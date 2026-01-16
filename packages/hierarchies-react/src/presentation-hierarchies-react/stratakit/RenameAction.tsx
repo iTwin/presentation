@@ -5,6 +5,7 @@
 
 import { createContext, memo, PropsWithChildren, useCallback, useContext, useMemo, useState } from "react";
 import renameSvg from "@stratakit/icons/rename.svg";
+import { PresentationHierarchyNode } from "../TreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
 
@@ -13,23 +14,28 @@ import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
  * The tree component must have `getEditingProps.onLabelChanged` prop set to enable renaming functionality. When the rename is completed, the `onLabelChanged` function is called to make the actual data update.
  * @alpha
  */
-export const RenameAction = memo(function RenameAction(actionAttributes: TreeActionBaseAttributes) {
+export const RenameAction = memo(function RenameAction({ node, ...actionAttributes }: TreeActionBaseAttributes & { node: PresentationHierarchyNode }) {
   const { localizedStrings } = useLocalizationContext();
   const context = useRenameContext();
   const { rename } = localizedStrings;
 
-  const setIsRenaming = context?.setIsRenaming;
+  const canRename = context?.canRename(node) ?? false;
+  const startRename = context?.startRename;
   const handleClick = useCallback(() => {
-    setIsRenaming?.(true);
-  }, [setIsRenaming]);
+    startRename?.(node);
+  }, [startRename, node]);
 
-  return <TreeActionBase {...actionAttributes} label={rename} onClick={handleClick} icon={renameSvg} hide={!context?.onLabelChanged} />;
+  return <TreeActionBase {...actionAttributes} label={rename} onClick={handleClick} icon={renameSvg} hide={!canRename} />;
 });
 
 interface RenameContext {
-  isRenaming: boolean;
-  setIsRenaming: (isRenaming: boolean) => void;
-  onLabelChanged?: (newLabel: string) => void;
+  renameParameters?: {
+    nodeId: string;
+    commit: (newLabel: string) => void;
+  };
+  startRename: (node: PresentationHierarchyNode) => void;
+  canRename: (node: PresentationHierarchyNode) => boolean;
+  cancelRename: () => void;
 }
 
 const renameContext = createContext<RenameContext | undefined>(undefined);
@@ -39,10 +45,53 @@ export const useRenameContext = () => {
   return useContext(renameContext);
 };
 
-/** @alpha */
-export function RenameContextProvider({ onLabelChanged, children }: PropsWithChildren<{ onLabelChanged?: (newLabel: string) => void }>) {
-  const [isRenaming, setIsRenaming] = useState(false);
-  const value = useMemo(() => ({ isRenaming, setIsRenaming, onLabelChanged }), [isRenaming, onLabelChanged]);
-
+/** @internal */
+export function RenameContextProvider({ value, children }: PropsWithChildren<{ value: RenameContext }>) {
   return <renameContext.Provider value={value}>{children}</renameContext.Provider>;
+}
+
+/** @internal */
+export function useNodeRenameContextValue({
+  getEditingProps,
+}: {
+  getEditingProps?: (node: PresentationHierarchyNode) => { onLabelChanged?: (newLabel: string) => void };
+}) {
+  const [renameParameters, setRenameParameters] = useState<{ nodeId: string; commit: (newLabel: string) => void } | undefined>(undefined);
+
+  const startRename = useCallback(
+    (node: PresentationHierarchyNode) => {
+      const onLabelChanged = getEditingProps?.(node)?.onLabelChanged;
+      if (onLabelChanged) {
+        setRenameParameters({
+          nodeId: node.id,
+          commit: (newLabel) => {
+            onLabelChanged(newLabel);
+            setRenameParameters(undefined);
+          },
+        });
+      }
+    },
+    [getEditingProps],
+  );
+
+  const cancelRename = useCallback(() => {
+    setRenameParameters(undefined);
+  }, []);
+
+  const canRename = useCallback(
+    (node: PresentationHierarchyNode) => {
+      return getEditingProps?.(node)?.onLabelChanged !== undefined;
+    },
+    [getEditingProps],
+  );
+
+  return useMemo(
+    () => ({
+      renameParameters,
+      cancelRename,
+      startRename,
+      canRename,
+    }),
+    [renameParameters, canRename, startRename, cancelRename],
+  );
 }

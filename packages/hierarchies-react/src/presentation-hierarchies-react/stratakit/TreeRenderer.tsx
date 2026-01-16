@@ -7,12 +7,16 @@ import {
   ComponentProps,
   ComponentPropsWithoutRef,
   CSSProperties,
+  FC,
   forwardRef,
   memo,
+  PropsWithoutRef,
   ReactElement,
   ReactNode,
+  RefAttributes,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
 } from "react";
@@ -22,9 +26,9 @@ import { TreeRendererProps } from "../Renderers.js";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
-import { ErrorItem, FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
+import { ErrorItem, findPathToNode, FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
-import { RenameContextProvider } from "./RenameAction.js";
+import { RenameContextProvider, useNodeRenameContextValue } from "./RenameAction.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
 import { PlaceholderNode, StrataKitTreeItemProps, StrataKitTreeNodeRenderer, TreeNodeRendererProps } from "./TreeNodeRenderer.js";
 
@@ -73,6 +77,17 @@ interface TreeRendererOwnProps {
 }
 
 /** @alpha */
+export interface StrataKitTreeRendererAttributes {
+  /**
+   * Opens rename mode for the first node that matches the given predicate. Node must be already loaded in the tree.
+   * If the node is not visible (because its parent is collapsed), all parents will be expanded to make it visible and node will be scrolled into view.
+   *
+   * Returns "node-not-found" if no node matches the predicate, "success" if rename was initiated.
+   */
+  renameNode: (predicate: (node: PresentationHierarchyNode) => boolean) => "node-not-found" | "success";
+}
+
+/** @alpha */
 type StrataKitTreeRendererProps = TreeRendererProps &
   Pick<TreeErrorRendererProps, "onFilterClick"> &
   TreeRendererOwnProps &
@@ -85,7 +100,10 @@ type StrataKitTreeRendererProps = TreeRendererProps &
  * @see https://itwinui.bentley.com/docs/tree
  * @alpha
  */
-export function StrataKitTreeRenderer(props: StrataKitTreeRendererProps) {
+export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProps> & RefAttributes<StrataKitTreeRendererAttributes>> = forwardRef<
+  StrataKitTreeRendererAttributes,
+  StrataKitTreeRendererProps
+>(function StrataKitTreeRenderer(props, forwardedRef) {
   const {
     id,
     rootNodes,
@@ -114,7 +132,7 @@ export function StrataKitTreeRenderer(props: StrataKitTreeRendererProps) {
   const flatItems = useFlatTreeItems(rootNodes);
   const errorList = useErrorList(rootNodes);
 
-  const scrollToNode = useRef<string | undefined>(undefined);
+  const scrollToNode = useRef<{ id: string; action?: () => void } | undefined>(undefined);
   const parentRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -132,7 +150,7 @@ export function StrataKitTreeRenderer(props: StrataKitTreeRendererProps) {
       const index = flatItems.findIndex((flatItem) => flatItem.id === errorNode.id);
       if (index === -1) {
         expandTo((nodeId) => expandNode(nodeId, true));
-        scrollToNode.current = errorNode.id;
+        scrollToNode.current = { id: errorNode.id };
         return;
       }
       virtualizer.scrollToIndex(index, { align: "end" });
@@ -144,13 +162,42 @@ export function StrataKitTreeRenderer(props: StrataKitTreeRendererProps) {
     if (scrollToNode.current === undefined) {
       return;
     }
-    const index = flatItems.findIndex((flatItem) => flatItem.id === scrollToNode.current);
+    const targetNodeId = scrollToNode.current.id;
+    const index = flatItems.findIndex((flatItem) => flatItem.id === targetNodeId);
     if (index === -1) {
       return;
     }
     virtualizer.scrollToIndex(index, { align: "end" });
+    scrollToNode.current.action?.();
     scrollToNode.current = undefined;
   }, [flatItems, virtualizer]);
+
+  const renameContext = useNodeRenameContextValue({
+    getEditingProps,
+  });
+
+  useImperativeHandle(forwardedRef, () => ({
+    renameNode: (predicate) => {
+      const pathToNode = findPathToNode(rootNodes, predicate);
+      if (!pathToNode) {
+        return "node-not-found";
+      }
+      const targetNode = pathToNode.pop()!;
+      const collapsedNodes = pathToNode.filter((pathNode) => !pathNode.isExpanded);
+      if (collapsedNodes.length > 0) {
+        collapsedNodes.forEach((node) => expandNode(node.id, true));
+        scrollToNode.current = {
+          id: targetNode.id,
+          action: () => {
+            renameContext.startRename(targetNode);
+          },
+        };
+      } else {
+        renameContext.startRename(targetNode);
+      }
+      return "success";
+    },
+  }));
 
   const errorRendererProps: TreeErrorRendererProps = {
     treeLabel,
@@ -181,35 +228,36 @@ export function StrataKitTreeRenderer(props: StrataKitTreeRendererProps) {
           {...treeRootProps}
           style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative", overflow: "hidden" }}
         >
-          {items.map((virtualizedItem) => {
-            const item = flatItems[virtualizedItem.index];
-            const selected = isNodeSelected?.(item.id) ?? false;
-            return (
-              <VirtualTreeItem
-                ref={virtualizer.measureElement}
-                key={virtualizedItem.key}
-                data-index={virtualizedItem.index}
-                start={virtualizedItem.start}
-                item={item}
-                selected={selected}
-                expandNode={expandNode}
-                reloadTree={reloadTree}
-                onNodeClick={onNodeClick}
-                onNodeKeyDown={onNodeKeyDown}
-                getSelectedNodes={getSelectedNodes}
-                getContextMenuActions={getContextMenuActions}
-                getEditingProps={getEditingProps}
-                getInlineActions={getInlineActions}
-                getMenuActions={getMenuActions}
-                getTreeItemProps={getTreeItemProps}
-              />
-            );
-          })}
+          <RenameContextProvider value={renameContext}>
+            {items.map((virtualizedItem) => {
+              const item = flatItems[virtualizedItem.index];
+              const selected = isNodeSelected?.(item.id) ?? false;
+              return (
+                <VirtualTreeItem
+                  ref={virtualizer.measureElement}
+                  key={virtualizedItem.key}
+                  data-index={virtualizedItem.index}
+                  start={virtualizedItem.start}
+                  item={item}
+                  selected={selected}
+                  expandNode={expandNode}
+                  reloadTree={reloadTree}
+                  onNodeClick={onNodeClick}
+                  onNodeKeyDown={onNodeKeyDown}
+                  getSelectedNodes={getSelectedNodes}
+                  getContextMenuActions={getContextMenuActions}
+                  getInlineActions={getInlineActions}
+                  getMenuActions={getMenuActions}
+                  getTreeItemProps={getTreeItemProps}
+                />
+              );
+            })}
+          </RenameContextProvider>
         </Tree.Root>
       </div>
     </LocalizationContextProvider>
   );
-}
+});
 
 type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item"> & {
   start: number;
@@ -244,24 +292,12 @@ type HierarchyNodeItemProps = {
   style?: CSSProperties;
   getSelectedNodes: () => PresentationHierarchyNode[];
 } & Pick<TreeNodeRendererProps, "expandNode" | "reloadTree" | "selected"> &
-  Pick<TreeRendererOwnProps, "getContextMenuActions" | "getInlineActions" | "getMenuActions" | "getTreeItemProps" | "getEditingProps"> &
+  Pick<TreeRendererOwnProps, "getContextMenuActions" | "getInlineActions" | "getMenuActions" | "getTreeItemProps"> &
   Pick<ReturnType<typeof useSelectionHandler>, "onNodeClick" | "onNodeKeyDown">;
 
 const HierarchyNodeItem = memo(
   forwardRef<HTMLElement, HierarchyNodeItemProps>(function HierarchyNodeItem(
-    {
-      item,
-      selected,
-      getEditingProps,
-      getTreeItemProps,
-      onNodeClick,
-      onNodeKeyDown,
-      getSelectedNodes,
-      getMenuActions,
-      getInlineActions,
-      getContextMenuActions,
-      ...rest
-    },
+    { item, selected, getTreeItemProps, onNodeClick, onNodeKeyDown, getSelectedNodes, getMenuActions, getInlineActions, getContextMenuActions, ...rest },
     forwardedRef,
   ) {
     const nodeRef = useRef<HTMLElement>(null);
@@ -298,24 +334,21 @@ const HierarchyNodeItem = memo(
       onNodeKeyDown?.(node, !selected, e);
     });
 
-    const editingProps = getEditingProps?.(item.node);
     const ref = useMergedRefs(forwardedRef, nodeRef);
     return (
-      <RenameContextProvider onLabelChanged={editingProps?.onLabelChanged}>
-        <StrataKitTreeNodeRenderer
-          {...treeItemProps}
-          {...rest}
-          {...nodeActions}
-          ref={ref}
-          aria-level={item.level}
-          aria-posinset={item.posInLevel}
-          aria-setsize={item.levelSize}
-          node={item.node}
-          selected={selected}
-          onClick={onClick}
-          onKeyDown={onKeyDown}
-        />
-      </RenameContextProvider>
+      <StrataKitTreeNodeRenderer
+        {...treeItemProps}
+        {...rest}
+        {...nodeActions}
+        ref={ref}
+        aria-level={item.level}
+        aria-posinset={item.posInLevel}
+        aria-setsize={item.levelSize}
+        node={item.node}
+        selected={selected}
+        onClick={onClick}
+        onKeyDown={onKeyDown}
+      />
     );
   }),
 );

@@ -104,6 +104,25 @@ export function useErrorList(rootNodes: PresentationHierarchyNode[]): ErrorItem[
   );
 }
 
+/** @internal */
+export function findPathToNode(
+  rootNodes: PresentationHierarchyNode[],
+  predicate: (node: PresentationHierarchyNode) => boolean,
+): PresentationHierarchyNode[] | undefined {
+  for (const parent of rootNodes) {
+    if (predicate(parent)) {
+      return [parent];
+    }
+    if (parent.children && parent.children !== true) {
+      const childPath = findPathToNode(parent.children, predicate);
+      if (childPath) {
+        return [parent, ...childPath];
+      }
+    }
+  }
+  return undefined;
+}
+
 function getErrorItems(parent: PresentationHierarchyNode, path: string[]) {
   const errorList: ErrorItem[] = [];
 

@@ -3,13 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, memo, useCallback, useMemo } from "react";
+import { ComponentProps, forwardRef, memo, useCallback, useMemo } from "react";
 import {
   ErrorItemRenderer,
   FilterAction,
   PresentationHierarchyNode,
   RenameAction,
   StrataKitTreeRenderer,
+  StrataKitTreeRendererAttributes,
   TreeActionBase,
   TreeActionBaseAttributes,
   TreeErrorRenderer,
@@ -19,9 +20,12 @@ import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 
 /* eslint-disable no-console */
 
-type TreeRendererProps = ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>;
+type TreeRendererProps = ComponentProps<typeof StrataKitTreeRenderer>;
 
-export function TreeRendererWithFilterAction(props: TreeRendererProps) {
+export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttributes, TreeRendererProps>(function TreeRendererWithFilterAction(
+  props: TreeRendererProps,
+  forwardedRef,
+) {
   const { getHierarchyLevelDetails, onFilterClick, ...treeProps } = props;
   const nodesWithError = useMemo(() => {
     return mapNodesHierarchy(treeProps.rootNodes, (node) => {
@@ -46,16 +50,16 @@ export function TreeRendererWithFilterAction(props: TreeRendererProps) {
     ({ targetNode, selectedNodes }) => [
       <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
       <FilterAction key="filter" node={targetNode} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
-      <RenameAction key="rename" />,
+      <RenameAction key="rename" node={targetNode} />,
     ],
     [onFilterClick, getHierarchyLevelDetails],
   );
-  const getMenuActions = useCallback<Required<TreeRendererProps>["getMenuActions"]>(() => [<RenameAction key="rename" />], []);
+  const getMenuActions = useCallback<Required<TreeRendererProps>["getMenuActions"]>(({ targetNode }) => [<RenameAction key="rename" node={targetNode} />], []);
   const getContextMenuActions = useCallback<Required<TreeRendererProps>["getContextMenuActions"]>(
     ({ targetNode, selectedNodes }) => [
       <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
       <FilterAction key="filter" node={targetNode} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
-      <RenameAction key="rename" />,
+      <RenameAction key="rename" node={targetNode} />,
     ],
     [onFilterClick, getHierarchyLevelDetails],
   );
@@ -72,6 +76,7 @@ export function TreeRendererWithFilterAction(props: TreeRendererProps) {
   return (
     <StrataKitTreeRenderer
       {...treeProps}
+      ref={forwardedRef}
       rootNodes={nodesWithError}
       getInlineActions={getInlineActions}
       getMenuActions={getMenuActions}
@@ -95,7 +100,7 @@ export function TreeRendererWithFilterAction(props: TreeRendererProps) {
       }}
     />
   );
-}
+});
 
 function mapNodesHierarchy(
   nodes: PresentationHierarchyNode[],
