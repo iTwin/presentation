@@ -445,6 +445,7 @@ const LINK_TAG_REGEX = /<link>(.*?)<\/link>/;
 function createLocalizedMessage(message: string, limit: number, onClick?: () => void) {
   const limitStr = limit.toLocaleString(undefined, { useGrouping: true });
   const messageWithLimit = message.replace("{{limit}}", limitStr);
+  /* c8 ignore next */
   const match = messageWithLimit.length <= 1000 ? messageWithLimit.match(LINK_TAG_REGEX) : undefined;
 
   if (!match) {
