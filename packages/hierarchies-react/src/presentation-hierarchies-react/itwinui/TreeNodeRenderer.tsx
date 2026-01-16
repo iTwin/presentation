@@ -443,7 +443,7 @@ function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: R
 function createLocalizedMessage(message: string, limit: number, onClick?: () => void) {
   const limitStr = limit.toLocaleString(undefined, { useGrouping: true });
   const messageWithLimit = message.replace("{{limit}}", limitStr);
-  const exp = new RegExp("<link>(.*)</link>");
+  const exp = new RegExp("<link>(.*?)</link>");
   const match = messageWithLimit.match(exp);
 
   if (!match) {
