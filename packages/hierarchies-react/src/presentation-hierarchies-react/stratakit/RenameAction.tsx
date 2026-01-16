@@ -60,7 +60,7 @@ export function useNodeRenameContextValue({
 
   const startRename = useCallback(
     (node: PresentationHierarchyNode) => {
-      const { onLabelChanged } = getEditingProps?.(node) ?? {};
+      const onLabelChanged = getEditingProps?.(node)?.onLabelChanged;
       if (onLabelChanged) {
         setRenameParameters({
           nodeId: node.id,
