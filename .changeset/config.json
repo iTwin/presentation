@@ -11,6 +11,7 @@
     "@itwin/presentation-models-tree",
     "presentation-full-stack-tests",
     "presentation-performance-tests",
+    "presentation-test-utilities",
     "@load-tests/backend",
     "@load-tests/frontend",
     "@test-app/backend",
