@@ -440,11 +440,12 @@ function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: R
   );
 }
 
+const LINK_TAG_REGEX = /<link>(.*?)<\/link>/;
+
 function createLocalizedMessage(message: string, limit: number, onClick?: () => void) {
   const limitStr = limit.toLocaleString(undefined, { useGrouping: true });
   const messageWithLimit = message.replace("{{limit}}", limitStr);
-  const exp = new RegExp("<link>(.*?)</link>");
-  const match = messageWithLimit.match(exp);
+  const match = messageWithLimit.match(LINK_TAG_REGEX);
 
   if (!match) {
     return {
