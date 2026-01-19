@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-//  cspell:words mocharc nycrc pnpmfile npmignore
+// cspell:words mocharc nycrc pnpmfile npmignore
 /** Script to check spelling in project filenames */
 
 const { execSync } = require("child_process");
