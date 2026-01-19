@@ -3,13 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+//cspell:words mocharc nycrc pnpmfile npmignore
 /** Script to check spelling in project filenames */
 
 const { execSync } = require("child_process");
 const { readdirSync } = require("fs");
 const { join } = require("path");
 
-const ignore = ["node_modules", ".git", "lib", "dist", ".husky"];
+const ignore = ["node_modules", ".git", "lib", "dist", ".husky", "pnpmfile", "npmignore", "mocharc", "nycrc"];
 
 /**
  * Recursively find all files in a directory
