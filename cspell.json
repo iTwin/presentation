@@ -3,6 +3,7 @@
     "ANDALSO",
     "appender",
     "appenders",
+    "appicon",
     "appui",
     "asyncs",
     "baytown",
@@ -30,6 +31,7 @@
     "imodeljs",
     "imodels",
     "IMJS",
+    "itwin",
     "itwinjs",
     "itwinui",
     "julianday",
@@ -37,7 +39,6 @@
     "kita",
     "lage",
     "millis",
-    "mocharc",
     "montecarlo",
     // Lithuanian word
     "nenurodyta",
@@ -59,6 +60,7 @@
     "USSURVEY",
     "viewport",
     "viewports",
+    "vite",
     "vusers"
   ],
   "ignorePaths": [
