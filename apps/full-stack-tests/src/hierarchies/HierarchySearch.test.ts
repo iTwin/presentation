@@ -32,8 +32,10 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding, InstanceKey, Props } from "@itwin/presentation-shared";
 import { createFileNameFromString } from "@itwin/presentation-testing";
-import { buildIModel, importSchema, withECDb } from "../IModelUtils.js";
+import { withECDb } from "../ECDbUtils.js";
+import { buildIModel } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
+import { importSchema } from "../SchemaUtils.js";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "./Utils.js";
 

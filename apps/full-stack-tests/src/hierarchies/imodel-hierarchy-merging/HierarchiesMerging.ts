@@ -17,7 +17,8 @@ import {
   NodesQueryClauseFactory,
 } from "@itwin/presentation-hierarchies";
 import { createDefaultInstanceLabelSelectClauseFactory, ECSqlBinding, Props } from "@itwin/presentation-shared";
-import { cloneECDb, createECDb, ECDbBuilder, importSchema } from "../../IModelUtils.js";
+import { cloneECDb, createECDb, ECDbBuilder } from "../../ECDbUtils.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { createIModelAccess } from "../Utils.js";
 
 export function createHierarchyDefinitionFactory({

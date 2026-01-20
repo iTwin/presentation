@@ -9,7 +9,8 @@ import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialC
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel, importSchema } from "../../IModelUtils.js";
+import { buildIModel } from "../../IModelUtils.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
