@@ -196,7 +196,7 @@ export async function createECDb<TResult extends {}>(
   }
 }
 
-export async function cloneECDb<TResult extends {}>(
+async function cloneECDb<TResult extends {}>(
   sourceECDbPath: string,
   targetECDbName: string,
   setup: (db: ECDbBuilder) => Promise<TResult>,
@@ -218,6 +218,46 @@ export async function cloneECDb<TResult extends {}>(
     ecdb[Symbol.dispose]();
     throw e;
   }
+}
+
+export async function createChangedDbs<TResultBase extends {}, TResultChangeset1 extends {}>(
+  mochaContext: Mocha.Context,
+  setupBase: (db: ECDbBuilder) => Promise<TResultBase>,
+  setupChangeset1: (db: ECDbBuilder, before: TResultBase) => Promise<TResultChangeset1>,
+): Promise<{ base: Awaited<ReturnType<typeof createECDb>> & TResultBase; changeset1: Awaited<ReturnType<typeof createECDb>> & TResultChangeset1 } & Disposable>;
+export async function createChangedDbs<TResultBase extends {}, TResultChangeset1 extends {}, TResultChangeset2 extends {}>(
+  mochaContext: Mocha.Context,
+  setupBase: (db: ECDbBuilder) => Promise<TResultBase>,
+  setupChangeset1: (db: ECDbBuilder, before: TResultBase) => Promise<TResultChangeset1>,
+  setupChangeset2: (db: ECDbBuilder, before: TResultChangeset1) => Promise<TResultChangeset2>,
+): Promise<
+  {
+    base: Awaited<ReturnType<typeof createECDb>> & TResultBase;
+    changeset1: Awaited<ReturnType<typeof createECDb>> & TResultChangeset1;
+    changeset2: Awaited<ReturnType<typeof createECDb>> & TResultChangeset2;
+  } & Disposable
+>;
+export async function createChangedDbs<TResultBase extends {}, TResultChangeset1 extends {}, TResultChangeset2 extends {}>(
+  mochaContext: Mocha.Context,
+  setupBase: (db: ECDbBuilder) => Promise<TResultBase>,
+  setupChangeset1: (db: ECDbBuilder, before: TResultBase) => Promise<TResultChangeset1>,
+  setupChangeset2?: (db: ECDbBuilder, before: TResultChangeset1) => Promise<TResultChangeset2>,
+) {
+  const base = await createECDb(`${mochaContext.test!.fullTitle()}-base`, setupBase);
+  const changeset1 = await cloneECDb(base.ecdbPath, `${mochaContext.test!.fullTitle()}-changeset1`, async (ecdb) => setupChangeset1(ecdb, base));
+  const changeset2 = setupChangeset2
+    ? await cloneECDb(changeset1.ecdbPath, `${mochaContext.test!.fullTitle()}-changeset2`, async (ecdb) => setupChangeset2(ecdb, changeset1))
+    : undefined;
+  return {
+    base,
+    changeset1,
+    changeset2,
+    [Symbol.dispose]() {
+      base.ecdb[Symbol.dispose]();
+      changeset1.ecdb[Symbol.dispose]();
+      changeset2?.ecdb[Symbol.dispose]();
+    },
+  };
 }
 
 export async function withECDb(

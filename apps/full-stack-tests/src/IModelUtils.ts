@@ -38,7 +38,7 @@ export async function buildIModel<TFirstArg extends Mocha.Context | string, TRes
   return { ...res, imodel };
 }
 
-export async function cloneIModel<TResult extends {}>(
+async function cloneIModel<TResult extends {}>(
   sourceIModelPath: string,
   targetIModelName: string,
   setup: (db: IIModelBuilder) => Promise<TResult>,
