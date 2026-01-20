@@ -47,6 +47,15 @@ interface CommonRendererProps {
     reloadTree: (options?: ReloadTreeOptions) => void;
 }
 
+// @alpha (undocumented)
+interface EditingProps {
+    // (undocumented)
+    labelValidationHint?: string;
+    onLabelChanged: (newLabel: string) => void;
+    // (undocumented)
+    validate?: (newLabel: string) => boolean;
+}
+
 // @public
 export type ErrorInfo = GenericErrorInfo | ResultSetTooLargeErrorInfo | NoFilterMatchesErrorInfo | ChildrenLoadErrorInfo;
 
@@ -149,7 +158,9 @@ interface LocalizationContextProviderProps {
 
 // @public
 interface LocalizedStrings {
+    cancel: string;
     clearHierarchyLevelFilter: string;
+    confirm: string;
     failedToCreateHierarchy: string;
     failedToCreateRootHierarchy: string;
     filterHierarchyLevel: string;
@@ -315,9 +326,7 @@ interface TreeRendererOwnProps {
         targetNode: PresentationHierarchyNode;
         selectedNodes: PresentationHierarchyNode[];
     }) => ReactNode[];
-    getEditingProps?: (node: PresentationHierarchyNode) => {
-        onLabelChanged?: (newLabel: string) => void;
-    };
+    getEditingProps?: (node: PresentationHierarchyNode) => EditingProps | undefined;
     getInlineActions?: (props: {
         targetNode: PresentationHierarchyNode;
         selectedNodes: PresentationHierarchyNode[];
