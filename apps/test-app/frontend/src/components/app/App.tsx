@@ -127,11 +127,10 @@ export function App() {
 
       // determine what the viewport is hiliting
       const selectedView = IModelApp.viewManager.selectedView;
-      const schemas = MyAppFrontend.getSchemaContext(state.imodel);
       const hiliteSetProvider = createHiliteSetProvider({
         imodelAccess: {
           ...createECSqlQueryExecutor(state.imodel),
-          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(schemas) }),
+          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(state.imodel.schemaContext) }),
         },
       });
       from(hiliteSetProvider.getHiliteSet({ selectables: MyAppFrontend.selectionStorage.getSelection({ imodelKey: createIModelKey(state.imodel) }) }))
@@ -326,7 +325,7 @@ function IModelComponents(props: IModelComponentsProps) {
       enableUnifiedSelectionSyncWithIModel({
         imodelAccess: {
           ...createECSqlQueryExecutor(imodel),
-          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)) }),
+          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodel.schemaContext) }),
           key: imodel.key,
           hiliteSet: imodel.hilited,
           selectionSet: imodel.selectionSet,
@@ -338,7 +337,7 @@ function IModelComponents(props: IModelComponentsProps) {
   );
 
   return (
-    <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={MyAppFrontend.getSchemaContext.bind(MyAppFrontend)}>
+    <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={getSchemaContext}>
       <ThemeManager theme="light">
         <UiStateStorageHandler>
           <ConfigurableUiContent />
@@ -346,6 +345,10 @@ function IModelComponents(props: IModelComponentsProps) {
       </ThemeManager>
     </SchemaMetadataContextProvider>
   );
+}
+
+function getSchemaContext(imodel: IModelConnection) {
+  return imodel.schemaContext;
 }
 
 function RulesDrivenTreePanel(props: { imodel: IModelConnection; rulesetId?: string }) {

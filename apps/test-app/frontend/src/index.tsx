@@ -67,7 +67,6 @@ async function initializePresentation() {
     presentation: {
       // specify locale for localizing presentation data, it can be changed afterwards
       activeLocale: IModelApp.localization.getLanguageList()[0],
-      schemaContextProvider: (imodel) => MyAppFrontend.getSchemaContext(imodel),
     },
     favorites: {
       storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),

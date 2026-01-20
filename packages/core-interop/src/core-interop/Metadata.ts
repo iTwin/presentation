@@ -22,11 +22,11 @@ interface CoreSchemaContext {
  * Usage example:
  *
  * ```ts
- * import { SchemaContext } from "@itwin/ecschema-metadata";
+ * import { IModelConnection } from "@itwin/core-frontend";
  * import { createECSchemaProvider } from "@itwin/presentation-core-interop";
  *
- * const schemaContext = new SchemaContext();
- * const schemaProvider = createECSchemaProvider(schemas);
+ * const imodel: IModelConnection = getIModel();
+ * const schemaProvider = createECSchemaProvider(imodel.schemaContext);
  * // the created schema provider may be used in `@itwin/presentation-hierarchies` and other Presentation packages
  * ```
  *
