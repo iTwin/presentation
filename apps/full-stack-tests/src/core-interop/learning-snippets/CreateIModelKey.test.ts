@@ -25,6 +25,7 @@ describe("Core interop", () => {
       after(async () => {
         await terminate();
         sinon.restore();
+        IModelConnection.onOpen.clear();
       });
 
       it("creates key for `BlankConnection`", async () => {

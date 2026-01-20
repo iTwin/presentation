@@ -22,6 +22,7 @@ describe("Core interop", () => {
 
       after(async () => {
         await terminate();
+        sinon.restore();
       });
 
       it("creates executor that can run ECSql queries", async function () {

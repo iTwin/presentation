@@ -144,7 +144,7 @@ describe("Hierarchies", () => {
       let logStub: sinon.SinonStub;
       beforeEach(async () => {
         await initialize();
-        // re-initialize to stubs to avoid iTwin.js core logging to console an ruining our testing strategy
+        // re-initialize to stubs to avoid iTwin.js core logging to console and ruining our testing strategy
         Logger.initialize(sinon.stub(), sinon.stub(), sinon.stub(), sinon.stub());
         logStub = sinon.stub(console, "log");
       });
