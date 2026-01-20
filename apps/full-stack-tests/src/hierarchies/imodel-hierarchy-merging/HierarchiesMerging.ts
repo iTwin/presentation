@@ -17,7 +17,8 @@ import {
   NodesQueryClauseFactory,
 } from "@itwin/presentation-hierarchies";
 import { createDefaultInstanceLabelSelectClauseFactory, ECSqlBinding, Props } from "@itwin/presentation-shared";
-import { cloneECDb, createECDb, ECDbBuilder, importSchema } from "../../IModelUtils.js";
+import { ECDbBuilder } from "../../ECDbUtils.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { createIModelAccess } from "../Utils.js";
 
 export function createHierarchyDefinitionFactory({
@@ -243,46 +244,6 @@ export async function importQSchema(target: ECDbBuilder, xyzSchema?: Omit<Awaite
       </ECEntityClass>
     `,
   );
-}
-
-export async function createChangedDbs<TResultBase extends {}, TResultChangeset1 extends {}>(
-  mochaContext: Mocha.Context,
-  setupBase: (db: ECDbBuilder) => Promise<TResultBase>,
-  setupChangeset1: (db: ECDbBuilder, before: TResultBase) => Promise<TResultChangeset1>,
-): Promise<{ base: Awaited<ReturnType<typeof createECDb>> & TResultBase; changeset1: Awaited<ReturnType<typeof createECDb>> & TResultChangeset1 } & Disposable>;
-export async function createChangedDbs<TResultBase extends {}, TResultChangeset1 extends {}, TResultChangeset2 extends {}>(
-  mochaContext: Mocha.Context,
-  setupBase: (db: ECDbBuilder) => Promise<TResultBase>,
-  setupChangeset1: (db: ECDbBuilder, before: TResultBase) => Promise<TResultChangeset1>,
-  setupChangeset2: (db: ECDbBuilder, before: TResultChangeset1) => Promise<TResultChangeset2>,
-): Promise<
-  {
-    base: Awaited<ReturnType<typeof createECDb>> & TResultBase;
-    changeset1: Awaited<ReturnType<typeof createECDb>> & TResultChangeset1;
-    changeset2: Awaited<ReturnType<typeof createECDb>> & TResultChangeset2;
-  } & Disposable
->;
-export async function createChangedDbs<TResultBase extends {}, TResultChangeset1 extends {}, TResultChangeset2 extends {}>(
-  mochaContext: Mocha.Context,
-  setupBase: (db: ECDbBuilder) => Promise<TResultBase>,
-  setupChangeset1: (db: ECDbBuilder, before: TResultBase) => Promise<TResultChangeset1>,
-  setupChangeset2?: (db: ECDbBuilder, before: TResultChangeset1) => Promise<TResultChangeset2>,
-) {
-  const base = await createECDb(`${mochaContext.test!.fullTitle()}-base`, setupBase);
-  const changeset1 = await cloneECDb(base.ecdbPath, `${mochaContext.test!.fullTitle()}-changeset1`, async (ecdb) => setupChangeset1(ecdb, base));
-  const changeset2 = setupChangeset2
-    ? await cloneECDb(changeset1.ecdbPath, `${mochaContext.test!.fullTitle()}-changeset2`, async (ecdb) => setupChangeset2(ecdb, changeset1))
-    : undefined;
-  return {
-    base,
-    changeset1,
-    changeset2,
-    [Symbol.dispose]() {
-      base.ecdb[Symbol.dispose]();
-      changeset1.ecdb[Symbol.dispose]();
-      changeset2?.ecdb[Symbol.dispose]();
-    },
-  };
 }
 
 export function createMergedHierarchyProvider(props: {

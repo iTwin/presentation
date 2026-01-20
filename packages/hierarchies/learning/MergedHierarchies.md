@@ -6,6 +6,8 @@ The merging hierarchy provider, created using the `mergeProviders` factory funct
 
 - While the `HierarchyProvider` interface doesn't define how the returned nodes should be sorted, it's assumed that they're sorted by the label property. As a result, the merging provider makes sure that returned nodes are sorted by the label property after merging them.
 
+- The merging provider merely forwards node requests to internal ones, it doesn't account for the need to merge special nodes, like grouping ones. If you want to create a merged hierarchy from multiple versions of the same iModel, have a look at [Merged iModel hierarchies](./imodel/MergedIModelHierarchies.md) learning page.
+
 ## Example
 
 The below example demonstrates how to create a hierarchy provider that merges three providers:

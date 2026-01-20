@@ -6,8 +6,9 @@
 import { collect } from "presentation-test-utilities";
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
-import { importSchema, withECDb } from "../IModelUtils.js";
+import { withECDb } from "../ECDbUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
+import { importSchema } from "../SchemaUtils.js";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "./Utils.js";
 

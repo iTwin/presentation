@@ -11,9 +11,10 @@ import { IModelApp } from "@itwin/core-frontend";
 import { ClassInfo, DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
 import { PresentationFilterBuilderValueRenderer } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { buildIModel, importSchema } from "../../IModelUtils.js";
+import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { queryByText, render } from "../../RenderUtils.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { stubVirtualization } from "../../Utils.js";
 
 describe("Presentation filter builder value renderer", () => {

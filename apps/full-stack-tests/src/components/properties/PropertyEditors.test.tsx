@@ -13,9 +13,10 @@ import { IModelApp } from "@itwin/core-frontend";
 import { FormatDefinition } from "@itwin/core-quantity";
 import { FieldDescriptorType, KeySet } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider, SchemaMetadataContextProvider } from "@itwin/presentation-components";
-import { buildIModel, importSchema } from "../../IModelUtils.js";
+import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
+import { importSchema } from "../../SchemaUtils.js";
 
 describe("Property editors", () => {
   before(async () => {
