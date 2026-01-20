@@ -29,7 +29,7 @@ import { useEvent, useMergedRefs } from "../Utils.js";
 import { ErrorItem, findPathToNode, FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
-import { TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./TreeNodeRenameAction.js";
+import { TreeNodeEditingProps, TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./TreeNodeRenameAction.js";
 import { PlaceholderNode, StrataKitTreeItemProps, StrataKitTreeNodeRenderer, TreeNodeRendererProps } from "./TreeNodeRenderer.js";
 
 /** @alpha */
@@ -45,14 +45,7 @@ interface TreeRendererOwnProps {
   /** A render function for errors' display component. Defaults to `<TreeErrorRenderer />`. */
   errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
   /** Props that defines if current node supports editing. */
-  getEditingProps?: (node: PresentationHierarchyNode) => {
-    /**
-     * A callback that is invoked when node label is changed. Should be used together
-     * with `<RenameAction />` to enter label editing mode. Node label is not editable
-     * when this is not supplied.
-     */
-    onLabelChanged?: (newLabel: string) => void;
-  };
+  getEditingProps?: (node: PresentationHierarchyNode) => TreeNodeEditingProps | undefined;
 
   /** Custom props for the root Tree component. */
   treeRootProps?: Partial<Omit<ComponentProps<typeof Tree.Root>, "style">>;
@@ -147,6 +140,10 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
 
   const items = virtualizer.getVirtualItems();
 
+  const renameContext = useTreeNodeRenameContextValue({
+    getEditingProps,
+  });
+
   const scrollToElement = useCallback(
     ({ errorNode, expandTo }: ErrorItem) => {
       const index = flatItems.findIndex((flatItem) => flatItem.id === errorNode.id);
@@ -169,14 +166,10 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
     if (index === -1) {
       return;
     }
-    virtualizer.scrollToIndex(index, { align: "end" });
+    virtualizer.scrollToIndex(index, { align: "auto" });
     scrollToNode.current.action?.();
     scrollToNode.current = undefined;
   }, [flatItems, virtualizer]);
-
-  const renameContext = useTreeNodeRenameContextValue({
-    getEditingProps,
-  });
 
   useImperativeHandle(forwardedRef, () => ({
     renameNode: (predicate) => {
@@ -186,20 +179,38 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
       }
       const targetNode = pathToNode.pop()!;
       const collapsedNodes = pathToNode.filter((pathNode) => !pathNode.isExpanded);
+
+      const handleRename = () => {
+        // give time to scroll node into view before starting rename
+        requestAnimationFrame(() => {
+          renameContext.startRename(targetNode);
+        });
+      };
+
       if (collapsedNodes.length > 0) {
         collapsedNodes.forEach((node) => expandNode(node.id, true));
         scrollToNode.current = {
           id: targetNode.id,
-          action: () => {
-            renameContext.startRename(targetNode);
-          },
+          action: handleRename,
         };
-      } else {
-        renameContext.startRename(targetNode);
+        return "success";
       }
+
+      const index = flatItems.findIndex((flatItem) => flatItem.id === targetNode.id);
+      virtualizer.scrollToIndex(index, { align: "auto" });
+      handleRename();
       return "success";
     },
   }));
+
+  const cancelRename = renameContext.cancelRename;
+  const isScrolling = virtualizer.isScrolling;
+  useEffect(() => {
+    if (isScrolling) {
+      // cancel rename when scroll is initiated
+      cancelRename();
+    }
+  }, [isScrolling, cancelRename]);
 
   const errorRendererProps: TreeErrorRendererProps = {
     treeLabel,

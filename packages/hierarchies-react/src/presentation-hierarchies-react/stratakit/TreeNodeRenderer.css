@@ -1,0 +1,25 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+.phr-node-label-editor {
+  padding: var(--stratakit-space-x1);
+  width: 300px;
+  display: grid;
+  gap: var(--stratakit-space-x1);
+  grid-template-rows: auto auto;
+
+  .phr-node-label-editor-input-row {
+    display: grid;
+    gap: var(--stratakit-space-x1);
+    grid-template-columns: 1fr auto auto;
+
+    .with-error {
+      outline-color: var(--stratakit-color-border-critical-base);
+      &::before {
+        border-color: var(--stratakit-color-border-critical-base);
+      }
+    }
+  }
+}
