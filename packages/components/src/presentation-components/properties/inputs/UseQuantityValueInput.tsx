@@ -66,9 +66,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
 
     setState((prev): State => {
       /* c8 ignore next 1 */
-      const defaultValue = (defaultFormatter ?? highPrecisionFormatter).applyFormatting(
-        initialRawValueRef.current ? initialRawValueRef.current : PLACEHOLDER_RAW_VALUE,
-      );
+      const { defaultValue, placeholderValue } = getDefaultFormattedValues(initialRawValueRef.current, defaultFormatter ?? highPrecisionFormatter);
       const newFormattedValue = prev.quantityValue.rawValue !== undefined ? highPrecisionFormatter.applyFormatting(prev.quantityValue.rawValue) : "";
       const roundingError = getPersistenceUnitRoundingError(newFormattedValue, parser);
 
@@ -80,7 +78,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
           defaultFormattedValue: defaultValue,
           roundingError,
         },
-        placeholder: defaultValue,
+        placeholder: placeholderValue,
       };
     });
   }, [highPrecisionFormatter, parser, defaultFormatter]);
@@ -163,5 +161,16 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
     highPrecisionFormatter: state?.highPrecisionFormatter,
     parser: state?.parserSpec,
     defaultFormatter: state?.defaultFormatter,
+  };
+}
+
+function getDefaultFormattedValues(initialRawValue: number | undefined, formatter: FormatterSpec): { defaultValue: string; placeholderValue: string } {
+  if (initialRawValue !== undefined) {
+    const formatted = formatter.applyFormatting(initialRawValue);
+    return { defaultValue: formatted, placeholderValue: formatted };
+  }
+  return {
+    defaultValue: "",
+    placeholderValue: formatter.applyFormatting(PLACEHOLDER_RAW_VALUE),
   };
 }
