@@ -11,12 +11,21 @@ import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
 
 /**
  * React component that renders a rename action for a tree item.
- * The tree component must have `getEditingProps.onLabelChanged` prop set to enable renaming functionality. When the rename is completed, the `onLabelChanged` function is called to make the actual data update.
+ *
+ * The tree component must have `getEditingProps.onLabelChanged` prop set to enable renaming functionality. When
+ * rename is completed, the `onLabelChanged` function is called to make the actual data update.
+ *
+ * @see `getMenuActions`, `getInlineActions`, `getContextMenuActions` props of `TreeRenderer` to add this action
+ * to tree items.
+ *
  * @alpha
  */
-export const RenameAction = memo(function RenameAction({ node, ...actionAttributes }: TreeActionBaseAttributes & { node: PresentationHierarchyNode }) {
+export const TreeNodeRenameAction = memo(function TreeNodeRenameAction({
+  node,
+  ...actionAttributes
+}: TreeActionBaseAttributes & { node: PresentationHierarchyNode }) {
   const { localizedStrings } = useLocalizationContext();
-  const context = useRenameContext();
+  const context = useTreeNodeRenameContext();
   const { rename } = localizedStrings;
 
   const canRename = context?.canRename(node) ?? false;
@@ -28,7 +37,7 @@ export const RenameAction = memo(function RenameAction({ node, ...actionAttribut
   return <TreeActionBase {...actionAttributes} label={rename} onClick={handleClick} icon={renameSvg} hide={!canRename} />;
 });
 
-interface RenameContext {
+interface TreeNodeRenameContext {
   renameParameters?: {
     nodeId: string;
     commit: (newLabel: string) => void;
@@ -38,20 +47,20 @@ interface RenameContext {
   cancelRename: () => void;
 }
 
-const renameContext = createContext<RenameContext | undefined>(undefined);
+const treeNodeRenameContext = createContext<TreeNodeRenameContext | undefined>(undefined);
 
 /** @internal */
-export const useRenameContext = () => {
-  return useContext(renameContext);
+export const useTreeNodeRenameContext = () => {
+  return useContext(treeNodeRenameContext);
 };
 
 /** @internal */
-export function RenameContextProvider({ value, children }: PropsWithChildren<{ value: RenameContext }>) {
-  return <renameContext.Provider value={value}>{children}</renameContext.Provider>;
+export function TreeNodeRenameContextProvider({ value, children }: PropsWithChildren<{ value: TreeNodeRenameContext }>) {
+  return <treeNodeRenameContext.Provider value={value}>{children}</treeNodeRenameContext.Provider>;
 }
 
 /** @internal */
-export function useNodeRenameContextValue({
+export function useTreeNodeRenameContextValue({
   getEditingProps,
 }: {
   getEditingProps?: (node: PresentationHierarchyNode) => { onLabelChanged?: (newLabel: string) => void };

@@ -25,11 +25,11 @@ import { DropdownMenu, Tree } from "@stratakit/structures";
 import { TreeRendererProps } from "../Renderers.js";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
-import { useRenameContext } from "./RenameAction.js";
 import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
+import { useTreeNodeRenameContext } from "./TreeNodeRenameAction.js";
 
 /** @internal */
-export interface TreeNodeRendererOwnProps extends Pick<TreeRendererProps, "expandNode" | "reloadTree"> {
+interface TreeNodeRendererOwnProps extends Pick<TreeRendererProps, "expandNode" | "reloadTree"> {
   /** Node that is rendered. */
   node: PresentationHierarchyNode;
   /**
@@ -69,15 +69,13 @@ export type TreeNodeRendererProps = StrataKitTreeItemProps & TreeNodeRendererOwn
  * A component that renders given `FlatTreeNode` using the `Tree.Item` component from `@itwin/itwinui-react`. The
  * `FlatTreeNode` objects for this renderer are generally created using the `useFlatTreeNodeList` hook.
  *
- * @see `TreeRenderer`
- * @see https://itwinui.bentley.com/docs/tree
  * @internal
  */
 export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>> = memo(
   forwardRef<HTMLElement, TreeNodeRendererProps>(function HierarchyNode(props, forwardedRef) {
     const { node, decorations, inlineActions, menuActions, contextMenuActions, expandNode, reloadTree, ...treeItemProps } = props;
     const { localizedStrings } = useLocalizationContext();
-    const renameContext = useRenameContext();
+    const renameContext = useTreeNodeRenameContext();
     const [contextMenuProps, setContextMenuProps] = useState<{ position: { x: number; y: number }; actions: ReactNode[] } | undefined>(undefined);
 
     const label = treeItemProps.label ?? node.label;

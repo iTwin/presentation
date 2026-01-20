@@ -11,7 +11,7 @@ import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
 
 /** @alpha */
-export type FilterActionProps = {
+type TreeNodeFilterActionProps = {
   /** Action to perform when the filter button is clicked for this node. */
   onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
 } & TreeActionBaseAttributes &
@@ -19,14 +19,20 @@ export type FilterActionProps = {
 
 /**
  * React component that renders a filter action for a tree item.
+ *
+ * The action calls the `onFilter` callback prop when clicked.
+ *
+ * @see `getMenuActions`, `getInlineActions`, `getContextMenuActions` props of `TreeRenderer` to add this action
+ * to tree items.
+ *
  * @alpha
  */
-export const FilterAction = memo(function FilterAction({
+export const TreeNodeFilterAction = memo(function TreeNodeFilterAction({
   node,
   onFilter,
   getHierarchyLevelDetails,
   ...actionAttributes
-}: FilterActionProps & { node: PresentationHierarchyNode }) {
+}: TreeNodeFilterActionProps & { node: PresentationHierarchyNode }) {
   const { localizedStrings } = useLocalizationContext();
   const { filterHierarchyLevel, filterHierarchyLevelActiveDescription } = localizedStrings;
 

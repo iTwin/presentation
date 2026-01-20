@@ -74,13 +74,6 @@ interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLe
 }
 
 // @alpha
-export const FilterAction: NamedExoticComponent<    {
-onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
-} & TreeActionBaseAttributes & Pick<TreeRendererProps, "getHierarchyLevelDetails"> & {
-node: PresentationHierarchyNode;
-}>;
-
-// @alpha
 interface FlatPlaceholderItem {
     // (undocumented)
     id: string;
@@ -212,11 +205,6 @@ interface ReloadTreeOptions {
 }
 
 // @alpha
-export const RenameAction: NamedExoticComponent<TreeActionBaseAttributes & {
-node: PresentationHierarchyNode;
-}>;
-
-// @alpha
 type RendererProps = {
     rootErrorRendererProps: RootErrorRendererProps;
 } | {
@@ -308,6 +296,18 @@ interface TreeErrorRendererOwnProps {
 // @alpha (undocumented)
 type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Pick<TreeRendererProps, "getHierarchyLevelDetails">;
 
+// @alpha
+export const TreeNodeFilterAction: NamedExoticComponent<    {
+onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
+} & TreeActionBaseAttributes & Pick<TreeRendererProps, "getHierarchyLevelDetails"> & {
+node: PresentationHierarchyNode;
+}>;
+
+// @alpha
+export const TreeNodeRenameAction: NamedExoticComponent<TreeActionBaseAttributes & {
+node: PresentationHierarchyNode;
+}>;
+
 // @alpha (undocumented)
 interface TreeRendererOwnProps {
     errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
@@ -326,13 +326,11 @@ interface TreeRendererOwnProps {
         targetNode: PresentationHierarchyNode;
         selectedNodes: PresentationHierarchyNode[];
     }) => ReactNode[];
-    // (undocumented)
     getTreeItemProps?: (node: PresentationHierarchyNode) => Partial<Omit<StrataKitTreeItemProps, "selected" | "aria-level" | "aria-posinset" | "aria-setsize">>;
     // (undocumented)
     id?: string;
     selectionMode?: SelectionMode_2;
     treeLabel: string;
-    // (undocumented)
     treeRootProps?: Partial<Omit<ComponentProps<typeof Tree.Root>, "style">>;
 }
 
