@@ -6,14 +6,14 @@
 import { ComponentProps, forwardRef, memo, useCallback, useMemo } from "react";
 import {
   ErrorItemRenderer,
-  FilterAction,
   PresentationHierarchyNode,
-  RenameAction,
   StrataKitTreeRenderer,
   StrataKitTreeRendererAttributes,
   TreeActionBase,
   TreeActionBaseAttributes,
   TreeErrorRenderer,
+  TreeNodeFilterAction,
+  TreeNodeRenameAction,
 } from "@itwin/presentation-hierarchies-react";
 import addSvg from "@stratakit/icons/add.svg";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
@@ -49,17 +49,20 @@ export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttr
   const getInlineActions = useCallback<Required<TreeRendererProps>["getInlineActions"]>(
     ({ targetNode, selectedNodes }) => [
       <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
-      <FilterAction key="filter" node={targetNode} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
-      <RenameAction key="rename" node={targetNode} />,
+      <TreeNodeFilterAction key="filter" node={targetNode} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
+      <TreeNodeRenameAction key="rename" node={targetNode} />,
     ],
     [onFilterClick, getHierarchyLevelDetails],
   );
-  const getMenuActions = useCallback<Required<TreeRendererProps>["getMenuActions"]>(({ targetNode }) => [<RenameAction key="rename" node={targetNode} />], []);
+  const getMenuActions = useCallback<Required<TreeRendererProps>["getMenuActions"]>(
+    ({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />],
+    [],
+  );
   const getContextMenuActions = useCallback<Required<TreeRendererProps>["getContextMenuActions"]>(
     ({ targetNode, selectedNodes }) => [
       <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
-      <FilterAction key="filter" node={targetNode} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
-      <RenameAction key="rename" node={targetNode} />,
+      <TreeNodeFilterAction key="filter" node={targetNode} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
+      <TreeNodeRenameAction key="rename" node={targetNode} />,
     ],
     [onFilterClick, getHierarchyLevelDetails],
   );

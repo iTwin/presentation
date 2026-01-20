@@ -28,8 +28,8 @@ import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
 import { ErrorItem, findPathToNode, FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
-import { RenameContextProvider, useNodeRenameContextValue } from "./RenameAction.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
+import { TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./TreeNodeRenameAction.js";
 import { PlaceholderNode, StrataKitTreeItemProps, StrataKitTreeNodeRenderer, TreeNodeRendererProps } from "./TreeNodeRenderer.js";
 
 /** @alpha */
@@ -54,8 +54,10 @@ interface TreeRendererOwnProps {
     onLabelChanged?: (newLabel: string) => void;
   };
 
+  /** Custom props for the root Tree component. */
   treeRootProps?: Partial<Omit<ComponentProps<typeof Tree.Root>, "style">>;
 
+  /** A callback that returns tree item props for specific node. */
   getTreeItemProps?: (node: PresentationHierarchyNode) => Partial<Omit<StrataKitTreeItemProps, "selected" | "aria-level" | "aria-posinset" | "aria-setsize">>;
 
   /**
@@ -172,7 +174,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
     scrollToNode.current = undefined;
   }, [flatItems, virtualizer]);
 
-  const renameContext = useNodeRenameContextValue({
+  const renameContext = useTreeNodeRenameContextValue({
     getEditingProps,
   });
 
@@ -228,7 +230,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
           {...treeRootProps}
           style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative", overflow: "hidden" }}
         >
-          <RenameContextProvider value={renameContext}>
+          <TreeNodeRenameContextProvider value={renameContext}>
             {items.map((virtualizedItem) => {
               const item = flatItems[virtualizedItem.index];
               const selected = isNodeSelected?.(item.id) ?? false;
@@ -252,7 +254,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
                 />
               );
             })}
-          </RenameContextProvider>
+          </TreeNodeRenameContextProvider>
         </Tree.Root>
       </div>
     </LocalizationContextProvider>

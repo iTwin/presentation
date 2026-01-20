@@ -10,8 +10,8 @@ export { useNodeHighlighting } from "./presentation-hierarchies-react/UseNodeHig
 export { HierarchyLevelDetails, TreeRendererProps } from "./presentation-hierarchies-react/Renderers.js";
 export { useIModelTree, useIModelUnifiedSelectionTree } from "./presentation-hierarchies-react/UseIModelTree.js";
 export { TreeActionBase, TreeActionBaseAttributes } from "./presentation-hierarchies-react/stratakit/TreeAction.js";
-export { FilterAction } from "./presentation-hierarchies-react/stratakit/FilterAction.js";
-export { RenameAction } from "./presentation-hierarchies-react/stratakit/RenameAction.js";
+export { TreeNodeFilterAction } from "./presentation-hierarchies-react/stratakit/TreeNodeFilterAction.js";
+export { TreeNodeRenameAction } from "./presentation-hierarchies-react/stratakit/TreeNodeRenameAction.js";
 export { StrataKitTreeRenderer, StrataKitTreeRendererAttributes } from "./presentation-hierarchies-react/stratakit/TreeRenderer.js";
 export { StrataKitRootErrorRenderer } from "./presentation-hierarchies-react/stratakit/RootErrorRenderer.js";
 export { TreeErrorRenderer } from "./presentation-hierarchies-react/stratakit/TreeErrorRenderer.js";
