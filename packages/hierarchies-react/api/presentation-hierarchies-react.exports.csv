@@ -2,13 +2,11 @@ sep=;
 Release Tag;API Item Type;API Item Name
 public;type;ErrorInfo
 alpha;function;ErrorItemRenderer
-alpha;const;FilterAction
 alpha;type;FlatTreeItem
 public;interface;GenericErrorInfo
 public;interface;HierarchyLevelDetails
 public;function;LocalizationContextProvider
 public;interface;PresentationHierarchyNode
-alpha;const;RenameAction
 public;interface;ResultSetTooLargeErrorInfo
 alpha;function;StrataKitRootErrorRenderer
 alpha;const;StrataKitTreeRenderer
@@ -16,6 +14,8 @@ alpha;interface;StrataKitTreeRendererAttributes
 alpha;const;TreeActionBase
 alpha;interface;TreeActionBaseAttributes
 alpha;function;TreeErrorRenderer
+alpha;const;TreeNodeFilterAction
+alpha;const;TreeNodeRenameAction
 alpha;type;TreeRendererProps
 alpha;function;useErrorList
 alpha;function;useFlatTreeItems
