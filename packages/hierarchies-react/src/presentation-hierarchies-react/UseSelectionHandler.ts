@@ -39,13 +39,11 @@ type UseSelectionHandlerProps = Pick<TreeRendererProps, "selectNodes" | "rootNod
 
 /**
  * Result of `useSelectionHandler` hook.
- * @public
+ * @internal
  */
 interface UseSelectionHandlerResult {
   /** Should be called by node renderer when a node component is clicked. */
-  onNodeClick: (node: TreeNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
-  /** Should be called by node renderer when a keyboard event happens on a node. */
-  onNodeKeyDown: (node: TreeNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+  handleNodeSelect: (props: { nodeId: string; isSelected: boolean; shiftDown: boolean; ctrlDown: boolean }) => void;
 }
 
 interface FlatTreeState {
@@ -55,7 +53,7 @@ interface FlatTreeState {
 
 /**
  * A react hook that helps implement different selection modes in a tree component created using `useTree` hook.
- * @public
+ * @internal
  */
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult {
   const { rootNodes, selectionMode, selectNodes } = props;
@@ -84,8 +82,8 @@ export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelecti
     return state.current.flatNodeList.slice(startingIndex, endIndex + 1);
   };
 
-  const onNodeSelect = useCallback(
-    (nodeId: string, isSelected: boolean, shiftDown: boolean, ctrlDown: boolean) => {
+  const handleNodeSelect = useCallback<UseSelectionHandlerResult["handleNodeSelect"]>(
+    ({ nodeId, isSelected, shiftDown, ctrlDown }) => {
       const selection = getSelectionAction(selectionMode, isSelected, shiftDown, ctrlDown);
       if (selection.type === "disabled") {
         return;
@@ -102,23 +100,7 @@ export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelecti
     [selectionMode, selectNodes],
   );
 
-  const onNodeClick = useCallback(
-    (node: TreeNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => {
-      return onNodeSelect(node.id, isSelected, event.shiftKey, event.ctrlKey);
-    },
-    [onNodeSelect],
-  );
-
-  const onNodeKeyDown = useCallback(
-    (node: TreeNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => {
-      if (event.key === " " || event.key === "Spacebar" || event.key === "Enter") {
-        return onNodeSelect(node.id, isSelected, event.shiftKey, event.ctrlKey);
-      }
-    },
-    [onNodeSelect],
-  );
-
-  return { onNodeClick, onNodeKeyDown };
+  return { handleNodeSelect };
 }
 
 interface SelectionAction {
@@ -131,9 +113,9 @@ function getSelectionAction(selectionMode: SelectionMode, isSelected: boolean, s
     case "none":
       return { select: "node", type: "disabled" };
     case "single":
-      return { select: "node", type: isSelected ? "replace" : "remove" };
+      return { select: "node", type: isSelected ? "remove" : "replace" };
     case "multiple":
-      return { select: "node", type: isSelected ? "add" : "remove" };
+      return { select: "node", type: isSelected ? "remove" : "add" };
     case "extended":
       return getExtendedSelectionAction(isSelected, shiftDown, ctrlDown);
   }
@@ -144,7 +126,7 @@ function getExtendedSelectionAction(isSelected: boolean, shiftDown: boolean, ctr
     return { select: "range", type: "replace" };
   }
   if (ctrlDown) {
-    return { select: "node", type: isSelected ? "add" : "remove" };
+    return { select: "node", type: isSelected ? "remove" : "add" };
   }
   return { select: "node", type: "replace" };
 }

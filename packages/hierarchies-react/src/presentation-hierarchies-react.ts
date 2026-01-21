@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 export { GenericErrorInfo, TreeNode, ErrorInfo, ResultSetTooLargeErrorInfo } from "./presentation-hierarchies-react/TreeNode.js";
-export { useSelectionHandler } from "./presentation-hierarchies-react/UseSelectionHandler.js";
 export { useTree, useUnifiedSelectionTree } from "./presentation-hierarchies-react/UseTree.js";
 export { useNodeHighlighting } from "./presentation-hierarchies-react/UseNodeHighlighting.js";
 export { HierarchyLevelDetails, TreeRendererProps } from "./presentation-hierarchies-react/Renderers.js";

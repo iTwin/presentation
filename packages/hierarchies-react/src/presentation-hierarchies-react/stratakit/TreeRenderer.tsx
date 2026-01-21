@@ -119,7 +119,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
     getMenuActions,
     getTreeItemProps,
   } = props;
-  const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
+  const { handleNodeSelect } = useSelectionHandler({
     rootNodes,
     selectNodes: selectNodes ?? noopSelectNodes,
     selectionMode: selectionMode ?? "single",
@@ -255,8 +255,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
                   selected={selected}
                   expandNode={expandNode}
                   reloadTree={reloadTree}
-                  onNodeClick={onNodeClick}
-                  onNodeKeyDown={onNodeKeyDown}
+                  handleNodeSelect={handleNodeSelect}
                   getSelectedNodes={getSelectedNodes}
                   getContextMenuActions={getContextMenuActions}
                   getInlineActions={getInlineActions}
@@ -306,11 +305,11 @@ type HierarchyNodeItemProps = {
   getSelectedNodes: () => TreeNode[];
 } & Pick<TreeNodeRendererProps, "expandNode" | "reloadTree" | "selected"> &
   Pick<TreeRendererOwnProps, "getContextMenuActions" | "getInlineActions" | "getMenuActions" | "getTreeItemProps"> &
-  Pick<ReturnType<typeof useSelectionHandler>, "onNodeClick" | "onNodeKeyDown">;
+  Pick<ReturnType<typeof useSelectionHandler>, "handleNodeSelect">;
 
 const HierarchyNodeItem = memo(
   forwardRef<HTMLElement, HierarchyNodeItemProps>(function HierarchyNodeItem(
-    { item, selected, getTreeItemProps, onNodeClick, onNodeKeyDown, getSelectedNodes, getMenuActions, getInlineActions, getContextMenuActions, ...rest },
+    { item, selected, getTreeItemProps, handleNodeSelect, getSelectedNodes, getMenuActions, getInlineActions, getContextMenuActions, ...rest },
     forwardedRef,
   ) {
     const nodeRef = useRef<HTMLElement>(null);
@@ -331,20 +330,11 @@ const HierarchyNodeItem = memo(
       if (treeItemProps?.onClick) {
         treeItemProps.onClick(e);
       }
-      if (isDisabled) {
+      // ignore if this is double click
+      if (isDisabled || e.detail > 1) {
         return;
       }
-      onNodeClick?.(node, !selected, e);
-    });
-    const onKeyDown = useEvent<Required<TreeNodeRendererProps>["onKeyDown"]>((e) => {
-      if (treeItemProps?.onKeyDown) {
-        treeItemProps.onKeyDown(e);
-      }
-      // Ignore if it is called on the element inside, e.g. checkbox or expander
-      if (isDisabled || e.target !== nodeRef.current) {
-        return;
-      }
-      onNodeKeyDown?.(node, !selected, e);
+      handleNodeSelect({ nodeId: node.id, isSelected: selected ?? false, shiftDown: e.shiftKey, ctrlDown: e.ctrlKey });
     });
 
     const ref = useMergedRefs(forwardedRef, nodeRef);
@@ -360,7 +350,6 @@ const HierarchyNodeItem = memo(
         node={item.node}
         selected={selected}
         onClick={onClick}
-        onKeyDown={onKeyDown}
       />
     );
   }),
