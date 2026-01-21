@@ -10,7 +10,7 @@ import { TreeNode } from "../TreeNode.js";
  * Placeholder item that is added to hierarchy as a child for a parent item while its child items are loading.
  *
  * @alpha
- * */
+ */
 interface FlatPlaceholderItem {
   id: string;
   level: number;
@@ -35,10 +35,9 @@ export interface FlatTreeNodeItem {
  * Returned by `useErrorList`.
  *
  * @alpha
- * */
+ */
 export interface ErrorItem {
   errorNode: TreeNode & Pick<Required<TreeNode>, "error">;
-  expandTo: (expandNode: (nodeId: string) => void) => void;
 }
 
 /**
@@ -93,12 +92,12 @@ export function useErrorList(rootNodes: TreeNode[]): ErrorItem[] {
     () =>
       rootNodes.flatMap((rootNode) => {
         if (isErrorNode(rootNode)) {
-          return [{ errorNode: rootNode, expandTo: (expandNode) => expandTo(expandNode, []) }];
+          return [{ errorNode: rootNode }];
         }
         if (rootNode.children === true) {
           return [];
         }
-        return getErrorItems(rootNode, !rootNode.isExpanded ? [rootNode.id] : []);
+        return getErrorItems(rootNode);
       }),
     [rootNodes],
   );
@@ -120,31 +119,26 @@ export function findPathToNode(rootNodes: TreeNode[], predicate: (node: TreeNode
   return undefined;
 }
 
-function getErrorItems(parent: TreeNode, path: string[]) {
+function getErrorItems(parent: TreeNode) {
   const errorList: ErrorItem[] = [];
 
   if (parent.children === true) {
     return [];
   }
 
-  const pathToChild = [...path, ...(!parent.isExpanded ? [parent.id] : [])];
   parent.children.forEach((node) => {
     if (isErrorNode(node)) {
-      errorList.push({ errorNode: node, expandTo: (expandNode) => expandTo(expandNode, path) });
+      errorList.push({ errorNode: node });
       return;
     }
 
     if (node.children !== true) {
-      const childErrorList = getErrorItems(node, pathToChild);
+      const childErrorList = getErrorItems(node);
       errorList.push(...childErrorList);
       return;
     }
   });
   return errorList;
-}
-
-function expandTo(expandNode: (nodeId: string) => void, path: string[]) {
-  path.forEach((nodeId) => expandNode(nodeId));
 }
 
 function isErrorNode(node: TreeNode): node is TreeNode & Pick<Required<TreeNode>, "error"> {

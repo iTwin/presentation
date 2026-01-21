@@ -54,12 +54,10 @@ export type ErrorInfo = GenericErrorInfo | ResultSetTooLargeErrorInfo | NoFilter
 interface ErrorItem {
     // (undocumented)
     errorNode: TreeNode & Pick<Required<TreeNode>, "error">;
-    // (undocumented)
-    expandTo: (expandNode: (nodeId: string) => void) => void;
 }
 
 // @alpha
-export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, filterHierarchyLevel, reloadTree, scrollToElement }: ErrorItemRendererProps): JSX_2.Element;
+export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, filterHierarchyLevel, reloadTree, scrollToNode }: ErrorItemRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
@@ -69,7 +67,7 @@ interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLe
     reloadTree: (options: {
         parentNodeId: string | undefined;
     }) => void;
-    scrollToElement: (errorNode: ErrorItem) => void;
+    scrollToNode: (errorNode: TreeNode) => void;
 }
 
 // @alpha

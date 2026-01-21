@@ -16,8 +16,8 @@ export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHier
   errorItem: ErrorItem;
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
   reloadTree: (options: { parentNodeId: string | undefined }) => void;
-  /** A callback to scroll to the element associated with the error. */
-  scrollToElement: (errorNode: ErrorItem) => void;
+  /** A callback to scroll to the node associated with the error. */
+  scrollToNode: (errorNode: TreeNode) => void;
   /** A callback to initiate filtering of the given hierarchy level. */
   filterHierarchyLevel?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
 }
@@ -31,10 +31,10 @@ export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHier
  *
  * @alpha
  */
-export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, filterHierarchyLevel, reloadTree, scrollToElement }: ErrorItemRendererProps) {
+export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, filterHierarchyLevel, reloadTree, scrollToNode }: ErrorItemRendererProps) {
   const { localizedStrings } = useLocalizationContext();
 
-  const { errorNode, expandTo } = errorItem;
+  const { errorNode } = errorItem;
   if (errorNode.error.type === "ResultSetTooLarge") {
     const limit = errorNode.error.resultSetSizeLimit;
     const onOverrideLimit = getHierarchyLevelDetails ? () => getHierarchyLevelDetails(errorNode.id)?.setSizeLimit(MAX_LIMIT_OVERRIDE) : undefined;
@@ -59,7 +59,7 @@ export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, filterH
           },
         ]}
         message={localizedStrings.resultLimitExceeded.replace("{{limit}}", limit.toString())}
-        scrollToElement={() => scrollToElement({ errorNode, expandTo })}
+        scrollToElement={() => scrollToNode(errorNode)}
       />
     );
   }
@@ -78,7 +78,7 @@ export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, filterH
           },
         ]}
         message={localizedStrings.noFilteredChildren}
-        scrollToElement={() => scrollToElement({ errorNode, expandTo })}
+        scrollToElement={() => scrollToNode(errorNode)}
       />
     );
   }
@@ -94,12 +94,12 @@ export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, filterH
           },
         ]}
         message={localizedStrings.failedToCreateHierarchy}
-        scrollToElement={() => scrollToElement({ errorNode, expandTo })}
+        scrollToElement={() => scrollToNode(errorNode)}
       />
     );
   }
 
-  return <ErrorItemContainer errorNode={errorNode} message={errorNode.error.message} scrollToElement={() => scrollToElement({ errorNode, expandTo })} />;
+  return <ErrorItemContainer errorNode={errorNode} message={errorNode.error.message} scrollToElement={() => scrollToNode(errorNode)} />;
 }
 
 type ErrorItemContainerProps = {
