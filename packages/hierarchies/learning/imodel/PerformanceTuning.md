@@ -27,38 +27,3 @@ Then creating a query reader through a limiting query executor, it's possible to
 The hierarchy provider heavily relies on `ECClassHierarchyInspector` for checking if one ECClass derives from another. In some cases, the checks are done so often, that it could become a performance problem.
 
 For that reason, the `@itwin/presentation-shared` delivers the [`createCachingECClassHierarchyInspector`](https://github.com/iTwin/presentation/blob/master/packages/shared/README.md#ecclasshierarchyinspector--createcachingecclasshierarchyinspector) factory function, which creates an inspector with caching capability. As with all caches, there's a tradeoff of memory consumption VS performance, so the cache size should be limited. The cache size defaults to `0`, but we recommend using at around `100` for most cases.
-
-## Caching iModels' schema contexts
-
-[SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/) and related APIs are outside the scope of this library, but this topic is so important that it's worth mentioning here too.
-
-To create a hierarchy provider, the `createIModelHierarchyProvider` function requires an `imodelAccess` prop, part of which is the `ECSchemaProvider` interface. In majority of cases, the [`createECSchemaProvider`](https://github.com/iTwin/presentation/blob/master/packages/core-interop/README.md#createECSchemaProvider) function will be used to create it from a given `SchemaContext`. The context is responsible for storing (aka caching) all the previously requested schemas, so it's important that only one schema context is used for a single iModel across the whole application, or otherwise the memory consumption will grow and the performance will degrade (pulling schema information from the backend may be expensive).
-
-Sadly, iTwin.js framework doesn't provide a convenient way to retrieve a `SchemaContext` for an `IModelConnection` or `IModelDb`, so it's up to the application to manage it. Our suggested approach looks like this:
-
-<!-- [[include: [Presentation.Hierarchies.PerformanceTuning.Imports, Presentation.Hierarchies.PerformanceTuning.CachingSchemaContexts], ts]] -->
-<!-- BEGIN EXTRACTION -->
-
-```ts
-import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-
-const schemaContextsCache = new Map<string, SchemaContext>();
-function getSchemaContext(imodel: IModelConnection) {
-  const context = schemaContextsCache.get(imodel.key);
-  if (context) {
-    return context;
-  }
-
-  const newContext = new SchemaContext();
-  newContext.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-  schemaContextsCache.set(imodel.key, newContext);
-
-  imodel.onClose.addListener(() => schemaContextsCache.delete(imodel.key));
-
-  return newContext;
-}
-```
-
-<!-- END EXTRACTION -->

@@ -5,9 +5,7 @@
 // /* eslint-disable no-duplicate-imports */
 
 // import { expect } from "chai";
-// import { SchemaContext } from "@itwin/ecschema-metadata";
 // import { IModelConnection } from "@itwin/core-frontend";
-// import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 // import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 // import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 // import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
@@ -64,9 +62,7 @@
 //             insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
 //           })
 //         ).imodel;
-//         const context = new SchemaContext();
-//         context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-//         const schemaProvider = createECSchemaProvider(context);
+//         const schemaProvider = createECSchemaProvider(imodel.schemaContext);
 //         access = {
 //           imodelKey: createIModelKey(imodel),
 //           ...schemaProvider,

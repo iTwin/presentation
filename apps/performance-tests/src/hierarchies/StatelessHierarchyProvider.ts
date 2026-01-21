@@ -5,8 +5,6 @@
 
 import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
-import { BeDuration } from "@itwin/core-bentley";
-import { Schema, SchemaContext, SchemaJsonLocater, SchemaKey, SchemaMatchType, SchemaPropsGetter } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
   createIModelHierarchyProvider,
@@ -95,13 +93,6 @@ export class StatelessHierarchyProvider {
     });
   }
 
-  private static createECSchemaProvider(iModel: IModelDb) {
-    const schemas = new SchemaContext();
-    const locater = new AsyncSchemaJsonLocater((schemaName) => iModel.getSchemaProps(schemaName));
-    schemas.addLocater(locater);
-    return createECSchemaProvider(schemas);
-  }
-
   private createProvider() {
     const imodelAccess =
       "iModel" in this._props ? StatelessHierarchyProvider.createIModelAccess(this._props.iModel, this._props.rowLimit) : this._props.imodelAccess;
@@ -114,7 +105,7 @@ export class StatelessHierarchyProvider {
   }
 
   public static createIModelAccess(iModel: IModelDb, rowLimit?: number | "unbounded"): IModelAccess {
-    const schemaProvider = this.createECSchemaProvider(iModel);
+    const schemaProvider = createECSchemaProvider(iModel.schemaContext);
     const rowLimitToUse = rowLimit ?? DEFAULT_ROW_LIMIT;
     const imodelAccess = {
       imodelKey: iModel.key,
@@ -128,26 +119,4 @@ export class StatelessHierarchyProvider {
 
 function getNodeDepth(node: HierarchyNode): number {
   return node.parentKeys.length + 1;
-}
-
-class AsyncSchemaJsonLocater extends SchemaJsonLocater {
-  #_getSchema: SchemaPropsGetter;
-  public constructor(getSchema: SchemaPropsGetter) {
-    super(getSchema);
-    this.#_getSchema = getSchema;
-  }
-  public override async getSchema<T extends Schema>(
-    schemaKey: Readonly<SchemaKey>,
-    _matchType: SchemaMatchType,
-    context: SchemaContext,
-  ): Promise<T | undefined> {
-    const schemaProps = this.#_getSchema(schemaKey.name);
-    if (!schemaProps) {
-      return undefined;
-    }
-
-    await BeDuration.wait(0);
-    const schema = await Schema.fromJson(schemaProps, context);
-    return schema as T;
-  }
 }
