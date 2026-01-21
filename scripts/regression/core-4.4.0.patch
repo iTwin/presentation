@@ -21,7 +21,7 @@ index 4282b2d9..6761fbdc 100644
          const bindingIndex = i + 1;
          switch (typeof value) {
 @@ -118,7 +118,7 @@ export class ECDbBuilder {
-
+ 
    public insertInstance(fullClassName: string, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
      const query = this.createInsertQuery(fullClassName, props);
 -    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
@@ -80,7 +80,7 @@ index 497eb88e..7cef9c80 100644
 @@ -29,111 +26,6 @@ describe("Property editors", () => {
      await terminate();
    });
-
+ 
 -  afterEach(() => {
 -    IModelApp.resetFormatsProvider();
 -  });
@@ -189,6 +189,86 @@ index 497eb88e..7cef9c80 100644
    it("edits merged values", async function () {
      const { imodel, schema, ...imodelKeys } = await buildIModel(this, async (builder, mochaContext) => {
        const mySchema = await importSchema(
+diff --git a/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts b/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts
+index eb48a47c..86433d78 100644
+--- a/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts
++++ b/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts
+@@ -15,7 +15,7 @@ import * as sinon from "sinon";
+ import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+ import { PropertyCategory } from "@itwin/components-react";
+ import { assert } from "@itwin/core-bentley";
+-import { ArrayPropertiesField, combineFieldNames, InstanceKey, KeySet, PropertiesField, RuleTypes, StructPropertiesField } from "@itwin/presentation-common";
++import { combineFieldNames, InstanceKey, KeySet, PropertiesField, RuleTypes } from "@itwin/presentation-common";
+ import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider, PresentationPropertyDataProviderProps } from "@itwin/presentation-components";
+ import { Presentation } from "@itwin/presentation-frontend";
+ import { buildTestIModel } from "@itwin/presentation-testing";
+@@ -323,7 +323,8 @@ describe("PropertyDataProvider", async () => {
+   runTests("with flat property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = false));
+   runTests("with nested property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = true));
+ 
+-  it("finds array item & struct member fields", async function () {
++  // requires iTwin.js@5.6
++  it.skip("finds array item & struct member fields", async function () {
+     const { imodel, ...keys } = await buildIModel(this, async (builder, mochaContext) => {
+       const schema = await importSchema(
+         mochaContext,
+@@ -449,15 +450,6 @@ describe("PropertyDataProvider", async () => {
+       name: "[*]",
+       label: "ArrayProperty",
+     });
+-    expect(arrayItemField.parentArrayField)
+-      .to.be.instanceOf(ArrayPropertiesField)
+-      .and.to.containSubset({
+-        label: "ArrayProperty",
+-        type: {
+-          valueFormat: "Array",
+-          typeName: "string[]",
+-        },
+-      });
+ 
+     // test retrieving struct member field
+     const structRecord = properties.records["/selected-item/"].find((r) => r.property.name.endsWith("StructProperty"));
+@@ -467,15 +459,6 @@ describe("PropertyDataProvider", async () => {
+     expect(structMemberField).to.containSubset({
+       name: "StringMember",
+     });
+-    expect(structMemberField.parentStructField)
+-      .to.be.instanceOf(StructPropertiesField)
+-      .and.to.containSubset({
+-        label: "StructProperty",
+-        type: {
+-          valueFormat: "Struct",
+-          typeName: "TestStruct",
+-        },
+-      });
+ 
+     // test retrieving struct array member field
+     const structArrayRecord = properties.records["/selected-item/"].find((r) => r.property.name.endsWith("StructArrayProperty"));
+@@ -487,24 +470,6 @@ describe("PropertyDataProvider", async () => {
+     expect(structArrayMemberField).to.containSubset({
+       name: "StringMember",
+     });
+-    expect(structArrayMemberField.parentStructField)
+-      .to.be.instanceOf(StructPropertiesField)
+-      .and.to.containSubset({
+-        label: "StructArrayProperty",
+-        type: {
+-          valueFormat: "Struct",
+-          typeName: "TestStruct",
+-        },
+-      });
+-    expect((structArrayMemberField.parentStructField as StructPropertiesField).parentArrayField)
+-      .to.be.instanceOf(ArrayPropertiesField)
+-      .and.to.containSubset({
+-        label: "StructArrayProperty",
+-        type: {
+-          valueFormat: "Array",
+-          typeName: "TestStruct[]",
+-        },
+-      });
+   });
+ 
+   it("gets property data after re-initializing Presentation", async function () {
 diff --git a/apps/full-stack-tests/src/hierarchies/Formatting.test.ts b/apps/full-stack-tests/src/hierarchies/Formatting.test.ts
 index c84d13bd..bbcfc7af 100644
 --- a/apps/full-stack-tests/src/hierarchies/Formatting.test.ts
@@ -209,7 +289,7 @@ index c84d13bd..bbcfc7af 100644
  import { createValueFormatter } from "@itwin/presentation-core-interop";
  import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 @@ -466,8 +465,8 @@ describe("Hierarchies", () => {
-
+ 
      describe("Integer", () => {
        it("formats instance node labels", async function () {
 -        const { imodel, sheetIndexFolder } = await buildIModel(this, async (builder) => {
@@ -218,7 +298,7 @@ index c84d13bd..bbcfc7af 100644
 +          return { category: insertSpatialCategory({ builder, codeValue: "category", rank: Rank.Application }) };
          });
          const imodelAccess = createIModelAccess(imodel);
-
+ 
 @@ -480,7 +479,7 @@ describe("Hierarchies", () => {
              if (!parentNode) {
                return [
@@ -280,7 +360,7 @@ index 63947822..621c6df2 100644
  import { ContentBuilder, HierarchyBuilder, TestIModelConnection } from "@itwin/presentation-testing";
  import { initialize, terminate } from "../IntegrationTests.js";
 @@ -210,9 +209,6 @@ describe("RulesetTesting", () => {
-
+ 
      // set up for testing iModel presentation data
      iModel = TestIModelConnection.openFile(iModelPath);
 -
@@ -288,7 +368,7 @@ index 63947822..621c6df2 100644
 -    IModelApp.formatsProvider = new SchemaFormatsProvider(iModel.schemaContext, "metric");
      // __PUBLISH_EXTRACT_END__
    });
-
+ 
 diff --git a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap b/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
 index c2ba40a4..6c2c3bc3 100644
 --- a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
@@ -2134,7 +2214,7 @@ index 7e79a37c..77b57aa3 100644
 @@ -483,18 +482,6 @@ export function insertGroupInformationElement(
    return { className, id };
  }
-
+ 
 -export function insertSheetIndexFolder(props: BaseInstanceInsertProps & Partial<Omit<SheetIndexFolderProps, "id" | "parent" | "code" | "model">>) {
 -  const { builder, ...elementProps } = props;
 -  const className = `BisCore${props.fullClassNameSeparator ?? "."}SheetIndexFolder`;

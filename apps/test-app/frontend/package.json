@@ -53,6 +53,7 @@
     "classnames": "catalog:react",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
+    "fast-xml-parser": "^5.3.3",
     "immer": "^10.2.0",
     "react": "catalog:react",
     "react-dom": "catalog:react",
@@ -60,10 +61,9 @@
     "rimraf": "catalog:build-tools",
     "rss-parser": "^3.13.0",
     "rxjs": "catalog:rxjs",
-    "sass": "^1.97.1",
+    "sass": "^1.97.2",
     "typescript": "catalog:build-tools",
     "vite": "^6.4.1",
-    "vite-plugin-node-polyfills": "^0.23.0",
     "vite-plugin-static-copy": "^2.3.2"
   }
 }

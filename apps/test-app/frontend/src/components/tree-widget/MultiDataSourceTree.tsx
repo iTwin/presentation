@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { XMLParser } from "fast-xml-parser";
 import { ComponentPropsWithoutRef, ReactElement, useCallback, useEffect, useMemo, useState } from "react";
-import RssParser from "rss-parser";
 import { debounceTime, Subject } from "rxjs";
-import { BeEvent, Guid, Id64String } from "@itwin/core-bentley";
+import { BeEvent, Guid, GuidString, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgFolder, SvgGlobe, SvgImodelHollow, SvgItem, SvgModel } from "@itwin/itwinui-icons-react";
 import { Flex, ProgressRadial, SearchBox, Text } from "@itwin/itwinui-react";
@@ -431,14 +431,15 @@ function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
   return undefined;
 }
 
-function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (searchText: string) => Promise<HierarchySearchPath[]> } {
-  let feedPromise: ReturnType<RssParser["parseURL"]> | undefined;
+function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (filter: string) => Promise<HierarchySearchPath[]> } {
+  let feedPromise: Promise<{ title?: string; items: Array<{ title?: string; guid: GuidString }> }> | undefined;
   async function getFeed() {
     if (!feedPromise) {
       // ideally we'd fetch straight from medium, but use our backend as means to avoid CORS
       feedPromise = SampleRpcInterface.getClient()
         .getRssFeed({ url: "https://medium.com/feed/itwinjs" })
-        .then(async (xml) => new RssParser().parseString(xml));
+        .then(async (xml) => new XMLParser().parse(xml))
+        .then((json) => ({ title: json.rss.channel.title, items: json.rss.channel.item }));
     }
     const feed = await feedPromise;
     return feed;
@@ -463,7 +464,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (se
         if ((item.title ?? "<no title>").toLocaleLowerCase().includes(searchText.toLocaleLowerCase())) {
           paths.push([
             { type: "generic", id: "rss-root", source: "rss" },
-            { type: "generic", id: `rss-${item.guid!}`, source: "rss" },
+            { type: "generic", id: `rss-${item.guid}`, source: "rss" },
           ]);
         }
       });
@@ -494,7 +495,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (se
           let count = 0;
           for (const item of feed.items) {
             yield {
-              key: { type: "generic", id: `rss-${item.guid!}`, source: "rss" },
+              key: { type: "generic", id: `rss-${item.guid}`, source: "rss" },
               label: item.title ?? "<no title>",
               parentKeys: [parentNode.key],
               children: false,
