@@ -1,5 +1,17 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.9.10
+
+### Patch Changes
+
+- [#1168](https://github.com/iTwin/presentation/pull/1168): Bump dependencies.
+- [#1167](https://github.com/iTwin/presentation/pull/1167): Fix a greedy regular expression in `TreeNodeRenderer` that renders a "result set too large" error node.
+- [#1161](https://github.com/iTwin/presentation/pull/1161): Bump iTwin.js dependencies to `^5.5.0`.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.8
+  - @itwin/presentation-shared@1.2.7
+  - @itwin/unified-selection@1.6.5
+
 ## 1.9.9
 
 ### Patch Changes

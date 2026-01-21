@@ -1,5 +1,25 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.17
+
+### Patch Changes
+
+- [#1168](https://github.com/iTwin/presentation/pull/1168): Bump dependencies.
+- [#1161](https://github.com/iTwin/presentation/pull/1161): Bump iTwin.js dependencies to `^5.5.0`.
+- [#1177](https://github.com/iTwin/presentation/pull/1177): Fix quantity editor displaying placeholder instead of actual values when always displaying editors.
+  - The editor now correctly displays 0 as the actual value instead of showing the placeholder.
+  - The editor now correctly displays an empty value for multiple node selections instead of showing the placeholder.
+
+- [#1161](https://github.com/iTwin/presentation/pull/1161): Fix `ContentDataProvider.getFieldByPropertyDescription` not finding array item and struct member fields.
+
+  The fix requires the `@itwin/presentation-common` peer dependency to be at least version `5.6.0`.
+
+- Updated dependencies:
+  - @itwin/presentation-core-interop@1.3.8
+  - @itwin/presentation-shared@1.2.7
+  - @itwin/unified-selection@1.6.5
+  - @itwin/unified-selection-react@1.0.5
+
 ## 5.12.16
 
 ### Patch Changes
