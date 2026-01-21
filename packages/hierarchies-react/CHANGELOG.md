@@ -1,5 +1,75 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.49
+
+### Major Changes
+
+- [#1166](https://github.com/iTwin/presentation/pull/1166): Added ability to enter node rename mode programmatically through `StrataKitTreeRenderer` ref. The `renameNode` method accepts a predicate function to identify the target node. If the node is not visible (because its parent is collapsed), all parents will be expanded automatically to make it visible and the node will be scrolled into view.
+
+  Example:
+
+  ```tsx
+  import { StrataKitTreeRenderer, StrataKitTreeRendererAttributes } from "@itwin/presentation-hierarchies-react";
+
+  function MyTree() {
+    const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
+
+    return (
+      <>
+        <div className="tree-header">
+          <button
+            onClick={() => {
+              treeRef.current?.renameNode((node) => node.label === "Node to rename");
+            }}
+          >
+            Rename node
+          </button>
+        </div>
+        <StrataKitTreeRenderer ref={treeRef} />
+      </>
+    );
+  }
+  ```
+
+  **Breaking changes**
+  - `StrataKitTreeNodeRenderer` is no longer exported.
+  - `RenameContextProvider` is no longer exported. It is not necessary when using `StrataKitTreeRenderer`.
+  - `RenameAction` now requires a `node` prop.
+
+- [#1179](https://github.com/iTwin/presentation/pull/1179): **Breaking change:** Rename tree node action components for clarity.
+  - `FilterAction` -> `TreeNodeFilterAction`
+  - `RenameAction` -> `TreeNodeRenameAction`
+
+- [#1178](https://github.com/iTwin/presentation/pull/1178): Updated tree node rename UI to show input in popover instead of inline. Additionally added ability to show hint for supported characters and validate new label.
+
+  Example:
+
+  ```tsx
+  type TreeRendererProps = ComponentProps<typeof StrataKitTreeRenderer>;
+
+  const getEditingProps = useCallback<Required<TreeRendererProps>["getEditingProps"]>((node) => {
+    return {
+      onLabelChanged: (newLabel: string) => {
+        // Handle label change
+      },
+      labelValidationHint: `Allowed are A to Z, 0 to 9, "-" and "_"`,
+      validate: (newLabel: string) => /^[A-Za-z0-9\- ]+$/.test(newLabel),
+    };
+  }, []);
+
+  return <StrataKitTreeRenderer {...treeProps} getEditingProps={getEditingProps} />;
+  ```
+
+  **Breaking changes**
+  - `getEditingProps` callback was changed to require `onLabelChanged`. If node does not support renaming `getEditingProps` should return `undefined`.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.10
+  - @itwin/presentation-shared@2.0.0-alpha.6
+  - @itwin/unified-selection@1.6.6-alpha.0
+
 ## 2.0.0-alpha.48
 
 ### Minor Changes
