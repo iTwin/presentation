@@ -255,16 +255,7 @@ export interface TreeActionBaseAttributes {
 type TreeActionBaseProps = ComponentProps<typeof Tree.ItemAction> & TreeActionBaseAttributes;
 
 // @alpha
-interface TreeErrorItemProps {
-    onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
-    reloadTree: (options: {
-        parentNodeId: string | undefined;
-    }) => void;
-    scrollToElement: (errorNode: ErrorItem) => void;
-}
-
-// @alpha
-export function TreeErrorRenderer({ treeLabel, errorList, reloadTree, scrollToElement, getHierarchyLevelDetails, onFilterClick, renderError, }: TreeErrorRendererProps): JSX_2.Element;
+export function TreeErrorRenderer({ treeLabel, errorList, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): JSX_2.Element;
 
 // @alpha
 interface TreeErrorRendererOwnProps {
@@ -274,7 +265,7 @@ interface TreeErrorRendererOwnProps {
 }
 
 // @alpha (undocumented)
-type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Pick<TreeRendererProps, "getHierarchyLevelDetails">;
+type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemRendererProps, "errorItem">;
 
 // @public
 export interface TreeNode {

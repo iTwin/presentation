@@ -5,24 +5,10 @@
 
 import { cloneElement, ReactElement } from "react";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
-import { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
 import { ErrorItemRenderer, ErrorItemRendererProps } from "./ErrorItemRenderer.js";
 import { ErrorItem } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
-/**
- * Interface containing error item related actions.
- *
- * @alpha
- */
-interface TreeErrorItemProps {
-  /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
-  reloadTree: (options: { parentNodeId: string | undefined }) => void;
-  /** Action to perform when the filter button is clicked for this node. */
-  onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
-  /** Action to perform when an error occurs and node label is clicked in the error message */
-  scrollToElement: (errorNode: ErrorItem) => void;
-}
 /**
  * Interface containing building blocks for `TreeErrorRenderer`.
  *
@@ -41,7 +27,7 @@ interface TreeErrorRendererOwnProps {
 }
 
 /** @alpha */
-export type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Pick<TreeRendererProps, "getHierarchyLevelDetails">;
+export type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemRendererProps, "errorItem">;
 
 /**
  * A component that renders error display dropdown using the `unstable_ErrorRegion` component from `@itwin/itwinui-react`.
@@ -49,23 +35,12 @@ export type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemPr
  *
  * @alpha
  */
-export function TreeErrorRenderer({
-  treeLabel,
-  errorList,
-  reloadTree,
-  scrollToElement,
-  getHierarchyLevelDetails,
-  onFilterClick,
-  renderError,
-}: TreeErrorRendererProps) {
+export function TreeErrorRenderer({ treeLabel, errorList, renderError, ...errorItemRendererProps }: TreeErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();
   const errorItems = errorList.map((errorItem) => {
     const errorRendererProps: ErrorItemRendererProps = {
       errorItem,
-      scrollToElement: () => scrollToElement(errorItem),
-      reloadTree,
-      getHierarchyLevelDetails,
-      onFilterClick,
+      ...errorItemRendererProps,
     };
 
     if (renderError) {
