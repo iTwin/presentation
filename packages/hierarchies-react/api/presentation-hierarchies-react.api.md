@@ -47,15 +47,6 @@ interface CommonRendererProps {
     reloadTree: (options?: ReloadTreeOptions) => void;
 }
 
-// @alpha (undocumented)
-interface EditingProps {
-    // (undocumented)
-    labelValidationHint?: string;
-    onLabelChanged: (newLabel: string) => void;
-    // (undocumented)
-    validate?: (newLabel: string) => boolean;
-}
-
 // @public
 export type ErrorInfo = GenericErrorInfo | ResultSetTooLargeErrorInfo | NoFilterMatchesErrorInfo | ChildrenLoadErrorInfo;
 
@@ -307,6 +298,15 @@ interface TreeErrorRendererOwnProps {
 // @alpha (undocumented)
 type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Pick<TreeRendererProps, "getHierarchyLevelDetails">;
 
+// @alpha (undocumented)
+interface TreeNodeEditingProps {
+    // (undocumented)
+    labelValidationHint?: string;
+    onLabelChanged: (newLabel: string) => void;
+    // (undocumented)
+    validate?: (newLabel: string) => boolean;
+}
+
 // @alpha
 export const TreeNodeFilterAction: NamedExoticComponent<    {
 onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
@@ -326,7 +326,7 @@ interface TreeRendererOwnProps {
         targetNode: PresentationHierarchyNode;
         selectedNodes: PresentationHierarchyNode[];
     }) => ReactNode[];
-    getEditingProps?: (node: PresentationHierarchyNode) => EditingProps | undefined;
+    getEditingProps?: (node: PresentationHierarchyNode) => TreeNodeEditingProps | undefined;
     getInlineActions?: (props: {
         targetNode: PresentationHierarchyNode;
         selectedNodes: PresentationHierarchyNode[];

@@ -41,8 +41,7 @@ export const TreeNodeRenameAction = memo(function TreeNodeRenameAction({
 export interface TreeNodeEditingProps {
   /**
    * A callback that is invoked when node label is changed. Should be used together
-   * with `<RenameAction />` to enter label editing mode. Node label is not editable
-   * when this is not supplied.
+   * with `<TreeNodeRenameAction />` to enter label editing mode.
    */
   onLabelChanged: (newLabel: string) => void;
   labelValidationHint?: string;
