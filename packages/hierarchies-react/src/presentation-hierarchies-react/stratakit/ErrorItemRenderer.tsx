@@ -15,7 +15,7 @@ import { useLocalizationContext } from "./LocalizationContext.js";
 export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
   errorItem: ErrorItem;
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
-  reloadTree: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
+  reloadTree: (options: { parentNodeId: string | undefined }) => void;
   /** Action to perform when an error occurs and node label is clicked in the error message */
   scrollToElement: (errorNode: ErrorItem) => void;
   /** Action to perform when the filter button is clicked for this node. */
@@ -88,7 +88,7 @@ export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, onFilte
         errorNode={errorNode}
         actions={[
           {
-            action: () => reloadTree({ parentNodeId: errorNode.id, state: "reset" }),
+            action: () => reloadTree({ parentNodeId: errorNode.id }),
             label: localizedStrings.retry,
             condition: () => true,
           },

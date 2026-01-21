@@ -218,7 +218,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
     scrollToElement,
     getHierarchyLevelDetails,
     onFilterClick,
-    reloadTree,
+    reloadTree: useCallback<TreeErrorRendererProps["reloadTree"]>(({ parentNodeId }) => reloadTree({ parentNodeId, state: "reset" }), [reloadTree]),
   };
 
   const getSelectedNodes = useMemo(() => {

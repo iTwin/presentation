@@ -17,7 +17,7 @@ import { useLocalizationContext } from "./LocalizationContext.js";
  */
 interface TreeErrorItemProps {
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
-  reloadTree: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
+  reloadTree: (options: { parentNodeId: string | undefined }) => void;
   /** Action to perform when the filter button is clicked for this node. */
   onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
   /** Action to perform when an error occurs and node label is clicked in the error message */

@@ -68,7 +68,6 @@ interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLe
     onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
     reloadTree: (options: {
         parentNodeId: string | undefined;
-        state: "reset";
     }) => void;
     scrollToElement: (errorNode: ErrorItem) => void;
 }
@@ -260,7 +259,6 @@ interface TreeErrorItemProps {
     onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
     reloadTree: (options: {
         parentNodeId: string | undefined;
-        state: "reset";
     }) => void;
     scrollToElement: (errorNode: ErrorItem) => void;
 }
