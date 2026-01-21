@@ -3,6 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import "./TreeNodeRenderer.css";
+
 import {
   cloneElement,
   ComponentPropsWithoutRef,
@@ -15,13 +17,16 @@ import {
   RefAttributes,
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
 } from "react";
-import { Spinner, TextBox } from "@stratakit/bricks";
+import { Description, IconButton, Spinner, Text, TextBox } from "@stratakit/bricks";
+import checkmarkSvg from "@stratakit/icons/checkmark.svg";
+import dismissSvg from "@stratakit/icons/dismiss.svg";
 import refreshSvg from "@stratakit/icons/refresh.svg";
-import { DropdownMenu, Tree } from "@stratakit/structures";
+import { DropdownMenu, unstable_Popover as Popover, Tree } from "@stratakit/structures";
 import { TreeRendererProps } from "../Renderers.js";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
@@ -118,60 +123,59 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
     }, [node.children, node.error, node.isExpanded]);
 
     const { renameParameters, cancelRename } = renameContext ?? {};
-    const labelEditor =
-      renameParameters?.nodeId === node.id ? (
-        <LabelEditor
-          initialLabel={node.label}
-          onChange={(newLabel) => {
-            renameParameters?.commit(newLabel);
-          }}
-          onCancel={() => {
-            cancelRename?.();
-          }}
-        />
-      ) : undefined;
+    const labelEditor = (
+      <LabelEditor
+        initialLabel={node.label}
+        onChange={renameParameters?.commit}
+        onCancel={cancelRename}
+        labelValidationHint={renameParameters?.labelValidationHint}
+        validate={renameParameters?.validate}
+      />
+    );
 
     return (
       <>
-        <Tree.Item
-          {...treeItemProps}
-          ref={forwardedRef}
-          label={labelEditor ?? label}
-          expanded={expanded}
-          onExpandedChange={useCallback(
-            (isExpanded: boolean) => {
-              expandNode(node.id, isExpanded);
-            },
-            [node, expandNode],
-          )}
-          inlineActions={inlineActionItems}
-          actions={menuActionItems}
-          unstable_decorations={decorations}
-          error={node.error ? node.error.id : undefined}
-          onContextMenu={(e) => {
-            if (treeItemProps.onContextMenu) {
-              treeItemProps.onContextMenu(e);
-            }
-
-            if (!contextMenuActions) {
-              return;
-            }
-
-            e.preventDefault();
-            const actions = injectActionVariant(contextMenuActions, "context-menu");
-            if (actions.length === 0) {
-              return;
-            }
-
-            setContextMenuProps({
-              position: {
-                x: e.clientX,
-                y: e.clientY,
+        <Popover content={labelEditor} placement="bottom" open={renameParameters?.nodeId === node.id} setOpen={cancelRename} unmountOnHide>
+          <Tree.Item
+            {...treeItemProps}
+            ref={forwardedRef}
+            label={label}
+            expanded={expanded}
+            onExpandedChange={useCallback(
+              (isExpanded: boolean) => {
+                expandNode(node.id, isExpanded);
               },
-              actions,
-            });
-          }}
-        />
+              [node, expandNode],
+            )}
+            inlineActions={inlineActionItems}
+            actions={menuActionItems}
+            unstable_decorations={decorations}
+            error={node.error ? node.error.id : undefined}
+            onContextMenu={(e) => {
+              if (treeItemProps.onContextMenu) {
+                treeItemProps.onContextMenu(e);
+              }
+
+              if (!contextMenuActions) {
+                return;
+              }
+
+              e.preventDefault();
+              const actions = injectActionVariant(contextMenuActions, "context-menu");
+              if (actions.length === 0) {
+                return;
+              }
+
+              setContextMenuProps({
+                position: {
+                  x: e.clientX,
+                  y: e.clientY,
+                },
+                actions,
+              });
+            }}
+          />
+        </Popover>
         <DropdownMenu.Provider
           open={contextMenuProps !== undefined}
           setOpen={(open) => {
@@ -216,20 +220,39 @@ export const PlaceholderNode: FC<
   }),
 );
 
-function LabelEditor({ initialLabel, onChange, onCancel }: { initialLabel: string; onChange: (newLabel: string) => void; onCancel: () => void }) {
+function LabelEditor({
+  initialLabel,
+  labelValidationHint,
+  onChange,
+  onCancel,
+  validate,
+}: {
+  initialLabel: string;
+  labelValidationHint?: string;
+  onChange?: (newLabel: string) => void;
+  onCancel?: () => void;
+  validate?: (newLabel: string) => boolean;
+}) {
+  const { localizedStrings } = useLocalizationContext();
   const inputRef = useRef<HTMLInputElement>(null);
   const [newLabelValue, setNewLabelValue] = useState(initialLabel);
+  const [hasError, setHasError] = useState<boolean>(false);
   const handleLabelChange = () => {
-    if (initialLabel !== newLabelValue) {
-      onChange(newLabelValue);
+    if (validate && !validate(newLabelValue)) {
+      setHasError(true);
       return;
     }
-    onCancel();
+
+    if (initialLabel !== newLabelValue) {
+      onChange?.(newLabelValue);
+      return;
+    }
+    onCancel?.();
   };
 
   const cancelLabelChange = () => {
     setNewLabelValue(initialLabel);
-    onCancel();
+    onCancel?.();
   };
 
   useEffect(() => {
@@ -239,22 +262,39 @@ function LabelEditor({ initialLabel, onChange, onCancel }: { initialLabel: strin
     }
   }, []);
 
+  const canRename = newLabelValue && newLabelValue !== initialLabel && !hasError;
+  const inputId = useId();
+
   return (
-    <TextBox.Root>
-      <TextBox.Input
-        ref={inputRef}
-        value={newLabelValue}
-        onChange={(event) => setNewLabelValue(event.target.value)}
-        onBlur={handleLabelChange}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            handleLabelChange();
-          } else if (event.key === "Escape") {
-            cancelLabelChange();
-          }
-        }}
-      />
-    </TextBox.Root>
+    <div key={initialLabel} className="phr-node-label-editor">
+      <div className="phr-node-label-editor-input-row">
+        <TextBox.Root style={{ width: "100%" }} className={hasError ? "with-error" : undefined}>
+          <TextBox.Input
+            id={inputId}
+            ref={inputRef}
+            value={newLabelValue}
+            onChange={(event) => {
+              setNewLabelValue(event.target.value);
+              setHasError(false);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                handleLabelChange();
+              } else if (event.key === "Escape") {
+                cancelLabelChange();
+              }
+            }}
+          />
+        </TextBox.Root>
+        <IconButton icon={dismissSvg} label={localizedStrings.cancel} onClick={cancelLabelChange} />
+        <IconButton icon={checkmarkSvg} label={localizedStrings.confirm} onClick={handleLabelChange} disabled={!canRename} />
+      </div>
+      {labelValidationHint !== undefined ? (
+        <Description id={inputId} tone={hasError ? "critical" : "neutral"} style={{ display: "flex" }}>
+          <Text variant="caption-lg">{labelValidationHint}</Text>
+        </Description>
+      ) : undefined}
+    </div>
   );
 }
 

@@ -105,6 +105,16 @@ export interface LocalizedStrings {
    * Default value: `More`.
    */
   more: string;
+  /**
+   * Label for confirm button.
+   * Default value: `Confirm`.
+   */
+  confirm: string;
+  /**
+   * Label for cancel button.
+   * Default value: `Cancel`.
+   */
+  cancel: string;
 }
 
 /** @internal */
@@ -132,6 +142,8 @@ const defaultLocalizedStrings: LocalizedStrings = {
   retry: "Retry",
   rename: "Rename",
   more: "More",
+  confirm: "Confirm",
+  cancel: "Cancel",
 };
 
 const localizationContext = createContext<LocalizationContext>({ localizedStrings: defaultLocalizedStrings });

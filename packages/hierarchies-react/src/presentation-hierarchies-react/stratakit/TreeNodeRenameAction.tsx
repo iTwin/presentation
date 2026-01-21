@@ -37,11 +37,27 @@ export const TreeNodeRenameAction = memo(function TreeNodeRenameAction({
   return <TreeActionBase {...actionAttributes} label={rename} onClick={handleClick} icon={renameSvg} hide={!canRename} />;
 });
 
+/** @alpha */
+export interface TreeNodeEditingProps {
+  /**
+   * A callback that is invoked when node label is changed. Should be used together
+   * with `<TreeNodeRenameAction />` to enter label editing mode.
+   */
+  onLabelChanged: (newLabel: string) => void;
+  labelValidationHint?: string;
+  validate?: (newLabel: string) => boolean;
+}
+
+/** @internal */
+export interface RenameParameters {
+  nodeId: string;
+  commit: (newLabel: string) => void;
+  labelValidationHint?: string;
+  validate?: (newLabel: string) => boolean;
+}
+
 interface TreeNodeRenameContext {
-  renameParameters?: {
-    nodeId: string;
-    commit: (newLabel: string) => void;
-  };
+  renameParameters?: RenameParameters;
   startRename: (node: PresentationHierarchyNode) => void;
   canRename: (node: PresentationHierarchyNode) => boolean;
   cancelRename: () => void;
@@ -63,13 +79,13 @@ export function TreeNodeRenameContextProvider({ value, children }: PropsWithChil
 export function useTreeNodeRenameContextValue({
   getEditingProps,
 }: {
-  getEditingProps?: (node: PresentationHierarchyNode) => { onLabelChanged?: (newLabel: string) => void };
+  getEditingProps?: (node: PresentationHierarchyNode) => TreeNodeEditingProps | undefined;
 }) {
-  const [renameParameters, setRenameParameters] = useState<{ nodeId: string; commit: (newLabel: string) => void } | undefined>(undefined);
+  const [renameParameters, setRenameParameters] = useState<RenameParameters | undefined>(undefined);
 
   const startRename = useCallback(
     (node: PresentationHierarchyNode) => {
-      const onLabelChanged = getEditingProps?.(node)?.onLabelChanged;
+      const { onLabelChanged, labelValidationHint, validate } = getEditingProps?.(node) ?? {};
       if (onLabelChanged) {
         setRenameParameters({
           nodeId: node.id,
@@ -77,6 +93,8 @@ export function useTreeNodeRenameContextValue({
             onLabelChanged(newLabel);
             setRenameParameters(undefined);
           },
+          labelValidationHint,
+          validate,
         });
       }
     },
