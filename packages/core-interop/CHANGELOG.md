@@ -1,5 +1,13 @@
 # @itwin/presentation-core-interop
 
+## 1.4.0-alpha.5
+
+### Patch Changes
+
+- [#1180](https://github.com/iTwin/presentation/pull/1180): Version bump
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.6
+
 ## 1.4.0-alpha.4
 
 ### Patch Changes
