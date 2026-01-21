@@ -16,10 +16,10 @@ export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHier
   errorItem: ErrorItem;
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
   reloadTree: (options: { parentNodeId: string | undefined }) => void;
-  /** Action to perform when an error occurs and node label is clicked in the error message */
+  /** A callback to scroll to the element associated with the error. */
   scrollToElement: (errorNode: ErrorItem) => void;
-  /** Action to perform when the filter button is clicked for this node. */
-  onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
+  /** A callback to initiate filtering of the given hierarchy level. */
+  filterHierarchyLevel?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
 }
 
 /**
@@ -31,7 +31,7 @@ export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHier
  *
  * @alpha
  */
-export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, onFilterClick, reloadTree, scrollToElement }: ErrorItemRendererProps) {
+export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, filterHierarchyLevel, reloadTree, scrollToElement }: ErrorItemRendererProps) {
   const { localizedStrings } = useLocalizationContext();
 
   const { errorNode, expandTo } = errorItem;
@@ -52,10 +52,10 @@ export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, onFilte
           {
             action: () => {
               const hierarchyLevelDetails = getHierarchyLevelDetails?.(errorNode.id);
-              hierarchyLevelDetails && onFilterClick?.(hierarchyLevelDetails);
+              hierarchyLevelDetails && filterHierarchyLevel?.(hierarchyLevelDetails);
             },
             label: localizedStrings.increaseHierarchyLimitWithFiltering,
-            condition: () => !!onFilterClick && !!errorNode?.isFilterable,
+            condition: () => !!filterHierarchyLevel && !!errorNode?.isFilterable,
           },
         ]}
         message={localizedStrings.resultLimitExceeded.replace("{{limit}}", limit.toString())}
@@ -71,7 +71,7 @@ export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, onFilte
           {
             action: () => {
               const hierarchyLevelDetails = getHierarchyLevelDetails?.(errorNode.id);
-              hierarchyLevelDetails && onFilterClick?.(hierarchyLevelDetails);
+              hierarchyLevelDetails && filterHierarchyLevel?.(hierarchyLevelDetails);
             },
             label: localizedStrings.noFilteredChildrenChangeFilter,
             condition: () => true,

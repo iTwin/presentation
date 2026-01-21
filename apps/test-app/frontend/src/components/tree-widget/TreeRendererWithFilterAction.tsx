@@ -26,7 +26,7 @@ export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttr
   props: TreeRendererProps,
   forwardedRef,
 ) {
-  const { getHierarchyLevelDetails, onFilterClick, ...treeProps } = props;
+  const { getHierarchyLevelDetails, filterHierarchyLevel, ...treeProps } = props;
   const nodesWithError = useMemo(() => {
     return mapNodesHierarchy(treeProps.rootNodes, (node) => {
       if (node.label.includes("[0-1M]") || node.label.includes("[0-1U]") || node.label.includes("[0-29]")) {
@@ -49,10 +49,10 @@ export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttr
   const getInlineActions = useCallback<Required<TreeRendererProps>["getInlineActions"]>(
     ({ targetNode, selectedNodes }) => [
       <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
-      <TreeNodeFilterAction key="filter" node={targetNode} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
+      <TreeNodeFilterAction key="filter" node={targetNode} onFilter={filterHierarchyLevel} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
       <TreeNodeRenameAction key="rename" node={targetNode} />,
     ],
-    [onFilterClick, getHierarchyLevelDetails],
+    [filterHierarchyLevel, getHierarchyLevelDetails],
   );
   const getMenuActions = useCallback<Required<TreeRendererProps>["getMenuActions"]>(
     ({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />],
@@ -61,10 +61,10 @@ export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttr
   const getContextMenuActions = useCallback<Required<TreeRendererProps>["getContextMenuActions"]>(
     ({ targetNode, selectedNodes }) => [
       <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
-      <TreeNodeFilterAction key="filter" node={targetNode} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
+      <TreeNodeFilterAction key="filter" node={targetNode} onFilter={filterHierarchyLevel} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
       <TreeNodeRenameAction key="rename" node={targetNode} />,
     ],
-    [onFilterClick, getHierarchyLevelDetails],
+    [filterHierarchyLevel, getHierarchyLevelDetails],
   );
 
   const getEditingProps = useCallback<Required<TreeRendererProps>["getEditingProps"]>((node) => {
@@ -88,7 +88,7 @@ export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttr
       getInlineActions={getInlineActions}
       getMenuActions={getMenuActions}
       getContextMenuActions={getContextMenuActions}
-      onFilterClick={onFilterClick}
+      filterHierarchyLevel={filterHierarchyLevel}
       getHierarchyLevelDetails={getHierarchyLevelDetails}
       getEditingProps={getEditingProps}
       errorRenderer={(errorProps) => {

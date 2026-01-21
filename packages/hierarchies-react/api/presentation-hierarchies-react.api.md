@@ -59,13 +59,13 @@ interface ErrorItem {
 }
 
 // @alpha
-export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, onFilterClick, reloadTree, scrollToElement }: ErrorItemRendererProps): JSX_2.Element;
+export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, filterHierarchyLevel, reloadTree, scrollToElement }: ErrorItemRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
     // (undocumented)
     errorItem: ErrorItem;
-    onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
+    filterHierarchyLevel?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
     reloadTree: (options: {
         parentNodeId: string | undefined;
     }) => void;
@@ -240,7 +240,7 @@ export interface StrataKitTreeRendererAttributes {
 }
 
 // @alpha (undocumented)
-type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "onFilterClick"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
+type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "filterHierarchyLevel"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
 // @alpha
 export const TreeActionBase: NamedExoticComponent<TreeActionBaseProps>;

@@ -84,7 +84,7 @@ export interface StrataKitTreeRendererAttributes {
 
 /** @alpha */
 type StrataKitTreeRendererProps = TreeRendererProps &
-  Pick<TreeErrorRendererProps, "onFilterClick"> &
+  Pick<TreeErrorRendererProps, "filterHierarchyLevel"> &
   TreeRendererOwnProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
@@ -108,7 +108,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
     treeLabel,
     localizedStrings,
     getHierarchyLevelDetails,
-    onFilterClick,
+    filterHierarchyLevel,
     reloadTree,
     isNodeSelected,
     errorRenderer,
@@ -217,7 +217,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
     errorList,
     scrollToElement,
     getHierarchyLevelDetails,
-    onFilterClick,
+    filterHierarchyLevel,
     reloadTree: useCallback<TreeErrorRendererProps["reloadTree"]>(({ parentNodeId }) => reloadTree({ parentNodeId, state: "reset" }), [reloadTree]),
   };
 
