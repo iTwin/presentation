@@ -25,7 +25,7 @@ import { createDefaultValueFormatter, IPrimitiveValueFormatter, parseFullClassNa
 interface CreateValueFormatterProps {
   /**
    * An instance of [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/) for
-   * getting units information.
+   * getting units information. Generally, retrieved directly from `IModelDb` or `IModelConnection` using the `schemaContext` accessor.
    */
   schemaContext: SchemaContext;
 
@@ -50,11 +50,11 @@ interface CreateValueFormatterProps {
  * Usage example:
  *
  * ```ts
- * import { SchemaContext } from "@itwin/ecschema-metadata";
+ * import { IModelConnection } from "@itwin/core-frontend";
  * import { createValueFormatter } from "@itwin/presentation-core-interop";
  *
- * const schemaContext = new SchemaContext();
- * const formatter = createValueFormatter({ schemaContext, unitSystem: "metric" });
+ * const imodel: IModelConnection = getIModel();
+ * const formatter = createValueFormatter({ schemaContext: imodel.schemaContext, unitSystem: "metric" });
  * const formattedValue = await formatter({ type: "Double", value: 1.234, koqName: "MySchema.LengthKindOfQuantity" });
  * ```
  *

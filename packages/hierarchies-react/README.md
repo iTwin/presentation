@@ -59,31 +59,12 @@ The hook takes 2 required properties:
 
   ```tsx
   import { IModelConnection } from "@itwin/core-frontend";
-  import { SchemaContext } from "@itwin/ecschema-metadata";
-  import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
   import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
   import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
   import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
-  // Not really part of the package, but we need SchemaContext to create the tree state. It's
-  // recommended to cache the schema context and reuse it across different application's components to
-  // avoid loading and storing same schemas multiple times.
-  const imodelSchemaContextsCache = new Map<string, SchemaContext>();
-
-  function getIModelSchemaContext(imodel: IModelConnection) {
-    const imodelKey = createIModelKey(imodel);
-    let context = imodelSchemaContextsCache.get(imodelKey);
-    if (!context) {
-      context = new SchemaContext();
-      context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-      imodelSchemaContextsCache.set(imodelKey, context);
-      imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodelKey));
-    }
-    return context;
-  }
-
   function createIModelAccess(imodel: IModelConnection) {
-    const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
+    const schemaProvider = createECSchemaProvider(imodel.schemaContext);
     return {
       imodelKey: createIModelKey(imodel),
       ...schemaProvider,
@@ -143,8 +124,6 @@ The component is based on `Tree.Item` component from StrataKit library and suppo
 
 ```tsx
 import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
@@ -155,25 +134,8 @@ import { TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
 
-// Not really part of the package, but we need SchemaContext to create the tree state. It's
-// recommended to cache the schema context and reuse it across different application's components to
-// avoid loading and storing same schemas multiple times.
-const imodelSchemaContextsCache = new Map<string, SchemaContext>();
-
-function getIModelSchemaContext(imodel: IModelConnection) {
-  const imodelKey = createIModelKey(imodel);
-  let context = imodelSchemaContextsCache.get(imodelKey);
-  if (!context) {
-    context = new SchemaContext();
-    context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-    imodelSchemaContextsCache.set(imodelKey, context);
-    imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodelKey));
-  }
-  return context;
-}
-
 function createIModelAccess(imodel: IModelConnection) {
-  const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
+  const schemaProvider = createECSchemaProvider(imodel.schemaContext);
   return {
     imodelKey: createIModelKey(imodel),
     ...schemaProvider,

@@ -39,7 +39,6 @@ import {
 } from "@itwin/presentation-shared";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { SampleRpcInterface } from "@test-app/common";
-import { MyAppFrontend } from "../../api/MyAppFrontend";
 
 type UseTreeProps = Props<typeof useUnifiedSelectionTree>;
 type IModelAccess = Props<typeof createIModelHierarchyProvider>["imodelAccess"];
@@ -56,8 +55,7 @@ export function MultiDataSourceTree({ imodel, ...props }: { imodel: IModelConnec
 }
 
 function createIModelAccess(imodel: IModelConnection) {
-  const schemas = MyAppFrontend.getSchemaContext(imodel);
-  const schemaProvider = createECSchemaProvider(schemas);
+  const schemaProvider = createECSchemaProvider(imodel.schemaContext);
   return {
     imodelKey: imodel.key,
     ...schemaProvider,

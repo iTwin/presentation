@@ -39,8 +39,7 @@ type IModelAccess = UseIModelTreeProps["imodelAccess"];
 export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number; treeLabel: string }) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
   useEffect(() => {
-    const schemas = MyAppFrontend.getSchemaContext(imodel);
-    const schemaProvider = createECSchemaProvider(schemas);
+    const schemaProvider = createECSchemaProvider(imodel.schemaContext);
     setIModelAccess({
       imodelKey: imodel.key,
       ...schemaProvider,

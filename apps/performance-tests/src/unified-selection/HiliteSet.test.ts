@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import { SnapshotDb } from "@itwin/core-backend";
-import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, Selectable, Selectables } from "@itwin/unified-selection";
@@ -76,15 +75,12 @@ function runHiliteTest(
     ...testProps,
     setup: async () => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath(iModelName));
-      const schemas = new SchemaContext();
-      const locater = new SchemaJsonLocater((schemaName) => iModel.getSchemaProps(schemaName));
-      schemas.addLocater(locater);
 
       const selectables: Selectable[] = [];
       const imodelAccess = {
         ...createECSqlQueryExecutor(iModel),
         ...createCachingECClassHierarchyInspector({
-          schemaProvider: createECSchemaProvider(schemas),
+          schemaProvider: createECSchemaProvider(iModel.schemaContext),
           cacheSize: 100,
         }),
       };

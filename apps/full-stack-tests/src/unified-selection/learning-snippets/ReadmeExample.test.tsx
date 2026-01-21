@@ -7,12 +7,10 @@
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useEffect, useState } from "react";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { KeySet } from "@itwin/presentation-common";
 import { Selectables } from "@itwin/unified-selection";
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.IModelSelectionSync.Imports
 import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { enableUnifiedSelectionSyncWithIModel, SelectionStorage } from "@itwin/unified-selection";
@@ -75,10 +73,6 @@ describe("Unified selection", () => {
 
           // enable unified selection sync with the iModel
           useEffect(() => {
-            // iModel's schema context should be shared between all components using the iModel (implementation
-            // of the getter is outside the scope of this example)
-            const imodelSchemaContext: SchemaContext = getSchemaContext(iModelConnection);
-
             return enableUnifiedSelectionSyncWithIModel({
               // Unified selection storage to synchronize iModel's tool selection with. The storage should be shared
               // across all components in the application to ensure unified selection experience.
@@ -88,7 +82,7 @@ describe("Unified selection", () => {
               // selection and hilite sets
               imodelAccess: {
                 ...createECSqlQueryExecutor(iModelConnection),
-                ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodelSchemaContext) }),
+                ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(iModelConnection.schemaContext) }),
                 key: createIModelKey(iModelConnection),
                 hiliteSet: iModelConnection.hilited,
                 selectionSet: iModelConnection.selectionSet,
@@ -160,9 +154,3 @@ describe("Unified selection", () => {
     });
   });
 });
-
-function getSchemaContext(imodel: IModelConnection) {
-  const schemas = new SchemaContext();
-  schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-  return schemas;
-}

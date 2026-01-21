@@ -2,17 +2,11 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable no-duplicate-imports */
 
 import { Guid, Id64Arg, Logger, OpenMode } from "@itwin/core-bentley";
 import { ElementProps, IModelConnectionProps, IModelError, ViewQueryParams } from "@itwin/core-common";
-import { BriefcaseConnection, IpcApp, SnapshotConnection } from "@itwin/core-frontend";
+import { BriefcaseConnection, IModelConnection, IpcApp, SnapshotConnection } from "@itwin/core-frontend";
 import { UnitSystemKey } from "@itwin/core-quantity";
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.PerformanceTuning.Imports
-import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-// __PUBLISH_EXTRACT_END__
 import { createStorage } from "@itwin/unified-selection";
 import { PRESENTATION_TEST_APP_IPC_CHANNEL_NAME, SampleIpcInterface, SampleRpcInterface } from "@test-app/common";
 
@@ -111,10 +105,6 @@ export class MyAppFrontend {
     return this._ipcProxy.deleteElements(imodel.key, elementIds);
   }
 
-  public static getSchemaContext(imodel: IModelConnection) {
-    return getSchemaContext(imodel);
-  }
-
   private static async openLocalImodel(path: string) {
     const connectionsProps = await SampleRpcInterface.getClient().getConnectionProps(path);
     const close = async () => {
@@ -124,24 +114,6 @@ export class MyAppFrontend {
     return imodel;
   }
 }
-
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.PerformanceTuning.CachingSchemaContexts
-const schemaContextsCache = new Map<string, SchemaContext>();
-function getSchemaContext(imodel: IModelConnection) {
-  const context = schemaContextsCache.get(imodel.key);
-  if (context) {
-    return context;
-  }
-
-  const newContext = new SchemaContext();
-  newContext.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-  schemaContextsCache.set(imodel.key, newContext);
-
-  imodel.onClose.addListener(() => schemaContextsCache.delete(imodel.key));
-
-  return newContext;
-}
-// __PUBLISH_EXTRACT_END__
 
 async function tryOpenStandalone(path: string) {
   let iModel: IModelConnection | undefined;
