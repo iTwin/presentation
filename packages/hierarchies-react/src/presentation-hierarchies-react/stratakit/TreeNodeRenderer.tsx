@@ -28,7 +28,7 @@ import dismissSvg from "@stratakit/icons/dismiss.svg";
 import refreshSvg from "@stratakit/icons/refresh.svg";
 import { DropdownMenu, unstable_Popover as Popover, Tree } from "@stratakit/structures";
 import { TreeRendererProps } from "../Renderers.js";
-import { PresentationHierarchyNode } from "../TreeNode.js";
+import { TreeNode } from "../TreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
 import { useTreeNodeRenameContext } from "./TreeNodeRenameAction.js";
@@ -36,7 +36,7 @@ import { useTreeNodeRenameContext } from "./TreeNodeRenameAction.js";
 /** @internal */
 interface TreeNodeRendererOwnProps extends Pick<TreeRendererProps, "expandNode" | "reloadTree"> {
   /** Node that is rendered. */
-  node: PresentationHierarchyNode;
+  node: TreeNode;
   /**
    * Menu actions for tree item.
    * Must be an array of `<TreeActionBase />` or `<Divider />` elements.

@@ -6,7 +6,6 @@ alpha;type;FlatTreeItem
 public;interface;GenericErrorInfo
 public;interface;HierarchyLevelDetails
 public;function;LocalizationContextProvider
-public;interface;PresentationHierarchyNode
 public;interface;ResultSetTooLargeErrorInfo
 alpha;function;StrataKitRootErrorRenderer
 alpha;const;StrataKitTreeRenderer
@@ -14,6 +13,7 @@ alpha;interface;StrataKitTreeRendererAttributes
 alpha;const;TreeActionBase
 alpha;interface;TreeActionBaseAttributes
 alpha;function;TreeErrorRenderer
+public;interface;TreeNode
 alpha;const;TreeNodeFilterAction
 alpha;const;TreeNodeRenameAction
 alpha;type;TreeRendererProps

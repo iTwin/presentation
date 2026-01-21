@@ -20,9 +20,9 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyNodeKey } from "@itwin/presentation-hierarchies";
 import {
   HierarchyLevelDetails,
-  PresentationHierarchyNode,
   StrataKitRootErrorRenderer,
   StrataKitTreeRendererAttributes,
+  TreeNode,
   useIModelUnifiedSelectionTree,
 } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
@@ -348,7 +348,7 @@ const categorySvg = new URL("@stratakit/icons/bis-category-3d.svg", import.meta.
 const elementSvg = new URL("@stratakit/icons/bis-element.svg", import.meta.url).href;
 const iModelSvg = new URL("@stratakit/icons/imodel.svg", import.meta.url).href;
 
-function getIcon(node: PresentationHierarchyNode): string | undefined {
+function getIcon(node: TreeNode): string | undefined {
   if (node.nodeData.extendedData?.imageId === undefined) {
     return undefined;
   }

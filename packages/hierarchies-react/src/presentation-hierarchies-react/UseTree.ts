@@ -11,7 +11,7 @@ import { TreeModel, TreeModelHierarchyNode, TreeModelRootNode } from "./internal
 import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
 import { safeDispose } from "./internal/Utils.js";
 import { RootErrorRendererProps, TreeRendererProps } from "./Renderers.js";
-import { PresentationHierarchyNode } from "./TreeNode.js";
+import { TreeNode } from "./TreeNode.js";
 import { SelectionChangeType } from "./UseSelectionHandler.js";
 import { useLatest } from "./Utils.js";
 
@@ -92,7 +92,7 @@ export type UseTreeResult = {
    */
   isReloading: boolean;
   /** Get a tree node by id */
-  getNode: (nodeId: string) => PresentationHierarchyNode | undefined;
+  getNode: (nodeId: string) => TreeNode | undefined;
   /** Sets a formatter for the primitive values that are displayed in the hierarchy. */
   setFormatter: (formatter: IPrimitiveValueFormatter | undefined) => void;
 } & RendererProps;
@@ -122,7 +122,7 @@ type RendererProps =
 
 interface TreeState {
   model: TreeModel;
-  rootNodes: Array<PresentationHierarchyNode> | undefined;
+  rootNodes: Array<TreeNode> | undefined;
 }
 
 function useTreeInternal({
@@ -219,12 +219,12 @@ function useTreeInternal({
   );
 
   const getNode = useCallback(
-    (nodeId: string): PresentationHierarchyNode | undefined => {
+    (nodeId: string): TreeNode | undefined => {
       const node = actions.getNode(nodeId);
       if (!node || node.id === undefined) {
         return undefined;
       }
-      return createPresentationHierarchyNode(node, state.model);
+      return createTreeNode(node, state.model);
     },
     [actions, state.model],
   );
@@ -327,7 +327,7 @@ function useTreeInternal({
   };
 }
 
-function generateTreeStructure(parentNodeId: string | undefined, model: TreeModel): Array<PresentationHierarchyNode> | undefined {
+function generateTreeStructure(parentNodeId: string | undefined, model: TreeModel): Array<TreeNode> | undefined {
   const currentChildren = model.parentChildMap.get(parentNodeId);
   if (!currentChildren) {
     return undefined;
@@ -336,15 +336,15 @@ function generateTreeStructure(parentNodeId: string | undefined, model: TreeMode
   return currentChildren
     .map((childId) => model.idToNode.get(childId))
     .filter((node): node is TreeModelHierarchyNode => !!node)
-    .map<PresentationHierarchyNode>((node) => {
-      return createPresentationHierarchyNode(node, model);
+    .map<TreeNode>((node) => {
+      return createTreeNode(node, model);
     });
 }
 
-function createPresentationHierarchyNode(modelNode: TreeModelHierarchyNode, model: TreeModel): PresentationHierarchyNode {
-  let children: Array<PresentationHierarchyNode> | undefined;
+function createTreeNode(modelNode: TreeModelHierarchyNode, model: TreeModel): TreeNode {
+  let children: Array<TreeNode> | undefined;
   return {
-    ...toPresentationHierarchyNodeBase(modelNode),
+    ...toTreeNodeBase(modelNode),
     get children() {
       if (!children) {
         children = generateTreeStructure(modelNode.id, model);
@@ -354,7 +354,7 @@ function createPresentationHierarchyNode(modelNode: TreeModelHierarchyNode, mode
   };
 }
 
-function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<PresentationHierarchyNode, "children"> {
+function toTreeNodeBase(node: TreeModelHierarchyNode): Omit<TreeNode, "children"> {
   return {
     id: node.id,
     label: node.label,

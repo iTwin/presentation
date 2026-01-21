@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export { GenericErrorInfo, PresentationHierarchyNode, ErrorInfo, ResultSetTooLargeErrorInfo } from "./presentation-hierarchies-react/TreeNode.js";
+export { GenericErrorInfo, TreeNode, ErrorInfo, ResultSetTooLargeErrorInfo } from "./presentation-hierarchies-react/TreeNode.js";
 export { useSelectionHandler } from "./presentation-hierarchies-react/UseSelectionHandler.js";
 export { useTree, useUnifiedSelectionTree } from "./presentation-hierarchies-react/UseTree.js";
 export { useNodeHighlighting } from "./presentation-hierarchies-react/UseNodeHighlighting.js";

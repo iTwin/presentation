@@ -6,12 +6,12 @@
 import { ComponentProps, forwardRef, memo, useCallback, useMemo } from "react";
 import {
   ErrorItemRenderer,
-  PresentationHierarchyNode,
   StrataKitTreeRenderer,
   StrataKitTreeRendererAttributes,
   TreeActionBase,
   TreeActionBaseAttributes,
   TreeErrorRenderer,
+  TreeNode,
   TreeNodeFilterAction,
   TreeNodeRenameAction,
 } from "@itwin/presentation-hierarchies-react";
@@ -109,10 +109,7 @@ export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttr
   );
 });
 
-function mapNodesHierarchy(
-  nodes: PresentationHierarchyNode[],
-  callback: (node: PresentationHierarchyNode) => PresentationHierarchyNode,
-): PresentationHierarchyNode[] {
+function mapNodesHierarchy(nodes: TreeNode[], callback: (node: TreeNode) => TreeNode): TreeNode[] {
   return nodes.map((node) => {
     return {
       ...callback(node),
@@ -125,7 +122,7 @@ const CustomAction = memo(function CustomAction({
   node,
   selectedNodes,
   ...actionAttributes
-}: { node: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] } & TreeActionBaseAttributes) {
+}: { node: TreeNode; selectedNodes: TreeNode[] } & TreeActionBaseAttributes) {
   const handleClick = useCallback(() => {
     console.log("Custom action clicked for node:", node);
     console.log("Currently selected nodes:", selectedNodes);

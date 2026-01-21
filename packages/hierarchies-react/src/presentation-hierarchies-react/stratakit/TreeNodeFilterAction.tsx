@@ -6,7 +6,7 @@
 import { memo, useCallback } from "react";
 import filterSvg from "@stratakit/icons/filter.svg";
 import { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
-import { PresentationHierarchyNode } from "../TreeNode.js";
+import { TreeNode } from "../TreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
 
@@ -32,7 +32,7 @@ export const TreeNodeFilterAction = memo(function TreeNodeFilterAction({
   onFilter,
   getHierarchyLevelDetails,
   ...actionAttributes
-}: TreeNodeFilterActionProps & { node: PresentationHierarchyNode }) {
+}: TreeNodeFilterActionProps & { node: TreeNode }) {
   const { localizedStrings } = useLocalizationContext();
   const { filterHierarchyLevel, filterHierarchyLevelActiveDescription } = localizedStrings;
 

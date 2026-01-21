@@ -5,7 +5,7 @@
 
 import { useCallback } from "react";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
-import { PresentationHierarchyNode } from "./TreeNode.js";
+import { TreeNode } from "./TreeNode.js";
 
 /**
  * Props for `useNodeHighlighting` hook.
@@ -22,7 +22,7 @@ interface UseNodeHighlightingProps {
  */
 interface UseNodeHighlightingResult {
   /** Function that creates highlighted node labels. */
-  getLabel: (node: PresentationHierarchyNode) => React.ReactElement;
+  getLabel: (node: TreeNode) => React.ReactElement;
 }
 
 /**
@@ -31,7 +31,7 @@ interface UseNodeHighlightingResult {
  */
 export function useNodeHighlighting({ highlightText }: UseNodeHighlightingProps): UseNodeHighlightingResult {
   const getLabel = useCallback(
-    (node: PresentationHierarchyNode) => {
+    (node: TreeNode) => {
       if (!highlightText || HierarchyNode.isGroupingNode(node.nodeData) || !node.nodeData.search?.isSearchTarget) {
         return <span>{node.label}</span>;
       }

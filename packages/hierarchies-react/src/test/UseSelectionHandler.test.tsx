@@ -6,12 +6,12 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { UserEvent } from "@testing-library/user-event";
-import { PresentationHierarchyNode } from "../presentation-hierarchies-react/TreeNode.js";
+import { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
 import { SelectionChangeType, SelectionMode, useSelectionHandler } from "../presentation-hierarchies-react/UseSelectionHandler.js";
 import { render } from "./TestUtils.js";
 
 interface TestComponentProps {
-  rootNodes: Array<PresentationHierarchyNode>;
+  rootNodes: Array<TreeNode>;
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
   selectionMode: SelectionMode;
   isSelected: boolean;
@@ -19,7 +19,7 @@ interface TestComponentProps {
 
 function TestComponent({ rootNodes, selectNodes, selectionMode, isSelected }: TestComponentProps) {
   const { onNodeKeyDown, onNodeClick } = useSelectionHandler({ rootNodes, selectNodes, selectionMode });
-  const invalidNode = { id: "invalid", children: [] } as unknown as PresentationHierarchyNode;
+  const invalidNode = { id: "invalid", children: [] } as unknown as TreeNode;
   const nodes = rootNodes ? [...rootNodes, invalidNode] : [invalidNode];
   return (
     <>
@@ -37,11 +37,11 @@ function TestComponent({ rootNodes, selectNodes, selectionMode, isSelected }: Te
 describe("useSelectionHandler", () => {
   const selectNodesStub = sinon.stub<[Array<string>, SelectionChangeType], void>();
 
-  const createHierarchyNode = (id: string, children: Array<PresentationHierarchyNode> = [], isExpanded: boolean = true) => {
-    return { id, isExpanded, children } as PresentationHierarchyNode;
+  const createTreeNode = (id: string, children: Array<TreeNode> = [], isExpanded: boolean = true) => {
+    return { id, isExpanded, children } as TreeNode;
   };
 
-  const createProps = (rootNodes: Array<PresentationHierarchyNode>, selectionMode: SelectionMode, isSelected: boolean) => {
+  const createProps = (rootNodes: Array<TreeNode>, selectionMode: SelectionMode, isSelected: boolean) => {
     return { rootNodes, selectNodes: selectNodesStub, selectionMode, isSelected };
   };
 
@@ -52,7 +52,7 @@ describe("useSelectionHandler", () => {
   const selectionTests = (clickNode: (user: UserEvent, node: HTMLElement) => Promise<void>) => {
     describe("`none` selection mode", () => {
       it("does nothing when node is clicked", async () => {
-        const rootNode = createHierarchyNode("node");
+        const rootNode = createTreeNode("node");
         const { user, getByText } = render(<TestComponent {...createProps([rootNode], "none", true)} />);
 
         const node = getByText("node");
@@ -68,7 +68,7 @@ describe("useSelectionHandler", () => {
       const selectionMode = "single";
 
       it("replaces selection when node is clicked", async () => {
-        const rootNode = createHierarchyNode("node");
+        const rootNode = createTreeNode("node");
         const { user, getByText } = render(<TestComponent {...createProps([rootNode], selectionMode, true)} />);
 
         const node = getByText("node");
@@ -80,7 +80,7 @@ describe("useSelectionHandler", () => {
       });
 
       it("replaces selection when clicking using `ctrl` and `shift`", async () => {
-        const rootNode = createHierarchyNode("node");
+        const rootNode = createTreeNode("node");
         const { user, getByText } = render(<TestComponent {...createProps([rootNode], selectionMode, true)} />);
 
         const node = getByText("node");
@@ -101,7 +101,7 @@ describe("useSelectionHandler", () => {
       });
 
       it("removes from selection when a selected node is clicked", async () => {
-        const rootNode = createHierarchyNode("node");
+        const rootNode = createTreeNode("node");
         const { user, getByText } = render(<TestComponent {...createProps([rootNode], selectionMode, false)} />);
 
         const node = getByText("node");
@@ -117,7 +117,7 @@ describe("useSelectionHandler", () => {
       const selectionMode = "multiple";
 
       it("adds to selection when node is clicked", async () => {
-        const rootNode = createHierarchyNode("node");
+        const rootNode = createTreeNode("node");
         const { user, getByText } = render(<TestComponent {...createProps([rootNode], selectionMode, true)} />);
 
         const node = getByText("node");
@@ -129,7 +129,7 @@ describe("useSelectionHandler", () => {
       });
 
       it("adds to selection when clicking using `ctrl` and `shift`", async () => {
-        const rootNode = createHierarchyNode("node");
+        const rootNode = createTreeNode("node");
         const { user, getByText } = render(<TestComponent {...createProps([rootNode], selectionMode, true)} />);
 
         const node = getByText("node");
@@ -150,7 +150,7 @@ describe("useSelectionHandler", () => {
       });
 
       it("removes from selection when a selected node is clicked", async () => {
-        const rootNode = createHierarchyNode("node");
+        const rootNode = createTreeNode("node");
         const { user, getByText } = render(<TestComponent {...createProps([rootNode], selectionMode, false)} />);
 
         const node = getByText("node");
@@ -166,7 +166,7 @@ describe("useSelectionHandler", () => {
       const selectionMode = "extended";
 
       it("replaces selection when node is clicked", async () => {
-        const rootNode = createHierarchyNode("node");
+        const rootNode = createTreeNode("node");
         const { user, getByText } = render(<TestComponent {...createProps([rootNode], selectionMode, true)} />);
 
         const node = getByText("node");
@@ -178,7 +178,7 @@ describe("useSelectionHandler", () => {
       });
 
       it("replaces selection when selected node is clicked", async () => {
-        const rootNode = createHierarchyNode("node");
+        const rootNode = createTreeNode("node");
         const { user, getByText } = render(<TestComponent {...createProps([rootNode], selectionMode, false)} />);
 
         const node = getByText("node");
@@ -190,7 +190,7 @@ describe("useSelectionHandler", () => {
       });
 
       it("adds to selection when node is clicked and `ctrl` used", async () => {
-        const rootNode = createHierarchyNode("node");
+        const rootNode = createTreeNode("node");
         const { user, getByText } = render(<TestComponent {...createProps([rootNode], selectionMode, true)} />);
 
         const node = getByText("node");
@@ -204,7 +204,7 @@ describe("useSelectionHandler", () => {
       });
 
       it("removes from selection when a selected node is clicked and `ctrl` used", async () => {
-        const rootNode = createHierarchyNode("node");
+        const rootNode = createTreeNode("node");
         const { user, getByText } = render(<TestComponent {...createProps([rootNode], selectionMode, false)} />);
 
         const node = getByText("node");
@@ -218,7 +218,7 @@ describe("useSelectionHandler", () => {
       });
 
       it("replaces selection with node range when node clicked and `shift` used", async () => {
-        const nodes = [createHierarchyNode("node-1"), createHierarchyNode("node-2"), createHierarchyNode("node-3")];
+        const nodes = [createTreeNode("node-1"), createTreeNode("node-2"), createTreeNode("node-3")];
         const { user, getByText } = render(<TestComponent {...createProps(nodes, selectionMode, true)} />);
 
         const node1 = getByText("node-1");
@@ -239,7 +239,7 @@ describe("useSelectionHandler", () => {
       });
 
       it("starts range selection from first node when previous selection does not exist", async () => {
-        const nodes = [createHierarchyNode("node-1"), createHierarchyNode("node-2"), createHierarchyNode("node-3")];
+        const nodes = [createTreeNode("node-1"), createTreeNode("node-2"), createTreeNode("node-3")];
         const { user, getByText } = render(<TestComponent {...createProps(nodes, selectionMode, true)} />);
 
         const node = getByText("node-3");
@@ -253,7 +253,7 @@ describe("useSelectionHandler", () => {
       });
 
       it("selects range when second selected node has lower index", async () => {
-        const nodes = [createHierarchyNode("node-1"), createHierarchyNode("node-2"), createHierarchyNode("node-3")];
+        const nodes = [createTreeNode("node-1"), createTreeNode("node-2"), createTreeNode("node-3")];
         const { user, getByText } = render(<TestComponent {...createProps(nodes, selectionMode, true)} />);
 
         const node3 = getByText("node-3");
@@ -274,9 +274,9 @@ describe("useSelectionHandler", () => {
       });
 
       it("selects visible children of different depth when selecting range", async () => {
-        const innerChild = createHierarchyNode("child-inner");
-        const outerChild = createHierarchyNode("child-outer", [innerChild]);
-        const nodes = [createHierarchyNode("node-1", [outerChild]), createHierarchyNode("node-2")];
+        const innerChild = createTreeNode("child-inner");
+        const outerChild = createTreeNode("child-outer", [innerChild]);
+        const nodes = [createTreeNode("node-1", [outerChild]), createTreeNode("node-2")];
         const { user, getByText } = render(<TestComponent {...createProps(nodes, selectionMode, true)} />);
 
         const node1 = getByText("node-1");
@@ -297,9 +297,9 @@ describe("useSelectionHandler", () => {
       });
 
       it("skips non visible children when selecting range", async () => {
-        const innerChild = createHierarchyNode("child-inner");
-        const outerChild = createHierarchyNode("child-outer", [innerChild]);
-        const nodes = [createHierarchyNode("node-1", [outerChild], false), createHierarchyNode("node-2")];
+        const innerChild = createTreeNode("child-inner");
+        const outerChild = createTreeNode("child-outer", [innerChild]);
+        const nodes = [createTreeNode("node-1", [outerChild], false), createTreeNode("node-2")];
         const { user, getByText } = render(<TestComponent {...createProps(nodes, selectionMode, true)} />);
 
         const node1 = getByText("node-1");
@@ -320,7 +320,7 @@ describe("useSelectionHandler", () => {
       });
 
       it("subsequent range selections use the same starting point", async () => {
-        const nodes = [createHierarchyNode("node-1"), createHierarchyNode("node-2"), createHierarchyNode("node-3"), createHierarchyNode("node-4")];
+        const nodes = [createTreeNode("node-1"), createTreeNode("node-2"), createTreeNode("node-3"), createTreeNode("node-4")];
         const { user, getByText } = render(<TestComponent {...createProps(nodes, selectionMode, true)} />);
 
         let node = getByText("node-2");
@@ -387,7 +387,7 @@ describe("useSelectionHandler", () => {
 
   describe("keyboard input", () => {
     it("only reacts to ` `, `Spacebar` and `Enter`", async () => {
-      const rootNode = createHierarchyNode("node");
+      const rootNode = createTreeNode("node");
       const { user, getByText } = render(<TestComponent {...createProps([rootNode], "single", true)} />);
 
       const node = getByText("node");

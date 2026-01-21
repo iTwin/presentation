@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { TreeRendererProps } from "./Renderers.js";
-import { PresentationHierarchyNode } from "./TreeNode.js";
+import { TreeNode } from "./TreeNode.js";
 
 /**
  * A union of different supported selection modes in a tree component:
@@ -43,9 +43,9 @@ type UseSelectionHandlerProps = Pick<TreeRendererProps, "selectNodes" | "rootNod
  */
 interface UseSelectionHandlerResult {
   /** Should be called by node renderer when a node component is clicked. */
-  onNodeClick: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+  onNodeClick: (node: TreeNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
   /** Should be called by node renderer when a keyboard event happens on a node. */
-  onNodeKeyDown: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+  onNodeKeyDown: (node: TreeNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
 }
 
 interface FlatTreeState {
@@ -103,14 +103,14 @@ export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelecti
   );
 
   const onNodeClick = useCallback(
-    (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => {
+    (node: TreeNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => {
       return onNodeSelect(node.id, isSelected, event.shiftKey, event.ctrlKey);
     },
     [onNodeSelect],
   );
 
   const onNodeKeyDown = useCallback(
-    (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => {
+    (node: TreeNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => {
       if (event.key === " " || event.key === "Spacebar" || event.key === "Enter") {
         return onNodeSelect(node.id, isSelected, event.shiftKey, event.ctrlKey);
       }
@@ -149,11 +149,11 @@ function getExtendedSelectionAction(isSelected: boolean, shiftDown: boolean, ctr
   return { select: "node", type: "replace" };
 }
 
-function computeFlatNodeList(rootNodes: Array<PresentationHierarchyNode>): FlatTreeState {
+function computeFlatNodeList(rootNodes: Array<TreeNode>): FlatTreeState {
   const flatNodeList: Array<string> = [];
   const nodeIdToIndexMap: Map<string, number> = new Map();
 
-  const flattenNodeRecursively = (nodes: Array<PresentationHierarchyNode>) => {
+  const flattenNodeRecursively = (nodes: Array<TreeNode>) => {
     nodes.forEach((node) => {
       nodeIdToIndexMap.set(node.id, flatNodeList.length);
       flatNodeList.push(node.id);

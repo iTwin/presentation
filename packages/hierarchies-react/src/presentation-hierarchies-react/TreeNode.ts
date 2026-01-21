@@ -9,10 +9,10 @@ import { HierarchyNode } from "@itwin/presentation-hierarchies";
  * A type that defines an node in a UI tree component, built with `useTree` hook.
  * @public
  */
-export interface PresentationHierarchyNode {
+export interface TreeNode {
   id: string;
   label: string;
-  children: true | Array<PresentationHierarchyNode>;
+  children: true | Array<TreeNode>;
   isExpanded: boolean;
   isLoading: boolean;
   isFilterable: boolean;
@@ -76,7 +76,7 @@ export interface GenericErrorInfo {
 }
 
 /**
- * A collection of types that defines an error state for `PresentationHierarchyNode` node in a UI tree component, built
+ * A collection of types that defines an error state for `TreeNode` node in a UI tree component, built
  * with `useTree` hook.
  *
  * @public

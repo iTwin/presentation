@@ -53,7 +53,7 @@ export type ErrorInfo = GenericErrorInfo | ResultSetTooLargeErrorInfo | NoFilter
 // @alpha
 interface ErrorItem {
     // (undocumented)
-    errorNode: PresentationHierarchyNode & Pick<Required<PresentationHierarchyNode>, "error">;
+    errorNode: TreeNode & Pick<Required<TreeNode>, "error">;
     // (undocumented)
     expandTo: (expandNode: (nodeId: string) => void) => void;
 }
@@ -95,7 +95,7 @@ interface FlatTreeNodeItem {
     // (undocumented)
     levelSize: number;
     // (undocumented)
-    node: PresentationHierarchyNode;
+    node: TreeNode;
     // (undocumented)
     posInLevel: number;
 }
@@ -181,26 +181,6 @@ interface NoFilterMatchesErrorInfo {
 }
 
 // @public
-export interface PresentationHierarchyNode {
-    // (undocumented)
-    children: true | Array<PresentationHierarchyNode>;
-    error?: ErrorInfo;
-    // (undocumented)
-    id: string;
-    // (undocumented)
-    isExpanded: boolean;
-    // (undocumented)
-    isFilterable: boolean;
-    // (undocumented)
-    isFiltered: boolean;
-    // (undocumented)
-    isLoading: boolean;
-    // (undocumented)
-    label: string;
-    nodeData: HierarchyNode;
-}
-
-// @public
 interface ReloadTreeOptions {
     parentNodeId: string | undefined;
     state?: "keep" | "discard" | "reset";
@@ -257,7 +237,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
 
 // @alpha (undocumented)
 export interface StrataKitTreeRendererAttributes {
-    renameNode: (predicate: (node: PresentationHierarchyNode) => boolean) => "node-not-found" | "success";
+    renameNode: (predicate: (node: TreeNode) => boolean) => "node-not-found" | "success";
 }
 
 // @alpha (undocumented)
@@ -298,6 +278,26 @@ interface TreeErrorRendererOwnProps {
 // @alpha (undocumented)
 type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Pick<TreeRendererProps, "getHierarchyLevelDetails">;
 
+// @public
+export interface TreeNode {
+    // (undocumented)
+    children: true | Array<TreeNode>;
+    error?: ErrorInfo;
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    isExpanded: boolean;
+    // (undocumented)
+    isFilterable: boolean;
+    // (undocumented)
+    isFiltered: boolean;
+    // (undocumented)
+    isLoading: boolean;
+    // (undocumented)
+    label: string;
+    nodeData: HierarchyNode;
+}
+
 // @alpha (undocumented)
 interface TreeNodeEditingProps {
     // (undocumented)
@@ -311,31 +311,31 @@ interface TreeNodeEditingProps {
 export const TreeNodeFilterAction: NamedExoticComponent<    {
 onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
 } & TreeActionBaseAttributes & Pick<TreeRendererProps, "getHierarchyLevelDetails"> & {
-node: PresentationHierarchyNode;
+node: TreeNode;
 }>;
 
 // @alpha
 export const TreeNodeRenameAction: NamedExoticComponent<TreeActionBaseAttributes & {
-node: PresentationHierarchyNode;
+node: TreeNode;
 }>;
 
 // @alpha (undocumented)
 interface TreeRendererOwnProps {
     errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
     getContextMenuActions?: (props: {
-        targetNode: PresentationHierarchyNode;
-        selectedNodes: PresentationHierarchyNode[];
+        targetNode: TreeNode;
+        selectedNodes: TreeNode[];
     }) => ReactNode[];
-    getEditingProps?: (node: PresentationHierarchyNode) => TreeNodeEditingProps | undefined;
+    getEditingProps?: (node: TreeNode) => TreeNodeEditingProps | undefined;
     getInlineActions?: (props: {
-        targetNode: PresentationHierarchyNode;
-        selectedNodes: PresentationHierarchyNode[];
+        targetNode: TreeNode;
+        selectedNodes: TreeNode[];
     }) => ReactNode[];
     getMenuActions?: (props: {
-        targetNode: PresentationHierarchyNode;
-        selectedNodes: PresentationHierarchyNode[];
+        targetNode: TreeNode;
+        selectedNodes: TreeNode[];
     }) => ReactNode[];
-    getTreeItemProps?: (node: PresentationHierarchyNode) => Partial<Omit<StrataKitTreeItemProps, "selected" | "aria-level" | "aria-posinset" | "aria-setsize">>;
+    getTreeItemProps?: (node: TreeNode) => Partial<Omit<StrataKitTreeItemProps, "selected" | "aria-level" | "aria-posinset" | "aria-setsize">>;
     // (undocumented)
     id?: string;
     selectionMode?: SelectionMode_2;
@@ -345,17 +345,17 @@ interface TreeRendererOwnProps {
 
 // @alpha
 export type TreeRendererProps = {
-    rootNodes: PresentationHierarchyNode[];
+    rootNodes: TreeNode[];
     expandNode: (nodeId: string, isExpanded: boolean) => void;
     selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
     isNodeSelected: (nodeId: string) => boolean;
 } & CommonRendererProps;
 
 // @alpha
-export function useErrorList(rootNodes: PresentationHierarchyNode[]): ErrorItem[];
+export function useErrorList(rootNodes: TreeNode[]): ErrorItem[];
 
 // @alpha
-export function useFlatTreeItems(rootNodes: PresentationHierarchyNode[]): FlatTreeItem[];
+export function useFlatTreeItems(rootNodes: TreeNode[]): FlatTreeItem[];
 
 // @public
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult;
@@ -384,7 +384,7 @@ interface UseNodeHighlightingProps {
 
 // @alpha
 interface UseNodeHighlightingResult {
-    getLabel: (node: PresentationHierarchyNode) => React.ReactElement;
+    getLabel: (node: TreeNode) => React.ReactElement;
 }
 
 // @public
@@ -397,8 +397,8 @@ type UseSelectionHandlerProps = Pick<TreeRendererProps, "selectNodes" | "rootNod
 
 // @public
 interface UseSelectionHandlerResult {
-    onNodeClick: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
-    onNodeKeyDown: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+    onNodeClick: (node: TreeNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+    onNodeKeyDown: (node: TreeNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
 }
 
 // @public
@@ -426,7 +426,7 @@ interface UseTreeProps {
 // @public (undocumented)
 type UseTreeResult = {
     isReloading: boolean;
-    getNode: (nodeId: string) => PresentationHierarchyNode | undefined;
+    getNode: (nodeId: string) => TreeNode | undefined;
     setFormatter: (formatter: IPrimitiveValueFormatter | undefined) => void;
 } & RendererProps;
 
