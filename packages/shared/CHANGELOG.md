@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 2.0.0-alpha.6
+
+### Patch Changes
+
+- [#1180](https://github.com/iTwin/presentation/pull/1180): Version bump
+
 ## 2.0.0-alpha.5
 
 ### Minor Changes

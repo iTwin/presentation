@@ -1,5 +1,16 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.18-alpha.0
+
+### Patch Changes
+
+- [#1180](https://github.com/iTwin/presentation/pull/1180): Version bump
+- Updated dependencies:
+  - @itwin/presentation-core-interop@1.4.0-alpha.5
+  - @itwin/presentation-shared@2.0.0-alpha.6
+  - @itwin/unified-selection@1.6.6-alpha.0
+  - @itwin/unified-selection-react@1.0.6-alpha.0
+
 ## 5.12.17
 
 ### Patch Changes
