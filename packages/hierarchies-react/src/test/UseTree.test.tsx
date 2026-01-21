@@ -18,7 +18,7 @@ import {
   StorageSelectionChangesListener,
 } from "@itwin/unified-selection";
 import { createNodeId } from "../presentation-hierarchies-react/internal/Utils.js";
-import { PresentationHierarchyNode } from "../presentation-hierarchies-react/TreeNode.js";
+import { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
 import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree.js";
 import {
   act,
@@ -590,7 +590,7 @@ describe("useTree", () => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
       expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(1);
-      const groupingTreeNode = (treeRenderProps!.rootNodes[0] as any).children[0] as PresentationHierarchyNode;
+      const groupingTreeNode = (treeRenderProps!.rootNodes[0] as any).children[0] as TreeNode;
       expect(groupingTreeNode.children).to.have.lengthOf(2);
     });
 
@@ -604,7 +604,7 @@ describe("useTree", () => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
       expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(1);
-      const groupingTreeNode = (treeRenderProps?.rootNodes[0] as any).children[0] as PresentationHierarchyNode;
+      const groupingTreeNode = (treeRenderProps?.rootNodes[0] as any).children[0] as TreeNode;
       expect(groupingTreeNode.children).to.have.lengthOf(1);
     });
   });

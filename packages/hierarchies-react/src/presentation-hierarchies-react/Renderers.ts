@@ -5,7 +5,7 @@
 
 import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { InstanceKey } from "@itwin/presentation-shared";
-import { ErrorInfo, PresentationHierarchyNode } from "./TreeNode.js";
+import { ErrorInfo, TreeNode } from "./TreeNode.js";
 import { SelectionChangeType } from "./UseSelectionHandler.js";
 
 /**
@@ -16,7 +16,7 @@ export type TreeRendererProps = {
   /**
    * Array containing root tree nodes.
    */
-  rootNodes: PresentationHierarchyNode[];
+  rootNodes: TreeNode[];
   /**
    * A function that should be called to either expand or collapse the given node.
    */

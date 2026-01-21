@@ -27,7 +27,7 @@ import {
   HierarchySearchPath,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
-import { PresentationHierarchyNode, StrataKitRootErrorRenderer, StrataKitTreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { StrataKitRootErrorRenderer, StrataKitTreeRenderer, TreeNode, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import {
   createBisInstanceLabelSelectClauseFactory,
   createCachingECClassHierarchyInspector,
@@ -415,7 +415,7 @@ async function getRootSubjectSearchedPath({
   return row ? [{ className: "BisCore.Subject", id: row.id, imodelKey: imodelAccess.imodelKey }] : undefined;
 }
 
-function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
+function getIcon(node: TreeNode): ReactElement | undefined {
   switch (node.nodeData.extendedData?.nodeType) {
     case "root-subject":
       return <SvgImodelHollow />;

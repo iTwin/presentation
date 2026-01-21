@@ -5,7 +5,7 @@
 
 import { createContext, memo, PropsWithChildren, useCallback, useContext, useMemo, useState } from "react";
 import renameSvg from "@stratakit/icons/rename.svg";
-import { PresentationHierarchyNode } from "../TreeNode.js";
+import { TreeNode } from "../TreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
 
@@ -20,10 +20,7 @@ import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
  *
  * @alpha
  */
-export const TreeNodeRenameAction = memo(function TreeNodeRenameAction({
-  node,
-  ...actionAttributes
-}: TreeActionBaseAttributes & { node: PresentationHierarchyNode }) {
+export const TreeNodeRenameAction = memo(function TreeNodeRenameAction({ node, ...actionAttributes }: TreeActionBaseAttributes & { node: TreeNode }) {
   const { localizedStrings } = useLocalizationContext();
   const context = useTreeNodeRenameContext();
   const { rename } = localizedStrings;
@@ -58,8 +55,8 @@ export interface RenameParameters {
 
 interface TreeNodeRenameContext {
   renameParameters?: RenameParameters;
-  startRename: (node: PresentationHierarchyNode) => void;
-  canRename: (node: PresentationHierarchyNode) => boolean;
+  startRename: (node: TreeNode) => void;
+  canRename: (node: TreeNode) => boolean;
   cancelRename: () => void;
 }
 
@@ -76,15 +73,11 @@ export function TreeNodeRenameContextProvider({ value, children }: PropsWithChil
 }
 
 /** @internal */
-export function useTreeNodeRenameContextValue({
-  getEditingProps,
-}: {
-  getEditingProps?: (node: PresentationHierarchyNode) => TreeNodeEditingProps | undefined;
-}) {
+export function useTreeNodeRenameContextValue({ getEditingProps }: { getEditingProps?: (node: TreeNode) => TreeNodeEditingProps | undefined }) {
   const [renameParameters, setRenameParameters] = useState<RenameParameters | undefined>(undefined);
 
   const startRename = useCallback(
-    (node: PresentationHierarchyNode) => {
+    (node: TreeNode) => {
       const { onLabelChanged, labelValidationHint, validate } = getEditingProps?.(node) ?? {};
       if (onLabelChanged) {
         setRenameParameters({
@@ -106,7 +99,7 @@ export function useTreeNodeRenameContextValue({
   }, []);
 
   const canRename = useCallback(
-    (node: PresentationHierarchyNode) => {
+    (node: TreeNode) => {
       return getEditingProps?.(node)?.onLabelChanged !== undefined;
     },
     [getEditingProps],

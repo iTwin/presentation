@@ -7,7 +7,7 @@ import { Anchor, Text } from "@stratakit/bricks";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
-import { PresentationHierarchyNode } from "../TreeNode.js";
+import { TreeNode } from "../TreeNode.js";
 import { ErrorItem } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
@@ -103,7 +103,7 @@ export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, onFilte
 }
 
 type ErrorItemContainerProps = {
-  errorNode: PresentationHierarchyNode;
+  errorNode: TreeNode;
   message: string;
   actions?: { action: () => void; label: string; condition: () => boolean }[];
 } & Pick<MessageWithLinkProps, "scrollToElement">;

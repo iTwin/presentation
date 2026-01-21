@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import { NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
-import { PresentationHierarchyNode } from "../presentation-hierarchies-react/TreeNode.js";
+import { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
 import { useNodeHighlighting } from "../presentation-hierarchies-react/UseNodeHighlighting.js";
 import { render, renderHook } from "./TestUtils.js";
 
@@ -35,7 +35,7 @@ describe("useNodeHighlighting", () => {
   });
 
   it("does not highlight text when node is not filter target", () => {
-    const rootNodes = [createHierarchyNode({ id: "node", label: "node" })];
+    const rootNodes = [createTreeNode({ id: "node", label: "node" })];
 
     const { result } = renderHook(useNodeHighlighting, {
       initialProps: { highlightText: "node" },
@@ -109,7 +109,7 @@ describe("useNodeHighlighting", () => {
   });
 });
 
-function createHierarchyNode(partial?: Partial<PresentationHierarchyNode>): PresentationHierarchyNode {
+function createTreeNode(partial?: Partial<TreeNode>): TreeNode {
   return {
     id: "test-node",
     label: "test-node",
@@ -133,8 +133,8 @@ function createNonGroupingHierarchyNode(partial?: Partial<NonGroupingHierarchyNo
   };
 }
 
-function createdSearchTargetHierarchyNode(partial?: Partial<PresentationHierarchyNode>): PresentationHierarchyNode {
-  const node = createHierarchyNode(partial);
+function createdSearchTargetHierarchyNode(partial?: Partial<TreeNode>): TreeNode {
+  const node = createTreeNode(partial);
   return {
     ...node,
     nodeData: {

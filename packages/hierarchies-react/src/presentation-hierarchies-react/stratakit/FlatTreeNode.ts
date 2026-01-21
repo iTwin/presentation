@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useMemo } from "react";
-import { PresentationHierarchyNode } from "../TreeNode.js";
+import { TreeNode } from "../TreeNode.js";
 
 /**
  * Placeholder item that is added to hierarchy as a child for a parent item while its child items are loading.
@@ -18,7 +18,7 @@ interface FlatPlaceholderItem {
 }
 
 /**
- * An item containing `PresentationHierarchyNode` node with properties needed for a flat tree structure.
+ * An item containing `TreeNode` node with properties needed for a flat tree structure.
  *
  * @alpha
  */
@@ -27,7 +27,7 @@ export interface FlatTreeNodeItem {
   level: number;
   levelSize: number;
   posInLevel: number;
-  node: PresentationHierarchyNode;
+  node: TreeNode;
 }
 
 /**
@@ -37,7 +37,7 @@ export interface FlatTreeNodeItem {
  * @alpha
  * */
 export interface ErrorItem {
-  errorNode: PresentationHierarchyNode & Pick<Required<PresentationHierarchyNode>, "error">;
+  errorNode: TreeNode & Pick<Required<TreeNode>, "error">;
   expandTo: (expandNode: (nodeId: string) => void) => void;
 }
 
@@ -55,17 +55,17 @@ export function isPlaceholderItem(item: FlatTreeItem): item is FlatPlaceholderIt
 }
 
 /**
- * Used to get a list of `FlatTreeItem` objects for the given list of `PresentationHierarchyNode` objects that represent
+ * Used to get a list of `FlatTreeItem` objects for the given list of `TreeNode` objects that represent
  * a hierarchical structure. The resulting items can be used to render the hierarchy in a flat manner, e.g. using a
  * virtualized list.
  *
  * @alpha
  */
-export function useFlatTreeItems(rootNodes: PresentationHierarchyNode[]) {
+export function useFlatTreeItems(rootNodes: TreeNode[]) {
   return useMemo(() => getFlatItems(rootNodes, 1), [rootNodes]);
 }
 
-function getFlatItems(nodes: PresentationHierarchyNode[], level: number) {
+function getFlatItems(nodes: TreeNode[], level: number) {
   const flatItems: FlatTreeItem[] = [];
   nodes.forEach((node, index) => {
     flatItems.push({ node, id: node.id, level, levelSize: nodes.length, posInLevel: index + 1 });
@@ -88,7 +88,7 @@ function getFlatItems(nodes: PresentationHierarchyNode[], level: number) {
  *
  * @alpha
  */
-export function useErrorList(rootNodes: PresentationHierarchyNode[]): ErrorItem[] {
+export function useErrorList(rootNodes: TreeNode[]): ErrorItem[] {
   return useMemo(
     () =>
       rootNodes.flatMap((rootNode) => {
@@ -105,10 +105,7 @@ export function useErrorList(rootNodes: PresentationHierarchyNode[]): ErrorItem[
 }
 
 /** @internal */
-export function findPathToNode(
-  rootNodes: PresentationHierarchyNode[],
-  predicate: (node: PresentationHierarchyNode) => boolean,
-): PresentationHierarchyNode[] | undefined {
+export function findPathToNode(rootNodes: TreeNode[], predicate: (node: TreeNode) => boolean): TreeNode[] | undefined {
   for (const parent of rootNodes) {
     if (predicate(parent)) {
       return [parent];
@@ -123,7 +120,7 @@ export function findPathToNode(
   return undefined;
 }
 
-function getErrorItems(parent: PresentationHierarchyNode, path: string[]) {
+function getErrorItems(parent: TreeNode, path: string[]) {
   const errorList: ErrorItem[] = [];
 
   if (parent.children === true) {
@@ -150,6 +147,6 @@ function expandTo(expandNode: (nodeId: string) => void, path: string[]) {
   path.forEach((nodeId) => expandNode(nodeId));
 }
 
-function isErrorNode(node: PresentationHierarchyNode): node is PresentationHierarchyNode & Pick<Required<PresentationHierarchyNode>, "error"> {
+function isErrorNode(node: TreeNode): node is TreeNode & Pick<Required<TreeNode>, "error"> {
   return node.error !== undefined;
 }

@@ -23,7 +23,7 @@ import {
 import { Tree } from "@stratakit/structures";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { TreeRendererProps } from "../Renderers.js";
-import { PresentationHierarchyNode } from "../TreeNode.js";
+import { TreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
 import { ErrorItem, findPathToNode, FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
@@ -45,30 +45,30 @@ interface TreeRendererOwnProps {
   /** A render function for errors' display component. Defaults to `<TreeErrorRenderer />`. */
   errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
   /** Props that defines if current node supports editing. */
-  getEditingProps?: (node: PresentationHierarchyNode) => TreeNodeEditingProps | undefined;
+  getEditingProps?: (node: TreeNode) => TreeNodeEditingProps | undefined;
 
   /** Custom props for the root Tree component. */
   treeRootProps?: Partial<Omit<ComponentProps<typeof Tree.Root>, "style">>;
 
   /** A callback that returns tree item props for specific node. */
-  getTreeItemProps?: (node: PresentationHierarchyNode) => Partial<Omit<StrataKitTreeItemProps, "selected" | "aria-level" | "aria-posinset" | "aria-setsize">>;
+  getTreeItemProps?: (node: TreeNode) => Partial<Omit<StrataKitTreeItemProps, "selected" | "aria-level" | "aria-posinset" | "aria-setsize">>;
 
   /**
    * Callback that returns menu actions for tree item.
    * Must return an array of `<TreeActionBase />` or `<Divider />` elements.
    */
-  getMenuActions?: (props: { targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }) => ReactNode[];
+  getMenuActions?: (props: { targetNode: TreeNode; selectedNodes: TreeNode[] }) => ReactNode[];
   /**
    * Callback that returns inline actions for tree item.
    * Must return an array of `<TreeActionBase />` elements.
    * Max 2 items.
    */
-  getInlineActions?: (props: { targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }) => ReactNode[];
+  getInlineActions?: (props: { targetNode: TreeNode; selectedNodes: TreeNode[] }) => ReactNode[];
   /**
    * Callback that returns actions for tree item context menu.
    * Must return an array of `<TreeActionBase />` or `<Divider />` elements.
    */
-  getContextMenuActions?: (props: { targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }) => ReactNode[];
+  getContextMenuActions?: (props: { targetNode: TreeNode; selectedNodes: TreeNode[] }) => ReactNode[];
 }
 
 /** @alpha */
@@ -79,7 +79,7 @@ export interface StrataKitTreeRendererAttributes {
    *
    * Returns "node-not-found" if no node matches the predicate, "success" if rename was initiated.
    */
-  renameNode: (predicate: (node: PresentationHierarchyNode) => boolean) => "node-not-found" | "success";
+  renameNode: (predicate: (node: TreeNode) => boolean) => "node-not-found" | "success";
 }
 
 /** @alpha */
@@ -222,7 +222,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
   };
 
   const getSelectedNodes = useMemo(() => {
-    let calculatedSelectedNodes: PresentationHierarchyNode[];
+    let calculatedSelectedNodes: TreeNode[];
     return () => {
       if (calculatedSelectedNodes === undefined) {
         calculatedSelectedNodes = flatItems
@@ -303,7 +303,7 @@ const VirtualTreeItem = memo(
 type HierarchyNodeItemProps = {
   item: FlatTreeNodeItem;
   style?: CSSProperties;
-  getSelectedNodes: () => PresentationHierarchyNode[];
+  getSelectedNodes: () => TreeNode[];
 } & Pick<TreeNodeRendererProps, "expandNode" | "reloadTree" | "selected"> &
   Pick<TreeRendererOwnProps, "getContextMenuActions" | "getInlineActions" | "getMenuActions" | "getTreeItemProps"> &
   Pick<ReturnType<typeof useSelectionHandler>, "onNodeClick" | "onNodeKeyDown">;
