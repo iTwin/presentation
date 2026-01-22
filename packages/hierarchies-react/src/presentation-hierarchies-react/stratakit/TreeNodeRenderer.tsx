@@ -277,7 +277,7 @@ function LabelEditor({
               setNewLabelValue(event.target.value);
               setHasError(false);
             }}
-            onKeyDown={(event) => {
+            onKeyUp={(event) => {
               if (event.key === "Enter") {
                 handleLabelChange();
               } else if (event.key === "Escape") {
