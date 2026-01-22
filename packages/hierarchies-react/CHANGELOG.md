@@ -1,5 +1,28 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.50
+
+### Major Changes
+
+- [#1184](https://github.com/iTwin/presentation/pull/1184): Fixed selection handling in `StrataKitTreeRenderer`. Mouse double clicks are now correctly ignored to prevent rapid selection toggling. Keyboard selection using `Space` and `Enter` keys is working.
+
+  **Breaking changes**
+  - `useSelectionHandler` is no longer exported. This function is an internal implementation detail of `StrataKitTreeRenderer` and should not be used directly.
+
+- [#1181](https://github.com/iTwin/presentation/pull/1181): **Breaking change:** Rename `PresentationHierarchyNode` to `TreeNode` for clarity.
+
+  We already have a `HierarchyNode` type in `@itwin/presentation-hierarchies`, so having a `PresentationHierarchyNode` in `@itwin/presentation-hierarchies-react` was causing confusion. Additionally, this change aligns with the naming convention that we try to keep, where "hierarchy" refers to data and "tree" refers to UI components.
+
+- [#1183](https://github.com/iTwin/presentation/pull/1183): Clean up `TreeErrorRenderer` and `ErrorItemRenderer`.
+
+  **Breaking changes:**
+  - Replaced `useErrorList` hook with `useErrorNodes` hook that returns error nodes (`TreeNode[]`) instead of error items. The `expandTo` function became unnecessary, because expanding to error nodes is now handled internally. As a result, the whole `ErrorItem` type (result of `useErrorList`) was removed. Reacting to this, the following other breaking changes were made:
+    - Renamed `errorItem` -> `errorNode` in `ErrorItemRenderer` component and changed the type from removed `ErrorItem` to `TreeNode`.
+    - Renamed `errorList` -> `errorNodes` in `TreeErrorRenderer` component and changed the type from `ErrorItem[]` to `TreeNode[]`.
+  - The `reloadTree` function prop in `ErrorItemRenderer` and `TreeErrorRenderer` components no longer takes the `state` option. The option was required and always had the same value, so it was redundant.
+  - Renamed `onFilterClick` -> `filterHierarchyLevel` in `ErrorItemRenderer`, `TreeErrorRenderer` and `StrataKitTreeRenderer` components. This makes its name consistent with other function props ("do something" vs "on something happened").
+  - Renamed `scrollToElement` -> `scrollToNode` in `ErrorItemRenderer` and `TreeErrorRenderer`, and changed its type to take `TreeNode` instead of an error item returned by `useErrorList` hook.
+
 ## 2.0.0-alpha.49
 
 ### Major Changes
