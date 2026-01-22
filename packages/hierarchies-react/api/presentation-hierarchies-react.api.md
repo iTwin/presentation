@@ -234,7 +234,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
 
 // @alpha (undocumented)
 export interface StrataKitTreeRendererAttributes {
-    renameNode: (predicate: (node: TreeNode) => boolean) => "node-not-found" | "success";
+    renameNode: (nodePredicate: (node: TreeNode) => boolean) => "node-not-found" | "success";
 }
 
 // @alpha (undocumented)
