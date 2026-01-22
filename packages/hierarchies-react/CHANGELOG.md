@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.51
+
+### Major Changes
+
+- [#1185](https://github.com/iTwin/presentation/pull/1185): Bumped peer dependencies:
+  - `@stratakit/bricks`: `^0.5.4`
+  - `@stratakit/foundations`: `^0.4.5`
+  - `@stratakit/icons`: `^0.2.2`
+  - `@stratakit/structures`: `^0.5.4`
+
 ## 2.0.0-alpha.50
 
 ### Major Changes
