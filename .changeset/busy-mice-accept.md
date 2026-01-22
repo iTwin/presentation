@@ -2,7 +2,7 @@
 "@itwin/presentation-hierarchies-react": minor
 ---
 
-Fixed selection handling in `StrataKitTreeRenderer`. Mouse double clicks now correctly ignored to prevent rapid selection toggling. Keyboard selection using `Space` and `Enter` keys is working.
+Fixed selection handling in `StrataKitTreeRenderer`. Mouse double clicks are now correctly ignored to prevent rapid selection toggling. Keyboard selection using `Space` and `Enter` keys is working.
 
 **Breaking changes**
 
