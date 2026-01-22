@@ -368,20 +368,6 @@ interface UseNodeHighlightingResult {
 }
 
 // @public
-export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult;
-
-// @alpha
-type UseSelectionHandlerProps = Pick<TreeRendererProps, "selectNodes" | "rootNodes"> & {
-    selectionMode: SelectionMode_2;
-};
-
-// @public
-interface UseSelectionHandlerResult {
-    onNodeClick: (node: TreeNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
-    onNodeKeyDown: (node: TreeNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
-}
-
-// @public
 export function useTree(props: UseTreeProps): UseTreeResult;
 
 // @public (undocumented)
