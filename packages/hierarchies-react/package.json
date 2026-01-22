@@ -63,10 +63,10 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@stratakit/bricks": "^0.5",
-    "@stratakit/foundations": "^0.4",
-    "@stratakit/icons": "^0.2",
-    "@stratakit/structures": "^0.5",
+    "@stratakit/bricks": "^0.5.4",
+    "@stratakit/foundations": "^0.4.5",
+    "@stratakit/icons": "^0.2.2",
+    "@stratakit/structures": "^0.5.4",
     "react": "^17.0 || ^18.0",
     "react-dom": "^17.0 || ^18.0"
   },

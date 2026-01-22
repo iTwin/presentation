@@ -146,17 +146,17 @@ catalogs:
       version: 1.0.0
   stratakit:
     '@stratakit/bricks':
-      specifier: ^0.5.3
-      version: 0.5.3
+      specifier: ^0.5.4
+      version: 0.5.4
     '@stratakit/foundations':
-      specifier: ^0.4.3
-      version: 0.4.3
+      specifier: ^0.4.5
+      version: 0.4.5
     '@stratakit/icons':
       specifier: ^0.2.2
       version: 0.2.2
     '@stratakit/structures':
-      specifier: ^0.5.3
-      version: 0.5.3
+      specifier: ^0.5.4
+      version: 0.5.4
   test-tools:
     '@testing-library/dom':
       specifier: ^10.4.1
@@ -773,7 +773,7 @@ importers:
         version: 5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)
       '@itwin/appui-react':
         specifier: catalog:appui
-        version: 5.23.0(0c5fa42af8841712fbac9517daa063e3)
+        version: 5.23.0(29ebfb00e832776df2cc7cd8ca56358b)
       '@itwin/build-tools':
         specifier: catalog:build-tools
         version: 5.5.1(@types/node@22.19.7)
@@ -854,16 +854,16 @@ importers:
         version: link:../../../packages/unified-selection-react
       '@stratakit/bricks':
         specifier: catalog:stratakit
-        version: 0.5.3(@stratakit/foundations@0.4.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 0.5.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@stratakit/foundations':
         specifier: catalog:stratakit
-        version: 0.4.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 0.4.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@stratakit/icons':
         specifier: catalog:stratakit
         version: 0.2.2
       '@stratakit/structures':
         specifier: catalog:stratakit
-        version: 0.5.3(@stratakit/foundations@0.4.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.27)(immer@10.2.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
+        version: 0.5.4(@types/react@18.3.27)(immer@10.2.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1308,16 +1308,16 @@ importers:
         version: 5.1.0(eslint@9.39.2)(typescript@5.7.3)
       '@stratakit/bricks':
         specifier: catalog:stratakit
-        version: 0.5.3(@stratakit/foundations@0.4.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 0.5.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@stratakit/foundations':
         specifier: catalog:stratakit
-        version: 0.4.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 0.4.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@stratakit/icons':
         specifier: catalog:stratakit
         version: 0.2.2
       '@stratakit/structures':
         specifier: catalog:stratakit
-        version: 0.5.3(@stratakit/foundations@0.4.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.27)(immer@10.2.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
+        version: 0.5.4(@types/react@18.3.27)(immer@10.2.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
       '@testing-library/dom':
         specifier: catalog:test-tools
         version: 10.4.1
@@ -4287,15 +4287,14 @@ packages:
   '@socket.io/component-emitter@3.1.2':
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
 
-  '@stratakit/bricks@0.5.3':
-    resolution: {integrity: sha512-qV97A72BmAO0C3zPp+R7UdYgPGSuXHGHNAxFQ8DineezHLiKBd1Z1tlaoEj6xHNGj4PeXzczekwYlYGKFQ0aUg==}
+  '@stratakit/bricks@0.5.4':
+    resolution: {integrity: sha512-3ixeNPZeAr0+cjouFBZevsC0gl8k4kWBaK2vhJyySsLNnCxBHoQIAUTl5DaSi8suyKdsl504AAq00/mmfuL37Q==}
     peerDependencies:
-      '@stratakit/foundations': ^0.4.3
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
 
-  '@stratakit/foundations@0.4.3':
-    resolution: {integrity: sha512-TT5XXU+WPsIRih4TDpt0/S5iYcW7JPqP9RCFlN4c2hsJwzedsKuSJUH/evRZ3RKl4Dk2C3e7WB+hH8i1jcm8cA==}
+  '@stratakit/foundations@0.4.5':
+    resolution: {integrity: sha512-LacSyditXDO7/ckRwUYwOp+bA90HjtblQwR+wRFyFAH6FQMo75Ev3I0ulfgBeCIN2WWB8uqFKGTA8ZTjs/ONUA==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -4308,10 +4307,9 @@ packages:
   '@stratakit/icons@0.2.2':
     resolution: {integrity: sha512-CXv2z0PhC+KU1dqZ//1gxZe2LTToO5WbhFmI65H1+VNDeZ+WH9GnaWHhOnmY54s0jQjOwut7jjSKkYXJbL8llg==}
 
-  '@stratakit/structures@0.5.3':
-    resolution: {integrity: sha512-9fmlLdwRveNnUSDpxtzo2UpT671dr1iruijlnBUSsb5gXkI+3gZ6G/jpOcQA97m8VO/FTHGAL4yu2V6irXi9eg==}
+  '@stratakit/structures@0.5.4':
+    resolution: {integrity: sha512-zLm4Hvhoy0Vb9baOlf4wCVQOLXRzxkcQD/3wYWfOl5CVvQVvnzxToWf1vfkXKyam0mjeHNVql5YlwtS0VXjLyQ==}
     peerDependencies:
-      '@stratakit/foundations': ^0.4.3
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
 
@@ -10928,7 +10926,7 @@ snapshots:
     dependencies:
       '@itwin/core-bentley': 5.6.0-dev.8
 
-  '@itwin/appui-react@5.23.0(0c5fa42af8841712fbac9517daa063e3)':
+  '@itwin/appui-react@5.23.0(29ebfb00e832776df2cc7cd8ca56358b)':
     dependencies:
       '@itwin/appui-abstract': 5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)
       '@itwin/components-react': 5.23.0(@itwin/appui-abstract@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8))(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-react@5.23.0(@itwin/appui-abstract@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8))(@itwin/core-bentley@5.6.0-dev.8)(@itwin/itwinui-react@3.20.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@itwin/itwinui-react@3.20.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -10970,7 +10968,7 @@ snapshots:
       rimraf: 6.1.2
       tree-kill: 1.2.2
       typedoc: 0.26.11(typescript@5.6.3)
-      typedoc-plugin-merge-modules: 6.1.0(typedoc@0.26.11(typescript@5.7.3))
+      typedoc-plugin-merge-modules: 6.1.0(typedoc@0.26.11(typescript@5.6.3))
       typescript: 5.6.3
       wtfnode: 0.9.4
       yargs: 17.7.2
@@ -12504,16 +12502,16 @@ snapshots:
 
   '@socket.io/component-emitter@3.1.2': {}
 
-  '@stratakit/bricks@0.5.3(@stratakit/foundations@0.4.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@stratakit/bricks@0.5.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@ariakit/react': 0.4.20(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@stratakit/foundations': 0.4.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@stratakit/foundations': 0.4.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       classnames: 2.5.1
       react: 18.3.1
       react-compiler-runtime: 1.0.0(react@18.3.1)
       react-dom: 18.3.1(react@18.3.1)
 
-  '@stratakit/foundations@0.4.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@stratakit/foundations@0.4.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@ariakit/react': 0.4.20(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       classnames: 2.5.1
@@ -12524,11 +12522,11 @@ snapshots:
 
   '@stratakit/icons@0.2.2': {}
 
-  '@stratakit/structures@0.5.3(@stratakit/foundations@0.4.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.27)(immer@10.2.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))':
+  '@stratakit/structures@0.5.4(@types/react@18.3.27)(immer@10.2.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))':
     dependencies:
       '@ariakit/react': 0.4.20(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@stratakit/bricks': 0.5.3(@stratakit/foundations@0.4.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@stratakit/foundations': 0.4.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@stratakit/bricks': 0.5.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@stratakit/foundations': 0.4.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       classnames: 2.5.1
       react: 18.3.1
       react-compiler-runtime: 1.0.0(react@18.3.1)
@@ -17304,7 +17302,7 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typedoc-plugin-merge-modules@6.1.0(typedoc@0.26.11(typescript@5.7.3)):
+  typedoc-plugin-merge-modules@6.1.0(typedoc@0.26.11(typescript@5.6.3)):
     dependencies:
       typedoc: 0.26.11(typescript@5.6.3)
 
