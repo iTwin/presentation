@@ -337,6 +337,16 @@ const HierarchyNodeItem = memo(
       handleNodeSelect({ nodeId: node.id, isSelected: selected ?? false, shiftDown: e.shiftKey, ctrlDown: e.ctrlKey });
     });
 
+    const onMouseDown = useEvent<Required<TreeNodeRendererProps>["onMouseDown"]>((e) => {
+      if (treeItemProps?.onMouseDown) {
+        treeItemProps.onMouseDown(e);
+      }
+      // prevent text selection on shift+click
+      if (e.shiftKey) {
+        e.preventDefault();
+      }
+    });
+
     const ref = useMergedRefs(forwardedRef, nodeRef);
     return (
       <StrataKitTreeNodeRenderer
@@ -350,6 +360,7 @@ const HierarchyNodeItem = memo(
         node={item.node}
         selected={selected}
         onClick={onClick}
+        onMouseDown={onMouseDown}
       />
     );
   }),
