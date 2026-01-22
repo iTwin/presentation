@@ -10,7 +10,7 @@ import { TreeNode } from "../TreeNode.js";
  * Placeholder item that is added to hierarchy as a child for a parent item while its child items are loading.
  *
  * @alpha
- * */
+ */
 interface FlatPlaceholderItem {
   id: string;
   level: number;
@@ -28,17 +28,6 @@ export interface FlatTreeNodeItem {
   levelSize: number;
   posInLevel: number;
   node: TreeNode;
-}
-
-/**
- * An item used to build an error message.
- * Returned by `useErrorList`.
- *
- * @alpha
- * */
-export interface ErrorItem {
-  errorNode: TreeNode & Pick<Required<TreeNode>, "error">;
-  expandTo: (expandNode: (nodeId: string) => void) => void;
 }
 
 /**
@@ -84,67 +73,46 @@ function getFlatItems(nodes: TreeNode[], level: number) {
 }
 
 /**
- * Finds and returns all items containing errors in a given hierarchy in the form of `ErrorItem[]`.
+ * Finds and returns all nodes containing errors in a given hierarchy.
  *
  * @alpha
  */
-export function useErrorList(rootNodes: TreeNode[]): ErrorItem[] {
+export function useErrorNodes(rootNodes: TreeNode[]): Array<TreeNode & Pick<Required<TreeNode>, "error">> {
   return useMemo(
     () =>
       rootNodes.flatMap((rootNode) => {
         if (isErrorNode(rootNode)) {
-          return [{ errorNode: rootNode, expandTo: (expandNode) => expandTo(expandNode, []) }];
+          return [rootNode];
         }
         if (rootNode.children === true) {
           return [];
         }
-        return getErrorItems(rootNode, !rootNode.isExpanded ? [rootNode.id] : []);
+        return getErrorNodes(rootNode);
       }),
     [rootNodes],
   );
 }
 
-/** @internal */
-export function findPathToNode(rootNodes: TreeNode[], predicate: (node: TreeNode) => boolean): TreeNode[] | undefined {
-  for (const parent of rootNodes) {
-    if (predicate(parent)) {
-      return [parent];
-    }
-    if (parent.children && parent.children !== true) {
-      const childPath = findPathToNode(parent.children, predicate);
-      if (childPath) {
-        return [parent, ...childPath];
-      }
-    }
-  }
-  return undefined;
-}
-
-function getErrorItems(parent: TreeNode, path: string[]) {
-  const errorList: ErrorItem[] = [];
+function getErrorNodes(parent: TreeNode) {
+  const errorList: ReturnType<typeof useErrorNodes> = [];
 
   if (parent.children === true) {
     return [];
   }
 
-  const pathToChild = [...path, ...(!parent.isExpanded ? [parent.id] : [])];
   parent.children.forEach((node) => {
     if (isErrorNode(node)) {
-      errorList.push({ errorNode: node, expandTo: (expandNode) => expandTo(expandNode, path) });
+      errorList.push(node);
       return;
     }
 
     if (node.children !== true) {
-      const childErrorList = getErrorItems(node, pathToChild);
+      const childErrorList = getErrorNodes(node);
       errorList.push(...childErrorList);
       return;
     }
   });
   return errorList;
-}
-
-function expandTo(expandNode: (nodeId: string) => void, path: string[]) {
-  path.forEach((nodeId) => expandNode(nodeId));
 }
 
 function isErrorNode(node: TreeNode): node is TreeNode & Pick<Required<TreeNode>, "error"> {

@@ -26,7 +26,7 @@ import { TreeRendererProps } from "../Renderers.js";
 import { TreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
-import { ErrorItem, findPathToNode, FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
+import { FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
 import { TreeNodeEditingProps, TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./TreeNodeRenameAction.js";
@@ -79,12 +79,12 @@ export interface StrataKitTreeRendererAttributes {
    *
    * Returns "node-not-found" if no node matches the predicate, "success" if rename was initiated.
    */
-  renameNode: (predicate: (node: TreeNode) => boolean) => "node-not-found" | "success";
+  renameNode: (nodePredicate: (node: TreeNode) => boolean) => "node-not-found" | "success";
 }
 
 /** @alpha */
 type StrataKitTreeRendererProps = TreeRendererProps &
-  Pick<TreeErrorRendererProps, "onFilterClick"> &
+  Pick<TreeErrorRendererProps, "filterHierarchyLevel"> &
   TreeRendererOwnProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
@@ -108,7 +108,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
     treeLabel,
     localizedStrings,
     getHierarchyLevelDetails,
-    onFilterClick,
+    filterHierarchyLevel,
     reloadTree,
     isNodeSelected,
     errorRenderer,
@@ -125,9 +125,8 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
     selectionMode: selectionMode ?? "single",
   });
   const flatItems = useFlatTreeItems(rootNodes);
-  const errorList = useErrorList(rootNodes);
+  const errorNodes = useErrorNodes(rootNodes);
 
-  const scrollToNode = useRef<{ id: string; action?: () => void } | undefined>(undefined);
   const parentRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -137,70 +136,21 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
     estimateSize: () => 28,
     overscan: 10,
   });
-
   const items = virtualizer.getVirtualItems();
+  const expandAndScrollToNode = useExpandAndScrollToNode({ rootNodes, flatItems, expandNode, virtualizer });
 
   const renameContext = useTreeNodeRenameContextValue({
     getEditingProps,
   });
-
-  const scrollToElement = useCallback(
-    ({ errorNode, expandTo }: ErrorItem) => {
-      const index = flatItems.findIndex((flatItem) => flatItem.id === errorNode.id);
-      if (index === -1) {
-        expandTo((nodeId) => expandNode(nodeId, true));
-        scrollToNode.current = { id: errorNode.id };
-        return;
-      }
-      virtualizer.scrollToIndex(index, { align: "end" });
-    },
-    [expandNode, flatItems, virtualizer],
-  );
-
-  useEffect(() => {
-    if (scrollToNode.current === undefined) {
-      return;
-    }
-    const targetNodeId = scrollToNode.current.id;
-    const index = flatItems.findIndex((flatItem) => flatItem.id === targetNodeId);
-    if (index === -1) {
-      return;
-    }
-    virtualizer.scrollToIndex(index, { align: "auto" });
-    scrollToNode.current.action?.();
-    scrollToNode.current = undefined;
-  }, [flatItems, virtualizer]);
-
   useImperativeHandle(forwardedRef, () => ({
-    renameNode: (predicate) => {
-      const pathToNode = findPathToNode(rootNodes, predicate);
-      if (!pathToNode) {
-        return "node-not-found";
-      }
-      const targetNode = pathToNode.pop()!;
-      const collapsedNodes = pathToNode.filter((pathNode) => !pathNode.isExpanded);
-
-      const handleRename = () => {
-        // give time to scroll node into view before starting rename
-        requestAnimationFrame(() => {
-          renameContext.startRename(targetNode);
-        });
-      };
-
-      if (collapsedNodes.length > 0) {
-        collapsedNodes.forEach((node) => expandNode(node.id, true));
-        scrollToNode.current = {
-          id: targetNode.id,
-          action: handleRename,
-        };
-        return "success";
-      }
-
-      const index = flatItems.findIndex((flatItem) => flatItem.id === targetNode.id);
-      virtualizer.scrollToIndex(index, { align: "auto" });
-      handleRename();
-      return "success";
-    },
+    renameNode: (nodePredicate) =>
+      expandAndScrollToNode({
+        nodePredicate,
+        onComplete: (targetNode) => {
+          // give time to scroll node into view before starting rename
+          requestAnimationFrame(() => renameContext.startRename(targetNode));
+        },
+      }),
   }));
 
   const cancelRename = renameContext.cancelRename;
@@ -214,11 +164,11 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
 
   const errorRendererProps: TreeErrorRendererProps = {
     treeLabel,
-    errorList,
-    scrollToElement,
+    errorNodes,
+    scrollToNode: (node) => expandAndScrollToNode({ nodePredicate: (n) => n.id === node.id }),
     getHierarchyLevelDetails,
-    onFilterClick,
-    reloadTree,
+    filterHierarchyLevel,
+    reloadTree: useCallback<TreeErrorRendererProps["reloadTree"]>(({ parentNodeId }) => reloadTree({ parentNodeId, state: "reset" }), [reloadTree]),
   };
 
   const getSelectedNodes = useMemo(() => {
@@ -270,6 +220,77 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
     </LocalizationContextProvider>
   );
 });
+
+function useExpandAndScrollToNode({
+  rootNodes,
+  flatItems,
+  expandNode,
+  virtualizer,
+}: Pick<StrataKitTreeRendererProps, "rootNodes" | "expandNode"> & {
+  flatItems: ReturnType<typeof useFlatTreeItems>;
+  virtualizer: Pick<ReturnType<typeof useVirtualizer>, "scrollToIndex">;
+}) {
+  const expandToNode = (nodePredicate: (node: TreeNode) => boolean) => {
+    const pathToNode = findPathToNode(rootNodes, nodePredicate);
+    if (!pathToNode) {
+      return undefined;
+    }
+    const targetNode = pathToNode.pop()!;
+    const collapsedNodes = pathToNode.filter((pathNode) => !pathNode.isExpanded);
+    collapsedNodes.forEach((node) => expandNode(node.id, true));
+    return { targetNode, didExpand: collapsedNodes.length > 0 };
+  };
+
+  const scrollToNode = useRef<{ id: string; onScrollComplete?: () => void } | undefined>(undefined);
+  useEffect(() => {
+    if (scrollToNode.current === undefined) {
+      return;
+    }
+    const targetNodeId = scrollToNode.current.id;
+    const index = flatItems.findIndex((flatItem) => flatItem.id === targetNodeId);
+    if (index === -1) {
+      return;
+    }
+    virtualizer.scrollToIndex(index, { align: "auto" });
+    scrollToNode.current.onScrollComplete?.();
+    scrollToNode.current = undefined;
+  }, [flatItems, virtualizer]);
+
+  return ({ nodePredicate, onComplete }: { nodePredicate: (node: TreeNode) => boolean; onComplete?: (targetNode: TreeNode) => void }) => {
+    const expandResult = expandToNode(nodePredicate);
+    if (!expandResult) {
+      return "node-not-found";
+    }
+
+    const { targetNode, didExpand } = expandResult;
+    if (didExpand) {
+      scrollToNode.current = {
+        id: targetNode.id,
+        onScrollComplete: onComplete ? () => onComplete(targetNode) : undefined,
+      };
+    } else {
+      const index = flatItems.findIndex((flatItem) => flatItem.id === targetNode.id);
+      virtualizer.scrollToIndex(index, { align: "auto" });
+      onComplete?.(targetNode);
+    }
+    return "success";
+  };
+}
+
+function findPathToNode(rootNodes: TreeNode[], nodePredicate: (node: TreeNode) => boolean): TreeNode[] | undefined {
+  for (const parent of rootNodes) {
+    if (nodePredicate(parent)) {
+      return [parent];
+    }
+    if (parent.children && parent.children !== true) {
+      const childPath = findPathToNode(parent.children, nodePredicate);
+      if (childPath) {
+        return [parent, ...childPath];
+      }
+    }
+  }
+  return undefined;
+}
 
 type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item"> & {
   start: number;

@@ -17,7 +17,7 @@ public;interface;TreeNode
 alpha;const;TreeNodeFilterAction
 alpha;const;TreeNodeRenameAction
 alpha;type;TreeRendererProps
-alpha;function;useErrorList
+alpha;function;useErrorNodes
 alpha;function;useFlatTreeItems
 public;function;useIModelTree
 public;function;useIModelUnifiedSelectionTree

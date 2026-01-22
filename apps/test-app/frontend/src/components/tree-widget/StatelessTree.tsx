@@ -194,7 +194,7 @@ function Tree({
       <TreeRendererWithFilterAction
         {...treeProps.treeRendererProps}
         ref={treeRef}
-        onFilterClick={setFilteringOptions}
+        filterHierarchyLevel={setFilteringOptions}
         selectionMode={"extended"}
         treeLabel={treeLabel}
         getTreeItemProps={(node) => ({
