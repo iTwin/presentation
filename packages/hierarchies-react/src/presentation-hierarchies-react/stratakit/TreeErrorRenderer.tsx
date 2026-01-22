@@ -20,7 +20,7 @@ interface TreeErrorRendererOwnProps {
    * as it's used for creating a unique accessible label for the error region.
    */
   treeLabel: string;
-  /** List of error nodes to render errors for be displayed */
+  /** List of error nodes to render errors for. */
   errorNodes: ReturnType<typeof useErrorNodes>;
   /** Callback to render custom error messages. Component should be wrapped in `ErrorRegion.Item` from `@itwin/itwinui-react` package. */
   renderError?: (props: ErrorItemRendererProps) => ReactElement;
