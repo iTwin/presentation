@@ -42,7 +42,7 @@ type UseSelectionHandlerProps = Pick<TreeRendererProps, "selectNodes" | "rootNod
  * @internal
  */
 interface UseSelectionHandlerResult {
-  /** Should be called by node renderer when a node component is clicked. */
+  /** Updates nodes selection based on current node state and modifier keys used. */
   handleNodeSelect: (props: { nodeId: string; isSelected: boolean; shiftDown: boolean; ctrlDown: boolean }) => void;
 }
 
