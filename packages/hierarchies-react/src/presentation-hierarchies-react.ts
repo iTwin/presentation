@@ -16,7 +16,7 @@ export { StrataKitTreeRenderer, StrataKitTreeRendererAttributes } from "./presen
 export { StrataKitRootErrorRenderer } from "./presentation-hierarchies-react/stratakit/RootErrorRenderer.js";
 export { TreeErrorRenderer } from "./presentation-hierarchies-react/stratakit/TreeErrorRenderer.js";
 export { ErrorItemRenderer } from "./presentation-hierarchies-react/stratakit/ErrorItemRenderer.js";
-export { useFlatTreeItems, useErrorList, FlatTreeItem } from "./presentation-hierarchies-react/stratakit/FlatTreeNode.js";
+export { useFlatTreeItems, useErrorNodes, FlatTreeItem } from "./presentation-hierarchies-react/stratakit/FlatTreeNode.js";
 export { LocalizationContextProvider } from "./presentation-hierarchies-react/stratakit/LocalizationContext.js";
 
 export { GenericInstanceFilter, HierarchyNode, HierarchyProvider, getLogger, setLogger } from "@itwin/presentation-hierarchies";

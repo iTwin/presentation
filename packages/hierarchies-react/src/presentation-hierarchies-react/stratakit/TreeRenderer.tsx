@@ -26,7 +26,7 @@ import { TreeRendererProps } from "../Renderers.js";
 import { TreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
-import { FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
+import { FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
 import { TreeNodeEditingProps, TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./TreeNodeRenameAction.js";
@@ -125,7 +125,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
     selectionMode: selectionMode ?? "single",
   });
   const flatItems = useFlatTreeItems(rootNodes);
-  const errorList = useErrorList(rootNodes);
+  const errorNodes = useErrorNodes(rootNodes);
 
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -164,7 +164,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
 
   const errorRendererProps: TreeErrorRendererProps = {
     treeLabel,
-    errorList,
+    errorNodes,
     scrollToNode: (node) => expandAndScrollToNode({ nodePredicate: (n) => n.id === node.id }),
     getHierarchyLevelDetails,
     filterHierarchyLevel,

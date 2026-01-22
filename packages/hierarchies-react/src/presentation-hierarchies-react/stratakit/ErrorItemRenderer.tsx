@@ -8,12 +8,13 @@ import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
 import { TreeNode } from "../TreeNode.js";
-import { ErrorItem } from "./FlatTreeNode.js";
+import { useErrorNodes } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 /** @alpha */
 export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
-  errorItem: ErrorItem;
+  /** A node containing an error. */
+  errorNode: ReturnType<typeof useErrorNodes>[number];
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
   reloadTree: (options: { parentNodeId: string | undefined }) => void;
   /** A callback to scroll to the node associated with the error. */
@@ -31,10 +32,9 @@ export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHier
  *
  * @alpha
  */
-export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, filterHierarchyLevel, reloadTree, scrollToNode }: ErrorItemRendererProps) {
+export function ErrorItemRenderer({ errorNode, getHierarchyLevelDetails, filterHierarchyLevel, reloadTree, scrollToNode }: ErrorItemRendererProps) {
   const { localizedStrings } = useLocalizationContext();
 
-  const { errorNode } = errorItem;
   if (errorNode.error.type === "ResultSetTooLarge") {
     const limit = errorNode.error.resultSetSizeLimit;
     const onOverrideLimit = getHierarchyLevelDetails ? () => getHierarchyLevelDetails(errorNode.id)?.setSizeLimit(MAX_LIMIT_OVERRIDE) : undefined;

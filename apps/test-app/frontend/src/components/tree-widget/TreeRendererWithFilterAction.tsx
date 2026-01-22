@@ -96,10 +96,9 @@ export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttr
           <TreeErrorRenderer
             {...errorProps}
             renderError={(errorItemProps) => {
-              if (errorItemProps.errorItem.errorNode.error.type === "Unknown") {
-                return <ErrorRegion.Item message="Custom error" messageId={errorItemProps.errorItem.errorNode.id} />;
+              if (errorItemProps.errorNode.error.type === "Unknown") {
+                return <ErrorRegion.Item message="Custom error" messageId={errorItemProps.errorNode.id} />;
               }
-
               return <ErrorItemRenderer {...errorItemProps} />;
             }}
           />

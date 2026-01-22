@@ -31,16 +31,6 @@ export interface FlatTreeNodeItem {
 }
 
 /**
- * An item used to build an error message.
- * Returned by `useErrorList`.
- *
- * @alpha
- */
-export interface ErrorItem {
-  errorNode: TreeNode & Pick<Required<TreeNode>, "error">;
-}
-
-/**
  * An Item describing single tree item position and its content inside tree.
  * Returned by `useFlatTreeNodeList` hook.
  *
@@ -83,28 +73,28 @@ function getFlatItems(nodes: TreeNode[], level: number) {
 }
 
 /**
- * Finds and returns all items containing errors in a given hierarchy in the form of `ErrorItem[]`.
+ * Finds and returns all nodes containing errors in a given hierarchy.
  *
  * @alpha
  */
-export function useErrorList(rootNodes: TreeNode[]): ErrorItem[] {
+export function useErrorNodes(rootNodes: TreeNode[]): Array<TreeNode & Pick<Required<TreeNode>, "error">> {
   return useMemo(
     () =>
       rootNodes.flatMap((rootNode) => {
         if (isErrorNode(rootNode)) {
-          return [{ errorNode: rootNode }];
+          return [rootNode];
         }
         if (rootNode.children === true) {
           return [];
         }
-        return getErrorItems(rootNode);
+        return getErrorNodes(rootNode);
       }),
     [rootNodes],
   );
 }
 
-function getErrorItems(parent: TreeNode) {
-  const errorList: ErrorItem[] = [];
+function getErrorNodes(parent: TreeNode) {
+  const errorList: ReturnType<typeof useErrorNodes> = [];
 
   if (parent.children === true) {
     return [];
@@ -112,12 +102,12 @@ function getErrorItems(parent: TreeNode) {
 
   parent.children.forEach((node) => {
     if (isErrorNode(node)) {
-      errorList.push({ errorNode: node });
+      errorList.push(node);
       return;
     }
 
     if (node.children !== true) {
-      const childErrorList = getErrorItems(node);
+      const childErrorList = getErrorNodes(node);
       errorList.push(...childErrorList);
       return;
     }

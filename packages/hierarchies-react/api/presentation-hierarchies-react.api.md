@@ -51,18 +51,11 @@ interface CommonRendererProps {
 export type ErrorInfo = GenericErrorInfo | ResultSetTooLargeErrorInfo | NoFilterMatchesErrorInfo | ChildrenLoadErrorInfo;
 
 // @alpha
-interface ErrorItem {
-    // (undocumented)
-    errorNode: TreeNode & Pick<Required<TreeNode>, "error">;
-}
-
-// @alpha
-export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, filterHierarchyLevel, reloadTree, scrollToNode }: ErrorItemRendererProps): JSX_2.Element;
+export function ErrorItemRenderer({ errorNode, getHierarchyLevelDetails, filterHierarchyLevel, reloadTree, scrollToNode }: ErrorItemRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
-    // (undocumented)
-    errorItem: ErrorItem;
+    errorNode: ReturnType<typeof useErrorNodes>[number];
     filterHierarchyLevel?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
     reloadTree: (options: {
         parentNodeId: string | undefined;
@@ -253,17 +246,17 @@ export interface TreeActionBaseAttributes {
 type TreeActionBaseProps = ComponentProps<typeof Tree.ItemAction> & TreeActionBaseAttributes;
 
 // @alpha
-export function TreeErrorRenderer({ treeLabel, errorList, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): JSX_2.Element;
+export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): JSX_2.Element;
 
 // @alpha
 interface TreeErrorRendererOwnProps {
-    errorList: ErrorItem[];
+    errorNodes: ReturnType<typeof useErrorNodes>;
     renderError?: (props: ErrorItemRendererProps) => ReactElement;
     treeLabel: string;
 }
 
 // @alpha (undocumented)
-type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemRendererProps, "errorItem">;
+type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemRendererProps, "errorNode">;
 
 // @public
 export interface TreeNode {
@@ -339,7 +332,7 @@ export type TreeRendererProps = {
 } & CommonRendererProps;
 
 // @alpha
-export function useErrorList(rootNodes: TreeNode[]): ErrorItem[];
+export function useErrorNodes(rootNodes: TreeNode[]): Array<TreeNode & Pick<Required<TreeNode>, "error">>;
 
 // @alpha
 export function useFlatTreeItems(rootNodes: TreeNode[]): FlatTreeItem[];
