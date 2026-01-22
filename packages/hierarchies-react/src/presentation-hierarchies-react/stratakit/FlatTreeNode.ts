@@ -103,22 +103,6 @@ export function useErrorList(rootNodes: TreeNode[]): ErrorItem[] {
   );
 }
 
-/** @internal */
-export function findPathToNode(rootNodes: TreeNode[], predicate: (node: TreeNode) => boolean): TreeNode[] | undefined {
-  for (const parent of rootNodes) {
-    if (predicate(parent)) {
-      return [parent];
-    }
-    if (parent.children && parent.children !== true) {
-      const childPath = findPathToNode(parent.children, predicate);
-      if (childPath) {
-        return [parent, ...childPath];
-      }
-    }
-  }
-  return undefined;
-}
-
 function getErrorItems(parent: TreeNode) {
   const errorList: ErrorItem[] = [];
 

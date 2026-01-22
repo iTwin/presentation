@@ -26,7 +26,7 @@ import { TreeRendererProps } from "../Renderers.js";
 import { TreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
-import { findPathToNode, FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
+import { FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
 import { TreeNodeEditingProps, TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./TreeNodeRenameAction.js";
@@ -79,7 +79,7 @@ export interface StrataKitTreeRendererAttributes {
    *
    * Returns "node-not-found" if no node matches the predicate, "success" if rename was initiated.
    */
-  renameNode: (predicate: (node: TreeNode) => boolean) => "node-not-found" | "success";
+  renameNode: (nodePredicate: (node: TreeNode) => boolean) => "node-not-found" | "success";
 }
 
 /** @alpha */
@@ -231,8 +231,8 @@ function useExpandAndScrollToNode({
   flatItems: ReturnType<typeof useFlatTreeItems>;
   virtualizer: Pick<ReturnType<typeof useVirtualizer>, "scrollToIndex">;
 }) {
-  const expandToNode = (predicate: (node: TreeNode) => boolean) => {
-    const pathToNode = findPathToNode(rootNodes, predicate);
+  const expandToNode = (nodePredicate: (node: TreeNode) => boolean) => {
+    const pathToNode = findPathToNode(rootNodes, nodePredicate);
     if (!pathToNode) {
       return undefined;
     }
@@ -276,6 +276,21 @@ function useExpandAndScrollToNode({
     }
     return "success";
   };
+}
+
+function findPathToNode(rootNodes: TreeNode[], nodePredicate: (node: TreeNode) => boolean): TreeNode[] | undefined {
+  for (const parent of rootNodes) {
+    if (nodePredicate(parent)) {
+      return [parent];
+    }
+    if (parent.children && parent.children !== true) {
+      const childPath = findPathToNode(parent.children, nodePredicate);
+      if (childPath) {
+        return [parent, ...childPath];
+      }
+    }
+  }
+  return undefined;
 }
 
 type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item"> & {
