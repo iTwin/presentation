@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.52
+
+### Patch Changes
+
+- [#1187](https://github.com/iTwin/presentation/pull/1187): Fixed tree node rename committed with keyboard activating previously focused element.
+
 ## 2.0.0-alpha.51
 
 ### Major Changes
