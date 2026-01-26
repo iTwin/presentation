@@ -29,7 +29,6 @@ Before the deprecation, we made sure that migration is as smooth as possible by 
    <!-- BEGIN EXTRACTION -->
 
    ```ts
-   import { createStorage } from "@itwin/unified-selection";
    import { Presentation } from "@itwin/presentation-frontend";
 
    const selectionStorage = createStorage();

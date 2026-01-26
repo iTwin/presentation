@@ -17,9 +17,8 @@ For example, in a React application this function could be used inside a `useEff
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
-import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { enableUnifiedSelectionSyncWithIModel, SelectionStorage } from "@itwin/unified-selection";
 
