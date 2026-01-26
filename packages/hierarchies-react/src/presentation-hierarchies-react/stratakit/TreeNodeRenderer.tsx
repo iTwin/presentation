@@ -101,12 +101,13 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
         return undefined;
       }
 
-      if (node.isExpanded || node.children === true || node.children.length > 0) {
-        return node.isExpanded;
+      // this is a leaf node
+      if (node.children !== true && node.children.length === 0) {
+        return undefined;
       }
 
-      return undefined;
-    }, [node.children, node.error, node.isExpanded]);
+      return node.isExpanded;
+    }, [node]);
 
     const { renameParameters, cancelRename } = renameContext ?? {};
     const labelEditor = (
