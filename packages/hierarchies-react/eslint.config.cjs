@@ -5,6 +5,7 @@
 const iTwinPlugin = require("@itwin/eslint-plugin");
 const eslintBaseConfig = require("../../eslint.base.config");
 const reactPlugin = require("eslint-plugin-react");
+const unusedImports = require("eslint-plugin-unused-imports");
 
 module.exports = [
   {
@@ -14,6 +15,21 @@ module.exports = [
   {
     files: ["**/*.{ts,tsx}"],
     ...reactPlugin.configs.flat["jsx-runtime"],
+  },
+  {
+    plugins: {
+      "unused-imports": unusedImports,
+    },
+    files: ["**/*.{ts,tsx}"],
+    rules: {
+      "no-duplicate-imports": "off",
+      "import/no-duplicates": "error",
+      "object-curly-spacing": ["error", "always"],
+      "@typescript-eslint/consistent-type-imports": "error",
+      "@typescript-eslint/consistent-type-exports": "error",
+      "unused-imports/no-unused-imports": "error",
+      "unused-imports/no-unused-vars": ["error", { vars: "all", varsIgnorePattern: "^_", args: "after-used", argsIgnorePattern: "^_" }],
+    },
   },
   ...eslintBaseConfig,
 ];

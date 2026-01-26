@@ -6,8 +6,8 @@
 import { Button, Text } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import errorSvg from "@stratakit/icons/status-error.svg";
-import { RootErrorRendererProps } from "../Renderers.js";
-import { ErrorInfo } from "../TreeNode.js";
+import type { RootErrorRendererProps } from "../Renderers.js";
+import type { ErrorInfo } from "../TreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 /**

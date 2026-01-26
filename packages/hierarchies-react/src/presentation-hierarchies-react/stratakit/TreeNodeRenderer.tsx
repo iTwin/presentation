@@ -5,16 +5,17 @@
 
 import "./TreeNodeRenderer.css";
 
-import {
-  cloneElement,
+import type {
   ComponentPropsWithoutRef,
   FC,
+  PropsWithRef,
+  ReactNode,
+  RefAttributes} from "react";
+import {
+  cloneElement,
   forwardRef,
   isValidElement,
   memo,
-  PropsWithRef,
-  ReactNode,
-  RefAttributes,
   useCallback,
   useEffect,
   useId,
@@ -27,10 +28,11 @@ import checkmarkSvg from "@stratakit/icons/checkmark.svg";
 import dismissSvg from "@stratakit/icons/dismiss.svg";
 import refreshSvg from "@stratakit/icons/refresh.svg";
 import { DropdownMenu, unstable_Popover as Popover, Tree } from "@stratakit/structures";
-import { TreeRendererProps } from "../Renderers.js";
-import { TreeNode } from "../TreeNode.js";
+import type { TreeRendererProps } from "../Renderers.js";
+import type { TreeNode } from "../TreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
-import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
+import type { TreeActionBaseAttributes } from "./TreeAction.js";
+import { TreeActionBase } from "./TreeAction.js";
 import { useTreeNodeRenameContext } from "./TreeNodeRenameAction.js";
 
 /** @internal */

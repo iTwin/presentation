@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef } from "react";
-import { TreeRendererProps } from "./Renderers.js";
-import { TreeNode } from "./TreeNode.js";
+import type { TreeRendererProps } from "./Renderers.js";
+import type { TreeNode } from "./TreeNode.js";
 
 /**
  * A union of different supported selection modes in a tree component:

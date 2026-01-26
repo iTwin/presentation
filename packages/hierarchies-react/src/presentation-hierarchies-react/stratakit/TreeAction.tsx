@@ -3,7 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentProps, memo } from "react";
+import type { ComponentProps} from "react";
+import { memo } from "react";
 import { DropdownMenu, Tree } from "@stratakit/structures";
 
 /**

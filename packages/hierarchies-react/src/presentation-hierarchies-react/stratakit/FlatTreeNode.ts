@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useMemo } from "react";
-import { TreeNode } from "../TreeNode.js";
+import type { TreeNode } from "../TreeNode.js";
 
 /**
  * Placeholder item that is added to hierarchy as a child for a parent item while its child items are loading.

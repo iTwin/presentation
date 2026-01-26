@@ -6,8 +6,9 @@
 import { expect } from "chai";
 import { waitFor } from "presentation-test-utilities";
 import sinon from "sinon";
-import { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
-import { SelectionChangeType, useSelectionHandler } from "../presentation-hierarchies-react/UseSelectionHandler.js";
+import type { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
+import type { SelectionChangeType} from "../presentation-hierarchies-react/UseSelectionHandler.js";
+import { useSelectionHandler } from "../presentation-hierarchies-react/UseSelectionHandler.js";
 import { renderHook } from "./TestUtils.js";
 
 describe("useSelectionHandler", () => {

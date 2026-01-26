@@ -4,16 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { ReactElement } from "react";
+import type { ReactElement } from "react";
 import sinon from "sinon";
 import { BeEvent } from "@itwin/core-bentley";
-import { GroupingHierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
-import { EventArgs } from "@itwin/presentation-shared";
-import { configure, RenderOptions, RenderResult, render as renderRTL } from "@testing-library/react";
-import { userEvent, UserEvent } from "@testing-library/user-event";
-import { isTreeModelHierarchyNode, TreeModel, TreeModelHierarchyNode } from "../presentation-hierarchies-react/internal/TreeModel.js";
-import { ChildrenLoadErrorInfo, GenericErrorInfo, NoFilterMatchesErrorInfo, ResultSetTooLargeErrorInfo } from "../presentation-hierarchies-react/TreeNode.js";
-import { UseTreeResult } from "../presentation-hierarchies-react/UseTree.js";
+import type { GroupingHierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import type { EventArgs } from "@itwin/presentation-shared";
+import type { RenderOptions, RenderResult} from "@testing-library/react";
+import { configure, render as renderRTL } from "@testing-library/react";
+import type { UserEvent } from "@testing-library/user-event";
+import { userEvent } from "@testing-library/user-event";
+import type { TreeModelHierarchyNode } from "../presentation-hierarchies-react/internal/TreeModel.js";
+import { isTreeModelHierarchyNode, TreeModel } from "../presentation-hierarchies-react/internal/TreeModel.js";
+import type { ChildrenLoadErrorInfo, GenericErrorInfo, NoFilterMatchesErrorInfo, ResultSetTooLargeErrorInfo } from "../presentation-hierarchies-react/TreeNode.js";
+import type { UseTreeResult } from "../presentation-hierarchies-react/UseTree.js";
 
 configure({ reactStrictMode: true });
 
