@@ -3,13 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { PropsWithChildren} from "react";
 import { createContext, memo, useCallback, useContext, useMemo, useState } from "react";
 import renameSvg from "@stratakit/icons/rename.svg";
-import type { TreeNode } from "../TreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
-import type { TreeActionBaseAttributes } from "./TreeAction.js";
 import { TreeActionBase } from "./TreeAction.js";
+import type { PropsWithChildren } from "react";
+import type { TreeNode } from "../TreeNode.js";
+import type { TreeActionBaseAttributes } from "./TreeAction.js";
 
 /**
  * React component that renders a rename action for a tree item.

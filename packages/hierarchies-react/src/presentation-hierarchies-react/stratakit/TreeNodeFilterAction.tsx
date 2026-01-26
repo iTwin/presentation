@@ -5,11 +5,11 @@
 
 import { memo, useCallback } from "react";
 import filterSvg from "@stratakit/icons/filter.svg";
+import { useLocalizationContext } from "./LocalizationContext.js";
+import { TreeActionBase } from "./TreeAction.js";
 import type { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
 import type { TreeNode } from "../TreeNode.js";
-import { useLocalizationContext } from "./LocalizationContext.js";
 import type { TreeActionBaseAttributes } from "./TreeAction.js";
-import { TreeActionBase } from "./TreeAction.js";
 
 /** @alpha */
 type TreeNodeFilterActionProps = {

@@ -5,8 +5,8 @@
 
 import "./DisposePolyfill.js";
 
-import type { HierarchyNode} from "@itwin/presentation-hierarchies";
 import { HierarchyNodeKey } from "@itwin/presentation-hierarchies";
+import type { HierarchyNode } from "@itwin/presentation-hierarchies";
 
 /** @internal */
 export function createNodeId(node: Pick<HierarchyNode, "key" | "parentKeys">) {

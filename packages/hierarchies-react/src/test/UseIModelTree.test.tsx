@@ -9,8 +9,8 @@ import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeEvent } from "@itwin/core-bentley";
 import * as presentationHierarchiesModule from "@itwin/presentation-hierarchies";
-import type { Props } from "@itwin/presentation-shared";
 import { createHierarchyProviderStub, getTreeRendererProps, renderHook, waitFor } from "./TestUtils.js";
+import type { Props } from "@itwin/presentation-shared";
 import type {
   useIModelTree as originalUseIModelTree,
   useIModelUnifiedSelectionTree as originalUseIModelUnifiedSelectionTree,

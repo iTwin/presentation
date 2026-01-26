@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback } from "react";
-import type { HierarchyDefinition, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { useTree, useUnifiedSelectionTree } from "./UseTree.js";
+import type { HierarchyDefinition, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 import type { Props } from "@itwin/presentation-shared";
 import type { UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
-import type { UseTreeProps, UseTreeResult} from "./UseTree.js";
-import { useTree, useUnifiedSelectionTree } from "./UseTree.js";
+import type { UseTreeProps, UseTreeResult } from "./UseTree.js";
 
 /** @public */
 type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;

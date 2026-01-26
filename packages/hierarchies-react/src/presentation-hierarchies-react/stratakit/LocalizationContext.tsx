@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { PropsWithChildren} from "react";
 import { createContext, useContext, useEffect, useState } from "react";
+import type { PropsWithChildren } from "react";
 
 /**
  * Localized strings used in the components.

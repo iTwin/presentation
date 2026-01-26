@@ -5,19 +5,19 @@
 
 import "./DisposePolyfill.js";
 
-import type { Draft} from "immer";
 import { enableMapSet, produce } from "immer";
-import type { Observable} from "rxjs";
 import { buffer, debounceTime, EMPTY, groupBy, map, mergeMap, reduce, Subject, switchMap, takeUntil, tap } from "rxjs";
-import type { GenericInstanceFilter, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
-import type { ErrorInfo } from "../TreeNode.js";
-import type { SelectionChangeType } from "../UseSelectionHandler.js";
-import type { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, LoadNodesOptions} from "./TreeLoader.js";
 import { TreeLoader } from "./TreeLoader.js";
-import type { TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
 import { TreeModel } from "./TreeModel.js";
 import { createNodeId, sameNodes } from "./Utils.js";
+import type { Draft } from "immer";
+import type { Observable } from "rxjs";
+import type { GenericInstanceFilter, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import type { ErrorInfo } from "../TreeNode.js";
+import type { SelectionChangeType } from "../UseSelectionHandler.js";
+import type { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, LoadNodesOptions } from "./TreeLoader.js";
+import type { TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
 
 enableMapSet();
 

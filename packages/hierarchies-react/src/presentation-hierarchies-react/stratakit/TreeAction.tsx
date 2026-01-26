@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ComponentProps} from "react";
 import { memo } from "react";
 import { DropdownMenu, Tree } from "@stratakit/structures";
+import type { ComponentProps } from "react";
 
 /**
  * Attributes used to decide how to render tree actions. They allow to differentiate action style based on the context

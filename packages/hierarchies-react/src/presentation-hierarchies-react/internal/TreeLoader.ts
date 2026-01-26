@@ -3,12 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Observable} from "rxjs";
 import { catchError, EMPTY, expand, filter, from, map, mergeMap, of, toArray } from "rxjs";
+import { createNodeId } from "./Utils.js";
+import type { Observable } from "rxjs";
 import type { GenericInstanceFilter, HierarchyNode, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import type { ErrorInfo } from "../TreeNode.js";
 import type { TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
-import { createNodeId } from "./Utils.js";
 
 /** @internal */
 export type LoadedTreePart = {
