@@ -85,16 +85,18 @@ describe("Unified selection", () => {
         });
         // __PUBLISH_EXTRACT_END__
 
-        // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.InteractiveComponent
-        // An interactive component that allows selecting elements, representing something in an iModel, may want to
-        // add that something to unified selection:
-        // MyComponent.onECInstanceSelected((imodel: IModelConnection, key: { className: string; id: Id64String }) => {
-        //   unifiedSelection.addToSelection({ imodelKey: createIModelKey(imodel), source: "MyComponent", selectables: [key] });
-        // });
-        // __PUBLISH_EXTRACT_END__
-
         // Verify the storage works
         expect(Selectables.isEmpty(unifiedSelection.getSelection({ imodelKey: createIModelKey(imodel) }))).to.be.true;
+
+        // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.InteractiveComponent
+        // An interactive component that allows selecting elements, representing something in an iModel, may want to
+        // add that something to unified selection. For example:
+        const elementKey = { className: "BisCore.PhysicalElement", id: "0x1" };
+        unifiedSelection.addToSelection({ imodelKey: createIModelKey(imodel), source: "MyComponent", selectables: [elementKey] });
+        // __PUBLISH_EXTRACT_END__
+
+        // Verify selection was added
+        expect(Selectables.size(unifiedSelection.getSelection({ imodelKey: createIModelKey(imodel) }))).to.eq(1);
       });
 
       it("Unified selection sync with iModel selection", async function () {
