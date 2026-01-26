@@ -85,7 +85,7 @@ describe("Unified selection", () => {
         });
         // __PUBLISH_EXTRACT_END__
 
-        // Verify the storage works
+        // Verify selection is initially empty
         expect(Selectables.isEmpty(unifiedSelection.getSelection({ imodelKey: createIModelKey(imodel) }))).to.be.true;
 
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.InteractiveComponent
