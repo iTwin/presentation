@@ -15,17 +15,19 @@ So for example when unified selection contains a Subject, the hilite set for it 
 
 The `@itwin/unified-selection` package delivers APIs for creating a `HiliteSet` or retrieving it for _current_ selection in a `SelectionStorage`:
 
+<!-- [[include: [Presentation.UnifiedSelection.HiliteSets.BasicProviderImports, Presentation.UnifiedSelection.HiliteSets.BasicProvider, Presentation.UnifiedSelection.HiliteSets.CachingProviderImports, Presentation.UnifiedSelection.HiliteSets.CachingProvider], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
 ```ts
-// Components may want to get a hilite set for arbitrary set of Selectables - use `createHiliteSetProvider` for that.
 import { IModelConnection } from "@itwin/core-frontend";
-import { createECSqlQueryExecutor, createECSchemaProvider } from "@itwin/presentation-core-interop";
+import { SchemaContext } from "@itwin/ecschema-metadata";
+import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createHiliteSetProvider } from "@itwin/unified-selection";
 
-const imodel: IModelConnection; // initialized elsewhere
-
+// Components may want to get a hilite set for arbitrary set of Selectables - use `createHiliteSetProvider` for that.
 // iModel's schema context should be shared between all components using the iModel (implementation
 // of the getter is outside the scope of this example)
-const imodelSchemaContext: SchemaContext = getSchemaContext(iModelConnection);
+const imodelSchemaContext: SchemaContext = getSchemaContext(imodel);
 
 const hiliteProvider = createHiliteSetProvider({
   imodelAccess: {
@@ -35,11 +37,11 @@ const hiliteProvider = createHiliteSetProvider({
 });
 const hiliteSet = await hiliteProvider.getHiliteSet({ selectables });
 
-// Some others may want to get a hilite set for _current_ selection for specific iModel in storage - use `createCachingHiliteSetProvider`
-// for that. It's recommended to keep a single instance of this provider per application as it caches hilite sets per each iModel's selection.
 import { createCachingHiliteSetProvider } from "@itwin/unified-selection";
 import { createIModelKey } from "@itwin/presentation-core-interop";
 
+// Some others may want to get a hilite set for _current_ selection for specific iModel in storage - use `createCachingHiliteSetProvider`
+// for that. It's recommended to keep a single instance of this provider per application as it caches hilite sets per each iModel's selection.
 // Note the use of `using` keyword here. The caching provider registers a selection change listener and should be disposed, in case
 // its lifetime is shorter than that of `SelectionStorage`, to unregister the listener. The `using` keyword ensures that the provider
 // is disposed when it goes out of scope.
@@ -50,5 +52,7 @@ using selectionHiliteProvider = createCachingHiliteSetProvider({
 });
 const selectionHiliteSet = selectionHiliteProvider.getHiliteSet({ imodelKey: createIModelKey(imodel) });
 ```
+
+<!-- END EXTRACTION -->
 
 See [iModel selection synchronization with unified selection](./SyncWithIModelConnection.md) for an example of how to easily enable automatic synchronization of iModel's hilite set with a `SelectionStorage`.
