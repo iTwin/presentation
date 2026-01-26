@@ -3,20 +3,18 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
+/* eslint-disable no-console */
 
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useEffect, useState } from "react";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { KeySet } from "@itwin/presentation-common";
-// __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Imports
+// __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.Imports
 import { IModelConnection } from "@itwin/core-frontend";
-import { Id64String } from "@itwin/core-bentley";
 import { createIModelKey } from "@itwin/presentation-core-interop";
 import { createStorage, Selectables } from "@itwin/unified-selection";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.IModelSelectionSync.Imports
-import { SchemaContext } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { enableUnifiedSelectionSyncWithIModel, SelectionStorage } from "@itwin/unified-selection";
@@ -43,12 +41,7 @@ describe("Unified selection", () => {
       stubVirtualization();
 
       it("Basic usage example", async function () {
-        const { imodel } = await buildIModel(this, async (builder) => {
-          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
-          return { modelKey, categoryKey, elementKey };
-        });
+        const { imodel } = await buildIModel(this, async () => {});
 
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.CreateStorage
         // Create a global selection store (generally, somewhere in main.ts or similar). This store
@@ -58,8 +51,8 @@ describe("Unified selection", () => {
 
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.CleanupOnClose
         // The store should to be cleaned up when iModels are closed to free up memory, e.g.:
-        IModelConnection.onClose.addListener((imodel) => {
-          unifiedSelection.clearStorage({ imodelKey: createIModelKey(imodel) });
+        IModelConnection.onClose.addListener((iModelConnection) => {
+          unifiedSelection.clearStorage({ imodelKey: createIModelKey(iModelConnection) });
         });
         // __PUBLISH_EXTRACT_END__
 
@@ -134,30 +127,28 @@ describe("Unified selection", () => {
           const iModelConnection: IModelConnection = useActiveIModelConnection();
 
           // enable unified selection sync with the iModel
-          useEffect(() => {
-            // iModel's schema context should be shared between all components using the iModel (implementation
-            // of the getter is outside the scope of this example)
-            const imodelSchemaContext: SchemaContext = getSchemaContext(iModelConnection);
+          useEffect(
+            () =>
+              enableUnifiedSelectionSyncWithIModel({
+                // Unified selection storage to synchronize iModel's tool selection with. The storage should be shared
+                // across all components in the application to ensure unified selection experience.
+                selectionStorage,
 
-            return enableUnifiedSelectionSyncWithIModel({
-              // Unified selection storage to synchronize iModel's tool selection with. The storage should be shared
-              // across all components in the application to ensure unified selection experience.
-              selectionStorage,
+                // `imodelAccess` provides access to different iModel's features: query executing, class hierarchy,
+                // selection and hilite sets
+                imodelAccess: {
+                  ...createECSqlQueryExecutor(iModelConnection),
+                  ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(iModelConnection.schemaContext) }),
+                  key: createIModelKey(iModelConnection),
+                  hiliteSet: iModelConnection.hilited,
+                  selectionSet: iModelConnection.selectionSet,
+                },
 
-              // `imodelAccess` provides access to different iModel's features: query executing, class hierarchy,
-              // selection and hilite sets
-              imodelAccess: {
-                ...createECSqlQueryExecutor(iModelConnection),
-                ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodelSchemaContext) }),
-                key: createIModelKey(iModelConnection),
-                hiliteSet: iModelConnection.hilited,
-                selectionSet: iModelConnection.selectionSet,
-              },
-
-              // a function that returns the active selection scope (see "Selection scopes" section in README)
-              activeScopeProvider: () => "model",
-            });
-          }, [iModelConnection, selectionStorage]);
+                // a function that returns the active selection scope (see "Selection scopes" section in README)
+                activeScopeProvider: () => "model",
+              }),
+            [iModelConnection, selectionStorage],
+          );
 
           return <button onClick={() => iModelConnection.selectionSet.add(geometricElementId)}>Select element</button>;
         }
@@ -220,9 +211,3 @@ describe("Unified selection", () => {
     });
   });
 });
-
-function getSchemaContext(imodel: IModelConnection) {
-  const schemas = new SchemaContext();
-  schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-  return schemas;
-}

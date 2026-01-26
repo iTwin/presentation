@@ -23,12 +23,11 @@ The API consists of a few very basic concepts:
 
 ## Usage example
 
-<!-- [[include: [Presentation.UnifiedSelection.Imports, Presentation.UnifiedSelection.Example.CreateStorage, Presentation.UnifiedSelection.Example.CleanupOnClose, Presentation.UnifiedSelection.Example.SelectionListener, Presentation.UnifiedSelection.Example.InteractiveComponent], ts]] -->
+<!-- [[include: [Presentation.UnifiedSelection.Example.Imports, Presentation.UnifiedSelection.Example.CreateStorage, Presentation.UnifiedSelection.Example.CleanupOnClose, Presentation.UnifiedSelection.Example.SelectionListener, Presentation.UnifiedSelection.Example.InteractiveComponent], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
 import { IModelConnection } from "@itwin/core-frontend";
-import { Id64String } from "@itwin/core-bentley";
 import { createIModelKey } from "@itwin/presentation-core-interop";
 import { createStorage, Selectables } from "@itwin/unified-selection";
 
@@ -37,8 +36,8 @@ import { createStorage, Selectables } from "@itwin/unified-selection";
 const unifiedSelection = createStorage();
 
 // The store should to be cleaned up when iModels are closed to free up memory, e.g.:
-IModelConnection.onClose.addListener((imodel) => {
-  unifiedSelection.clearStorage({ imodelKey: createIModelKey(imodel) });
+IModelConnection.onClose.addListener((iModelConnection) => {
+  unifiedSelection.clearStorage({ imodelKey: createIModelKey(iModelConnection) });
 });
 
 // A demo selection listener logs selection changes to the console:

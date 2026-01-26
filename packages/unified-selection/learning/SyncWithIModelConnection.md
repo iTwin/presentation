@@ -17,7 +17,6 @@ For example, in a React application this function could be used inside a `useEff
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { SchemaContext } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { enableUnifiedSelectionSyncWithIModel, SelectionStorage } from "@itwin/unified-selection";
@@ -28,30 +27,28 @@ function IModelComponent({ selectionStorage }: { selectionStorage: SelectionStor
   const iModelConnection: IModelConnection = useActiveIModelConnection();
 
   // enable unified selection sync with the iModel
-  useEffect(() => {
-    // iModel's schema context should be shared between all components using the iModel (implementation
-    // of the getter is outside the scope of this example)
-    const imodelSchemaContext: SchemaContext = getSchemaContext(iModelConnection);
+  useEffect(
+    () =>
+      enableUnifiedSelectionSyncWithIModel({
+        // Unified selection storage to synchronize iModel's tool selection with. The storage should be shared
+        // across all components in the application to ensure unified selection experience.
+        selectionStorage,
 
-    return enableUnifiedSelectionSyncWithIModel({
-      // Unified selection storage to synchronize iModel's tool selection with. The storage should be shared
-      // across all components in the application to ensure unified selection experience.
-      selectionStorage,
+        // `imodelAccess` provides access to different iModel's features: query executing, class hierarchy,
+        // selection and hilite sets
+        imodelAccess: {
+          ...createECSqlQueryExecutor(iModelConnection),
+          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(iModelConnection.schemaContext) }),
+          key: createIModelKey(iModelConnection),
+          hiliteSet: iModelConnection.hilited,
+          selectionSet: iModelConnection.selectionSet,
+        },
 
-      // `imodelAccess` provides access to different iModel's features: query executing, class hierarchy,
-      // selection and hilite sets
-      imodelAccess: {
-        ...createECSqlQueryExecutor(iModelConnection),
-        ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodelSchemaContext) }),
-        key: createIModelKey(iModelConnection),
-        hiliteSet: iModelConnection.hilited,
-        selectionSet: iModelConnection.selectionSet,
-      },
-
-      // a function that returns the active selection scope (see "Selection scopes" section in README)
-      activeScopeProvider: () => "model",
-    });
-  }, [iModelConnection, selectionStorage]);
+        // a function that returns the active selection scope (see "Selection scopes" section in README)
+        activeScopeProvider: () => "model",
+      }),
+    [iModelConnection, selectionStorage],
+  );
 
   return <button onClick={() => iModelConnection.selectionSet.add(geometricElementId)}>Select element</button>;
 }

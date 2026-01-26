@@ -19,7 +19,7 @@
     "lint:all": "lage lint --continue",
     "lint:copyright": "node scripts/copyrightLinter.js",
     "gather-docs": "node ./scripts/gatherDocs.js",
-    "update-extractions": "npm run docs:all && lage update-extractions",
+    "update-extractions": "npm run docs:all && npm run gather-docs && lage update-extractions",
     "check-extractions": "npm run docs:all && npm run gather-docs && lage check-extractions",
     "validate-markdowns": "lage validate-markdowns --grouped --continue",
     "prettier": "prettier --check .",
