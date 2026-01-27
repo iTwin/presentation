@@ -27,10 +27,10 @@ export type Props<TFunc extends (...args: any[]) => any> = Parameters<TFunc>[0];
  * Returns type of the given `Event` listener.
  * @public
  */
-export type EventListener<TEvent extends Event> = TEvent extends Event<infer TListener> ? TListener : never;
+export type EventListener<TEvent extends {}> = TEvent extends Event<infer TListener> ? TListener : never;
 
 /**
  * Returns type of the given `Event` arguments.
  * @public
  */
-export type EventArgs<TEvent extends Event> = Props<EventListener<TEvent>>;
+export type EventArgs<TEvent extends {}> = Props<EventListener<TEvent>>;

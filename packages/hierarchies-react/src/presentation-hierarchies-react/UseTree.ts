@@ -164,7 +164,7 @@ function useTreeInternal({
     const provider = getHierarchyProvider();
     provider.setFormatter(currentFormatter.current);
     const removeHierarchyChangedListener = provider.hierarchyChanged.addListener((hierarchyChangeArgs) => {
-      const shouldDiscardState = hierarchyChangeArgs?.searchChange?.newSearch !== undefined;
+      const shouldDiscardState = hierarchyChangeArgs.searchChange?.newSearch !== undefined;
       actions.reloadTree({ state: shouldDiscardState ? "discard" : "keep" });
     });
     actions.setHierarchyProvider(provider);
