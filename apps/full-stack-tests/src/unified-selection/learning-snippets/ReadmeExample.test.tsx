@@ -3,22 +3,23 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
+/* eslint-disable no-console */
 
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useEffect, useState } from "react";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { KeySet } from "@itwin/presentation-common";
-import { Selectables } from "@itwin/unified-selection";
-// __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.IModelSelectionSync.Imports
+// __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.Imports
 import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
+import { createIModelKey } from "@itwin/presentation-core-interop";
+import { createStorage, Selectables } from "@itwin/unified-selection";
+// __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.IModelSelectionSync.Imports
+import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { enableUnifiedSelectionSyncWithIModel, SelectionStorage } from "@itwin/unified-selection";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.LegacySelectionManagerSelectionSync.Imports
-import { createStorage } from "@itwin/unified-selection";
 import { Presentation } from "@itwin/presentation-frontend";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
@@ -38,6 +39,58 @@ describe("Unified selection", () => {
       });
 
       stubVirtualization();
+
+      it("Basic usage example", async function () {
+        const { imodel } = await buildIModel(this, async () => {});
+
+        // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.CreateStorage
+        // Create a global selection store (generally, somewhere in main.ts or similar). This store
+        // must be shared across all the application's components to ensure unified selection experience.
+        const unifiedSelection = createStorage();
+        // __PUBLISH_EXTRACT_END__
+
+        // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.CleanupOnClose
+        // The store should to be cleaned up when iModels are closed to free up memory, e.g.:
+        IModelConnection.onClose.addListener((iModelConnection) => {
+          unifiedSelection.clearStorage({ imodelKey: createIModelKey(iModelConnection) });
+        });
+        // __PUBLISH_EXTRACT_END__
+
+        // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.SelectionListener
+        // A demo selection listener logs selection changes to the console:
+        unifiedSelection.selectionChangeEvent.addListener(({ imodelKey, source, changeType, selectables }) => {
+          const suffix = `in ${imodelKey} iModel from ${source} component`;
+          const numSelectables = Selectables.size(selectables);
+          switch (changeType) {
+            case "add":
+              console.log(`Added ${numSelectables} items to selection ${suffix}.`);
+              break;
+            case "remove":
+              console.log(`Removed ${numSelectables} items from selection ${suffix}.`);
+              break;
+            case "replace":
+              console.log(`Replaced selection with ${numSelectables} items ${suffix}.`);
+              break;
+            case "clear":
+              console.log(`Cleared selection ${suffix}.`);
+              break;
+          }
+        });
+        // __PUBLISH_EXTRACT_END__
+
+        // Verify selection is initially empty
+        expect(Selectables.isEmpty(unifiedSelection.getSelection({ imodelKey: createIModelKey(imodel) }))).to.be.true;
+
+        // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.InteractiveComponent
+        // An interactive component that allows selecting elements, representing something in an iModel, may want to
+        // add that something to unified selection. For example:
+        const elementKey = { className: "BisCore.PhysicalElement", id: "0x1" };
+        unifiedSelection.addToSelection({ imodelKey: createIModelKey(imodel), source: "MyComponent", selectables: [elementKey] });
+        // __PUBLISH_EXTRACT_END__
+
+        // Verify selection was added
+        expect(Selectables.size(unifiedSelection.getSelection({ imodelKey: createIModelKey(imodel) }))).to.eq(1);
+      });
 
       it("Unified selection sync with iModel selection", async function () {
         const {
@@ -74,30 +127,28 @@ describe("Unified selection", () => {
           const iModelConnection: IModelConnection = useActiveIModelConnection();
 
           // enable unified selection sync with the iModel
-          useEffect(() => {
-            // iModel's schema context should be shared between all components using the iModel (implementation
-            // of the getter is outside the scope of this example)
-            const imodelSchemaContext: SchemaContext = getSchemaContext(iModelConnection);
+          useEffect(
+            () =>
+              enableUnifiedSelectionSyncWithIModel({
+                // Unified selection storage to synchronize iModel's tool selection with. The storage should be shared
+                // across all components in the application to ensure unified selection experience.
+                selectionStorage,
 
-            return enableUnifiedSelectionSyncWithIModel({
-              // Unified selection storage to synchronize iModel's tool selection with. The storage should be shared
-              // across all components in the application to ensure unified selection experience.
-              selectionStorage,
+                // `imodelAccess` provides access to different iModel's features: query executing, class hierarchy,
+                // selection and hilite sets
+                imodelAccess: {
+                  ...createECSqlQueryExecutor(iModelConnection),
+                  ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(iModelConnection.schemaContext) }),
+                  key: createIModelKey(iModelConnection),
+                  hiliteSet: iModelConnection.hilited,
+                  selectionSet: iModelConnection.selectionSet,
+                },
 
-              // `imodelAccess` provides access to different iModel's features: query executing, class hierarchy,
-              // selection and hilite sets
-              imodelAccess: {
-                ...createECSqlQueryExecutor(iModelConnection),
-                ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodelSchemaContext) }),
-                key: createIModelKey(iModelConnection),
-                hiliteSet: iModelConnection.hilited,
-                selectionSet: iModelConnection.selectionSet,
-              },
-
-              // a function that returns the active selection scope (see "Selection scopes" section in README)
-              activeScopeProvider: () => "model",
-            });
-          }, [iModelConnection, selectionStorage]);
+                // a function that returns the active selection scope (see "Selection scopes" section in README)
+                activeScopeProvider: () => "model",
+              }),
+            [iModelConnection, selectionStorage],
+          );
 
           return <button onClick={() => iModelConnection.selectionSet.add(geometricElementId)}>Select element</button>;
         }
@@ -160,9 +211,3 @@ describe("Unified selection", () => {
     });
   });
 });
-
-function getSchemaContext(imodel: IModelConnection) {
-  const schemas = new SchemaContext();
-  schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-  return schemas;
-}

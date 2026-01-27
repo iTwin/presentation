@@ -23,21 +23,24 @@ The API consists of a few very basic concepts:
 
 ## Usage example
 
+<!-- [[include: [Presentation.UnifiedSelection.Example.Imports, Presentation.UnifiedSelection.Example.CreateStorage, Presentation.UnifiedSelection.Example.CleanupOnClose, Presentation.UnifiedSelection.Example.SelectionListener, Presentation.UnifiedSelection.Example.InteractiveComponent], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
 ```ts
+import { IModelConnection } from "@itwin/core-frontend";
+import { createIModelKey } from "@itwin/presentation-core-interop";
+import { createStorage, Selectables } from "@itwin/unified-selection";
+
 // Create a global selection store (generally, somewhere in main.ts or similar). This store
 // must be shared across all the application's components to ensure unified selection experience.
-import { createStorage } from "@itwin/unified-selection";
 const unifiedSelection = createStorage();
 
 // The store should to be cleaned up when iModels are closed to free up memory, e.g.:
-import { IModelConnection } from "@itwin/core-frontend";
-import { createIModelKey } from "@itwin/presentation-core-interop";
-IModelConnection.onClose.addListener((imodel) => {
-  unifiedSelection.clearStorage({ imodelKey: createIModelKey(imodel) });
+IModelConnection.onClose.addListener((iModelConnection) => {
+  unifiedSelection.clearStorage({ imodelKey: createIModelKey(iModelConnection) });
 });
 
 // A demo selection listener logs selection changes to the console:
-import { Selectables } from "@itwin/unified-selection";
 unifiedSelection.selectionChangeEvent.addListener(({ imodelKey, source, changeType, selectables }) => {
   const suffix = `in ${imodelKey} iModel from ${source} component`;
   const numSelectables = Selectables.size(selectables);
@@ -58,11 +61,12 @@ unifiedSelection.selectionChangeEvent.addListener(({ imodelKey, source, changeTy
 });
 
 // An interactive component that allows selecting elements, representing something in an iModel, may want to
-// add that something to unified selection:
-MyComponent.onECInstanceSelected((imodel: IModelConnection, key: { className: string; id: Id64String }) => {
-  unifiedSelection.addToSelection({ imodelKey: createIModelKey(imodel), source: "MyComponent", selectables: [key] });
-});
+// add that something to unified selection. For example:
+const elementKey = { className: "BisCore.PhysicalElement", id: "0x1" };
+unifiedSelection.addToSelection({ imodelKey: createIModelKey(imodel), source: "MyComponent", selectables: [elementKey] });
 ```
+
+<!-- END EXTRACTION -->
 
 ## Learning
 

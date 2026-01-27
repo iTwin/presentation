@@ -2091,3 +2091,99 @@ index 97e65eb8..5657e34e 100644
        "property": Object {
          "displayLabel": "Label",
          "name": "node_label",
+diff --git a/apps/full-stack-tests/src/unified-selection/learning-snippets/HiliteSets.test.ts b/apps/full-stack-tests/src/unified-selection/learning-snippets/HiliteSets.test.ts
+index cefd419e..bdaa1cdb 100644
+--- a/apps/full-stack-tests/src/unified-selection/learning-snippets/HiliteSets.test.ts
++++ b/apps/full-stack-tests/src/unified-selection/learning-snippets/HiliteSets.test.ts
+@@ -16,6 +16,8 @@ import { createIModelHiliteSetProvider } from "@itwin/unified-selection";
+ import { createIModelKey } from "@itwin/presentation-core-interop";
+ // __PUBLISH_EXTRACT_END__
+ import { createStorage, Selectables } from "@itwin/unified-selection";
++import { SchemaContext } from "@itwin/ecschema-metadata";
++import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+ import { buildIModel } from "../../IModelUtils.js";
+ import { initialize, terminate } from "../../IntegrationTests.js";
+ 
+@@ -37,8 +39,16 @@ describe("Unified selection", () => {
+           const elementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
+           return { modelKey, categoryKey, elementKey };
+         });
++        // The accessor was introduced in iTwin.js Core 5.1.0
++        Object.defineProperty(imodel, "schemaContext", {
++          get: () => {
++            const schemas = new SchemaContext();
++            schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
++            return schemas;
++          },
++        });
+ 
+-        const getIModelConnection = () => imodel;
++        const getIModelConnection = (): any => imodel;
+         const selectables = Selectables.create([keys.elementKey]);
+ 
+         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.BasicProvider
+@@ -70,6 +80,8 @@ describe("Unified selection", () => {
+           const elementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
+           return { modelKey, categoryKey, elementKey };
+         });
++        const schemas = new SchemaContext();
++        schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
+ 
+         const selectionStorage = createStorage();
+         selectionStorage.addToSelection({ imodelKey: createIModelKey(imodel), source: "test", selectables: [keys.elementKey] });
+@@ -78,7 +90,7 @@ describe("Unified selection", () => {
+           if (imodelKey === createIModelKey(imodel)) {
+             return {
+               ...createECSqlQueryExecutor(imodel),
+-              ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodel.schemaContext) }),
++              ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(schemas) }),
+               key: imodelKey,
+             };
+           }
+diff --git a/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx b/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
+index c3a6cd99..f3f6a5d3 100644
+--- a/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
++++ b/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
+@@ -22,6 +22,8 @@ import { enableUnifiedSelectionSyncWithIModel, SelectionStorage } from "@itwin/u
+ // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.LegacySelectionManagerSelectionSync.Imports
+ import { Presentation } from "@itwin/presentation-frontend";
+ // __PUBLISH_EXTRACT_END__
++import { SchemaContext } from "@itwin/ecschema-metadata";
++import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+ import { buildIModel } from "../../IModelUtils.js";
+ import { initialize, terminate } from "../../IntegrationTests.js";
+ import { render, waitFor } from "../../RenderUtils.js";
+@@ -102,7 +104,15 @@ describe("Unified selection", () => {
+           const elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
+           return { modelKey, categoryKey, elementKey };
+         });
+-        function useActiveIModelConnection() {
++        // The accessor was introduced in iTwin.js Core 5.1.0
++        Object.defineProperty(imodel, "schemaContext", {
++          get: () => {
++            const schemas = new SchemaContext();
++            schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
++            return schemas;
++          },
++        });
++        function useActiveIModelConnection(): any {
+           return imodel;
+         }
+ 
+@@ -124,7 +134,7 @@ describe("Unified selection", () => {
+         /** An iModel-based component that handles iModel selection directly, through its `SelectionSet` */
+         function IModelComponent({ selectionStorage }: { selectionStorage: SelectionStorage }) {
+           // get the active iModel connection (implementation is outside the scope of this example)
+-          const iModelConnection: IModelConnection = useActiveIModelConnection();
++          const iModelConnection = useActiveIModelConnection();
+ 
+           // enable unified selection sync with the iModel
+           useEffect(
+@@ -201,7 +211,6 @@ describe("Unified selection", () => {
+ 
+           expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key }))).to.be.true;
+ 
+-          // eslint-disable-next-line @typescript-eslint/no-deprecated
+           Presentation.selection.addToSelection("test", imodel, new KeySet([keys.elementKey]));
+           await waitFor(() => {
+             expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key }))).to.eq(1);
