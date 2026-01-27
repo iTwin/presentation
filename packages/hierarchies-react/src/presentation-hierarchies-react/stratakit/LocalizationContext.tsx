@@ -115,6 +115,11 @@ export interface LocalizedStrings {
    * Default value: `Cancel`.
    */
   cancel: string;
+  /**
+   * Label for tree node rename input.
+   * Default value: `New label`.
+   */
+  newLabel: string;
 }
 
 /** @internal */
@@ -144,6 +149,7 @@ const defaultLocalizedStrings: LocalizedStrings = {
   more: "More",
   confirm: "Confirm",
   cancel: "Cancel",
+  newLabel: "New label",
 };
 
 const localizationContext = createContext<LocalizationContext>({ localizedStrings: defaultLocalizedStrings });
