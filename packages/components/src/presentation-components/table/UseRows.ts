@@ -7,17 +7,23 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { EMPTY, from, map, mergeMap, Observable, of, Subject, toArray } from "rxjs";
-import { PropertyRecord } from "@itwin/appui-abstract";
+import { EMPTY, from, map, mergeMap, of, Subject, toArray } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Content, DefaultContentDisplayTypes, KeySet, PageOptions, Ruleset, StartItemProps, traverseContent } from "@itwin/presentation-common";
+import { IModelApp } from "@itwin/core-frontend";
+import { Content, DefaultContentDisplayTypes, KeySet, traverseContent } from "@itwin/presentation-common";
 import { createIModelKey } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
-import { FieldHierarchyRecord, InternalPropertyRecordsBuilder } from "../common/ContentBuilder.js";
-import { useErrorState, WithIModelKey } from "../common/Utils.js";
-import { TableRowDefinition } from "./Types.js";
-import { TableOptions } from "./UseTableOptions.js";
+import { InternalPropertyRecordsBuilder } from "../common/ContentBuilder.js";
+import { useErrorState } from "../common/Utils.js";
+
+import type { Observable } from "rxjs";
+import type { PropertyRecord } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { PageOptions, Ruleset, StartItemProps } from "@itwin/presentation-common";
+import type { FieldHierarchyRecord } from "../common/ContentBuilder.js";
+import type { WithIModelKey } from "../common/Utils.js";
+import type { TableRowDefinition } from "./Types.js";
+import type { TableOptions } from "./UseTableOptions.js";
 
 /** @internal */
 export interface UseRowsProps {

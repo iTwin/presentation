@@ -4,9 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { OrderedId64Iterable } from "@itwin/core-bentley";
-import { ECSqlReader, QueryBinder, QueryOptions, QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
+import { QueryBinder, QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
 import { Point2d, Point3d } from "@itwin/core-geometry";
-import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow, trimWhitespace } from "@itwin/presentation-shared";
+import { trimWhitespace } from "@itwin/presentation-shared";
+
+import type { ECSqlReader, QueryOptions } from "@itwin/core-common";
+import type { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
 
 /**
  * Defines input for `createECSqlQueryExecutor`. Generally, this is an instance of either [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/)

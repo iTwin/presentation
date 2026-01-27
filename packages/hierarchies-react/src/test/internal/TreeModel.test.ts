@@ -12,6 +12,7 @@ import {
   createTreeModel,
   getHierarchyNode,
 } from "../TestUtils.js";
+
 import type { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 
 describe("TreeModel", () => {

@@ -3,20 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { FormatProps, FormatterSpec, Format as QuantityFormat, UnitsProvider, UnitSystemKey } from "@itwin/core-quantity";
-import {
-  Format,
-  InvertedUnit,
-  KindOfQuantity,
-  LazyLoadedFormat,
-  OverrideFormat,
-  SchemaContext,
-  SchemaKey,
-  SchemaMatchType,
-  SchemaUnitProvider,
-  Unit,
-} from "@itwin/ecschema-metadata";
-import { createDefaultValueFormatter, IPrimitiveValueFormatter, parseFullClassName, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import { FormatterSpec, Format as QuantityFormat } from "@itwin/core-quantity";
+import { OverrideFormat, SchemaKey, SchemaMatchType, SchemaUnitProvider } from "@itwin/ecschema-metadata";
+import { createDefaultValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
+
+import type { FormatProps, UnitsProvider, UnitSystemKey } from "@itwin/core-quantity";
+import type { Format, InvertedUnit, KindOfQuantity, LazyLoadedFormat, SchemaContext, Unit } from "@itwin/ecschema-metadata";
+import type { IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-shared";
 
 /**
  * Props for `createValueFormatter` function.

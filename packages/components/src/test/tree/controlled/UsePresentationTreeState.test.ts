@@ -7,40 +7,28 @@
 import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
-import { PrimitiveValue } from "@itwin/appui-abstract";
-import {
-  MutableTreeModel,
-  TreeEventHandler,
-  TreeModel,
-  TreeModelNode,
-  TreeModelNodeEditingInfo,
-  TreeModelNodeInput,
-  UiComponents,
-} from "@itwin/components-react";
+import { MutableTreeModel, TreeEventHandler, UiComponents } from "@itwin/components-react";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import {
-  LabelDefinition,
-  Node,
-  PresentationError,
-  PresentationStatus,
-  RegisteredRuleset,
-  Ruleset,
-  StandardNodeTypes,
-  VariableValue,
-} from "@itwin/presentation-common";
-import { IModelHierarchyChangeEventArgs, Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
-import {
-  PresentationTreeEventHandlerProps,
-  usePresentationTreeState,
-  UsePresentationTreeStateProps,
-  UsePresentationTreeStateResult,
-} from "../../../presentation-components/tree/controlled/UsePresentationTreeState.js";
+import { IModelApp } from "@itwin/core-frontend";
+import { LabelDefinition, PresentationError, PresentationStatus, RegisteredRuleset, StandardNodeTypes } from "@itwin/presentation-common";
+import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { usePresentationTreeState } from "../../../presentation-components/tree/controlled/UsePresentationTreeState.js";
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider.js";
 import { ReportingTreeNodeLoader } from "../../../presentation-components/tree/ReportingTreeNodeLoader.js";
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils.js";
 import { renderHook, waitFor } from "../../TestUtils.js";
+
+import type { PrimitiveValue } from "@itwin/appui-abstract";
+import type { TreeModel, TreeModelNode, TreeModelNodeEditingInfo, TreeModelNodeInput } from "@itwin/components-react";
+import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
+import type { Node, Ruleset, VariableValue } from "@itwin/presentation-common";
+import type { IModelHierarchyChangeEventArgs, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import type {
+  PresentationTreeEventHandlerProps,
+  UsePresentationTreeStateProps,
+  UsePresentationTreeStateResult,
+} from "../../../presentation-components/tree/controlled/UsePresentationTreeState.js";
 
 describe("usePresentationTreeState", () => {
   const onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"] = new BeEvent<(args: IModelHierarchyChangeEventArgs) => void>();

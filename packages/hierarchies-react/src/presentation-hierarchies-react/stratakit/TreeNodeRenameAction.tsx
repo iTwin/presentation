@@ -7,6 +7,7 @@ import { createContext, memo, useCallback, useContext, useMemo, useState } from 
 import renameSvg from "@stratakit/icons/rename.svg";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionBase } from "./TreeAction.js";
+
 import type { PropsWithChildren } from "react";
 import type { TreeNode } from "../TreeNode.js";
 import type { TreeActionBaseAttributes } from "./TreeAction.js";

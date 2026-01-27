@@ -6,10 +6,12 @@
 import "../common/DisposePolyfill.js";
 
 import { from, Subject, takeUntil } from "rxjs";
-import { IModelConnection } from "@itwin/core-frontend";
-import { KeySet } from "@itwin/presentation-common";
-import { HiliteSet, HiliteSetProvider, Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
+import { HiliteSetProvider, Presentation, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
 import { safeDispose } from "../common/Utils.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { KeySet } from "@itwin/presentation-common";
+import type { HiliteSet, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 

@@ -11,24 +11,27 @@ import "../../common/DisposePolyfill.js";
 
 import { useCallback } from "react";
 import { Subject, takeUntil, tap } from "rxjs";
-import {
+import { TreeEventHandler } from "@itwin/components-react";
+import { Guid } from "@itwin/core-bentley";
+import { useDisposable } from "@itwin/core-react";
+import { NodeKey } from "@itwin/presentation-common";
+import { Presentation, SelectionChangeType, SelectionHelper } from "@itwin/presentation-frontend";
+import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem.js";
+import { toRxjsObservable } from "../Utils.js";
+
+import type {
   AbstractTreeNodeLoaderWithProvider,
   MutableTreeModel,
   MutableTreeModelNode,
   TreeEditingParams,
-  TreeEventHandler,
   TreeModelChanges,
   TreeNodeItem,
   TreeSelectionModificationEventArgs,
   TreeSelectionReplacementEventArgs,
 } from "@itwin/components-react";
-import { Guid } from "@itwin/core-bentley";
-import { useDisposable } from "@itwin/core-react";
-import { Keys, KeySet, NodeKey } from "@itwin/presentation-common";
-import { Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHelper } from "@itwin/presentation-frontend";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
-import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem.js";
-import { toRxjsObservable } from "../Utils.js";
+import type { Keys, KeySet } from "@itwin/presentation-common";
+import type { SelectionChangeEventArgs } from "@itwin/presentation-frontend";
+import type { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
 
 /**
  * Data structure that describes parameters for UnifiedSelectionTreeEventHandler

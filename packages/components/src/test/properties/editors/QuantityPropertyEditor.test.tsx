@@ -7,14 +7,17 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { StandardTypeNames } from "@itwin/appui-abstract";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Format, FormatterSpec, ParserSpec } from "@itwin/core-quantity";
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { IModelApp } from "@itwin/core-frontend";
+import { Format } from "@itwin/core-quantity";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext.js";
 import { QuantityEditorName, QuantityPropertyEditor } from "../../../presentation-components/properties/editors/QuantityPropertyEditor.js";
 import { render, waitFor } from "../../TestUtils.js";
+
+import type { FormattingUnitSystemChangedArgs, IModelConnection } from "@itwin/core-frontend";
+import type { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
+import type { SchemaContext } from "@itwin/ecschema-metadata";
 
 const createRecord = ({ initialValue, kindOfQuantityName, quantityType }: { initialValue?: number; kindOfQuantityName?: string; quantityType?: string }) => {
   return createTestPropertyRecord(

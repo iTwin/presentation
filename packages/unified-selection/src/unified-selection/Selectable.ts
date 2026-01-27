@@ -5,8 +5,9 @@
 
 import { from, map, merge, mergeMap } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { Id64String } from "@itwin/core-bentley";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
+
+import type { Id64String } from "@itwin/core-bentley";
 
 /**
  * ECInstance selectable

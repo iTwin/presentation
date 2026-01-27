@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { TypedPrimitiveValue } from "./Values.js";
+import type { TypedPrimitiveValue } from "./Values.js";
 
 /**
  * A part of a `ConcatenatedValue`, describing one piece of the value. Possible types:

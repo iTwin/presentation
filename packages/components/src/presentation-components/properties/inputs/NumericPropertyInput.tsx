@@ -4,12 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyEditorProps } from "@itwin/components-react";
+import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { Input } from "@itwin/itwinui-react";
-import { PropertyValueConstraints, WithConstraints } from "../../common/ContentBuilder.js";
-import { PropertyEditorAttributes } from "../editors/Common.js";
 import { getDecimalRoundingError } from "./Utils.js";
+
+import type { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
+import type { PropertyEditorProps } from "@itwin/components-react";
+import type { PropertyValueConstraints, WithConstraints } from "../../common/ContentBuilder.js";
+import type { PropertyEditorAttributes } from "../editors/Common.js";
 
 /** @internal */
 export interface NumericPropertyInputProps extends PropertyEditorProps {

@@ -7,6 +7,7 @@ import { Anchor, Text } from "@stratakit/bricks";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
+
 import type { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
 import type { TreeNode } from "../TreeNode.js";
 import type { useErrorNodes } from "./FlatTreeNode.js";

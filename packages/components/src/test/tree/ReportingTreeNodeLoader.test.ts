@@ -6,7 +6,10 @@
 import { expect } from "chai";
 import { Subject } from "rxjs";
 import sinon from "sinon";
-import {
+import { ReportingTreeNodeLoader } from "../../presentation-components/tree/ReportingTreeNodeLoader.js";
+import { waitFor } from "../TestUtils.js";
+
+import type {
   ITreeNodeLoader,
   PagedTreeNodeLoader,
   TreeDataProvider,
@@ -15,8 +18,6 @@ import {
   TreeNodeItem,
   TreeNodeLoadResult,
 } from "@itwin/components-react";
-import { ReportingTreeNodeLoader } from "../../presentation-components/tree/ReportingTreeNodeLoader.js";
-import { waitFor } from "../TestUtils.js";
 
 describe("ReportingTreeNodeLoader", () => {
   let reportingNodeLoader: ReportingTreeNodeLoader<TreeDataProvider>;

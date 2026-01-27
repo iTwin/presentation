@@ -5,17 +5,17 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 import { expect } from "chai";
-import { PropsWithChildren, useEffect } from "react";
+import { useEffect } from "react";
 import sinon from "sinon";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionManager } from "@itwin/presentation-frontend";
-import {
-  UnifiedSelectionContext,
-  UnifiedSelectionContextProvider,
-  useUnifiedSelectionContext,
-} from "../../presentation-components/unified-selection/UnifiedSelectionContext.js";
-import { act, render, renderHook, RenderHookResult, waitFor } from "../TestUtils.js";
+import { UnifiedSelectionContextProvider, useUnifiedSelectionContext } from "../../presentation-components/unified-selection/UnifiedSelectionContext.js";
+import { act, render, renderHook, waitFor } from "../TestUtils.js";
+
+import type { PropsWithChildren } from "react";
+import type { UnifiedSelectionContext } from "../../presentation-components/unified-selection/UnifiedSelectionContext.js";
+import type { RenderHookResult } from "../TestUtils.js";
 
 describe("UnifiedSelectionContext", () => {
   const testIModel = { key: "" } as IModelConnection;

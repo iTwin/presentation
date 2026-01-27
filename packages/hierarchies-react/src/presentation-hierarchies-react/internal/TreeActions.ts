@@ -11,6 +11,7 @@ import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { TreeLoader } from "./TreeLoader.js";
 import { TreeModel } from "./TreeModel.js";
 import { createNodeId, sameNodes } from "./Utils.js";
+
 import type { Draft } from "immer";
 import type { Observable } from "rxjs";
 import type { GenericInstanceFilter, HierarchyProvider } from "@itwin/presentation-hierarchies";

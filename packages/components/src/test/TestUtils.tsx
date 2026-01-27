@@ -4,11 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { createElement, PropsWithChildren, ReactElement } from "react";
+import { createElement } from "react";
 import sinon from "sinon";
 import { ThemeProvider } from "@itwin/itwinui-react";
-import { RenderOptions, RenderResult, render as renderRTL, waitFor } from "@testing-library/react";
-import { userEvent, UserEvent } from "@testing-library/user-event";
+import { render as renderRTL, waitFor } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
+
+import type { PropsWithChildren, ReactElement } from "react";
+import type { RenderOptions, RenderResult } from "@testing-library/react";
+import type { UserEvent } from "@testing-library/user-event";
 
 function createWrapper(Outer: React.JSXElementConstructor<{ children: React.ReactNode }>) {
   return (Inner?: React.JSXElementConstructor<{ children: React.ReactNode }>) => {

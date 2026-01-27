@@ -3,11 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64, Id64String } from "@itwin/core-bentley";
-import {
-  BisCodeSpec,
+import { Id64 } from "@itwin/core-bentley";
+import { BisCodeSpec, Code, IModel } from "@itwin/core-common";
+
+import type { Id64String } from "@itwin/core-bentley";
+import type {
   CategoryProps,
-  Code,
   CodeScopeProps,
   DefinitionElementProps,
   ElementAspectProps,
@@ -18,7 +19,6 @@ import {
   GeometricElement2dProps,
   GeometricModel2dProps,
   GeometricModel3dProps,
-  IModel,
   InformationPartitionElementProps,
   ModelProps,
   PhysicalElementProps,

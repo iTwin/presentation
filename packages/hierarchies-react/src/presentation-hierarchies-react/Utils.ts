@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useInsertionEffect, useRef } from "react";
+
 import type { LegacyRef, MutableRefObject, Ref } from "react";
 
 /** @internal */

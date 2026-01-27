@@ -3,8 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createContext, PropsWithChildren, useContext } from "react";
-import { SelectionStorage } from "@itwin/unified-selection";
+import { createContext, useContext } from "react";
+
+import type { PropsWithChildren } from "react";
+import type { SelectionStorage } from "@itwin/unified-selection";
 
 /** @public */
 interface UnifiedSelectionContext {

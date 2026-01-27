@@ -6,19 +6,21 @@
 import { expect } from "chai";
 import { createAsyncIterator, ResolvablePromise, waitFor } from "presentation-test-utilities";
 import sinon from "sinon";
-import { BeEvent, BeUiEvent, Id64Arg } from "@itwin/core-bentley";
-import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow, EventArgs, Props } from "@itwin/presentation-shared";
-import {
-  enableUnifiedSelectionSyncWithIModel,
-  EnableUnifiedSelectionSyncWithIModelProps,
-  IModelSelectionHandler,
-} from "../unified-selection/EnableUnifiedSelectionSyncWithIModel.js";
-import { HiliteSet, HiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
-import { Selectable, SelectableInstanceKey, Selectables } from "../unified-selection/Selectable.js";
-import { StorageSelectionChangesListener, StorageSelectionChangeType } from "../unified-selection/SelectionChangeEvent.js";
-import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage.js";
-import { CoreSelectableIds, CoreSelectionSetEventType } from "../unified-selection/types/IModel.js";
+import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
+import { enableUnifiedSelectionSyncWithIModel, IModelSelectionHandler } from "../unified-selection/EnableUnifiedSelectionSyncWithIModel.js";
+import { Selectables } from "../unified-selection/Selectable.js";
+import { createStorage } from "../unified-selection/SelectionStorage.js";
+import { CoreSelectionSetEventType } from "../unified-selection/types/IModel.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
+
+import type { Id64Arg } from "@itwin/core-bentley";
+import type { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow, EventArgs, Props } from "@itwin/presentation-shared";
+import type { EnableUnifiedSelectionSyncWithIModelProps } from "../unified-selection/EnableUnifiedSelectionSyncWithIModel.js";
+import type { HiliteSet, HiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
+import type { Selectable, SelectableInstanceKey } from "../unified-selection/Selectable.js";
+import type { StorageSelectionChangesListener, StorageSelectionChangeType } from "../unified-selection/SelectionChangeEvent.js";
+import type { SelectionStorage } from "../unified-selection/SelectionStorage.js";
+import type { CoreSelectableIds } from "../unified-selection/types/IModel.js";
 
 describe("enableUnifiedSelectionSyncWithIModel", () => {
   const selectionStorage = {

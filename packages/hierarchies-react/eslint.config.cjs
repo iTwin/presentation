@@ -25,6 +25,7 @@ module.exports = [
     files: ["**/*.{ts,tsx}"],
     rules: {
       "no-duplicate-imports": "off",
+      "import/no-duplicates": "error",
       "@stylistic/object-curly-spacing": ["error", "always"],
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/consistent-type-exports": "error",

@@ -14,6 +14,7 @@ import { DropdownMenu, unstable_Popover as Popover, Tree } from "@stratakit/stru
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionBase } from "./TreeAction.js";
 import { useTreeNodeRenameContext } from "./TreeNodeRenameAction.js";
+
 import type { ComponentPropsWithoutRef, FC, PropsWithRef, ReactNode, RefAttributes } from "react";
 import type { TreeRendererProps } from "../Renderers.js";
 import type { TreeNode } from "../TreeNode.js";

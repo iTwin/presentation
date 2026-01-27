@@ -6,9 +6,12 @@
  * @module Internal
  */
 
-import { compareStrings, Guid, GuidString, Id64, Id64String, LRUDictionary } from "@itwin/core-bentley";
-import { ECSqlReader, QueryBinder, QueryOptions, QueryRowFormat } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
+import { compareStrings, Guid, Id64, LRUDictionary } from "@itwin/core-bentley";
+import { QueryBinder, QueryRowFormat } from "@itwin/core-common";
+
+import type { GuidString, Id64String } from "@itwin/core-bentley";
+import type { ECSqlReader, QueryOptions } from "@itwin/core-common";
+import type { IModelConnection } from "@itwin/core-frontend";
 
 /* c8 ignore start */
 

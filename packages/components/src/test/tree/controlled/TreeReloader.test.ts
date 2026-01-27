@@ -5,14 +5,16 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 import { expect } from "chai";
-import { Observable } from "rxjs/internal/Observable";
 import * as sinon from "sinon";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { DelayLoadedTreeNodeItem, MutableTreeModel, RenderedItemsRange, TreeModelNodeInput, TreeModelSource, UiComponents } from "@itwin/components-react";
+import { MutableTreeModel, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
 import { reloadTree } from "../../../presentation-components/tree/controlled/TreeReloader.js";
-import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
+
+import type { Observable } from "rxjs/internal/Observable";
+import type { DelayLoadedTreeNodeItem, RenderedItemsRange, TreeModelNodeInput, TreeModelSource } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 
 describe("reloadTree", () => {
   let dataProvider: IPresentationTreeDataProvider;

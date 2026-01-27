@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from "@itwin/presentation-shared";
+import type { Event } from "@itwin/presentation-shared";
 
 /**
  * An interface for a transaction manager that has 3 types of events fired before and after a commit

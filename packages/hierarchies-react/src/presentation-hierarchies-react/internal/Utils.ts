@@ -6,6 +6,7 @@
 import "./DisposePolyfill.js";
 
 import { HierarchyNodeKey } from "@itwin/presentation-hierarchies";
+
 import type { HierarchyNode } from "@itwin/presentation-hierarchies";
 
 /** @internal */

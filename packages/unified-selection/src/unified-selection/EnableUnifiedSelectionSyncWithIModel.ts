@@ -6,17 +6,24 @@
 import "./DisposePolyfill.js";
 
 import { EMPTY, firstValueFrom, from, map, merge, Subject, takeUntil, toArray } from "rxjs";
-import { Guid, GuidString, Id64Arg, Id64Set } from "@itwin/core-bentley";
-import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
-import { CachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";
-import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
-import { createIModelHiliteSetProvider, IModelHiliteSetProvider } from "./IModelHiliteSetProvider.js";
-import { SelectableInstanceKey, Selectables } from "./Selectable.js";
-import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
-import { computeSelection, SelectionScope } from "./SelectionScope.js";
-import { SelectionStorage } from "./SelectionStorage.js";
-import { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectableIds, CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "./types/IModel.js";
+import { Guid } from "@itwin/core-bentley";
+import { createHiliteSetProvider } from "./HiliteSetProvider.js";
+import { createIModelHiliteSetProvider } from "./IModelHiliteSetProvider.js";
+import { Selectables } from "./Selectable.js";
+import { computeSelection } from "./SelectionScope.js";
+import { CoreSelectionSetEventType } from "./types/IModel.js";
 import { safeDispose } from "./Utils.js";
+
+import type { GuidString, Id64Arg, Id64Set } from "@itwin/core-bentley";
+import type { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import type { CachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";
+import type { HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
+import type { IModelHiliteSetProvider } from "./IModelHiliteSetProvider.js";
+import type { SelectableInstanceKey } from "./Selectable.js";
+import type { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
+import type { SelectionScope } from "./SelectionScope.js";
+import type { SelectionStorage } from "./SelectionStorage.js";
+import type { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectableIds, CoreSelectionSetEventUnsafe } from "./types/IModel.js";
 
 /**
  * Props for `enableUnifiedSelectionSyncWithIModel`.

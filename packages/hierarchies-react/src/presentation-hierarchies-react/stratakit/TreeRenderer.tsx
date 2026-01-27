@@ -13,6 +13,7 @@ import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
 import { TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./TreeNodeRenameAction.js";
 import { PlaceholderNode, StrataKitTreeNodeRenderer } from "./TreeNodeRenderer.js";
+
 import type { ComponentProps, ComponentPropsWithoutRef, CSSProperties, FC, PropsWithoutRef, ReactElement, ReactNode, RefAttributes } from "react";
 import type { TreeRendererProps } from "../Renderers.js";
 import type { TreeNode } from "../TreeNode.js";

@@ -6,11 +6,10 @@
 import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
-import { PropertyDescription } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Content, Item, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { IModelApp } from "@itwin/core-frontend";
+import { Content, LabelDefinition } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
 import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
 import { VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
 import {
@@ -19,6 +18,11 @@ import {
   useNavigationPropertyTargetsRuleset,
 } from "../../../presentation-components/properties/inputs/UseNavigationPropertyTargetsLoader.js";
 import { renderHook, waitFor } from "../../TestUtils.js";
+
+import type { PropertyDescription } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Item, NavigationPropertyInfo } from "@itwin/presentation-common";
+import type { PresentationManager } from "@itwin/presentation-frontend";
 
 describe("useNavigationPropertyTargetsLoader", () => {
   let presentationManagerStub: sinon.SinonStub;

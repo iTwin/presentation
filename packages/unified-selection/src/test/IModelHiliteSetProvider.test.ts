@@ -6,12 +6,14 @@
 import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
-import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
-import { HiliteSet, HiliteSetProvider, HiliteSetProviderProps } from "../unified-selection/HiliteSetProvider.js";
 import { createIModelHiliteSetProvider } from "../unified-selection/IModelHiliteSetProvider.js";
-import { SelectableInstanceKey } from "../unified-selection/Selectable.js";
-import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage.js";
+import { createStorage } from "../unified-selection/SelectionStorage.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
+
+import type { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import type { HiliteSet, HiliteSetProvider, HiliteSetProviderProps } from "../unified-selection/HiliteSetProvider.js";
+import type { SelectableInstanceKey } from "../unified-selection/Selectable.js";
+import type { SelectionStorage } from "../unified-selection/SelectionStorage.js";
 
 const generateSelection = (): SelectableInstanceKey[] => {
   return [createSelectableInstanceKey(1), createSelectableInstanceKey(2), createSelectableInstanceKey(3)];

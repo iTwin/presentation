@@ -6,20 +6,12 @@
 import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
-import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { omit } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import {
-  ClassInfo,
-  combineFieldNames,
-  ContentInstancesOfSpecificClassesSpecification,
-  ContentRule,
-  KeySet,
-  RelatedClassInfo,
-  Ruleset,
-} from "@itwin/presentation-common";
-import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { IModelApp } from "@itwin/core-frontend";
+import { combineFieldNames, KeySet } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
 import {
   createTestECClassInfo,
   createTestPropertyInfo,
@@ -34,10 +26,16 @@ import {
   createTestPropertiesContentField,
 } from "../../_helpers/Content.js";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
-import { serializeUniqueValues, UniqueValue } from "../../../presentation-components/common/Utils.js";
+import { serializeUniqueValues } from "../../../presentation-components/common/Utils.js";
 import { ItemsLoader, VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
 import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector.js";
 import { render, waitFor } from "../../TestUtils.js";
+
+import type { PropertyDescription, PropertyValue } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { ClassInfo, ContentInstancesOfSpecificClassesSpecification, ContentRule, RelatedClassInfo, Ruleset } from "@itwin/presentation-common";
+import type { PresentationManager } from "@itwin/presentation-frontend";
+import type { UniqueValue } from "../../../presentation-components/common/Utils.js";
 
 describe("UniquePropertyValuesSelector", () => {
   let presentationManagerStub: sinon.SinonStub;

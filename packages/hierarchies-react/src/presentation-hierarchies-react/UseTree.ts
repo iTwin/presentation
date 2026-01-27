@@ -10,6 +10,7 @@ import { TreeModel } from "./internal/TreeModel.js";
 import { useUnifiedTreeSelection } from "./internal/UseUnifiedSelection.js";
 import { safeDispose } from "./internal/Utils.js";
 import { useLatest } from "./Utils.js";
+
 import type { GenericInstanceFilter, HierarchyProvider, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 import type { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import type { TreeModelHierarchyNode, TreeModelRootNode } from "./internal/TreeModel.js";

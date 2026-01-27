@@ -56,6 +56,8 @@
     "@types/node": "catalog:build-tools",
     "@types/sinon": "catalog:test-tools",
     "@types/sinon-chai": "catalog:test-tools",
+    "@stylistic/eslint-plugin": "catalog:build-tools",
+    "eslint-plugin-unused-imports": "catalog:build-tools",
     "c8": "catalog:test-tools",
     "chai": "catalog:test-tools",
     "chai-as-promised": "catalog:test-tools",

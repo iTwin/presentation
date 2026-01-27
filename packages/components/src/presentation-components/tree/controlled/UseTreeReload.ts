@@ -4,14 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { MutableRefObject, useEffect } from "react";
-import { RenderedItemsRange, Subscription, TreeModelSource } from "@itwin/components-react";
+import { useEffect } from "react";
 import { IModelApp } from "@itwin/core-frontend";
-import { Ruleset } from "@itwin/presentation-common";
-import { IModelHierarchyChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
+import { Presentation } from "@itwin/presentation-frontend";
 import { getRulesetId } from "../../common/Utils.js";
-import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider.js";
+import { PresentationTreeDataProvider } from "../DataProvider.js";
 import { reloadTree } from "./TreeReloader.js";
+
+import type { MutableRefObject } from "react";
+import type { RenderedItemsRange, Subscription, TreeModelSource } from "@itwin/components-react";
+import type { Ruleset } from "@itwin/presentation-common";
+import type { IModelHierarchyChangeEventArgs } from "@itwin/presentation-frontend";
+import type { PresentationTreeDataProviderProps } from "../DataProvider.js";
 
 /** @internal */
 export interface ReloadedTree {

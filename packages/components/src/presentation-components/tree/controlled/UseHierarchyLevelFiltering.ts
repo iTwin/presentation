@@ -8,9 +8,11 @@
  */
 
 import { useRef } from "react";
-import { isTreeModelNode, ITreeNodeLoader, Subscription, TreeModelSource } from "@itwin/components-react";
-import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationFilterBuilder.js";
+import { isTreeModelNode } from "@itwin/components-react";
 import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem.js";
+
+import type { ITreeNodeLoader, Subscription, TreeModelSource } from "@itwin/components-react";
+import type { PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationFilterBuilder.js";
 
 /**
  * Props for [[useHierarchyLevelFiltering]] hook.

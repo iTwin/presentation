@@ -4,15 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import {
-  ArrayValue,
-  PropertyDescription,
-  PropertyRecord,
-  StandardTypeNames,
-  StructValue,
-  PropertyValueFormat as UiPropertyValueFormat,
-} from "@itwin/appui-abstract";
-import { createContentTraverser, EnumerationInfo, PropertyValueFormat } from "@itwin/presentation-common";
+import { StandardTypeNames, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
+import { createContentTraverser, PropertyValueFormat } from "@itwin/presentation-common";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -23,10 +16,13 @@ import {
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
-import { PropertyValueConstraints, WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
 import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder.js";
 import { NumericEditorName } from "../../presentation-components/properties/editors/NumericPropertyEditor.js";
 import { QuantityEditorName } from "../../presentation-components/properties/editors/QuantityPropertyEditor.js";
+
+import type { ArrayValue, PropertyDescription, PropertyRecord, StructValue } from "@itwin/appui-abstract";
+import type { EnumerationInfo } from "@itwin/presentation-common";
+import type { PropertyValueConstraints, WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
 
 class TestPropertyRecordsBuilder extends PropertyRecordsBuilder {
   public entries: Array<PropertyRecord> = [];

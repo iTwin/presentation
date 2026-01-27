@@ -5,6 +5,7 @@
 
 import { useCallback } from "react";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
+
 import type { TreeNode } from "./TreeNode.js";
 
 /**

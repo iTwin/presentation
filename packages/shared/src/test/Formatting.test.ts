@@ -5,9 +5,11 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import { createDefaultValueFormatter, formatConcatenatedValue, IPrimitiveValueFormatter } from "../shared/Formatting.js";
+import { createDefaultValueFormatter, formatConcatenatedValue } from "../shared/Formatting.js";
 import { julianToDateTime } from "../shared/Utils.js";
-import { TypedPrimitiveValue } from "../shared/Values.js";
+
+import type { IPrimitiveValueFormatter } from "../shared/Formatting.js";
+import type { TypedPrimitiveValue } from "../shared/Values.js";
 
 describe("createDefaultValueFormatter", () => {
   let valueFormatter: IPrimitiveValueFormatter;

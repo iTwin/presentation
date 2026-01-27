@@ -5,20 +5,23 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { PropertyValue, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
-import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
+import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import { PropertyFilterRuleGroupOperator } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, RelationshipPath, PropertyValueFormat as TypeValueFormat, Value } from "@itwin/presentation-common";
+import { PropertyValueFormat as TypeValueFormat } from "@itwin/presentation-common";
 import { createTestECClassInfo, createTestPropertyInfo } from "../_helpers/Common.js";
 import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content.js";
-import { serializeUniqueValues, UniqueValue } from "../../presentation-components/common/Utils.js";
+import { serializeUniqueValues } from "../../presentation-components/common/Utils.js";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
-import {
-  createInstanceFilterDefinition,
-  PresentationInstanceFilterInfo,
-} from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
-import { PresentationInstanceFilterCondition } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
+import { createInstanceFilterDefinition } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+
+import type { PropertyValue } from "@itwin/appui-abstract";
+import type { PropertyFilterRuleOperator } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { ClassInfo, RelationshipPath, Value } from "@itwin/presentation-common";
+import type { UniqueValue } from "../../presentation-components/common/Utils.js";
+import type { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import type { PresentationInstanceFilterCondition } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
 
 describe("createInstanceFilterDefinition", () => {
   describe("converts single condition with", () => {

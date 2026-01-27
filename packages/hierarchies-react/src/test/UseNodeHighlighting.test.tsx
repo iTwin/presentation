@@ -6,6 +6,7 @@
 import { expect } from "chai";
 import { useNodeHighlighting } from "../presentation-hierarchies-react/UseNodeHighlighting.js";
 import { render, renderHook } from "./TestUtils.js";
+
 import type { NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
 import type { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
 

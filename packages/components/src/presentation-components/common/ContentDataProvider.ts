@@ -8,25 +8,26 @@
 
 import "./DisposePolyfill.js";
 
-import { PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
 import { assert, Logger } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { UnitSystemKey } from "@itwin/core-quantity";
-import {
+import { IModelApp } from "@itwin/core-frontend";
+import { Content, DEFAULT_KEYS_BATCH_SIZE, Descriptor, DisplayValue, KeySet, KoqPropertyValueFormatter, Value } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
+import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
+import { createDiagnosticsOptions } from "./Diagnostics.js";
+import { findField, getRulesetId, memoize } from "./Utils.js";
+
+import type { PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { UnitSystemKey } from "@itwin/core-quantity";
+import type {
   ArrayPropertiesField,
   ClientDiagnosticsOptions,
-  Content,
-  DEFAULT_KEYS_BATCH_SIZE,
-  Descriptor,
   DescriptorOverrides,
-  DisplayValue,
   DisplayValuesArray,
   DisplayValuesMap,
   Field,
   Item,
-  KeySet,
   KindOfQuantityInfo,
-  KoqPropertyValueFormatter,
   NestedContentValue,
   PageOptions,
   PropertiesField,
@@ -37,16 +38,14 @@ import {
   RulesetVariable,
   SelectionInfo,
   StructPropertiesField,
-  Value,
   ValuesArray,
   ValuesDictionary,
   ValuesMap,
 } from "@itwin/presentation-common";
-import { IModelContentChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
-import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
-import { createDiagnosticsOptions, DiagnosticsProps } from "./Diagnostics.js";
-import { IPresentationDataProvider } from "./IPresentationDataProvider.js";
-import { findField, getRulesetId, memoize, RulesetOrId } from "./Utils.js";
+import type { IModelContentChangeEventArgs } from "@itwin/presentation-frontend";
+import type { DiagnosticsProps } from "./Diagnostics.js";
+import type { IPresentationDataProvider } from "./IPresentationDataProvider.js";
+import type { RulesetOrId } from "./Utils.js";
 
 /**
  * Properties for invalidating content cache.

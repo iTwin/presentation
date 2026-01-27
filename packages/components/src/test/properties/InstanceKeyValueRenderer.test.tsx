@@ -5,17 +5,20 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { Primitives, PrimitiveValue, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { TypeConverter, TypeConverterManager } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { IModelApp } from "@itwin/core-frontend";
 import { Presentation, SelectionManager } from "@itwin/presentation-frontend";
-import { SelectionStorage } from "@itwin/unified-selection";
 import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
-import { WithIModelKey } from "../../presentation-components/common/Utils.js";
 import { InstanceKeyValueRenderer } from "../../presentation-components/properties/InstanceKeyValueRenderer.js";
 import { UnifiedSelectionContextProvider as UnifiedSelectionContextProviderDeprecated } from "../../presentation-components/unified-selection/UnifiedSelectionContext.js";
 import { act, cleanup, render, waitFor } from "../TestUtils.js";
+
+import type { Primitives, PrimitiveValue, PropertyValue } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SelectionStorage } from "@itwin/unified-selection";
+import type { WithIModelKey } from "../../presentation-components/common/Utils.js";
 
 describe("InstanceKeyValueRenderer", () => {
   const renderer = new InstanceKeyValueRenderer();

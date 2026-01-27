@@ -7,26 +7,29 @@ import { expect } from "chai";
 import { useEffect, useState } from "react";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import {
-  CategorizedPropertyItem,
   FlatGridItemType,
-  IPropertyDataProvider,
   Orientation,
   PrimitivePropertyRenderer,
   PrimitivePropertyValueRenderer,
-  PropertyCategory,
   PropertyCategoryRendererManager,
-  PropertyCategoryRendererProps,
-  PropertyData,
   PropertyDataChangeEvent,
-  PropertyValueRendererContext,
   PropertyValueRendererManager,
   VirtualizedPropertyGridWithDataProvider,
 } from "@itwin/components-react";
-import { InstanceKey } from "@itwin/presentation-common";
 import { createTestCategoryDescription } from "../_helpers/Content.js";
 import { createPrimitiveStringProperty } from "../_helpers/Properties.js";
-import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 import { render, renderHook, waitFor } from "../TestUtils.js";
+
+import type {
+  CategorizedPropertyItem,
+  IPropertyDataProvider,
+  PropertyCategory,
+  PropertyCategoryRendererProps,
+  PropertyData,
+  PropertyValueRendererContext,
+} from "@itwin/components-react";
+import type { InstanceKey } from "@itwin/presentation-common";
+import type { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 
 describe("Category renderer customization", () => {
   describe("documentation snippets", () => {

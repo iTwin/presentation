@@ -3,20 +3,23 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, toArray } from "rxjs";
+import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, scan, shareReplay, Subject, toArray } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { Guid, GuidString, Id64String } from "@itwin/core-bentley";
-import {
+import { Guid } from "@itwin/core-bentley";
+import { normalizeFullClassName } from "@itwin/presentation-shared";
+import { formIdBindings, genericExecuteQuery, releaseMainThreadOnItemsCount } from "./Utils.js";
+
+import type { Observable } from "rxjs";
+import type { GuidString, Id64String } from "@itwin/core-bentley";
+import type {
   ECClassHierarchyInspector,
   ECSqlBinding,
   ECSqlQueryDef,
   ECSqlQueryExecutor,
   ECSqlQueryReaderOptions,
   ECSqlQueryRow,
-  normalizeFullClassName,
 } from "@itwin/presentation-shared";
-import { SelectableInstanceKey, Selectables } from "./Selectable.js";
-import { formIdBindings, genericExecuteQuery, releaseMainThreadOnItemsCount } from "./Utils.js";
+import type { SelectableInstanceKey, Selectables } from "./Selectable.js";
 
 const HILITE_SET_EMIT_FREQUENCY = 20;
 

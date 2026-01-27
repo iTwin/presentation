@@ -3,10 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Guid, Id64, Id64Arg, Id64Array } from "@itwin/core-bentley";
-import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
-import { SelectableInstanceKey } from "./Selectable.js";
+import { Guid, Id64 } from "@itwin/core-bentley";
 import { formIdBindings, genericExecuteQuery } from "./Utils.js";
+
+import type { Id64Arg, Id64Array } from "@itwin/core-bentley";
+import type { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
+import type { SelectableInstanceKey } from "./Selectable.js";
 
 /**
  * Available selection scopes.

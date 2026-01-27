@@ -8,35 +8,36 @@ import { expect } from "chai";
 import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { CheckBoxState, PageOptions } from "@itwin/components-react";
+import { CheckBoxState } from "@itwin/components-react";
 import { assert, BeEvent, Logger } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import {
-  ClassInfo,
-  ClientDiagnosticsAttribute,
-  Descriptor,
-  ECInstancesNodeKey,
-  FilterByTextHierarchyRequestOptions,
-  HierarchyRequestOptions,
-  Node,
-  NodeKey,
-  Paged,
-  PresentationError,
-  PresentationStatus,
-  PropertyInfo,
-  RulesetVariable,
-} from "@itwin/presentation-common";
-import { Presentation, PresentationManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import { Descriptor, PresentationError, PresentationStatus } from "@itwin/presentation-common";
+import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy.js";
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
 import { createTestTreeNodeItem } from "../_helpers/UiComponents.js";
 import { translate } from "../../presentation-components/common/Utils.js";
-import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider.js";
-import {
+
+import type { PageOptions } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type {
+  ClassInfo,
+  ClientDiagnosticsAttribute,
+  ECInstancesNodeKey,
+  FilterByTextHierarchyRequestOptions,
+  HierarchyRequestOptions,
+  Node,
+  NodeKey,
+  Paged,
+  PropertyInfo,
+  RulesetVariable,
+} from "@itwin/presentation-common";
+import type { RulesetVariablesManager } from "@itwin/presentation-frontend";
+import type { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import type {
   PresentationInfoTreeNodeItem,
   PresentationTreeNodeItem,
   PresentationTreeNodeItemFilteringInfo,

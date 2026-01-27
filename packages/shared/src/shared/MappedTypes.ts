@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from "./Event.js";
+import type { Event } from "./Event.js";
 
 /**
  * An utility `Omit` type which works with union types.

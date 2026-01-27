@@ -25,6 +25,9 @@ catalogs:
     '@itwin/eslint-plugin':
       specifier: 5.1.0
       version: 5.1.0
+    '@stylistic/eslint-plugin':
+      specifier: ^5.7.1
+      version: 5.7.1
     '@types/node':
       specifier: ^22.19.7
       version: 22.19.7
@@ -40,6 +43,9 @@ catalogs:
     eslint-plugin-react:
       specifier: ^7.37.5
       version: 7.37.5
+    eslint-plugin-unused-imports:
+      specifier: ^4.3.0
+      version: 4.3.0
     rimraf:
       specifier: ^6.1.2
       version: 6.1.2
@@ -246,6 +252,9 @@ importers:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: ^4.7.0
         version: 4.7.0(@vue/compiler-sfc@3.5.26)(prettier@3.8.0)
+      '@stylistic/eslint-plugin':
+        specifier: catalog:build-tools
+        version: 5.7.1(eslint@9.39.2)
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2
@@ -258,6 +267,9 @@ importers:
       eslint-config-prettier:
         specifier: ^9.1.2
         version: 9.1.2(eslint@9.39.2)
+      eslint-plugin-unused-imports:
+        specifier: catalog:build-tools
+        version: 4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.9.3))(eslint@9.39.2)(typescript@5.9.3))(eslint@9.39.2)
       fast-glob:
         specifier: ^3.3.3
         version: 3.3.3
@@ -341,7 +353,7 @@ importers:
         version: 5.1.0(eslint@9.39.2)(typescript@5.7.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 5.23.0(d0715d1c13e2959eac0015a4966cc23f)
+        version: 5.23.0(ab0fbfc4244f3277a38ddef5b27b8fb5)
       '@itwin/itwinui-react':
         specifier: catalog:itwinui
         version: 3.20.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -359,7 +371,7 @@ importers:
         version: link:../../packages/core-interop
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core-dev
-        version: 5.6.0-dev.8(8bb1dd6f7777f07f21a0b19633da2aa2)
+        version: 5.6.0-dev.8(e39c6d23dcef96d19ad8698cbd4e2e14)
       '@itwin/presentation-hierarchies':
         specifier: workspace:^
         version: link:../../packages/hierarchies
@@ -815,7 +827,7 @@ importers:
         version: 5.1.0(eslint@9.39.2)(typescript@5.7.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 5.23.0(d0715d1c13e2959eac0015a4966cc23f)
+        version: 5.23.0(ab0fbfc4244f3277a38ddef5b27b8fb5)
       '@itwin/itwinui-icons-react':
         specifier: catalog:itwinui
         version: 2.11.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -833,7 +845,7 @@ importers:
         version: link:../../../packages/core-interop
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core-dev
-        version: 5.6.0-dev.8(8bb1dd6f7777f07f21a0b19633da2aa2)
+        version: 5.6.0-dev.8(e39c6d23dcef96d19ad8698cbd4e2e14)
       '@itwin/presentation-hierarchies':
         specifier: workspace:*
         version: link:../../../packages/hierarchies
@@ -999,7 +1011,7 @@ importers:
         version: 5.1.0(eslint@9.39.2)(typescript@5.7.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 5.23.0(d0715d1c13e2959eac0015a4966cc23f)
+        version: 5.23.0(ab0fbfc4244f3277a38ddef5b27b8fb5)
       '@itwin/itwinui-react':
         specifier: catalog:itwinui
         version: 3.20.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1008,10 +1020,13 @@ importers:
         version: 5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-common@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-geometry@5.6.0-dev.8))(@itwin/core-quantity@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8))(@itwin/ecschema-metadata@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-quantity@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)))
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core-dev
-        version: 5.6.0-dev.8(8bb1dd6f7777f07f21a0b19633da2aa2)
+        version: 5.6.0-dev.8(e39c6d23dcef96d19ad8698cbd4e2e14)
       '@itwin/unified-selection-react':
         specifier: workspace:^
         version: link:../unified-selection-react
+      '@stylistic/eslint-plugin':
+        specifier: catalog:build-tools
+        version: 5.7.1(eslint@9.39.2)
       '@testing-library/dom':
         specifier: catalog:test-tools
         version: 10.4.1
@@ -1075,6 +1090,9 @@ importers:
       eslint-plugin-react:
         specifier: catalog:build-tools
         version: 7.37.5(eslint@9.39.2)
+      eslint-plugin-unused-imports:
+        specifier: catalog:build-tools
+        version: 4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)
       global-jsdom:
         specifier: catalog:test-tools
         version: 26.0.0(jsdom@26.1.0)
@@ -1139,6 +1157,9 @@ importers:
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.1.0(eslint@9.39.2)(typescript@5.7.3)
+      '@stylistic/eslint-plugin':
+        specifier: catalog:build-tools
+        version: 5.7.1(eslint@9.39.2)
       '@types/chai':
         specifier: catalog:test-tools
         version: 5.2.3
@@ -1169,6 +1190,9 @@ importers:
       eslint:
         specifier: catalog:build-tools
         version: 9.39.2
+      eslint-plugin-unused-imports:
+        specifier: catalog:build-tools
+        version: 4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)
       mocha:
         specifier: catalog:test-tools
         version: 11.7.5
@@ -1215,6 +1239,9 @@ importers:
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.1.0(eslint@9.39.2)(typescript@5.7.3)
+      '@stylistic/eslint-plugin':
+        specifier: catalog:build-tools
+        version: 5.7.1(eslint@9.39.2)
       '@types/chai':
         specifier: catalog:test-tools
         version: 5.2.3
@@ -1251,6 +1278,9 @@ importers:
       eslint:
         specifier: catalog:build-tools
         version: 9.39.2
+      eslint-plugin-unused-imports:
+        specifier: catalog:build-tools
+        version: 4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)
       mocha:
         specifier: catalog:test-tools
         version: 11.7.5
@@ -1319,7 +1349,7 @@ importers:
         specifier: catalog:stratakit
         version: 0.5.4(@types/react@18.3.27)(immer@10.2.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
       '@stylistic/eslint-plugin':
-        specifier: ^5.7.1
+        specifier: catalog:build-tools
         version: 5.7.1(eslint@9.39.2)
       '@testing-library/dom':
         specifier: catalog:test-tools
@@ -1379,7 +1409,7 @@ importers:
         specifier: catalog:build-tools
         version: 7.37.5(eslint@9.39.2)
       eslint-plugin-unused-imports:
-        specifier: ^4.3.0
+        specifier: catalog:build-tools
         version: 4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)
       global-jsdom:
         specifier: catalog:test-tools
@@ -1436,12 +1466,18 @@ importers:
       '@itwin/presentation-hierarchies':
         specifier: workspace:^
         version: link:../hierarchies
+      '@stylistic/eslint-plugin':
+        specifier: catalog:build-tools
+        version: 5.7.1(eslint@9.39.2)
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2
       eslint:
         specifier: catalog:build-tools
         version: 9.39.2
+      eslint-plugin-unused-imports:
+        specifier: catalog:build-tools
+        version: 4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.2
@@ -1463,6 +1499,9 @@ importers:
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.0
+      '@stylistic/eslint-plugin':
+        specifier: catalog:build-tools
+        version: 5.7.1(eslint@9.39.2)
       '@types/chai':
         specifier: catalog:test-tools
         version: 5.2.3
@@ -1493,6 +1532,9 @@ importers:
       eslint:
         specifier: catalog:build-tools
         version: 9.39.2
+      eslint-plugin-unused-imports:
+        specifier: catalog:build-tools
+        version: 4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)
       mocha:
         specifier: catalog:test-tools
         version: 11.7.5
@@ -1521,6 +1563,9 @@ importers:
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.1.0(eslint@9.39.2)(typescript@5.7.3)
+      '@stylistic/eslint-plugin':
+        specifier: catalog:build-tools
+        version: 5.7.1(eslint@9.39.2)
       '@types/chai':
         specifier: catalog:test-tools
         version: 5.2.3
@@ -1551,6 +1596,9 @@ importers:
       eslint:
         specifier: catalog:build-tools
         version: 9.39.2
+      eslint-plugin-unused-imports:
+        specifier: catalog:build-tools
+        version: 4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)
       mocha:
         specifier: catalog:test-tools
         version: 11.7.5
@@ -1584,12 +1632,18 @@ importers:
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.1.0(eslint@9.39.2)(typescript@5.7.3)
+      '@stylistic/eslint-plugin':
+        specifier: catalog:build-tools
+        version: 5.7.1(eslint@9.39.2)
       '@types/node':
         specifier: catalog:build-tools
         version: 22.19.7
       eslint:
         specifier: catalog:build-tools
         version: 9.39.2
+      eslint-plugin-unused-imports:
+        specifier: catalog:build-tools
+        version: 4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.2
@@ -1650,7 +1704,10 @@ importers:
         version: 5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-common@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-geometry@5.6.0-dev.8))(@itwin/core-quantity@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8))(@itwin/ecschema-metadata@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-quantity@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)))
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core-dev
-        version: 5.6.0-dev.8(8bb1dd6f7777f07f21a0b19633da2aa2)
+        version: 5.6.0-dev.8(e39c6d23dcef96d19ad8698cbd4e2e14)
+      '@stylistic/eslint-plugin':
+        specifier: catalog:build-tools
+        version: 5.7.1(eslint@9.39.2)
       '@types/chai':
         specifier: catalog:test-tools
         version: 5.2.3
@@ -1693,6 +1750,9 @@ importers:
       eslint:
         specifier: catalog:build-tools
         version: 9.39.2
+      eslint-plugin-unused-imports:
+        specifier: catalog:build-tools
+        version: 4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)
       global-jsdom:
         specifier: catalog:test-tools
         version: 26.0.0(jsdom@26.1.0)
@@ -1739,6 +1799,9 @@ importers:
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.1.0(eslint@9.39.2)(typescript@5.7.3)
+      '@stylistic/eslint-plugin':
+        specifier: catalog:build-tools
+        version: 5.7.1(eslint@9.39.2)
       '@types/chai':
         specifier: catalog:test-tools
         version: 5.2.3
@@ -1772,6 +1835,9 @@ importers:
       eslint:
         specifier: catalog:build-tools
         version: 9.39.2
+      eslint-plugin-unused-imports:
+        specifier: catalog:build-tools
+        version: 4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)
       mocha:
         specifier: catalog:test-tools
         version: 11.7.5
@@ -1802,6 +1868,9 @@ importers:
       '@itwin/unified-selection':
         specifier: workspace:^
         version: link:../unified-selection
+      '@stylistic/eslint-plugin':
+        specifier: catalog:build-tools
+        version: 5.7.1(eslint@9.39.2)
       '@testing-library/react':
         specifier: catalog:test-tools
         version: 16.3.1(@testing-library/dom@10.4.1)(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1835,6 +1904,9 @@ importers:
       eslint-plugin-react:
         specifier: catalog:build-tools
         version: 7.37.5(eslint@9.39.2)
+      eslint-plugin-unused-imports:
+        specifier: catalog:build-tools
+        version: 4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)
       global-jsdom:
         specifier: catalog:test-tools
         version: 26.0.0(jsdom@26.1.0)
@@ -10609,7 +10681,7 @@ snapshots:
   '@es-joy/jsdoccomment@0.50.2':
     dependencies:
       '@types/estree': 1.0.8
-      '@typescript-eslint/types': 8.53.0
+      '@typescript-eslint/types': 8.54.0
       comment-parser: 1.4.1
       esquery: 1.7.0
       jsdoc-type-pratt-parser: 4.1.0
@@ -10961,7 +11033,7 @@ snapshots:
       '@itwin/core-geometry': 5.6.0-dev.8
       '@itwin/core-quantity': 5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)
       '@itwin/core-react': 5.23.0(@itwin/appui-abstract@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8))(@itwin/core-bentley@5.6.0-dev.8)(@itwin/itwinui-react@3.20.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@itwin/imodel-components-react': 5.23.0(d0715d1c13e2959eac0015a4966cc23f)
+      '@itwin/imodel-components-react': 5.23.0(ab0fbfc4244f3277a38ddef5b27b8fb5)
       '@itwin/itwinui-icons-react': 2.11.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-illustrations-react': 2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-react': 3.20.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -11188,7 +11260,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@itwin/imodel-components-react@5.23.0(d0715d1c13e2959eac0015a4966cc23f)':
+  '@itwin/imodel-components-react@5.23.0(ab0fbfc4244f3277a38ddef5b27b8fb5)':
     dependencies:
       '@itwin/appui-abstract': 5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)
       '@itwin/components-react': 5.23.0(@itwin/appui-abstract@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8))(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-react@5.23.0(@itwin/appui-abstract@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8))(@itwin/core-bentley@5.6.0-dev.8)(@itwin/itwinui-react@3.20.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@itwin/itwinui-react@3.20.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -11265,7 +11337,7 @@ snapshots:
       '@itwin/ecschema-metadata': 5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-quantity@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8))
       '@itwin/presentation-shared': 1.2.6
 
-  '@itwin/presentation-frontend@5.6.0-dev.8(8bb1dd6f7777f07f21a0b19633da2aa2)':
+  '@itwin/presentation-frontend@5.6.0-dev.8(e39c6d23dcef96d19ad8698cbd4e2e14)':
     dependencies:
       '@itwin/core-bentley': 5.6.0-dev.8
       '@itwin/core-common': 5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-geometry@5.6.0-dev.8)
@@ -12799,6 +12871,23 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.9.3))(eslint@9.39.2)(typescript@5.9.3)':
+    dependencies:
+      '@eslint-community/regexpp': 4.12.2
+      '@typescript-eslint/parser': 8.53.0(eslint@9.39.2)(typescript@5.9.3)
+      '@typescript-eslint/scope-manager': 8.53.0
+      '@typescript-eslint/type-utils': 8.53.0(eslint@9.39.2)(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.53.0(eslint@9.39.2)(typescript@5.9.3)
+      '@typescript-eslint/visitor-keys': 8.53.0
+      eslint: 9.39.2
+      ignore: 7.0.5
+      natural-compare: 1.4.0
+      ts-api-utils: 2.4.0(typescript@5.9.3)
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
+
   '@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.53.0
@@ -12811,10 +12900,23 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.9.3)':
+    dependencies:
+      '@typescript-eslint/scope-manager': 8.53.0
+      '@typescript-eslint/types': 8.53.0
+      '@typescript-eslint/typescript-estree': 8.53.0(typescript@5.9.3)
+      '@typescript-eslint/visitor-keys': 8.53.0
+      debug: 4.4.3(supports-color@8.1.1)
+      eslint: 9.39.2
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
+
   '@typescript-eslint/project-service@8.53.0(typescript@5.7.3)':
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.53.0(typescript@5.7.3)
-      '@typescript-eslint/types': 8.53.0
+      '@typescript-eslint/types': 8.54.0
       debug: 4.4.3(supports-color@8.1.1)
       typescript: 5.7.3
     transitivePeerDependencies:
@@ -12823,7 +12925,7 @@ snapshots:
   '@typescript-eslint/project-service@8.53.0(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.53.0(typescript@5.9.3)
-      '@typescript-eslint/types': 8.53.0
+      '@typescript-eslint/types': 8.54.0
       debug: 4.4.3(supports-color@8.1.1)
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -12853,6 +12955,19 @@ snapshots:
       typescript: 5.7.3
     transitivePeerDependencies:
       - supports-color
+
+  '@typescript-eslint/type-utils@8.53.0(eslint@9.39.2)(typescript@5.9.3)':
+    dependencies:
+      '@typescript-eslint/types': 8.53.0
+      '@typescript-eslint/typescript-estree': 8.53.0(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.53.0(eslint@9.39.2)(typescript@5.9.3)
+      debug: 4.4.3(supports-color@8.1.1)
+      eslint: 9.39.2
+      ts-api-utils: 2.4.0(typescript@5.9.3)
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
 
   '@typescript-eslint/types@8.53.0': {}
 
@@ -12898,6 +13013,18 @@ snapshots:
       typescript: 5.7.3
     transitivePeerDependencies:
       - supports-color
+
+  '@typescript-eslint/utils@8.53.0(eslint@9.39.2)(typescript@5.9.3)':
+    dependencies:
+      '@eslint-community/eslint-utils': 4.9.1(eslint@9.39.2)
+      '@typescript-eslint/scope-manager': 8.53.0
+      '@typescript-eslint/types': 8.53.0
+      '@typescript-eslint/typescript-estree': 8.53.0(typescript@5.9.3)
+      eslint: 9.39.2
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
 
   '@typescript-eslint/visitor-keys@8.53.0':
     dependencies:
@@ -14476,6 +14603,12 @@ snapshots:
       eslint: 9.39.2
     optionalDependencies:
       '@typescript-eslint/eslint-plugin': 8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3)
+
+  eslint-plugin-unused-imports@4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.9.3))(eslint@9.39.2)(typescript@5.9.3))(eslint@9.39.2):
+    dependencies:
+      eslint: 9.39.2
+    optionalDependencies:
+      '@typescript-eslint/eslint-plugin': 8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.9.3))(eslint@9.39.2)(typescript@5.9.3)
 
   eslint-scope@8.4.0:
     dependencies:

@@ -5,6 +5,7 @@
 
 import { memo } from "react";
 import { DropdownMenu, Tree } from "@stratakit/structures";
+
 import type { ComponentProps } from "react";
 
 /**

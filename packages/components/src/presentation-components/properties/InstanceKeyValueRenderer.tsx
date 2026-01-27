@@ -7,12 +7,16 @@
  * @module Properties
  */
 
-import { Primitives, PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { IPropertyValueRenderer, PropertyValueRendererContext, TypeConverterManager, useAsyncValue } from "@itwin/components-react";
+import { PropertyValueFormat } from "@itwin/appui-abstract";
+import { TypeConverterManager, useAsyncValue } from "@itwin/components-react";
 import { Anchor } from "@itwin/itwinui-react";
 import { useOptionalUnifiedSelectionContext } from "../common/UnifiedSelection.js";
-import { translate, WithIModelKey } from "../common/Utils.js";
+import { translate } from "../common/Utils.js";
 import { useUnifiedSelectionContext as useDeprecatedUnifiedSelectionContext } from "../unified-selection/UnifiedSelectionContext.js";
+
+import type { Primitives, PrimitiveValue, PropertyRecord } from "@itwin/appui-abstract";
+import type { IPropertyValueRenderer, PropertyValueRendererContext } from "@itwin/components-react";
+import type { WithIModelKey } from "../common/Utils.js";
 
 /**
  * Property value renderer for instance keys. If application provides a [[UnifiedSelectionContext]] and this value is

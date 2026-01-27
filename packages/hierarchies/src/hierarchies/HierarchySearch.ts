@@ -3,9 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { NonGroupingHierarchyNode } from "./HierarchyNode.js";
-import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
-import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
+import { HierarchyNodeIdentifier } from "./HierarchyNodeIdentifier.js";
+import { HierarchyNodeKey } from "./HierarchyNodeKey.js";
+
+import type { NonGroupingHierarchyNode } from "./HierarchyNode.js";
+import type { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
+import type { GenericNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
 
 /** @public */
 export interface SearchPathRevealDepthInPath {

@@ -4,10 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import sinon from "sinon";
-import { Dictionary, Logger, LogLevel } from "@itwin/core-bentley";
-import { compareFullClassNames, EC, getClass } from "@itwin/presentation-shared";
-import { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
-import {
+import { Dictionary, Logger } from "@itwin/core-bentley";
+import { compareFullClassNames, getClass } from "@itwin/presentation-shared";
+
+import type { LogLevel } from "@itwin/core-bentley";
+import type { EC } from "@itwin/presentation-shared";
+import type { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
+import type {
   ClassGroupingNodeKey,
   GenericNodeKey,
   HierarchyNodeKey,
@@ -17,7 +20,7 @@ import {
   PropertyValueGroupingNodeKey,
   PropertyValueRangeGroupingNodeKey,
 } from "../hierarchies/HierarchyNodeKey.js";
-import {
+import type {
   ProcessedGenericHierarchyNode,
   ProcessedGroupingHierarchyNode,
   ProcessedInstanceHierarchyNode,

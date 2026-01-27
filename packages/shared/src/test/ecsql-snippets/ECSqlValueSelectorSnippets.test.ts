@@ -14,9 +14,10 @@ import {
   createRawPropertyValueSelector,
   TypedValueSelectClauseProps,
 } from "../../shared/ecsql-snippets/ECSqlValueSelectorSnippets.js";
-import { EC } from "../../shared/Metadata.js";
 import { trimWhitespace } from "../../shared/Utils.js";
 import { createECSchemaProviderStub } from "../MetadataProviderStub.js";
+
+import type { EC } from "../../shared/Metadata.js";
 
 describe("TypedValueSelectClauseProps", () => {
   describe("isPrimitiveValueSelector", () => {

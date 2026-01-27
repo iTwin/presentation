@@ -4,7 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { createHierarchySearchHelper, HierarchySearchPath, HierarchySearchPathOptions } from "../hierarchies/HierarchySearch.js";
+import { createHierarchySearchHelper, HierarchySearchPath } from "../hierarchies/HierarchySearch.js";
+
+import type { HierarchySearchPathOptions } from "../hierarchies/HierarchySearch.js";
 
 describe("HierarchySearchPath", () => {
   describe("mergeOptions", () => {

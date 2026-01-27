@@ -4,11 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { DelayLoadedTreeNodeItem } from "@itwin/components-react";
-import { NodeKey } from "@itwin/presentation-common";
-import { PresentationTreeNodeItem } from "../../presentation-components/tree/PresentationTreeNodeItem.js";
+import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { createTestECInstancesNodeKey } from "./Hierarchy.js";
+
+import type { PrimitiveValue, PropertyDescription } from "@itwin/appui-abstract";
+import type { DelayLoadedTreeNodeItem } from "@itwin/components-react";
+import type { NodeKey } from "@itwin/presentation-common";
+import type { PresentationTreeNodeItem } from "../../presentation-components/tree/PresentationTreeNodeItem.js";
 
 export function createTestTreeNodeItem(key?: NodeKey, partialNode?: Partial<DelayLoadedTreeNodeItem>): PresentationTreeNodeItem {
   const node = {

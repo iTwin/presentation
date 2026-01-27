@@ -7,12 +7,16 @@ import { expect } from "chai";
 import { useEffect } from "react";
 import sinon from "sinon";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp } from "@itwin/core-frontend";
-import { Format, FormatterSpec, FormatType, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { IModelApp } from "@itwin/core-frontend";
+import { Format, FormatType, ParseError } from "@itwin/core-quantity";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
-import { QuantityValue, useQuantityValueInput, UseQuantityValueInputProps } from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
+import { useQuantityValueInput } from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
 import { render, waitFor } from "../../TestUtils.js";
+
+import type { FormattingUnitSystemChangedArgs } from "@itwin/core-frontend";
+import type { FormatterSpec, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
+import type { SchemaContext } from "@itwin/ecschema-metadata";
+import type { QuantityValue, UseQuantityValueInputProps } from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
 
 function TestInput({ onChange, ...restProps }: UseQuantityValueInputProps & { onChange?: (value: QuantityValue) => void }) {
   const { quantityValue, inputProps } = useQuantityValueInput(restProps);

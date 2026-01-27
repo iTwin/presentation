@@ -7,10 +7,11 @@ import "./internal/DisposePolyfill.js";
 
 import { filter, first, from, map, mergeMap, of } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
-import { HierarchyProvider } from "./HierarchyProvider.js";
 import { safeDispose } from "./internal/Common.js";
 import { eachValueFrom } from "./internal/EachValueFrom.js";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting.js";
+
+import type { HierarchyProvider } from "./HierarchyProvider.js";
 
 /**
  * Props for `mergeProviders` function.
