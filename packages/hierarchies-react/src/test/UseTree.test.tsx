@@ -8,7 +8,8 @@ import { collect, createAsyncIterator, ResolvablePromise, throwingAsyncIterator 
 import sinon from "sinon";
 import { BeEvent } from "@itwin/core-bentley";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
-import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import { HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { EventListener, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import {
   createStorage,
   Selectable,
@@ -142,7 +143,7 @@ describe("useTree", () => {
   it("sets 'isReloading' to false only after root nodes are loaded", async () => {
     const rootNode1 = createTestHierarchyNode({ id: "root-1" });
     const rootNode2 = createTestHierarchyNode({ id: "root-2" });
-    const hierarchyChanged = new BeEvent();
+    const hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
     let getNodesCallCount = 0;
     const customHierarchyProvider: hierarchiesModule.HierarchyProvider = {
       async *getNodes() {
@@ -155,8 +156,8 @@ describe("useTree", () => {
           yield rootNode1;
         }
       },
-      setHierarchySearch() {
-        hierarchyChanged.raiseEvent();
+      setHierarchySearch(newSearch) {
+        hierarchyChanged.raiseEvent({ searchChange: { newSearch } });
       },
       async *getNodeInstanceKeys() {},
       setFormatter() {},
@@ -927,7 +928,7 @@ describe("useTree", () => {
       return createAsyncIterator([]);
     });
     act(() => {
-      hierarchyProvider.hierarchyChanged.raiseEvent();
+      hierarchyProvider.hierarchyChanged.raiseEvent({});
     });
 
     await waitFor(() => {

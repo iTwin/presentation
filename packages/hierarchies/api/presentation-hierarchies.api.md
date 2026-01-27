@@ -454,7 +454,7 @@ type HierarchyNodeSearchProps = {
 export interface HierarchyProvider {
     getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
     getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
-    readonly hierarchyChanged: Event_2<(args?: HierarchyChangedEventArgs) => void>;
+    readonly hierarchyChanged: Event_2<(args: HierarchyChangedEventArgs) => void>;
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
     setHierarchySearch(props: {
         paths: HierarchySearchPath[];

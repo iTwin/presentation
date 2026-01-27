@@ -7,6 +7,7 @@ import "./internal/DisposePolyfill.js";
 
 import { filter, first, from, map, mergeMap, of } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
+import { EventArgs } from "@itwin/presentation-shared";
 import { HierarchyProvider } from "./HierarchyProvider.js";
 import { safeDispose } from "./internal/Common.js";
 import { eachValueFrom } from "./internal/EachValueFrom.js";
@@ -28,9 +29,9 @@ interface MergeHierarchyProvidersProps {
 export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & {
   [Symbol.dispose]: () => void;
 } {
-  const hierarchyChanged = new BeEvent<() => void>();
+  const hierarchyChanged = new BeEvent<(args: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>();
   providers.forEach((p) => {
-    p.hierarchyChanged.addListener(() => hierarchyChanged.raiseEvent());
+    p.hierarchyChanged.addListener((args) => hierarchyChanged.raiseEvent(args));
   });
   const dispose = () => {
     hierarchyChanged.clear();

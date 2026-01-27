@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeEvent } from "@itwin/core-bentley";
-import { InstanceKey, Props } from "@itwin/presentation-shared";
+import { EventListener, InstanceKey, Props } from "@itwin/presentation-shared";
 import { mergeProviders } from "../hierarchies/HierarchyMerge.js";
 import { HierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
 import { HierarchyProvider } from "../hierarchies/HierarchyProvider.js";
@@ -121,10 +121,10 @@ describe("mergeProviders", () => {
     const spy = sinon.spy();
     mergedProvider.hierarchyChanged.addListener(spy);
 
-    providers[0].hierarchyChanged.raiseEvent();
+    providers[0].hierarchyChanged.raiseEvent({});
     expect(spy).to.be.calledOnce;
 
-    providers[1].hierarchyChanged.raiseEvent();
+    providers[1].hierarchyChanged.raiseEvent({});
     expect(spy).to.be.calledTwice;
   });
 
@@ -153,7 +153,7 @@ function createTestProvider(
   } = {},
 ) {
   return {
-    hierarchyChanged: new BeEvent(),
+    hierarchyChanged: new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>(),
     getNodes: sinon
       .stub<Parameters<HierarchyProvider["getNodes"]>>()
       .callsFake((getNodesProps) =>
