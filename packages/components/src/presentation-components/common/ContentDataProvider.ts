@@ -289,19 +289,19 @@ export class ContentDataProvider implements IContentDataProvider {
    * Invalidates cached content.
    */
   protected invalidateCache(props: CacheInvalidationProps): void {
-    if (props.descriptor && this.getDefaultContentDescriptor) {
+    if (props.descriptor) {
       this.getDefaultContentDescriptor.cache.keys.length = 0;
       this.getDefaultContentDescriptor.cache.values.length = 0;
     }
-    if (props.descriptorConfiguration && this.getContentDescriptor) {
+    if (props.descriptorConfiguration) {
       this.getContentDescriptor.cache.keys.length = 0;
       this.getContentDescriptor.cache.values.length = 0;
     }
-    if ((props.content || props.size) && this._getContentAndSize) {
+    if (props.content || props.size) {
       this._getContentAndSize.cache.keys.length = 0;
       this._getContentAndSize.cache.values.length = 0;
     }
-    if ((props.formatting || props.content || props.size) && this._getFormattedContentAndSize) {
+    if (props.formatting || props.content || props.size) {
       this._getFormattedContentAndSize.cache.keys.length = 0;
       this._getFormattedContentAndSize.cache.values.length = 0;
       this._isContentFormatted = false;
@@ -325,6 +325,8 @@ export class ContentDataProvider implements IContentDataProvider {
     this._listeners.push(Presentation.presentation.rulesets().onRulesetModified.addListener(this.onRulesetModified));
     this._listeners.push(Presentation.presentation.vars(getRulesetId(this._ruleset)).onVariableChanged.addListener(this.onRulesetVariableChanged));
     this._listeners.push(IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(this.onUnitSystemChanged));
+    // note: IModelApp.formatsProvider may not be available in older versions of core
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     IModelApp.formatsProvider && this._listeners.push(IModelApp.formatsProvider.onFormatsChanged.addListener(this.onFormatsChanged));
   }
 
@@ -452,6 +454,8 @@ export class ContentDataProvider implements IContentDataProvider {
         },
       };
 
+      // note: `getContentIterator` may not be available in older versions of core
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (Presentation.presentation.getContentIterator) {
         const result = await Presentation.presentation.getContentIterator(options);
         return result

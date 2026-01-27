@@ -65,6 +65,8 @@ export const findField = (descriptor: Descriptor, recordPropertyName: string): F
     }
     if (field.isNestedContentField()) {
       fieldsSource = field;
+      // note: `isStructPropertiesField` and `isArrayPropertiesField` may not be available in older versions of core
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     } else if (field.isPropertiesField() && (field.isStructPropertiesField?.() || field.isArrayPropertiesField?.())) {
       fieldsSource = field;
     } else {

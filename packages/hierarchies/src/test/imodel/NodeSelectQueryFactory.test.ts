@@ -599,7 +599,7 @@ describe("createNodesQueryClauseFactory", () => {
             rules: rule,
           };
           const res = await factory.createFilterClauses({ filter, contentClass: { fullName: className, alias: classAlias } });
-          expect(trimWhitespace(res.where ?? "")).to.eq(trimWhitespace(expectedECSql));
+          expect(trimWhitespace(res.where)).to.eq(trimWhitespace(expectedECSql));
         }
 
         it(`defaults to content class alias if it's not specified for property rule`, async () => {
@@ -1102,8 +1102,8 @@ describe("createNodesQueryClauseFactory", () => {
           const relationship = imodelAccess.stubRelationshipClass({
             schemaName: "x",
             className: "rel",
-            source: { polymorphic: false, abstractConstraint: Promise.resolve(contentClass) },
-            target: { polymorphic: false, abstractConstraint: Promise.resolve(propertyClass) },
+            source: { polymorphic: false, abstractConstraint: Promise.resolve(contentClass), multiplicity: { lowerLimit: 0, upperLimit: 1 } },
+            target: { polymorphic: false, abstractConstraint: Promise.resolve(propertyClass), multiplicity: { lowerLimit: 0, upperLimit: 1 } },
           });
           await testPropertyFilter({
             className: contentClass.fullName,
@@ -1144,8 +1144,8 @@ describe("createNodesQueryClauseFactory", () => {
           const relationship = imodelAccess.stubRelationshipClass({
             schemaName: "x",
             className: "rel",
-            source: { polymorphic: false, abstractConstraint: Promise.resolve(contentClass) },
-            target: { polymorphic: false, abstractConstraint: Promise.resolve(propertyClass) },
+            source: { polymorphic: false, abstractConstraint: Promise.resolve(contentClass), multiplicity: { lowerLimit: 0, upperLimit: 1 } },
+            target: { polymorphic: false, abstractConstraint: Promise.resolve(propertyClass), multiplicity: { lowerLimit: 0, upperLimit: 1 } },
           });
           await expect(
             factory.createFilterClauses({
@@ -1422,10 +1422,12 @@ describe("createNodesQueryClauseFactory", () => {
           source: {
             abstractConstraint: Promise.resolve(sourceClass),
             polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
             abstractConstraint: Promise.resolve(imodelAccess.stubEntityClass({ schemaName: "x", className: "t" })),
             polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
         });
         const filter: GenericInstanceFilter = {
@@ -1468,10 +1470,12 @@ describe("createNodesQueryClauseFactory", () => {
           source: {
             abstractConstraint: Promise.resolve(sourceClass),
             polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
             abstractConstraint: Promise.resolve(intermediateClass),
             polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
         });
         imodelAccess.stubRelationshipClass({
@@ -1481,10 +1485,12 @@ describe("createNodesQueryClauseFactory", () => {
           source: {
             abstractConstraint: Promise.resolve(intermediateClass),
             polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
             abstractConstraint: Promise.resolve(targetClass),
             polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
         });
         const filter: GenericInstanceFilter = {
@@ -1535,10 +1541,12 @@ describe("createNodesQueryClauseFactory", () => {
           source: {
             abstractConstraint: Promise.resolve(sourceClass),
             polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
             abstractConstraint: Promise.resolve(targetClass1),
             polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
         });
         imodelAccess.stubRelationshipClass({
@@ -1548,10 +1556,12 @@ describe("createNodesQueryClauseFactory", () => {
           source: {
             abstractConstraint: Promise.resolve(sourceClass),
             polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
             abstractConstraint: Promise.resolve(targetClass2),
             polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
         });
         const filter: GenericInstanceFilter = {

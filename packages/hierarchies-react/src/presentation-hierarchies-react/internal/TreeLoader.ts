@@ -142,8 +142,7 @@ function createTreeModelNodesFactory({
 }
 
 function isRowsLimitError(error: Error): error is RowsLimitExceededError {
-  const asRowsError = error as RowsLimitExceededError;
-  return asRowsError.limit !== undefined && asRowsError.message.includes("Query rows limit of");
+  return "limit" in error && error.message.includes("Query rows limit of");
 }
 
 function isTimeoutError(error: Error) {

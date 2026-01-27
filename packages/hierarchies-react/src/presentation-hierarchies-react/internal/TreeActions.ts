@@ -229,7 +229,7 @@ export class TreeActions {
   }
 
   public expandNode(nodeId: string, isExpanded: boolean) {
-    let childrenAction: ReturnType<typeof TreeModel.expandNode> = "none";
+    let childrenAction = "none" as ReturnType<typeof TreeModel.expandNode>;
     this.updateTreeModel((model) => {
       childrenAction = TreeModel.expandNode(model, nodeId, isExpanded);
     });
@@ -243,7 +243,7 @@ export class TreeActions {
 
   public setHierarchyLimit(nodeId: string | undefined, limit?: number | "unbounded") {
     const oldModel = this._currentModel;
-    let loadChildren = false;
+    let loadChildren = false as boolean;
     this.updateTreeModel((model) => {
       loadChildren = TreeModel.setHierarchyLimit(model, nodeId, limit);
     });
@@ -257,7 +257,7 @@ export class TreeActions {
 
   public setInstanceFilter(nodeId: string | undefined, filter?: GenericInstanceFilter) {
     const oldModel = this._currentModel;
-    let loadChildren = false;
+    let loadChildren = false as boolean;
     this.updateTreeModel((model) => {
       loadChildren = TreeModel.setInstanceFilter(model, nodeId, filter);
     });
@@ -274,7 +274,7 @@ export class TreeActions {
     this.updateTreeModel((model) => {
       TreeModel.setIsLoading(model, options?.parentNodeId, true);
       if (options?.state === "reset") {
-        TreeModel.removeSubTree(model, options?.parentNodeId);
+        TreeModel.removeSubTree(model, options.parentNodeId);
       }
     });
 

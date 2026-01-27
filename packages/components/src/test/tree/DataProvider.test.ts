@@ -9,7 +9,7 @@ import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilit
 import * as sinon from "sinon";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { CheckBoxState, PageOptions } from "@itwin/components-react";
-import { assert, BeEvent, Logger } from "@itwin/core-bentley";
+import { BeEvent, Logger } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
@@ -580,7 +580,7 @@ describe("TreeDataProvider", () => {
       expect(presentationManager.getNodesIterator).to.be.calledWith(
         matchOptions(
           ({ diagnostics }) =>
-            diagnostics?.backendVersion === true && diagnostics.perf === true && diagnostics?.dev === "error" && diagnostics.handler === diagnosticsHandler,
+            diagnostics?.backendVersion === true && diagnostics.perf === true && diagnostics.dev === "error" && diagnostics.handler === diagnosticsHandler,
         ),
       );
     });
@@ -588,7 +588,6 @@ describe("TreeDataProvider", () => {
 
   describe("filterable nodes", () => {
     async function loadDescriptor(filteringInfo: PresentationTreeNodeItemFilteringInfo) {
-      assert(filteringInfo.descriptor !== undefined);
       if (filteringInfo.descriptor instanceof Descriptor) {
         return filteringInfo.descriptor;
       }

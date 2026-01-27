@@ -37,7 +37,7 @@ export const TreeNodeFilterAction = memo(function TreeNodeFilterAction({
   const { filterHierarchyLevel, filterHierarchyLevelActiveDescription } = localizedStrings;
 
   const handleClick = useCallback(() => {
-    const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
+    const hierarchyLevelDetails = getHierarchyLevelDetails(node.id);
     hierarchyLevelDetails && onFilter?.(hierarchyLevelDetails);
   }, [node, getHierarchyLevelDetails, onFilter]);
 

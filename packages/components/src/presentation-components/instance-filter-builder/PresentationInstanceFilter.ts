@@ -216,7 +216,7 @@ function createGenericInstanceFilterUniqueValueRules(filter: PresentationInstanc
   if (filter.operator !== "is-equal" && filter.operator !== "is-not-equal") {
     return undefined;
   }
-  if (typeof filter.value?.value !== "string" || typeof filter.value?.displayValue !== "string") {
+  if (typeof filter.value?.value !== "string" || typeof filter.value.displayValue !== "string") {
     return undefined;
   }
   const result = createUniqueValueConditions(filter, filter.value.displayValue, filter.value.value);
@@ -400,7 +400,7 @@ function parseUniqueValuesRule(rules: GenericInstanceFilterRule[], ctx: GenericF
 
   const uniqueValues: UniqueValue[] = [];
   for (const rule of rules) {
-    assert(rule.value?.displayValue !== undefined && rule.value.rawValue !== undefined);
+    assert(rule.value?.displayValue !== undefined);
     const displayValue = rule.value.displayValue;
     const value = rule.value.rawValue as Value;
 

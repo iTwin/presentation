@@ -88,7 +88,6 @@ describe("search", () => {
               return createHierarchyLevelDefinition(imodelAccess, (alias) => `WHERE ${alias}.ECInstanceId = ${physicalElementsSmallestDecimalId}`);
             }
             if (
-              props.parentNode &&
               HierarchyNode.isInstancesNode(props.parentNode) &&
               props.parentNode.key.instanceKeys.some(({ id }) => Id64.getLocalId(id) === physicalElementsSmallestDecimalId)
             ) {
@@ -96,7 +95,6 @@ describe("search", () => {
             }
 
             if (
-              props.parentNode &&
               HierarchyNode.isInstancesNode(props.parentNode) &&
               props.parentNode.key.instanceKeys.some(({ id }) => parentIdsArr.includes(Id64.getLocalId(id)))
             ) {

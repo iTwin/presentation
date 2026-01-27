@@ -31,21 +31,21 @@ export interface ClassStubs {
   stub: sinon.SinonStub<[schemaProvider: ECSchemaProvider, fullClassName: string], Promise<EC.Class>>;
 }
 export function createECSchemaProviderStub() {
-  const schemaStubs: { [schemaName: string]: sinon.SinonStubbedInstance<EC.Schema> } = {};
+  const schemaStubs = new Map<string, sinon.SinonStubbedInstance<EC.Schema>>();
   const stub = {
     getSchema: sinon.fake(async (schemaName: string): Promise<EC.Schema | undefined> => {
-      return schemaStubs[schemaName];
+      return schemaStubs.get(schemaName);
     }),
   };
   const getSchemaStub = (schemaName: string) => {
-    let schemaStub = schemaStubs[schemaName];
+    let schemaStub = schemaStubs.get(schemaName);
     if (!schemaStub) {
       schemaStub = {
         name: schemaName,
         getClass: sinon.stub(),
         getCustomAttributes: sinon.stub(),
       };
-      schemaStubs[schemaName] = schemaStub;
+      schemaStubs.set(schemaName, schemaStub);
     }
     return schemaStub;
   };
@@ -109,7 +109,7 @@ export function createECSchemaProviderStub() {
     stubRelationshipClass,
     stubOtherClass,
     getClassRequestCount(props: { schemaName: string; className: string }): number {
-      const schemaStub = schemaStubs[props.schemaName];
+      const schemaStub = schemaStubs.get(props.schemaName);
       if (!schemaStub) {
         return 0;
       }

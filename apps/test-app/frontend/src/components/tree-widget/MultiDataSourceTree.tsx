@@ -451,9 +451,6 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (fi
 
     async getSearchPaths(searchText: string): Promise<HierarchySearchPath[]> {
       const feed = await getFeed();
-      if (!feed) {
-        return [];
-      }
       const paths = new Array<HierarchyNodeIdentifiersPath>();
 
       if ((feed.title ?? "<no title>").toLocaleLowerCase().includes(searchText.toLocaleLowerCase())) {
@@ -474,10 +471,6 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (fi
 
     async *getNodes({ parentNode }: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode> {
       const feed = await getFeed();
-      if (!feed) {
-        return;
-      }
-
       async function* generateNodes(): AsyncIterableIterator<HierarchyNode & { key: GenericNodeKey }> {
         if (!parentNode) {
           yield {

@@ -251,7 +251,7 @@ describe("useTree", () => {
     const rootNode2 = createTestHierarchyNode({ id: "root-2" });
 
     hierarchyProvider.getNodes.callsFake(() => {
-      const activePaths = hierarchyProvider.setHierarchySearch.lastCall?.args[0]?.paths;
+      const activePaths = hierarchyProvider.setHierarchySearch.lastCall.args[0]?.paths;
       if (activePaths === paths1) {
         return createAsyncIterator([rootNode1]);
       }
@@ -661,10 +661,7 @@ describe("useTree", () => {
       if (props.parentNode === undefined) {
         return createAsyncIterator(rootNodes);
       }
-      if (props.parentNode !== undefined) {
-        return createAsyncIterator(childNodes);
-      }
-      return createAsyncIterator([]);
+      return createAsyncIterator(childNodes);
     });
     const { result } = renderHook(useTree, { initialProps });
     const nodeId = createNodeId(rootNodes[0]);
@@ -715,10 +712,7 @@ describe("useTree", () => {
       if (props.parentNode === undefined) {
         return createAsyncIterator(rootNodes);
       }
-      if (props.parentNode !== undefined) {
-        return createAsyncIterator(childNodes.slice(0, 1));
-      }
-      return createAsyncIterator([]);
+      return createAsyncIterator(childNodes.slice(0, 1));
     });
     const { result } = renderHook(useTree, { initialProps });
 
@@ -733,10 +727,7 @@ describe("useTree", () => {
       if (props.parentNode === undefined) {
         return createAsyncIterator(rootNodes);
       }
-      if (props.parentNode !== undefined) {
-        return createAsyncIterator(childNodes);
-      }
-      return createAsyncIterator([]);
+      return createAsyncIterator(childNodes);
     });
 
     act(() => {

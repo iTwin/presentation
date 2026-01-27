@@ -375,6 +375,8 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
 }
 
 async function isFieldFavorite(field: Field, imodel: IModelConnection) {
+  // note: `Presentation.favoriteProperties.hasAsync` may not be available in older versions of core
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (Presentation.favoriteProperties.hasAsync) {
     return Presentation.favoriteProperties.hasAsync(field, imodel, FavoritePropertiesScope.IModel);
   }
@@ -383,6 +385,8 @@ async function isFieldFavorite(field: Field, imodel: IModelConnection) {
 }
 
 async function sortFavoriteFields(fields: Field[], imodel: IModelConnection) {
+  // note: `Presentation.favoriteProperties.sortFieldsAsync` may not be available in older versions of core
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (Presentation.favoriteProperties.sortFieldsAsync) {
     await Presentation.favoriteProperties.sortFieldsAsync(imodel, fields);
     return;
@@ -632,7 +636,7 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
   }
 
   public override processPrimitiveValue(props: ProcessPrimitiveValueProps): void {
-    if (this.shouldSkipField(props.field, () => null === props.rawValue || undefined === props.rawValue || "" === props.rawValue)) {
+    if (this.shouldSkipField(props.field, () => undefined === props.rawValue || "" === props.rawValue)) {
       return;
     }
 
@@ -796,6 +800,7 @@ function destructureStructArrayItems(items: PropertyRecord[], fieldHierarchy: Fi
     items.forEach((item) => {
       assert(item.value.valueFormat === UiPropertyValueFormat.Struct);
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (item.value.members[nestedFieldHierarchy.field.name] === undefined) {
         // the member may not exist at all if we decided to skip it beforehand
         return;
@@ -855,6 +860,7 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
       // destructure structs by replacing them with their member records
       const members = entry.fieldHierarchy.childFields.reduce((list, nestedFieldHierarchy) => {
         assert(entry.record.value.valueFormat === UiPropertyValueFormat.Struct);
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         assert(entry.record.value.members[nestedFieldHierarchy.field.name] !== undefined);
         const member = {
           fieldHierarchy: nestedFieldHierarchy,

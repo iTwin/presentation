@@ -37,25 +37,25 @@ export function ErrorItemRenderer({ errorNode, getHierarchyLevelDetails, filterH
 
   if (errorNode.error.type === "ResultSetTooLarge") {
     const limit = errorNode.error.resultSetSizeLimit;
-    const onOverrideLimit = getHierarchyLevelDetails ? () => getHierarchyLevelDetails(errorNode.id)?.setSizeLimit(MAX_LIMIT_OVERRIDE) : undefined;
+    const onOverrideLimit = () => getHierarchyLevelDetails(errorNode.id)?.setSizeLimit(MAX_LIMIT_OVERRIDE);
     return (
       <ErrorItemContainer
         errorNode={errorNode}
         actions={[
           {
             action: () => {
-              onOverrideLimit?.();
+              onOverrideLimit();
             },
             label: localizedStrings.increaseHierarchyLimit.replace("{{limit}}", MAX_LIMIT_OVERRIDE.toString()),
-            condition: () => !!onOverrideLimit && limit < MAX_LIMIT_OVERRIDE,
+            condition: () => limit < MAX_LIMIT_OVERRIDE,
           },
           {
             action: () => {
-              const hierarchyLevelDetails = getHierarchyLevelDetails?.(errorNode.id);
+              const hierarchyLevelDetails = getHierarchyLevelDetails(errorNode.id);
               hierarchyLevelDetails && filterHierarchyLevel?.(hierarchyLevelDetails);
             },
             label: localizedStrings.increaseHierarchyLimitWithFiltering,
-            condition: () => !!filterHierarchyLevel && !!errorNode?.isFilterable,
+            condition: () => !!filterHierarchyLevel && !!errorNode.isFilterable,
           },
         ]}
         message={localizedStrings.resultLimitExceeded.replace("{{limit}}", limit.toString())}
@@ -70,7 +70,7 @@ export function ErrorItemRenderer({ errorNode, getHierarchyLevelDetails, filterH
         actions={[
           {
             action: () => {
-              const hierarchyLevelDetails = getHierarchyLevelDetails?.(errorNode.id);
+              const hierarchyLevelDetails = getHierarchyLevelDetails(errorNode.id);
               hierarchyLevelDetails && filterHierarchyLevel?.(hierarchyLevelDetails);
             },
             label: localizedStrings.noFilteredChildrenChangeFilter,

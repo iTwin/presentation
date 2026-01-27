@@ -178,7 +178,7 @@ function useTreeInternal({
 
   const [isSearching, setIsSearching] = useState(false);
   useEffect(() => {
-    let disposed = false;
+    let disposed = false as boolean;
     const controller = new AbortController();
     void (async () => {
       if (!hierarchyProvider) {

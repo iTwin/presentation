@@ -115,7 +115,8 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
       // `SchemaFormatsProvider` was introduced around the same time the meaning of this second argument was changed
       // from `includeInherited` to `excludeInherited` - we're using its existence to determine what we need to pass to get
       // inherited properties.
-      /* c8 ignore next */
+      /* c8 ignore next 2 */
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       ecschemaMetadata.SchemaFormatsProvider ? false : true,
     );
     return coreProperty ? createECProperty(coreProperty, this) : undefined;
@@ -408,15 +409,10 @@ class ECRelationshipConstraintImpl implements EC.RelationshipConstraint {
     private _schema: EC.Schema,
   ) {}
   public get multiplicity() {
-    return this._coreConstraint.multiplicity
-      ? {
-          lowerLimit: this._coreConstraint.multiplicity.lowerLimit,
-          upperLimit: this._coreConstraint.multiplicity.upperLimit,
-        }
-      : undefined;
+    return this._coreConstraint.multiplicity;
   }
   public get polymorphic() {
-    return this._coreConstraint.polymorphic ?? false;
+    return this._coreConstraint.polymorphic;
   }
   public get abstractConstraint(): Promise<EC.EntityClass | EC.Mixin | EC.RelationshipClass | undefined> {
     return createFromOptionalLazyLoaded(this._coreConstraint.abstractConstraint, (coreConstraint) => createECClass(coreConstraint, this._schema));
