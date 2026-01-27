@@ -11,7 +11,7 @@ import { mergeProviders } from "../hierarchies/HierarchyMerge.js";
 import { HierarchyNode } from "../hierarchies/HierarchyNode.js";
 import { createTestGenericNode, createTestGenericNodeKey } from "./Utils.js";
 
-import type { InstanceKey, Props } from "@itwin/presentation-shared";
+import type { EventListener, InstanceKey, Props } from "@itwin/presentation-shared";
 import type { NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
 import type { HierarchyProvider } from "../hierarchies/HierarchyProvider.js";
 
@@ -123,10 +123,10 @@ describe("mergeProviders", () => {
     const spy = sinon.spy();
     mergedProvider.hierarchyChanged.addListener(spy);
 
-    providers[0].hierarchyChanged.raiseEvent();
+    providers[0].hierarchyChanged.raiseEvent({});
     expect(spy).to.be.calledOnce;
 
-    providers[1].hierarchyChanged.raiseEvent();
+    providers[1].hierarchyChanged.raiseEvent({});
     expect(spy).to.be.calledTwice;
   });
 
@@ -155,7 +155,7 @@ function createTestProvider(
   } = {},
 ) {
   return {
-    hierarchyChanged: new BeEvent(),
+    hierarchyChanged: new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>(),
     getNodes: sinon
       .stub<Parameters<HierarchyProvider["getNodes"]>>()
       .callsFake((getNodesProps) =>

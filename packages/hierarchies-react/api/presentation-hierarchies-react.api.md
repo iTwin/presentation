@@ -153,6 +153,7 @@ interface LocalizedStrings {
     issuesFound: string;
     loading: string;
     more: string;
+    newLabel: string;
     noFilteredChildren: string;
     noFilteredChildrenChangeFilter: string;
     noIssuesFound: string;

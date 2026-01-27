@@ -24,7 +24,16 @@ import {
 } from "./TestUtils.js";
 
 import type { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
-import type { Selectable, SelectionStorage, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
+import type {
+  Selectable,
+  Selectable,
+  SelectionStorage,
+  SelectionStorage,
+  StorageSelectionChangeEventArgs,
+  StorageSelectionChangeEventArgs,
+  StorageSelectionChangesListener,
+  StorageSelectionChangesListener,
+} from "@itwin/unified-selection";
 import type { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
 import type { StubbedHierarchyProvider } from "./TestUtils.js";
 
@@ -137,7 +146,7 @@ describe("useTree", () => {
   it("sets 'isReloading' to false only after root nodes are loaded", async () => {
     const rootNode1 = createTestHierarchyNode({ id: "root-1" });
     const rootNode2 = createTestHierarchyNode({ id: "root-2" });
-    const hierarchyChanged = new BeEvent();
+    const hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
     let getNodesCallCount = 0;
     const customHierarchyProvider: hierarchiesModule.HierarchyProvider = {
       async *getNodes() {
@@ -150,8 +159,8 @@ describe("useTree", () => {
           yield rootNode1;
         }
       },
-      setHierarchySearch() {
-        hierarchyChanged.raiseEvent();
+      setHierarchySearch(newSearch) {
+        hierarchyChanged.raiseEvent({ searchChange: { newSearch } });
       },
       async *getNodeInstanceKeys() {},
       setFormatter() {},
@@ -922,7 +931,7 @@ describe("useTree", () => {
       return createAsyncIterator([]);
     });
     act(() => {
-      hierarchyProvider.hierarchyChanged.raiseEvent();
+      hierarchyProvider.hierarchyChanged.raiseEvent({});
     });
 
     await waitFor(() => {

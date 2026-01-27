@@ -225,7 +225,7 @@ type WithSourceNameOverride<T> = T & { sourceName?: string };
 
 class IModelHierarchyProviderImpl implements HierarchyProvider {
   private _imodels: Array<{ imodelAccess: IModelAccess; imodelChanged?: Event<() => void> }>;
-  private _hierarchyChanged: BeEvent<(args?: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>;
+  private _hierarchyChanged: BeEvent<(args: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _sourceHierarchyDefinition: RxjsHierarchyDefinition;
   private _activeHierarchyDefinition: RxjsHierarchyDefinition;
@@ -281,7 +281,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       .subscribe(({ imodelKey }) => {
         this.invalidateHierarchyCache(`Data source changed: "${imodelKey}"`);
         this._dispose.next();
-        this._hierarchyChanged.raiseEvent();
+        this._hierarchyChanged.raiseEvent({});
       });
     this._unsubscribe = () => {
       imodelChangeSubscription.unsubscribe();

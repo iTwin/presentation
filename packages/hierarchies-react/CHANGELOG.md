@@ -1,5 +1,12 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.53
+
+### Patch Changes
+
+- [#1192](https://github.com/iTwin/presentation/pull/1192): Fix situations where expander was rendered for leaf nodes.
+- [#1196](https://github.com/iTwin/presentation/pull/1196): Added accessible name for tree node rename input.
+
 ## 2.0.0-alpha.52
 
 ### Patch Changes

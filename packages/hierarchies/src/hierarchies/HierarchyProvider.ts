@@ -54,14 +54,13 @@ interface HierarchyChangedEventArgs {
  */
 export interface HierarchyProvider {
   /**
-   * An event that provider raises due to a hierarchy change, that requires a reload. Provider may
-   * set additional event arguments to provide extra information about what caused the change.
+   * An event that provider raises due to a hierarchy change that requires a reload.
    *
    * Consumers are expected to subscribe to this event and reload the hierarchy when it's raised.
-   * Implementations may provide additional details on what caused the change through the optional
+   * Implementations may provide additional details on what caused the change through the
    * event arguments.
    */
-  readonly hierarchyChanged: Event<(args?: HierarchyChangedEventArgs) => void>;
+  readonly hierarchyChanged: Event<(args: HierarchyChangedEventArgs) => void>;
 
   /**
    * Gets nodes for the specified parent node. This is **the method to implement**, otherwise

@@ -10,9 +10,7 @@ import { configure, render as renderRTL } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { isTreeModelHierarchyNode, TreeModel } from "../presentation-hierarchies-react/internal/TreeModel.js";
 
-import type { ReactElement } from "react";
 import type { GroupingHierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
-import type { EventArgs } from "@itwin/presentation-shared";
 import type { RenderOptions, RenderResult } from "@testing-library/react";
 import type { UserEvent } from "@testing-library/user-event";
 import type { TreeModelHierarchyNode } from "../presentation-hierarchies-react/internal/TreeModel.js";
@@ -181,12 +179,12 @@ export function stubVirtualization() {
 export type StubbedHierarchyProvider = {
   [P in keyof Omit<HierarchyProvider, "hierarchyChanged">]: ReturnType<typeof createStub<HierarchyProvider[P]>>;
 } & {
-  hierarchyChanged: BeEvent<(args?: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>;
+  hierarchyChanged: BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>;
   [Symbol.dispose]: sinon.SinonStub<[], void>;
 };
 export function createHierarchyProviderStub(customizations?: Partial<StubbedHierarchyProvider>) {
   const provider = {
-    hierarchyChanged: new BeEvent(),
+    hierarchyChanged: new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>(),
     getNodes: createStub<HierarchyProvider["getNodes"]>(),
     getNodeInstanceKeys: createStub<HierarchyProvider["getNodeInstanceKeys"]>(),
     setFormatter: createStub<HierarchyProvider["setFormatter"]>(),
