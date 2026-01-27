@@ -273,6 +273,7 @@ function LabelEditor({
           <TextBox.Input
             id={inputId}
             ref={inputRef}
+            aria-label={localizedStrings.newLabel}
             value={newLabelValue}
             onChange={(event) => {
               setNewLabelValue(event.target.value);
