@@ -378,17 +378,17 @@ type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 // @public
 interface Event_2<TListener extends (...args: any[]) => void = () => void> {
     // (undocumented)
-    addListener(listener: TListener): () => void;
+    addListener: (listener: TListener) => () => void;
     // (undocumented)
-    removeListener(listener: TListener): void;
+    removeListener: (listener: TListener) => void;
 }
 export { Event_2 as Event }
 
 // @public
-export type EventArgs<TEvent extends Event_2> = Props<EventListener_2<TEvent>>;
+export type EventArgs<TEvent extends {}> = Props<EventListener_2<TEvent>>;
 
 // @public
-type EventListener_2<TEvent extends Event_2> = TEvent extends Event_2<infer TListener> ? TListener : never;
+type EventListener_2<TEvent extends {}> = TEvent extends Event_2<infer TListener> ? TListener : never;
 export { EventListener_2 as EventListener }
 
 // @public
