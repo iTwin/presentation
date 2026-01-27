@@ -23,17 +23,9 @@ import {
   waitFor,
 } from "./TestUtils.js";
 
-import type { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
-import type {
-  Selectable,
-  Selectable,
-  SelectionStorage,
-  SelectionStorage,
-  StorageSelectionChangeEventArgs,
-  StorageSelectionChangeEventArgs,
-  StorageSelectionChangesListener,
-  StorageSelectionChangesListener,
-} from "@itwin/unified-selection";
+import type { HierarchyProvider } from "@itwin/presentation-hierarchies";
+import type { EventListener, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import type { Selectable, SelectionStorage, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
 import type { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
 import type { StubbedHierarchyProvider } from "./TestUtils.js";
 
