@@ -7,9 +7,10 @@ import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
 import { createRelationshipPathJoinClause } from "../../shared/ecsql-snippets/ECSqlJoinSnippets.js";
-import { EC } from "../../shared/Metadata.js";
 import { trimWhitespace } from "../../shared/Utils.js";
 import { createECSchemaProviderStub } from "../MetadataProviderStub.js";
+
+import type { EC } from "../../shared/Metadata.js";
 
 describe("createRelationshipPathJoinClause", () => {
   let schemaProvider: ReturnType<typeof createECSchemaProviderStub>;
@@ -554,7 +555,7 @@ describe("createRelationshipPathJoinClause", () => {
   }) {
     const navigationRelationshipRes = new ResolvablePromise<EC.RelationshipClass>();
     const navigationProperty = {
-      name: props?.navigationPropertyName ?? "navigation-property",
+      name: props.navigationPropertyName ?? "navigation-property",
       isNavigation: () => true,
       direction: props.navigationPropertyDirection,
       relationshipClass: navigationRelationshipRes,
@@ -577,10 +578,12 @@ describe("createRelationshipPathJoinClause", () => {
       direction: "Forward",
       source: {
         polymorphic: false,
+        multiplicity: { lowerLimit: 0, upperLimit: 1 },
         abstractConstraint: Promise.resolve(sourceClass),
       },
       target: {
         polymorphic: false,
+        multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
         abstractConstraint: Promise.resolve(targetClass),
       },
       ...(typeof props.relationship === "object" ? props.relationship : undefined),
@@ -614,12 +617,17 @@ describe("createRelationshipPathJoinClause", () => {
             source: {
               polymorphic: false,
               abstractConstraint: Promise.resolve(sourceClass),
+              multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
             },
             target: {
               polymorphic: false,
               abstractConstraint: Promise.resolve(targetClass),
+              multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
             },
           });
     return { sourceClass, targetClass, relationship };
   }
 });
+
+// taken from `@itwin/ecschema-metadata`
+const INT32_MAX = 2147483647;

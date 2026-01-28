@@ -4,18 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
 
-import { VUContext, VUEvents } from "artillery";
 import { Guid, StopWatch } from "@itwin/core-bentley";
-import {
-  HierarchyRpcRequestOptions,
-  Node,
-  PagedResponse,
-  PresentationError,
-  PresentationRpcResponseData,
-  PresentationStatus,
-} from "@itwin/presentation-common";
+import { PresentationError, PresentationStatus } from "@itwin/presentation-common";
 import RULESET_ModelsTree from "../rulesets/ModelsTree-GroupedByClass.PresentationRuleSet.json";
 import { doRequest, getCurrentIModelName, loadNodes, loadVariables, openIModelConnectionIfNeeded } from "./common";
+
+import type { VUContext, VUEvents } from "artillery";
+import type { HierarchyRpcRequestOptions, Node, PagedResponse, PresentationRpcResponseData } from "@itwin/presentation-common";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 

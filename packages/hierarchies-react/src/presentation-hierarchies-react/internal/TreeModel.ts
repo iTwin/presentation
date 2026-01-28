@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { ErrorInfo } from "../TreeNode.js";
-import { SelectionChangeType } from "../UseSelectionHandler.js";
+import type { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
+import type { ErrorInfo } from "../TreeNode.js";
+import type { SelectionChangeType } from "../UseSelectionHandler.js";
 
 /** @internal */
 export interface TreeModelRootNode {

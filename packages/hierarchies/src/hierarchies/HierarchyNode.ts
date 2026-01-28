@@ -3,12 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { OmitOverUnion } from "@itwin/presentation-shared";
-import {
+import { HierarchyNodeKey } from "./HierarchyNodeKey.js";
+
+import type { OmitOverUnion } from "@itwin/presentation-shared";
+import type {
   ClassGroupingNodeKey,
   GenericNodeKey,
   GroupingNodeKey,
-  HierarchyNodeKey,
   IModelHierarchyNodeKey,
   IModelInstanceKey,
   InstancesNodeKey,
@@ -18,7 +19,7 @@ import {
   PropertyValueGroupingNodeKey,
   PropertyValueRangeGroupingNodeKey,
 } from "./HierarchyNodeKey.js";
-import { HierarchySearchPath, HierarchySearchPathOptions } from "./HierarchySearch.js";
+import type { HierarchySearchPath, HierarchySearchPathOptions } from "./HierarchySearch.js";
 
 /** @public */
 export type HierarchyNodeSearchProps = {

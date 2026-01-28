@@ -7,11 +7,13 @@
  */
 
 import { useEffect, useState } from "react";
-import { IModelConnection } from "@itwin/core-frontend";
-import { DefaultContentDisplayTypes, Descriptor, Field, KeySet, Ruleset } from "@itwin/presentation-common";
+import { DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { useErrorState } from "../common/Utils.js";
-import { TableColumnDefinition } from "./Types.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Descriptor, Field, Ruleset } from "@itwin/presentation-common";
+import type { TableColumnDefinition } from "./Types.js";
 
 /** @internal */
 export interface UseColumnsProps {
@@ -27,7 +29,7 @@ export function useColumns(props: UseColumnsProps): TableColumnDefinition[] | un
   const setErrorState = useErrorState();
 
   useEffect(() => {
-    let disposed = false;
+    let disposed = false as boolean;
     if (keys.isEmpty) {
       setColumns([]);
       return;

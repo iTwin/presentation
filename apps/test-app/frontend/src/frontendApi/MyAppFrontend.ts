@@ -3,12 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Guid, Id64Arg, Logger, OpenMode } from "@itwin/core-bentley";
-import { ElementProps, IModelConnectionProps, IModelError, ViewQueryParams } from "@itwin/core-common";
+import { Guid, Logger, OpenMode } from "@itwin/core-bentley";
+import { IModelError } from "@itwin/core-common";
 import { BriefcaseConnection, IModelConnection, IpcApp, SnapshotConnection } from "@itwin/core-frontend";
-import { UnitSystemKey } from "@itwin/core-quantity";
 import { createStorage } from "@itwin/unified-selection";
-import { PRESENTATION_TEST_APP_IPC_CHANNEL_NAME, SampleIpcInterface, SampleRpcInterface } from "@test-app/common";
+import { PRESENTATION_TEST_APP_IPC_CHANNEL_NAME, SampleRpcInterface } from "@test-app/common";
+
+import type { Id64Arg } from "@itwin/core-bentley";
+import type { ElementProps, IModelConnectionProps, ViewQueryParams } from "@itwin/core-common";
+import type { UnitSystemKey } from "@itwin/core-quantity";
+import type { SampleIpcInterface } from "@test-app/common";
 
 const LOCAL_STORAGE_KEY_AppSettings = "presentation-test-app/settings";
 
@@ -47,7 +51,9 @@ export class MyAppFrontend {
     return imodel;
   }
 
-  public static get selectionStorage() {return this._selectionStorage;}
+  public static get selectionStorage() {
+    return this._selectionStorage;
+  }
 
   public static get settings(): MyAppSettings {
     let strValue = window.localStorage.getItem(LOCAL_STORAGE_KEY_AppSettings);
@@ -109,7 +115,7 @@ export class MyAppFrontend {
     const connectionsProps = await SampleRpcInterface.getClient().getConnectionProps(path);
     const close = async () => {
       await SampleRpcInterface.getClient().closeConnection(path);
-    }
+    };
     const imodel = new LocalIModelConnection(connectionsProps, close);
     return imodel;
   }
@@ -132,12 +138,17 @@ async function tryOpenStandalone(path: string) {
 
 class LocalIModelConnection extends IModelConnection {
   private _isClosed = false;
-  constructor(connectionsProps: IModelConnectionProps, private _close: () => Promise<void>) {
+  constructor(
+    connectionsProps: IModelConnectionProps,
+    private _close: () => Promise<void>,
+  ) {
     // eslint-disable-next-line @itwin/no-internal
     super(connectionsProps);
   }
 
-  public override get isClosed(): boolean { return this._isClosed }
+  public override get isClosed(): boolean {
+    return this._isClosed;
+  }
 
   public override async close(): Promise<void> {
     this._isClosed = true;

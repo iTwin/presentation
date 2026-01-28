@@ -9,15 +9,17 @@ import { Subject } from "rxjs";
 import { from } from "rxjs/internal/observable/from";
 import sinon from "sinon";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { ITreeNodeLoader, TreeModelNode, TreeModelNodeInput, TreeModelSource, TreeNodeLoadResult, UiComponents } from "@itwin/components-react";
+import { TreeModelSource, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { createTestPropertyInfo } from "../../_helpers/Common.js";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
-import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { useHierarchyLevelFiltering } from "../../../presentation-components/tree/controlled/UseHierarchyLevelFiltering.js";
-import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
 import { createStub, renderHook } from "../../TestUtils.js";
+
+import type { ITreeNodeLoader, TreeModelNode, TreeModelNodeInput, TreeNodeLoadResult } from "@itwin/components-react";
+import type { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import type { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
 
 function createTreeModelInput(input?: Partial<TreeModelNodeInput>, treeItem?: Partial<PresentationTreeNodeItem>): TreeModelNodeInput {
   const item: PresentationTreeNodeItem = {

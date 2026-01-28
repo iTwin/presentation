@@ -7,12 +7,14 @@ import { expect } from "chai";
 import { describe } from "mocha";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
-import { GenericNodeKey, InstancesNodeKey, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
-import { createStorage, Selectables, SelectionStorage, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
-import { TreeModelHierarchyNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import { createStorage, Selectables } from "@itwin/unified-selection";
 import { useUnifiedTreeSelection } from "../../presentation-hierarchies-react/internal/UseUnifiedSelection.js";
 import { act, createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModelNode, renderHook } from "../TestUtils.js";
+
+import type { GenericNodeKey, InstancesNodeKey, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import type { Props } from "@itwin/presentation-shared";
+import type { SelectionStorage, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
+import type { TreeModelHierarchyNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
 
 describe("useUnifiedSelection", () => {
   let storage: SelectionStorage;

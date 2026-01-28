@@ -14,12 +14,12 @@ import { Event as Event_2 } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/core-common';
 import { Id64String } from '@itwin/core-bentley';
 import { IInstanceLabelSelectClauseFactory } from '@itwin/presentation-shared';
-import { ILogger } from '@itwin/presentation-shared';
+import type { ILogger } from '@itwin/presentation-shared';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { OmitOverUnion } from '@itwin/presentation-shared';
 import { PrimitiveValue } from '@itwin/presentation-shared';
-import { Props } from '@itwin/presentation-shared';
+import type { Props } from '@itwin/presentation-shared';
 
 // @public
 interface BaseHierarchyNode {
@@ -454,7 +454,7 @@ type HierarchyNodeSearchProps = {
 export interface HierarchyProvider {
     getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
     getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
-    readonly hierarchyChanged: Event_2<(args?: HierarchyChangedEventArgs) => void>;
+    readonly hierarchyChanged: Event_2<(args: HierarchyChangedEventArgs) => void>;
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
     setHierarchySearch(props: {
         paths: HierarchySearchPath[];
@@ -580,10 +580,16 @@ export type NodeParser = (props: {
 }) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 // @public
-export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
+export type NodePostProcessor = (props: {
+    node: ProcessedHierarchyNode;
+    parentNode?: ParentHierarchyNode;
+}) => Promise<ProcessedHierarchyNode>;
 
 // @public
-export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
+export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(props: {
+    node: TNode;
+    parentNode?: ParentHierarchyNode;
+}) => Promise<TNode | undefined>;
 
 // @public
 export enum NodeSelectClauseColumnNames {

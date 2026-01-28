@@ -3,13 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ChangeEventHandler, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
-import { FormatterSpec, FormatType, ParserSpec } from "@itwin/core-quantity";
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { FormatType } from "@itwin/core-quantity";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { getPersistenceUnitRoundingError } from "./Utils.js";
+
+import type { ChangeEventHandler } from "react";
+import type { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
+import type { SchemaContext } from "@itwin/ecschema-metadata";
 
 /**
  * Value of kind of quantity property.
@@ -148,6 +151,8 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
     void findFormatterAndParser();
 
     const listeners = [IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(findFormatterAndParser)];
+    // note: `IModelApp.formatsProvider` may not be available in older versions of core
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (IModelApp.formatsProvider) {
       listeners.push(IModelApp.formatsProvider.onFormatsChanged.addListener(findFormatterAndParser));
     }

@@ -4,10 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createRef, forwardRef, PureComponent } from "react";
-import { PropertyEditorBase, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
+import { PropertyEditorBase } from "@itwin/components-react";
 import { NavigationPropertyTargetSelector, ReadonlyNavigationPropertyTarget } from "../inputs/NavigationPropertyTargetSelector.js";
-import { PropertyEditorAttributes } from "./Common.js";
 import { useNavigationPropertyEditorContext } from "./NavigationPropertyEditorContext.js";
+
+import type { PropertyEditorProps, TypeEditor } from "@itwin/components-react";
+import type { PropertyEditorAttributes } from "./Common.js";
 
 /**
  * Editor for navigation properties.

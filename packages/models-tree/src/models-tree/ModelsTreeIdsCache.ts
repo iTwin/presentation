@@ -3,9 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert, Guid, GuidString, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
-import { InstanceKey } from "@itwin/presentation-shared";
+import { assert, Guid } from "@itwin/core-bentley";
+
+import type { GuidString, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { HierarchyNodeIdentifiersPath, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import type { InstanceKey } from "@itwin/presentation-shared";
 import type { ModelsTreeDefinition } from "./ModelsTreeDefinition.js";
 
 interface SubjectInfo {
@@ -384,7 +386,7 @@ export class ModelsTreeIdsCache {
       entry = (async () => {
         const result = new Set<Id64String>();
         const modelInfos = await this.getModelInfos();
-        modelInfos?.forEach((modelInfo, modelId) => {
+        modelInfos.forEach((modelInfo, modelId) => {
           if (modelInfo.categories.has(categoryId)) {
             result.add(modelId);
           }

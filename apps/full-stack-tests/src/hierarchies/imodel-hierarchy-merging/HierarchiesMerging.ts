@@ -3,23 +3,27 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECDb } from "@itwin/core-backend";
 import { assert } from "@itwin/core-bentley";
 import {
   createMergedIModelHierarchyProvider,
   createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  HierarchyNodeKey,
+} from "@itwin/presentation-hierarchies";
+import { createDefaultInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { importSchema } from "../../SchemaUtils.js";
+import { createIModelAccess } from "../Utils.js";
+
+import type { ECDb } from "@itwin/core-backend";
+import type {
   DefineGenericNodeChildHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
   HierarchyDefinition,
-  HierarchyNodeKey,
   NodesQueryClauseFactory,
 } from "@itwin/presentation-hierarchies";
-import { createDefaultInstanceLabelSelectClauseFactory, ECSqlBinding, Props } from "@itwin/presentation-shared";
-import { ECDbBuilder } from "../../ECDbUtils.js";
-import { importSchema } from "../../SchemaUtils.js";
-import { createIModelAccess } from "../Utils.js";
+import type { ECSqlBinding, Props } from "@itwin/presentation-shared";
+import type { ECDbBuilder } from "../../ECDbUtils.js";
 
 export function createHierarchyDefinitionFactory({
   xyzSchema,

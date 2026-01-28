@@ -10,22 +10,18 @@
 import "../../common/DisposePolyfill.js";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Subscription } from "rxjs/internal/Subscription";
-import {
-  AbstractTreeNodeLoaderWithProvider,
-  MutableTreeModel,
-  PagedTreeNodeLoader,
-  RenderedItemsRange,
-  TreeModel,
-  TreeModelSource,
-  usePagedTreeNodeLoader,
-} from "@itwin/components-react";
+import { MutableTreeModel, TreeModelSource, usePagedTreeNodeLoader } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
-import { IModelHierarchyChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
-import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider.js";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import { Presentation } from "@itwin/presentation-frontend";
+import { PresentationTreeDataProvider } from "../DataProvider.js";
 import { reloadTree } from "./TreeReloader.js";
 import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering.js";
+
+import type { Subscription } from "rxjs/internal/Subscription";
+import type { AbstractTreeNodeLoaderWithProvider, PagedTreeNodeLoader, RenderedItemsRange, TreeModel } from "@itwin/components-react";
+import type { IModelHierarchyChangeEventArgs } from "@itwin/presentation-frontend";
+import type { PresentationTreeDataProviderProps } from "../DataProvider.js";
+import type { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
 
 /**
  * Properties for [[usePresentationTreeNodeLoader]] hook.

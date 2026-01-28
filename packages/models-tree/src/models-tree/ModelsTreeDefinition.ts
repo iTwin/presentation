@@ -16,19 +16,27 @@ import {
   merge,
   mergeAll,
   mergeMap,
-  Observable,
-  ObservableInput,
   of,
   reduce,
   switchMap,
   takeUntil,
 } from "rxjs";
-import { Guid, Id64Array, Id64String } from "@itwin/core-bentley";
+import { Guid } from "@itwin/core-bentley";
 import {
-  ClassGroupingNodeKey,
-  createIModelHierarchyProvider,
   createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  NodeSelectClauseColumnNames,
+  ProcessedHierarchyNode,
+  RowsLimitExceededError,
+} from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
+import { ModelsTreeIdsCache } from "./ModelsTreeIdsCache.js";
+
+import type { Observable, ObservableInput } from "rxjs";
+import type { Id64Array, Id64String } from "@itwin/core-bentley";
+import type {
+  ClassGroupingNodeKey,
+  createIModelHierarchyProvider,
   DefineHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
@@ -37,16 +45,11 @@ import {
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
   LimitingECSqlQueryExecutor,
-  NodeSelectClauseColumnNames,
   NodesQueryClauseFactory,
-  ProcessedHierarchyNode,
-  RowsLimitExceededError,
 } from "@itwin/presentation-hierarchies";
-import {
-  createBisInstanceLabelSelectClauseFactory,
+import type {
   ECClassHierarchyInspector,
   ECSchemaProvider,
-  ECSql,
   ECSqlBinding,
   ECSqlQueryDef,
   ECSqlQueryRow,
@@ -54,7 +57,6 @@ import {
   InstanceKey,
   Props,
 } from "@itwin/presentation-shared";
-import { ModelsTreeIdsCache } from "./ModelsTreeIdsCache.js";
 
 /** @beta */
 export type ClassGroupingHierarchyNode = GroupingHierarchyNode & { key: ClassGroupingNodeKey };
@@ -176,7 +178,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     });
   }
 
-  public async postProcessNode(node: ProcessedHierarchyNode): Promise<ProcessedHierarchyNode> {
+  public async postProcessNode({ node }: { node: ProcessedHierarchyNode }): Promise<ProcessedHierarchyNode> {
     if (ProcessedHierarchyNode.isGroupingNode(node)) {
       return {
         ...node,

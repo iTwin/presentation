@@ -7,9 +7,9 @@
  * @module Tree
  */
 
-import { DelayLoadedTreeNodeItem, ImmediatelyLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
-import { Descriptor, NodeKey } from "@itwin/presentation-common";
-import { PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder.js";
+import type { DelayLoadedTreeNodeItem, ImmediatelyLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
+import type { Descriptor, NodeKey } from "@itwin/presentation-common";
+import type { PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder.js";
 
 /**
  * Describes descriptor used for hierarchy level filtering. It can be lazy loaded.
@@ -104,6 +104,7 @@ export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
  * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export function isPresentationTreeNodeItem(item: TreeNodeItem): item is PresentationTreeNodeItem {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   return (item as PresentationTreeNodeItem).key !== undefined;
 }
 
@@ -114,6 +115,7 @@ export function isPresentationTreeNodeItem(item: TreeNodeItem): item is Presenta
  * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export function isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is PresentationInfoTreeNodeItem {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   return (item as PresentationInfoTreeNodeItem).message !== undefined;
 }
 

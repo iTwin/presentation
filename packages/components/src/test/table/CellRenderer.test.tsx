@@ -4,9 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { ArrayValue, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat, StructValue } from "@itwin/appui-abstract";
+import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { TableCellRenderer } from "../../presentation-components/table/CellRenderer.js";
 import { render, waitFor } from "../TestUtils.js";
+
+import type { ArrayValue, PrimitiveValue, PropertyDescription, PropertyValue, StructValue } from "@itwin/appui-abstract";
 
 describe("TableCellRenderer", () => {
   function createRecord(value: PropertyValue, propDescription?: Partial<PropertyDescription>) {

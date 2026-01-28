@@ -5,23 +5,27 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { PropertyDescription } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Content, KeySet, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { IModelApp } from "@itwin/core-frontend";
+import { Content, KeySet, LabelDefinition } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
 import { stubVirtualization } from "../../_helpers/Common.js";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../../_helpers/Content.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
-import { IContentDataProvider } from "../../../presentation-components/common/ContentDataProvider.js";
 import { NavigationPropertyTargetEditor } from "../../../presentation-components/properties/editors/NavigationPropertyEditor.js";
 import {
   NavigationPropertyEditorContextProvider,
-  NavigationPropertyEditorContextProviderProps,
   useNavigationPropertyEditorContextProviderProps,
 } from "../../../presentation-components/properties/editors/NavigationPropertyEditorContext.js";
 import { renderHook, render as renderRTL, waitFor } from "../../TestUtils.js";
+
+import type { PropertyDescription } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { NavigationPropertyInfo } from "@itwin/presentation-common";
+import type { PresentationManager } from "@itwin/presentation-frontend";
+import type { IContentDataProvider } from "../../../presentation-components/common/ContentDataProvider.js";
+import type { NavigationPropertyEditorContextProviderProps } from "../../../presentation-components/properties/editors/NavigationPropertyEditorContext.js";
 
 function createNavigationPropertyInfo(): NavigationPropertyInfo {
   return {

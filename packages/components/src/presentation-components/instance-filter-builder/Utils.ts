@@ -7,21 +7,18 @@
  */
 
 import { useMemo } from "react";
-import { PrimitiveValue, PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
-import {
-  defaultPropertyFilterBuilderRuleValidator,
-  isUnaryPropertyFilterBuilderOperator,
-  PropertyFilterBuilderRule,
-  PropertyFilterBuilderRuleGroup,
-  PropertyFilterBuilderRuleOperator,
-  PropertyFilterBuilderRuleRangeValue,
-} from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
-import { CategoryDescription, ClassInfo, combineFieldNames, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
+import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import { defaultPropertyFilterBuilderRuleValidator, isUnaryPropertyFilterBuilderOperator, PropertyFilterBuilderRuleRangeValue } from "@itwin/components-react";
+import { combineFieldNames } from "@itwin/presentation-common";
 import { createFieldInfo, createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder.js";
 import { translate } from "../common/Utils.js";
-import { NavigationPropertyEditorContextProviderProps } from "../properties/editors/NavigationPropertyEditorContext.js";
-import { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder.js";
+
+import type { PrimitiveValue, PropertyDescription } from "@itwin/appui-abstract";
+import type { PropertyFilterBuilderRule, PropertyFilterBuilderRuleGroup, PropertyFilterBuilderRuleOperator } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { CategoryDescription, ClassInfo, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
+import type { NavigationPropertyEditorContextProviderProps } from "../properties/editors/NavigationPropertyEditorContext.js";
+import type { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder.js";
 
 /** @internal */
 export function createInstanceFilterPropertyInfos(descriptor: Descriptor): PresentationInstanceFilterPropertyInfo[] {

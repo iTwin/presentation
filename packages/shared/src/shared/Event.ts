@@ -8,6 +8,6 @@
  * @public
  */
 export interface Event<TListener extends (...args: any[]) => void = () => void> {
-  addListener(listener: TListener): () => void;
-  removeListener(listener: TListener): void;
+  addListener: (listener: TListener) => () => void;
+  removeListener: (listener: TListener) => void;
 }

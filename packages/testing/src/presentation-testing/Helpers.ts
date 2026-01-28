@@ -7,19 +7,20 @@
  */
 
 import { join } from "path";
-import { IModelHost, IModelHostOptions } from "@itwin/core-backend";
+import { IModelHost } from "@itwin/core-backend";
 import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
-import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration, RpcInterfaceDefinition } from "@itwin/core-common";
-import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
-import {
-  HierarchyCacheMode,
-  Presentation as PresentationBackend,
-  PresentationBackendNativeLoggerCategory,
-  PresentationManagerProps as PresentationBackendProps,
-} from "@itwin/presentation-backend";
+import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration } from "@itwin/core-common";
+import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
+import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationBackendNativeLoggerCategory } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
-import { Presentation as PresentationFrontend, PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
+import { Presentation as PresentationFrontend } from "@itwin/presentation-frontend";
 import { getTestOutputDir, setTestOutputDir } from "./FilenameUtils.js";
+
+import type { IModelHostOptions } from "@itwin/core-backend";
+import type { RpcInterfaceDefinition } from "@itwin/core-common";
+import type { IModelAppOptions } from "@itwin/core-frontend";
+import type { PresentationManagerProps as PresentationBackendProps } from "@itwin/presentation-backend";
+import type { PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
 
 function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
   const config = class extends RpcDefaultConfiguration {
@@ -45,8 +46,9 @@ function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
 
 let isInitialized = false;
 
+export type { PresentationBackendProps };
 // eslint-disable-next-line @typescript-eslint/no-deprecated
-export { HierarchyCacheMode, PresentationBackendProps };
+export { HierarchyCacheMode };
 
 /** @public */
 export interface PresentationTestingInitProps {
@@ -144,10 +146,10 @@ export const terminate = async (frontendApp = IModelApp) => {
   const hierarchiesCacheConfig = PresentationBackend.initProps?.caching?.hierarchies;
   // eslint-disable-next-line @typescript-eslint/no-deprecated
   if (hierarchiesCacheConfig?.mode === HierarchyCacheMode.Disk) {
-    hierarchiesCacheDirectory = hierarchiesCacheConfig?.directory;
+    hierarchiesCacheDirectory = hierarchiesCacheConfig.directory;
     // eslint-disable-next-line @typescript-eslint/no-deprecated
   } else if (hierarchiesCacheConfig?.mode === HierarchyCacheMode.Hybrid) {
-    hierarchiesCacheDirectory = hierarchiesCacheConfig?.disk?.directory;
+    hierarchiesCacheDirectory = hierarchiesCacheConfig.disk?.directory;
   }
 
   // terminate backend

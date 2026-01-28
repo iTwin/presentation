@@ -6,24 +6,21 @@
 import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
-import { Id64, Id64Arg, Id64String } from "@itwin/core-bentley";
-import { Code, ElementProps } from "@itwin/core-common";
-import { IModelApp, IModelConnection, ViewState3d } from "@itwin/core-frontend";
+import { Id64 } from "@itwin/core-bentley";
+import { Code } from "@itwin/core-common";
+import { IModelApp } from "@itwin/core-frontend";
 import { ViewportComponent } from "@itwin/imodel-components-react";
 import { KeySet } from "@itwin/presentation-common";
-import {
-  HiliteSet,
-  HiliteSetProvider,
-  Presentation,
-  SelectionChangeEvent,
-  SelectionChangeEventArgs,
-  SelectionChangeType,
-  SelectionManager,
-} from "@itwin/presentation-frontend";
+import { HiliteSetProvider, Presentation, SelectionChangeEvent, SelectionChangeType } from "@itwin/presentation-frontend";
 import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { ViewportSelectionHandler } from "../../presentation-components/viewport/ViewportSelectionHandler.js";
 import { ViewportSelectionHandlerContextProvider, viewWithUnifiedSelection } from "../../presentation-components/viewport/WithUnifiedSelection.js";
 import { render, waitFor } from "../TestUtils.js";
+
+import type { Id64Arg, Id64String } from "@itwin/core-bentley";
+import type { ElementProps } from "@itwin/core-common";
+import type { IModelConnection, ViewState3d } from "@itwin/core-frontend";
+import type { HiliteSet, SelectionChangeEventArgs, SelectionManager } from "@itwin/presentation-frontend";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 

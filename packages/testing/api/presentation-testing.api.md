@@ -4,32 +4,32 @@
 
 ```ts
 
-import { BisCodeSpec } from '@itwin/core-common';
-import { Code } from '@itwin/core-common';
-import { CodeScopeProps } from '@itwin/core-common';
-import { Content } from '@itwin/presentation-common';
-import { ElementAspectProps } from '@itwin/core-common';
-import { ElementProps } from '@itwin/core-common';
+import type { BisCodeSpec } from '@itwin/core-common';
+import type { Code } from '@itwin/core-common';
+import type { CodeScopeProps } from '@itwin/core-common';
+import type { Content } from '@itwin/presentation-common';
+import type { ElementAspectProps } from '@itwin/core-common';
+import type { ElementProps } from '@itwin/core-common';
 import { HierarchyCacheMode } from '@itwin/presentation-backend';
-import { Id64String } from '@itwin/core-bentley';
+import type { Id64String } from '@itwin/core-bentley';
 import { IModelApp } from '@itwin/core-frontend';
-import { IModelAppOptions } from '@itwin/core-frontend';
+import type { IModelAppOptions } from '@itwin/core-frontend';
 import { IModelConnection } from '@itwin/core-frontend';
-import { IModelDb } from '@itwin/core-backend';
-import { IModelHostOptions } from '@itwin/core-backend';
-import { InstanceKey } from '@itwin/presentation-common';
+import type { IModelDb } from '@itwin/core-backend';
+import type { IModelHostOptions } from '@itwin/core-backend';
+import type { InstanceKey } from '@itwin/presentation-common';
 import { KeySet } from '@itwin/presentation-common';
-import { LocalFileName } from '@itwin/core-common';
-import { ModelProps } from '@itwin/core-common';
-import { Omit as Omit_2 } from '@itwin/presentation-common';
-import { PageOptions } from '@itwin/presentation-common';
-import { PresentationManagerProps as PresentationBackendProps } from '@itwin/presentation-backend';
-import { PresentationProps } from '@itwin/presentation-frontend';
-import { PropertyRecord } from '@itwin/appui-abstract';
-import { RelationshipProps } from '@itwin/core-common';
-import { RpcInterfaceDefinition } from '@itwin/core-common';
-import { Ruleset } from '@itwin/presentation-common';
-import { TreeNodeItem } from '@itwin/components-react';
+import type { LocalFileName } from '@itwin/core-common';
+import type { ModelProps } from '@itwin/core-common';
+import type { Omit as Omit_2 } from '@itwin/presentation-common';
+import type { PageOptions } from '@itwin/presentation-common';
+import type { PresentationManagerProps as PresentationBackendProps } from '@itwin/presentation-backend';
+import type { PresentationProps } from '@itwin/presentation-frontend';
+import type { PropertyRecord } from '@itwin/appui-abstract';
+import type { RelationshipProps } from '@itwin/core-common';
+import type { RpcInterfaceDefinition } from '@itwin/core-common';
+import type { Ruleset } from '@itwin/presentation-common';
+import type { TreeNodeItem } from '@itwin/components-react';
 
 // @beta @deprecated
 export function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;

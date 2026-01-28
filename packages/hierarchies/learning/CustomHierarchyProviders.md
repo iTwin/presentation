@@ -59,7 +59,7 @@ import { registerTxnListeners } from "@itwin/presentation-core-interop";
 
 // Create a hierarchy provider that returns the root bis.Subject and a hierarchy of its children.
 class IModelHierarchyProvider implements HierarchyProvider {
-  public hierarchyChanged = new BeEvent();
+  public hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
   private _disposeTxnListeners: (() => void) | undefined;
 
   public constructor(private _imodel: IModelConnection) {
@@ -67,7 +67,7 @@ class IModelHierarchyProvider implements HierarchyProvider {
       // Briefcase connections support data modifications - the provider should listen to txn changes
       // and raise `hierarchyChanged` event when the hierarchy should be refreshed. `BriefcaseTxns` has a number
       // of events that we should listen to - here we're using `registerTxnListeners` helper to simplify subscription.
-      this._disposeTxnListeners = registerTxnListeners(this._imodel.txns, () => this.hierarchyChanged.raiseEvent());
+      this._disposeTxnListeners = registerTxnListeners(this._imodel.txns, () => this.hierarchyChanged.raiseEvent({}));
     }
   }
 

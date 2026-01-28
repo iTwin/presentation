@@ -21,18 +21,16 @@ import {
   UiStateStorageHandler,
   WidgetState,
 } from "@itwin/appui-react";
-import { Id64String } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { UnitSystemKey } from "@itwin/core-quantity";
+import { IModelApp } from "@itwin/core-frontend";
 import { SchemaFormatsProvider, SchemaUnitProvider } from "@itwin/ecschema-metadata";
 import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { SchemaMetadataContextProvider } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel, HiliteSet, SelectionScope } from "@itwin/unified-selection";
+import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel } from "@itwin/unified-selection";
 import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { Root } from "@stratakit/foundations";
-import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
+import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
@@ -42,6 +40,12 @@ import { RulesDrivenTreeWidget } from "../tree-widget/RulesDrivenTree";
 import { StatelessTreeV2 } from "../tree-widget/StatelessTree";
 import { UnitSystemSelector } from "../unit-system-selector/UnitSystemSelector";
 import ViewportContentControl from "../viewport/ViewportContentControl";
+
+import type { Id64String } from "@itwin/core-bentley";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { UnitSystemKey } from "@itwin/core-quantity";
+import type { HiliteSet, SelectionScope } from "@itwin/unified-selection";
+import type { MyAppSettings } from "../../frontendApi/MyAppFrontend";
 
 export interface State {
   imodel?: IModelConnection;
@@ -102,7 +106,7 @@ export function App() {
 
     return () => {
       IModelApp.resetFormatsProvider();
-      removeFormatterListener?.();
+      removeFormatterListener();
       void IModelApp.quantityFormatter.resetToUseInternalUnitsProvider();
     };
   }, [state.imodel]);
@@ -140,7 +144,7 @@ export function App() {
             (acc, curr) => {
               // note: the hilite list may contain models and subcategories as well - we don't
               // care about them at this moment
-              acc.elements.push(...(curr.elements ?? []));
+              acc.elements.push(...curr.elements);
               return acc;
             },
             { elements: [] },

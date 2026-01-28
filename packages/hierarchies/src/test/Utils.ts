@@ -4,10 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import sinon from "sinon";
-import { Dictionary, Logger, LogLevel } from "@itwin/core-bentley";
-import { compareFullClassNames, EC, getClass } from "@itwin/presentation-shared";
-import { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
-import {
+import { Dictionary, Logger } from "@itwin/core-bentley";
+import { compareFullClassNames, getClass } from "@itwin/presentation-shared";
+
+import type { LogLevel } from "@itwin/core-bentley";
+import type { EC } from "@itwin/presentation-shared";
+import type { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
+import type {
   ClassGroupingNodeKey,
   GenericNodeKey,
   HierarchyNodeKey,
@@ -17,7 +20,7 @@ import {
   PropertyValueGroupingNodeKey,
   PropertyValueRangeGroupingNodeKey,
 } from "../hierarchies/HierarchyNodeKey.js";
-import {
+import type {
   ProcessedGenericHierarchyNode,
   ProcessedGroupingHierarchyNode,
   ProcessedInstanceHierarchyNode,
@@ -199,18 +202,18 @@ export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass
 export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass & ECClassExtraMembers;
 
 export function createECSchemaProviderStub() {
-  const schemaStubs: { [schemaName: string]: sinon.SinonStubbedInstance<EC.Schema> } = {};
+  const schemaStubs = new Map<string, sinon.SinonStubbedInstance<EC.Schema>>();
   const classes = new Dictionary<string, EC.Class>(compareFullClassNames); // className -> class
   const classHierarchy = new Dictionary<string, string>(compareFullClassNames); // className -> baseClassName
   const getSchemaStub = sinon.stub<[string], sinon.SinonStubbedInstance<EC.Schema>>().callsFake((schemaName: string) => {
-    let schemaStub = schemaStubs[schemaName];
+    let schemaStub = schemaStubs.get(schemaName);
     if (!schemaStub) {
       schemaStub = {
         name: schemaName,
         getClass: sinon.stub<[string], Promise<EC.Class | undefined>>().callsFake(async (className) => classes.get(`${schemaName}.${className}`)),
         getCustomAttributes: sinon.stub<[], Promise<EC.CustomAttributeSet>>().callsFake(async () => new Map()),
       };
-      schemaStubs[schemaName] = schemaStub;
+      schemaStubs.set(schemaName, schemaStub);
     }
     return schemaStub;
   });

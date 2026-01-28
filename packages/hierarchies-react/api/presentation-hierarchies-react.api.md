@@ -4,29 +4,29 @@
 
 ```ts
 
-import { ComponentProps } from 'react';
-import { ComponentPropsWithoutRef } from 'react';
+import type { ComponentProps } from 'react';
+import type { ComponentPropsWithoutRef } from 'react';
 import { createIModelHierarchyProvider } from '@itwin/presentation-hierarchies';
-import { FC } from 'react';
+import type { FC } from 'react';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
-import { GenericNodeKey } from '@itwin/presentation-hierarchies';
+import type { GenericNodeKey } from '@itwin/presentation-hierarchies';
 import { getLogger } from '@itwin/presentation-hierarchies';
-import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
+import type { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
-import { HierarchySearchPath } from '@itwin/presentation-hierarchies';
-import { InstanceKey } from '@itwin/presentation-shared';
-import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
+import type { HierarchySearchPath } from '@itwin/presentation-hierarchies';
+import type { InstanceKey } from '@itwin/presentation-shared';
+import type { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { NamedExoticComponent } from 'react';
-import { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
-import { Props } from '@itwin/presentation-shared';
-import { PropsWithChildren } from 'react';
-import { PropsWithoutRef } from 'react';
-import { ReactElement } from 'react';
-import { ReactNode } from 'react';
-import { RefAttributes } from 'react';
-import { Selectable } from '@itwin/unified-selection';
+import type { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
+import type { Props } from '@itwin/presentation-shared';
+import type { PropsWithChildren } from 'react';
+import type { PropsWithoutRef } from 'react';
+import type { ReactElement } from 'react';
+import type { ReactNode } from 'react';
+import type { RefAttributes } from 'react';
+import type { Selectable } from '@itwin/unified-selection';
 import { SelectionStorage } from '@itwin/unified-selection';
 import { setLogger } from '@itwin/presentation-hierarchies';
 import { Tree } from '@stratakit/structures';
@@ -153,6 +153,7 @@ interface LocalizedStrings {
     issuesFound: string;
     loading: string;
     more: string;
+    newLabel: string;
     noFilteredChildren: string;
     noFilteredChildrenChangeFilter: string;
     noIssuesFound: string;

@@ -7,13 +7,17 @@
 import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
-import { TreeNodeItem } from "@itwin/components-react";
 import { BeEvent, Guid } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
-import { HierarchyRequestOptions, LabelDefinition, Node, NodeKey, RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
-import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
-import { HierarchyBuilder, NodeMappingFunc } from "../presentation-testing/HierarchyBuilder.js";
+import { LabelDefinition, RegisteredRuleset } from "@itwin/presentation-common";
+import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { HierarchyBuilder } from "../presentation-testing/HierarchyBuilder.js";
 import { createStub } from "./Utils.js";
+
+import type { TreeNodeItem } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { HierarchyRequestOptions, Node, NodeKey, Ruleset } from "@itwin/presentation-common";
+import type { RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import type { NodeMappingFunc } from "../presentation-testing/HierarchyBuilder.js";
 
 async function getRootNodes() {
   const root: Node = {
@@ -25,7 +29,7 @@ async function getRootNodes() {
 }
 
 async function getChildrenNodes(opts: HierarchyRequestOptions<IModelConnection, NodeKey>) {
-  if (opts.parentKey?.pathFromRoot[0] !== "root" || opts?.parentKey.pathFromRoot.length !== 1) {
+  if (opts.parentKey?.pathFromRoot[0] !== "root" || opts.parentKey.pathFromRoot.length !== 1) {
     return { items: createAsyncIterator([]), total: 0 };
   }
 

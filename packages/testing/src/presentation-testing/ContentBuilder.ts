@@ -6,26 +6,17 @@
  * @module Content
  */
 
-import { PropertyRecord } from "@itwin/appui-abstract";
-import { Guid, GuidString } from "@itwin/core-bentley";
+import { Guid } from "@itwin/core-bentley";
 import { QueryRowFormat } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import {
-  Content,
-  DefaultContentDisplayTypes,
-  InstanceId,
-  InstanceKey,
-  KeySet,
-  PageOptions,
-  ProcessPrimitiveValueProps,
-  Ruleset,
-  traverseContent,
-  Value,
-  ValuesMap,
-} from "@itwin/presentation-common";
+import { DefaultContentDisplayTypes, KeySet, traverseContent, Value } from "@itwin/presentation-common";
 import { ContentDataProvider, PropertyRecordsBuilder } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { safeDispose } from "./Helpers.js";
+
+import type { PropertyRecord } from "@itwin/appui-abstract";
+import type { GuidString } from "@itwin/core-bentley";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Content, InstanceId, InstanceKey, PageOptions, ProcessPrimitiveValueProps, Ruleset, ValuesMap } from "@itwin/presentation-common";
 
 /**
  * Interface for a data provider, which is used by ContentBuilder.

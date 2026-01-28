@@ -7,17 +7,12 @@
  * @module Tree
  */
 
-import { ReactElement } from "react";
-import {
-  AbstractTreeNodeLoaderWithProvider,
-  ControlledTree,
-  ControlledTreeProps,
-  TreeEventHandler,
-  TreeRendererProps,
-  useTreeModel,
-} from "@itwin/components-react";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
-import { UsePresentationTreeStateResult } from "./UsePresentationTreeState.js";
+import { ControlledTree, useTreeModel } from "@itwin/components-react";
+
+import type { ReactElement } from "react";
+import type { AbstractTreeNodeLoaderWithProvider, ControlledTreeProps, TreeEventHandler, TreeRendererProps } from "@itwin/components-react";
+import type { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import type { UsePresentationTreeStateResult } from "./UsePresentationTreeState.js";
 
 /**
  * Props for [[PresentationTree]] component.

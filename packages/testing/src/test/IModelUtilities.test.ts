@@ -5,12 +5,14 @@
 
 import { expect } from "chai";
 import { join } from "path";
-import sinon, { SinonStub } from "sinon";
+import sinon from "sinon";
 import { IModelJsFs, SnapshotDb } from "@itwin/core-backend";
-import { CreateEmptySnapshotIModelProps } from "@itwin/core-common";
 import { createFileNameFromString, getTestOutputDir } from "../presentation-testing/FilenameUtils.js";
 import { buildTestIModel, TestIModelConnection } from "../presentation-testing/IModelUtilities.js";
 import { createStub } from "./Utils.js";
+
+import type { SinonStub } from "sinon";
+import type { CreateEmptySnapshotIModelProps } from "@itwin/core-common";
 
 describe("buildTestIModel", () => {
   const snapshotDb = {

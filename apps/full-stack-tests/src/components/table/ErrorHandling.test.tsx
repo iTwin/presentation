@@ -5,12 +5,11 @@
 
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import sinon from "sinon";
-import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager, UiComponents } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { InstanceKey, KeySet, Ruleset } from "@itwin/presentation-common";
-import { TableColumnDefinition, TableRowDefinition, usePresentationTable } from "@itwin/presentation-components";
+import { IModelApp } from "@itwin/core-frontend";
+import { KeySet } from "@itwin/presentation-common";
+import { usePresentationTable } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -18,6 +17,11 @@ import { render } from "../../RenderUtils.js";
 import { isIterableManager } from "../../Utils.js";
 import { ensureHasError, ErrorBoundary } from "../ErrorBoundary.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
+
+import type { PropertyRecord } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { InstanceKey, Ruleset } from "@itwin/presentation-common";
+import type { TableColumnDefinition, TableRowDefinition } from "@itwin/presentation-components";
 
 describe("Learning snippets", () => {
   describe("Table", () => {

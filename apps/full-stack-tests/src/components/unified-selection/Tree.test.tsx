@@ -8,19 +8,18 @@ import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useCallback, useState } from "react";
 import { SelectionMode, UiComponents } from "@itwin/components-react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { InstanceKey, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
-import {
-  PresentationTree,
-  PresentationTreeEventHandlerProps,
-  UnifiedSelectionTreeEventHandler,
-  usePresentationTreeState,
-} from "@itwin/presentation-components";
+import { IModelApp } from "@itwin/core-frontend";
+import { KeySet, RuleTypes } from "@itwin/presentation-common";
+import { PresentationTree, UnifiedSelectionTreeEventHandler, usePresentationTreeState } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, fireEvent, render, waitFor } from "../../RenderUtils.js";
 import { getNodeByLabel, isNodeSelectedInTree, toggleExpandNode } from "../TreeUtils.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { InstanceKey, Ruleset } from "@itwin/presentation-common";
+import type { PresentationTreeEventHandlerProps } from "@itwin/presentation-components";
 
 describe("Learning snippets", async () => {
   describe("Tree", () => {

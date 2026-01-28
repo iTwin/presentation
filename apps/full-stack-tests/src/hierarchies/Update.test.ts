@@ -18,30 +18,21 @@ import {
   SubjectOwnsPartitionElements,
   SubjectOwnsSubjects,
 } from "@itwin/core-backend";
-import { BeEvent, Guid, Id64String, OpenMode } from "@itwin/core-bentley";
-import {
-  BisCodeSpec,
-  EmptyLocalization,
-  ExternalSourceAspectProps,
-  IModel,
-  IModelReadRpcInterface,
-  IpcListener,
-  IpcSocketBackend,
-  IpcSocketFrontend,
-  RelationshipProps,
-  RemoveFunction,
-  RpcConfiguration,
-  RpcManager,
-} from "@itwin/core-common";
+import { BeEvent, Guid, OpenMode } from "@itwin/core-bentley";
+import { BisCodeSpec, EmptyLocalization, IModel, IModelReadRpcInterface, RpcConfiguration, RpcManager } from "@itwin/core-common";
 import { BriefcaseConnection, IpcApp, NullRenderSystem } from "@itwin/core-frontend";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
-import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 import { createFileNameFromString, setupOutputFileLocation } from "@itwin/presentation-testing";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation.js";
 import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils.js";
+
+import type { Id64String } from "@itwin/core-bentley";
+import type { ExternalSourceAspectProps, IpcListener, IpcSocketBackend, IpcSocketFrontend, RelationshipProps, RemoveFunction } from "@itwin/core-common";
+import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
   describe("Updating hierarchies upon iModel change", () => {

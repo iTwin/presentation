@@ -3,7 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Format, FormatType, Parser, ParserSpec } from "@itwin/core-quantity";
+import { FormatType, Parser } from "@itwin/core-quantity";
+
+import type { Format, ParserSpec } from "@itwin/core-quantity";
 
 /**
  * Finds rounding error for entered value and converts it to persistence unit.

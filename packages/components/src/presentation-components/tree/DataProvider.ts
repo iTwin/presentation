@@ -9,10 +9,20 @@
 
 import "../common/DisposePolyfill.js";
 
-import { DelayLoadedTreeNodeItem, PageOptions, PropertyFilterRuleGroupOperator, TreeNodeItem } from "@itwin/components-react";
+import { PropertyFilterRuleGroupOperator } from "@itwin/components-react";
 import { Logger } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
-import {
+import { NodeKey, PresentationError, PresentationStatus } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
+import { createDiagnosticsOptions } from "../common/Diagnostics.js";
+import { getRulesetId, memoize, translate } from "../common/Utils.js";
+import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
+import { createInstanceFilterDefinition } from "../instance-filter-builder/PresentationFilterBuilder.js";
+import { InfoTreeNodeItemType, isPresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
+import { createInfoNode, createTreeNodeItem, pageOptionsUiToPresentation } from "./Utils.js";
+
+import type { DelayLoadedTreeNodeItem, PageOptions, TreeNodeItem } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type {
   BaseNodeKey,
   ClassInfo,
   ClientDiagnosticsOptions,
@@ -20,23 +30,16 @@ import {
   HierarchyRequestOptions,
   InstanceFilterDefinition,
   Node,
-  NodeKey,
   NodePathElement,
   Paged,
-  PresentationError,
-  PresentationStatus,
   RequestOptionsWithRuleset,
   Ruleset,
 } from "@itwin/presentation-common";
-import { Presentation } from "@itwin/presentation-frontend";
-import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostics.js";
-import { getRulesetId, memoize, translate } from "../common/Utils.js";
-import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
-import { createInstanceFilterDefinition, PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder.js";
-import { PresentationInstanceFilter } from "../instance-filter-builder/PresentationInstanceFilter.js";
-import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider.js";
-import { InfoTreeNodeItemType, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
-import { createInfoNode, createTreeNodeItem, pageOptionsUiToPresentation } from "./Utils.js";
+import type { DiagnosticsProps } from "../common/Diagnostics.js";
+import type { PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder.js";
+import type { PresentationInstanceFilter } from "../instance-filter-builder/PresentationInstanceFilter.js";
+import type { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider.js";
+import type { PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
 
 /**
  * Properties for creating a `PresentationTreeDataProvider` instance.
@@ -153,6 +156,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
 
         // the `PresentationManager.getNodesIterator` has only been added to @itwin/presentation-frontend in 4.5.1, and our peerDependency is
         // set to 4.0.0, so we need to check if the method is really there
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (Presentation.presentation.getNodesIterator) {
           return Presentation.presentation.getNodesIterator(requestOptions);
         }

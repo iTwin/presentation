@@ -7,8 +7,10 @@ import { expect } from "chai";
 import { FieldDescriptorType, SortDirection } from "@itwin/presentation-common";
 import { createTestPropertyInfo } from "../_helpers/Common.js";
 import { createTestPropertiesContentField } from "../_helpers/Content.js";
-import { useTableOptions, UseTableOptionsProps } from "../../presentation-components/table/UseTableOptions.js";
+import { useTableOptions } from "../../presentation-components/table/UseTableOptions.js";
 import { act, renderHook, waitFor } from "../TestUtils.js";
+
+import type { UseTableOptionsProps } from "../../presentation-components/table/UseTableOptions.js";
 
 describe("useTableOptions", () => {
   const propertiesField = createTestPropertiesContentField({ name: "prop_field", label: "Prop Field", properties: [{ property: createTestPropertyInfo() }] });

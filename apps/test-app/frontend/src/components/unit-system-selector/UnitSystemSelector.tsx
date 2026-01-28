@@ -4,8 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IModelApp } from "@itwin/core-frontend";
-import { UnitSystemKey } from "@itwin/core-quantity";
-import { Select, SelectOption } from "@itwin/itwinui-react";
+import { Select } from "@itwin/itwinui-react";
+
+import type { UnitSystemKey } from "@itwin/core-quantity";
+import type { SelectOption } from "@itwin/itwinui-react";
 
 export interface UnitSystemSelectorProps {
   selectedUnitSystem: UnitSystemKey;

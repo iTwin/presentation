@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { InstanceKey } from "@itwin/presentation-shared";
-import { GenericNodeKey, IModelInstanceKey } from "./HierarchyNodeKey.js";
+
+import type { GenericNodeKey, IModelInstanceKey } from "./HierarchyNodeKey.js";
 
 /**
  * An identifier that can be used to identify either an ECInstance or a generic node.

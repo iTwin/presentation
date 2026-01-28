@@ -4,16 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, HierarchySearchPath } from "@itwin/presentation-hierarchies";
-import { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { TreeActions } from "./internal/TreeActions.js";
-import { TreeModel, TreeModelHierarchyNode, TreeModelRootNode } from "./internal/TreeModel.js";
-import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
+import { TreeModel } from "./internal/TreeModel.js";
+import { useUnifiedTreeSelection } from "./internal/UseUnifiedSelection.js";
 import { safeDispose } from "./internal/Utils.js";
-import { RootErrorRendererProps, TreeRendererProps } from "./Renderers.js";
-import { TreeNode } from "./TreeNode.js";
-import { SelectionChangeType } from "./UseSelectionHandler.js";
 import { useLatest } from "./Utils.js";
+
+import type { GenericInstanceFilter, HierarchyProvider, HierarchySearchPath } from "@itwin/presentation-hierarchies";
+import type { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import type { TreeModelHierarchyNode, TreeModelRootNode } from "./internal/TreeModel.js";
+import type { UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
+import type { RootErrorRendererProps, TreeRendererProps } from "./Renderers.js";
+import type { TreeNode } from "./TreeNode.js";
+import type { SelectionChangeType } from "./UseSelectionHandler.js";
 
 /**
  * A React hook that creates state for a tree component.
@@ -164,7 +168,7 @@ function useTreeInternal({
     const provider = getHierarchyProvider();
     provider.setFormatter(currentFormatter.current);
     const removeHierarchyChangedListener = provider.hierarchyChanged.addListener((hierarchyChangeArgs) => {
-      const shouldDiscardState = hierarchyChangeArgs?.searchChange?.newSearch !== undefined;
+      const shouldDiscardState = hierarchyChangeArgs.searchChange?.newSearch !== undefined;
       actions.reloadTree({ state: shouldDiscardState ? "discard" : "keep" });
     });
     actions.setHierarchyProvider(provider);
@@ -178,7 +182,7 @@ function useTreeInternal({
 
   const [isSearching, setIsSearching] = useState(false);
   useEffect(() => {
-    let disposed = false;
+    let disposed = false as boolean;
     const controller = new AbortController();
     void (async () => {
       if (!hierarchyProvider) {

@@ -5,14 +5,20 @@
 
 import "./DisposePolyfill.js";
 
-import { Draft, enableMapSet, produce } from "immer";
-import { buffer, debounceTime, EMPTY, groupBy, map, mergeMap, Observable, reduce, Subject, switchMap, takeUntil, tap } from "rxjs";
-import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { ErrorInfo } from "../TreeNode.js";
-import { SelectionChangeType } from "../UseSelectionHandler.js";
-import { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, LoadNodesOptions, TreeLoader } from "./TreeLoader.js";
-import { TreeModel, TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
+import { enableMapSet, produce } from "immer";
+import { buffer, debounceTime, EMPTY, groupBy, map, mergeMap, reduce, Subject, switchMap, takeUntil, tap } from "rxjs";
+import { HierarchyNode } from "@itwin/presentation-hierarchies";
+import { TreeLoader } from "./TreeLoader.js";
+import { TreeModel } from "./TreeModel.js";
 import { createNodeId, sameNodes } from "./Utils.js";
+
+import type { Draft } from "immer";
+import type { Observable } from "rxjs";
+import type { GenericInstanceFilter, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import type { ErrorInfo } from "../TreeNode.js";
+import type { SelectionChangeType } from "../UseSelectionHandler.js";
+import type { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, LoadNodesOptions } from "./TreeLoader.js";
+import type { TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
 
 enableMapSet();
 
@@ -229,7 +235,7 @@ export class TreeActions {
   }
 
   public expandNode(nodeId: string, isExpanded: boolean) {
-    let childrenAction: ReturnType<typeof TreeModel.expandNode> = "none";
+    let childrenAction = "none" as ReturnType<typeof TreeModel.expandNode>;
     this.updateTreeModel((model) => {
       childrenAction = TreeModel.expandNode(model, nodeId, isExpanded);
     });
@@ -243,7 +249,7 @@ export class TreeActions {
 
   public setHierarchyLimit(nodeId: string | undefined, limit?: number | "unbounded") {
     const oldModel = this._currentModel;
-    let loadChildren = false;
+    let loadChildren = false as boolean;
     this.updateTreeModel((model) => {
       loadChildren = TreeModel.setHierarchyLimit(model, nodeId, limit);
     });
@@ -257,7 +263,7 @@ export class TreeActions {
 
   public setInstanceFilter(nodeId: string | undefined, filter?: GenericInstanceFilter) {
     const oldModel = this._currentModel;
-    let loadChildren = false;
+    let loadChildren = false as boolean;
     this.updateTreeModel((model) => {
       loadChildren = TreeModel.setInstanceFilter(model, nodeId, filter);
     });
@@ -274,7 +280,7 @@ export class TreeActions {
     this.updateTreeModel((model) => {
       TreeModel.setIsLoading(model, options?.parentNodeId, true);
       if (options?.state === "reset") {
-        TreeModel.removeSubTree(model, options?.parentNodeId);
+        TreeModel.removeSubTree(model, options.parentNodeId);
       }
     });
 

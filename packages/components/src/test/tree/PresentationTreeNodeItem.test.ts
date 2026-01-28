@@ -6,15 +6,15 @@
 
 import { expect } from "chai";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { TreeNodeItem } from "@itwin/components-react";
 import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 import {
   InfoTreeNodeItemType,
   isPresentationInfoTreeNodeItem,
   isPresentationTreeNodeItem,
-  PresentationInfoTreeNodeItem,
-  PresentationTreeNodeItem,
 } from "../../presentation-components/tree/PresentationTreeNodeItem.js";
+
+import type { TreeNodeItem } from "@itwin/components-react";
+import type { PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "../../presentation-components/tree/PresentationTreeNodeItem.js";
 
 describe("isPresentationTreeNodeItem", () => {
   it("returns correct values", () => {

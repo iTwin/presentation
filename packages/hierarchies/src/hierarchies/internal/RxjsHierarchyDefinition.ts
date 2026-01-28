@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { filter, from, Observable } from "rxjs";
+import { ParentHierarchyNode } from "../HierarchyNode.js";
 import {
   DefineHierarchyLevelProps,
   HierarchyDefinition,
@@ -35,7 +36,10 @@ export type RxjsNodeParser = (props: {
  *
  * @internal
  */
-export type RxjsNodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Observable<TNode>;
+export type RxjsNodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(props: {
+  node: TNode;
+  parentNode?: ParentHierarchyNode;
+}) => Observable<TNode>;
 
 /**
  * A type for a function that post-processes given node. Unless the function decides not to make any modifications,
@@ -43,7 +47,7 @@ export type RxjsNodePreProcessor = <TNode extends ProcessedGenericHierarchyNode 
  *
  * @internal
  */
-export type RxjsNodePostProcessor = (node: ProcessedHierarchyNode) => Observable<ProcessedHierarchyNode>;
+export type RxjsNodePostProcessor = (props: { node: ProcessedHierarchyNode; parentNode?: ParentHierarchyNode }) => Observable<ProcessedHierarchyNode>;
 
 /**
  * An interface for a factory that knows how define a hierarchy based on a given parent node.
@@ -95,9 +99,9 @@ export function getRxjsHierarchyDefinition(hierarchyDefinition: HierarchyDefinit
         }
       : undefined,
     preProcessNode: hierarchyDefinition.preProcessNode
-      ? (node) => from(hierarchyDefinition.preProcessNode!(node)).pipe(filter((preprocessedNode) => !!preprocessedNode))
+      ? (props) => from(hierarchyDefinition.preProcessNode!(props)).pipe(filter((preprocessedNode) => !!preprocessedNode))
       : undefined,
-    postProcessNode: hierarchyDefinition.postProcessNode ? (node) => from(hierarchyDefinition.postProcessNode!(node)) : undefined,
+    postProcessNode: hierarchyDefinition.postProcessNode ? (props) => from(hierarchyDefinition.postProcessNode!(props)) : undefined,
     defineHierarchyLevel: (props) => from(hierarchyDefinition.defineHierarchyLevel(props)),
   };
 }

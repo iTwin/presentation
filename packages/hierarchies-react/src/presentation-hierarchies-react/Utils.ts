@@ -3,7 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { LegacyRef, MutableRefObject, Ref, useCallback, useInsertionEffect, useRef } from "react";
+import { useCallback, useInsertionEffect, useRef } from "react";
+
+import type { LegacyRef, MutableRefObject, Ref } from "react";
 
 /** @internal */
 export function useLatest<T>(value: T) {

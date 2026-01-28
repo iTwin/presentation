@@ -3,12 +3,18 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECDb, IModelDb, IModelJsFs, StandaloneDb } from "@itwin/core-backend";
-import { Id64String, OpenMode } from "@itwin/core-bentley";
-import { BisCodeSpec, Code, CodeScopeProps, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
+import { IModelDb, IModelJsFs, StandaloneDb } from "@itwin/core-backend";
+import { OpenMode } from "@itwin/core-bentley";
+import { Code } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
-import { buildTestIModel, setupOutputFileLocation, TestIModelBuilder, TestIModelConnection } from "@itwin/presentation-testing";
+import { Schema, SchemaContext } from "@itwin/ecschema-metadata";
+import { buildTestIModel, setupOutputFileLocation, TestIModelConnection } from "@itwin/presentation-testing";
+
+import type { ECDb } from "@itwin/core-backend";
+import type { Id64String } from "@itwin/core-bentley";
+import type { BisCodeSpec, CodeScopeProps, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
+import type { SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
+import type { TestIModelBuilder } from "@itwin/presentation-testing";
 
 interface IIModelBuilder extends TestIModelBuilder {
   deleteElement(elementId: Id64String): void;
@@ -47,9 +53,6 @@ async function cloneIModel<TResult extends {}>(
   IModelJsFs.copySync(sourceIModelPath, targetIModelPath);
 
   const imodel = StandaloneDb.openFile(targetIModelPath, OpenMode.ReadWrite);
-  if (!imodel) {
-    throw new Error("Failed to open cloned iModel");
-  }
   try {
     const res = await setup(new TestIModelBuilderImpl(imodel));
     imodel.saveChanges("Updated cloned iModel");
@@ -93,7 +96,7 @@ export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) 
     async getSchemaInfo(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<SchemaInfo | undefined> {
       const schemaJson = imodel.getSchemaProps(schemaKey.name);
       const schemaInfo = await Schema.startLoadingFromJson(schemaJson, schemaContext);
-      if (schemaInfo !== undefined && schemaInfo.schemaKey.matches(schemaKey as SchemaKey, matchType)) {
+      if (schemaInfo.schemaKey.matches(schemaKey as SchemaKey, matchType)) {
         return schemaInfo;
       }
       return undefined;

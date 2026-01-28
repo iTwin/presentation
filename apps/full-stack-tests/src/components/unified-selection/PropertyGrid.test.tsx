@@ -6,8 +6,7 @@
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useCallback, useState } from "react";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { InstanceKey } from "@itwin/presentation-common";
+import { IModelApp } from "@itwin/core-frontend";
 import { PresentationPropertyDataProvider, usePropertyDataProviderWithUnifiedSelection } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { createStorage } from "@itwin/unified-selection";
@@ -15,6 +14,9 @@ import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, getByText, render, waitFor } from "../../RenderUtils.js";
 import { useOptionalDisposable } from "../../UseOptionalDisposable.js";
 import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { InstanceKey } from "@itwin/presentation-common";
 
 describe("Learning snippets", async () => {
   describe("Property grid", () => {

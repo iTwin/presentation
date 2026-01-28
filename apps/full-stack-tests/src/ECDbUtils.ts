@@ -5,11 +5,15 @@
 
 import * as fs from "fs";
 import hash from "object-hash";
-import { ECDb, ECDbOpenMode, ECSqlWriteStatement, IModelJsFs } from "@itwin/core-backend";
-import { BentleyError, DbResult, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
-import { ECSqlBinding, InstanceKey, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
+import { ECDb, ECDbOpenMode, IModelJsFs } from "@itwin/core-backend";
+import { BentleyError, DbResult, Id64, OrderedId64Iterable } from "@itwin/core-bentley";
+import { parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 import { createFileNameFromString, limitFilePathLength, setupOutputFileLocation } from "@itwin/presentation-testing";
 import { safeDispose } from "./Utils.js";
+
+import type { ECSqlWriteStatement } from "@itwin/core-backend";
+import type { Id64String } from "@itwin/core-bentley";
+import type { ECSqlBinding, InstanceKey } from "@itwin/presentation-shared";
 
 export class ECDbBuilder {
   public constructor(
@@ -175,7 +179,7 @@ export class ECDbBuilder {
 }
 
 function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding {
-  return typeof value === "object" && (value as ECSqlBinding).type !== undefined && (value as ECSqlBinding).value !== undefined;
+  return typeof value === "object" && "type" in value && "value" in value;
 }
 
 export async function createECDb<TResult extends {}>(

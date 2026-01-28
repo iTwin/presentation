@@ -3,35 +3,30 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { debounceTime, Subject } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
 import { Button, Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
-import { ClassInfo, DefaultContentDisplayTypes, Descriptor, InstanceKey, KeySet } from "@itwin/presentation-common";
-import {
-  PresentationInstanceFilter,
-  PresentationInstanceFilterDialog,
-  PresentationInstanceFilterInfo,
-  PresentationInstanceFilterPropertiesSource,
-} from "@itwin/presentation-components";
+import { DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
+import { PresentationInstanceFilter, PresentationInstanceFilterDialog } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey, registerTxnListeners } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyNodeKey } from "@itwin/presentation-hierarchies";
-import {
-  HierarchyLevelDetails,
-  StrataKitRootErrorRenderer,
-  StrataKitTreeRendererAttributes,
-  TreeNode,
-  useIModelUnifiedSelectionTree,
-} from "@itwin/presentation-hierarchies-react";
+import { StrataKitRootErrorRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { Selectable, Selectables } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { Icon } from "@stratakit/foundations";
-import { MyAppFrontend } from "../../api/MyAppFrontend";
+import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
 import { TreeRendererWithFilterAction } from "./TreeRendererWithFilterAction";
+
+import type { ComponentPropsWithoutRef } from "react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { ClassInfo, Descriptor, InstanceKey } from "@itwin/presentation-common";
+import type { PresentationInstanceFilterInfo, PresentationInstanceFilterPropertiesSource } from "@itwin/presentation-components";
+import type { HierarchyLevelDetails, StrataKitTreeRendererAttributes, TreeNode } from "@itwin/presentation-hierarchies-react";
+import type { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 
 type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;
 type IModelAccess = UseIModelTreeProps["imodelAccess"];
@@ -265,7 +260,7 @@ function Tree({
           if (!filteringOptions) {
             return;
           }
-          filteringOptions?.setInstanceFilter(toGenericFilter(info));
+          filteringOptions.setInstanceFilter(toGenericFilter(info));
           setFilteringOptions(undefined);
         }}
         onClose={() => {
@@ -305,8 +300,8 @@ function getHierarchyDefinition(props: Parameters<UseIModelTreeProps["getHierarc
   return new ModelsTreeDefinition(props);
 }
 
-const customFormatter: IPrimitiveValueFormatter = async (val) => {
-  return `THIS_IS_FORMATTED_${val ? JSON.stringify(val.value) : ""}_THIS_IS_FORMATTED`;
+const customFormatter: IPrimitiveValueFormatter = async ({ value }) => {
+  return `THIS_IS_FORMATTED_${JSON.stringify(value)}_THIS_IS_FORMATTED`;
 };
 
 function fromGenericFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilterInfo {

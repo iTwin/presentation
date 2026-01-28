@@ -7,10 +7,12 @@
  */
 
 import { bufferCount, from, map, mergeAll, mergeMap, reduce } from "rxjs";
-import { IModelConnection } from "@itwin/core-frontend";
-import { DEFAULT_KEYS_BATCH_SIZE, InstanceKey } from "@itwin/presentation-common";
+import { DEFAULT_KEYS_BATCH_SIZE } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { memoize } from "../common/Utils.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { InstanceKey } from "@itwin/presentation-common";
 
 /**
  * Interface for presentation rules-driven labels provider.
@@ -71,6 +73,8 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
         .pipe(
           bufferCount(DEFAULT_KEYS_BATCH_SIZE),
           mergeMap((keysBatch, batchIndex) => {
+            // note: `getDisplayLabelDefinitionsIterator` may not be available in older versions of core
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             if (Presentation.presentation.getDisplayLabelDefinitionsIterator) {
               return from(Presentation.presentation.getDisplayLabelDefinitionsIterator({ imodel: this.imodel, keys: keysBatch })).pipe(
                 mergeMap((result) => result.items),

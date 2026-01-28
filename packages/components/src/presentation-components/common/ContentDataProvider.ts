@@ -8,25 +8,26 @@
 
 import "./DisposePolyfill.js";
 
-import { PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
 import { assert, Logger } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { UnitSystemKey } from "@itwin/core-quantity";
-import {
+import { IModelApp } from "@itwin/core-frontend";
+import { Content, DEFAULT_KEYS_BATCH_SIZE, Descriptor, DisplayValue, KeySet, KoqPropertyValueFormatter, Value } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
+import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
+import { createDiagnosticsOptions } from "./Diagnostics.js";
+import { findField, getRulesetId, memoize } from "./Utils.js";
+
+import type { PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { UnitSystemKey } from "@itwin/core-quantity";
+import type {
   ArrayPropertiesField,
   ClientDiagnosticsOptions,
-  Content,
-  DEFAULT_KEYS_BATCH_SIZE,
-  Descriptor,
   DescriptorOverrides,
-  DisplayValue,
   DisplayValuesArray,
   DisplayValuesMap,
   Field,
   Item,
-  KeySet,
   KindOfQuantityInfo,
-  KoqPropertyValueFormatter,
   NestedContentValue,
   PageOptions,
   PropertiesField,
@@ -37,16 +38,14 @@ import {
   RulesetVariable,
   SelectionInfo,
   StructPropertiesField,
-  Value,
   ValuesArray,
   ValuesDictionary,
   ValuesMap,
 } from "@itwin/presentation-common";
-import { IModelContentChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
-import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
-import { createDiagnosticsOptions, DiagnosticsProps } from "./Diagnostics.js";
-import { IPresentationDataProvider } from "./IPresentationDataProvider.js";
-import { findField, getRulesetId, memoize, RulesetOrId } from "./Utils.js";
+import type { IModelContentChangeEventArgs } from "@itwin/presentation-frontend";
+import type { DiagnosticsProps } from "./Diagnostics.js";
+import type { IPresentationDataProvider } from "./IPresentationDataProvider.js";
+import type { RulesetOrId } from "./Utils.js";
 
 /**
  * Properties for invalidating content cache.
@@ -289,19 +288,19 @@ export class ContentDataProvider implements IContentDataProvider {
    * Invalidates cached content.
    */
   protected invalidateCache(props: CacheInvalidationProps): void {
-    if (props.descriptor && this.getDefaultContentDescriptor) {
+    if (props.descriptor) {
       this.getDefaultContentDescriptor.cache.keys.length = 0;
       this.getDefaultContentDescriptor.cache.values.length = 0;
     }
-    if (props.descriptorConfiguration && this.getContentDescriptor) {
+    if (props.descriptorConfiguration) {
       this.getContentDescriptor.cache.keys.length = 0;
       this.getContentDescriptor.cache.values.length = 0;
     }
-    if ((props.content || props.size) && this._getContentAndSize) {
+    if (props.content || props.size) {
       this._getContentAndSize.cache.keys.length = 0;
       this._getContentAndSize.cache.values.length = 0;
     }
-    if ((props.formatting || props.content || props.size) && this._getFormattedContentAndSize) {
+    if (props.formatting || props.content || props.size) {
       this._getFormattedContentAndSize.cache.keys.length = 0;
       this._getFormattedContentAndSize.cache.values.length = 0;
       this._isContentFormatted = false;
@@ -325,6 +324,8 @@ export class ContentDataProvider implements IContentDataProvider {
     this._listeners.push(Presentation.presentation.rulesets().onRulesetModified.addListener(this.onRulesetModified));
     this._listeners.push(Presentation.presentation.vars(getRulesetId(this._ruleset)).onVariableChanged.addListener(this.onRulesetVariableChanged));
     this._listeners.push(IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(this.onUnitSystemChanged));
+    // note: IModelApp.formatsProvider may not be available in older versions of core
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     IModelApp.formatsProvider && this._listeners.push(IModelApp.formatsProvider.onFormatsChanged.addListener(this.onFormatsChanged));
   }
 
@@ -452,6 +453,8 @@ export class ContentDataProvider implements IContentDataProvider {
         },
       };
 
+      // note: `getContentIterator` may not be available in older versions of core
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (Presentation.presentation.getContentIterator) {
         const result = await Presentation.presentation.getContentIterator(options);
         return result

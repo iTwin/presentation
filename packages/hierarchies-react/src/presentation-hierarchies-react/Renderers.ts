@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { InstanceKey } from "@itwin/presentation-shared";
-import { ErrorInfo, TreeNode } from "./TreeNode.js";
-import { SelectionChangeType } from "./UseSelectionHandler.js";
+import type { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
+import type { InstanceKey } from "@itwin/presentation-shared";
+import type { ErrorInfo, TreeNode } from "./TreeNode.js";
+import type { SelectionChangeType } from "./UseSelectionHandler.js";
 
 /**
  * Type definition used to render tree rendering UI component.

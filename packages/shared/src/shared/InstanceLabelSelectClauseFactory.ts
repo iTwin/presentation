@@ -3,13 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ConcatenatedValue } from "./ConcatenatedValue.js";
-import {
-  createConcatenatedValueJsonSelector,
-  createRawPropertyValueSelector,
-  TypedValueSelectClauseProps,
-} from "./ecsql-snippets/ECSqlValueSelectorSnippets.js";
-import { ECClassHierarchyInspector } from "./Metadata.js";
+import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } from "./ecsql-snippets/ECSqlValueSelectorSnippets.js";
+
+import type { ConcatenatedValue } from "./ConcatenatedValue.js";
+import type { TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets.js";
+import type { ECClassHierarchyInspector } from "./Metadata.js";
 
 /**
  * Props for `IInstanceLabelSelectClauseFactory.createSelectClause`.

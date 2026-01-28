@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { GenericInstanceFilter } from "@itwin/core-common";
-import { Event, InstanceKey, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
-import { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
-import { HierarchySearchPath } from "./HierarchySearch.js";
+import type { GenericInstanceFilter } from "@itwin/core-common";
+import type { Event, InstanceKey, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import type { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
+import type { HierarchySearchPath } from "./HierarchySearch.js";
 
 /**
  * Props for the `HierarchyProvider.getNodes` call.
@@ -54,14 +54,13 @@ interface HierarchyChangedEventArgs {
  */
 export interface HierarchyProvider {
   /**
-   * An event that provider raises due to a hierarchy change, that requires a reload. Provider may
-   * set additional event arguments to provide extra information about what caused the change.
+   * An event that provider raises due to a hierarchy change that requires a reload.
    *
    * Consumers are expected to subscribe to this event and reload the hierarchy when it's raised.
-   * Implementations may provide additional details on what caused the change through the optional
+   * Implementations may provide additional details on what caused the change through the
    * event arguments.
    */
-  readonly hierarchyChanged: Event<(args?: HierarchyChangedEventArgs) => void>;
+  readonly hierarchyChanged: Event<(args: HierarchyChangedEventArgs) => void>;
 
   /**
    * Gets nodes for the specified parent node. This is **the method to implement**, otherwise

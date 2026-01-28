@@ -8,15 +8,18 @@ import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection, SelectedViewportChangedArgs, SpatialViewState, ViewManager, ViewState } from "@itwin/core-frontend";
+import { IModelApp, SpatialViewState, ViewManager } from "@itwin/core-frontend";
 import { Point3d, Vector3d } from "@itwin/core-geometry";
 import { UiIModelComponents, ViewportComponent } from "@itwin/imodel-components-react";
-import { InstanceKey, KeySet } from "@itwin/presentation-common";
+import { KeySet } from "@itwin/presentation-common";
 import { viewWithUnifiedSelection } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
+
+import type { IModelConnection, SelectedViewportChangedArgs, ViewState } from "@itwin/core-frontend";
+import type { InstanceKey } from "@itwin/presentation-common";
 
 describe("Learning snippets", async () => {
   describe("Viewport", () => {

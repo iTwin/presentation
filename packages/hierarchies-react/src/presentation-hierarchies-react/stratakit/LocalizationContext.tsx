@@ -3,7 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+
+import type { PropsWithChildren } from "react";
 
 /**
  * Localized strings used in the components.
@@ -115,6 +117,11 @@ export interface LocalizedStrings {
    * Default value: `Cancel`.
    */
   cancel: string;
+  /**
+   * Label for tree node rename input.
+   * Default value: `New label`.
+   */
+  newLabel: string;
 }
 
 /** @internal */
@@ -144,6 +151,7 @@ const defaultLocalizedStrings: LocalizedStrings = {
   more: "More",
   confirm: "Confirm",
   cancel: "Cancel",
+  newLabel: "New label",
 };
 
 const localizationContext = createContext<LocalizationContext>({ localizedStrings: defaultLocalizedStrings });

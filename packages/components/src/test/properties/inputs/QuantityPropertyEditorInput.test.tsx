@@ -7,18 +7,21 @@ import { expect } from "chai";
 import { createRef } from "react";
 import sinon from "sinon";
 import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
-import { PropertyEditorProps } from "@itwin/components-react";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Format, FormatterSpec, FormatType, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { IModelApp } from "@itwin/core-frontend";
+import { Format, FormatType, ParseError } from "@itwin/core-quantity";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext.js";
-import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 import { QuantityEditorName } from "../../../presentation-components/properties/editors/QuantityPropertyEditor.js";
 import { QuantityPropertyEditorInput } from "../../../presentation-components/properties/inputs/QuantityPropertyEditorInput.js";
 import { render, waitFor } from "../../TestUtils.js";
+
+import type { PropertyEditorProps } from "@itwin/components-react";
+import type { FormattingUnitSystemChangedArgs, IModelConnection } from "@itwin/core-frontend";
+import type { FormatterSpec, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
+import type { SchemaContext } from "@itwin/ecschema-metadata";
+import type { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 
 const createRecord = ({ initialValue, kindOfQuantityName }: { initialValue?: number; kindOfQuantityName?: string }) => {
   return createTestPropertyRecord(

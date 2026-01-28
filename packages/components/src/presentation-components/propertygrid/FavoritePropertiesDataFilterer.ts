@@ -6,12 +6,15 @@
  * @module PropertyGrid
  */
 
-import { PropertyRecord } from "@itwin/appui-abstract";
-import { PropertyDataFiltererBase, PropertyDataFilterResult } from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
-import { Field } from "@itwin/presentation-common";
-import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
-import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
+import { PropertyDataFiltererBase } from "@itwin/components-react";
+import { Presentation } from "@itwin/presentation-frontend";
+
+import type { PropertyRecord } from "@itwin/appui-abstract";
+import type { PropertyDataFilterResult } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Field } from "@itwin/presentation-common";
+import type { FavoritePropertiesScope } from "@itwin/presentation-frontend";
+import type { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 
 /**
  * Props for [[FavoritePropertiesDataFilterer]].
@@ -91,6 +94,8 @@ export class FavoritePropertiesDataFilterer extends PropertyDataFiltererBase {
 }
 
 async function defaultFavoritePropertyCheckCallback(field: Field, imodel: IModelConnection, scope: FavoritePropertiesScope) {
+  // note: `Presentation.favoriteProperties.hasAsync` may not be available in older versions of core
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (Presentation.favoriteProperties.hasAsync) {
     return Presentation.favoriteProperties.hasAsync(field, imodel, scope);
   }

@@ -6,15 +6,18 @@
  * @module PropertyGrid
  */
 
-import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { from, map, Subject, switchMap, takeLast } from "rxjs";
-import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { createIModelKey } from "@itwin/presentation-core-interop";
-import { Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
-import { SelectionStorage } from "@itwin/unified-selection";
+import { Presentation, SelectionHandler } from "@itwin/presentation-frontend";
 import { createKeySetFromSelectables, safeDispose } from "../common/Utils.js";
-import { IPresentationPropertyDataProvider } from "./DataProvider.js";
+
+import type { PropsWithChildren } from "react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SelectionChangeEventArgs } from "@itwin/presentation-frontend";
+import type { SelectionStorage } from "@itwin/unified-selection";
+import type { IPresentationPropertyDataProvider } from "./DataProvider.js";
 
 const DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT = 100;
 

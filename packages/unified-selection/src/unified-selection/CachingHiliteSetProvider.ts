@@ -6,10 +6,11 @@
 
 import "./DisposePolyfill.js";
 
-import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
-import { createHiliteSetProvider, HiliteSet } from "./HiliteSetProvider.js";
 import { createIModelHiliteSetProvider } from "./IModelHiliteSetProvider.js";
-import { SelectionStorage } from "./SelectionStorage.js";
+
+import type { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import type { createHiliteSetProvider, HiliteSet } from "./HiliteSetProvider.js";
+import type { SelectionStorage } from "./SelectionStorage.js";
 
 /**
  * Props for creating a `CachingHiliteSetProvider` instance.

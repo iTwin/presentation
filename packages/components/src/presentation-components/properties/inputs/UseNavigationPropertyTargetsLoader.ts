@@ -10,22 +10,14 @@ import "../../common/DisposePolyfill.js";
 
 import { useEffect, useMemo, useState } from "react";
 import { EMPTY, from, map, mergeMap, toArray } from "rxjs";
-import { PropertyDescription } from "@itwin/appui-abstract";
-import { IModelConnection } from "@itwin/core-frontend";
-import { SelectOption } from "@itwin/itwinui-react";
-import {
-  ContentFlags,
-  ContentSpecificationTypes,
-  InstanceKey,
-  Item,
-  KeySet,
-  LabelDefinition,
-  NavigationPropertyInfo,
-  Ruleset,
-  RuleTypes,
-} from "@itwin/presentation-common";
+import { ContentFlags, ContentSpecificationTypes, KeySet, RuleTypes } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader.js";
+
+import type { PropertyDescription } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SelectOption } from "@itwin/itwinui-react";
+import type { InstanceKey, Item, LabelDefinition, NavigationPropertyInfo, Ruleset } from "@itwin/presentation-common";
 
 /** @internal */
 export interface NavigationPropertyTarget {
@@ -132,7 +124,7 @@ export function useNavigationPropertyTargetsRuleset(
   const [ruleset, setRuleset] = useState<Ruleset>();
 
   useEffect(() => {
-    let disposed = false;
+    let disposed = false as boolean;
     void (async () => {
       const propertyInfo = await getNavigationPropertyInfo(property);
       if (!disposed && propertyInfo) {
@@ -177,6 +169,8 @@ async function getItems(imodel: IModelConnection, ruleset: Ruleset, filter?: str
     paging: { size: VALUE_BATCH_SIZE },
   };
   const items = await new Promise<Item[]>((resolve, reject) => {
+    // note: `getContentIterator` may not be available in older versions of core
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     (Presentation.presentation.getContentIterator
       ? from(Presentation.presentation.getContentIterator(requestProps)).pipe(
           mergeMap((result) => (result ? result.items : EMPTY)),

@@ -6,29 +6,23 @@
 import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
-import { PrimitiveValue } from "@itwin/appui-abstract";
-import {
-  AbstractTreeNodeLoaderWithProvider,
-  MutableTreeModel,
-  TreeModel,
-  TreeModelNode,
-  TreeModelNodeEditingInfo,
-  TreeModelNodeInput,
-  UiComponents,
-} from "@itwin/components-react";
+import { MutableTreeModel, UiComponents } from "@itwin/components-react";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import { LabelDefinition, Node, RegisteredRuleset, Ruleset, StandardNodeTypes, VariableValue } from "@itwin/presentation-common";
-import { IModelHierarchyChangeEventArgs, Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
-import {
-  PresentationTreeNodeLoaderProps,
-  useControlledPresentationTreeFiltering,
-  usePresentationTreeNodeLoader,
-} from "../../../presentation-components/tree/controlled/TreeHooks.js";
-import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
+import { IModelApp } from "@itwin/core-frontend";
+import { LabelDefinition, RegisteredRuleset, StandardNodeTypes } from "@itwin/presentation-common";
+import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { useControlledPresentationTreeFiltering, usePresentationTreeNodeLoader } from "../../../presentation-components/tree/controlled/TreeHooks.js";
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils.js";
 import { renderHook, waitFor } from "../../TestUtils.js";
+
+import type { PrimitiveValue } from "@itwin/appui-abstract";
+import type { AbstractTreeNodeLoaderWithProvider, TreeModel, TreeModelNode, TreeModelNodeEditingInfo, TreeModelNodeInput } from "@itwin/components-react";
+import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
+import type { Node, Ruleset, VariableValue } from "@itwin/presentation-common";
+import type { IModelHierarchyChangeEventArgs, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import type { PresentationTreeNodeLoaderProps } from "../../../presentation-components/tree/controlled/TreeHooks.js";
+import type { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 

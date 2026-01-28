@@ -5,27 +5,25 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { FormatProps, FormatterSpec, Format as QuantityFormat, UnitSystemKey } from "@itwin/core-quantity";
-import {
-  DelayedPromiseWithProps,
+import { FormatterSpec, Format as QuantityFormat } from "@itwin/core-quantity";
+import { DelayedPromiseWithProps, OverrideFormat, SchemaItemKey, SchemaItemType, SchemaKey, SchemaUnitProvider } from "@itwin/ecschema-metadata";
+import { parseFullClassName } from "@itwin/presentation-shared";
+import { createValueFormatter } from "../core-interop/Formatting.js";
+
+import type { FormatProps, UnitSystemKey } from "@itwin/core-quantity";
+import type {
   Format,
   KindOfQuantity,
   LazyLoadedFormat,
   LazyLoadedSchemaItem,
-  OverrideFormat,
   Schema,
   SchemaContext,
   SchemaItem,
   SchemaItemFormatProps,
-  SchemaItemKey,
-  SchemaItemType,
-  SchemaKey,
-  SchemaUnitProvider,
   Unit,
   UnitSystem,
 } from "@itwin/ecschema-metadata";
-import { IPrimitiveValueFormatter, parseFullClassName, TypedPrimitiveValue } from "@itwin/presentation-shared";
-import { createValueFormatter } from "../core-interop/Formatting.js";
+import type { IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-shared";
 
 describe("createValueFormatter", () => {
   const schemaContext = {

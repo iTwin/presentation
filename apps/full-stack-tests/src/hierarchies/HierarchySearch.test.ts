@@ -12,25 +12,19 @@ import {
   insertSubject,
 } from "presentation-test-utilities";
 import { Subject } from "@itwin/core-backend";
-import { BeEvent, Id64String } from "@itwin/core-bentley";
+import { BeEvent } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
 import {
   createHierarchySearchHelper,
   createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
-  DefineInstanceNodeChildHierarchyLevelProps,
-  GenericNodeKey,
-  HierarchyDefinition,
   HierarchyNode,
   HierarchyNodeIdentifier,
   HierarchyNodeKey,
-  HierarchyProvider,
   HierarchySearchPath,
-  IModelInstanceKey,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding, InstanceKey, Props } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { createFileNameFromString } from "@itwin/presentation-testing";
 import { withECDb } from "../ECDbUtils.js";
 import { buildIModel } from "../IModelUtils.js";
@@ -38,6 +32,17 @@ import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "./Utils.js";
+
+import type { Id64String } from "@itwin/core-bentley";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type {
+  DefineInstanceNodeChildHierarchyLevelProps,
+  GenericNodeKey,
+  HierarchyDefinition,
+  HierarchyProvider,
+  IModelInstanceKey,
+} from "@itwin/presentation-hierarchies";
+import type { ECSqlBinding, EventListener, InstanceKey, Props } from "@itwin/presentation-shared";
 
 describe("Hierarchies", () => {
   describe("Hierarchy search", () => {
@@ -1735,7 +1740,7 @@ describe("Hierarchies", () => {
           },
         });
         const provider4 = new (class implements HierarchyProvider {
-          public hierarchyChanged = new BeEvent();
+          public hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
           private _search: HierarchySearchPath[] | undefined;
           public getNodes: HierarchyProvider["getNodes"] = ({ parentNode }) => {
             if (!parentNode) {
@@ -1919,7 +1924,7 @@ describe("Hierarchies", () => {
         const provider2 = createSubjectsHierarchyProvider(createIModelAccess(imodel2));
         // create generic node provider that creates a node for every bis.Subject node of any iModel
         const provider3 = new (class implements HierarchyProvider {
-          public hierarchyChanged = new BeEvent();
+          public hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
           public getNodes: HierarchyProvider["getNodes"] = ({ parentNode }) => {
             if (
               parentNode &&

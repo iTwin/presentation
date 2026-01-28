@@ -5,33 +5,20 @@
 
 import "./TreeNodeRenderer.css";
 
-import {
-  cloneElement,
-  ComponentPropsWithoutRef,
-  FC,
-  forwardRef,
-  isValidElement,
-  memo,
-  PropsWithRef,
-  ReactNode,
-  RefAttributes,
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { cloneElement, forwardRef, isValidElement, memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Description, IconButton, Spinner, Text, TextBox } from "@stratakit/bricks";
 import checkmarkSvg from "@stratakit/icons/checkmark.svg";
 import dismissSvg from "@stratakit/icons/dismiss.svg";
 import refreshSvg from "@stratakit/icons/refresh.svg";
 import { DropdownMenu, unstable_Popover as Popover, Tree } from "@stratakit/structures";
-import { TreeRendererProps } from "../Renderers.js";
-import { TreeNode } from "../TreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
-import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
+import { TreeActionBase } from "./TreeAction.js";
 import { useTreeNodeRenameContext } from "./TreeNodeRenameAction.js";
+
+import type { ComponentPropsWithoutRef, FC, PropsWithRef, ReactNode, RefAttributes } from "react";
+import type { TreeRendererProps } from "../Renderers.js";
+import type { TreeNode } from "../TreeNode.js";
+import type { TreeActionBaseAttributes } from "./TreeAction.js";
 
 /** @internal */
 interface TreeNodeRendererOwnProps extends Pick<TreeRendererProps, "expandNode" | "reloadTree"> {
@@ -115,12 +102,13 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
         return undefined;
       }
 
-      if (node.isExpanded || node.children === true || node.children.length > 0) {
-        return node.isExpanded;
+      // this is a leaf node
+      if (node.children !== true && node.children.length === 0) {
+        return undefined;
       }
 
-      return undefined;
-    }, [node.children, node.error, node.isExpanded]);
+      return node.isExpanded;
+    }, [node]);
 
     const { renameParameters, cancelRename } = renameContext ?? {};
     const labelEditor = (
@@ -272,6 +260,7 @@ function LabelEditor({
           <TextBox.Input
             id={inputId}
             ref={inputRef}
+            aria-label={localizedStrings.newLabel}
             value={newLabelValue}
             onChange={(event) => {
               setNewLabelValue(event.target.value);

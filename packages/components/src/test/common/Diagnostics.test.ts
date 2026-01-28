@@ -5,8 +5,9 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import { ClientDiagnostics } from "@itwin/presentation-common";
 import { createDiagnosticsOptions } from "../../presentation-components/common/Diagnostics.js";
+
+import type { ClientDiagnostics } from "@itwin/presentation-common";
 
 describe("createDiagnosticsOptions", () => {
   it("returns undefined when neither rule nor dev diagnostic props are set", () => {

@@ -4,9 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createRef, PureComponent } from "react";
-import { PropertyEditorBase, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
+import { PropertyEditorBase } from "@itwin/components-react";
 import { QuantityPropertyEditorInput } from "../inputs/QuantityPropertyEditorInput.js";
-import { PropertyEditorAttributes } from "./Common.js";
+
+import type { PropertyEditorProps, TypeEditor } from "@itwin/components-react";
+import type { PropertyEditorAttributes } from "./Common.js";
 
 /**
  * Name for `QuantityPropertyEditor`.

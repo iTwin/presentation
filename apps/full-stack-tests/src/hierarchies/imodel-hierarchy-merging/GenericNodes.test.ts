@@ -3,11 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { createChangedDbs } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createHierarchyDefinitionFactory, createMergedHierarchyProvider, importXYZSchema, pickAndTransform } from "./HierarchiesMerging.js";
+
+import type { createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
   before(async function () {

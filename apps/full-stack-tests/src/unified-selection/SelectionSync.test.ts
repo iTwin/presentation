@@ -21,26 +21,21 @@ import {
   insertSubject,
   waitFor,
 } from "presentation-test-utilities";
-import { Id64Arg, Id64Set } from "@itwin/core-bentley";
 import { RpcConfiguration, RpcManager } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
-import {
-  createStorage,
-  enableUnifiedSelectionSyncWithIModel,
-  HiliteSet,
-  SelectableInstanceKey,
-  Selectables,
-  SelectionScope,
-  SelectionStorage,
-} from "@itwin/unified-selection";
+import { createStorage, enableUnifiedSelectionSyncWithIModel, Selectables } from "@itwin/unified-selection";
 import { createSchemaContext } from "../IModelUtils.js";
 import { getSchemaFromPackage } from "./getSchema.js";
+
+import type { Id64Arg, Id64Set } from "@itwin/core-bentley";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Props } from "@itwin/presentation-shared";
+import type { HiliteSet, SelectableInstanceKey, SelectionScope, SelectionStorage } from "@itwin/unified-selection";
 
 describe("Unified selection sync with iModel", () => {
   let imodel: IModelConnection;
@@ -66,6 +61,7 @@ describe("Unified selection sync with iModel", () => {
   });
 
   afterEach(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (imodel) {
       selectionStorage.clearStorage({ imodelKey: createIModelKey(imodel) });
       await imodel.close();

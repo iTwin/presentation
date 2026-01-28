@@ -6,10 +6,12 @@
  * @module Core
  */
 
-import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
+import { PropertyValueRendererManager } from "@itwin/components-react";
 import { Presentation } from "@itwin/presentation-frontend";
 import { localizationNamespaceName } from "./common/Utils.js";
 import { InstanceKeyValueRenderer } from "./properties/InstanceKeyValueRenderer.js";
+
+import type { IPropertyValueRenderer } from "@itwin/components-react";
 
 /**
  * Registers 'PresentationComponents' localization namespace and returns callback

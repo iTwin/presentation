@@ -3,9 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { compareStrings, Id64, Id64String } from "@itwin/core-bentley";
-import { PrimitiveValueType } from "./Metadata.js";
+import { compareStrings, Id64 } from "@itwin/core-bentley";
 import { normalizeFullClassName } from "./Utils.js";
+
+import type { Id64String } from "@itwin/core-bentley";
+import type { PrimitiveValueType } from "./Metadata.js";
 
 /**
  * A data structure uniquely identifying an ECInstance in an iModel.
@@ -83,8 +85,7 @@ export namespace PrimitiveValue {
     if (typeof value !== "object") {
       return false;
     }
-    const pt = value as Point2d;
-    return pt.x !== undefined && pt.y !== undefined;
+    return "x" in value && "y" in value;
   }
 
   /**
@@ -95,8 +96,7 @@ export namespace PrimitiveValue {
     if (typeof value !== "object") {
       return false;
     }
-    const pt = value as Point3d;
-    return pt.x !== undefined && pt.y !== undefined && pt.z !== undefined;
+    return "x" in value && "y" in value && "z" in value;
   }
 }
 

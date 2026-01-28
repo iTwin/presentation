@@ -8,28 +8,21 @@
  */
 
 import { useCallback, useMemo, useState } from "react";
-import {
-  AbstractTreeNodeLoaderWithProvider,
-  isTreeModelNode,
-  TreeNodeRendererProps,
-  TreeRenderer,
-  TreeRendererProps,
-  useDebouncedAsyncValue,
-} from "@itwin/components-react";
-import { NodeKey, PresentationError, PresentationStatus } from "@itwin/presentation-common";
+import { isTreeModelNode, TreeRenderer, useDebouncedAsyncValue } from "@itwin/components-react";
+import { PresentationError, PresentationStatus } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../common/Utils.js";
-import { createInstanceFilterDefinition, PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationFilterBuilder.js";
+import { createInstanceFilterDefinition } from "../../instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationInstanceFilterDialog } from "../../instance-filter-builder/PresentationInstanceFilterDialog.js";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
-import {
-  FilterablePresentationTreeNodeItem,
-  isFilterablePresentationTreeNodeItem,
-  isPresentationTreeNodeItem,
-  PresentationTreeNodeItem,
-} from "../PresentationTreeNodeItem.js";
+import { isFilterablePresentationTreeNodeItem, isPresentationTreeNodeItem } from "../PresentationTreeNodeItem.js";
 import { PresentationTreeNodeRenderer } from "./PresentationTreeNodeRenderer.js";
 import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering.js";
+
+import type { AbstractTreeNodeLoaderWithProvider, TreeNodeRendererProps, TreeRendererProps } from "@itwin/components-react";
+import type { NodeKey } from "@itwin/presentation-common";
+import type { PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationFilterBuilder.js";
+import type { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import type { FilterablePresentationTreeNodeItem, PresentationTreeNodeItem } from "../PresentationTreeNodeItem.js";
 
 /**
  * Props for [[PresentationTreeRenderer]] component.

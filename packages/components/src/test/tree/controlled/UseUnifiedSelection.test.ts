@@ -9,40 +9,31 @@ import { ResolvablePromise } from "presentation-test-utilities";
 import { Subject } from "rxjs";
 import { from } from "rxjs/internal/observable/from";
 import { finalize } from "rxjs/internal/operators/finalize";
-import { ObservableInput } from "rxjs/internal/types";
 import sinon from "sinon";
-import {
+import { TreeModelSource, UiComponents } from "@itwin/components-react";
+import { EmptyLocalization } from "@itwin/core-common";
+import { KeySet } from "@itwin/presentation-common";
+import { Presentation, SelectionChangeEvent, SelectionChangeType, SelectionHelper, SelectionManager } from "@itwin/presentation-frontend";
+import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
+import { createTestTreeNodeItem } from "../../_helpers/UiComponents.js";
+import { UnifiedSelectionTreeEventHandler, useUnifiedSelectionTreeEventHandler } from "../../../presentation-components/tree/controlled/UseUnifiedSelection.js";
+import { configure, renderHook } from "../../TestUtils.js";
+
+import type { ObservableInput } from "rxjs/internal/types";
+import type {
   AbstractTreeNodeLoaderWithProvider,
   TreeModelNodeInput,
-  TreeModelSource,
   TreeNodeItem,
   TreeSelectionChange,
   TreeSelectionModificationEventArgs,
   TreeSelectionReplacementEventArgs,
-  UiComponents,
 } from "@itwin/components-react";
-import { EmptyLocalization } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import { Key, KeySet, NodeKey } from "@itwin/presentation-common";
-import {
-  ISelectionProvider,
-  Presentation,
-  SelectionChangeEvent,
-  SelectionChangeEventArgs,
-  SelectionChangeType,
-  SelectionHelper,
-  SelectionManager,
-} from "@itwin/presentation-frontend";
-import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
-import { createTestTreeNodeItem } from "../../_helpers/UiComponents.js";
-import {
-  UnifiedSelectionTreeEventHandler,
-  UnifiedSelectionTreeEventHandlerParams,
-  useUnifiedSelectionTreeEventHandler,
-} from "../../../presentation-components/tree/controlled/UseUnifiedSelection.js";
-import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
-import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
-import { configure, renderHook } from "../../TestUtils.js";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Key, NodeKey } from "@itwin/presentation-common";
+import type { ISelectionProvider, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
+import type { UnifiedSelectionTreeEventHandlerParams } from "../../../presentation-components/tree/controlled/UseUnifiedSelection.js";
+import type { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
+import type { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
 
 const awaitableObservable = <T>(input: ObservableInput<T>) => {
   const promise = new ResolvablePromise<void>();

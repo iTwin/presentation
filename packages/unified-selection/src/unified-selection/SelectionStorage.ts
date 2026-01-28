@@ -4,9 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { BeEvent } from "@itwin/core-bentley";
-import { Event } from "@itwin/presentation-shared";
-import { Selectable, Selectables } from "./Selectable.js";
-import { StorageSelectionChangeEventArgs, StorageSelectionChangesListener, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
+import { Selectables } from "./Selectable.js";
+
+import type { Event } from "@itwin/presentation-shared";
+import type { Selectable } from "./Selectable.js";
+import type { StorageSelectionChangeEventArgs, StorageSelectionChangesListener, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
 
 /** @public */
 type IModelKeyProp =

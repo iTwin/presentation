@@ -6,16 +6,18 @@
 import { expect } from "chai";
 import { createRef } from "react";
 import sinon from "sinon";
-import { PrimitiveValue, PropertyDescription, PropertyRecord, StandardTypeNames } from "@itwin/appui-abstract";
-import { PropertyUpdatedArgs } from "@itwin/components-react";
+import { StandardTypeNames } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
-import { WithConstraints } from "../../../presentation-components/common/ContentBuilder.js";
-import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 import { NumericInput, NumericPropertyInput } from "../../../presentation-components/properties/inputs/NumericPropertyInput.js";
 import { render, waitFor } from "../../TestUtils.js";
+
+import type { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
+import type { PropertyUpdatedArgs } from "@itwin/components-react";
+import type { WithConstraints } from "../../../presentation-components/common/ContentBuilder.js";
+import type { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 
 const createRecord = (initialValue?: number) => {
   return createTestPropertyRecord({ value: initialValue, displayValue: initialValue?.toString() }, { typename: StandardTypeNames.Double });

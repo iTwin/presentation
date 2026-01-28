@@ -8,16 +8,16 @@ import * as sinon from "sinon";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createTestECClassInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../_helpers/Common.js";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
-import {
-  PresentationInstanceFilterBuilder,
-  PresentationInstanceFilterInfo,
-} from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import { PresentationInstanceFilterBuilder } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { render, waitFor, waitForElement, within } from "../TestUtils.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 
 describe("PresentationInstanceFilter", () => {
   stubRaf();

@@ -8,7 +8,7 @@ import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialC
 import sinon from "sinon";
 import { UiComponents } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
-import { ClassInfo, DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
+import { DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
 import { PresentationFilterBuilderValueRenderer } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildIModel } from "../../IModelUtils.js";
@@ -16,6 +16,8 @@ import { initialize, terminate } from "../../IntegrationTests.js";
 import { queryByText, render } from "../../RenderUtils.js";
 import { importSchema } from "../../SchemaUtils.js";
 import { stubVirtualization } from "../../Utils.js";
+
+import type { ClassInfo } from "@itwin/presentation-common";
 
 describe("Presentation filter builder value renderer", () => {
   stubVirtualization();

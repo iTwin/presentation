@@ -6,7 +6,9 @@
  * @module Core
  */
 
-import { createContext, PropsWithChildren } from "react";
+import { createContext } from "react";
+
+import type { PropsWithChildren } from "react";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 

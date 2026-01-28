@@ -7,17 +7,19 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { TreeActions } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createTestPropertyInfo } from "../../_helpers/Common.js";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
-import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationTreeNodeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeNodeRenderer.js";
-import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
+import { InfoTreeNodeItemType } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
 import { fireEvent, render, waitFor } from "../../TestUtils.js";
 import { createInfoTreeNodeItem, createTreeModelNode, createTreeNodeItem } from "./Helpers.js";
+
+import type { TreeActions } from "@itwin/components-react";
+import type { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import type { PresentationInfoTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
 
 function createFilterInfo(propName: string = "prop"): PresentationInstanceFilterInfo {
   const property = createTestPropertyInfo({ name: propName });

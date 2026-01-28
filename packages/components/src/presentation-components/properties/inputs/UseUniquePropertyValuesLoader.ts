@@ -7,12 +7,15 @@ import "../../common/DisposePolyfill.js";
 
 import { useEffect, useMemo, useState } from "react";
 import { from, map, mergeMap, toArray } from "rxjs";
-import { IModelConnection } from "@itwin/core-frontend";
-import { SelectOption } from "@itwin/itwinui-react";
-import { DisplayValue, DisplayValueGroup, Field, FieldDescriptor, Keys, KeySet, Ruleset } from "@itwin/presentation-common";
+import { DisplayValue, KeySet } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { translate, UniqueValue } from "../../common/Utils.js";
+import { translate } from "../../common/Utils.js";
 import { FILTER_WARNING_OPTION, ItemsLoader, VALUE_BATCH_SIZE } from "./ItemsLoader.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SelectOption } from "@itwin/itwinui-react";
+import type { DisplayValueGroup, Field, FieldDescriptor, Keys, Ruleset } from "@itwin/presentation-common";
+import type { UniqueValue } from "../../common/Utils.js";
 
 interface UseUniquePropertyValuesLoaderProps {
   imodel: IModelConnection;
@@ -154,6 +157,8 @@ async function getItems({
     keys,
   };
   const items = await new Promise<DisplayValueGroup[]>((resolve) => {
+    // note: `getDistinctValuesIterator` may not be available in older versions of core
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     (Presentation.presentation.getDistinctValuesIterator
       ? from(Presentation.presentation.getDistinctValuesIterator(requestProps)).pipe(
           mergeMap((result) => result.items),

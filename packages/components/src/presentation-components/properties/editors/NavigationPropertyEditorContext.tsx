@@ -7,11 +7,13 @@
  * @module Properties
  */
 
-import { createContext, PropsWithChildren, useContext, useMemo } from "react";
-import { PropertyDescription } from "@itwin/appui-abstract";
-import { IModelConnection } from "@itwin/core-frontend";
-import { NavigationPropertyInfo } from "@itwin/presentation-common";
-import { IContentDataProvider } from "../../common/ContentDataProvider.js";
+import { createContext, useContext, useMemo } from "react";
+
+import type { PropsWithChildren } from "react";
+import type { PropertyDescription } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { NavigationPropertyInfo } from "@itwin/presentation-common";
+import type { IContentDataProvider } from "../../common/ContentDataProvider.js";
 
 /**
  * A context providing necessary information for [[NavigationPropertyEditor]].

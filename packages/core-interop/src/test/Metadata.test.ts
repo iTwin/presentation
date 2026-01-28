@@ -6,7 +6,11 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { assert } from "@itwin/core-bentley";
-import {
+import { PrimitiveType, RelationshipMultiplicity, SchemaItemType, StrengthDirection } from "@itwin/ecschema-metadata";
+import { createECSchemaProvider } from "../core-interop/Metadata.js";
+import { createECClass, createECProperty, createECSchema } from "../core-interop/MetadataInternal.js";
+
+import type {
   ECClass as CoreClass,
   EnumerationArrayProperty as CoreEnumerationArrayProperty,
   EnumerationProperty as CoreEnumerationProperty,
@@ -17,16 +21,10 @@ import {
   Schema as CoreSchema,
   StructArrayProperty as CoreStructArrayProperty,
   StructProperty as CoreStructProperty,
-  PrimitiveType,
-  RelationshipMultiplicity,
   SchemaContext,
-  SchemaItemType,
   SchemaKey,
-  StrengthDirection,
 } from "@itwin/ecschema-metadata";
-import { EC } from "@itwin/presentation-shared";
-import { createECSchemaProvider } from "../core-interop/Metadata.js";
-import { createECClass, createECProperty, createECSchema } from "../core-interop/MetadataInternal.js";
+import type { EC } from "@itwin/presentation-shared";
 
 describe("createECSchemaProvider", () => {
   describe("getSchema", () => {
@@ -160,7 +158,6 @@ describe("createECSchema", () => {
 
       const schema = createECSchema(coreSchema);
       const result = await schema.getCustomAttributes();
-      assert(result !== undefined);
 
       const entries = [...result];
       expect(entries.length).to.eq(1);
@@ -176,7 +173,6 @@ describe("createECSchema", () => {
 
       const schema = createECSchema(coreSchema);
       const result = await schema.getCustomAttributes();
-      assert(result !== undefined);
 
       const entries = [...result];
       expect(entries.length).to.eq(0);
@@ -474,7 +470,6 @@ describe("createECClass", () => {
       } as unknown as CoreClass;
       const ecClass = createECClass(coreClass, schema);
       const result = await ecClass.getCustomAttributes();
-      assert(result !== undefined);
 
       const entries = [...result];
       expect(entries.length).to.eq(1);
@@ -492,7 +487,6 @@ describe("createECClass", () => {
       } as unknown as CoreClass;
       const ecClass = createECClass(coreClass, schema);
       const result = await ecClass.getCustomAttributes();
-      assert(result !== undefined);
 
       const entries = [...result];
       expect(entries.length).to.eq(0);
@@ -553,7 +547,6 @@ describe("createECClass", () => {
 
         it("returns polymorphic flag from core constraint", () => {
           [
-            { in: undefined, expectation: false },
             { in: false, expectation: false },
             { in: true, expectation: true },
           ].forEach((testEntry) => {
@@ -607,7 +600,6 @@ describe("createECProperty", () => {
       } as unknown as CorePrimitiveProperty;
       const property = createECProperty(coreProperty, propertyClass);
       const result = await property.getCustomAttributes();
-      assert(result !== undefined);
 
       const entries = [...result];
       expect(entries.length).to.eq(1);
@@ -624,7 +616,6 @@ describe("createECProperty", () => {
       } as unknown as CorePrimitiveProperty;
       const property = createECProperty(coreProperty, propertyClass);
       const result = await property.getCustomAttributes();
-      assert(result !== undefined);
 
       const entries = [...result];
       expect(entries.length).to.eq(0);

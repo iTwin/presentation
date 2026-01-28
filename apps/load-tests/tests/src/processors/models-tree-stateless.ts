@@ -4,16 +4,21 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @itwin/no-internal */
 /* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 
-import { VUContext, VUEvents } from "artillery";
 import { StopWatch } from "@itwin/core-bentley";
-import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
-import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
+import { ECSqlReader } from "@itwin/core-common";
+import { Schema, SchemaContext } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyNode, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { doRequest, getCurrentIModelName, loadNodes, loadVariables, openIModelConnectionIfNeeded } from "./common";
+
+import type { VUContext, VUEvents } from "artillery";
+import type { DbQueryRequest, DbQueryResponse, DbRequestExecutor } from "@itwin/core-common";
+import type { ISchemaLocater, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
+import type { HierarchyNode } from "@itwin/presentation-hierarchies";
 
 console.log(`Frontend PID: ${process.pid}`);
 const ENABLE_REQUESTS_LOGGING = false;

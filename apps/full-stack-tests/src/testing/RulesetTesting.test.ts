@@ -8,11 +8,14 @@ import { expect } from "chai";
 import ChaiJestSnapshot from "chai-jest-snapshot";
 import path from "path";
 import { Id64 } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { IModelApp } from "@itwin/core-frontend";
 import { SchemaFormatsProvider } from "@itwin/ecschema-metadata";
-import { ChildNodeSpecificationTypes, ContentSpecificationTypes, RelationshipDirection, Ruleset, RuleTypes } from "@itwin/presentation-common";
+import { ChildNodeSpecificationTypes, ContentSpecificationTypes, RelationshipDirection, RuleTypes } from "@itwin/presentation-common";
 import { ContentBuilder, HierarchyBuilder, TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Ruleset } from "@itwin/presentation-common";
 
 const iModelPath = "assets/datasets/Properties_60InstancesWithUrl2.ibim";
 

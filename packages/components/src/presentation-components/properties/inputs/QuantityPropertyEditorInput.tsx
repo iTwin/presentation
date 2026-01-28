@@ -4,14 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyEditorProps } from "@itwin/components-react";
+import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { assert } from "@itwin/core-bentley";
 import { Input } from "@itwin/itwinui-react";
 import { useSchemaMetadataContext } from "../../common/SchemaMetadataContext.js";
-import { PropertyEditorAttributes } from "../editors/Common.js";
 import { NumericPropertyInput } from "./NumericPropertyInput.js";
-import { useQuantityValueInput, UseQuantityValueInputProps } from "./UseQuantityValueInput.js";
+import { useQuantityValueInput } from "./UseQuantityValueInput.js";
+
+import type { PrimitiveValue, PropertyRecord } from "@itwin/appui-abstract";
+import type { PropertyEditorProps } from "@itwin/components-react";
+import type { PropertyEditorAttributes } from "../editors/Common.js";
+import type { UseQuantityValueInputProps } from "./UseQuantityValueInput.js";
 
 /** @internal */
 export interface QuantityPropertyEditorImplProps extends PropertyEditorProps {
@@ -30,7 +33,8 @@ export const QuantityPropertyEditorInput = forwardRef<PropertyEditorAttributes, 
   const koqName = props.propertyRecord.property.kindOfQuantityName ?? props.propertyRecord.property.quantityType;
   assert(koqName !== undefined);
 
-  const initialValue = (props.propertyRecord.value as PrimitiveValue)?.value as number;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  const initialValue = (props.propertyRecord.value as PrimitiveValue)?.value as number | undefined;
   return (
     <QuantityPropertyValueInput {...props} ref={ref} koqName={koqName} schemaContext={schemaMetadataContext.schemaContext} initialRawValue={initialValue} />
   );

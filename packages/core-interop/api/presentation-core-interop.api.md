@@ -4,19 +4,19 @@
 
 ```ts
 
-import { ECSchemaProvider } from '@itwin/presentation-shared';
-import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
-import { ECSqlReader } from '@itwin/core-common';
-import { Event } from '@itwin/presentation-shared';
-import { ILogger } from '@itwin/presentation-shared';
-import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
+import type { ECSchemaProvider } from '@itwin/presentation-shared';
+import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
+import type { ECSqlReader } from '@itwin/core-common';
+import type { Event } from '@itwin/presentation-shared';
+import type { ILogger } from '@itwin/presentation-shared';
+import type { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { LogLevel } from '@itwin/core-bentley';
 import { QueryBinder } from '@itwin/core-common';
-import { QueryOptions } from '@itwin/core-common';
-import { Schema } from '@itwin/ecschema-metadata';
-import { SchemaContext } from '@itwin/ecschema-metadata';
+import type { QueryOptions } from '@itwin/core-common';
+import type { Schema } from '@itwin/ecschema-metadata';
+import type { SchemaContext } from '@itwin/ecschema-metadata';
 import { SchemaKey } from '@itwin/ecschema-metadata';
-import { UnitSystemKey } from '@itwin/core-quantity';
+import type { UnitSystemKey } from '@itwin/core-quantity';
 
 // @public
 interface CoreECSqlReaderFactory {
