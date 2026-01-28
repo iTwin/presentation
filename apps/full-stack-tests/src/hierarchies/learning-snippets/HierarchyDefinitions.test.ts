@@ -177,7 +177,7 @@ describe("Hierarchies", () => {
             // Otherwise, return an empty array to indicate that there are no children
             return [];
           },
-          async preProcessNode(node) {
+          async preProcessNode({ node }) {
             // The pre-processor queries an external service to get an external ID for the node
             // and either adds it to the node's extended data or omits the node from the hierarchy
             // if the external ID is not found.
@@ -237,7 +237,7 @@ describe("Hierarchies", () => {
             // Otherwise, return an empty array to indicate that there are no children
             return [];
           },
-          async postProcessNode(node) {
+          async postProcessNode({ node }) {
             // All instance nodes will have an iconId assigned in the query, but grouping nodes won't - do it here
             if (HierarchyNode.isClassGroupingNode(node)) {
               return { ...node, extendedData: { ...node.extendedData, iconId: "icon-class-group" } };

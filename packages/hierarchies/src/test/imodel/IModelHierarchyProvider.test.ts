@@ -289,11 +289,11 @@ describe("createIModelHierarchyProvider", () => {
 
   describe("Custom processing", () => {
     class TestHierarchyDefinition implements HierarchyDefinition {
-      public async preProcessNode<TNode>(node: TNode) {
-        return { ...node, isPreprocessed: true };
+      public async preProcessNode<TNode>(props: { node: TNode; parentNode?: ParentHierarchyNode }) {
+        return { ...props.node, isPreprocessed: true };
       }
-      public async postProcessNode(node: ProcessedHierarchyNode) {
-        return { ...node, isPostprocessed: true };
+      public async postProcessNode(props: { node: ProcessedHierarchyNode; parentNode?: ParentHierarchyNode }) {
+        return { ...props.node, isPostprocessed: true };
       }
       public async defineHierarchyLevel({ parentNode }: DefineHierarchyLevelProps) {
         if (!parentNode) {
@@ -305,25 +305,26 @@ describe("createIModelHierarchyProvider", () => {
 
     describe("Pre-processing", async () => {
       it("calls hierarchy definition factory pre-processor if supplied", async () => {
+        const parentNode = createTestGenericNode({ key: createTestGenericNodeKey({ id: "parent" }) });
         const node = createTestSourceGenericNode();
-        // const preprocess = sinon.stub().resolves({ ...node, isPreprocessed: true });
+        const preProcessNode = sinon.fake(async (preprocessProps) => ({ ...preprocessProps.node, isPreprocessed: true }));
         using provider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
-            preProcessNode: async (n) => ({ ...n, isPreprocessed: true }),
-            async defineHierarchyLevel({ parentNode }) {
-              if (!parentNode) {
-                return [
-                  {
-                    node,
-                  },
-                ];
+            preProcessNode,
+            async defineHierarchyLevel(defineHierarchyLevelProps) {
+              if (defineHierarchyLevelProps.parentNode?.key.type === "generic" && defineHierarchyLevelProps.parentNode.key.id === "parent") {
+                return [{ node }];
               }
               return [];
             },
           },
         });
-        const nodes = await collect(provider.getNodes({ parentNode: undefined }));
+        const nodes = await collect(provider.getNodes({ parentNode }));
+        expect(preProcessNode).to.be.calledOnceWith({
+          node: { ...node, key: createTestGenericNodeKey({ source: sourceName }), parentKeys: [parentNode.key] },
+          parentNode,
+        });
         expect(nodes)
           .to.have.lengthOf(1)
           .and.to.containSubset([{ isPreprocessed: true }]);
@@ -349,7 +350,10 @@ describe("createIModelHierarchyProvider", () => {
           },
         });
         const nodes = await collect(provider.getNodes({ parentNode: undefined }));
-        expect(preprocess).to.be.calledOnceWith({ ...node, key: createTestGenericNodeKey({ source: sourceName }), parentKeys: [] });
+        expect(preprocess).to.be.calledOnceWith({
+          node: { ...node, key: createTestGenericNodeKey({ source: sourceName }), parentKeys: [] },
+          parentNode: undefined,
+        });
         expect(nodes).to.deep.eq([]);
       });
 
@@ -367,30 +371,30 @@ describe("createIModelHierarchyProvider", () => {
 
     describe("Post-processing", async () => {
       it("calls hierarchy definition factory post-processor if supplied", async () => {
+        const parentNode = createTestGenericNode({ key: createTestGenericNodeKey({ id: "parent" }) });
         const node = createTestSourceGenericNode();
-        const postprocess = sinon.stub().resolves({ ...node, isPostprocessed: true });
+        const postProcessNode = sinon.fake(async (postprocessProps) => ({ ...postprocessProps.node, isPostprocessed: true }));
         using provider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
-            postProcessNode: postprocess,
-            async defineHierarchyLevel({ parentNode }) {
-              if (!parentNode) {
-                return [
-                  {
-                    node,
-                  },
-                ];
+            postProcessNode,
+            async defineHierarchyLevel(defineHierarchyLevelProps) {
+              if (defineHierarchyLevelProps.parentNode?.key.type === "generic" && defineHierarchyLevelProps.parentNode.key.id === "parent") {
+                return [{ node }];
               }
               return [];
             },
           },
         });
-        const nodes = await collect(provider.getNodes({ parentNode: undefined }));
-        expect(postprocess).to.be.calledOnceWith({
-          ...node,
-          key: createTestGenericNodeKey({ source: sourceName }),
-          parentKeys: [],
-          children: false,
+        const nodes = await collect(provider.getNodes({ parentNode }));
+        expect(postProcessNode).to.be.calledOnceWith({
+          node: {
+            ...node,
+            key: createTestGenericNodeKey({ source: sourceName }),
+            parentKeys: [parentNode.key],
+            children: false,
+          },
+          parentNode,
         });
         expect(nodes)
           .to.have.lengthOf(1)

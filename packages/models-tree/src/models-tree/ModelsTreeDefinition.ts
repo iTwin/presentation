@@ -176,7 +176,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     });
   }
 
-  public async postProcessNode(node: ProcessedHierarchyNode): Promise<ProcessedHierarchyNode> {
+  public async postProcessNode({ node }: { node: ProcessedHierarchyNode }): Promise<ProcessedHierarchyNode> {
     if (ProcessedHierarchyNode.isGroupingNode(node)) {
       return {
         ...node,
