@@ -24,6 +24,12 @@ module.exports = [
       ],
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-unsafe-enum-comparison": "off",
+      "@typescript-eslint/no-unnecessary-condition": [
+        "error",
+        {
+          allowConstantLoopConditions: "only-allowed-literals",
+        },
+      ],
       "@typescript-eslint/restrict-template-expressions": [
         "error",
         {

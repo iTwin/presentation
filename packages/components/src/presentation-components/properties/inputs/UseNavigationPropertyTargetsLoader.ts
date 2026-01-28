@@ -124,7 +124,7 @@ export function useNavigationPropertyTargetsRuleset(
   const [ruleset, setRuleset] = useState<Ruleset>();
 
   useEffect(() => {
-    let disposed = false;
+    let disposed = false as boolean;
     void (async () => {
       const propertyInfo = await getNavigationPropertyInfo(property);
       if (!disposed && propertyInfo) {
@@ -169,6 +169,8 @@ async function getItems(imodel: IModelConnection, ruleset: Ruleset, filter?: str
     paging: { size: VALUE_BATCH_SIZE },
   };
   const items = await new Promise<Item[]>((resolve, reject) => {
+    // note: `getContentIterator` may not be available in older versions of core
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     (Presentation.presentation.getContentIterator
       ? from(Presentation.presentation.getContentIterator(requestProps)).pipe(
           mergeMap((result) => (result ? result.items : EMPTY)),

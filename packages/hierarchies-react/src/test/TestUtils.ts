@@ -70,7 +70,7 @@ export function createTreeModel(seed: ModelInput) {
     }
 
     const nodeId = input.id;
-    const node = input ? model.idToNode.get(nodeId) : model.rootNode;
+    const node = model.idToNode.get(nodeId);
     if (!node) {
       model.idToNode.set(nodeId, {
         ...input,

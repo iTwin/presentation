@@ -429,7 +429,7 @@ describe("ContentDataProvider", () => {
           if (!options.paging?.start && !options.paging?.size) {
             return resultNoPageOptions;
           }
-          if (!options.paging?.start && options.paging.size) {
+          if (!options.paging.start && options.paging.size) {
             return resultNoPageStartWithSize;
           }
           if (options.paging.start) {
@@ -841,7 +841,7 @@ describe("ContentDataProvider", () => {
 
       await provider.getContentSetSize();
       expect(presentationManager.getContentIterator).to.be.calledOnceWith(
-        matchOptions((options) => options.diagnostics?.editor === "error" && options.diagnostics?.handler === diagnosticsHandler),
+        matchOptions((options) => options.diagnostics?.editor === "error" && options.diagnostics.handler === diagnosticsHandler),
       );
     });
 
@@ -874,9 +874,9 @@ describe("ContentDataProvider", () => {
         matchOptions(
           (options) =>
             options.diagnostics?.backendVersion === true &&
-            options.diagnostics?.perf === true &&
-            options.diagnostics?.dev === "error" &&
-            options.diagnostics?.handler === diagnosticsHandler,
+            options.diagnostics.perf === true &&
+            options.diagnostics.dev === "error" &&
+            options.diagnostics.handler === diagnosticsHandler,
         ),
       );
     });

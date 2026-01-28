@@ -92,32 +92,35 @@ function createOptions(
   return {
     isNodeSelected: (nodeId: string) => {
       const node = getNode(nodeId);
-      if (!node || node?.id === undefined) {
+      if (!node || node.id === undefined) {
         return false;
       }
-      return Object.entries(groupNodeSelectablesByIModelKey(node, createSelectableForGenericNode)).some(([imodelKey, nodeSelectables]) => {
+      for (const [imodelKey, nodeSelectables] of groupNodeSelectablesByIModelKey(node, createSelectableForGenericNode)) {
         const storageSelectables = storage.getSelection({ imodelKey, level: 0 });
-        return Selectables.hasAny(storageSelectables, nodeSelectables);
-      });
+        if (Selectables.hasAny(storageSelectables, nodeSelectables)) {
+          return true;
+        }
+      }
+      return false;
     },
 
     selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => {
-      const imodelSelectables: { [imodelKey: string]: Selectable[] } = {};
+      const imodelSelectables = new Map<string, Selectable[]>();
       for (const nodeId of nodeIds) {
         const node = getNode(nodeId);
-        if (!node || node?.id === undefined) {
+        if (!node || node.id === undefined) {
           return;
         }
-        Object.entries(groupNodeSelectablesByIModelKey(node, createSelectableForGenericNode)).forEach(([imodelKey, nodeSelectables]) => {
-          let selectablesList = imodelSelectables[imodelKey];
+        for (const [imodelKey, nodeSelectables] of groupNodeSelectablesByIModelKey(node, createSelectableForGenericNode)) {
+          let selectablesList = imodelSelectables.get(imodelKey);
           if (!selectablesList) {
             selectablesList = [];
-            imodelSelectables[imodelKey] = selectablesList;
+            imodelSelectables.set(imodelKey, selectablesList);
           }
           nodeSelectables.forEach((selectable) => selectablesList.push(selectable));
-        });
+        }
       }
-      Object.entries(imodelSelectables).forEach(([imodelKey, selectables]) => {
+      imodelSelectables.forEach((selectables, imodelKey) => {
         const actionProps = { imodelKey, source, selectables, level: 0 };
         switch (changeType) {
           case "add":
@@ -138,49 +141,42 @@ function createOptions(
 function groupNodeSelectablesByIModelKey(
   modelNode: TreeModelHierarchyNode,
   createSelectableForGenericNode: NonNullable<UseUnifiedTreeSelectionProps["createSelectableForGenericNode"]>,
-): { [imodelKey: string]: Selectable[] } {
+): Map<string, Selectable[]> {
   const hierarchyNode = modelNode.nodeData;
   if (HierarchyNode.isInstancesNode(hierarchyNode)) {
     return groupIModelInstanceKeys(hierarchyNode.key.instanceKeys);
   }
   if (HierarchyNode.isGroupingNode(hierarchyNode)) {
-    return Object.entries(groupIModelInstanceKeys(hierarchyNode.groupedInstanceKeys)).reduce(
-      (imodelSelectables, [imodelKey, instanceKeys]) => ({
-        ...imodelSelectables,
-        [imodelKey]: [
-          {
-            identifier: modelNode.id,
-            data: hierarchyNode,
-            async *loadInstanceKeys() {
-              for (const key of instanceKeys) {
-                yield key;
-              }
-            },
+    const groupingNodeSelectables = new Map<string, Selectable[]>();
+    groupIModelInstanceKeys(hierarchyNode.groupedInstanceKeys).forEach((instanceKeys, imodelKey) => {
+      groupingNodeSelectables.set(imodelKey, [
+        {
+          identifier: modelNode.id,
+          data: hierarchyNode,
+          async *loadInstanceKeys() {
+            for (const key of instanceKeys) {
+              yield key;
+            }
           },
-        ],
-      }),
-      {} as { [imodelKey: string]: Selectable[] },
-    );
+        },
+      ]);
+    });
+    return groupingNodeSelectables;
   }
   assert(HierarchyNode.isGeneric(hierarchyNode));
-  return {
-    // note: generic nodes aren't associated with an imodel
-    [""]: [createSelectableForGenericNode(hierarchyNode, modelNode.id)],
-  };
+  // note: generic nodes aren't associated with an imodel
+  return new Map([["", [createSelectableForGenericNode(hierarchyNode, modelNode.id)]]]);
 }
 
 function groupIModelInstanceKeys(instanceKeys: InstancesNodeKey["instanceKeys"]) {
-  return instanceKeys.reduce(
-    (imodelSelectables, key) => {
-      const imodelKey = key.imodelKey ?? "";
-      let selectablesList = imodelSelectables[imodelKey];
-      if (!selectablesList) {
-        selectablesList = [];
-        imodelSelectables[imodelKey] = selectablesList;
-      }
-      selectablesList.push(key);
-      return imodelSelectables;
-    },
-    {} as { [imodelKey: string]: InstanceKey[] },
-  );
+  return instanceKeys.reduce((imodelSelectables, key) => {
+    const imodelKey = key.imodelKey ?? "";
+    let selectablesList = imodelSelectables.get(imodelKey);
+    if (!selectablesList) {
+      selectablesList = [];
+      imodelSelectables.set(imodelKey, selectablesList);
+    }
+    selectablesList.push(key);
+    return imodelSelectables;
+  }, new Map<string, InstanceKey[]>());
 }

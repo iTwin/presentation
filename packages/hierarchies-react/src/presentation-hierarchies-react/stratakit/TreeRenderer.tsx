@@ -112,7 +112,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
   } = props;
   const { handleNodeSelect } = useSelectionHandler({
     rootNodes,
-    selectNodes: selectNodes ?? noopSelectNodes,
+    selectNodes,
     selectionMode: selectionMode ?? "single",
   });
   const flatItems = useFlatTreeItems(rootNodes);
@@ -163,11 +163,11 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
   };
 
   const getSelectedNodes = useMemo(() => {
-    let calculatedSelectedNodes: TreeNode[];
+    let calculatedSelectedNodes: TreeNode[] | undefined;
     return () => {
       if (calculatedSelectedNodes === undefined) {
         calculatedSelectedNodes = flatItems
-          .filter((item): item is FlatTreeNodeItem => !isPlaceholderItem(item) && isNodeSelected?.(item.id))
+          .filter((item): item is FlatTreeNodeItem => !isPlaceholderItem(item) && isNodeSelected(item.id))
           .map((item) => item.node);
       }
       return calculatedSelectedNodes;
@@ -185,7 +185,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
           <TreeNodeRenameContextProvider value={renameContext}>
             {items.map((virtualizedItem) => {
               const item = flatItems[virtualizedItem.index];
-              const selected = isNodeSelected?.(item.id) ?? false;
+              const selected = isNodeSelected(item.id);
               return (
                 <VirtualTreeItem
                   ref={virtualizer.measureElement}
@@ -273,7 +273,7 @@ function findPathToNode(rootNodes: TreeNode[], nodePredicate: (node: TreeNode) =
     if (nodePredicate(parent)) {
       return [parent];
     }
-    if (parent.children && parent.children !== true) {
+    if (parent.children !== true) {
       const childPath = findPathToNode(parent.children, nodePredicate);
       if (childPath) {
         return [parent, ...childPath];
@@ -377,5 +377,3 @@ const HierarchyNodeItem = memo(
     );
   }),
 );
-
-function noopSelectNodes() {}

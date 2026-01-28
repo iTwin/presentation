@@ -85,8 +85,7 @@ export namespace PrimitiveValue {
     if (typeof value !== "object") {
       return false;
     }
-    const pt = value as Point2d;
-    return pt.x !== undefined && pt.y !== undefined;
+    return "x" in value && "y" in value;
   }
 
   /**
@@ -97,8 +96,7 @@ export namespace PrimitiveValue {
     if (typeof value !== "object") {
       return false;
     }
-    const pt = value as Point3d;
-    return pt.x !== undefined && pt.y !== undefined && pt.z !== undefined;
+    return "x" in value && "y" in value && "z" in value;
   }
 }
 

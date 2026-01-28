@@ -94,6 +94,8 @@ export class FavoritePropertiesDataFilterer extends PropertyDataFiltererBase {
 }
 
 async function defaultFavoritePropertyCheckCallback(field: Field, imodel: IModelConnection, scope: FavoritePropertiesScope) {
+  // note: `Presentation.favoriteProperties.hasAsync` may not be available in older versions of core
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (Presentation.favoriteProperties.hasAsync) {
     return Presentation.favoriteProperties.hasAsync(field, imodel, scope);
   }

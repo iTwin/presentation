@@ -61,6 +61,7 @@ describe("Unified selection sync with iModel", () => {
   });
 
   afterEach(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (imodel) {
       selectionStorage.clearStorage({ imodelKey: createIModelKey(imodel) });
       await imodel.close();

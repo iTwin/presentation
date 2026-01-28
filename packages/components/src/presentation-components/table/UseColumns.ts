@@ -29,7 +29,7 @@ export function useColumns(props: UseColumnsProps): TableColumnDefinition[] | un
   const setErrorState = useErrorState();
 
   useEffect(() => {
-    let disposed = false;
+    let disposed = false as boolean;
     if (keys.isEmpty) {
       setColumns([]);
       return;

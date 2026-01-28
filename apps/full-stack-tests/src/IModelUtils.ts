@@ -53,9 +53,6 @@ async function cloneIModel<TResult extends {}>(
   IModelJsFs.copySync(sourceIModelPath, targetIModelPath);
 
   const imodel = StandaloneDb.openFile(targetIModelPath, OpenMode.ReadWrite);
-  if (!imodel) {
-    throw new Error("Failed to open cloned iModel");
-  }
   try {
     const res = await setup(new TestIModelBuilderImpl(imodel));
     imodel.saveChanges("Updated cloned iModel");
@@ -99,7 +96,7 @@ export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) 
     async getSchemaInfo(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<SchemaInfo | undefined> {
       const schemaJson = imodel.getSchemaProps(schemaKey.name);
       const schemaInfo = await Schema.startLoadingFromJson(schemaJson, schemaContext);
-      if (schemaInfo !== undefined && schemaInfo.schemaKey.matches(schemaKey as SchemaKey, matchType)) {
+      if (schemaInfo.schemaKey.matches(schemaKey as SchemaKey, matchType)) {
         return schemaInfo;
       }
       return undefined;

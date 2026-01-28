@@ -223,6 +223,8 @@ async function loadRows(
     paging,
   };
   return new Promise((resolve, reject) => {
+    // note: `getContentIterator` may not be available in older versions of core
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     (Presentation.presentation.getContentIterator
       ? from(Presentation.presentation.getContentIterator(requestProps)).pipe(
           mergeMap((result) => {

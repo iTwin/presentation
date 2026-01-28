@@ -157,6 +157,8 @@ async function getItems({
     keys,
   };
   const items = await new Promise<DisplayValueGroup[]>((resolve) => {
+    // note: `getDistinctValuesIterator` may not be available in older versions of core
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     (Presentation.presentation.getDistinctValuesIterator
       ? from(Presentation.presentation.getDistinctValuesIterator(requestProps)).pipe(
           mergeMap((result) => result.items),

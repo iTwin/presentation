@@ -156,10 +156,10 @@ export interface INestedPropertiesAppender extends IPropertiesAppender {
 /** @internal */
 export namespace IPropertiesAppender {
   export function isRoot(appender: IPropertiesAppender): appender is IRootPropertiesAppender {
-    return (appender as IRootPropertiesAppender).item !== undefined;
+    return "item" in appender;
   }
   export function isNested(appender: IPropertiesAppender): appender is INestedPropertiesAppender {
-    return (appender as INestedPropertiesAppender).finish !== undefined;
+    return "finish" in appender;
   }
 }
 class StructMembersAppender implements INestedPropertiesAppender {
@@ -238,7 +238,6 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
 
   protected get currentPropertiesAppender(): IPropertiesAppender {
     const appender = this._appendersStack[this._appendersStack.length - 1];
-    assert(appender !== undefined);
     return appender;
   }
 

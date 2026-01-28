@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 
 import { decompress as brotliDecompress } from "brotli";
 import * as http from "node:http";

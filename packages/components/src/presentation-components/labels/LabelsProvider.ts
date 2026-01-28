@@ -73,6 +73,8 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
         .pipe(
           bufferCount(DEFAULT_KEYS_BATCH_SIZE),
           mergeMap((keysBatch, batchIndex) => {
+            // note: `getDisplayLabelDefinitionsIterator` may not be available in older versions of core
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             if (Presentation.presentation.getDisplayLabelDefinitionsIterator) {
               return from(Presentation.presentation.getDisplayLabelDefinitionsIterator({ imodel: this.imodel, keys: keysBatch })).pipe(
                 mergeMap((result) => result.items),

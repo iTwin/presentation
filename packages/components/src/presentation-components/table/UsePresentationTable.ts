@@ -75,7 +75,7 @@ export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableP
 
   return {
     columns: useMemo(() => columns?.map(columnMapper), [columns, columnMapper]),
-    rows: useMemo(() => rows?.map(rowMapper), [rows, rowMapper]),
+    rows: useMemo(() => rows.map(rowMapper), [rows, rowMapper]),
     isLoading,
     loadMoreRows,
     sort,

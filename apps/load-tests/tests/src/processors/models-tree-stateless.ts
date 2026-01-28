@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @itwin/no-internal */
 /* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 
 import { StopWatch } from "@itwin/core-bentley";
 import { ECSqlReader } from "@itwin/core-common";

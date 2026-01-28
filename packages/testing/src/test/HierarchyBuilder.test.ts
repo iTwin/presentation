@@ -29,7 +29,7 @@ async function getRootNodes() {
 }
 
 async function getChildrenNodes(opts: HierarchyRequestOptions<IModelConnection, NodeKey>) {
-  if (opts.parentKey?.pathFromRoot[0] !== "root" || opts?.parentKey.pathFromRoot.length !== 1) {
+  if (opts.parentKey?.pathFromRoot[0] !== "root" || opts.parentKey.pathFromRoot.length !== 1) {
     return { items: createAsyncIterator([]), total: 0 };
   }
 

@@ -150,7 +150,7 @@ export namespace EC {
    * @public
    */
   export interface RelationshipConstraint {
-    multiplicity?: RelationshipConstraintMultiplicity;
+    multiplicity: RelationshipConstraintMultiplicity;
     polymorphic: boolean;
     abstractConstraint: Promise<EntityClass | Mixin | RelationshipClass | undefined>;
   }

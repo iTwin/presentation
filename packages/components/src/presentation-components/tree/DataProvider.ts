@@ -156,6 +156,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
 
         // the `PresentationManager.getNodesIterator` has only been added to @itwin/presentation-frontend in 4.5.1, and our peerDependency is
         // set to 4.0.0, so we need to check if the method is really there
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (Presentation.presentation.getNodesIterator) {
           return Presentation.presentation.getNodesIterator(requestOptions);
         }

@@ -386,7 +386,7 @@ export class ModelsTreeIdsCache {
       entry = (async () => {
         const result = new Set<Id64String>();
         const modelInfos = await this.getModelInfos();
-        modelInfos?.forEach((modelInfo, modelId) => {
+        modelInfos.forEach((modelInfo, modelId) => {
           if (modelInfo.categories.has(categoryId)) {
             result.add(modelId);
           }

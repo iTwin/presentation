@@ -53,7 +53,7 @@ export function createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQ
           break;
       }
       if (config?.restartToken) {
-        opts.setRestartToken(config?.restartToken);
+        opts.setRestartToken(config.restartToken);
       }
       return new ECSqlQueryReaderImpl(
         imodel.createQueryReader(trimWhitespace(addCTEs(ecsql, ctes)), bind(bindings ?? []), opts.getOptions()),

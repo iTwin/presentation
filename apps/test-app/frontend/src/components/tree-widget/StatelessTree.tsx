@@ -260,7 +260,7 @@ function Tree({
           if (!filteringOptions) {
             return;
           }
-          filteringOptions?.setInstanceFilter(toGenericFilter(info));
+          filteringOptions.setInstanceFilter(toGenericFilter(info));
           setFilteringOptions(undefined);
         }}
         onClose={() => {
@@ -300,8 +300,8 @@ function getHierarchyDefinition(props: Parameters<UseIModelTreeProps["getHierarc
   return new ModelsTreeDefinition(props);
 }
 
-const customFormatter: IPrimitiveValueFormatter = async (val) => {
-  return `THIS_IS_FORMATTED_${val ? JSON.stringify(val.value) : ""}_THIS_IS_FORMATTED`;
+const customFormatter: IPrimitiveValueFormatter = async ({ value }) => {
+  return `THIS_IS_FORMATTED_${JSON.stringify(value)}_THIS_IS_FORMATTED`;
 };
 
 function fromGenericFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilterInfo {

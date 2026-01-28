@@ -179,7 +179,7 @@ export class ECDbBuilder {
 }
 
 function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding {
-  return typeof value === "object" && (value as ECSqlBinding).type !== undefined && (value as ECSqlBinding).value !== undefined;
+  return typeof value === "object" && "type" in value && "value" in value;
 }
 
 export async function createECDb<TResult extends {}>(

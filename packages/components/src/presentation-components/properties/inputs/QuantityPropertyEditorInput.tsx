@@ -33,7 +33,8 @@ export const QuantityPropertyEditorInput = forwardRef<PropertyEditorAttributes, 
   const koqName = props.propertyRecord.property.kindOfQuantityName ?? props.propertyRecord.property.quantityType;
   assert(koqName !== undefined);
 
-  const initialValue = (props.propertyRecord.value as PrimitiveValue)?.value as number;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  const initialValue = (props.propertyRecord.value as PrimitiveValue)?.value as number | undefined;
   return (
     <QuantityPropertyValueInput {...props} ref={ref} koqName={koqName} schemaContext={schemaMetadataContext.schemaContext} initialRawValue={initialValue} />
   );
