@@ -164,12 +164,10 @@ export interface INestedPropertiesAppender extends IPropertiesAppender {
 /** @internal */
 export namespace IPropertiesAppender {
   export function isRoot(appender: IPropertiesAppender): appender is IRootPropertiesAppender {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    return (appender as IRootPropertiesAppender).item !== undefined;
+    return "item" in appender;
   }
   export function isNested(appender: IPropertiesAppender): appender is INestedPropertiesAppender {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    return (appender as INestedPropertiesAppender).finish !== undefined;
+    return "finish" in appender;
   }
 }
 class StructMembersAppender implements INestedPropertiesAppender {
