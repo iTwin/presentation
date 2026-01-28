@@ -48,8 +48,8 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
   }
 
   public get preProcessNode(): RxjsNodePreProcessor {
-    return (node) =>
-      (this._source.preProcessNode ? this._source.preProcessNode(node) : of(node)).pipe(
+    return (props) =>
+      (this._source.preProcessNode ? this._source.preProcessNode(props) : of(props.node)).pipe(
         filter((processedNode) => {
           if (processedNode.processingParams?.hideInHierarchy && processedNode.search?.isSearchTarget && !processedNode.search.hasSearchTargetAncestor) {
             // we want to hide target nodes if they have `hideInHierarchy` param, but only if they're not under another search target
@@ -61,8 +61,8 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
   }
 
   public get postProcessNode(): RxjsNodePostProcessor {
-    return (node) =>
-      (this._source.postProcessNode ? this._source.postProcessNode(node) : of(node)).pipe(
+    return (props) =>
+      (this._source.postProcessNode ? this._source.postProcessNode(props) : of(props.node)).pipe(
         map((processedNode) => {
           const parentKeysWithoutGroupingNodesLength = processedNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
           const parentKeysLength = processedNode.parentKeys.length;

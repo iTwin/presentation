@@ -473,7 +473,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       mergeMap((node) => applyLabelsFormatting(node, this._valuesFormatter)),
       // we have `ProcessedHierarchyNode` from here
       // let consumers step-in
-      preProcessNodes(this._activeHierarchyDefinition),
+      preProcessNodes(this._activeHierarchyDefinition, props.parentNode),
       // process hiding
       createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n, requestContext: props.requestContext }).hasNodes),
       createHideNodesInHierarchyOperator(
@@ -515,7 +515,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   ): Observable<HierarchyNode> {
     return processedNodesObservable.pipe(
       createDetermineChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n, requestContext: props.requestContext }).hasNodes),
-      postProcessNodes(this._activeHierarchyDefinition),
+      postProcessNodes(this._activeHierarchyDefinition, props.parentNode),
       sortNodesByLabelOperator,
       map((n): HierarchyNode => {
         if ("processingParams" in n) {
@@ -805,16 +805,19 @@ type HierarchyCacheEntry =
   | { observable: SourceNodesObservable; processingStatus: "none" }
   | { observable: ProcessedNodesObservable; processingStatus: "pre-processed" };
 
-function preProcessNodes(hierarchyFactory: RxjsHierarchyDefinition) {
-  return hierarchyFactory.preProcessNode ? processNodes(hierarchyFactory.preProcessNode) : identity;
+function preProcessNodes(hierarchyFactory: RxjsHierarchyDefinition, parentNode: ParentHierarchyNode | undefined) {
+  return hierarchyFactory.preProcessNode ? processNodes(hierarchyFactory.preProcessNode, parentNode) : identity;
 }
 
-function postProcessNodes(hierarchyFactory: RxjsHierarchyDefinition) {
-  return hierarchyFactory.postProcessNode ? processNodes(hierarchyFactory.postProcessNode) : identity;
+function postProcessNodes(hierarchyFactory: RxjsHierarchyDefinition, parentNode: ParentHierarchyNode | undefined) {
+  return hierarchyFactory.postProcessNode ? processNodes(hierarchyFactory.postProcessNode, parentNode) : identity;
 }
 
-function processNodes<TNode>(processor: (node: TNode) => Observable<TNode>) {
-  return (nodes: Observable<TNode>) => nodes.pipe(mergeMap(processor));
+function processNodes<TNode>(
+  processor: (props: { node: TNode; parentNode?: ParentHierarchyNode }) => Observable<TNode>,
+  parentNode: ParentHierarchyNode | undefined,
+) {
+  return (nodes: Observable<TNode>) => nodes.pipe(mergeMap((node) => processor({ node, parentNode })));
 }
 
 function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue }>(

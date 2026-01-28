@@ -304,7 +304,7 @@ describe("SearchHierarchyDefinition", () => {
     it("returns given node when source factory has no pre-processor", async () => {
       const node = createTestProcessedGenericNode();
       const searchFactory = await createSearchHierarchyDefinition();
-      const result = await firstValueFrom(searchFactory.preProcessNode(node));
+      const result = await firstValueFrom(searchFactory.preProcessNode({ node }));
       expect(result).to.eq(node);
     });
 
@@ -318,8 +318,8 @@ describe("SearchHierarchyDefinition", () => {
       const searchFactory = await createSearchHierarchyDefinition({
         sourceFactory,
       });
-      const result = await firstValueFrom(searchFactory.preProcessNode(inputNode));
-      expect(stub).to.be.calledOnceWithExactly(inputNode);
+      const result = await firstValueFrom(searchFactory.preProcessNode({ node: inputNode }));
+      expect(stub).to.be.calledOnceWithExactly({ node: inputNode });
       expect(result).to.eq(sourceFactoryNode);
     });
 
@@ -336,7 +336,7 @@ describe("SearchHierarchyDefinition", () => {
         },
       };
       const searchFactory = await createSearchHierarchyDefinition();
-      const result = await firstValueFrom(searchFactory.preProcessNode(inputNode));
+      const result = await firstValueFrom(searchFactory.preProcessNode({ node: inputNode }));
       expect(result).to.eq(inputNode);
     });
 
@@ -353,7 +353,7 @@ describe("SearchHierarchyDefinition", () => {
         },
       };
       const searchFactory = await createSearchHierarchyDefinition();
-      const result = await firstValueFrom(searchFactory.preProcessNode(inputNode).pipe(toArray()));
+      const result = await firstValueFrom(searchFactory.preProcessNode({ node: inputNode }).pipe(toArray()));
       expect(result).to.deep.eq([]);
     });
   });
@@ -362,7 +362,7 @@ describe("SearchHierarchyDefinition", () => {
     it("returns given node when source factory has no post-processor", async () => {
       const node = createTestProcessedGenericNode();
       const searchFactory = await createSearchHierarchyDefinition();
-      const result = await firstValueFrom(searchFactory.postProcessNode(node));
+      const result = await firstValueFrom(searchFactory.postProcessNode({ node }));
       expect(result).to.eq(node);
     });
 
@@ -376,8 +376,8 @@ describe("SearchHierarchyDefinition", () => {
       const searchFactory = await createSearchHierarchyDefinition({
         sourceFactory,
       });
-      const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
-      expect(stub).to.be.calledOnceWithExactly(inputNode);
+      const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
+      expect(stub).to.be.calledOnceWithExactly({ node: inputNode });
       expect(result).to.eq(sourceFactoryNode);
     });
 
@@ -394,7 +394,7 @@ describe("SearchHierarchyDefinition", () => {
       const searchFactory = await createSearchHierarchyDefinition({
         targetPaths: [{ path: [inputNode.key.instanceKeys[0]], options: { autoExpand: true } }],
       });
-      const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+      const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
       expect(result.autoExpand).to.be.true;
     });
 
@@ -421,7 +421,7 @@ describe("SearchHierarchyDefinition", () => {
           const searchFactory = await createSearchHierarchyDefinition({
             targetPaths: [{ path: [inputNode.key.instanceKeys[0]], options: { reveal } }],
           });
-          const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+          const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
           expect(result.autoExpand).to.be.undefined;
         });
 
@@ -435,7 +435,7 @@ describe("SearchHierarchyDefinition", () => {
             ],
           });
           const searchFactory = await createSearchHierarchyDefinition({ targetPaths: [{ path: [inputNode.key], options: { reveal } }] });
-          const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+          const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
           expect(result.autoExpand).to.be.undefined;
         });
       });
@@ -470,7 +470,7 @@ describe("SearchHierarchyDefinition", () => {
             const searchFactory = await createSearchHierarchyDefinition({
               targetPaths: [{ path: [inputNode.key.instanceKeys[0], { id: "child", type: "generic" }], options: { reveal } }],
             });
-            const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+            const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
             expect(result.autoExpand).to.eq(expectation);
           });
 
@@ -483,7 +483,7 @@ describe("SearchHierarchyDefinition", () => {
             const searchFactory = await createSearchHierarchyDefinition({
               targetPaths: [{ path: [inputNode.key, { id: "child", type: "generic" }], options: { reveal } }],
             });
-            const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+            const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
             expect(result.autoExpand).to.eq(expectation);
           });
         });
@@ -517,7 +517,7 @@ describe("SearchHierarchyDefinition", () => {
               },
             ],
           });
-          const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+          const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
           expect(result.autoExpand).to.eq(undefined);
         });
       });
@@ -527,7 +527,7 @@ describe("SearchHierarchyDefinition", () => {
       it("doesn't set auto-expand on grouping nodes if none of the children have target children search paths", async () => {
         const inputNode = createGroupingNode();
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.undefined;
       });
 
@@ -542,7 +542,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.undefined;
       });
 
@@ -559,7 +559,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.undefined;
       });
 
@@ -579,7 +579,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.true;
       });
 
@@ -594,7 +594,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.undefined;
       });
 
@@ -609,7 +609,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.true;
       });
 
@@ -629,7 +629,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.undefined;
       });
 
@@ -649,7 +649,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.true;
       });
 
@@ -677,7 +677,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.true;
       });
 
@@ -705,7 +705,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.true;
       });
 
@@ -733,7 +733,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.true;
       });
 
@@ -761,7 +761,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.undefined;
       });
 
@@ -789,7 +789,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.true;
       });
 
@@ -813,7 +813,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.true;
       });
 
@@ -836,7 +836,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(result.autoExpand).to.be.true;
       });
 
@@ -859,7 +859,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(!!result.autoExpand).to.be.false;
       });
 
@@ -882,7 +882,7 @@ describe("SearchHierarchyDefinition", () => {
           ],
         };
         const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
         expect(!!result.autoExpand).to.be.false;
       });
     };
