@@ -4,7 +4,7 @@
 
 ```ts
 
-import { Id64String } from '@itwin/core-bentley';
+import type { Id64String } from '@itwin/core-bentley';
 
 // @public
 export type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
@@ -247,7 +247,7 @@ export namespace EC {
         // (undocumented)
         abstractConstraint: Promise<EntityClass | Mixin | RelationshipClass | undefined>;
         // (undocumented)
-        multiplicity: RelationshipConstraintMultiplicity;
+        multiplicity?: RelationshipConstraintMultiplicity;
         // (undocumented)
         polymorphic: boolean;
     }

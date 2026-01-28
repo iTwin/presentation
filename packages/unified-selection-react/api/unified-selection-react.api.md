@@ -5,8 +5,8 @@
 ```ts
 
 import { JSX as JSX_2 } from 'react/jsx-runtime';
-import { PropsWithChildren } from 'react';
-import { SelectionStorage } from '@itwin/unified-selection';
+import type { PropsWithChildren } from 'react';
+import type { SelectionStorage } from '@itwin/unified-selection';
 
 // @public (undocumented)
 interface UnifiedSelectionContext {

@@ -14,12 +14,12 @@ import { Event as Event_2 } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/core-common';
 import { Id64String } from '@itwin/core-bentley';
 import { IInstanceLabelSelectClauseFactory } from '@itwin/presentation-shared';
-import { ILogger } from '@itwin/presentation-shared';
+import type { ILogger } from '@itwin/presentation-shared';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { OmitOverUnion } from '@itwin/presentation-shared';
 import { PrimitiveValue } from '@itwin/presentation-shared';
-import { Props } from '@itwin/presentation-shared';
+import type { Props } from '@itwin/presentation-shared';
 
 // @public
 interface BaseHierarchyNode {
