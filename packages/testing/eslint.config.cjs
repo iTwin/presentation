@@ -4,8 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 const iTwinPlugin = require("@itwin/eslint-plugin");
 const eslintBaseConfig = require("../../eslint.base.config");
-const unusedImports = require("eslint-plugin-unused-imports");
-const stylistic = require("@stylistic/eslint-plugin");
 
 module.exports = [
   {
@@ -16,21 +14,6 @@ module.exports = [
     files: ["src/presentation-testing/Helpers.ts"],
     rules: {
       "@typescript-eslint/ban-ts-comment": "warn",
-    },
-  },
-  {
-    plugins: {
-      "unused-imports": unusedImports,
-      "@stylistic": stylistic,
-    },
-    files: ["**/*.{ts,tsx}"],
-    rules: {
-      "no-duplicate-imports": "off",
-      "import/no-duplicates": "error",
-      "@stylistic/object-curly-spacing": ["error", "always"],
-      "@typescript-eslint/consistent-type-imports": "error",
-      "@typescript-eslint/consistent-type-exports": "error",
-      "unused-imports/no-unused-imports": "error",
     },
   },
   ...eslintBaseConfig,

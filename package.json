@@ -38,6 +38,8 @@
   "dependencies": {
     "@changesets/cli": "^2.29.8",
     "@ianvs/prettier-plugin-sort-imports": "^4.7.0",
+    "@stylistic/eslint-plugin": "catalog:build-tools",
+    "eslint-plugin-unused-imports": "catalog:build-tools",
     "cpx2": "catalog:build-tools",
     "cspell": "^9.6.0",
     "eslint": "catalog:build-tools",

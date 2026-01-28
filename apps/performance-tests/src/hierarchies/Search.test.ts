@@ -4,13 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { IModelDb, PhysicalElement, SnapshotDb } from "@itwin/core-backend";
+import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
-import { createNodesQueryClauseFactory, DefineHierarchyLevelProps, HierarchyNode, HierarchySearchPath } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import { createNodesQueryClauseFactory, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+
+import type { IModelDb } from "@itwin/core-backend";
+import type { DefineHierarchyLevelProps, HierarchySearchPath } from "@itwin/presentation-hierarchies";
+import type { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 
 describe("search", () => {
   const totalNumberOfSearchPaths = 50000;

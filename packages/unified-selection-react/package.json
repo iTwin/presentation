@@ -61,8 +61,6 @@
     "@types/jsdom": "catalog:test-tools",
     "@types/mocha": "catalog:test-tools",
     "@types/react": "catalog:react",
-    "@stylistic/eslint-plugin": "catalog:build-tools",
-    "eslint-plugin-unused-imports": "catalog:build-tools",
     "c8": "catalog:test-tools",
     "chai": "catalog:test-tools",
     "cpx2": "catalog:build-tools",

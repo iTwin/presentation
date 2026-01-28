@@ -6,12 +6,14 @@
 import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { DictionaryModel, InformationPartitionElement, LinkModel, Model, Subject } from "@itwin/core-backend";
-import { IModelConnection } from "@itwin/core-frontend";
-import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
   describe("Hierarchy level instance keys", () => {

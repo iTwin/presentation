@@ -6,9 +6,12 @@
 import "./IModelSelector.css";
 
 import { Component } from "react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Select, SelectOption } from "@itwin/itwinui-react";
+import { IModelApp } from "@itwin/core-frontend";
+import { Select } from "@itwin/itwinui-react";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SelectOption } from "@itwin/itwinui-react";
 
 export interface Props {
   onIModelSelected: (imodel?: IModelConnection, path?: string) => void;

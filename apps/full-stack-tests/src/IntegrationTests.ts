@@ -8,15 +8,18 @@ import Backend from "i18next-http-backend";
 import * as path from "path";
 import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
 import { IModelReadRpcInterface } from "@itwin/core-common";
-import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
+import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationBackendNativeLoggerCategory } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
-import { PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
-import { Props } from "@itwin/presentation-shared";
-import { initialize as initializePresentation, PresentationTestingInitProps, terminate as terminatePresentation } from "@itwin/presentation-testing";
+import { initialize as initializePresentation, terminate as terminatePresentation } from "@itwin/presentation-testing";
+
+import type { IModelAppOptions } from "@itwin/core-frontend";
+import type { PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
+import type { Props } from "@itwin/presentation-shared";
+import type { PresentationTestingInitProps } from "@itwin/presentation-testing";
 
 class IntegrationTestsApp extends NoRenderApp {
   public static override async startup(opts?: IModelAppOptions): Promise<void> {

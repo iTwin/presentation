@@ -6,10 +6,13 @@
 import { expect } from "chai";
 import { SnapshotDb } from "@itwin/core-backend";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { Props } from "@itwin/presentation-shared";
 import { computeSelection } from "@itwin/unified-selection";
-import { Datasets, IModelName } from "../util/Datasets";
-import { run, RunOptions } from "../util/TestUtilities";
+import { Datasets } from "../util/Datasets";
+import { run } from "../util/TestUtilities";
+
+import type { Props } from "@itwin/presentation-shared";
+import type { IModelName } from "../util/Datasets";
+import type { RunOptions } from "../util/TestUtilities";
 
 describe("compute", () => {
   runSelectionScopeTest({

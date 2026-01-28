@@ -21,13 +21,15 @@ import {
   insertSubject,
 } from "presentation-test-utilities";
 import { RpcConfiguration, RpcManager } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
-import { createHiliteSetProvider, SelectableInstanceKey, Selectables } from "@itwin/unified-selection";
+import { createHiliteSetProvider, Selectables } from "@itwin/unified-selection";
 import { createIModelAccess } from "../hierarchies/Utils.js";
 import { getSchemaFromPackage } from "./getSchema.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SelectableInstanceKey } from "@itwin/unified-selection";
 
 describe("HiliteSet", () => {
   let iModel: IModelConnection;

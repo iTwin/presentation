@@ -5,8 +5,10 @@
 
 import { Component } from "react";
 import { IModelApp } from "@itwin/core-frontend";
-import { Select, SelectOption } from "@itwin/itwinui-react";
+import { Select } from "@itwin/itwinui-react";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
+
+import type { SelectOption } from "@itwin/itwinui-react";
 
 export interface RulesetSelectorProps {
   onRulesetSelected: (rulesetId?: string) => void;

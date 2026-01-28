@@ -19,15 +19,17 @@ import sinon from "sinon";
 import { Subject } from "@itwin/core-backend";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
-import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSql, julianToDateTime } from "@itwin/presentation-shared";
 import { buildIModel } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
 import { validateHierarchy } from "./HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "./Utils.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
   let emptyIModel: IModelConnection;

@@ -4,13 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
 
-import { VUContext, VUEvents } from "artillery";
 import { decompress as brotliDecompress } from "brotli";
 import * as http from "node:http";
 import * as https from "node:https";
 import * as path from "path";
 import { expand, filter, from, mergeAll, mergeMap, of, tap } from "rxjs";
 import { Guid, StopWatch } from "@itwin/core-bentley";
+
+import type { VUContext, VUEvents } from "artillery";
 
 const ENABLE_NODES_LOGGING = false;
 const BACKEND_PORT = process.env.BACKEND_DEFAULT_PORT ? Number.parseInt(process.env.BACKEND_DEFAULT_PORT, 10) : 5001;

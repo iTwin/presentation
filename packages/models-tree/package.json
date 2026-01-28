@@ -50,8 +50,6 @@
     "@itwin/build-tools": "catalog:build-tools",
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@itwin/presentation-hierarchies": "workspace:^",
-    "@stylistic/eslint-plugin": "catalog:build-tools",
-    "eslint-plugin-unused-imports": "catalog:build-tools",
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",

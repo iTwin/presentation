@@ -3,13 +3,17 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECDb, IModelDb } from "@itwin/core-backend";
+import { IModelDb } from "@itwin/core-backend";
 import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider as createECSchemaProviderInterop, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector, Event, IPrimitiveValueFormatter, parseFullClassName, Props } from "@itwin/presentation-shared";
+import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import { createCachingECClassHierarchyInspector, parseFullClassName } from "@itwin/presentation-shared";
 import { createSchemaContext } from "../IModelUtils.js";
+
+import type { ECDb } from "@itwin/core-backend";
+import type { SchemaContext } from "@itwin/ecschema-metadata";
+import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import type { Event, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 
 type HierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 type HierarchySearchPaths = NonNullable<NonNullable<HierarchyProviderProps["search"]>["paths"]>;

@@ -4,26 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } from "rxjs";
-import { IModelDb } from "@itwin/core-backend";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import {
-  createIModelHierarchyProvider,
-  createLimitingECSqlQueryExecutor,
-  HierarchyDefinition,
-  HierarchyNode,
-  HierarchyProvider,
-  HierarchySearchPath,
-} from "@itwin/presentation-hierarchies";
-import {
-  createCachingECClassHierarchyInspector,
-  EC,
-  ECClassHierarchyInspector,
-  ECSchemaProvider,
-  ECSqlQueryDef,
-  ECSqlQueryExecutor,
-  ECSqlQueryReaderOptions,
-} from "@itwin/presentation-shared";
+import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { LOGGER } from "../util/Logging";
+
+import type { IModelDb } from "@itwin/core-backend";
+import type { HierarchyDefinition, HierarchyNode, HierarchyProvider, HierarchySearchPath } from "@itwin/presentation-hierarchies";
+import type { EC, ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions } from "@itwin/presentation-shared";
 
 interface ProviderOptionsBase {
   rowLimit?: number | "unbounded";

@@ -5,33 +5,25 @@
 
 import "./PropertiesWidget.css";
 
-import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import {
-  ActionButtonRendererProps,
   CompositeFilterType,
   CompositePropertyDataFilterer,
   DisplayValuePropertyDataFilterer,
-  FilteredPropertyData,
   FilteringInput,
   FilteringInputStatus,
   FilteringPropertyDataProvider,
-  HighlightInfo,
   LabelPropertyDataFilterer,
   Orientation,
-  PropertyCategory,
   PropertyCategoryLabelFilterer,
-  PropertyData,
-  PropertyGridContextMenuArgs,
   useDebouncedAsyncValue,
   VirtualizedPropertyGridWithDataProvider,
 } from "@itwin/components-react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { IModelApp } from "@itwin/core-frontend";
 import { GlobalContextMenu } from "@itwin/core-react";
 import { Flex, MenuItem, ToggleSwitch } from "@itwin/itwinui-react";
-import { Field } from "@itwin/presentation-common";
 import {
-  DiagnosticsProps,
   FavoritePropertiesDataFilterer,
   NavigationPropertyEditorContextProvider,
   PresentationPropertyDataProvider,
@@ -41,6 +33,19 @@ import {
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
+
+import type { ComponentPropsWithoutRef } from "react";
+import type {
+  ActionButtonRendererProps,
+  FilteredPropertyData,
+  HighlightInfo,
+  PropertyCategory,
+  PropertyData,
+  PropertyGridContextMenuArgs,
+} from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Field } from "@itwin/presentation-common";
+import type { DiagnosticsProps } from "@itwin/presentation-components";
 
 const FAVORITES_SCOPE = FavoritePropertiesScope.IModel;
 

@@ -3,12 +3,18 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECDb, IModelDb, IModelJsFs, StandaloneDb } from "@itwin/core-backend";
-import { Id64String, OpenMode } from "@itwin/core-bentley";
-import { BisCodeSpec, Code, CodeScopeProps, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
+import { IModelDb, IModelJsFs, StandaloneDb } from "@itwin/core-backend";
+import { OpenMode } from "@itwin/core-bentley";
+import { Code } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
-import { buildTestIModel, setupOutputFileLocation, TestIModelBuilder, TestIModelConnection } from "@itwin/presentation-testing";
+import { Schema, SchemaContext } from "@itwin/ecschema-metadata";
+import { buildTestIModel, setupOutputFileLocation, TestIModelConnection } from "@itwin/presentation-testing";
+
+import type { ECDb } from "@itwin/core-backend";
+import type { Id64String } from "@itwin/core-bentley";
+import type { BisCodeSpec, CodeScopeProps, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
+import type { SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
+import type { TestIModelBuilder } from "@itwin/presentation-testing";
 
 interface IIModelBuilder extends TestIModelBuilder {
   deleteElement(elementId: Id64String): void;

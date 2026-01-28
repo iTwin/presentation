@@ -3,20 +3,20 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentProps, forwardRef, memo, useCallback, useMemo } from "react";
+import { forwardRef, memo, useCallback, useMemo } from "react";
 import {
   ErrorItemRenderer,
   StrataKitTreeRenderer,
-  StrataKitTreeRendererAttributes,
   TreeActionBase,
-  TreeActionBaseAttributes,
   TreeErrorRenderer,
-  TreeNode,
   TreeNodeFilterAction,
   TreeNodeRenameAction,
 } from "@itwin/presentation-hierarchies-react";
 import addSvg from "@stratakit/icons/add.svg";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
+
+import type { ComponentProps } from "react";
+import type { StrataKitTreeRendererAttributes, TreeActionBaseAttributes, TreeNode } from "@itwin/presentation-hierarchies-react";
 
 /* eslint-disable no-console */
 

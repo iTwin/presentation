@@ -3,12 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Guid, Id64Arg, Logger, OpenMode } from "@itwin/core-bentley";
-import { ElementProps, IModelConnectionProps, IModelError, ViewQueryParams } from "@itwin/core-common";
+import type { Id64Arg } from "@itwin/core-bentley";
+import { Guid, Logger, OpenMode } from "@itwin/core-bentley";
+import type { ElementProps, IModelConnectionProps, ViewQueryParams } from "@itwin/core-common";
+import { IModelError } from "@itwin/core-common";
 import { BriefcaseConnection, IModelConnection, IpcApp, SnapshotConnection } from "@itwin/core-frontend";
-import { UnitSystemKey } from "@itwin/core-quantity";
+import type { UnitSystemKey } from "@itwin/core-quantity";
 import { createStorage } from "@itwin/unified-selection";
-import { PRESENTATION_TEST_APP_IPC_CHANNEL_NAME, SampleIpcInterface, SampleRpcInterface } from "@test-app/common";
+import type { SampleIpcInterface } from "@test-app/common";
+import { PRESENTATION_TEST_APP_IPC_CHANNEL_NAME, SampleRpcInterface } from "@test-app/common";
 
 const LOCAL_STORAGE_KEY_AppSettings = "presentation-test-app/settings";
 

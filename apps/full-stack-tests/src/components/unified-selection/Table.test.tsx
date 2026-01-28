@@ -4,16 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
-import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager, UiComponents } from "@itwin/components-react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { InstanceKey, Ruleset } from "@itwin/presentation-common";
-import { TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
+import { IModelApp } from "@itwin/core-frontend";
+import { usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { createStorage, SelectionStorage } from "@itwin/unified-selection";
+import { createStorage } from "@itwin/unified-selection";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, getByText, render, waitFor } from "../../RenderUtils.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
+
+import type { PropertyRecord } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { InstanceKey, Ruleset } from "@itwin/presentation-common";
+import type { TableColumnDefinition, TableRowDefinition } from "@itwin/presentation-components";
+import type { SelectionStorage } from "@itwin/unified-selection";
 
 describe("Learning snippets", async () => {
   describe("Table", () => {

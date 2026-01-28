@@ -12,25 +12,19 @@ import {
   insertSubject,
 } from "presentation-test-utilities";
 import { Subject } from "@itwin/core-backend";
-import { BeEvent, Id64String } from "@itwin/core-bentley";
+import { BeEvent } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
 import {
   createHierarchySearchHelper,
   createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
-  DefineInstanceNodeChildHierarchyLevelProps,
-  GenericNodeKey,
-  HierarchyDefinition,
   HierarchyNode,
   HierarchyNodeIdentifier,
   HierarchyNodeKey,
-  HierarchyProvider,
   HierarchySearchPath,
-  IModelInstanceKey,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding, EventListener, InstanceKey, Props } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { createFileNameFromString } from "@itwin/presentation-testing";
 import { withECDb } from "../ECDbUtils.js";
 import { buildIModel } from "../IModelUtils.js";
@@ -38,6 +32,17 @@ import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "./Utils.js";
+
+import type { Id64String } from "@itwin/core-bentley";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type {
+  DefineInstanceNodeChildHierarchyLevelProps,
+  GenericNodeKey,
+  HierarchyDefinition,
+  HierarchyProvider,
+  IModelInstanceKey,
+} from "@itwin/presentation-hierarchies";
+import type { ECSqlBinding, EventListener, InstanceKey, Props } from "@itwin/presentation-shared";
 
 describe("Hierarchies", () => {
   describe("Hierarchy search", () => {
