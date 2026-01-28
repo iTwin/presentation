@@ -5,7 +5,7 @@
 
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef } from "@itwin/presentation-shared";
-import { NonGroupingHierarchyNode } from "../HierarchyNode.js";
+import { NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
 import {
   ProcessedGenericHierarchyNode,
   ProcessedHierarchyNode,
@@ -85,7 +85,13 @@ export type NodeParser = (props: {
  *
  * @public
  */
-export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
+export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(props: {
+  /** Node to be pre-processed. */
+  node: TNode;
+
+  /** The parent node whose child node is being pre-processed. */
+  parentNode?: ParentHierarchyNode;
+}) => Promise<TNode | undefined>;
 
 /**
  * A type for a function that post-processes given node. Unless the function decides not to make any modifications,
@@ -93,7 +99,13 @@ export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | Pr
  *
  * @public
  */
-export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
+export type NodePostProcessor = (props: {
+  /** Node to be post-processed. */
+  node: ProcessedHierarchyNode;
+
+  /** The parent node whose child node is being post-processed. */
+  parentNode?: ParentHierarchyNode;
+}) => Promise<ProcessedHierarchyNode>;
 
 /**
  * A type of node that can be passed to `HierarchyDefinition.defineHierarchyLevel`. This basically means

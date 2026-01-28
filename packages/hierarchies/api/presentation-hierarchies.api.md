@@ -580,10 +580,16 @@ export type NodeParser = (props: {
 }) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 // @public
-export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
+export type NodePostProcessor = (props: {
+    node: ProcessedHierarchyNode;
+    parentNode?: ParentHierarchyNode;
+}) => Promise<ProcessedHierarchyNode>;
 
 // @public
-export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
+export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(props: {
+    node: TNode;
+    parentNode?: ParentHierarchyNode;
+}) => Promise<TNode | undefined>;
 
 // @public
 export enum NodeSelectClauseColumnNames {

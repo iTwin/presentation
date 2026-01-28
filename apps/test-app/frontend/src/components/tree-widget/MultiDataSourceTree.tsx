@@ -294,7 +294,7 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
         },
       ],
     },
-    postProcessNode: async (node) => {
+    postProcessNode: async ({ node }) => {
       if (HierarchyNode.isClassGroupingNode(node)) {
         return { ...node, extendedData: { nodeType: "model-class" } };
       }
