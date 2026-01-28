@@ -1024,9 +1024,6 @@ importers:
       '@itwin/unified-selection-react':
         specifier: workspace:^
         version: link:../unified-selection-react
-      '@stylistic/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 5.7.1(eslint@9.39.2)
       '@testing-library/dom':
         specifier: catalog:test-tools
         version: 10.4.1
@@ -1090,9 +1087,6 @@ importers:
       eslint-plugin-react:
         specifier: catalog:build-tools
         version: 7.37.5(eslint@9.39.2)
-      eslint-plugin-unused-imports:
-        specifier: catalog:build-tools
-        version: 4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)
       global-jsdom:
         specifier: catalog:test-tools
         version: 26.0.0(jsdom@26.1.0)
@@ -1157,9 +1151,6 @@ importers:
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.1.0(eslint@9.39.2)(typescript@5.7.3)
-      '@stylistic/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 5.7.1(eslint@9.39.2)
       '@types/chai':
         specifier: catalog:test-tools
         version: 5.2.3
@@ -1190,9 +1181,6 @@ importers:
       eslint:
         specifier: catalog:build-tools
         version: 9.39.2
-      eslint-plugin-unused-imports:
-        specifier: catalog:build-tools
-        version: 4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)
       mocha:
         specifier: catalog:test-tools
         version: 11.7.5
@@ -11011,7 +10999,7 @@ snapshots:
       rimraf: 6.1.2
       tree-kill: 1.2.2
       typedoc: 0.26.11(typescript@5.6.3)
-      typedoc-plugin-merge-modules: 6.1.0(typedoc@0.26.11(typescript@5.6.3))
+      typedoc-plugin-merge-modules: 6.1.0(typedoc@0.26.11(typescript@5.7.3))
       typescript: 5.6.3
       wtfnode: 0.9.4
       yargs: 17.7.2
@@ -14544,12 +14532,6 @@ snapshots:
       string.prototype.matchall: 4.0.12
       string.prototype.repeat: 1.0.0
 
-  eslint-plugin-unused-imports@4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2):
-    dependencies:
-      eslint: 9.39.2
-    optionalDependencies:
-      '@typescript-eslint/eslint-plugin': 8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.7.3))(eslint@9.39.2)(typescript@5.7.3)
-
   eslint-plugin-unused-imports@4.3.0(@typescript-eslint/eslint-plugin@8.53.0(@typescript-eslint/parser@8.53.0(eslint@9.39.2)(typescript@5.9.3))(eslint@9.39.2)(typescript@5.9.3))(eslint@9.39.2):
     dependencies:
       eslint: 9.39.2
@@ -17424,7 +17406,7 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typedoc-plugin-merge-modules@6.1.0(typedoc@0.26.11(typescript@5.6.3)):
+  typedoc-plugin-merge-modules@6.1.0(typedoc@0.26.11(typescript@5.7.3)):
     dependencies:
       typedoc: 0.26.11(typescript@5.6.3)
 
