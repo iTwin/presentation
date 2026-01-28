@@ -18,7 +18,7 @@ import { ITwinLocalization } from "@itwin/core-i18n";
 import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, Presentation } from "@itwin/presentation-frontend";
 // __PUBLISH_EXTRACT_END__
 import { rpcInterfaces } from "@test-app/common";
-import { MyAppFrontend } from "./api/MyAppFrontend";
+import { MyAppFrontend } from "./frontendApi/MyAppFrontend";
 import { App } from "./components/app/App";
 
 import type { IModelAppOptions } from "@itwin/core-frontend";

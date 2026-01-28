@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useState } from "react";
-import { MyAppFrontend } from "../../api/MyAppFrontend";
+import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
 
 import type { Id64String } from "@itwin/core-bentley";
 import type { IModelConnection } from "@itwin/core-frontend";

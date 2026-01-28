@@ -30,7 +30,7 @@ import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shar
 import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel } from "@itwin/unified-selection";
 import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { Root } from "@stratakit/foundations";
-import { MyAppFrontend } from "../../api/MyAppFrontend";
+import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
@@ -45,7 +45,7 @@ import type { Id64String } from "@itwin/core-bentley";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { UnitSystemKey } from "@itwin/core-quantity";
 import type { HiliteSet, SelectionScope } from "@itwin/unified-selection";
-import type { MyAppSettings } from "../../api/MyAppFrontend";
+import type { MyAppSettings } from "../../frontendApi/MyAppFrontend";
 
 export interface State {
   imodel?: IModelConnection;

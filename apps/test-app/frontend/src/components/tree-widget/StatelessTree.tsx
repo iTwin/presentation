@@ -18,7 +18,7 @@ import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shar
 import { Selectable, Selectables } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { Icon } from "@stratakit/foundations";
-import { MyAppFrontend } from "../../api/MyAppFrontend";
+import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
 import { TreeRendererWithFilterAction } from "./TreeRendererWithFilterAction";
 
 import type { ComponentPropsWithoutRef } from "react";

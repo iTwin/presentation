@@ -7,7 +7,7 @@ import "./ViewportContentControl.css";
 
 import { useCallback, useEffect, useState } from "react";
 import { ViewportComponent } from "@itwin/imodel-components-react";
-import { MyAppFrontend } from "../../api/MyAppFrontend";
+import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
 import { SelectionScopePicker } from "./SelectionScopePicker";
 import ViewDefinitionSelector from "./ViewDefinitionSelector";
 

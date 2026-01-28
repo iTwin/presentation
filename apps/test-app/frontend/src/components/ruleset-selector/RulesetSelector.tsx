@@ -6,7 +6,7 @@
 import { Component } from "react";
 import { IModelApp } from "@itwin/core-frontend";
 import { Select } from "@itwin/itwinui-react";
-import { MyAppFrontend } from "../../api/MyAppFrontend";
+import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
 
 import type { SelectOption } from "@itwin/itwinui-react";
 
