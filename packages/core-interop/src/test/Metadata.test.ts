@@ -160,7 +160,6 @@ describe("createECSchema", () => {
 
       const schema = createECSchema(coreSchema);
       const result = await schema.getCustomAttributes();
-      assert(result !== undefined);
 
       const entries = [...result];
       expect(entries.length).to.eq(1);
@@ -176,7 +175,6 @@ describe("createECSchema", () => {
 
       const schema = createECSchema(coreSchema);
       const result = await schema.getCustomAttributes();
-      assert(result !== undefined);
 
       const entries = [...result];
       expect(entries.length).to.eq(0);
@@ -474,7 +472,6 @@ describe("createECClass", () => {
       } as unknown as CoreClass;
       const ecClass = createECClass(coreClass, schema);
       const result = await ecClass.getCustomAttributes();
-      assert(result !== undefined);
 
       const entries = [...result];
       expect(entries.length).to.eq(1);
@@ -492,7 +489,6 @@ describe("createECClass", () => {
       } as unknown as CoreClass;
       const ecClass = createECClass(coreClass, schema);
       const result = await ecClass.getCustomAttributes();
-      assert(result !== undefined);
 
       const entries = [...result];
       expect(entries.length).to.eq(0);
@@ -553,7 +549,6 @@ describe("createECClass", () => {
 
         it("returns polymorphic flag from core constraint", () => {
           [
-            { in: undefined, expectation: false },
             { in: false, expectation: false },
             { in: true, expectation: true },
           ].forEach((testEntry) => {
@@ -607,7 +602,6 @@ describe("createECProperty", () => {
       } as unknown as CorePrimitiveProperty;
       const property = createECProperty(coreProperty, propertyClass);
       const result = await property.getCustomAttributes();
-      assert(result !== undefined);
 
       const entries = [...result];
       expect(entries.length).to.eq(1);
@@ -624,7 +618,6 @@ describe("createECProperty", () => {
       } as unknown as CorePrimitiveProperty;
       const property = createECProperty(coreProperty, propertyClass);
       const result = await property.getCustomAttributes();
-      assert(result !== undefined);
 
       const entries = [...result];
       expect(entries.length).to.eq(0);

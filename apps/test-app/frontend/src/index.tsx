@@ -48,17 +48,12 @@ async function initializeApp() {
     BentleyCloudRpcManager.initializeClient(rpcParams, rpcInterfaces);
     // __PUBLISH_EXTRACT_END__
   }
-  const readyPromises = new Array<Promise<void>>();
-
-  const namespacePromise = IModelApp.localization.registerNamespace("Sample");
-  if (namespacePromise !== undefined) {
-    readyPromises.push(namespacePromise);
-  }
-
-  readyPromises.push(initializePresentation());
-  readyPromises.push(UiFramework.initialize());
-  readyPromises.push(IModelApp.quantityFormatter.setActiveUnitSystem("metric"));
-  await Promise.all(readyPromises);
+  await Promise.all([
+    IModelApp.localization.registerNamespace("Sample"),
+    initializePresentation(),
+    UiFramework.initialize(),
+    IModelApp.quantityFormatter.setActiveUnitSystem("metric"),
+  ]);
 }
 
 async function initializePresentation() {

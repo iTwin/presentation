@@ -247,7 +247,7 @@ export namespace EC {
         // (undocumented)
         abstractConstraint: Promise<EntityClass | Mixin | RelationshipClass | undefined>;
         // (undocumented)
-        multiplicity?: RelationshipConstraintMultiplicity;
+        multiplicity: RelationshipConstraintMultiplicity;
         // (undocumented)
         polymorphic: boolean;
     }

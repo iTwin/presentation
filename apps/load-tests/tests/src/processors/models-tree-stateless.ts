@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @itwin/no-internal */
 /* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 
 import { VUContext, VUEvents } from "artillery";
 import { StopWatch } from "@itwin/core-bentley";

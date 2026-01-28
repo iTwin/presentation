@@ -372,7 +372,7 @@ function FavoriteFieldActionButton(props: { imodel: IModelConnection; field: Fie
     }
   }, [field, imodel]);
   const { value: isFieldFavorite } = useDebouncedAsyncValue(
-    useCallback(async () => field && Presentation.favoriteProperties.hasAsync(field, props.imodel, FAVORITES_SCOPE), [field, props.imodel]),
+    useCallback(async () => Presentation.favoriteProperties.hasAsync(field, props.imodel, FAVORITES_SCOPE), [field, props.imodel]),
   );
   return (
     <div className="favorite-action-button" onClick={toggleFavoriteProperty} onKeyDown={toggleFavoriteProperty} role="button" tabIndex={0}>

@@ -482,7 +482,7 @@ describe("PropertyDataProvider", async () => {
     const structArrayRecord = properties.records["/selected-item/"].find((r) => r.property.name.endsWith("StructArrayProperty"));
     assert(structArrayRecord?.value.valueFormat === PropertyValueFormat.Array);
     const structArrayItemRecord = structArrayRecord.value.items[0];
-    assert(structArrayItemRecord?.value.valueFormat === PropertyValueFormat.Struct);
+    assert(structArrayItemRecord.value.valueFormat === PropertyValueFormat.Struct);
     const structArrayItemMemberRecord = structArrayItemRecord.value.members.StringMember;
     const structArrayMemberField = (await provider.getFieldByPropertyDescription(structArrayItemMemberRecord.property)) as PropertiesField;
     expect(structArrayMemberField).to.containSubset({

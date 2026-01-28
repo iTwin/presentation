@@ -102,7 +102,7 @@ export function App() {
 
     return () => {
       IModelApp.resetFormatsProvider();
-      removeFormatterListener?.();
+      removeFormatterListener();
       void IModelApp.quantityFormatter.resetToUseInternalUnitsProvider();
     };
   }, [state.imodel]);
@@ -140,7 +140,7 @@ export function App() {
             (acc, curr) => {
               // note: the hilite list may contain models and subcategories as well - we don't
               // care about them at this moment
-              acc.elements.push(...(curr.elements ?? []));
+              acc.elements.push(...curr.elements);
               return acc;
             },
             { elements: [] },

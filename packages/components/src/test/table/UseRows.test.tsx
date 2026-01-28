@@ -321,7 +321,7 @@ describe("useRows", () => {
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(2));
     // initial rows load request
     expect(getContentIteratorStub).to.be.calledWith(
-      sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging?.size === 10),
+      sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging.size === 10),
     );
 
     act(() => {
@@ -332,7 +332,7 @@ describe("useRows", () => {
       expect(result.current.rows).to.have.lengthOf(2);
       // reload request should have page options to get only previously loaded rows.
       expect(getContentIteratorStub).to.be.calledWith(
-        sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging?.size === 2),
+        sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging.size === 2),
       );
     });
   });
@@ -355,7 +355,7 @@ describe("useRows", () => {
 
     // initial load request
     expect(getContentIteratorStub).to.be.calledWith(
-      sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging?.size === 10),
+      sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging.size === 10),
     );
     getContentIteratorStub.resetHistory();
 
@@ -395,10 +395,10 @@ describe("useRows", () => {
     // setup presentation manager for rows reload
     getContentIteratorStub.reset();
     getContentIteratorStub.callsFake(async (options) => {
-      if (options.paging?.start === 0 && options.paging?.size === ROWS_RELOAD_PAGE_SIZE) {
+      if (options.paging?.start === 0 && options.paging.size === ROWS_RELOAD_PAGE_SIZE) {
         return { descriptor, items: createAsyncIterator(items.slice(0, ROWS_RELOAD_PAGE_SIZE)), total: ROWS_RELOAD_PAGE_SIZE };
       }
-      if (options.paging?.start === ROWS_RELOAD_PAGE_SIZE && options.paging?.size === 1) {
+      if (options.paging?.start === ROWS_RELOAD_PAGE_SIZE && options.paging.size === 1) {
         return { descriptor, items: createAsyncIterator(items.slice(ROWS_RELOAD_PAGE_SIZE)), total: 1 };
       }
       return undefined;
@@ -411,10 +411,10 @@ describe("useRows", () => {
     await waitFor(() => {
       expect(result.current.rows).to.have.lengthOf(itemsCount);
       expect(getContentIteratorStub).to.be.calledWith(
-        sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging?.size === ROWS_RELOAD_PAGE_SIZE),
+        sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging.size === ROWS_RELOAD_PAGE_SIZE),
       );
       expect(getContentIteratorStub).to.be.calledWith(
-        sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === ROWS_RELOAD_PAGE_SIZE && paging?.size === 1),
+        sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === ROWS_RELOAD_PAGE_SIZE && paging.size === 1),
       );
     });
   });

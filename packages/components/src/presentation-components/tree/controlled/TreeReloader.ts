@@ -117,7 +117,6 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
           take(1),
           // If the node is found, load and expand its children recursively
           concatMap((loadedNode) => {
-            assert(loadedNode !== undefined);
             return concat(this.loadChildren(loadedNode), expandedNode.expandedChildren);
           }),
         );
