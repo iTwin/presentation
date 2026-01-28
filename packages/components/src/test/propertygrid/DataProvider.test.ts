@@ -5,40 +5,22 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import { PrimitiveValue, PropertyRecord, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyCategory } from "@itwin/components-react";
+import { PropertyRecord, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { FormatsChangedArgs } from "@itwin/core-quantity";
+import { IModelApp } from "@itwin/core-frontend";
 import { PrimitiveType, primitiveTypeToString, SchemaContext } from "@itwin/ecschema-metadata";
 import {
-  ArrayTypeDescription,
-  CategoryDescription,
   combineFieldNames,
   Content,
   ContentFlags,
-  DisplayValue,
-  Field,
   Item,
   KoqPropertyValueFormatter,
   LabelDefinition,
   PropertyValueFormat,
   RelationshipMeaning,
-  StructFieldMemberDescription,
-  StructTypeDescription,
-  TypeDescription,
-  Value,
-  ValuesDictionary,
 } from "@itwin/presentation-common";
-import {
-  FavoritePropertiesManager,
-  FavoritePropertiesScope,
-  Presentation,
-  PresentationManager,
-  RulesetManager,
-  RulesetVariablesManager,
-} from "@itwin/presentation-frontend";
+import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -48,9 +30,26 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
-import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider.js";
 import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils.js";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
+
+import type { PrimitiveValue } from "@itwin/appui-abstract";
+import type { PropertyCategory } from "@itwin/components-react";
+import type { FormattingUnitSystemChangedArgs, IModelConnection } from "@itwin/core-frontend";
+import type { FormatsChangedArgs } from "@itwin/core-quantity";
+import type {
+  ArrayTypeDescription,
+  CategoryDescription,
+  DisplayValue,
+  Field,
+  StructFieldMemberDescription,
+  StructTypeDescription,
+  TypeDescription,
+  Value,
+  ValuesDictionary,
+} from "@itwin/presentation-common";
+import type { RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import type { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider.js";
 
 /**
  * This is just a helper class to provide public access to

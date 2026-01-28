@@ -5,32 +5,30 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { ArrayValue, PrimitiveValue, StructValue } from "@itwin/appui-abstract";
-import { BeEvent, BeUiEvent, Guid, Id64String } from "@itwin/core-bentley";
-import { ECSqlReader } from "@itwin/core-common";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import {
+import { BeEvent, BeUiEvent, Guid } from "@itwin/core-bentley";
+import { IModelApp } from "@itwin/core-frontend";
+import { Content, Descriptor, Field, Item, KeySet, LabelDefinition, PropertyValueFormat, RegisteredRuleset } from "@itwin/presentation-common";
+import { ContentDataProvider } from "@itwin/presentation-components";
+import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { ContentBuilder } from "../presentation-testing/ContentBuilder.js";
+import { createStub } from "./Utils.js";
+
+import type { ArrayValue, PrimitiveValue, StructValue } from "@itwin/appui-abstract";
+import type { Id64String } from "@itwin/core-bentley";
+import type { ECSqlReader } from "@itwin/core-common";
+import type { FormattingUnitSystemChangedArgs, IModelConnection } from "@itwin/core-frontend";
+import type {
   ArrayTypeDescription,
   CategoryDescription,
-  Content,
-  Descriptor,
   DisplayValuesMap,
-  Field,
-  Item,
-  KeySet,
-  LabelDefinition,
   PrimitiveTypeDescription,
-  PropertyValueFormat,
-  RegisteredRuleset,
   Ruleset,
   StructTypeDescription,
   TypeDescription,
   ValuesMap,
 } from "@itwin/presentation-common";
-import { ContentDataProvider } from "@itwin/presentation-components";
-import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
-import { ContentBuilder, IContentBuilderDataProvider } from "../presentation-testing/ContentBuilder.js";
-import { createStub } from "./Utils.js";
+import type { RulesetManager } from "@itwin/presentation-frontend";
+import type { IContentBuilderDataProvider } from "../presentation-testing/ContentBuilder.js";
 
 class EmptyDataProvider implements IContentBuilderDataProvider {
   // Verifies that given keyset matches a template, otherwise it throws an error

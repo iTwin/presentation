@@ -3,13 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { withECDb } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { importSchema } from "../../SchemaUtils.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "../Utils.js";
+
+import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
   describe("Grouping special cases", () => {

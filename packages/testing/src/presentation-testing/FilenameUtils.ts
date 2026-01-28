@@ -7,7 +7,8 @@ import { tmpdir } from "os";
 import path from "path";
 import sanitize from "sanitize-filename";
 import { IModelJsFs } from "@itwin/core-backend";
-import { LocalFileName } from "@itwin/core-common";
+
+import type { LocalFileName } from "@itwin/core-common";
 
 const defaultTestOutputDir = tmpdir();
 let testOutputDir: string | undefined;

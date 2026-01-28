@@ -5,21 +5,17 @@
 
 import { expect } from "chai";
 import { createAsyncIterator, throwingAsyncIterator } from "presentation-test-utilities";
-import { Observable } from "rxjs";
 import sinon from "sinon";
-import {
-  GenericInstanceFilter,
-  GetHierarchyNodesProps,
-  HierarchyNode,
-  HierarchyNodeKey,
-  HierarchyProvider,
-  RowsLimitExceededError,
-} from "@itwin/presentation-hierarchies";
-import { LoadedTreePart, TreeLoader } from "../../presentation-hierarchies-react/internal/TreeLoader.js";
-import { TreeModelHierarchyNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import { HierarchyNode, HierarchyNodeKey, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
+import { TreeLoader } from "../../presentation-hierarchies-react/internal/TreeLoader.js";
 import { createNodeId } from "../../presentation-hierarchies-react/internal/Utils.js";
-import { ErrorInfo } from "../../presentation-hierarchies-react/TreeNode.js";
 import { createTestHierarchyNode, createTreeModelNode } from "../TestUtils.js";
+
+import type { Observable } from "rxjs";
+import type { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import type { LoadedTreePart } from "../../presentation-hierarchies-react/internal/TreeLoader.js";
+import type { TreeModelHierarchyNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import type { ErrorInfo } from "../../presentation-hierarchies-react/TreeNode.js";
 
 describe("TreeLoader", () => {
   const onHierarchyLimitExceededStub = sinon.stub();

@@ -6,8 +6,10 @@
 import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import sinon from "sinon";
-import { CustomSelectable, Selectable, SelectableInstanceKey, Selectables, TRANSIENT_ELEMENT_CLASSNAME } from "../unified-selection/Selectable.js";
+import { Selectable, Selectables, TRANSIENT_ELEMENT_CLASSNAME } from "../unified-selection/Selectable.js";
 import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
+
+import type { CustomSelectable, SelectableInstanceKey } from "../unified-selection/Selectable.js";
 
 describe("Selectable", () => {
   describe("isInstanceKey", () => {

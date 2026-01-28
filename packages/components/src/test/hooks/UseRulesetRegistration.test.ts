@@ -6,10 +6,13 @@
 import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
-import { RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
-import { Presentation, RulesetManager } from "@itwin/presentation-frontend";
+import { RegisteredRuleset } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
 import { useRulesetRegistration } from "../../presentation-components/hooks/UseRulesetRegistration.js";
 import { renderHook } from "../TestUtils.js";
+
+import type { Ruleset } from "@itwin/presentation-common";
+import type { RulesetManager } from "@itwin/presentation-frontend";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 

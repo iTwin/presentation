@@ -3,34 +3,25 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  ComponentProps,
-  ComponentPropsWithoutRef,
-  CSSProperties,
-  FC,
-  forwardRef,
-  memo,
-  PropsWithoutRef,
-  ReactElement,
-  ReactNode,
-  RefAttributes,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-} from "react";
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import { Tree } from "@stratakit/structures";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { TreeRendererProps } from "../Renderers.js";
-import { TreeNode } from "../TreeNode.js";
-import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
+import { useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
-import { FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "./FlatTreeNode.js";
+import { isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
-import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
-import { TreeNodeEditingProps, TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./TreeNodeRenameAction.js";
-import { PlaceholderNode, StrataKitTreeItemProps, StrataKitTreeNodeRenderer, TreeNodeRendererProps } from "./TreeNodeRenderer.js";
+import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
+import { TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./TreeNodeRenameAction.js";
+import { PlaceholderNode, StrataKitTreeNodeRenderer } from "./TreeNodeRenderer.js";
+
+import type { ComponentProps, ComponentPropsWithoutRef, CSSProperties, FC, PropsWithoutRef, ReactElement, ReactNode, RefAttributes } from "react";
+import type { TreeRendererProps } from "../Renderers.js";
+import type { TreeNode } from "../TreeNode.js";
+import type { SelectionMode } from "../UseSelectionHandler.js";
+import type { FlatTreeItem, FlatTreeNodeItem } from "./FlatTreeNode.js";
+import type { TreeErrorRendererProps } from "./TreeErrorRenderer.js";
+import type { TreeNodeEditingProps } from "./TreeNodeRenameAction.js";
+import type { StrataKitTreeItemProps, TreeNodeRendererProps } from "./TreeNodeRenderer.js";
 
 /** @alpha */
 interface TreeRendererOwnProps {

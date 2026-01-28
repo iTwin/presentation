@@ -6,37 +6,31 @@
  * @module InstancesFilter
  */
 
-import { Primitives, PrimitiveValue, PropertyValueFormat } from "@itwin/appui-abstract";
-import {
-  isPropertyFilterRuleGroup,
+import { PropertyValueFormat } from "@itwin/appui-abstract";
+import { isPropertyFilterRuleGroup } from "@itwin/components-react";
+import { assert } from "@itwin/core-bentley";
+import { GenericInstanceFilter } from "@itwin/core-common";
+import { PresentationError, PresentationStatus, RelationshipPath } from "@itwin/presentation-common";
+import { deserializeUniqueValues, findField, serializeUniqueValues } from "../common/Utils.js";
+import { createPropertyInfoFromPropertiesField, getInstanceFilterFieldName } from "./Utils.js";
+
+import type { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
+import type {
   PropertyFilter,
   PropertyFilterRule,
   PropertyFilterRuleGroup,
   PropertyFilterRuleGroupOperator,
   PropertyFilterRuleOperator,
 } from "@itwin/components-react";
-import { assert } from "@itwin/core-bentley";
-import {
-  GenericInstanceFilter,
+import type {
   GenericInstanceFilterRelatedInstanceDescription,
   GenericInstanceFilterRelationshipStep,
   GenericInstanceFilterRule,
   GenericInstanceFilterRuleGroup,
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import {
-  ClassInfo,
-  Descriptor,
-  Field,
-  NestedContentField,
-  PresentationError,
-  PresentationStatus,
-  PropertiesField,
-  RelationshipPath,
-  Value,
-} from "@itwin/presentation-common";
-import { deserializeUniqueValues, findField, serializeUniqueValues, UniqueValue } from "../common/Utils.js";
-import { createPropertyInfoFromPropertiesField, getInstanceFilterFieldName } from "./Utils.js";
+import type { ClassInfo, Descriptor, Field, NestedContentField, PropertiesField, Value } from "@itwin/presentation-common";
+import type { UniqueValue } from "../common/Utils.js";
 
 /**
  * Type that describes instance filter based on [Descriptor]($presentation-common) fields. It can be

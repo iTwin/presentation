@@ -6,21 +6,22 @@
  * @module InstancesFilter
  */
 
-import { Primitives, StandardTypeNames } from "@itwin/appui-abstract";
+import { StandardTypeNames } from "@itwin/appui-abstract";
 import { isUnaryPropertyFilterOperator } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
-import {
-  GenericInstanceFilter,
+import { GenericInstanceFilter, GenericInstanceFilterRuleValue } from "@itwin/core-common";
+import { getIModelMetadataProvider } from "./ECMetadataProvider.js";
+import { PresentationInstanceFilter } from "./PresentationInstanceFilter.js";
+
+import type { Primitives } from "@itwin/appui-abstract";
+import type {
   GenericInstanceFilterRule,
   GenericInstanceFilterRuleGroup,
   GenericInstanceFilterRuleGroupOperator,
   GenericInstanceFilterRuleOperator,
-  GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo } from "@itwin/presentation-common";
-import { getIModelMetadataProvider } from "./ECMetadataProvider.js";
-import { PresentationInstanceFilter } from "./PresentationInstanceFilter.js";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { ClassInfo } from "@itwin/presentation-common";
 
 /** @internal */
 export async function findBaseExpressionClassName(imodel: IModelConnection, propertyClassNames: string[]) {

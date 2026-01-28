@@ -5,10 +5,12 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { QueryBinder, QueryOptions, QueryRowFormat } from "@itwin/core-common";
+import { QueryBinder, QueryRowFormat } from "@itwin/core-common";
 import { Point2d, Point3d } from "@itwin/core-geometry";
-import { ECSqlBinding } from "@itwin/presentation-shared";
 import { createECSqlQueryExecutor } from "../core-interop/QueryExecutor.js";
+
+import type { QueryOptions } from "@itwin/core-common";
+import type { ECSqlBinding } from "@itwin/presentation-shared";
 
 describe("createECSqlQueryExecutor", () => {
   describe("createQueryReader", () => {

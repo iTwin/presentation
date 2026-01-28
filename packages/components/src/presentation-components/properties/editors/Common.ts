@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { PropertyValue } from "@itwin/appui-abstract";
+import type { PropertyValue } from "@itwin/appui-abstract";
 
 /** @internal */
 export interface PropertyEditorAttributes {

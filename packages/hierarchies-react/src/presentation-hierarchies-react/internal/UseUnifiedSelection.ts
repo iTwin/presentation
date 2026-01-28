@@ -5,11 +5,14 @@
 
 import { useEffect, useState } from "react";
 import { assert } from "@itwin/core-bentley";
-import { GenericNodeKey, HierarchyNode, InstancesNodeKey, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
-import { InstanceKey } from "@itwin/presentation-shared";
-import { Selectable, Selectables, SelectionStorage } from "@itwin/unified-selection";
-import { SelectionChangeType } from "../UseSelectionHandler.js";
-import { TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
+import { HierarchyNode } from "@itwin/presentation-hierarchies";
+import { Selectables } from "@itwin/unified-selection";
+
+import type { GenericNodeKey, InstancesNodeKey, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import type { InstanceKey } from "@itwin/presentation-shared";
+import type { Selectable, SelectionStorage } from "@itwin/unified-selection";
+import type { SelectionChangeType } from "../UseSelectionHandler.js";
+import type { TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
 
 /** @internal */
 export interface TreeSelectionOptions {

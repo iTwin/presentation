@@ -5,15 +5,11 @@
 
 import "./DisposePolyfill.js";
 
-import { bufferCount, concatAll, concatMap, delay, Observable, of } from "rxjs";
-import {
-  createMainThreadReleaseOnTimePassedHandler,
-  ECSqlBinding,
-  ECSqlQueryDef,
-  ECSqlQueryExecutor,
-  ECSqlQueryReaderOptions,
-  ECSqlQueryRow,
-} from "@itwin/presentation-shared";
+import { bufferCount, concatAll, concatMap, delay, of } from "rxjs";
+import { createMainThreadReleaseOnTimePassedHandler } from "@itwin/presentation-shared";
+
+import type { Observable } from "rxjs";
+import type { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
 
 /**
  * Forms ECSql bindings from given ID's.

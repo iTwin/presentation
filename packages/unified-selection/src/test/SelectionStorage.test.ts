@@ -5,9 +5,12 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable.js";
-import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage.js";
+import { Selectables } from "../unified-selection/Selectable.js";
+import { createStorage } from "../unified-selection/SelectionStorage.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
+
+import type { SelectableInstanceKey } from "../unified-selection/Selectable.js";
+import type { SelectionStorage } from "../unified-selection/SelectionStorage.js";
 
 const generateSelection = (): SelectableInstanceKey[] => {
   return [createSelectableInstanceKey(1, "base.Class1"), createSelectableInstanceKey(2, "base.Class2"), createSelectableInstanceKey(3, "base.Class3")];

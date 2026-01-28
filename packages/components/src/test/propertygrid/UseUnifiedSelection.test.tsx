@@ -4,19 +4,22 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { PropsWithChildren } from "react";
 import sinon from "sinon";
-import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
-import { ISelectionProvider, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
-import { createStorage, Selectables, SelectionStorage } from "@itwin/unified-selection";
+import { SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
+import { createStorage, Selectables } from "@itwin/unified-selection";
 import { createTestECInstanceKey } from "../_helpers/Common.js";
-import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 import {
   SelectionHandlerContextProvider,
   usePropertyDataProviderWithUnifiedSelection,
 } from "../../presentation-components/propertygrid/UseUnifiedSelection.js";
 import { act, renderHook, waitFor } from "../TestUtils.js";
+
+import type { PropsWithChildren } from "react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { ISelectionProvider, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
+import type { SelectionStorage } from "@itwin/unified-selection";
+import type { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 
@@ -43,7 +46,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
 
   describe("with deprecated SelectionHandler", () => {
     let selectionHandler: sinon.SinonStubbedInstance<SelectionHandler>;
-    function SelectionHandlerWrapper({ children }: PropsWithChildren<{}>) {
+    function SelectionHandlerWrapper({ children }: PropsWithChildren) {
       return <SelectionHandlerContextProvider selectionHandler={selectionHandler}>{children}</SelectionHandlerContextProvider>;
     }
 

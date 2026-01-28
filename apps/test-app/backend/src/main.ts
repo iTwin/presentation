@@ -2,7 +2,8 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-
+/* eslint-disable import/no-duplicates */
+/* eslint-disable @typescript-eslint/consistent-type-imports */
 // cspell:disable
 
 import "./SampleRpcImpl.js"; // just to get the RPC implementation registered
@@ -13,7 +14,6 @@ import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.Imports
 import { Presentation, PresentationProps } from "@itwin/presentation-backend";
 // __PUBLISH_EXTRACT_END__
-// eslint-disable-next-line no-duplicate-imports
 import { PresentationBackendLoggerCategory, PresentationBackendNativeLoggerCategory } from "@itwin/presentation-backend";
 // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.OpenTelemetry.Imports
 import { exportDiagnostics } from "@itwin/presentation-opentelemetry";

@@ -8,15 +8,18 @@ import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useState } from "react";
 import sinon from "sinon";
-import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Ruleset } from "@itwin/presentation-common";
+import { SelectionMode, UiComponents } from "@itwin/components-react";
+import { IModelApp } from "@itwin/core-frontend";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getByPlaceholderText, getByRole, getByTitle, render, waitFor } from "../../RenderUtils.js";
 import { stubVirtualization } from "../../Utils.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
+
+import type { TreeRendererProps } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Ruleset } from "@itwin/presentation-common";
 
 describe("Learning snippets", () => {
   describe("Tree", () => {

@@ -7,19 +7,22 @@
  */
 
 import { useCallback, useEffect, useMemo } from "react";
-import { PropertyDescription } from "@itwin/appui-abstract";
-import { PropertyFilterBuilderRuleValue, PropertyFilterBuilderRuleValueRendererProps, usePropertyFilterBuilder } from "@itwin/components-react";
+import { PropertyFilterBuilderRuleValue, usePropertyFilterBuilder } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
-import { ClassId, ClassInfo, Descriptor, InstanceFilterDefinition, Keys, PropertiesField } from "@itwin/presentation-common";
-import { WithConstraints } from "../common/ContentBuilder.js";
 import { NavigationPropertyEditorContextProvider } from "../properties/editors/NavigationPropertyEditorContext.js";
 import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector.js";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder.js";
 import { createFilterClassExpression, createInstanceFilterDefinitionBase } from "./InstanceFilterConverter.js";
-import { PresentationInstanceFilter, PresentationInstanceFilterConditionGroup } from "./PresentationInstanceFilter.js";
+import { PresentationInstanceFilter } from "./PresentationInstanceFilter.js";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty.js";
 import { createInstanceFilterPropertyInfos, useFilterBuilderNavigationPropertyEditorContextProviderProps } from "./Utils.js";
+
+import type { PropertyDescription } from "@itwin/appui-abstract";
+import type { PropertyFilterBuilderRuleValueRendererProps } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { ClassId, ClassInfo, Descriptor, InstanceFilterDefinition, Keys, PropertiesField } from "@itwin/presentation-common";
+import type { WithConstraints } from "../common/ContentBuilder.js";
+import type { PresentationInstanceFilterConditionGroup } from "./PresentationInstanceFilter.js";
 
 /**
  * Function that checks if supplied [[PresentationInstanceFilter]] is [[PresentationInstanceFilterConditionGroup]].

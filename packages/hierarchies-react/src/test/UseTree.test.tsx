@@ -8,18 +8,8 @@ import { collect, createAsyncIterator, ResolvablePromise, throwingAsyncIterator 
 import sinon from "sinon";
 import { BeEvent } from "@itwin/core-bentley";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
-import { HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { EventListener, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
-import {
-  createStorage,
-  Selectable,
-  Selectables,
-  SelectionStorage,
-  StorageSelectionChangeEventArgs,
-  StorageSelectionChangesListener,
-} from "@itwin/unified-selection";
+import { createStorage, Selectables } from "@itwin/unified-selection";
 import { createNodeId } from "../presentation-hierarchies-react/internal/Utils.js";
-import { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
 import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree.js";
 import {
   act,
@@ -30,9 +20,14 @@ import {
   createTestHierarchyNode,
   getTreeRendererProps,
   renderHook,
-  StubbedHierarchyProvider,
   waitFor,
 } from "./TestUtils.js";
+
+import type { HierarchyProvider } from "@itwin/presentation-hierarchies";
+import type { EventListener, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import type { Selectable, SelectionStorage, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
+import type { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
+import type { StubbedHierarchyProvider } from "./TestUtils.js";
 
 describe("useTree", () => {
   let hierarchyProvider: StubbedHierarchyProvider;

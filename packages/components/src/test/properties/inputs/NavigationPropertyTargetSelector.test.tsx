@@ -6,20 +6,23 @@
 import { expect } from "chai";
 import { createRef } from "react";
 import sinon from "sinon";
-import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Content, Item, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { IModelApp } from "@itwin/core-frontend";
+import { Content, LabelDefinition } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
 import { stubVirtualization } from "../../_helpers/Common.js";
 import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
-import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 import { VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
-import {
-  NavigationPropertyTargetSelector,
-  NavigationPropertyTargetSelectorProps,
-} from "../../../presentation-components/properties/inputs/NavigationPropertyTargetSelector.js";
+import { NavigationPropertyTargetSelector } from "../../../presentation-components/properties/inputs/NavigationPropertyTargetSelector.js";
 import { render, waitFor } from "../../TestUtils.js";
+
+import type { PrimitiveValue, PropertyDescription, PropertyValue } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Item, NavigationPropertyInfo } from "@itwin/presentation-common";
+import type { PresentationManager } from "@itwin/presentation-frontend";
+import type { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
+import type { NavigationPropertyTargetSelectorProps } from "../../../presentation-components/properties/inputs/NavigationPropertyTargetSelector.js";
 
 function createNavigationPropertyDescription(): PropertyDescription {
   return {

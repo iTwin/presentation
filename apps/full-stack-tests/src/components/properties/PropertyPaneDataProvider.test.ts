@@ -12,16 +12,20 @@ import {
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import * as sinon from "sinon";
-import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyCategory } from "@itwin/components-react";
+import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { assert } from "@itwin/core-bentley";
-import { ArrayPropertiesField, combineFieldNames, InstanceKey, KeySet, PropertiesField, RuleTypes, StructPropertiesField } from "@itwin/presentation-common";
-import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider, PresentationPropertyDataProviderProps } from "@itwin/presentation-components";
+import { ArrayPropertiesField, combineFieldNames, KeySet, RuleTypes, StructPropertiesField } from "@itwin/presentation-common";
+import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { importSchema } from "../../SchemaUtils.js";
+
+import type { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue } from "@itwin/appui-abstract";
+import type { PropertyCategory } from "@itwin/components-react";
+import type { InstanceKey, PropertiesField } from "@itwin/presentation-common";
+import type { PresentationPropertyDataProviderProps } from "@itwin/presentation-components";
 
 describe("PropertyDataProvider", async () => {
   before(async () => {

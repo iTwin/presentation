@@ -5,8 +5,17 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import { PrimitiveValue } from "@itwin/appui-abstract";
-import {
+import { UiComponents } from "@itwin/components-react";
+import { IModelApp } from "@itwin/core-frontend";
+import { ChildNodeSpecificationTypes, RuleTypes } from "@itwin/presentation-common";
+import { usePresentationTreeState } from "@itwin/presentation-components";
+import { Presentation } from "@itwin/presentation-frontend";
+import { TestIModelConnection } from "@itwin/presentation-testing";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { renderHook, waitFor } from "../../RenderUtils.js";
+
+import type { PrimitiveValue } from "@itwin/appui-abstract";
+import type {
   AbstractTreeNodeLoader,
   AbstractTreeNodeLoaderWithProvider,
   DelayLoadedTreeNodeItem,
@@ -15,15 +24,10 @@ import {
   TreeModelNode,
   TreeModelRootNode,
   TreeModelSource,
-  UiComponents,
 } from "@itwin/components-react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { ChildNodeSpecificationTypes, Ruleset, RuleTypes } from "@itwin/presentation-common";
-import { IPresentationTreeDataProvider, usePresentationTreeState, UsePresentationTreeStateProps } from "@itwin/presentation-components";
-import { Presentation } from "@itwin/presentation-frontend";
-import { TestIModelConnection } from "@itwin/presentation-testing";
-import { initialize, terminate } from "../../IntegrationTests.js";
-import { renderHook, waitFor } from "../../RenderUtils.js";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Ruleset } from "@itwin/presentation-common";
+import type { IPresentationTreeDataProvider, UsePresentationTreeStateProps } from "@itwin/presentation-components";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 

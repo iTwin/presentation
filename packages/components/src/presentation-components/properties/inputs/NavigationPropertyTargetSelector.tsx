@@ -6,15 +6,21 @@
 import "./NavigationPropertyTargetSelector.scss";
 
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyEditorProps, PropertyValueRendererManager } from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
-import { ComboBox, SelectOption } from "@itwin/itwinui-react";
-import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
+import { PropertyValueFormat } from "@itwin/appui-abstract";
+import { PropertyValueRendererManager } from "@itwin/components-react";
+import { ComboBox } from "@itwin/itwinui-react";
+import { LabelDefinition } from "@itwin/presentation-common";
 import { translate } from "../../common/Utils.js";
-import { PropertyEditorAttributes } from "../editors/Common.js";
 import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader.js";
-import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader.js";
+import { useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader.js";
+
+import type { PropertyDescription, PropertyRecord, PropertyValue } from "@itwin/appui-abstract";
+import type { PropertyEditorProps } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SelectOption } from "@itwin/itwinui-react";
+import type { InstanceKey, NavigationPropertyInfo } from "@itwin/presentation-common";
+import type { PropertyEditorAttributes } from "../editors/Common.js";
+import type { NavigationPropertyTarget } from "./UseNavigationPropertyTargetsLoader.js";
 
 /** @internal */
 export interface NavigationPropertyTargetSelectorProps extends PropertyEditorProps {

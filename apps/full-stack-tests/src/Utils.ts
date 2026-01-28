@@ -4,8 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import sinon from "sinon";
-import { IModelConnection } from "@itwin/core-frontend";
-import {
+import frontendPackageJson from "@itwin/presentation-frontend/package.json" with { type: "json" };
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type {
   ClientDiagnosticsAttribute,
   ContentRequestOptions,
   Descriptor,
@@ -19,8 +21,7 @@ import {
   Paged,
   RulesetVariable,
 } from "@itwin/presentation-common";
-import { PresentationManager } from "@itwin/presentation-frontend";
-import frontendPackageJson from "@itwin/presentation-frontend/package.json" with { type: "json" };
+import type { PresentationManager } from "@itwin/presentation-frontend";
 
 export function stubVirtualization() {
   let stubs: sinon.SinonStub[] = [];

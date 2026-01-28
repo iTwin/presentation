@@ -5,7 +5,8 @@
 
 import { useCallback } from "react";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
-import { TreeNode } from "./TreeNode.js";
+
+import type { TreeNode } from "./TreeNode.js";
 
 /**
  * Props for `useNodeHighlighting` hook.

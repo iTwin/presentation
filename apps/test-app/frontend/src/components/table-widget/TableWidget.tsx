@@ -4,11 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback } from "react";
-import { PropertyRecord } from "@itwin/appui-abstract";
-import { IModelConnection } from "@itwin/core-frontend";
 import { ProgressRadial, Table } from "@itwin/itwinui-react";
-import { TableCellRenderer, TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
+import { TableCellRenderer, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
+
+import type { PropertyRecord } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { TableColumnDefinition, TableRowDefinition } from "@itwin/presentation-components";
 
 export interface TableWidgetProps {
   imodel: IModelConnection;

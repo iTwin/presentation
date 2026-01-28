@@ -10,22 +10,14 @@ import "../../common/DisposePolyfill.js";
 
 import { useEffect, useMemo, useState } from "react";
 import { EMPTY, from, map, mergeMap, toArray } from "rxjs";
-import { PropertyDescription } from "@itwin/appui-abstract";
-import { IModelConnection } from "@itwin/core-frontend";
-import { SelectOption } from "@itwin/itwinui-react";
-import {
-  ContentFlags,
-  ContentSpecificationTypes,
-  InstanceKey,
-  Item,
-  KeySet,
-  LabelDefinition,
-  NavigationPropertyInfo,
-  Ruleset,
-  RuleTypes,
-} from "@itwin/presentation-common";
+import { ContentFlags, ContentSpecificationTypes, KeySet, RuleTypes } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader.js";
+
+import type { PropertyDescription } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SelectOption } from "@itwin/itwinui-react";
+import type { InstanceKey, Item, LabelDefinition, NavigationPropertyInfo, Ruleset } from "@itwin/presentation-common";
 
 /** @internal */
 export interface NavigationPropertyTarget {

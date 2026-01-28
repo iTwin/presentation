@@ -8,16 +8,11 @@ import "./TreeWidget.css";
 
 import { useCallback, useEffect, useState } from "react";
 import { FilteringInputStatus, SelectionMode } from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
-import {
-  DiagnosticsProps,
-  PresentationTree,
-  PresentationTreeEventHandlerProps,
-  PresentationTreeRenderer,
-  UnifiedSelectionTreeEventHandler,
-  usePresentationTreeState,
-} from "@itwin/presentation-components";
+import { PresentationTree, PresentationTreeRenderer, UnifiedSelectionTreeEventHandler, usePresentationTreeState } from "@itwin/presentation-components";
 import { TreeWidgetHeader, useTreeHeight } from "./TreeHeader";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { DiagnosticsProps, PresentationTreeEventHandlerProps } from "@itwin/presentation-components";
 
 const PAGING_SIZE = 10;
 

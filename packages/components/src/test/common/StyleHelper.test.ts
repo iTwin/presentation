@@ -4,9 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { LabelDefinition, Node } from "@itwin/presentation-common";
+import { LabelDefinition } from "@itwin/presentation-common";
 import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 import { StyleHelper } from "../../presentation-components/common/StyleHelper.js";
+
+import type { Node } from "@itwin/presentation-common";
 
 describe("StyleHelper", () => {
   // eslint-disable-next-line @typescript-eslint/no-deprecated

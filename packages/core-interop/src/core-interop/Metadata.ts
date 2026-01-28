@@ -3,9 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Schema as CoreSchema, SchemaKey as CoreSchemaKey } from "@itwin/ecschema-metadata";
-import { EC, ECSchemaProvider } from "@itwin/presentation-shared";
+import { SchemaKey as CoreSchemaKey } from "@itwin/ecschema-metadata";
 import { createECSchema } from "./MetadataInternal.js";
+
+import type { Schema as CoreSchema } from "@itwin/ecschema-metadata";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 
 /**
  * Defines input for `createECSchemaProvider`. Generally, this is an instance of [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/)

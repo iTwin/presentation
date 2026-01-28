@@ -9,11 +9,14 @@ import * as sinon from "sinon";
 import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { assert, Guid } from "@itwin/core-bentley";
 import { RpcManager } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import { ChildNodeSpecificationTypes, NodeKey, PresentationRpcInterface, Ruleset, RuleTypes } from "@itwin/presentation-common";
-import { isPresentationInfoTreeNodeItem, PresentationTreeDataProvider, PresentationTreeNodeItem } from "@itwin/presentation-components";
+import { ChildNodeSpecificationTypes, NodeKey, PresentationRpcInterface, RuleTypes } from "@itwin/presentation-common";
+import { isPresentationInfoTreeNodeItem, PresentationTreeDataProvider } from "@itwin/presentation-components";
 import { TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Ruleset } from "@itwin/presentation-common";
+import type { PresentationTreeNodeItem } from "@itwin/presentation-components";
 
 const RULESET: Ruleset = {
   id: "SimpleHierarchy",

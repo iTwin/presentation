@@ -24,7 +24,7 @@ However, consumers may also want to use their own logger. For example, the follo
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { ILogger, LogLevel } from "@itwin/presentation-shared";
+import type { ILogger, LogLevel } from "@itwin/presentation-shared";
 
 export const LOGGER: ILogger = {
   isEnabled: (_category: string, level: LogLevel) => {

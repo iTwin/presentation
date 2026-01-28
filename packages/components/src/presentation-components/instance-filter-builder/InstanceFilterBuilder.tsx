@@ -12,15 +12,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BehaviorSubject, from, of } from "rxjs";
 import { map } from "rxjs/internal/operators/map";
 import { switchAll } from "rxjs/internal/operators/switchAll";
-import { PropertyDescription } from "@itwin/appui-abstract";
-import { PropertyFilterBuilderRenderer, PropertyFilterBuilderRendererProps, PropertyFilterBuilderRuleValueRendererProps } from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
-import { Alert, ComboBox, SelectOption } from "@itwin/itwinui-react";
-import { ClassInfo, Descriptor, Keys } from "@itwin/presentation-common";
+import { PropertyFilterBuilderRenderer } from "@itwin/components-react";
+import { Alert, ComboBox } from "@itwin/itwinui-react";
 import { translate } from "../common/Utils.js";
 import { getIModelMetadataProvider } from "./ECMetadataProvider.js";
-import { PresentationFilterBuilderValueRenderer, PresentationInstanceFilterPropertyInfo, useInstanceFilterPropertyInfos } from "./PresentationFilterBuilder.js";
+import { PresentationFilterBuilderValueRenderer, useInstanceFilterPropertyInfos } from "./PresentationFilterBuilder.js";
 import { isFilterNonEmpty } from "./Utils.js";
+
+import type { PropertyDescription } from "@itwin/appui-abstract";
+import type { PropertyFilterBuilderRendererProps, PropertyFilterBuilderRuleValueRendererProps } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SelectOption } from "@itwin/itwinui-react";
+import type { ClassInfo, Descriptor, Keys } from "@itwin/presentation-common";
+import type { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder.js";
 
 /**
  * Props for [[InstanceFilterBuilder]] component.

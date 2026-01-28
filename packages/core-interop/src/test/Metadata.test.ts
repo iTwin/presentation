@@ -6,7 +6,11 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { assert } from "@itwin/core-bentley";
-import {
+import { PrimitiveType, RelationshipMultiplicity, SchemaItemType, StrengthDirection } from "@itwin/ecschema-metadata";
+import { createECSchemaProvider } from "../core-interop/Metadata.js";
+import { createECClass, createECProperty, createECSchema } from "../core-interop/MetadataInternal.js";
+
+import type {
   ECClass as CoreClass,
   EnumerationArrayProperty as CoreEnumerationArrayProperty,
   EnumerationProperty as CoreEnumerationProperty,
@@ -17,16 +21,10 @@ import {
   Schema as CoreSchema,
   StructArrayProperty as CoreStructArrayProperty,
   StructProperty as CoreStructProperty,
-  PrimitiveType,
-  RelationshipMultiplicity,
   SchemaContext,
-  SchemaItemType,
   SchemaKey,
-  StrengthDirection,
 } from "@itwin/ecschema-metadata";
-import { EC } from "@itwin/presentation-shared";
-import { createECSchemaProvider } from "../core-interop/Metadata.js";
-import { createECClass, createECProperty, createECSchema } from "../core-interop/MetadataInternal.js";
+import type { EC } from "@itwin/presentation-shared";
 
 describe("createECSchemaProvider", () => {
   describe("getSchema", () => {

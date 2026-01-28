@@ -4,14 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { PropertyRecord } from "@itwin/appui-abstract";
-import { PropertyData } from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, FavoritePropertiesDataProvider, PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
 import { TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
+
+import type { PropertyRecord } from "@itwin/appui-abstract";
+import type { PropertyData } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
 
 describe("FavoritePropertiesDataProvider", async () => {
   let imodel: IModelConnection;

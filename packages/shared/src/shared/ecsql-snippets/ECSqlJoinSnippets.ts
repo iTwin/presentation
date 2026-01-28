@@ -3,8 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EC, ECSchemaProvider, getClass, RelationshipPath, RelationshipPathStep } from "../Metadata.js";
+import { getClass } from "../Metadata.js";
 import { createRawPropertyValueSelector } from "./ECSqlValueSelectorSnippets.js";
+
+import type { EC, ECSchemaProvider, RelationshipPath, RelationshipPathStep } from "../Metadata.js";
 
 /**
  * Describes a single JOIN step from source to target through a relationship.

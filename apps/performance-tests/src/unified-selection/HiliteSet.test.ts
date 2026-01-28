@@ -7,9 +7,13 @@ import { expect } from "chai";
 import { SnapshotDb } from "@itwin/core-backend";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { createHiliteSetProvider, Selectable, Selectables } from "@itwin/unified-selection";
-import { Datasets, IModelName } from "../util/Datasets";
-import { run, RunOptions } from "../util/TestUtilities";
+import { createHiliteSetProvider, Selectables } from "@itwin/unified-selection";
+import { Datasets } from "../util/Datasets";
+import { run } from "../util/TestUtilities";
+
+import type { Selectable } from "@itwin/unified-selection";
+import type { IModelName } from "../util/Datasets";
+import type { RunOptions } from "../util/TestUtilities";
 
 describe("hilite", () => {
   runHiliteTest({

@@ -7,9 +7,8 @@
  * @module Properties
  */
 
-import { PureComponent } from "react";
 import { StandardTypeNames } from "@itwin/appui-abstract";
-import { PropertyEditorBase, PropertyEditorManager, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
+import { PropertyEditorManager } from "@itwin/components-react";
 import {
   NavigationPropertyEditor as NavigationPropertyEditorInternal,
   NavigationPropertyTargetEditor as NavigationPropertyTargetEditorInternal,
@@ -17,11 +16,11 @@ import {
 import { NumericEditorName, NumericPropertyEditorBase } from "./NumericPropertyEditor.js";
 import { QuantityEditorName, QuantityPropertyEditorBase } from "./QuantityPropertyEditor.js";
 
-export {
-  NavigationPropertyEditorContextProvider,
-  NavigationPropertyEditorContextProviderProps,
-  useNavigationPropertyEditorContextProviderProps,
-} from "./NavigationPropertyEditorContext.js";
+import type { PureComponent } from "react";
+import type { PropertyEditorBase, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
+
+export type { NavigationPropertyEditorContextProviderProps } from "./NavigationPropertyEditorContext.js";
+export { NavigationPropertyEditorContextProvider, useNavigationPropertyEditorContextProviderProps } from "./NavigationPropertyEditorContext.js";
 
 /**
  * Editor for navigation properties.

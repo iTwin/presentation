@@ -7,21 +7,21 @@ import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { ContentDescriptorRequestOptions, InstanceKey, Item, KeySet, RulesetVariable } from "@itwin/presentation-common";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
-import { createStorage, Selectables, SelectionStorage } from "@itwin/unified-selection";
+import { createStorage, Selectables } from "@itwin/unified-selection";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
-import { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types.js";
-import {
-  usePresentationTable,
-  UsePresentationTableProps,
-  usePresentationTableWithUnifiedSelection,
-  UsePresentationTableWithUnifiedSelectionProps,
-} from "../../presentation-components/table/UsePresentationTable.js";
+import { usePresentationTable, usePresentationTableWithUnifiedSelection } from "../../presentation-components/table/UsePresentationTable.js";
 import { act, renderHook, waitFor } from "../TestUtils.js";
+
+import type { FormattingUnitSystemChangedArgs } from "@itwin/core-frontend";
+import type { ContentDescriptorRequestOptions, InstanceKey, Item, RulesetVariable } from "@itwin/presentation-common";
+import type { SelectionStorage } from "@itwin/unified-selection";
+import type { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types.js";
+import type { UsePresentationTableProps, UsePresentationTableWithUnifiedSelectionProps } from "../../presentation-components/table/UsePresentationTable.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 

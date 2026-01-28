@@ -4,9 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { forwardRef, useEffect, useRef, useState } from "react";
-import { FilteringInput, FilteringInputStatus } from "@itwin/components-react";
-import { DiagnosticsProps } from "@itwin/presentation-components";
+import { FilteringInput } from "@itwin/components-react";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
+
+import type { FilteringInputStatus } from "@itwin/components-react";
+import type { DiagnosticsProps } from "@itwin/presentation-components";
 
 export function useTreeHeight(height?: number) {
   const [treeHeight, setTreeHeight] = useState(0);

@@ -8,18 +8,21 @@
 
 import "./PresentationInstanceFilterDialog.scss";
 
-import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { BuildFilterOptions, usePropertyFilterBuilder } from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
+import { usePropertyFilterBuilder } from "@itwin/components-react";
 import { SvgError } from "@itwin/itwinui-illustrations-react";
 import { Button, Dialog, NonIdealState, ProgressRadial } from "@itwin/itwinui-react";
-import { Descriptor, Keys } from "@itwin/presentation-common";
 import { translate, useDelay } from "../common/Utils.js";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder.js";
-import { PresentationInstanceFilterInfo } from "./PresentationFilterBuilder.js";
 import { PresentationInstanceFilter } from "./PresentationInstanceFilter.js";
 import { filterRuleValidator, isFilterNonEmpty } from "./Utils.js";
+
+import type { ReactNode } from "react";
+import type { BuildFilterOptions } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Descriptor, Keys } from "@itwin/presentation-common";
+import type { PresentationInstanceFilterInfo } from "./PresentationFilterBuilder.js";
 
 /**
  * Data structure that describes source to gather properties from.

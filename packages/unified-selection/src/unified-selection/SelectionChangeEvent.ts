@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Selectables } from "./Selectable.js";
-import { SelectionStorage } from "./SelectionStorage.js";
+import type { Selectables } from "./Selectable.js";
+import type { SelectionStorage } from "./SelectionStorage.js";
 
 /**
  * The type of selection change.

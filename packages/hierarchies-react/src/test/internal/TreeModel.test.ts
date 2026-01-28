@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { isTreeModelHierarchyNode, TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
 import {
   createTestChildrenLoadErrorInfo,
@@ -13,6 +12,8 @@ import {
   createTreeModel,
   getHierarchyNode,
 } from "../TestUtils.js";
+
+import type { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 
 describe("TreeModel", () => {
   describe("expandNode", () => {

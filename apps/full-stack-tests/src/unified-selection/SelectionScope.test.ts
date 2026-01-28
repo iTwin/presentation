@@ -16,14 +16,16 @@ import {
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import { RpcConfiguration, RpcManager } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { Props } from "@itwin/presentation-shared";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
-import { computeSelection, SelectableInstanceKey } from "@itwin/unified-selection";
+import { computeSelection } from "@itwin/unified-selection";
 import { getSchemaFromPackage } from "./getSchema.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Props } from "@itwin/presentation-shared";
+import type { SelectableInstanceKey } from "@itwin/unified-selection";
 
 describe("SelectionScope", () => {
   let iModel: IModelConnection;

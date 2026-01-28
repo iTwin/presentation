@@ -4,8 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { HierarchyNodeKey, PropertyValueGroupingNodeKey, PropertyValueRangeGroupingNodeKey } from "../hierarchies/HierarchyNodeKey.js";
+import { HierarchyNodeKey } from "../hierarchies/HierarchyNodeKey.js";
 import { createTestGenericNodeKey } from "./Utils.js";
+
+import type { PropertyValueGroupingNodeKey, PropertyValueRangeGroupingNodeKey } from "../hierarchies/HierarchyNodeKey.js";
 
 describe("HierarchyNodeKey", () => {
   describe("equals", () => {

@@ -5,11 +5,16 @@
 
 import { expect } from "chai";
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
-import { createNodesQueryClauseFactory, DefineHierarchyLevelProps, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider, Props } from "@itwin/presentation-shared";
-import { Datasets, IModelName } from "../util/Datasets";
-import { run, RunOptions } from "../util/TestUtilities";
+import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { Datasets } from "../util/Datasets";
+import { run } from "../util/TestUtilities";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+
+import type { DefineHierarchyLevelProps, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import type { ECClassHierarchyInspector, ECSchemaProvider, Props } from "@itwin/presentation-shared";
+import type { IModelName } from "../util/Datasets";
+import type { RunOptions } from "../util/TestUtilities";
 
 /**
  * Runs a full hierarchy test against a given iModel. The hierarchy is created using the given

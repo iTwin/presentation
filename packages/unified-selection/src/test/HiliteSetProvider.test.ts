@@ -6,10 +6,13 @@
 import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
-import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
-import { createHiliteSetProvider, HiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
-import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable.js";
+import { createHiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
+import { Selectables } from "../unified-selection/Selectable.js";
 import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
+
+import type { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
+import type { HiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
+import type { SelectableInstanceKey } from "../unified-selection/Selectable.js";
 
 describe("HiliteSetProvider", () => {
   describe("create", () => {

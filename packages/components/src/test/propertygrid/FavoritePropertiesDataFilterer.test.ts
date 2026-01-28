@@ -5,14 +5,16 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { IModelConnection } from "@itwin/core-frontend";
+import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
 import { createTestSimpleContentField } from "../_helpers/Content.js";
 import { createArrayProperty, createPrimitiveStringProperty, createStructProperty } from "../_helpers/Properties.js";
-import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 import { FavoritePropertiesDataFilterer } from "../../presentation-components/propertygrid/FavoritePropertiesDataFilterer.js";
 import { createStub } from "../TestUtils.js";
+
+import type { PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 
 describe("FavoritePropertiesDataFilterer", () => {
   const imodel = {} as IModelConnection;

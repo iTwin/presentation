@@ -6,21 +6,16 @@
 
 import "../common/DisposePolyfill.js";
 
-import {
-  ActiveMatchInfo,
-  DelayLoadedTreeNodeItem,
-  PageOptions,
-  SimpleTreeDataProvider,
-  SimpleTreeDataProviderHierarchy,
-  TreeNodeItem,
-} from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
-import { InstanceFilterDefinition, Node, NodeKey, NodePathElement } from "@itwin/presentation-common";
+import { SimpleTreeDataProvider } from "@itwin/components-react";
 import { memoize } from "../common/Utils.js";
 import { PresentationTreeDataProvider } from "./DataProvider.js";
-import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider.js";
-import { PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
 import { createTreeNodeItem } from "./Utils.js";
+
+import type { ActiveMatchInfo, DelayLoadedTreeNodeItem, PageOptions, SimpleTreeDataProviderHierarchy, TreeNodeItem } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { InstanceFilterDefinition, Node, NodeKey, NodePathElement } from "@itwin/presentation-common";
+import type { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider.js";
+import type { PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
 
 /** @internal */
 export interface FilteredPresentationTreeDataProviderProps {

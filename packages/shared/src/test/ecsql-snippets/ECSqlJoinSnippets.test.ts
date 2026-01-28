@@ -7,9 +7,10 @@ import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
 import { createRelationshipPathJoinClause } from "../../shared/ecsql-snippets/ECSqlJoinSnippets.js";
-import { EC } from "../../shared/Metadata.js";
 import { trimWhitespace } from "../../shared/Utils.js";
 import { createECSchemaProviderStub } from "../MetadataProviderStub.js";
+
+import type { EC } from "../../shared/Metadata.js";
 
 describe("createRelationshipPathJoinClause", () => {
   let schemaProvider: ReturnType<typeof createECSchemaProviderStub>;

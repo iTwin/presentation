@@ -5,11 +5,12 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 
 import { omit } from "@itwin/core-bentley";
-import { createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { createChangedDbs } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createHierarchyDefinitionFactory, createMergedHierarchyProvider, importQSchema, importXYZSchema, pickAndTransform } from "./HierarchiesMerging.js";
+
+import type { createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
   before(async function () {

@@ -5,10 +5,12 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
-import { SelectableInstanceKey } from "../unified-selection/Selectable.js";
-import { computeSelection, SelectionScope } from "../unified-selection/SelectionScope.js";
+import { computeSelection } from "../unified-selection/SelectionScope.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
+
+import type { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
+import type { SelectableInstanceKey } from "../unified-selection/Selectable.js";
+import type { SelectionScope } from "../unified-selection/SelectionScope.js";
 
 describe("SelectionScope", () => {
   const queryExecutor = {

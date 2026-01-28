@@ -4,9 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import fs from "fs";
-import { getFullSchemaXml, TestIModelBuilder } from "presentation-test-utilities";
-import { IModelDb, SnapshotDb } from "@itwin/core-backend";
-import { BisCodeSpec, Code, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
+import { getFullSchemaXml } from "presentation-test-utilities";
+import { SnapshotDb } from "@itwin/core-backend";
+import { Code } from "@itwin/core-common";
+
+import type { TestIModelBuilder } from "presentation-test-utilities";
+import type { IModelDb } from "@itwin/core-backend";
+import type { BisCodeSpec, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
 
 export async function createIModel(name: string, localPath: string, cb: (builder: BackendTestIModelBuilder) => void | Promise<void>) {
   fs.rmSync(localPath, { force: true });

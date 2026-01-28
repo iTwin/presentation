@@ -4,12 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { IModelDb, SnapshotDb } from "@itwin/core-backend";
+import { SnapshotDb } from "@itwin/core-backend";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition, ModelsTreeIdsCache } from "@itwin/presentation-models-tree";
-import { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, InstanceKey } from "@itwin/presentation-shared";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
-import { IModelAccess, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+
+import type { IModelDb } from "@itwin/core-backend";
+import type { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, InstanceKey } from "@itwin/presentation-shared";
+import type { IModelAccess } from "./StatelessHierarchyProvider";
 
 describe("models tree", () => {
   const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & ECSqlQueryExecutor) => new ModelsTreeDefinition({ imodelAccess });

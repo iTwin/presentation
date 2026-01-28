@@ -7,9 +7,9 @@ import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import { Content, DescriptorOverrides, KeySet, SortDirection } from "@itwin/presentation-common";
-import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { IModelApp } from "@itwin/core-frontend";
+import { Content, KeySet, SortDirection } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
 import { createTestECInstanceKey, createTestPropertyInfo, TestErrorBoundary } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -18,8 +18,13 @@ import {
   createTestNestedContentField,
   createTestPropertiesContentField,
 } from "../_helpers/Content.js";
-import { ROWS_RELOAD_PAGE_SIZE, useRows, UseRowsProps } from "../../presentation-components/table/UseRows.js";
+import { ROWS_RELOAD_PAGE_SIZE, useRows } from "../../presentation-components/table/UseRows.js";
 import { act, render, renderHook, waitFor } from "../TestUtils.js";
+
+import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
+import type { DescriptorOverrides } from "@itwin/presentation-common";
+import type { PresentationManager } from "@itwin/presentation-frontend";
+import type { UseRowsProps } from "../../presentation-components/table/UseRows.js";
 
 describe("useRows", () => {
   let onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"];

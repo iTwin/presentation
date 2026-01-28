@@ -7,9 +7,9 @@
  * @module Tree
  */
 
-import { DelayLoadedTreeNodeItem, ImmediatelyLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
-import { Descriptor, NodeKey } from "@itwin/presentation-common";
-import { PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder.js";
+import type { DelayLoadedTreeNodeItem, ImmediatelyLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
+import type { Descriptor, NodeKey } from "@itwin/presentation-common";
+import type { PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder.js";
 
 /**
  * Describes descriptor used for hierarchy level filtering. It can be lazy loaded.

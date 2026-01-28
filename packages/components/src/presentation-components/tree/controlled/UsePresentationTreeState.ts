@@ -10,21 +10,16 @@
 import "../../common/DisposePolyfill.js";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  AbstractTreeNodeLoaderWithProvider,
-  HighlightableTreeProps,
-  MutableTreeModel,
-  PagedTreeNodeLoader,
-  RenderedItemsRange,
-  TreeEventHandler,
-  TreeModel,
-  TreeModelSource,
-} from "@itwin/components-react";
-import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider.js";
-import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import { MutableTreeModel, PagedTreeNodeLoader, TreeEventHandler, TreeModelSource } from "@itwin/components-react";
+import { PresentationTreeDataProvider } from "../DataProvider.js";
 import { ReportingTreeNodeLoader } from "../ReportingTreeNodeLoader.js";
 import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering.js";
-import { ReloadedTree, useTreeReload } from "./UseTreeReload.js";
+import { useTreeReload } from "./UseTreeReload.js";
+
+import type { AbstractTreeNodeLoaderWithProvider, HighlightableTreeProps, RenderedItemsRange, TreeModel } from "@itwin/components-react";
+import type { PresentationTreeDataProviderProps } from "../DataProvider.js";
+import type { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import type { ReloadedTree } from "./UseTreeReload.js";
 
 /**
  * Properties for [[usePresentationTreeState]] hook.

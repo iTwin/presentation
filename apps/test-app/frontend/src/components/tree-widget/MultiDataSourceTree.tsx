@@ -4,10 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { XMLParser } from "fast-xml-parser";
-import { ComponentPropsWithoutRef, ReactElement, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { debounceTime, Subject } from "rxjs";
-import { BeEvent, Guid, GuidString, Id64String } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
+import { BeEvent, Guid } from "@itwin/core-bentley";
 import { SvgFolder, SvgGlobe, SvgImodelHollow, SvgItem, SvgModel } from "@itwin/itwinui-icons-react";
 import { Flex, ProgressRadial, SearchBox, Text } from "@itwin/itwinui-react";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
@@ -17,28 +16,28 @@ import {
   createLimitingECSqlQueryExecutor,
   createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  HierarchyNode,
+  HierarchyNodeIdentifier,
+  mergeProviders,
+} from "@itwin/presentation-hierarchies";
+import { StrataKitRootErrorRenderer, StrataKitTreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector, ECSql } from "@itwin/presentation-shared";
+import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
+import { SampleRpcInterface } from "@test-app/common";
+
+import type { ComponentPropsWithoutRef, ReactElement } from "react";
+import type { GuidString, Id64String } from "@itwin/core-bentley";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type {
   DefineInstanceNodeChildHierarchyLevelProps,
   GenericNodeKey,
   GetHierarchyNodesProps,
-  HierarchyNode,
-  HierarchyNodeIdentifier,
   HierarchyNodeIdentifiersPath,
   HierarchyProvider,
   HierarchySearchPath,
-  mergeProviders,
 } from "@itwin/presentation-hierarchies";
-import { StrataKitRootErrorRenderer, StrataKitTreeRenderer, TreeNode, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
-import {
-  createBisInstanceLabelSelectClauseFactory,
-  createCachingECClassHierarchyInspector,
-  ECSql,
-  IInstanceLabelSelectClauseFactory,
-  InstanceKey,
-  IPrimitiveValueFormatter,
-  Props,
-} from "@itwin/presentation-shared";
-import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
-import { SampleRpcInterface } from "@test-app/common";
+import type { TreeNode } from "@itwin/presentation-hierarchies-react";
+import type { IInstanceLabelSelectClauseFactory, InstanceKey, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 
 type UseTreeProps = Props<typeof useUnifiedSelectionTree>;
 type IModelAccess = Props<typeof createIModelHierarchyProvider>["imodelAccess"];

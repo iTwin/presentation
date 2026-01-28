@@ -7,17 +7,18 @@ import { assert, expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { isDeepStrictEqual } from "util";
 import { Logger } from "@itwin/core-bentley";
-import {
+import { HierarchyNode, HierarchyNodeKey } from "@itwin/presentation-hierarchies";
+import { InstanceKey } from "@itwin/presentation-shared";
+
+import type {
   GenericNodeKey,
   GroupingHierarchyNode,
-  HierarchyNode,
-  HierarchyNodeKey,
   HierarchyProvider,
   HierarchySearchPathOptions,
   InstancesNodeKey,
   NonGroupingHierarchyNode,
 } from "@itwin/presentation-hierarchies";
-import { ArrayElement, InstanceKey, OmitOverUnion } from "@itwin/presentation-shared";
+import type { ArrayElement, OmitOverUnion } from "@itwin/presentation-shared";
 
 const loggingNamespace = `Presentation.HierarchyBuilder.HierarchyValidation`;
 

@@ -6,17 +6,18 @@
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import sinon from "sinon";
-import { PrimitiveValue } from "@itwin/appui-abstract";
 import { EditorContainer, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
-import { FormatDefinition } from "@itwin/core-quantity";
 import { FieldDescriptorType, KeySet } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider, SchemaMetadataContextProvider } from "@itwin/presentation-components";
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
 import { importSchema } from "../../SchemaUtils.js";
+
+import type { PrimitiveValue } from "@itwin/appui-abstract";
+import type { FormatDefinition } from "@itwin/core-quantity";
 
 describe("Property editors", () => {
   before(async () => {

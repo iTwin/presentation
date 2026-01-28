@@ -7,19 +7,14 @@
  */
 
 import { inPlaceSort } from "fast-sort";
-import {
-  ArrayValue,
-  PrimitiveValue,
-  PropertyDescription,
-  PropertyEditorInfo,
-  PropertyRecord,
-  StandardTypeNames,
-  StructValue,
-  PropertyValueFormat as UiPropertyValueFormat,
-} from "@itwin/appui-abstract";
+import { PropertyRecord, StandardTypeNames, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
 import { assert } from "@itwin/core-bentley";
-import {
-  combineFieldNames,
+import { combineFieldNames, PropertyValueFormat as PresentationPropertyValueFormat } from "@itwin/presentation-common";
+import { NumericEditorName } from "../properties/editors/NumericPropertyEditor.js";
+import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor.js";
+
+import type { ArrayValue, PrimitiveValue, PropertyDescription, PropertyEditorInfo, StructValue } from "@itwin/appui-abstract";
+import type {
   EditorDescription,
   EnumerationInfo,
   Field,
@@ -27,7 +22,6 @@ import {
   IContentVisitor,
   Item,
   LabelDefinition,
-  PropertyValueFormat as PresentationPropertyValueFormat,
   ProcessFieldHierarchiesProps,
   ProcessMergedValueProps,
   ProcessPrimitiveValueProps,
@@ -41,9 +35,7 @@ import {
   StartStructProps,
   TypeDescription,
 } from "@itwin/presentation-common";
-import { NumericEditorName } from "../properties/editors/NumericPropertyEditor.js";
-import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor.js";
-import { WithIModelKey } from "./Utils.js";
+import type { WithIModelKey } from "./Utils.js";
 
 /**
  * This is merely a copy of `PropertyValueConstraints` from @itwin/presentation-common package to support pre-5.0 version.

@@ -9,30 +9,26 @@ import { ResolvablePromise } from "presentation-test-utilities";
 import { EMPTY, Subject } from "rxjs";
 import sinon from "sinon";
 import { StandardTypeNames } from "@itwin/appui-abstract";
-import {
-  AbstractTreeNodeLoaderWithProvider,
-  computeVisibleNodes,
-  ITreeNodeLoader,
-  MutableTreeModel,
-  TreeActions,
-  TreeModelSource,
-  TreeNodeLoadResult,
-  UiComponents,
-} from "@itwin/components-react";
+import { computeVisibleNodes, MutableTreeModel, TreeModelSource, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Descriptor, PresentationError, PresentationStatus, PropertyValueFormat } from "@itwin/presentation-common";
-import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { IModelApp } from "@itwin/core-frontend";
+import { PresentationError, PresentationStatus, PropertyValueFormat } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
 import { createTestPropertyInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../../_helpers/Common.js";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
 import { translate } from "../../../presentation-components/common/Utils.js";
-import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationTreeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer.js";
-import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider.js";
-import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
-import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
 import { act, cleanup, render, waitFor } from "../../TestUtils.js";
 import { createTreeModelNodeInput } from "./Helpers.js";
+
+import type { AbstractTreeNodeLoaderWithProvider, ITreeNodeLoader, TreeActions, TreeNodeLoadResult } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Descriptor } from "@itwin/presentation-common";
+import type { PresentationManager } from "@itwin/presentation-frontend";
+import type { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import type { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider.js";
+import type { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
+import type { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
 
 describe("PresentationTreeRenderer", () => {
   stubRaf();

@@ -6,22 +6,18 @@
 import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
-import { PropertyValueFormat as AbstractPropertyValueFormat, PrimitiveValue } from "@itwin/appui-abstract";
+import { PropertyValueFormat as AbstractPropertyValueFormat } from "@itwin/appui-abstract";
 import { UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createTestECClassInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../_helpers/Common.js";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { translate } from "../../presentation-components/common/Utils.js";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
-import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
-import {
-  PresentationInstanceFilterDialog,
-  PresentationInstanceFilterPropertiesSource,
-} from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
+import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
 import {
   act,
   getAllByRole,
@@ -37,6 +33,11 @@ import {
   waitForElement,
   within,
 } from "../TestUtils.js";
+
+import type { PrimitiveValue } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import type { PresentationInstanceFilterPropertiesSource } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
 
 describe("PresentationInstanceFilterDialog", () => {
   stubRaf();

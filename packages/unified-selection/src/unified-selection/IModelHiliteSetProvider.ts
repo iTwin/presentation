@@ -5,12 +5,16 @@
 
 import "./DisposePolyfill.js";
 
-import { from, Observable, shareReplay } from "rxjs";
+import { from, shareReplay } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
-import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
-import { StorageSelectionChangeEventArgs } from "./SelectionChangeEvent.js";
-import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./SelectionStorage.js";
+import { createHiliteSetProvider } from "./HiliteSetProvider.js";
+import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE } from "./SelectionStorage.js";
+
+import type { Observable } from "rxjs";
+import type { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import type { HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
+import type { StorageSelectionChangeEventArgs } from "./SelectionChangeEvent.js";
+import type { SelectionStorage } from "./SelectionStorage.js";
 
 /**
  * Props for creating an `IModelHiliteSetProvider` instance.

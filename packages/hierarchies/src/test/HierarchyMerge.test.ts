@@ -7,11 +7,13 @@ import { expect } from "chai";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeEvent } from "@itwin/core-bentley";
-import { EventListener, InstanceKey, Props } from "@itwin/presentation-shared";
 import { mergeProviders } from "../hierarchies/HierarchyMerge.js";
-import { HierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
-import { HierarchyProvider } from "../hierarchies/HierarchyProvider.js";
+import { HierarchyNode } from "../hierarchies/HierarchyNode.js";
 import { createTestGenericNode, createTestGenericNodeKey } from "./Utils.js";
+
+import type { EventListener, InstanceKey, Props } from "@itwin/presentation-shared";
+import type { NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
+import type { HierarchyProvider } from "../hierarchies/HierarchyProvider.js";
 
 describe("mergeProviders", () => {
   it("returns nodes from all providers", async () => {

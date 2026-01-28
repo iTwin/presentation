@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
-import { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
 import { useNodeHighlighting } from "../presentation-hierarchies-react/UseNodeHighlighting.js";
 import { render, renderHook } from "./TestUtils.js";
+
+import type { NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import type { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
 
 describe("useNodeHighlighting", () => {
   it("does not highlight when highlight is undefined", () => {

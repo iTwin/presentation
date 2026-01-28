@@ -5,11 +5,9 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyFilterBuilderRuleRangeValue } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import { Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createTestECClassInfo } from "../_helpers/Common.js";
 import {
@@ -27,6 +25,10 @@ import {
   useFilterBuilderNavigationPropertyEditorContextProviderProps,
 } from "../../presentation-components/instance-filter-builder/Utils.js";
 import { renderHook } from "../TestUtils.js";
+
+import type { PropertyDescription } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
 
 describe("createInstanceFilterPropertyInfos", () => {
   it("creates property infos when fields are in root category", () => {

@@ -5,13 +5,15 @@
 
 import "./ViewportContentControl.css";
 
-import { ComponentProps, useCallback, useEffect, useState } from "react";
-import { Id64String } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
+import { useCallback, useEffect, useState } from "react";
 import { ViewportComponent } from "@itwin/imodel-components-react";
-import { MyAppFrontend } from "../../api/MyAppFrontend";
+import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
 import { SelectionScopePicker } from "./SelectionScopePicker";
 import ViewDefinitionSelector from "./ViewDefinitionSelector";
+
+import type { ComponentProps } from "react";
+import type { Id64String } from "@itwin/core-bentley";
+import type { IModelConnection } from "@itwin/core-frontend";
 
 export interface ViewportContentComponentProps extends Pick<ComponentProps<typeof SelectionScopePicker>, "onSelectionScopeChanged"> {
   imodel: IModelConnection;

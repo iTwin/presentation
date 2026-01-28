@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as sinon from "sinon";
-import { EC, ECSchemaProvider } from "../shared/Metadata.js";
 import { parseFullClassName } from "../shared/Utils.js";
+
+import type { EC, ECSchemaProvider } from "../shared/Metadata.js";
 
 export interface StubClassFuncProps {
   schemaName: string;

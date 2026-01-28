@@ -8,8 +8,8 @@ import { useCallback, useState } from "react";
 import sinon from "sinon";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { InstanceKey, KeySet, PresentationRpcInterface } from "@itwin/presentation-common";
+import { IModelApp } from "@itwin/core-frontend";
+import { KeySet, PresentationRpcInterface } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
@@ -19,6 +19,9 @@ import { useOptionalDisposable } from "../../UseOptionalDisposable.js";
 import { isIterableManager } from "../../Utils.js";
 import { ensureHasError, ErrorBoundary } from "../ErrorBoundary.js";
 import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { InstanceKey } from "@itwin/presentation-common";
 
 describe("Learning snippets", () => {
   describe("Property grid", () => {
