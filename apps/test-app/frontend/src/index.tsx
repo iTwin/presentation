@@ -12,7 +12,6 @@ import { UiFramework } from "@itwin/appui-react";
 import { Logger, LogLevel, ProcessDetector } from "@itwin/core-bentley";
 import { BentleyCloudRpcManager } from "@itwin/core-common";
 import { ElectronApp } from "@itwin/core-electron/lib/cjs/ElectronFrontend";
-import type { IModelAppOptions } from "@itwin/core-frontend";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 // __PUBLISH_EXTRACT_START__ Presentation.Frontend.Imports
@@ -21,6 +20,8 @@ import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes,
 import { rpcInterfaces } from "@test-app/common";
 import { MyAppFrontend } from "./api/MyAppFrontend";
 import { App } from "./components/app/App";
+
+import type { IModelAppOptions } from "@itwin/core-frontend";
 
 // initialize logging
 Logger.initializeToConsole();

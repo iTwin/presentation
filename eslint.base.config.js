@@ -56,6 +56,7 @@ module.exports = [
       "@stylistic": stylistic,
     },
     files: ["**/*.{ts,tsx}"],
+    // Ignoring learning snippets to not affect extractions for documentation
     ignores: ["**/learning-snippets/**"],
     rules: {
       "no-duplicate-imports": "off",

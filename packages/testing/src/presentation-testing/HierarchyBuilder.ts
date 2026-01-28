@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
-/* eslint-disable unused-imports/no-unused-vars */
 /** @packageDocumentation
  * @module Hierarchies
  */
