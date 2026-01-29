@@ -304,6 +304,8 @@ describe("Hierarchies", () => {
                       { type: "DateTime", extendedType: "ShortDate", value: new Date(Date.UTC(2024, 11, 31)) },
                       " | Point2d: ",
                       { type: "Point2d", value: { x: 1.234, y: 5.678 } },
+                      " | Point3d: ",
+                      { type: "Point3d", value: { x: 1.234, y: 5.678, z: 9.101 } },
                     ],
                     partFormatter: async (x) => (ConcatenatedValuePart.isString(x) ? x : this._formatter(x)),
                   }),
@@ -354,10 +356,10 @@ describe("Hierarchies", () => {
 
         expect(consoleLogSpy.callCount).to.eq(2);
         expect(consoleLogSpy.getCall(0).args[0]).to.eq(
-          `Boolean: true | Integer: 123 | Double: 4.56 | Date/Time: ${new Date(Date.UTC(2024, 11, 31)).toLocaleDateString()} | Point2d: (1.23, 5.68)`,
+          `Boolean: true | Integer: 123 | Double: 4.56 | Date/Time: ${new Date(Date.UTC(2024, 11, 31)).toLocaleDateString()} | Point2d: (1.23, 5.68) | Point3d: (1.23, 5.68, 9.10)`,
         );
         expect(consoleLogSpy.getCall(1).args[0]).to.eq(
-          "Boolean: Yes | Integer: i123 | Double: 4.6e+0 | Date/Time: 2024-12-31T00:00:00.000Z | Point2d: { x: 1.2e+0, y: 5.7e+0 }",
+          "Boolean: Yes | Integer: i123 | Double: 4.6e+0 | Date/Time: 2024-12-31T00:00:00.000Z | Point2d: { x: 1.2e+0, y: 5.7e+0 } | Point3d: { x: 1.2e+0, y: 5.7e+0, z: 9.1e+0 }",
         );
       });
 

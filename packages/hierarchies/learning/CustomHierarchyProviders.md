@@ -348,6 +348,8 @@ const provider = createHierarchyProvider(
               { type: "DateTime", extendedType: "ShortDate", value: new Date(Date.UTC(2024, 11, 31)) },
               " | Point2d: ",
               { type: "Point2d", value: { x: 1.234, y: 5.678 } },
+              " | Point3d: ",
+              { type: "Point3d", value: { x: 1.234, y: 5.678, z: 9.101 } },
             ],
             partFormatter: async (x) => (ConcatenatedValuePart.isString(x) ? x : this._formatter(x)),
           }),
