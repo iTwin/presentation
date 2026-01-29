@@ -3,6 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import postcss from "rollup-plugin-postcss";
+
 import { defineConfig } from "tsdown";
 import { babel } from "@rollup/plugin-babel";
 
@@ -12,6 +14,7 @@ export default defineConfig({
   format: ["esm"],
   unbundle: true,
   plugins: [
+    postcss({ autoModules: true }),
     babel({
       babelHelpers: "bundled",
       parserOpts: {
@@ -29,4 +32,9 @@ export default defineConfig({
       extensions: [".js", ".jsx", ".ts", ".tsx"],
     }),
   ],
+  inputOptions: {
+    moduleTypes: {
+      ".css": "js",
+    },
+  },
 });

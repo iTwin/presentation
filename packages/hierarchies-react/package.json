@@ -119,6 +119,7 @@
     "react": "catalog:react",
     "react-dom": "catalog:react",
     "rimraf": "catalog:build-tools",
+    "rollup-plugin-postcss": "^4.0.2",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
     "tsdown": "catalog:build-tools",
