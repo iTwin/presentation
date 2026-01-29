@@ -4,29 +4,29 @@
 
 ```ts
 
-import type { ComponentProps } from 'react';
-import type { ComponentPropsWithoutRef } from 'react';
+import { ComponentProps } from 'react';
+import { ComponentPropsWithoutRef } from 'react';
 import { createIModelHierarchyProvider } from '@itwin/presentation-hierarchies';
-import type { FC } from 'react';
+import { FC } from 'react';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
-import type { GenericNodeKey } from '@itwin/presentation-hierarchies';
+import { GenericNodeKey } from '@itwin/presentation-hierarchies';
 import { getLogger } from '@itwin/presentation-hierarchies';
-import type { HierarchyDefinition } from '@itwin/presentation-hierarchies';
+import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
-import type { HierarchySearchPath } from '@itwin/presentation-hierarchies';
-import type { InstanceKey } from '@itwin/presentation-shared';
-import type { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
-import { JSX as JSX_2 } from 'react/jsx-runtime';
-import { NamedExoticComponent } from 'react';
-import type { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
-import type { Props } from '@itwin/presentation-shared';
-import type { PropsWithChildren } from 'react';
-import type { PropsWithoutRef } from 'react';
-import type { ReactElement } from 'react';
-import type { ReactNode } from 'react';
-import type { RefAttributes } from 'react';
-import type { Selectable } from '@itwin/unified-selection';
+import { HierarchySearchPath } from '@itwin/presentation-hierarchies';
+import { InstanceKey } from '@itwin/presentation-shared';
+import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
+import { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
+import { Props } from '@itwin/presentation-shared';
+import { PropsWithChildren } from 'react';
+import { PropsWithoutRef } from 'react';
+import * as react0 from 'react';
+import * as react_jsx_runtime2 from 'react/jsx-runtime';
+import { ReactElement } from 'react';
+import { ReactNode } from 'react';
+import { RefAttributes } from 'react';
+import { Selectable } from '@itwin/unified-selection';
 import { SelectionStorage } from '@itwin/unified-selection';
 import { setLogger } from '@itwin/presentation-hierarchies';
 import { Tree } from '@stratakit/structures';
@@ -51,7 +51,13 @@ interface CommonRendererProps {
 export type ErrorInfo = GenericErrorInfo | ResultSetTooLargeErrorInfo | NoFilterMatchesErrorInfo | ChildrenLoadErrorInfo;
 
 // @alpha
-export function ErrorItemRenderer({ errorNode, getHierarchyLevelDetails, filterHierarchyLevel, reloadTree, scrollToNode }: ErrorItemRendererProps): JSX_2.Element;
+export function ErrorItemRenderer({
+    errorNode,
+    getHierarchyLevelDetails,
+    filterHierarchyLevel,
+    reloadTree,
+    scrollToNode
+}: ErrorItemRendererProps): react_jsx_runtime2.JSX.Element;
 
 // @alpha (undocumented)
 interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
@@ -130,7 +136,10 @@ type IModelAccess = IModelHierarchyProviderProps["imodelAccess"];
 type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 
 // @public
-export function LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
+export function LocalizationContextProvider({
+    localizedStrings,
+    children
+}: PropsWithChildren<LocalizationContextProviderProps>): react_jsx_runtime2.JSX.Element;
 
 // @public
 interface LocalizationContextProviderProps {
@@ -211,7 +220,11 @@ export { SelectionStorage }
 export { setLogger }
 
 // @alpha
-export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): JSX_2.Element;
+export function StrataKitRootErrorRenderer({
+    error,
+    getHierarchyLevelDetails,
+    reloadTree
+}: StrataKitRootErrorRendererProps): react_jsx_runtime2.JSX.Element;
 
 // @alpha (undocumented)
 type StrataKitRootErrorRendererProps = {
@@ -235,7 +248,7 @@ export interface StrataKitTreeRendererAttributes {
 type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "filterHierarchyLevel"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
 // @alpha
-export const TreeActionBase: NamedExoticComponent<TreeActionBaseProps>;
+export const TreeActionBase: react0.NamedExoticComponent<TreeActionBaseProps>;
 
 // @alpha
 export interface TreeActionBaseAttributes {
@@ -247,7 +260,12 @@ export interface TreeActionBaseAttributes {
 type TreeActionBaseProps = ComponentProps<typeof Tree.ItemAction> & TreeActionBaseAttributes;
 
 // @alpha
-export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): JSX_2.Element;
+export function TreeErrorRenderer({
+    treeLabel,
+    errorNodes,
+    renderError,
+    ...errorItemRendererProps
+}: TreeErrorRendererProps): react_jsx_runtime2.JSX.Element;
 
 // @alpha
 interface TreeErrorRendererOwnProps {
@@ -289,15 +307,15 @@ interface TreeNodeEditingProps {
 }
 
 // @alpha
-export const TreeNodeFilterAction: NamedExoticComponent<    {
-onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
+export const TreeNodeFilterAction: react0.NamedExoticComponent<{
+    onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
 } & TreeActionBaseAttributes & Pick<TreeRendererProps, "getHierarchyLevelDetails"> & {
-node: TreeNode;
+    node: TreeNode;
 }>;
 
 // @alpha
-export const TreeNodeRenameAction: NamedExoticComponent<TreeActionBaseAttributes & {
-node: TreeNode;
+export const TreeNodeRenameAction: react0.NamedExoticComponent<TreeActionBaseAttributes & {
+    node: TreeNode;
 }>;
 
 // @alpha (undocumented)
@@ -328,7 +346,7 @@ interface TreeRendererOwnProps {
 export type TreeRendererProps = {
     rootNodes: TreeNode[];
     expandNode: (nodeId: string, isExpanded: boolean) => void;
-    selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
+    selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void; /** Determines whether a given node is selected. */
     isNodeSelected: (nodeId: string) => boolean;
 } & CommonRendererProps;
 
@@ -345,9 +363,9 @@ export function useIModelTree(props: UseIModelTreeProps): UseTreeResult;
 type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearchPaths"> & Pick<IModelHierarchyProviderProps, "localizedStrings" | "imodelAccess" | "imodelChanged"> & {
     getHierarchyDefinition: (props: {
         imodelAccess: IModelAccess;
-    }) => HierarchyDefinition;
+    }) => HierarchyDefinition; /** Provides paths to target nodes. */
     getSearchPaths?: (props: {
-        imodelAccess: IModelAccess;
+        imodelAccess: IModelAccess; /** Signal indicating that that the request was canceled */
         abortSignal: AbortSignal;
     }) => Promise<HierarchySearchPath[] | undefined>;
 };
@@ -356,7 +374,9 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearch
 export function useIModelUnifiedSelectionTree(props: UseIModelTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
 
 // @alpha
-export function useNodeHighlighting({ highlightText }: UseNodeHighlightingProps): UseNodeHighlightingResult;
+export function useNodeHighlighting({
+    highlightText
+}: UseNodeHighlightingProps): UseNodeHighlightingResult;
 
 // @alpha
 interface UseNodeHighlightingProps {
@@ -374,7 +394,9 @@ export function useTree(props: UseTreeProps): UseTreeResult;
 // @public (undocumented)
 interface UseTreeProps {
     getHierarchyProvider: () => HierarchyProvider;
-    getSearchPaths?: ({ abortSignal }: {
+    getSearchPaths?: ({
+        abortSignal
+    }: {
         abortSignal: AbortSignal;
     }) => Promise<HierarchySearchPath[] | undefined>;
     onHierarchyLimitExceeded?: (props: {
@@ -392,13 +414,18 @@ interface UseTreeProps {
 
 // @public (undocumented)
 type UseTreeResult = {
-    isReloading: boolean;
-    getNode: (nodeId: string) => TreeNode | undefined;
+    isReloading: boolean; /** Get a tree node by id */
+    getNode: (nodeId: string) => TreeNode | undefined; /** Sets a formatter for the primitive values that are displayed in the hierarchy. */
     setFormatter: (formatter: IPrimitiveValueFormatter | undefined) => void;
 } & RendererProps;
 
 // @public
-export function useUnifiedSelectionTree({ sourceName, selectionStorage, createSelectableForGenericNode, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
+export function useUnifiedSelectionTree({
+    sourceName,
+    selectionStorage,
+    createSelectableForGenericNode,
+    ...props
+}: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
 
 // @public (undocumented)
 interface UseUnifiedTreeSelectionProps {

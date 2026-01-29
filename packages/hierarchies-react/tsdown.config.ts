@@ -10,6 +10,7 @@ export default defineConfig({
   entry: "./src/presentation-hierarchies-react.ts",
   outDir: "./lib/esm",
   format: ["esm"],
+  fixedExtension: false,
   unbundle: true,
   external: [/\.css$/],
   plugins: [

@@ -28,10 +28,10 @@
     "Tree"
   ],
   "type": "module",
-  "types": "lib/esm/presentation-hierarchies-react.d.mts",
+  "types": "lib/esm/presentation-hierarchies-react.d.ts",
   "exports": {
     ".": {
-      "import": "./lib/esm/presentation-hierarchies-react.mjs"
+      "import": "./lib/esm/presentation-hierarchies-react.js"
     },
     "./package.json": "./package.json"
   },
@@ -44,7 +44,7 @@
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "test:dev": "node --experimental-test-module-mocks --enable-source-maps --import presentation-test-utilities/node-hooks/ignore-styles ./node_modules/mocha/bin/mocha.js --config ./.mocharc.json",
     "test": "npm run test:dev -- --parallel --jobs=4",
-    "extract-api": "betools extract-api --entry=lib/presentation-hierarchies-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "extract-api": "betools extract-api --entry=lib/esm/presentation-hierarchies-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-hierarchies-react.api.md",
     "update-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md",
     "check-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md --check",
