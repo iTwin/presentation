@@ -510,6 +510,12 @@ type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry
 export type Props<TFunc extends (...args: any[]) => any> = Parameters<TFunc>[0];
 
 // @public
+export interface RaisableEvent<TListener extends (...args: any[]) => void = () => void> extends Event_2<TListener> {
+    // (undocumented)
+    raiseEvent: (...args: Parameters<TListener>) => void;
+}
+
+// @public
 type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
 
 // @public

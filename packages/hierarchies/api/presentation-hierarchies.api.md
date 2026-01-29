@@ -11,6 +11,7 @@ import { ECSqlQueryDef } from '@itwin/presentation-shared';
 import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ECSqlQueryReaderOptions } from '@itwin/presentation-shared';
 import { Event as Event_2 } from '@itwin/presentation-shared';
+import type { EventListener as EventListener_2 } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/core-common';
 import { Id64String } from '@itwin/core-bentley';
 import { IInstanceLabelSelectClauseFactory } from '@itwin/presentation-shared';
@@ -20,6 +21,7 @@ import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { OmitOverUnion } from '@itwin/presentation-shared';
 import { PrimitiveValue } from '@itwin/presentation-shared';
 import type { Props } from '@itwin/presentation-shared';
+import type { RaisableEvent } from '@itwin/presentation-shared';
 
 // @public
 interface BaseHierarchyNode {
@@ -37,6 +39,11 @@ export interface ClassGroupingNodeKey {
     className: string;
     type: "class-grouping";
 }
+
+// @public
+export function createHierarchyProvider<TPartialProvider extends Partial<Omit<HierarchyProvider, "hierarchyChanged">> & Pick<HierarchyProvider, "getNodes">>(partialFactory: (props: {
+    hierarchyChanged: RaisableEvent<EventListener_2<HierarchyProvider["hierarchyChanged"]>>;
+}) => TPartialProvider): TPartialProvider & HierarchyProvider;
 
 // @public
 export function createHierarchySearchHelper(rootLevelSearchProps: HierarchySearchPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined): {

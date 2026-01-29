@@ -39,6 +39,7 @@ public;function;parseInstanceLabel
 public;type;PrimitiveValue
 public;namespace;PrimitiveValue
 public;type;Props
+public;interface;RaisableEvent
 public;function;releaseMainThread
 public;function;trimWhitespace
 public;function;trimWhitespace

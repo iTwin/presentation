@@ -3,8 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Event } from "./Event.js";
-
 /**
  * An utility `Omit` type which works with union types.
  * @public
@@ -22,15 +20,3 @@ export type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType exten
  * @public
  */
 export type Props<TFunc extends (...args: any[]) => any> = Parameters<TFunc>[0];
-
-/**
- * Returns type of the given `Event` listener.
- * @public
- */
-export type EventListener<TEvent extends {}> = TEvent extends Event<infer TListener> ? TListener : never;
-
-/**
- * Returns type of the given `Event` arguments.
- * @public
- */
-export type EventArgs<TEvent extends {}> = Props<EventListener<TEvent>>;
