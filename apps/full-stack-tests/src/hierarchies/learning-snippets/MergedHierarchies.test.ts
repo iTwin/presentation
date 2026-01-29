@@ -5,8 +5,7 @@
 
 import { expect } from "chai";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedHierarchies.Imports
-import { BeEvent } from "@itwin/core-bentley";
-import { GetHierarchyNodesProps, HierarchyNode, HierarchyProvider, mergeProviders } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, GetHierarchyNodesProps, HierarchyNode, mergeProviders } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collectHierarchy } from "./Utils.js";
@@ -25,18 +24,14 @@ describe("Hierarchies", () => {
       it("merges providers", async function () {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedHierarchies.Example
         // Create a very basic hierarchy provider factory
-        function createBasicHierarchyProvider(nodes: (parentNode: GetHierarchyNodesProps["parentNode"]) => HierarchyNode[]): HierarchyProvider {
-          return {
-            hierarchyChanged: new BeEvent(),
+        function createBasicHierarchyProvider(nodes: (parentNode: GetHierarchyNodesProps["parentNode"]) => HierarchyNode[]) {
+          return createHierarchyProvider(() => ({
             async *getNodes({ parentNode }) {
               for (const node of nodes(parentNode)) {
                 yield node;
               }
             },
-            async *getNodeInstanceKeys() {},
-            setFormatter() {},
-            setHierarchySearch() {},
-          };
+          }));
         }
         // A provider that returns a single "Node X" root node
         const provider1 = createBasicHierarchyProvider((parent) => {

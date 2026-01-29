@@ -3,8 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { BeEvent } from "@itwin/core-bentley";
+
 import type { GenericInstanceFilter } from "@itwin/core-common";
-import type { Event, InstanceKey, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import type { Event, EventListener, InstanceKey, IPrimitiveValueFormatter, Props, RaisableEvent } from "@itwin/presentation-shared";
 import type { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
 import type { HierarchySearchPath } from "./HierarchySearch.js";
 
@@ -105,4 +107,58 @@ export interface HierarchyProvider {
         }
       | undefined,
   ): void;
+}
+
+/**
+ * An utility to create a `HierarchyProvider` from a partial implementation.
+ *
+ * Creating a `HierarchyProvider` directly requires implementing all its methods:
+ * ```ts
+ * {
+ *   hierarchyChanged: new BeEvent(),
+ *   async *getNodes({ parentNode }) {
+ *     // yield nodes...
+ *   },
+ *   async *getNodeInstanceKeys() {},
+ *   setFormatter() {},
+ *   setHierarchySearch() {},
+ * }
+ * ```
+ *
+ * However, in many cases you may only need to implement the `getNodes` method and
+ * can rely on default implementations for other methods.
+ *
+ * With this utility you can implement only part of it, e.g. just the `getNodes` method:
+ * ```ts
+ * // provide implementation as a javascript object
+ * createHierarchyProvider(({ hierarchyChanged }) => ({
+ *   async *getNodes({ parentNode }) {
+ *     // yield nodes...
+ *   },
+ * }));
+ *
+ * // or, provide implementation as a class instance:
+ * createHierarchyProvider(
+ *   ({ hierarchyChanged }) =>
+ *     new (class implements Pick<HierarchyProvider, "getNodes"> {
+ *       public async *getNodes({ parentNode }): ReturnType<HierarchyProvider["getNodes"]> {
+ *         // yield nodes...
+ *       }
+ *     })(),
+ * );
+ * ```
+ *
+ * @public
+ */
+export function createHierarchyProvider<TPartialProvider extends Partial<Omit<HierarchyProvider, "hierarchyChanged">> & Pick<HierarchyProvider, "getNodes">>(
+  partialFactory: (props: { hierarchyChanged: RaisableEvent<EventListener<HierarchyProvider["hierarchyChanged"]>> }) => TPartialProvider,
+): TPartialProvider & HierarchyProvider {
+  const hierarchyChanged: Props<typeof partialFactory>["hierarchyChanged"] = new BeEvent();
+  const impl = partialFactory({ hierarchyChanged });
+  return Object.assign(impl, {
+    hierarchyChanged,
+    ...(impl.getNodeInstanceKeys ? { getNodeInstanceKeys: impl.getNodeInstanceKeys } : { /* c8 ignore next */ async *getNodeInstanceKeys() {} }),
+    ...(impl.setFormatter ? { setFormatter: impl.setFormatter } : { /* c8 ignore next */ setFormatter() {} }),
+    ...(impl.setHierarchySearch ? { setHierarchySearch: impl.setHierarchySearch } : { /* c8 ignore next */ setHierarchySearch() {} }),
+  });
 }

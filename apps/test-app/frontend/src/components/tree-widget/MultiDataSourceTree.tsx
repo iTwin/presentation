@@ -6,11 +6,12 @@
 import { XMLParser } from "fast-xml-parser";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { debounceTime, Subject } from "rxjs";
-import { BeEvent, Guid } from "@itwin/core-bentley";
+import { Guid } from "@itwin/core-bentley";
 import { SvgFolder, SvgGlobe, SvgImodelHollow, SvgItem, SvgModel } from "@itwin/itwinui-icons-react";
 import { Flex, ProgressRadial, SearchBox, Text } from "@itwin/itwinui-react";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
+  createHierarchyProvider,
   createHierarchySearchHelper,
   createIModelHierarchyProvider,
   createLimitingECSqlQueryExecutor,
@@ -37,7 +38,7 @@ import type {
   HierarchySearchPath,
 } from "@itwin/presentation-hierarchies";
 import type { TreeNode } from "@itwin/presentation-hierarchies-react";
-import type { IInstanceLabelSelectClauseFactory, InstanceKey, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import type { IInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 
 type UseTreeProps = Props<typeof useUnifiedSelectionTree>;
 type IModelAccess = Props<typeof createIModelHierarchyProvider>["imodelAccess"];
@@ -445,9 +446,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (fi
   }
 
   let search: HierarchySearchPath[] | undefined;
-  return {
-    hierarchyChanged: new BeEvent(),
-
+  return createHierarchyProvider(({ hierarchyChanged }) => ({
     async getSearchPaths(searchText: string): Promise<HierarchySearchPath[]> {
       const feed = await getFeed();
       const paths = new Array<HierarchyNodeIdentifiersPath>();
@@ -519,10 +518,6 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (fi
       }
     },
 
-    async *getNodeInstanceKeys(_props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey> {},
-
-    setFormatter(_formatter: IPrimitiveValueFormatter | undefined): void {},
-
     setHierarchySearch(
       props:
         | {
@@ -531,6 +526,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (fi
         | undefined,
     ): void {
       search = props?.paths;
+      hierarchyChanged.raiseEvent({ searchChange: { newSearch: props } });
     },
-  };
+  }));
 }

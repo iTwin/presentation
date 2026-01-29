@@ -6,8 +6,8 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { BeEvent } from "@itwin/core-bentley";
 import { StandaloneDb } from "@itwin/core-backend";
+import { createHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.RegisterTxnListeners.Imports
 import { BriefcaseDb } from "@itwin/core-backend";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
@@ -38,14 +38,12 @@ describe("Core interop", () => {
           return testIModel;
         }
 
-        const testHierarchyProvider = {
-          hierarchyChanged: new BeEvent(),
+        const hierarchyChangedSpy = sinon.spy();
+        const testHierarchyProvider = createHierarchyProvider(({ hierarchyChanged }) => ({
           async *getNodes() {},
-          async *getNodeInstanceKeys() {},
-          setFormatter() {},
-          setHierarchySearch() {},
-          notifyDataSourceChanged: sinon.spy(),
-        };
+          notifyDataSourceChanged: () => hierarchyChanged.raiseEvent({}),
+        }));
+        testHierarchyProvider.hierarchyChanged.addListener(hierarchyChangedSpy);
         function getHierarchyProvider() {
           return testHierarchyProvider;
         }
@@ -66,12 +64,11 @@ describe("Core interop", () => {
         imodel.onClosed.addOnce(() => unregister());
         // __PUBLISH_EXTRACT_END__
 
-        expect(testHierarchyProvider.notifyDataSourceChanged).to.not.have.been.called;
+        expect(hierarchyChangedSpy).to.not.have.been.called;
 
         testIModel.elements.insertAspect({ element: { id: "0x1" }, classFullName: "BisCore.ExternalSourceAspect" });
         testIModel.saveChanges();
-        expect(testHierarchyProvider.notifyDataSourceChanged).to.have.been.calledOnce;
-
+        expect(hierarchyChangedSpy).to.have.been.calledOnce;
         await testIModel.importSchemaStrings([
           getFullSchemaXml({
             schemaName: "TestSchema",
@@ -84,7 +81,7 @@ describe("Core interop", () => {
           }),
         ]);
         testIModel.saveChanges();
-        expect(testHierarchyProvider.notifyDataSourceChanged).to.have.been.calledTwice;
+        expect(hierarchyChangedSpy).to.have.been.calledTwice;
       });
     });
   });

@@ -16,22 +16,17 @@ The below example demonstrates how to create a hierarchy provider that merges th
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { BeEvent } from "@itwin/core-bentley";
-import { GetHierarchyNodesProps, HierarchyNode, HierarchyProvider, mergeProviders } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, GetHierarchyNodesProps, HierarchyNode, mergeProviders } from "@itwin/presentation-hierarchies";
 
 // Create a very basic hierarchy provider factory
-function createBasicHierarchyProvider(nodes: (parentNode: GetHierarchyNodesProps["parentNode"]) => HierarchyNode[]): HierarchyProvider {
-  return {
-    hierarchyChanged: new BeEvent(),
+function createBasicHierarchyProvider(nodes: (parentNode: GetHierarchyNodesProps["parentNode"]) => HierarchyNode[]) {
+  return createHierarchyProvider(() => ({
     async *getNodes({ parentNode }) {
       for (const node of nodes(parentNode)) {
         yield node;
       }
     },
-    async *getNodeInstanceKeys() {},
-    setFormatter() {},
-    setHierarchySearch() {},
-  };
+  }));
 }
 // A provider that returns a single "Node X" root node
 const provider1 = createBasicHierarchyProvider((parent) => {
