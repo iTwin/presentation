@@ -10,12 +10,11 @@ In the most basic form, a hierarchy provider only needs to implement the `getNod
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { BeEvent } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
 // Create a hierarchy provider that returns an infinite hierarchy, where each node has one child node.
-const provider: HierarchyProvider = {
+const provider = createHierarchyProvider(() => ({
   async *getNodes({ parentNode }) {
     yield !parentNode
       ? {
@@ -31,11 +30,7 @@ const provider: HierarchyProvider = {
           parentKeys: [...parentNode.parentKeys, parentNode.key],
         };
   },
-  async *getNodeInstanceKeys() {},
-  setFormatter() {},
-  setHierarchySearch() {},
-  hierarchyChanged: new BeEvent(),
-};
+}));
 ```
 
 <!-- END EXTRACTION -->
@@ -50,114 +45,102 @@ However, it's possible to write one from scratch. The following example demonstr
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { BeEvent } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
-import { BriefcaseConnection, IModelConnection } from "@itwin/core-frontend";
+import { BriefcaseConnection } from "@itwin/core-frontend";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
 
 // Create a hierarchy provider that returns the root bis.Subject and a hierarchy of its children.
-class IModelHierarchyProvider implements HierarchyProvider {
-  public hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
-  private _disposeTxnListeners: (() => void) | undefined;
-
-  public constructor(private _imodel: IModelConnection) {
-    if (this._imodel instanceof BriefcaseConnection) {
-      // Briefcase connections support data modifications - the provider should listen to txn changes
-      // and raise `hierarchyChanged` event when the hierarchy should be refreshed. `BriefcaseTxns` has a number
-      // of events that we should listen to - here we're using `registerTxnListeners` helper to simplify subscription.
-      this._disposeTxnListeners = registerTxnListeners(this._imodel.txns, () => this.hierarchyChanged.raiseEvent({}));
-    }
-  }
-
-  // Make this provider disposable. Owners of the provider should make sure `Symbol.dispose` is called when the
-  // provider is no longer needed.
-  // The tree state hooks from `@itwin/presentation-hierarchies-react` package take care of this for you.
-  public [Symbol.dispose]() {
-    this._disposeTxnListeners?.();
-  }
-
-  public async *getNodes({ parentNode }: Props<HierarchyProvider["getNodes"]>): AsyncIterableIterator<HierarchyNode> {
-    if (!parentNode) {
-      // Query and return root bis.Subject node
-      for await (const row of this._imodel.createQueryReader(
-        `
-          SELECT
-            COALESCE(s.UserLabel, s.CodeValue, ec_classname(s.ECClassId, 'c')) label,
-            (SELECT 1 FROM bis.Element c WHERE c.Parent.Id = s.ECInstanceId LIMIT 1) hasChildren
-          FROM bis.Subject s
-          WHERE s.Parent.Id IS NULL
-        `,
-      )) {
-        yield {
-          key: { type: "instances", instanceKeys: [{ className: "BisCore.Subject", id: "0x1", imodelKey: this._imodel.key }] },
-          label: row.label,
-          children: !!row.hasChildren,
-          parentKeys: [],
-        };
-      }
-      return;
-    }
-    // Query and return children for the given parent node, assuming it's based on data from the same iModel
-    if (
-      HierarchyNode.isInstancesNode(parentNode) &&
-      parentNode.key.instanceKeys.length > 0 &&
-      parentNode.key.instanceKeys.every((k) => k.imodelKey === this._imodel.key)
-    ) {
-      for await (const row of this._imodel.createQueryReader(
-        `
-          SELECT
-            ec_classname(e.ECClassId, 's.c') className,
-            e.ECInstanceId id,
-            COALESCE(e.UserLabel, e.CodeValue, ec_classname(e.ECClassId, 'c')) label,
-            (SELECT 1 FROM bis.Element c WHERE c.Parent.Id = e.ECInstanceId LIMIT 1) hasChildren
-          FROM bis.Element e
-          WHERE e.Parent.Id IN (${parentNode.key.instanceKeys.map((key) => key.id).join(",")})
-        `,
-      )) {
-        yield {
-          key: { type: "instances", instanceKeys: [{ className: row.className, id: row.id, imodelKey: this._imodel.key }] },
-          label: row.label,
-          children: !!row.hasChildren,
-          parentKeys: [...parentNode.parentKeys, parentNode.key],
-        };
-      }
-    }
-  }
-
-  // Since we're returning nodes based on instances in an iModel, we should also implement the `getNodeInstanceKeys` method
-  // allow efficient retrieval of instance keys
-  public async *getNodeInstanceKeys({ parentNode }: Props<HierarchyProvider["getNodeInstanceKeys"]>) {
-    if (!parentNode) {
-      // Don't need to run a query here - we know all iModels have one root Subject with `0x1` id
-      yield { className: "BisCore.Subject", id: "0x1", imodelKey: this._imodel.key };
-      return;
-    }
-    // Query and return children instance keys for the given parent node
-    if (
-      HierarchyNode.isInstancesNode(parentNode) &&
-      parentNode.key.instanceKeys.length > 0 &&
-      parentNode.key.instanceKeys.every((k) => k.imodelKey === this._imodel.key)
-    ) {
-      for await (const row of this._imodel.createQueryReader(
-        `
-          SELECT ec_classname(e.ECClassId, 's.c') className, e.ECInstanceId id
-          FROM bis.Element e
-          WHERE e.Parent.Id IN (${parentNode.key.instanceKeys.map((key) => key.id).join(",")})
-        `,
-      )) {
-        yield { className: row.className, id: row.id, imodelKey: this._imodel.key };
-      }
-    }
-  }
-
-  public setFormatter() {}
-  public setHierarchySearch() {}
-}
-
 // The `using` keyword makes sure the provider is disposed when it goes out of scope
-using provider = new IModelHierarchyProvider(imodel);
+using provider = createHierarchyProvider(({ hierarchyChanged }) => {
+  // Briefcase connections support data modifications - the provider should listen to txn changes
+  // and raise `hierarchyChanged` event when the hierarchy should be refreshed. `BriefcaseTxns` has a number
+  // of events that we should listen to - here we're using `registerTxnListeners` helper to simplify subscription.
+  const disposeTxnListeners = imodel instanceof BriefcaseConnection ? registerTxnListeners(imodel.txns, () => hierarchyChanged.raiseEvent({})) : undefined;
+  return {
+    // Make this provider disposable. Owners of the provider should make sure `Symbol.dispose` is called when the
+    // provider is no longer needed.
+    // The tree state hooks from `@itwin/presentation-hierarchies-react` package take care of this for you.
+    [Symbol.dispose]() {
+      disposeTxnListeners?.();
+    },
+
+    async *getNodes({ parentNode }: Props<HierarchyProvider["getNodes"]>): AsyncIterableIterator<HierarchyNode> {
+      if (!parentNode) {
+        // Query and return root bis.Subject node
+        for await (const row of imodel.createQueryReader(
+          `
+            SELECT
+              COALESCE(s.UserLabel, s.CodeValue, ec_classname(s.ECClassId, 'c')) label,
+              (SELECT 1 FROM bis.Element c WHERE c.Parent.Id = s.ECInstanceId LIMIT 1) hasChildren
+            FROM bis.Subject s
+            WHERE s.Parent.Id IS NULL
+          `,
+        )) {
+          yield {
+            key: { type: "instances", instanceKeys: [{ className: "BisCore.Subject", id: "0x1", imodelKey: imodel.key }] },
+            label: row.label,
+            children: !!row.hasChildren,
+            parentKeys: [],
+          };
+        }
+        return;
+      }
+      // Query and return children for the given parent node, assuming it's based on data from the same iModel
+      if (
+        HierarchyNode.isInstancesNode(parentNode) &&
+        parentNode.key.instanceKeys.length > 0 &&
+        parentNode.key.instanceKeys.every((k) => k.imodelKey === imodel.key)
+      ) {
+        for await (const row of imodel.createQueryReader(
+          `
+            SELECT
+              ec_classname(e.ECClassId, 's.c') className,
+              e.ECInstanceId id,
+              COALESCE(e.UserLabel, e.CodeValue, ec_classname(e.ECClassId, 'c')) label,
+              (SELECT 1 FROM bis.Element c WHERE c.Parent.Id = e.ECInstanceId LIMIT 1) hasChildren
+            FROM bis.Element e
+            WHERE e.Parent.Id IN (${parentNode.key.instanceKeys.map((key) => key.id).join(",")})
+          `,
+        )) {
+          yield {
+            key: { type: "instances", instanceKeys: [{ className: row.className, id: row.id, imodelKey: imodel.key }] },
+            label: row.label,
+            children: !!row.hasChildren,
+            parentKeys: [...parentNode.parentKeys, parentNode.key],
+          };
+        }
+      }
+    },
+
+    // Since we're returning nodes based on instances in an iModel, we should also implement the `getNodeInstanceKeys` method
+    // to allow efficient retrieval of instance keys
+    async *getNodeInstanceKeys({ parentNode }: Props<HierarchyProvider["getNodeInstanceKeys"]>) {
+      if (!parentNode) {
+        // Don't need to run a query here - we know all iModels have one root Subject with `0x1` id
+        yield { className: "BisCore.Subject", id: "0x1", imodelKey: imodel.key };
+        return;
+      }
+      // Query and return children instance keys for the given parent node
+      if (
+        HierarchyNode.isInstancesNode(parentNode) &&
+        parentNode.key.instanceKeys.length > 0 &&
+        parentNode.key.instanceKeys.every((k) => k.imodelKey === imodel.key)
+      ) {
+        for await (const row of imodel.createQueryReader(
+          `
+            SELECT ec_classname(e.ECClassId, 's.c') className, e.ECInstanceId id
+            FROM bis.Element e
+            WHERE e.Parent.Id IN (${parentNode.key.instanceKeys.map((key) => key.id).join(",")})
+          `,
+        )) {
+          yield { className: row.className, id: row.id, imodelKey: imodel.key };
+        }
+      }
+    },
+  };
+});
 
 // Traverse the hierarchy to ensure expected nodes are returned. The result depends on
 // the iModel given to the provider.
@@ -256,8 +239,7 @@ Now that we have a service, let's create a hierarchy provider that creates a hie
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { BeEvent } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
 // Create a fake books service that simulates fetching authors and books data.
@@ -265,7 +247,7 @@ const booksService = createBooksService();
 
 // Create a hierarchy provider that returns a two-level hierarchy, where root nodes are authors and their
 // children are books.
-const provider: HierarchyProvider = {
+const provider = createHierarchyProvider(() => ({
   async *getNodes({ parentNode }) {
     if (!parentNode) {
       // For root nodes, query authors and return nodes based on them
@@ -289,11 +271,7 @@ const provider: HierarchyProvider = {
       }
     }
   },
-  async *getNodeInstanceKeys() {},
-  setHierarchySearch() {},
-  setFormatter() {},
-  hierarchyChanged: new BeEvent(),
-};
+}));
 
 // Traverse the hierarchy:
 await traverseHierarchy(provider);
@@ -334,58 +312,50 @@ With the above APIs at hand, implementing node label formatting is straightforwa
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { BeEvent } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
-import {
-  ConcatenatedValue,
-  ConcatenatedValuePart,
-  createDefaultValueFormatter,
-  EventListener,
-  IPrimitiveValueFormatter,
-  julianToDateTime,
-} from "@itwin/presentation-shared";
+import { ConcatenatedValue, ConcatenatedValuePart, createDefaultValueFormatter, IPrimitiveValueFormatter, julianToDateTime } from "@itwin/presentation-shared";
 
 // Create a hierarchy provider that returns a single root node with formatted label. The formatter used by the
 // provider can be changed by calling the `setFormatter` method.
-class FormattingHierarchyProvider implements HierarchyProvider {
-  private _formatter: IPrimitiveValueFormatter = createDefaultValueFormatter();
-  public hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
-  public async *getNodes(): ReturnType<HierarchyProvider["getNodes"]> {
-    yield {
-      key: { type: "generic", id: `formatted-node` },
-      // We're using `ConcatenatedValue` to simplify formatting complex values consisting of different parts
-      // that may need to be formatted differently
-      label: await ConcatenatedValue.serialize({
-        parts: [
-          "Boolean: ",
-          { type: "Boolean", value: true },
-          " | Integer: ",
-          { type: "Integer", value: 123 },
-          " | Double: ",
-          { type: "Double", value: 4.56 },
-          " | Date/Time: ",
-          { type: "DateTime", extendedType: "ShortDate", value: new Date(Date.UTC(2024, 11, 31)) },
-          " | Point2d: ",
-          { type: "Point2d", value: { x: 1.234, y: 5.678 } },
-        ],
-        partFormatter: async (x) => (ConcatenatedValuePart.isString(x) ? x : this._formatter(x)),
-      }),
-      children: false,
-      parentKeys: [],
-    };
-  }
-  public async *getNodeInstanceKeys() {}
-  public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
-    this._formatter = formatter ?? createDefaultValueFormatter();
-    // Changing formatter requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
-    this.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: this._formatter } });
-  }
-  public setHierarchySearch() {}
-}
+const provider = createHierarchyProvider(({ hierarchyChanged }) => {
+  let formatter: IPrimitiveValueFormatter = createDefaultValueFormatter();
+  return {
+    async *getNodes(): ReturnType<HierarchyProvider["getNodes"]> {
+      yield {
+        key: { type: "generic", id: `formatted-node` },
+        parentKeys: [],
+        // We're using `ConcatenatedValue` to simplify formatting complex values consisting of different parts
+        // that may need to be formatted differently
+        label: await ConcatenatedValue.serialize({
+          parts: [
+            "Boolean: ",
+            { type: "Boolean", value: true },
+            " | Integer: ",
+            { type: "Integer", value: 123 },
+            " | Double: ",
+            { type: "Double", value: 4.56 },
+            " | Date/Time: ",
+            { type: "DateTime", extendedType: "ShortDate", value: new Date(Date.UTC(2024, 11, 31)) },
+            " | Point2d: ",
+            { type: "Point2d", value: { x: 1.234, y: 5.678 } },
+            " | Point3d: ",
+            { type: "Point3d", value: { x: 1.234, y: 5.678, z: 9.101 } },
+          ],
+          partFormatter: async (x) => (ConcatenatedValuePart.isString(x) ? x : formatter(x)),
+        }),
+        children: false,
+      };
+    },
 
-const provider = new FormattingHierarchyProvider();
+    setFormatter(newFormatter: IPrimitiveValueFormatter | undefined) {
+      formatter = newFormatter ?? createDefaultValueFormatter();
+      // Changing formatter requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
+      hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: formatter } });
+    },
+  };
+});
 
 // Default formatter will format the node label to the following value (Date/Time formatted according to the locale and time zone):
 // `Boolean: true | Integer: 123 | Double: 4.56 | Date/Time: 2024-12-31 | Point2d: (1.23, 5.68)`
@@ -409,6 +379,8 @@ provider.setFormatter(async (typedValue) => {
       ).toISOString();
     case "Point2d":
       return `{ x: ${typedValue.value.x.toExponential(1)}, y: ${typedValue.value.y.toExponential(1)} }`;
+    case "Point3d":
+      return `{ x: ${typedValue.value.x.toExponential(1)}, y: ${typedValue.value.y.toExponential(1)}, z: ${typedValue.value.z.toExponential(1)} }`;
   }
   return typedValue.value.toString();
 });
@@ -437,14 +409,10 @@ As described in the [Hierarchy search](./HierarchySearch.md) learning page, the 
 
 Let's start with the first step:
 
-<!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderImports, Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderExample.PathsLookup], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderImports, Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderExample.PathsLookup], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { BeEvent } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
-
 import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
 // A function that matches given string against authors and books, and returns hierarchy paths
@@ -476,15 +444,13 @@ Now that we're able to find the paths, let's enhance our hierarchy provider to s
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { BeEvent } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
 import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
 let rootSearch: Props<HierarchyProvider["setHierarchySearch"]>;
-const hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
-const provider: HierarchyProvider = {
+const provider = createHierarchyProvider(({ hierarchyChanged }) => ({
   async *getNodes({ parentNode }) {
     const searchHelper = !parentNode || HierarchyNode.isGeneric(parentNode) ? createHierarchySearchHelper(rootSearch?.paths, parentNode) : undefined;
     const targetNodeKeys = searchHelper?.getChildNodeSearchIdentifiers();
@@ -548,10 +514,7 @@ const provider: HierarchyProvider = {
     // Changing the search requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
     hierarchyChanged.raiseEvent({ searchChange: { newSearch: rootSearch } });
   },
-  async *getNodeInstanceKeys() {},
-  setFormatter() {},
-  hierarchyChanged,
-};
+}));
 ```
 
 <!-- END EXTRACTION -->
@@ -640,11 +603,10 @@ Here's how the final provider looks like:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { BeEvent } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
-const provider: HierarchyProvider = {
+const provider = createHierarchyProvider(() => ({
   async *getNodes({ parentNode, instanceFilter }) {
     if (!parentNode) {
       // For root nodes, query authors and return nodes based on them
@@ -674,11 +636,7 @@ const provider: HierarchyProvider = {
       }
     }
   },
-  setHierarchySearch() {},
-  async *getNodeInstanceKeys() {},
-  setFormatter() {},
-  hierarchyChanged: new BeEvent(),
-};
+}));
 ```
 
 <!-- END EXTRACTION -->

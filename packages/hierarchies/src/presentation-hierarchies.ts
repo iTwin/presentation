@@ -42,7 +42,7 @@ export {
   PropertyValueRangeGroupingNodeKey,
   IModelHierarchyNodeKey,
 } from "./hierarchies/HierarchyNodeKey.js";
-export { GetHierarchyNodesProps, HierarchyProvider } from "./hierarchies/HierarchyProvider.js";
+export { createHierarchyProvider, GetHierarchyNodesProps, HierarchyProvider } from "./hierarchies/HierarchyProvider.js";
 export { mergeProviders } from "./hierarchies/HierarchyMerge.js";
 export { createHierarchySearchHelper, HierarchySearchPath, HierarchySearchPathOptions } from "./hierarchies/HierarchySearch.js";
 export { getLogger, setLogger } from "./hierarchies/Logging.js";

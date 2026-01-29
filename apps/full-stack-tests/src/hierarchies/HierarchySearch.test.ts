@@ -12,9 +12,9 @@ import {
   insertSubject,
 } from "presentation-test-utilities";
 import { Subject } from "@itwin/core-backend";
-import { BeEvent } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import {
+  createHierarchyProvider,
   createHierarchySearchHelper,
   createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
@@ -42,7 +42,7 @@ import type {
   HierarchyProvider,
   IModelInstanceKey,
 } from "@itwin/presentation-hierarchies";
-import type { ECSqlBinding, EventListener, InstanceKey, Props } from "@itwin/presentation-shared";
+import type { ECSqlBinding, InstanceKey, Props } from "@itwin/presentation-shared";
 
 describe("Hierarchies", () => {
   describe("Hierarchy search", () => {
@@ -1739,43 +1739,42 @@ describe("Hierarchies", () => {
             },
           },
         });
-        const provider4 = new (class implements HierarchyProvider {
-          public hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
-          private _search: HierarchySearchPath[] | undefined;
-          public getNodes: HierarchyProvider["getNodes"] = ({ parentNode }) => {
-            if (!parentNode) {
-              const myNode = {
-                key: { type: "generic", id: "gen", source: "custom-provider" } satisfies GenericNodeKey,
-                label: "Generic node 4",
-                parentKeys: [],
-                children: false,
+        const provider4 = createHierarchyProvider(
+          ({ hierarchyChanged }) =>
+            new (class implements Pick<HierarchyProvider, "getNodes"> {
+              private _search: HierarchySearchPath[] | undefined;
+              public getNodes: HierarchyProvider["getNodes"] = ({ parentNode }) => {
+                if (!parentNode) {
+                  const myNode = {
+                    key: { type: "generic", id: "gen", source: "custom-provider" } satisfies GenericNodeKey,
+                    label: "Generic node 4",
+                    parentKeys: [],
+                    children: false,
+                  };
+                  if (!this._search) {
+                    return createAsyncIterator([myNode]);
+                  }
+                  const nodeMatchesSearch = this._search.some((fp) => {
+                    const { path } = HierarchySearchPath.normalize(fp);
+                    return (
+                      path.length &&
+                      HierarchyNodeIdentifier.isGenericNodeIdentifier(path[0]) &&
+                      path[0].source === "custom-provider" &&
+                      path[0].id === myNode.key.id
+                    );
+                  });
+                  if (nodeMatchesSearch) {
+                    return createAsyncIterator([{ ...myNode, search: { isSearchTarget: true } }]);
+                  }
+                }
+                return createAsyncIterator([]);
               };
-              if (!this._search) {
-                return createAsyncIterator([myNode]);
-              }
-              const nodeMatchesSearch = this._search.some((fp) => {
-                const { path } = HierarchySearchPath.normalize(fp);
-                return (
-                  path.length &&
-                  HierarchyNodeIdentifier.isGenericNodeIdentifier(path[0]) &&
-                  path[0].source === "custom-provider" &&
-                  path[0].id === myNode.key.id
-                );
-              });
-              if (nodeMatchesSearch) {
-                return createAsyncIterator([{ ...myNode, search: { isSearchTarget: true } }]);
-              }
-            }
-            return createAsyncIterator([]);
-          };
-          public getNodeInstanceKeys: HierarchyProvider["getNodeInstanceKeys"] = () => {
-            return createAsyncIterator([]);
-          };
-          public setFormatter: HierarchyProvider["setFormatter"] = () => {};
-          public setHierarchySearch: HierarchyProvider["setHierarchySearch"] = (props) => {
-            this._search = props?.paths;
-          };
-        })();
+              public setHierarchySearch: HierarchyProvider["setHierarchySearch"] = (props) => {
+                this._search = props?.paths;
+                hierarchyChanged.raiseEvent({ searchChange: { newSearch: props } });
+              };
+            })(),
+        );
 
         // ensure we have expected default hierarchy
         await validateHierarchy({
@@ -1923,38 +1922,38 @@ describe("Hierarchies", () => {
         const provider1 = createSubjectsHierarchyProvider(createIModelAccess(imodel1));
         const provider2 = createSubjectsHierarchyProvider(createIModelAccess(imodel2));
         // create generic node provider that creates a node for every bis.Subject node of any iModel
-        const provider3 = new (class implements HierarchyProvider {
-          public hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
-          public getNodes: HierarchyProvider["getNodes"] = ({ parentNode }) => {
-            if (
-              parentNode &&
-              HierarchyNode.isInstancesNode(parentNode) &&
-              parentNode.key.instanceKeys.some(({ className }) => className === subjectClassName)
-            ) {
-              const myNode = {
-                key: { type: "generic", id: "gen", source: "custom-provider" } satisfies GenericNodeKey,
-                label: "Generic node",
-                parentKeys: [...parentNode.parentKeys, parentNode.key],
-                children: false,
+        const provider3 = createHierarchyProvider(
+          () =>
+            new (class implements Pick<HierarchyProvider, "getNodes" | "setHierarchySearch"> {
+              public getNodes: HierarchyProvider["getNodes"] = ({ parentNode }) => {
+                if (
+                  parentNode &&
+                  HierarchyNode.isInstancesNode(parentNode) &&
+                  parentNode.key.instanceKeys.some(({ className }) => className === subjectClassName)
+                ) {
+                  const myNode = {
+                    key: { type: "generic", id: "gen", source: "custom-provider" } satisfies GenericNodeKey,
+                    label: "Generic node",
+                    parentKeys: [...parentNode.parentKeys, parentNode.key],
+                    children: false,
+                  };
+                  const searchHelper = createHierarchySearchHelper(undefined, parentNode);
+                  if (!searchHelper.hasSearch) {
+                    return createAsyncIterator([myNode]);
+                  }
+                  const nodeMatchesSearch = searchHelper.getChildNodeSearchIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
+                  if (nodeMatchesSearch) {
+                    return createAsyncIterator([{ ...myNode, ...searchHelper.createChildNodeProps({ nodeKey: myNode.key, parentKeys: myNode.parentKeys }) }]);
+                  }
+                }
+                return createAsyncIterator([]);
               };
-              const searchHelper = createHierarchySearchHelper(undefined, parentNode);
-              if (!searchHelper.hasSearch) {
-                return createAsyncIterator([myNode]);
-              }
-              const nodeMatchesSearch = searchHelper.getChildNodeSearchIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
-              if (nodeMatchesSearch) {
-                return createAsyncIterator([{ ...myNode, ...searchHelper.createChildNodeProps({ nodeKey: myNode.key, parentKeys: myNode.parentKeys }) }]);
-              }
-            }
-            return createAsyncIterator([]);
-          };
-          public getNodeInstanceKeys: HierarchyProvider["getNodeInstanceKeys"] = () => createAsyncIterator([]);
-          public setFormatter: HierarchyProvider["setFormatter"] = () => {};
-          public setHierarchySearch: HierarchyProvider["setHierarchySearch"] = () => {
-            // don't need to save this, because this provider doesn't return any root nodes and for
-            // child nodes we take search paths from parent node
-          };
-        })();
+              public setHierarchySearch: HierarchyProvider["setHierarchySearch"] = () => {
+                // don't need to save this, because this provider doesn't return any root nodes and for
+                // child nodes we take search paths from parent node
+              };
+            })(),
+        );
 
         // ensure we have expected default hierarchy
         await validateHierarchy({
