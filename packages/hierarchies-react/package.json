@@ -29,7 +29,6 @@
   ],
   "type": "module",
   "types": "lib/esm/presentation-hierarchies-react.d.mts",
-  "module": "lib/esm/presentation-hierarchies-react.mjs",
   "exports": {
     ".": {
       "import": "./lib/esm/presentation-hierarchies-react.mjs"
