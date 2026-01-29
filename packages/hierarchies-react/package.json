@@ -36,7 +36,8 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsdown && npm run -s build:test",
+    "build": "tsdown && npm run -s copy:css && npm run -s build:test",
+    "copy:css": "cpx \"./src/**/*.css\" ./lib/esm",
     "build:test": "tsc -p tsconfig.test.json",
     "clean": "rimraf lib build",
     "cover": "c8 npm -s test",
@@ -119,7 +120,6 @@
     "react": "catalog:react",
     "react-dom": "catalog:react",
     "rimraf": "catalog:build-tools",
-    "rollup-plugin-postcss": "^4.0.2",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
     "tsdown": "catalog:build-tools",
