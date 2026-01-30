@@ -3,6 +3,7 @@ build
 lib
 node_modules
 built-packages
+dist
 
 /packages/*/api/temp
 

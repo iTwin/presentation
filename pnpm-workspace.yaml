@@ -91,7 +91,6 @@ hoistPattern:
 onlyBuiltDependencies:
   - '@bentley/imodeljs-native'
   - electron
-  - esbuild
 
 resolutionMode: lowest-direct
 
