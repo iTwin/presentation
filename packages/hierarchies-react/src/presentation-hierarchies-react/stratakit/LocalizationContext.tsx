@@ -173,6 +173,7 @@ export function LocalizationContextProvider({ localizedStrings, children }: Prop
   const [state, setState] = useState({ localizedStrings: { ...defaultLocalizedStrings, ...localizedStrings } });
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState({ localizedStrings: { ...defaultLocalizedStrings, ...localizedStrings } });
   }, [localizedStrings]);
 

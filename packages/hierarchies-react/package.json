@@ -112,6 +112,7 @@
     "cross-env": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "global-jsdom": "catalog:test-tools",
     "ignore-styles": "catalog:test-tools",
     "jsdom": "catalog:test-tools",

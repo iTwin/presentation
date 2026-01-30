@@ -5,6 +5,19 @@ settings:
   excludeLinksFromLockfile: false
 
 catalogs:
+  appui:
+    '@itwin/appui-react':
+      specifier: ^5.23.0
+      version: 5.23.0
+    '@itwin/components-react':
+      specifier: ^5.23.0
+      version: 5.23.0
+    '@itwin/core-react':
+      specifier: ^5.23.0
+      version: 5.23.0
+    '@itwin/imodel-components-react':
+      specifier: ^5.23.0
+      version: 5.23.0
   build-tools:
     '@itwin/build-tools':
       specifier: ^5.5.1
@@ -15,6 +28,9 @@ catalogs:
     '@rollup/plugin-babel':
       specifier: ^6.1.0
       version: 6.1.0
+    '@stylistic/eslint-plugin':
+      specifier: ^5.7.1
+      version: 5.7.1
     '@types/node':
       specifier: ^22.19.7
       version: 22.19.7
@@ -33,6 +49,9 @@ catalogs:
     eslint-plugin-react:
       specifier: ^7.37.5
       version: 7.37.5
+    eslint-plugin-unused-imports:
+      specifier: ^4.3.0
+      version: 4.3.0
     rimraf:
       specifier: ^6.1.2
       version: 6.1.2
@@ -46,6 +65,74 @@ catalogs:
     '@itwin/core-bentley':
       specifier: ^5.5.1
       version: 5.5.1
+    '@itwin/core-common':
+      specifier: ^5.5.1
+      version: 5.5.1
+    '@itwin/core-geometry':
+      specifier: ^5.5.1
+      version: 5.5.1
+  itwinjs-core-dev:
+    '@itwin/appui-abstract':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/core-backend':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/core-bentley':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/core-common':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/core-electron':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/core-frontend':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/core-geometry':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/core-i18n':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/core-orbitgt':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/core-quantity':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/ecschema-metadata':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/ecschema-rpcinterface-common':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/ecschema-rpcinterface-impl':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/express-server':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/presentation-backend':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/presentation-common':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+    '@itwin/presentation-frontend':
+      specifier: ^5.6.0-dev.8
+      version: 5.6.0-dev.8
+  itwinui:
+    '@itwin/itwinui-icons-react':
+      specifier: ^2.11.0
+      version: 2.11.0
+    '@itwin/itwinui-illustrations-react':
+      specifier: ^2.1.0
+      version: 2.1.0
+    '@itwin/itwinui-react':
+      specifier: ^3.20.1
+      version: 3.20.1
   react:
     '@types/react':
       specifier: ^18.3.27
@@ -72,6 +159,9 @@ catalogs:
     rxjs:
       specifier: ^7.8.2
       version: 7.8.2
+    rxjs-for-await:
+      specifier: ^1.0.0
+      version: 1.0.0
   stratakit:
     '@stratakit/bricks':
       specifier: ^0.5.4
@@ -101,6 +191,12 @@ catalogs:
     '@types/chai-as-promised':
       specifier: ^8.0.2
       version: 8.0.2
+    '@types/chai-jest-snapshot':
+      specifier: ^1.3.8
+      version: 1.3.8
+    '@types/deep-equal-in-any-order':
+      specifier: ^1.0.4
+      version: 1.0.4
     '@types/jsdom':
       specifier: ^21.1.7
       version: 21.1.7
@@ -122,6 +218,12 @@ catalogs:
     chai-as-promised:
       specifier: ^8.0.2
       version: 8.0.2
+    chai-jest-snapshot:
+      specifier: ^2.0.0
+      version: 2.0.0
+    deep-equal-in-any-order:
+      specifier: ^2.1.0
+      version: 2.1.0
     global-jsdom:
       specifier: ^26.0.0
       version: 26.0.0
@@ -1306,6 +1408,9 @@ importers:
       eslint-plugin-react:
         specifier: catalog:build-tools
         version: 7.37.5(eslint@9.39.2)
+      eslint-plugin-react-hooks:
+        specifier: ^7.0.1
+        version: 7.0.1(eslint@9.39.2)
       global-jsdom:
         specifier: catalog:test-tools
         version: 26.0.0(jsdom@26.1.0)
@@ -5893,6 +5998,12 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
 
+  eslint-plugin-react-hooks@7.0.1:
+    resolution: {integrity: sha512-O0d0m04evaNzEPoSW+59Mezf8Qt0InfgGIBJnpC0h3NH/WjUAR7BIKUfysC6todmtiZ/A0oUVS8Gce0WhBrHsA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
+
   eslint-plugin-react@7.37.5:
     resolution: {integrity: sha512-Qteup0SqU15kdocexFNAJMvCJEfa2xUKNV4CC1xsVMrIIqEy3SQ/rqyxCWNzfrd3/ldy6HMlD2e0JDVpDg2qIA==}
     engines: {node: '>=4'}
@@ -6404,6 +6515,12 @@ packages:
   he@1.2.0:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
+
+  hermes-estree@0.25.1:
+    resolution: {integrity: sha512-0wUoCcLp+5Ev5pDW2OriHC2MJCbwLwuRx+gAqMTOkGKJJiBCLjtrvy4PWUGn6MIVefecRpzoOZ/UV6iGdOr+Cw==}
+
+  hermes-parser@0.25.1:
+    resolution: {integrity: sha512-6pEjquH3rqaI6cYAXYPcz9MS4rY6R4ngRgrgfDshRptUZIc3lw0MCIJIGDj9++mfySOuPTHB4nrSW99BCvOPIA==}
 
   hookable@6.0.1:
     resolution: {integrity: sha512-uKGyY8BuzN/a5gvzvA+3FVWo0+wUjgtfSdnmjtrOVwQCZPHpHDH2WRO3VZSOeluYrHoDCiXFffZXs8Dj1ULWtw==}
@@ -8990,6 +9107,15 @@ packages:
     resolution: {integrity: sha512-U/PBtDf35ff0D8X8D0jfdzHYEPFxAI7jJlxZXwCSez5M3190m+QobIfh+sWDWSHMCWWJN2AWamkegn6vr6YBTw==}
     engines: {node: '>=18'}
 
+  zod-validation-error@4.0.2:
+    resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      zod: ^3.25.0 || ^4.0.0
+
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
+
   zustand@4.5.7:
     resolution: {integrity: sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==}
     engines: {node: '>=12.7.0'}
@@ -11231,7 +11357,7 @@ snapshots:
       rimraf: 6.1.2
       tree-kill: 1.2.2
       typedoc: 0.26.11(typescript@5.6.3)
-      typedoc-plugin-merge-modules: 6.1.0(typedoc@0.26.11(typescript@5.6.3))
+      typedoc-plugin-merge-modules: 6.1.0(typedoc@0.26.11(typescript@5.7.3))
       typescript: 5.6.3
       wtfnode: 0.9.4
       yargs: 17.7.2
@@ -14846,6 +14972,17 @@ snapshots:
     dependencies:
       eslint: 9.39.2
 
+  eslint-plugin-react-hooks@7.0.1(eslint@9.39.2):
+    dependencies:
+      '@babel/core': 7.28.6
+      '@babel/parser': 7.28.6
+      eslint: 9.39.2
+      hermes-parser: 0.25.1
+      zod: 4.3.6
+      zod-validation-error: 4.0.2(zod@4.3.6)
+    transitivePeerDependencies:
+      - supports-color
+
   eslint-plugin-react@7.37.5(eslint@9.39.2):
     dependencies:
       array-includes: 3.1.9
@@ -15467,6 +15604,12 @@ snapshots:
       '@types/hast': 3.0.4
 
   he@1.2.0: {}
+
+  hermes-estree@0.25.1: {}
+
+  hermes-parser@0.25.1:
+    dependencies:
+      hermes-estree: 0.25.1
 
   hookable@6.0.1: {}
 
@@ -17826,7 +17969,7 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typedoc-plugin-merge-modules@6.1.0(typedoc@0.26.11(typescript@5.6.3)):
+  typedoc-plugin-merge-modules@6.1.0(typedoc@0.26.11(typescript@5.7.3)):
     dependencies:
       typedoc: 0.26.11(typescript@5.6.3)
 
@@ -18203,6 +18346,12 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   yoctocolors-cjs@2.1.3: {}
+
+  zod-validation-error@4.0.2(zod@4.3.6):
+    dependencies:
+      zod: 4.3.6
+
+  zod@4.3.6: {}
 
   zustand@4.5.7(@types/react@18.3.27)(immer@10.2.0)(react@18.3.1):
     dependencies:

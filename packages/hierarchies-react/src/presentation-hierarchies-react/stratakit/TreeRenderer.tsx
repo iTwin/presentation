@@ -120,6 +120,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
 
   const parentRef = useRef<HTMLDivElement>(null);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: flatItems.length,
     getScrollElement: () => parentRef.current,
