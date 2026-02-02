@@ -947,7 +947,7 @@ function tryMergeInstanceNodes(primary: SourceHierarchyNode, secondary: SourceHi
   return undefined;
 }
 function tryMergeGenericNodes(primary: SourceHierarchyNode, secondary: SourceHierarchyNode): SourceHierarchyNode | undefined {
-  if (HierarchyNode.isGeneric(primary) && HierarchyNode.isGeneric(secondary)) {
+  if (HierarchyNode.isGeneric(primary) && HierarchyNode.isGeneric(secondary) && primary.key.id === secondary.key.id) {
     const searchProps = mergeSearchProps(primary.search, secondary.search);
     return {
       ...primary,
