@@ -6,9 +6,7 @@
 import glob from "fast-glob";
 import { defineConfig } from "tsdown";
 
-// Get all test files
 const testFiles = await glob("src/test/**/*.{ts,tsx}");
-
 export default defineConfig({
   entry: testFiles,
   outDir: "./lib/esm/test",
