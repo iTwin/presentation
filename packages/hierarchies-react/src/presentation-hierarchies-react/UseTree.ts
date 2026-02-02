@@ -95,9 +95,13 @@ export type UseTreeResult = {
    * or tree is reloading.
    */
   isReloading: boolean;
-  /** Get a tree node by id */
+  /**
+   * Get a tree node by id
+   */
   getNode: (nodeId: string) => TreeNode | undefined;
-  /** Sets a formatter for the primitive values that are displayed in the hierarchy. */
+  /**
+   * Sets a formatter for the primitive values that are displayed in the hierarchy.
+   */
   setFormatter: (formatter: IPrimitiveValueFormatter | undefined) => void;
 } & RendererProps;
 

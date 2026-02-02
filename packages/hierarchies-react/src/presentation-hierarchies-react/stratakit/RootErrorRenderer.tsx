@@ -15,7 +15,9 @@ import type { ErrorInfo } from "../TreeNode.js";
  * @alpha
  */
 export type StrataKitRootErrorRendererProps = {
-  /** Root error to be displayed */
+  /**
+   * Root error to be displayed
+   */
   error: ErrorInfo;
 } & RootErrorRendererProps;
 

@@ -346,7 +346,7 @@ interface TreeRendererOwnProps {
 export type TreeRendererProps = {
     rootNodes: TreeNode[];
     expandNode: (nodeId: string, isExpanded: boolean) => void;
-    selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void; /** Determines whether a given node is selected. */
+    selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
     isNodeSelected: (nodeId: string) => boolean;
 } & CommonRendererProps;
 
@@ -363,9 +363,9 @@ export function useIModelTree(props: UseIModelTreeProps): UseTreeResult;
 type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearchPaths"> & Pick<IModelHierarchyProviderProps, "localizedStrings" | "imodelAccess" | "imodelChanged"> & {
     getHierarchyDefinition: (props: {
         imodelAccess: IModelAccess;
-    }) => HierarchyDefinition; /** Provides paths to target nodes. */
+    }) => HierarchyDefinition;
     getSearchPaths?: (props: {
-        imodelAccess: IModelAccess; /** Signal indicating that that the request was canceled */
+        imodelAccess: IModelAccess;
         abortSignal: AbortSignal;
     }) => Promise<HierarchySearchPath[] | undefined>;
 };
@@ -414,8 +414,8 @@ interface UseTreeProps {
 
 // @public (undocumented)
 type UseTreeResult = {
-    isReloading: boolean; /** Get a tree node by id */
-    getNode: (nodeId: string) => TreeNode | undefined; /** Sets a formatter for the primitive values that are displayed in the hierarchy. */
+    isReloading: boolean;
+    getNode: (nodeId: string) => TreeNode | undefined;
     setFormatter: (formatter: IPrimitiveValueFormatter | undefined) => void;
 } & RendererProps;
 

@@ -27,7 +27,9 @@ export type TreeRendererProps = {
    * @param changeType Type of change that occurred for the selection.
    */
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
-  /** Determines whether a given node is selected. */
+  /**
+   * Determines whether a given node is selected.
+   */
   isNodeSelected: (nodeId: string) => boolean;
 } & CommonRendererProps;
 
@@ -36,7 +38,9 @@ export type TreeRendererProps = {
  * @alpha
  */
 export type RootErrorRendererProps = {
-  /** Object containing root error information */
+  /**
+   * Object containing root error information
+   */
   error: ErrorInfo;
 } & CommonRendererProps;
 
