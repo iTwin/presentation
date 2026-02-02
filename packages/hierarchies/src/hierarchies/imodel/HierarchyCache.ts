@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { LRUCache, LRUDictionary, LRUMap } from "@itwin/core-bentley";
-import { InstanceKey } from "@itwin/presentation-shared";
+import type { LRUCache } from "@itwin/core-bentley";
+import { LRUDictionary, LRUMap } from "@itwin/core-bentley";
+import type { InstanceKey } from "@itwin/presentation-shared";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
-import { GetHierarchyNodesProps } from "../HierarchyProvider.js";
+import type { GetHierarchyNodesProps } from "../HierarchyProvider.js";
 
 interface HierarchyCacheEntry<T> {
   /** Stores observables for the default case - no instance filter or custom limit for the hierarchy level. */

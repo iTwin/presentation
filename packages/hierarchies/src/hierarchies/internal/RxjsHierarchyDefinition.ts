@@ -3,15 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { filter, from, Observable } from "rxjs";
-import { ParentHierarchyNode } from "../HierarchyNode.js";
-import {
+import type { Observable } from "rxjs";
+import { filter, from } from "rxjs";
+import type { ParentHierarchyNode } from "../HierarchyNode.js";
+import type {
   DefineHierarchyLevelProps,
   HierarchyDefinition,
   HierarchyDefinitionParentNode,
   HierarchyLevelDefinition,
 } from "../imodel/IModelHierarchyDefinition.js";
-import {
+import type {
   ProcessedGenericHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,

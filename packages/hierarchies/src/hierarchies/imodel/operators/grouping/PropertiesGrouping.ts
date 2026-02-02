@@ -5,27 +5,26 @@
 
 import { assert } from "@itwin/core-bentley";
 import {
-  ArrayElement,
   compareFullClassNames,
   createMainThreadReleaseOnTimePassedHandler,
-  EC,
-  ECClassHierarchyInspector,
-  ECSchemaProvider,
   formatConcatenatedValue,
   getClass,
-  IPrimitiveValueFormatter,
   normalizeFullClassName,
   TypedPrimitiveValue,
 } from "@itwin/presentation-shared";
-import { HierarchyNode, ParentHierarchyNode } from "../../../HierarchyNode.js";
-import { HierarchyNodeKey, PropertyGroupingNodeKey } from "../../../HierarchyNodeKey.js";
-import {
+import { HierarchyNode } from "../../../HierarchyNode.js";
+import { HierarchyNodeKey } from "../../../HierarchyNodeKey.js";
+
+import type { ArrayElement, EC, ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import type { ParentHierarchyNode } from "../../../HierarchyNode.js";
+import type { PropertyGroupingNodeKey } from "../../../HierarchyNodeKey.js";
+import type {
   HierarchyNodePropertiesGroupingParams,
   HierarchyNodePropertyGroup,
   HierarchyNodePropertyValueRange,
   ProcessedInstanceHierarchyNode,
 } from "../../IModelHierarchyNode.js";
-import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
+import type { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
 
 interface DisplayablePropertyGroupingInfo {
   label: string;
@@ -329,7 +328,7 @@ export async function getUniquePropertiesGroupInfo(
       const mapKey = `${normalizeFullClassName(byProperties.propertiesClassName)}:${propertyGroupKey}`.toLocaleLowerCase();
 
       let isAlreadyGrouped = false;
-      if (!isAlreadyGrouped && parentPropertyGroupPath.length > 0 && propertyGroupIndex < parentPropertyGroupPath.length) {
+      if (parentPropertyGroupPath.length > 0 && propertyGroupIndex < parentPropertyGroupPath.length) {
         const groupMatcher = parentPropertyGroupPath[propertyGroupIndex];
         isAlreadyGrouped = groupMatcher({
           propertiesClassName: byProperties.propertiesClassName,

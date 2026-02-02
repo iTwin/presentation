@@ -5,8 +5,8 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { EC } from "@itwin/presentation-shared";
-import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
+import type { EC } from "@itwin/presentation-shared";
+import type { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
 import * as baseClassGrouping from "../../../../hierarchies/imodel/operators/grouping/BaseClassGrouping.js";
 import { createIModelAccessStub, createTestGenericNodeKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils.js";
 

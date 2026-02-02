@@ -4,12 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Guid, StopWatch } from "@itwin/core-bentley";
-import {
-  createMainThreadReleaseOnTimePassedHandler,
+import type {
   ECSqlQueryDef,
   ECSqlQueryExecutor,
   ECSqlQueryReaderOptions,
-  ECSqlQueryRow,
+  ECSqlQueryRow } from "@itwin/presentation-shared";
+import {
+  createMainThreadReleaseOnTimePassedHandler,
   trimWhitespace,
 } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../HierarchyErrors.js";

@@ -5,17 +5,18 @@
 
 import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
+import type {
+  Observable,
+  ObservableInput,
+  SchedulerLike,
+  Subscription } from "rxjs";
 import {
   asapScheduler,
   asyncScheduler,
   defer,
   from,
-  Observable,
-  ObservableInput,
   queueScheduler,
   scheduled,
-  SchedulerLike,
-  Subscription,
   throwError,
 } from "rxjs";
 import sinon from "sinon";

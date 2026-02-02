@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping.js";
+import type { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping.js";
 import { applyGroupHidingParams } from "../../../../hierarchies/imodel/operators/grouping/GroupHiding.js";
 import { createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils.js";
 

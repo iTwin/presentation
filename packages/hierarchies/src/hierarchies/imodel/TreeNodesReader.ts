@@ -3,15 +3,19 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, mergeMap, Observable, ObservedValueOf, of } from "rxjs";
-import { Guid, Id64String } from "@itwin/core-bentley";
-import { ECSqlQueryDef, parseInstanceLabel, Props } from "@itwin/presentation-shared";
+import { from, mergeMap, of } from "rxjs";
+import { Guid } from "@itwin/core-bentley";
+import { parseInstanceLabel } from "@itwin/presentation-shared";
 import { LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE } from "../internal/Common.js";
 import { log } from "../internal/LoggingUtils.js";
-import { RxjsNodeParser } from "../internal/RxjsHierarchyDefinition.js";
-import { InstanceHierarchyNodeProcessingParams, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
-import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
-import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
+
+import type { Observable, ObservedValueOf } from "rxjs";
+import type { Id64String } from "@itwin/core-bentley";
+import type { ECSqlQueryDef, Props } from "@itwin/presentation-shared";
+import type { RxjsNodeParser } from "../internal/RxjsHierarchyDefinition.js";
+import type { InstanceHierarchyNodeProcessingParams, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
+import type { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
+import type { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
 
 const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.QueryRows`;
 
@@ -25,7 +29,7 @@ interface ReadNodesProps {
 /** @internal */
 export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHierarchyNode> {
   const { queryExecutor, query, limit } = props;
-  const parser = props?.parser ?? ((row) => of(defaultNodesParser(row)));
+  const parser = props.parser ?? ((row) => of(defaultNodesParser(row)));
   const config: Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>[1] = {
     rowFormat: "ECSqlPropertyNames",
     restartToken: `readNodes/${Guid.createValue()}`,

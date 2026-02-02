@@ -8,8 +8,10 @@ import { collect } from "presentation-test-utilities";
 import { from } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
-import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
-import { createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/Grouping.js";
+import type { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { createDefaultValueFormatter } from "@itwin/presentation-shared";
+import type { GroupingHandlerResult } from "../../../hierarchies/imodel/operators/Grouping.js";
+import { createGroupingOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/Grouping.js";
 import {
   createIModelAccessStub,
   createTestProcessedGenericNode,

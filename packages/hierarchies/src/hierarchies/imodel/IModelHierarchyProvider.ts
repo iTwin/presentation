@@ -20,9 +20,6 @@ import {
   merge,
   mergeAll,
   mergeMap,
-  Observable,
-  ObservableInput,
-  ObservedValueOf,
   of,
   reduce,
   Subject,
@@ -30,25 +27,11 @@ import {
   takeUntil,
   tap,
 } from "rxjs";
-import { assert, BeEvent, Guid, GuidString, StopWatch } from "@itwin/core-bentley";
-import {
-  ConcatenatedValue,
-  createDefaultValueFormatter,
-  ECClassHierarchyInspector,
-  ECSchemaProvider,
-  ECSqlBinding,
-  ECSqlQueryDef,
-  Event,
-  EventArgs,
-  formatConcatenatedValue,
-  InstanceKey,
-  IPrimitiveValueFormatter,
-  normalizeFullClassName,
-} from "@itwin/presentation-shared";
+import { assert, BeEvent, Guid, StopWatch } from "@itwin/core-bentley";
+import { createDefaultValueFormatter, formatConcatenatedValue, InstanceKey, normalizeFullClassName } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../HierarchyErrors.js";
-import { HierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
-import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
-import { GetHierarchyNodesProps, HierarchyProvider } from "../HierarchyProvider.js";
+import { HierarchyNode } from "../HierarchyNode.js";
+import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 import { HierarchySearchPath } from "../HierarchySearch.js";
 import {
   LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE,
@@ -63,18 +46,10 @@ import { partition } from "../internal/operators/Partition.js";
 import { reduceToMergeMapList } from "../internal/operators/ReduceToMergeMap.js";
 import { shareReplayWithErrors } from "../internal/operators/ShareReplayWithErrors.js";
 import { sortNodesByLabelOperator } from "../internal/operators/Sorting.js";
-import { getRxjsHierarchyDefinition, RxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
+import { getRxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
 import { SubscriptionScheduler } from "../internal/SubscriptionScheduler.js";
 import { HierarchyCache } from "./HierarchyCache.js";
-import {
-  DefineHierarchyLevelProps,
-  GenericHierarchyNodeDefinition,
-  HierarchyDefinition,
-  HierarchyNodesDefinition,
-  InstanceNodesQueryDefinition,
-} from "./IModelHierarchyDefinition.js";
-import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, SourceGenericHierarchyNode, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
-import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
+import { HierarchyNodesDefinition } from "./IModelHierarchyDefinition.js";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
 import { createDetermineChildrenOperator } from "./operators/DetermineChildren.js";
 import { createGroupingOperator } from "./operators/Grouping.js";
@@ -82,6 +57,31 @@ import { createHideIfNoChildrenOperator } from "./operators/HideIfNoChildren.js"
 import { createHideNodesInHierarchyOperator } from "./operators/HideNodesInHierarchy.js";
 import { SearchHierarchyDefinition } from "./SearchHierarchyDefinition.js";
 import { readNodes } from "./TreeNodesReader.js";
+
+import type { Observable, ObservableInput, ObservedValueOf } from "rxjs";
+import type { GuidString } from "@itwin/core-bentley";
+import type {
+  ConcatenatedValue,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+  ECSqlBinding,
+  ECSqlQueryDef,
+  Event,
+  EventArgs,
+  IPrimitiveValueFormatter,
+} from "@itwin/presentation-shared";
+import type { NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
+import type { GenericNodeKey, IModelInstanceKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
+import type { GetHierarchyNodesProps, HierarchyProvider } from "../HierarchyProvider.js";
+import type { RxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
+import type {
+  DefineHierarchyLevelProps,
+  GenericHierarchyNodeDefinition,
+  HierarchyDefinition,
+  InstanceNodesQueryDefinition,
+} from "./IModelHierarchyDefinition.js";
+import type { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, SourceGenericHierarchyNode, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
+import type { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
 
 const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.IModelHierarchyProvider`;
 const LOGGING_NAMESPACE_INTERNAL = `${BASE_LOGGING_NAMESPACE_INTERNAL}.IModelHierarchyProvider`;
@@ -251,8 +251,8 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this._imodels = props.imodels;
     this._hierarchyChanged = new BeEvent();
     this._activeHierarchyDefinition = this._sourceHierarchyDefinition = getRxjsHierarchyDefinition(props.hierarchyDefinition);
-    this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
-    this._localizedStrings = { other: "Other", unspecified: "Not specified", ...props?.localizedStrings };
+    this._valuesFormatter = props.formatter ?? createDefaultValueFormatter();
+    this._localizedStrings = { other: "Other", unspecified: "Not specified", ...props.localizedStrings };
     this._queryConcurrency = props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY;
     this._querySchedulers = new Map();
     this.setHierarchySearch(props.search);
@@ -947,7 +947,7 @@ function tryMergeInstanceNodes(primary: SourceHierarchyNode, secondary: SourceHi
   return undefined;
 }
 function tryMergeGenericNodes(primary: SourceHierarchyNode, secondary: SourceHierarchyNode): SourceHierarchyNode | undefined {
-  if (HierarchyNode.isGeneric(primary) && HierarchyNode.isGeneric(secondary) && primary.key.type === secondary.key.type) {
+  if (HierarchyNode.isGeneric(primary) && HierarchyNode.isGeneric(secondary)) {
     const searchProps = mergeSearchProps(primary.search, secondary.search);
     return {
       ...primary,

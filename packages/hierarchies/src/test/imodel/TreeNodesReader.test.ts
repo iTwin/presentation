@@ -7,11 +7,12 @@ import { expect } from "chai";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import { of } from "rxjs";
 import sinon from "sinon";
-import { ConcatenatedValue } from "@itwin/presentation-shared";
-import { SourceHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
-import { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
+import type { ConcatenatedValue } from "@itwin/presentation-shared";
+import type { SourceHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
+import type { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
-import { defaultNodesParser, readNodes, RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
+import type { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
+import { defaultNodesParser, readNodes } from "../../hierarchies/imodel/TreeNodesReader.js";
 import { createTestSourceInstanceNode } from "../Utils.js";
 
 describe("readNodes", () => {

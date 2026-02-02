@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rimraf lib",
-    "lint": "eslint ./src/**/*.ts",
+    "lint": "eslint \"./src/**/*.ts\"",
     "start:initial-models-tree": "artillery run ./scenarios/initial-models-tree.yml",
     "start:first-branch-models-tree": "artillery run ./scenarios/first-branch-models-tree.yml",
     "start:full-models-tree": "artillery run ./scenarios/full-models-tree.yml",

@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GenericHierarchyNodeDefinition, HierarchyNodesDefinition, InstanceNodesQueryDefinition } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
+import type { GenericHierarchyNodeDefinition, InstanceNodesQueryDefinition } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
+import { HierarchyNodesDefinition } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
 import { createTestSourceGenericNode } from "../Utils.js";
 
 describe("HierarchyNodesDefinition", () => {

@@ -3,16 +3,17 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import type {
+  Connectable,
+  Observable } from "rxjs";
 import {
   asapScheduler,
-  Connectable,
   connectable,
   defer,
   EMPTY,
   finalize,
   iif,
   mergeMap,
-  Observable,
   observeOn,
   onErrorResumeNextWith,
   queueScheduler,

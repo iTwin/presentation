@@ -6,17 +6,18 @@
 import { assert, expect } from "chai";
 import { firstValueFrom, from, lastValueFrom, of, toArray } from "rxjs";
 import sinon from "sinon";
-import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
-import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
-import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier.js";
-import { HierarchySearchPath, HierarchySearchPathOptions, SearchPathRevealDepthInPath } from "../../hierarchies/HierarchySearch.js";
-import {
+import type { ECClassHierarchyInspector } from "@itwin/presentation-shared";
+import { trimWhitespace } from "@itwin/presentation-shared";
+import type { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
+import type { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier.js";
+import type { HierarchySearchPath, HierarchySearchPathOptions, SearchPathRevealDepthInPath } from "../../hierarchies/HierarchySearch.js";
+import type {
   GenericHierarchyNodeDefinition,
   HierarchyDefinitionParentNode,
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
-import { ProcessedGenericHierarchyNode, ProcessedGroupingHierarchyNode, SourceGenericHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
+import type { ProcessedGenericHierarchyNode, ProcessedGroupingHierarchyNode, SourceGenericHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
 import {
   applyECInstanceIdsSearch,
@@ -25,7 +26,7 @@ import {
   ECSQL_COLUMN_NAME_SearchECInstanceId,
   SearchHierarchyDefinition,
 } from "../../hierarchies/imodel/SearchHierarchyDefinition.js";
-import { RxjsHierarchyDefinition, RxjsNodeParser } from "../../hierarchies/internal/RxjsHierarchyDefinition.js";
+import type { RxjsHierarchyDefinition, RxjsNodeParser } from "../../hierarchies/internal/RxjsHierarchyDefinition.js";
 import {
   createIModelAccessStub,
   createTestGenericNodeKey,

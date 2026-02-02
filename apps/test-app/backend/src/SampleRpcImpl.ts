@@ -6,7 +6,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import { IModelHost, SnapshotDb } from "@itwin/core-backend";
-import { IModelConnectionProps, RpcManager } from "@itwin/core-common";
+import type { IModelConnectionProps } from "@itwin/core-common";
+import { RpcManager } from "@itwin/core-common";
 import { SampleRpcInterface } from "@test-app/common";
 
 /** The backend implementation of SampleRpcInterface. */

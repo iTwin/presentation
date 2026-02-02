@@ -3,7 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, Observable, ObservableInput, ReplaySubject, Subscription } from "rxjs";
+import type { ObservableInput, Subscription } from "rxjs";
+import { from, Observable, ReplaySubject } from "rxjs";
 import { assert } from "@itwin/core-bentley";
 
 /** @internal */

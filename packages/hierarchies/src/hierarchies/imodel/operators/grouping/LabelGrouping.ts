@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { LabelGroupingNodeKey } from "../../../HierarchyNodeKey.js";
-import { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
+import type { LabelGroupingNodeKey } from "../../../HierarchyNodeKey.js";
+import type { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
 import { mergeInstanceNodes } from "../../Utils.js";
-import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
+import type { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
 
 /** @internal */
 export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[]): Promise<GroupingHandlerResult> {

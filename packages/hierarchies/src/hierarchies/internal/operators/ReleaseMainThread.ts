@@ -3,7 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { bufferCount, concatAll, concatMap, delay, Observable, of } from "rxjs";
+import type { Observable } from "rxjs";
+import { bufferCount, concatAll, concatMap, delay, of } from "rxjs";
 
 /**
  * Emits a certain amount of values, then releases the main thread for other timers to use.

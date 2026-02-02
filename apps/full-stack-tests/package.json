@@ -8,7 +8,7 @@
     "build": "node ./scripts/setup-tests.cjs && tsc",
     "clean": "rimraf lib build",
     "cover": "npm run -s test",
-    "lint": "eslint ./src/**/*.{ts,tsx}",
+    "lint": "eslint \"./src/**/*.{ts,tsx}\"",
     "test:dev": "cross-env NODE_OPTIONS=\"--import presentation-test-utilities/node-hooks/ignore-styles\" mocha --enable-source-maps --config ./.mocharc.json",
     "test": "npm run test:dev -- --parallel --jobs=4",
     "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=./build/docs/extract"

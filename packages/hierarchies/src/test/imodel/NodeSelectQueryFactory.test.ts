@@ -5,15 +5,17 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import {
+import type {
   GenericInstanceFilter,
   GenericInstanceFilterRelatedInstanceDescription,
   GenericInstanceFilterRule,
   GenericInstanceFilterRuleGroup,
   GenericInstanceFilterRuleOperator,
 } from "@itwin/core-common";
-import { EC, trimWhitespace } from "@itwin/presentation-shared";
-import { createNodesQueryClauseFactory, NodeSelectClauseColumnNames, NodesQueryClauseFactory } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
+import type { EC } from "@itwin/presentation-shared";
+import { trimWhitespace } from "@itwin/presentation-shared";
+import type { NodesQueryClauseFactory } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
+import { createNodesQueryClauseFactory, NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
 import { createIModelAccessStub, createInstanceLabelSelectClauseFactoryStub } from "../Utils.js";
 
 describe("createNodesQueryClauseFactory", () => {

@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { of } from "rxjs";
 import sinon from "sinon";
-import { ILogger, LogLevel } from "@itwin/presentation-shared";
+import type { ILogger, LogLevel } from "@itwin/presentation-shared";
 import { doLog, log } from "../../hierarchies/internal/LoggingUtils.js";
 import { setLogger } from "../../hierarchies/Logging.js";
 

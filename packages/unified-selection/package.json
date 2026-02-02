@@ -41,7 +41,7 @@
     "build:esm": "tsc -p tsconfig.esm.json",
     "clean": "rimraf lib build",
     "cover": "c8 npm -s test",
-    "lint": "eslint ./src/**/*.ts",
+    "lint": "eslint \"./src/**/*.ts\"",
     "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
     "test": "npm run test:dev",
     "extract-api": "betools extract-api --entry=lib/esm/unified-selection --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",

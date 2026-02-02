@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { GenericInstanceFilter } from "@itwin/core-common";
-import { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef } from "@itwin/presentation-shared";
-import { NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
-import {
+import type { GenericInstanceFilter } from "@itwin/core-common";
+import type { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef } from "@itwin/presentation-shared";
+import type { NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
+import type {
   ProcessedGenericHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,

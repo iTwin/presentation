@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { tap } from "rxjs";
-import { ILogger, LogLevel } from "@itwin/presentation-shared";
+import type { ILogger, LogLevel } from "@itwin/presentation-shared";
 import { getLogger } from "../Logging.js";
 
 /** @internal */

@@ -3,14 +3,17 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { concat, defer, EMPTY, filter, finalize, map, merge, mergeAll, mergeMap, Observable, take } from "rxjs";
+import type { Observable } from "rxjs";
+import { concat, defer, EMPTY, filter, finalize, map, merge, mergeAll, mergeMap, take } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "../../HierarchyNodeKey.js";
+import type { GenericNodeKey, InstancesNodeKey } from "../../HierarchyNodeKey.js";
+import { HierarchyNodeKey } from "../../HierarchyNodeKey.js";
 import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, LOGGING_NAMESPACE_INTERNAL } from "../../internal/Common.js";
 import { doLog, log } from "../../internal/LoggingUtils.js";
 import { partition } from "../../internal/operators/Partition.js";
 import { reduceToMergeMapItem } from "../../internal/operators/ReduceToMergeMap.js";
-import { ProcessedGenericHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode.js";
+import type { ProcessedGenericHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode.js";
+import { ProcessedHierarchyNode } from "../IModelHierarchyNode.js";
 import { mergeInstanceNodes } from "../Utils.js";
 
 const OPERATOR_NAME = "HideNodesInHierarchy";

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GetHierarchyNodesProps } from "../../hierarchies/HierarchyProvider.js";
+import type { GetHierarchyNodesProps } from "../../hierarchies/HierarchyProvider.js";
 import { HierarchyCache } from "../../hierarchies/imodel/HierarchyCache.js";
 import { createTestGenericNodeKey, createTestProcessedGenericNode } from "../Utils.js";
 

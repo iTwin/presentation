@@ -5,9 +5,10 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { createDefaultValueFormatter, EC, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
-import { GroupingNodeKey, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
-import { HierarchyNodePropertyGroup } from "../../../../hierarchies/imodel/IModelHierarchyNode.js";
+import type { EC, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { createDefaultValueFormatter } from "@itwin/presentation-shared";
+import type { GroupingNodeKey, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
+import type { HierarchyNodePropertyGroup } from "../../../../hierarchies/imodel/IModelHierarchyNode.js";
 import * as propertiesGrouping from "../../../../hierarchies/imodel/operators/grouping/PropertiesGrouping.js";
 import {
   createIModelAccessStub,

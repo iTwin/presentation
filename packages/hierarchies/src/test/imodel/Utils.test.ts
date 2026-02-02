@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { InstanceHierarchyNodeProcessingParams } from "../../hierarchies/imodel/IModelHierarchyNode.js";
+import type { InstanceHierarchyNodeProcessingParams } from "../../hierarchies/imodel/IModelHierarchyNode.js";
 import { mergeInstanceNodes } from "../../hierarchies/imodel/Utils.js";
 import { createTestGenericNodeKey, createTestProcessedInstanceNode } from "../Utils.js";
 

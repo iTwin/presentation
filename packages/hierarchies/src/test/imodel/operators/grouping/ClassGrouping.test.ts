@@ -5,8 +5,8 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
-import { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping.js";
+import type { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
+import type { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping.js";
 import { createClassGroups } from "../../../../hierarchies/imodel/operators/grouping/ClassGrouping.js";
 import { createECSchemaProviderStub, createTestGenericNodeKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils.js";
 
