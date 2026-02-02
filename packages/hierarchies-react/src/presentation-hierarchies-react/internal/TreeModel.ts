@@ -32,11 +32,6 @@ export interface TreeModelHierarchyNode {
 }
 
 /** @internal */
-export function isTreeModelHierarchyNode(node: TreeModelHierarchyNode | ErrorInfo | TreeModelRootNode): node is TreeModelHierarchyNode {
-  return "nodeData" in node && node.nodeData !== undefined;
-}
-
-/** @internal */
 export interface TreeModel {
   parentChildMap: Map<string | undefined, string[]>;
   idToNode: Map<string, TreeModelHierarchyNode>;

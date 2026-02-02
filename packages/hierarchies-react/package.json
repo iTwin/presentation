@@ -38,7 +38,7 @@
   "scripts": {
     "build": "tsdown && npm run -s copy:css && npm run -s build:test",
     "copy:css": "cpx \"./src/**/*.css\" ./lib/esm",
-    "build:test": "tsc -p tsconfig.test.json",
+    "build:test": "tsdown --config tsdown.test.config.ts",
     "clean": "rimraf lib build",
     "cover": "c8 npm -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
