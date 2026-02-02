@@ -3,9 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ObservableInput, Subscription } from "rxjs";
 import { from, Observable, ReplaySubject } from "rxjs";
 import { assert } from "@itwin/core-bentley";
+
+import type { ObservableInput, Subscription } from "rxjs";
 
 /** @internal */
 export function partition<T, U extends T>(source: ObservableInput<T>, predicate: (value: T) => value is U): [Observable<U>, Observable<Exclude<T, U>>];

@@ -3,9 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type {
-  Connectable,
-  Observable } from "rxjs";
 import {
   asapScheduler,
   connectable,
@@ -21,6 +18,8 @@ import {
   subscribeOn,
   tap,
 } from "rxjs";
+
+import type { Connectable, Observable } from "rxjs";
 
 /** @internal */
 export class SubscriptionScheduler {

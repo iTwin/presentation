@@ -5,6 +5,10 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { trimWhitespace } from "@itwin/presentation-shared";
+import { createNodesQueryClauseFactory, NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
+import { createIModelAccessStub, createInstanceLabelSelectClauseFactoryStub } from "../Utils.js";
+
 import type {
   GenericInstanceFilter,
   GenericInstanceFilterRelatedInstanceDescription,
@@ -13,10 +17,7 @@ import type {
   GenericInstanceFilterRuleOperator,
 } from "@itwin/core-common";
 import type { EC } from "@itwin/presentation-shared";
-import { trimWhitespace } from "@itwin/presentation-shared";
 import type { NodesQueryClauseFactory } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
-import { createNodesQueryClauseFactory, NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
-import { createIModelAccessStub, createInstanceLabelSelectClauseFactoryStub } from "../Utils.js";
 
 describe("createNodesQueryClauseFactory", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub>;

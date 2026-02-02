@@ -3,9 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { mergeInstanceNodes } from "../../Utils.js";
+
 import type { LabelGroupingNodeKey } from "../../../HierarchyNodeKey.js";
 import type { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
-import { mergeInstanceNodes } from "../../Utils.js";
 import type { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
 
 /** @internal */

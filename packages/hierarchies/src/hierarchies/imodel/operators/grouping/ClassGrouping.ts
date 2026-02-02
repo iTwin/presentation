@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Dictionary } from "@itwin/core-bentley";
-import type { ECSchemaProvider } from "@itwin/presentation-shared";
 import { compareFullClassNames, createMainThreadReleaseOnTimePassedHandler, getClass } from "@itwin/presentation-shared";
-import type { ParentHierarchyNode } from "../../../HierarchyNode.js";
 import { HierarchyNode } from "../../../HierarchyNode.js";
+
+import type { ECSchemaProvider } from "@itwin/presentation-shared";
+import type { ParentHierarchyNode } from "../../../HierarchyNode.js";
 import type { ClassGroupingNodeKey } from "../../../HierarchyNodeKey.js";
 import type { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
 import type { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";

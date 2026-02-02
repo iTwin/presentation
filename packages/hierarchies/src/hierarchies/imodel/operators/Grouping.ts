@@ -3,11 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Observable } from "rxjs";
 import { concat, concatAll, delay, EMPTY, expand, finalize, from, last, map, merge, mergeMap, of, reduce, tap, toArray } from "rxjs";
 import { assert, StopWatch } from "@itwin/core-bentley";
-import type { ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
-import type { ParentHierarchyNode } from "../../HierarchyNode.js";
 import { HierarchyNode } from "../../HierarchyNode.js";
 import {
   LOGGING_NAMESPACE_PERFORMANCE as BASE_LOGGING_NAMESPACE_PERFORMANCE,
@@ -19,14 +16,18 @@ import {
 import { doLog, log } from "../../internal/LoggingUtils.js";
 import { releaseMainThreadOnItemsCount } from "../../internal/operators/ReleaseMainThread.js";
 import { tapOnce } from "../../internal/operators/TapOnce.js";
-import type { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode.js";
 import { assignAutoExpand } from "./grouping/AutoExpand.js";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping.js";
 import { createClassGroups } from "./grouping/ClassGrouping.js";
 import { applyGroupHidingParams } from "./grouping/GroupHiding.js";
 import { createLabelGroups } from "./grouping/LabelGrouping.js";
-import type { PropertiesGroupingLocalizedStrings } from "./grouping/PropertiesGrouping.js";
 import { createPropertiesGroupingHandlers } from "./grouping/PropertiesGrouping.js";
+
+import type { Observable } from "rxjs";
+import type { ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import type { ParentHierarchyNode } from "../../HierarchyNode.js";
+import type { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode.js";
+import type { PropertiesGroupingLocalizedStrings } from "./grouping/PropertiesGrouping.js";
 
 const OPERATOR_NAME = "Grouping";
 /** @internal */

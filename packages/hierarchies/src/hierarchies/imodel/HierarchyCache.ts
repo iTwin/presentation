@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { LRUCache } from "@itwin/core-bentley";
 import { LRUDictionary, LRUMap } from "@itwin/core-bentley";
-import type { InstanceKey } from "@itwin/presentation-shared";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
+
+import type { LRUCache } from "@itwin/core-bentley";
+import type { InstanceKey } from "@itwin/presentation-shared";
 import type { GetHierarchyNodesProps } from "../HierarchyProvider.js";
 
 interface HierarchyCacheEntry<T> {

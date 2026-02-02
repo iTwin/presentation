@@ -6,8 +6,9 @@
 import "./DisposePolyfill.js";
 
 import naturalCompare from "natural-compare-lite";
-import type { Observable } from "rxjs";
 import { from, of } from "rxjs";
+
+import type { Observable } from "rxjs";
 import type { ConcatenatedValue } from "@itwin/presentation-shared";
 import type { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 

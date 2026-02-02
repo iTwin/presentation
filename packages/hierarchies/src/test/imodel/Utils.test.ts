@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import type { InstanceHierarchyNodeProcessingParams } from "../../hierarchies/imodel/IModelHierarchyNode.js";
 import { mergeInstanceNodes } from "../../hierarchies/imodel/Utils.js";
 import { createTestGenericNodeKey, createTestProcessedInstanceNode } from "../Utils.js";
+
+import type { InstanceHierarchyNodeProcessingParams } from "../../hierarchies/imodel/IModelHierarchyNode.js";
 
 describe("mergeInstanceNodes", () => {
   it("takes lhs label", () => {

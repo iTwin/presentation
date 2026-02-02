@@ -5,6 +5,7 @@
 
 import { assert } from "@itwin/core-bentley";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
+
 import type { HierarchyNodeLabelGroupingParams, InstanceHierarchyNodeProcessingParams, ProcessedInstanceHierarchyNode } from "./IModelHierarchyNode.js";
 
 function mergeNodeHandlingParams(

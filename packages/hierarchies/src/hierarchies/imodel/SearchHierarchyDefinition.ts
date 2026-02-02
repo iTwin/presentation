@@ -3,29 +3,29 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Observable } from "rxjs";
 import { defaultIfEmpty, defer, filter, firstValueFrom, map, merge, mergeAll, mergeMap, of, take, toArray } from "rxjs";
-import type { Id64String } from "@itwin/core-bentley";
-import type { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import { compareFullClassNames } from "@itwin/presentation-shared";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
-import type { IModelInstanceKey } from "../HierarchyNodeKey.js";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 import { createHierarchySearchHelper, HierarchySearchPath, shouldAutoExpandBasedOnReveal } from "../HierarchySearch.js";
-import type {
-  DefineHierarchyLevelProps,
-  GenericHierarchyNodeDefinition,
-  HierarchyLevelDefinition,
-  InstanceNodesQueryDefinition } from "../imodel/IModelHierarchyDefinition.js";
-import {
-  HierarchyNodesDefinition
-} from "../imodel/IModelHierarchyDefinition.js";
-import type { ProcessedGroupingHierarchyNode, ProcessedInstanceHierarchyNode } from "../imodel/IModelHierarchyNode.js";
+import { HierarchyNodesDefinition } from "../imodel/IModelHierarchyDefinition.js";
 import { ProcessedHierarchyNode } from "../imodel/IModelHierarchyNode.js";
 import { NodeSelectClauseColumnNames } from "../imodel/NodeSelectQueryFactory.js";
 import { defaultNodesParser } from "../imodel/TreeNodesReader.js";
 import { fromPossiblyPromise } from "../internal/Common.js";
 import { partition } from "../internal/operators/Partition.js";
+
+import type { Observable } from "rxjs";
+import type { Id64String } from "@itwin/core-bentley";
+import type { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
+import type { IModelInstanceKey } from "../HierarchyNodeKey.js";
+import type {
+  DefineHierarchyLevelProps,
+  GenericHierarchyNodeDefinition,
+  HierarchyLevelDefinition,
+  InstanceNodesQueryDefinition,
+} from "../imodel/IModelHierarchyDefinition.js";
+import type { ProcessedGroupingHierarchyNode, ProcessedInstanceHierarchyNode } from "../imodel/IModelHierarchyNode.js";
 import type { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "../internal/RxjsHierarchyDefinition.js";
 
 interface SearchHierarchyDefinitionProps {

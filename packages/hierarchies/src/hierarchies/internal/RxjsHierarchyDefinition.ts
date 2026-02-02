@@ -3,8 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Observable } from "rxjs";
 import { filter, from } from "rxjs";
+import { fromPossiblyPromise } from "./Common.js";
+
+import type { Observable } from "rxjs";
 import type { ParentHierarchyNode } from "../HierarchyNode.js";
 import type {
   DefineHierarchyLevelProps,
@@ -18,7 +20,6 @@ import type {
   ProcessedInstanceHierarchyNode,
   SourceInstanceHierarchyNode,
 } from "../imodel/IModelHierarchyNode.js";
-import { fromPossiblyPromise } from "./Common.js";
 
 /**
  * A type for a function that parses a `SourceInstanceHierarchyNode` from provided ECSQL `row` object.

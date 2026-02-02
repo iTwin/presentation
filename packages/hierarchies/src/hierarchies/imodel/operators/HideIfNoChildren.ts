@@ -3,13 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Observable } from "rxjs";
 import { defer, filter, map, merge, mergeMap } from "rxjs";
 import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, LOGGING_NAMESPACE_INTERNAL } from "../../internal/Common.js";
 import { doLog, log } from "../../internal/LoggingUtils.js";
 import { partition } from "../../internal/operators/Partition.js";
-import type { ProcessedGenericHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode.js";
 import { ProcessedHierarchyNode } from "../IModelHierarchyNode.js";
+
+import type { Observable } from "rxjs";
+import type { ProcessedGenericHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode.js";
 
 // cspell:words doesnt
 

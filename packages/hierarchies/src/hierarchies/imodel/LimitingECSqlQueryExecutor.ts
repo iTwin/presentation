@@ -4,18 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Guid, StopWatch } from "@itwin/core-bentley";
-import type {
-  ECSqlQueryDef,
-  ECSqlQueryExecutor,
-  ECSqlQueryReaderOptions,
-  ECSqlQueryRow } from "@itwin/presentation-shared";
-import {
-  createMainThreadReleaseOnTimePassedHandler,
-  trimWhitespace,
-} from "@itwin/presentation-shared";
+import { createMainThreadReleaseOnTimePassedHandler, trimWhitespace } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../HierarchyErrors.js";
 import { LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE, LOGGING_NAMESPACE_PERFORMANCE as BASE_LOGGING_NAMESPACE_PERFORMANCE } from "../internal/Common.js";
 import { doLog } from "../internal/LoggingUtils.js";
+
+import type { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
 
 /**
  * An interface for something that knows how to create a limiting ECSQL query reader.

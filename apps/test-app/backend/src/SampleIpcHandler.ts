@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IModelDb, IpcHandler } from "@itwin/core-backend";
+import { PRESENTATION_TEST_APP_IPC_CHANNEL_NAME } from "@test-app/common";
+
 import type { Id64Arg } from "@itwin/core-bentley";
 import type { ElementProps } from "@itwin/core-common";
 import type { SampleIpcInterface } from "@test-app/common";
-import { PRESENTATION_TEST_APP_IPC_CHANNEL_NAME } from "@test-app/common";
 
 /** @internal */
 export class SampleIpcHandler extends IpcHandler implements SampleIpcInterface {

@@ -3,8 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { MonoTypeOperatorFunction } from "rxjs";
 import { tap } from "rxjs";
+
+import type { MonoTypeOperatorFunction } from "rxjs";
 
 /** @internal */
 export function tapOnce<T>(observer: () => void): MonoTypeOperatorFunction<T> {

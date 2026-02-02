@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createAsyncIterator } from "presentation-test-utilities";
+
 import type { CustomSelectable, SelectableInstanceKey } from "../../unified-selection/Selectable.js";
 
 /**

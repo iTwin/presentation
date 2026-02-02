@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Observable } from "rxjs";
 import { concatAll, map, reduce } from "rxjs";
 import { DuplicatePolicy, SortedArray } from "@itwin/core-bentley";
 import { compareNodesByLabel } from "../Common.js";
+
+import type { Observable } from "rxjs";
 
 /**
  * This should accept sorting params in some form:

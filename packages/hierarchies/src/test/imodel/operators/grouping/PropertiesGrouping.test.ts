@@ -5,10 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import type { EC, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { createDefaultValueFormatter } from "@itwin/presentation-shared";
-import type { GroupingNodeKey, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
-import type { HierarchyNodePropertyGroup } from "../../../../hierarchies/imodel/IModelHierarchyNode.js";
 import * as propertiesGrouping from "../../../../hierarchies/imodel/operators/grouping/PropertiesGrouping.js";
 import {
   createIModelAccessStub,
@@ -17,6 +14,10 @@ import {
   createTestProcessedInstanceNode,
   testLocalizedStrings,
 } from "../../../Utils.js";
+
+import type { EC, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import type { GroupingNodeKey, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
+import type { HierarchyNodePropertyGroup } from "../../../../hierarchies/imodel/IModelHierarchyNode.js";
 
 describe("PropertiesGrouping", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub>;

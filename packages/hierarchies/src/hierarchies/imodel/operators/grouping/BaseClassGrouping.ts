@@ -4,17 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SortedArray } from "@itwin/core-bentley";
-import type {
-  EC,
-  ECClassHierarchyInspector,
-  ECSchemaProvider } from "@itwin/presentation-shared";
-import {
-  compareFullClassNames,
-  createMainThreadReleaseOnTimePassedHandler,
-  getClass,
-} from "@itwin/presentation-shared";
-import type { ParentHierarchyNode } from "../../../HierarchyNode.js";
+import { compareFullClassNames, createMainThreadReleaseOnTimePassedHandler, getClass } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../../../HierarchyNode.js";
+
+import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { ParentHierarchyNode } from "../../../HierarchyNode.js";
 import type { ClassGroupingNodeKey } from "../../../HierarchyNodeKey.js";
 import type { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
 import type { GroupingHandler, GroupingHandlerResult } from "../Grouping.js";

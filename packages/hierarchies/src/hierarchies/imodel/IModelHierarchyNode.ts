@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
+
 import type { ConcatenatedValue, InstanceKey, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
 import type { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../HierarchyNode.js";
 import type { GenericNodeKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
-import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 
 /**
  * Base processing parameters that apply to every node.
