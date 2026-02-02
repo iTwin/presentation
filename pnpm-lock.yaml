@@ -365,7 +365,7 @@ importers:
         version: 5.1.0(eslint@9.39.2)(typescript@5.7.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 5.23.0(d0715d1c13e2959eac0015a4966cc23f)
+        version: 5.23.0(ab0fbfc4244f3277a38ddef5b27b8fb5)
       '@itwin/itwinui-react':
         specifier: catalog:itwinui
         version: 3.20.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -383,7 +383,7 @@ importers:
         version: link:../../packages/core-interop
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core-dev
-        version: 5.6.0-dev.8(8bb1dd6f7777f07f21a0b19633da2aa2)
+        version: 5.6.0-dev.8(e39c6d23dcef96d19ad8698cbd4e2e14)
       '@itwin/presentation-hierarchies':
         specifier: workspace:^
         version: link:../../packages/hierarchies
@@ -839,7 +839,7 @@ importers:
         version: 5.1.0(eslint@9.39.2)(typescript@5.7.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 5.23.0(d0715d1c13e2959eac0015a4966cc23f)
+        version: 5.23.0(ab0fbfc4244f3277a38ddef5b27b8fb5)
       '@itwin/itwinui-icons-react':
         specifier: catalog:itwinui
         version: 2.11.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -857,7 +857,7 @@ importers:
         version: link:../../../packages/core-interop
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core-dev
-        version: 5.6.0-dev.8(8bb1dd6f7777f07f21a0b19633da2aa2)
+        version: 5.6.0-dev.8(e39c6d23dcef96d19ad8698cbd4e2e14)
       '@itwin/presentation-hierarchies':
         specifier: workspace:*
         version: link:../../../packages/hierarchies
@@ -1023,7 +1023,7 @@ importers:
         version: 5.1.0(eslint@9.39.2)(typescript@5.7.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 5.23.0(d0715d1c13e2959eac0015a4966cc23f)
+        version: 5.23.0(ab0fbfc4244f3277a38ddef5b27b8fb5)
       '@itwin/itwinui-react':
         specifier: catalog:itwinui
         version: 3.20.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1032,7 +1032,7 @@ importers:
         version: 5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-common@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-geometry@5.6.0-dev.8))(@itwin/core-quantity@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8))(@itwin/ecschema-metadata@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-quantity@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)))
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core-dev
-        version: 5.6.0-dev.8(8bb1dd6f7777f07f21a0b19633da2aa2)
+        version: 5.6.0-dev.8(e39c6d23dcef96d19ad8698cbd4e2e14)
       '@itwin/unified-selection-react':
         specifier: workspace:^
         version: link:../unified-selection-react
@@ -1387,9 +1387,6 @@ importers:
       babel-plugin-react-compiler:
         specifier: catalog:build-tools
         version: 1.0.0
-      c8:
-        specifier: catalog:test-tools
-        version: 10.1.3
       chai:
         specifier: catalog:test-tools
         version: 5.3.3
@@ -1683,7 +1680,7 @@ importers:
         version: 5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-common@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-geometry@5.6.0-dev.8))(@itwin/core-quantity@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8))(@itwin/ecschema-metadata@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-quantity@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)))
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core-dev
-        version: 5.6.0-dev.8(8bb1dd6f7777f07f21a0b19633da2aa2)
+        version: 5.6.0-dev.8(e39c6d23dcef96d19ad8698cbd4e2e14)
       '@types/chai':
         specifier: catalog:test-tools
         version: 5.2.3
@@ -11325,7 +11322,7 @@ snapshots:
       '@itwin/core-geometry': 5.6.0-dev.8
       '@itwin/core-quantity': 5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)
       '@itwin/core-react': 5.23.0(@itwin/appui-abstract@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8))(@itwin/core-bentley@5.6.0-dev.8)(@itwin/itwinui-react@3.20.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@itwin/imodel-components-react': 5.23.0(d0715d1c13e2959eac0015a4966cc23f)
+      '@itwin/imodel-components-react': 5.23.0(ab0fbfc4244f3277a38ddef5b27b8fb5)
       '@itwin/itwinui-icons-react': 2.11.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-illustrations-react': 2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-react': 3.20.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -11357,7 +11354,7 @@ snapshots:
       rimraf: 6.1.2
       tree-kill: 1.2.2
       typedoc: 0.26.11(typescript@5.6.3)
-      typedoc-plugin-merge-modules: 6.1.0(typedoc@0.26.11(typescript@5.7.3))
+      typedoc-plugin-merge-modules: 6.1.0(typedoc@0.26.11(typescript@5.6.3))
       typescript: 5.6.3
       wtfnode: 0.9.4
       yargs: 17.7.2
@@ -11552,7 +11549,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@itwin/imodel-components-react@5.23.0(d0715d1c13e2959eac0015a4966cc23f)':
+  '@itwin/imodel-components-react@5.23.0(ab0fbfc4244f3277a38ddef5b27b8fb5)':
     dependencies:
       '@itwin/appui-abstract': 5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)
       '@itwin/components-react': 5.23.0(@itwin/appui-abstract@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8))(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-react@5.23.0(@itwin/appui-abstract@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8))(@itwin/core-bentley@5.6.0-dev.8)(@itwin/itwinui-react@3.20.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@itwin/itwinui-react@3.20.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -11629,7 +11626,7 @@ snapshots:
       '@itwin/ecschema-metadata': 5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-quantity@5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8))
       '@itwin/presentation-shared': 1.2.6
 
-  '@itwin/presentation-frontend@5.6.0-dev.8(8bb1dd6f7777f07f21a0b19633da2aa2)':
+  '@itwin/presentation-frontend@5.6.0-dev.8(e39c6d23dcef96d19ad8698cbd4e2e14)':
     dependencies:
       '@itwin/core-bentley': 5.6.0-dev.8
       '@itwin/core-common': 5.6.0-dev.8(@itwin/core-bentley@5.6.0-dev.8)(@itwin/core-geometry@5.6.0-dev.8)
@@ -17969,7 +17966,7 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typedoc-plugin-merge-modules@6.1.0(typedoc@0.26.11(typescript@5.7.3)):
+  typedoc-plugin-merge-modules@6.1.0(typedoc@0.26.11(typescript@5.6.3)):
     dependencies:
       typedoc: 0.26.11(typescript@5.6.3)
 
