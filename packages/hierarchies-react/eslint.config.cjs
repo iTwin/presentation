@@ -18,7 +18,7 @@ module.exports = [
     },
     rules: {
       ...iTwinPlugin.configs.uiConfig.rules,
-      ...reactHooks.configs.flat.recommended.rules,
+      ...reactHooksPlugin.configs.flat.recommended.rules,
     },
   },
   {
