@@ -5,14 +5,15 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import {
+import { createPredicateBasedHierarchyDefinition } from "../../hierarchies/imodel/PredicateBasedHierarchyDefinition.js";
+import { createIModelAccessStub, createTestGenericNodeKey, createTestSourceGenericNode } from "../Utils.js";
+
+import type {
   DefineHierarchyLevelProps,
   GenericHierarchyNodeDefinition,
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
-import { createPredicateBasedHierarchyDefinition } from "../../hierarchies/imodel/PredicateBasedHierarchyDefinition.js";
-import { createIModelAccessStub, createTestGenericNodeKey, createTestSourceGenericNode } from "../Utils.js";
 
 describe("createPredicateBasedHierarchyDefinition", () => {
   const imodelKey = "test-imodel-key";

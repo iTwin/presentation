@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { tap } from "rxjs";
-import { ILogger, LogLevel } from "@itwin/presentation-shared";
 import { getLogger } from "../Logging.js";
+
+import type { ILogger, LogLevel } from "@itwin/presentation-shared";
 
 /** @internal */
 export interface LogMessageProps<TMessageArg = void> {

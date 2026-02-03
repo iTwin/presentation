@@ -41,7 +41,7 @@
     "build:test": "tsdown --config tsdown.test.config.ts",
     "clean": "rimraf lib build",
     "cover": "npm -s test",
-    "lint": "eslint ./src/**/*.{ts,tsx}",
+    "lint": "eslint \"./src/**/*.{ts,tsx}\"",
     "test:dev": "node --experimental-test-module-mocks --enable-source-maps --import presentation-test-utilities/node-hooks/ignore-styles ./node_modules/mocha/bin/mocha.js --config ./.mocharc.json",
     "test": "npm run test:dev -- --parallel --jobs=4",
     "extract-api": "betools extract-api --entry=lib/esm/presentation-hierarchies-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",

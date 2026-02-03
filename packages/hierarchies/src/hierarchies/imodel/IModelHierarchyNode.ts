@@ -3,9 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ConcatenatedValue, InstanceKey, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
-import { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../HierarchyNode.js";
-import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
+import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
+
+import type { ConcatenatedValue, InstanceKey, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
+import type { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../HierarchyNode.js";
+import type { GenericNodeKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
 
 /**
  * Base processing parameters that apply to every node.

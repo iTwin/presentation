@@ -5,11 +5,12 @@
 
 import { expect } from "chai";
 import { HierarchyNode } from "../../../../hierarchies/HierarchyNode.js";
-import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
-import { HierarchyNodeAutoExpandProp, InstanceHierarchyNodeProcessingParams } from "../../../../hierarchies/imodel/IModelHierarchyNode.js";
-import { GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../../../../hierarchies/imodel/operators/Grouping.js";
 import { assignAutoExpand } from "../../../../hierarchies/imodel/operators/grouping/AutoExpand.js";
 import { createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils.js";
+
+import type { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
+import type { HierarchyNodeAutoExpandProp, InstanceHierarchyNodeProcessingParams } from "../../../../hierarchies/imodel/IModelHierarchyNode.js";
+import type { GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../../../../hierarchies/imodel/operators/Grouping.js";
 
 describe("AutoExpand", () => {
   [

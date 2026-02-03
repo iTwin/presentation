@@ -3,7 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, ObservableInput, reduce } from "rxjs";
+import { from, reduce } from "rxjs";
+
+import type { ObservableInput } from "rxjs";
 
 /**
  * Reduces the source observable into a `Map<string, TMapItem[]>`, where all input items are grouped based on their key

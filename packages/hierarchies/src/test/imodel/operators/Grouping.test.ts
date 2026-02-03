@@ -8,8 +8,8 @@ import { collect } from "presentation-test-utilities";
 import { from } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
-import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
-import { createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/Grouping.js";
+import { createDefaultValueFormatter } from "@itwin/presentation-shared";
+import { createGroupingOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/Grouping.js";
 import {
   createIModelAccessStub,
   createTestProcessedGenericNode,
@@ -18,6 +18,9 @@ import {
   setupLogging,
   testLocalizedStrings,
 } from "../../Utils.js";
+
+import type { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import type { GroupingHandlerResult } from "../../../hierarchies/imodel/operators/Grouping.js";
 
 describe("Grouping", () => {
   const imodelAccess = createIModelAccessStub();

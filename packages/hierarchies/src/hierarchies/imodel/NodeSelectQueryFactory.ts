@@ -3,29 +3,20 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert, Id64String } from "@itwin/core-bentley";
-import {
-  GenericInstanceFilter,
+import { assert } from "@itwin/core-bentley";
+import { GenericInstanceFilter, GenericInstanceFilterRuleValue } from "@itwin/core-common";
+import { compareFullClassNames, ECSql, getClass, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
+
+import type { Id64String } from "@itwin/core-bentley";
+import type {
   GenericInstanceFilterRelationshipStep,
   GenericInstanceFilterRule,
   GenericInstanceFilterRuleGroup,
   GenericInstanceFilterRuleGroupOperator,
   GenericInstanceFilterRuleOperator,
-  GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import {
-  compareFullClassNames,
-  EC,
-  ECClassHierarchyInspector,
-  ECSchemaProvider,
-  ECSql,
-  getClass,
-  IInstanceLabelSelectClauseFactory,
-  parseFullClassName,
-  PrimitiveValue,
-  Props,
-} from "@itwin/presentation-shared";
-import { HierarchyNodeAutoExpandProp } from "./IModelHierarchyNode.js";
+import type { EC, ECClassHierarchyInspector, ECSchemaProvider, IInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
+import type { HierarchyNodeAutoExpandProp } from "./IModelHierarchyNode.js";
 
 /**
  * Column names of the SELECT clause created by `NodeSelectClauseFactory`. Order of the names matches the order of columns
@@ -732,15 +723,15 @@ async function createWhereClause(
   }
 
   if (property.isNavigation()) {
-    assert(rule.value !== undefined && GenericInstanceFilterRuleValue.isInstanceKey(value));
+    assert(GenericInstanceFilterRuleValue.isInstanceKey(value));
     return `${propertyValueSelector}.[Id] ${ecsqlOperator} ${ECSql.createRawPrimitiveValueSelector(value.id)}`;
   }
   if (property.isEnumeration()) {
-    assert(rule.value !== undefined && !GenericInstanceFilterRuleValue.isInstanceKey(value));
+    assert(!GenericInstanceFilterRuleValue.isInstanceKey(value));
     return `${propertyValueSelector} ${ecsqlOperator} ${ECSql.createRawPrimitiveValueSelector(value)}`;
   }
   if (property.isPrimitive()) {
-    assert(rule.value !== undefined && !GenericInstanceFilterRuleValue.isInstanceKey(value));
+    assert(!GenericInstanceFilterRuleValue.isInstanceKey(value));
     switch (property.primitiveType) {
       case "Point2d": {
         assert(rule.operator === "is-equal" || rule.operator === "is-not-equal");

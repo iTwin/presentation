@@ -3,9 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { HierarchyNodeAutoExpandProp } from "../../IModelHierarchyNode.js";
-import { GroupingHandlerResult } from "../Grouping.js";
 import { iterateChildNodeGroupingParams } from "./Shared.js";
+
+import type { HierarchyNodeAutoExpandProp } from "../../IModelHierarchyNode.js";
+import type { GroupingHandlerResult } from "../Grouping.js";
 
 /** @internal */
 export function assignAutoExpand(props: GroupingHandlerResult): GroupingHandlerResult {

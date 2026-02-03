@@ -7,22 +7,29 @@ import { expect } from "chai";
 import { collect, createAsyncIterator, ResolvablePromise, waitFor } from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeEvent, omit } from "@itwin/core-bentley";
-import { GenericInstanceFilter } from "@itwin/core-common";
-import { EC, ECSqlQueryDef, ECSqlQueryReaderOptions, InstanceKey, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import { InstanceKey, trimWhitespace } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
-import { GroupingHierarchyNode, HierarchyNode, ParentHierarchyNode } from "../../hierarchies/HierarchyNode.js";
-import { GroupingNodeKey } from "../../hierarchies/HierarchyNodeKey.js";
-import { DefineHierarchyLevelProps, HierarchyDefinition, NodeParser } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
-import { InstanceHierarchyNodeProcessingParams, ProcessedHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
+import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import {
   createMergedIModelHierarchyProvider,
   createIModelHierarchyProvider as origCreateIModelHierarchyProvider,
 } from "../../hierarchies/imodel/IModelHierarchyProvider.js";
-import { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
 import { ECSQL_COLUMN_NAME_SearchClassName, ECSQL_COLUMN_NAME_SearchECInstanceId } from "../../hierarchies/imodel/SearchHierarchyDefinition.js";
-import { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 import { createIModelAccessStub, createTestGenericNode, createTestGenericNodeKey, createTestInstanceKey, createTestSourceGenericNode } from "../Utils.js";
+
+import type { GenericInstanceFilter } from "@itwin/core-common";
+import type { EC, ECSqlQueryDef, ECSqlQueryReaderOptions, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import type { GroupingHierarchyNode, ParentHierarchyNode } from "../../hierarchies/HierarchyNode.js";
+import type { GroupingNodeKey } from "../../hierarchies/HierarchyNodeKey.js";
+import type { DefineHierarchyLevelProps, HierarchyDefinition, NodeParser } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
+import type {
+  InstanceHierarchyNodeProcessingParams,
+  ProcessedHierarchyNode,
+  SourceInstanceHierarchyNode,
+} from "../../hierarchies/imodel/IModelHierarchyNode.js";
+import type { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
+import type { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 
 describe("createIModelHierarchyProvider", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub> & {
@@ -1741,7 +1748,7 @@ describe("createIModelHierarchyProvider", () => {
       // requesting children for the class grouping node again should re-execute the root query, searched by grouped instance ECInstanceIds
       const rootInstanceNodes2 = await collect(provider.getNodes({ parentNode: groupingNodes[0] }));
       expect(imodelAccess.createQueryReader).to.be.calledOnceWith(
-        sinon.match((query: ECSqlQueryDef) => query.ecsql.includes("FROM (ROOT)") && query?.bindings?.length === 1 && query?.bindings?.at(0)?.value === "0x1"),
+        sinon.match((query: ECSqlQueryDef) => query.ecsql.includes("FROM (ROOT)") && query.bindings?.length === 1 && query.bindings.at(0)?.value === "0x1"),
       );
       expect(rootInstanceNodes2).to.deep.eq(rootInstanceNodes);
       imodelAccess.createQueryReader.resetHistory();
@@ -1749,7 +1756,7 @@ describe("createIModelHierarchyProvider", () => {
       // requesting root nodes again should re-execute the root query, NOT searched by grouped instance ECInstanceIds
       const groupingNodes2 = await collect(provider.getNodes({ parentNode: undefined }));
       expect(imodelAccess.createQueryReader).to.be.calledOnceWith(
-        sinon.match((query: ECSqlQueryDef) => query.ecsql === "ROOT" && query?.bindings === undefined),
+        sinon.match((query: ECSqlQueryDef) => query.ecsql === "ROOT" && query.bindings === undefined),
       );
       expect(groupingNodes2).to.deep.eq(groupingNodes);
     });

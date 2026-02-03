@@ -4,11 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { concatMap, filter, firstValueFrom, from, mergeAll, mergeMap, toArray } from "rxjs";
-import { Id64String } from "@itwin/core-bentley";
-import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../HierarchyNode.js";
-import { GenericNodeKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
-import {
+
+import type { Id64String } from "@itwin/core-bentley";
+import type { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
+import type { GenericNodeKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
+import type {
   DefineHierarchyLevelProps,
   HierarchyDefinition,
   HierarchyDefinitionParentNode,

@@ -4,22 +4,22 @@
 
 ```ts
 
-import { ConcatenatedValue } from '@itwin/presentation-shared';
-import { ECClassHierarchyInspector } from '@itwin/presentation-shared';
-import { ECSchemaProvider } from '@itwin/presentation-shared';
-import { ECSqlQueryDef } from '@itwin/presentation-shared';
-import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
-import { ECSqlQueryReaderOptions } from '@itwin/presentation-shared';
-import { Event as Event_2 } from '@itwin/presentation-shared';
+import type { ConcatenatedValue } from '@itwin/presentation-shared';
+import type { ECClassHierarchyInspector } from '@itwin/presentation-shared';
+import type { ECSchemaProvider } from '@itwin/presentation-shared';
+import type { ECSqlQueryDef } from '@itwin/presentation-shared';
+import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
+import type { ECSqlQueryReaderOptions } from '@itwin/presentation-shared';
+import type { Event as Event_2 } from '@itwin/presentation-shared';
 import type { EventListener as EventListener_2 } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/core-common';
-import { Id64String } from '@itwin/core-bentley';
-import { IInstanceLabelSelectClauseFactory } from '@itwin/presentation-shared';
+import type { Id64String } from '@itwin/core-bentley';
+import type { IInstanceLabelSelectClauseFactory } from '@itwin/presentation-shared';
 import type { ILogger } from '@itwin/presentation-shared';
 import { InstanceKey } from '@itwin/presentation-shared';
-import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
-import { OmitOverUnion } from '@itwin/presentation-shared';
-import { PrimitiveValue } from '@itwin/presentation-shared';
+import type { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
+import type { OmitOverUnion } from '@itwin/presentation-shared';
+import type { PrimitiveValue } from '@itwin/presentation-shared';
 import type { Props } from '@itwin/presentation-shared';
 import type { RaisableEvent } from '@itwin/presentation-shared';
 

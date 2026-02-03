@@ -6,9 +6,9 @@
 
 import type { ECClassHierarchyInspector } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
-import { Event as Event_2 } from '@itwin/presentation-shared';
-import { Id64Arg } from '@itwin/core-bentley';
-import { Id64Set } from '@itwin/core-bentley';
+import type { Event as Event_2 } from '@itwin/presentation-shared';
+import type { Id64Arg } from '@itwin/core-bentley';
+import type { Id64Set } from '@itwin/core-bentley';
 import type { Id64String } from '@itwin/core-bentley';
 
 // @public @deprecated

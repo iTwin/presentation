@@ -4,11 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Dictionary } from "@itwin/core-bentley";
-import { compareFullClassNames, createMainThreadReleaseOnTimePassedHandler, ECSchemaProvider, getClass } from "@itwin/presentation-shared";
-import { HierarchyNode, ParentHierarchyNode } from "../../../HierarchyNode.js";
-import { ClassGroupingNodeKey } from "../../../HierarchyNodeKey.js";
-import { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
-import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
+import { compareFullClassNames, createMainThreadReleaseOnTimePassedHandler, getClass } from "@itwin/presentation-shared";
+import { HierarchyNode } from "../../../HierarchyNode.js";
+
+import type { ECSchemaProvider } from "@itwin/presentation-shared";
+import type { ParentHierarchyNode } from "../../../HierarchyNode.js";
+import type { ClassGroupingNodeKey } from "../../../HierarchyNodeKey.js";
+import type { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
+import type { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
 
 interface ClassInfo {
   fullName: string;

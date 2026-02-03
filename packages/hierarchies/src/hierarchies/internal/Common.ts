@@ -6,9 +6,11 @@
 import "./DisposePolyfill.js";
 
 import naturalCompare from "natural-compare-lite";
-import { from, Observable, of } from "rxjs";
-import { ConcatenatedValue } from "@itwin/presentation-shared";
-import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
+import { from, of } from "rxjs";
+
+import type { Observable } from "rxjs";
+import type { ConcatenatedValue } from "@itwin/presentation-shared";
+import type { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 
 /**
  * This is a logging namespace for public log messages that may be interesting to consumers.

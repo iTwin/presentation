@@ -38,7 +38,7 @@
     "docs": "npm run -s docs:reference && npm run -s docs:changelog",
     "docs:changelog": "cpx ./CHANGELOG.md ./build/docs/reference/presentation-testing",
     "docs:reference": "cross-env NODE_PROJECT_ROOT_DIRECTORY=../../ betools docs --json=./build/docs/reference/presentation-testing/file.json --tsIndexFile=presentation-testing.ts --onlyJson --testExcludeGlob=./src/test/**",
-    "lint": "eslint ./src/**/*.ts",
+    "lint": "eslint \"./src/**/*.ts\"",
     "test:dev": "node --experimental-test-module-mocks --enable-source-maps --import presentation-test-utilities/node-hooks/ignore-styles ./node_modules/mocha/bin/mocha.js --config ./.mocharc.json",
     "test": "npm run test:dev",
     "extract-api": "betools extract-api --entry=lib/esm/presentation-testing --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Observable } from "rxjs";
+import type { Observable } from "rxjs";
 
 // cspell:words deferreds
 
@@ -50,9 +50,11 @@ export async function* eachValueFrom<T>(source: Observable<T>): AsyncIterableIte
         yield value;
         continue;
       }
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (completed) {
         return;
       }
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (error) {
         // eslint-disable-next-line @typescript-eslint/only-throw-error
         throw error;
