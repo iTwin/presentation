@@ -34,7 +34,9 @@ export type SelectionChangeType = "add" | "replace" | "remove";
  * @alpha
  */
 type UseSelectionHandlerProps = Pick<TreeRendererProps, "selectNodes" | "rootNodes"> & {
-  /** Selection mode that the component is working in. */
+  /**
+   * Selection mode that the component is working in.
+   */
   selectionMode: SelectionMode;
 };
 

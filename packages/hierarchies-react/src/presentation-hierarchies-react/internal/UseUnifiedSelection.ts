@@ -62,6 +62,7 @@ export function useUnifiedTreeSelection({
   }));
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOptions(createOptions(sourceName, selectionStorage, createSelectableForGenericNode, getTreeModelNode));
     return selectionStorage.selectionChangeEvent.addListener((args) => {
       if (args.level > 0) {

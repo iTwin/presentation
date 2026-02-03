@@ -29,7 +29,6 @@
   ],
   "type": "module",
   "types": "lib/esm/presentation-hierarchies-react.d.ts",
-  "module": "lib/esm/presentation-hierarchies-react.js",
   "exports": {
     ".": {
       "import": "./lib/esm/presentation-hierarchies-react.js"
@@ -37,11 +36,11 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "npm run -s build:esm",
-    "build:esm": "npm run -s copy:esm && tsc -p tsconfig.esm.json",
-    "copy:esm": "cpx \"./src/**/*.{css,json}\" ./lib/esm",
+    "build": "tsdown && npm run -s copy:css && npm run -s build:test",
+    "copy:css": "cpx \"./src/**/*.css\" ./lib/esm",
+    "build:test": "tsdown --config tsdown.test.config.ts",
     "clean": "rimraf lib build",
-    "cover": "c8 npm -s test",
+    "cover": "npm -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "test:dev": "node --experimental-test-module-mocks --enable-source-maps --import presentation-test-utilities/node-hooks/ignore-styles ./node_modules/mocha/bin/mocha.js --config ./.mocharc.json",
     "test": "npm run test:dev -- --parallel --jobs=4",
@@ -59,6 +58,7 @@
     "@tanstack/react-virtual": "^3.13.13",
     "classnames": "catalog:react",
     "immer": "^10.2.0",
+    "react-compiler-runtime": "catalog:react",
     "react-error-boundary": "catalog:react",
     "rxjs": "catalog:rxjs"
   },
@@ -87,6 +87,7 @@
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
     "@itwin/eslint-plugin": "catalog:build-tools",
+    "@rollup/plugin-babel": "catalog:build-tools",
     "@stratakit/bricks": "catalog:stratakit",
     "@stratakit/foundations": "catalog:stratakit",
     "@stratakit/icons": "catalog:stratakit",
@@ -103,13 +104,14 @@
     "@types/react-dom": "catalog:react",
     "@types/sinon": "catalog:test-tools",
     "@types/sinon-chai": "catalog:test-tools",
-    "c8": "catalog:test-tools",
+    "babel-plugin-react-compiler": "catalog:build-tools",
     "chai": "catalog:test-tools",
     "chai-as-promised": "catalog:test-tools",
     "cpx2": "catalog:build-tools",
     "cross-env": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "global-jsdom": "catalog:test-tools",
     "ignore-styles": "catalog:test-tools",
     "jsdom": "catalog:test-tools",
@@ -120,6 +122,7 @@
     "rimraf": "catalog:build-tools",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
+    "tsdown": "catalog:build-tools",
     "typescript": "catalog:build-tools"
   }
 }

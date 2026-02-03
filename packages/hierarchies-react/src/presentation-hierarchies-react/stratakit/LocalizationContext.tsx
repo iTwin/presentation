@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
 
 import type { PropsWithChildren } from "react";
 
@@ -170,12 +170,7 @@ interface LocalizationContextProviderProps {
  * @public
  */
 export function LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren<LocalizationContextProviderProps>) {
-  const [state, setState] = useState({ localizedStrings: { ...defaultLocalizedStrings, ...localizedStrings } });
-
-  useEffect(() => {
-    setState({ localizedStrings: { ...defaultLocalizedStrings, ...localizedStrings } });
-  }, [localizedStrings]);
-
+  const state = useMemo(() => ({ localizedStrings: { ...defaultLocalizedStrings, ...localizedStrings } }), [localizedStrings]);
   return <localizationContext.Provider value={state}>{children}</localizationContext.Provider>;
 }
 

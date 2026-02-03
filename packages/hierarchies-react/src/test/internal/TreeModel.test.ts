@@ -4,13 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { isTreeModelHierarchyNode, TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import { TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
 import {
   createTestChildrenLoadErrorInfo,
   createTestHierarchyNode,
   createTestNoFilterMatchesErrorInfo,
   createTreeModel,
   getHierarchyNode,
+  isTreeModelHierarchyNode,
 } from "../TestUtils.js";
 
 import type { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
