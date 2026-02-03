@@ -402,16 +402,31 @@ class CustomPropertyDataProvider extends PresentationPropertyDataProvider {
 
     const copyData = structuredClone(otherProperties);
     copyData.categories.push(customProps.category);
-    copyData.records[customProps.category.name] = customProps.records;
+    copyData.records[customProps.category.name] = customProps.records.slice(0, 5);
+    copyData.records[customProps.childCategory.name] = customProps.records.slice(5);
+    copyData.records[customProps.complexCategory.name] = [customProps.arrayProp, customProps.structProp];
     this.expandCategories(copyData.categories);
     return copyData;
   }
 
   private async loadCustomProperties() {
+    const childCategory: PropertyCategory = {
+      name: "child_category",
+      label: "My Custom Child Category",
+      expand: true,
+    };
+
+    const complexCategory: PropertyCategory = {
+      name: "complex_category",
+      label: "Complex Properties",
+      expand: true,
+    };
+
     const customCategory: PropertyCategory = {
       name: "custom_category",
       label: "My Custom Category",
       expand: true,
+      childCategories: [childCategory, complexCategory],
     };
 
     const customProperties = await loadProperties();
@@ -430,7 +445,67 @@ class CustomPropertyDataProvider extends PresentationPropertyDataProvider {
         ),
     );
 
-    return { category: customCategory, records: customRecords };
+    const arrayProp = new PropertyRecord(
+      {
+        valueFormat: PropertyValueFormat.Array,
+        items: [1, 2, 3, 4].map(
+          (num) =>
+            new PropertyRecord(
+              {
+                valueFormat: PropertyValueFormat.Primitive,
+                value: num,
+              },
+              {
+                name: `item-${num}`,
+                displayLabel: `Item ${num}`,
+                typename: "number",
+              },
+            ),
+        ),
+        itemsTypeName: "number",
+      },
+      {
+        name: "Array Property",
+        displayLabel: "Array Property",
+        typename: "array",
+      },
+    );
+    const structProp = new PropertyRecord(
+      {
+        valueFormat: PropertyValueFormat.Struct,
+        members: {
+          "member-a": new PropertyRecord(
+            {
+              valueFormat: PropertyValueFormat.Primitive,
+              value: "Value A",
+            },
+            {
+              name: "member-a",
+              displayLabel: "Member A",
+              typename: "string",
+            },
+          ),
+          "member-b": new PropertyRecord(
+            {
+              valueFormat: PropertyValueFormat.Primitive,
+              value: 123,
+            },
+            {
+              name: "member-b",
+              displayLabel: "Member B",
+              typename: "number",
+            },
+          ),
+        },
+      },
+      {
+        name: "Struct Property",
+        displayLabel: "Struct Property",
+        typename: "struct",
+      },
+    );
+
+    return { category: customCategory, childCategory, complexCategory, records: customRecords, arrayProp, structProp };
   }
 
   private expandCategories(categories: PropertyCategory[]) {
