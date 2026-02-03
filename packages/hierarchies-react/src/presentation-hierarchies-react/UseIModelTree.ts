@@ -24,14 +24,22 @@ type IModelAccess = IModelHierarchyProviderProps["imodelAccess"];
  */
 type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearchPaths"> &
   Pick<IModelHierarchyProviderProps, "localizedStrings" | "imodelAccess" | "imodelChanged"> & {
-    /** Provides the hierarchy definition for the tree. */
+    /**
+     * Provides the hierarchy definition for the tree.
+     */
     getHierarchyDefinition: (props: { imodelAccess: IModelAccess }) => HierarchyDefinition;
 
-    /** Provides paths to target nodes. */
+    /**
+     * Provides paths to target nodes.
+     */
     getSearchPaths?: (props: {
-      /** Object that provides access to the iModel schema and can run queries against the iModel. */
+      /**
+       * Object that provides access to the iModel schema and can run queries against the iModel.
+       */
       imodelAccess: IModelAccess;
-      /** Signal indicating that that the request was canceled */
+      /**
+       * Signal indicating that that the request was canceled
+       */
       abortSignal: AbortSignal;
     }) => Promise<HierarchySearchPath[] | undefined>;
   };

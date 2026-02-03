@@ -14,7 +14,9 @@ import type { TreeActionBaseAttributes } from "./TreeAction.js";
 
 /** @alpha */
 type TreeNodeFilterActionProps = {
-  /** Action to perform when the filter button is clicked for this node. */
+  /**
+   * Action to perform when the filter button is clicked for this node.
+   */
   onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
 } & TreeActionBaseAttributes &
   Pick<TreeRendererProps, "getHierarchyLevelDetails">;
