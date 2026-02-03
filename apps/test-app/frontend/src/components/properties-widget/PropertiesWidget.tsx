@@ -7,6 +7,7 @@ import "./PropertiesWidget.css";
 
 import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
+import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import {
   ActionButtonRendererProps,
   CompositeFilterType,
@@ -147,10 +148,10 @@ interface PropertyGridProps {
 }
 function PropertyGrid(props: PropertyGridProps) {
   const { imodel, rulesetId, diagnostics, ...restProps } = props;
-  const [dataProvider, setDataProvider] = useState<AutoExpandingPropertyDataProvider>();
+  const [dataProvider, setDataProvider] = useState<CustomPropertyDataProvider>();
 
   useEffect(() => {
-    const provider = new AutoExpandingPropertyDataProvider({ imodel, ruleset: rulesetId, ...diagnostics });
+    const provider = new CustomPropertyDataProvider({ imodel, ruleset: rulesetId, ...diagnostics });
     provider.isNestedPropertyCategoryGroupingEnabled = true;
     setDataProvider(provider);
     return () => {
@@ -393,11 +394,43 @@ function CopyActionButton() {
   );
 }
 
-class AutoExpandingPropertyDataProvider extends PresentationPropertyDataProvider {
+class CustomPropertyDataProvider extends PresentationPropertyDataProvider {
   public override async getData(): Promise<PropertyData> {
-    const result = await super.getData();
-    this.expandCategories(result.categories);
-    return result;
+    const otherProperties = await super.getData();
+
+    const customProps = await this.loadCustomProperties();
+
+    const copyData = structuredClone(otherProperties);
+    copyData.categories.push(customProps.category);
+    copyData.records[customProps.category.name] = customProps.records;
+    this.expandCategories(copyData.categories);
+    return copyData;
+  }
+
+  private async loadCustomProperties() {
+    const customCategory: PropertyCategory = {
+      name: "custom_category",
+      label: "My Custom Category",
+      expand: true,
+    };
+
+    const customProperties = await loadProperties();
+    const customRecords = customProperties.map<PropertyRecord>(
+      (prop) =>
+        new PropertyRecord(
+          {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: prop.propertyValue,
+          },
+          {
+            name: prop.propertyName,
+            displayLabel: prop.propertyName,
+            typename: "string",
+          },
+        ),
+    );
+
+    return { category: customCategory, records: customRecords };
   }
 
   private expandCategories(categories: PropertyCategory[]) {
@@ -408,4 +441,16 @@ class AutoExpandingPropertyDataProvider extends PresentationPropertyDataProvider
       }
     });
   }
+}
+
+async function loadProperties() {
+  // simulate loading
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  return Array(10)
+    .fill(0)
+    .map((_, index) => ({
+      propertyName: `Property ${index + 1}`,
+      propertyValue: `Value ${index + 1}`,
+    }));
 }
