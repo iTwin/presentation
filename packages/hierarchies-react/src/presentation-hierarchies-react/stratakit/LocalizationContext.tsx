@@ -5,7 +5,7 @@
 
 import { createContext, useContext, useMemo } from "react";
 
-import type { PropsWithChildren } from "react";
+import type { JSX, PropsWithChildren } from "react";
 
 /**
  * Localized strings used in the components.
@@ -169,7 +169,7 @@ interface LocalizationContextProviderProps {
  * Context provider for localized strings used in the components.
  * @public
  */
-export function LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren<LocalizationContextProviderProps>): React.JSX.Element {
+export function LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren<LocalizationContextProviderProps>): JSX.Element {
   const state = useMemo(() => ({ localizedStrings: { ...defaultLocalizedStrings, ...localizedStrings } }), [localizedStrings]);
   return <localizationContext.Provider value={state}>{children}</localizationContext.Provider>;
 }

@@ -8,7 +8,7 @@ import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 import { ErrorItemRenderer } from "./ErrorItemRenderer.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
-import type { ReactElement } from "react";
+import type { JSX, ReactElement } from "react";
 import type { ErrorItemRendererProps } from "./ErrorItemRenderer.js";
 import type { useErrorNodes } from "./FlatTreeNode.js";
 
@@ -38,7 +38,7 @@ export type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemR
  *
  * @alpha
  */
-export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): React.JSX.Element {
+export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): JSX.Element {
   const { localizedStrings } = useLocalizationContext();
   const errorItems = errorNodes.map((errorNode) => {
     const errorRendererProps: ErrorItemRendererProps = {

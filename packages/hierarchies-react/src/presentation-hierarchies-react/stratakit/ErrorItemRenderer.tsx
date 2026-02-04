@@ -8,6 +8,7 @@ import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
+import type { JSX } from "react";
 import type { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
 import type { TreeNode } from "../TreeNode.js";
 import type { useErrorNodes } from "./FlatTreeNode.js";
@@ -39,7 +40,7 @@ export function ErrorItemRenderer({
   filterHierarchyLevel,
   reloadTree,
   scrollToNode,
-}: ErrorItemRendererProps): React.JSX.Element {
+}: ErrorItemRendererProps): JSX.Element {
   const { localizedStrings } = useLocalizationContext();
 
   if (errorNode.error.type === "ResultSetTooLarge") {

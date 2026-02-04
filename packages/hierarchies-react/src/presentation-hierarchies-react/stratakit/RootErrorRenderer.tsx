@@ -8,6 +8,7 @@ import { Icon } from "@stratakit/foundations";
 import errorSvg from "@stratakit/icons/status-error.svg";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
+import type { JSX } from "react";
 import type { RootErrorRendererProps } from "../Renderers.js";
 import type { ErrorInfo } from "../TreeNode.js";
 
@@ -26,7 +27,7 @@ export type StrataKitRootErrorRendererProps = {
  *
  * @alpha
  */
-export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): React.JSX.Element {
+export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): JSX.Element {
   const { localizedStrings } = useLocalizationContext();
 
   if (error.type === "ResultSetTooLarge") {

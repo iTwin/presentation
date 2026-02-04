@@ -17,6 +17,7 @@ import { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { HierarchySearchPath } from '@itwin/presentation-hierarchies';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
+import { JSX as JSX_2 } from 'react';
 import { NamedExoticComponent } from 'react';
 import { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import { Props } from '@itwin/presentation-shared';
@@ -56,7 +57,7 @@ export function ErrorItemRenderer({
     filterHierarchyLevel,
     reloadTree,
     scrollToNode
-}: ErrorItemRendererProps): React.JSX.Element;
+}: ErrorItemRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
@@ -138,7 +139,7 @@ type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 export function LocalizationContextProvider({
     localizedStrings,
     children
-}: PropsWithChildren<LocalizationContextProviderProps>): React.JSX.Element;
+}: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
 
 // @public
 interface LocalizationContextProviderProps {
@@ -223,7 +224,7 @@ export function StrataKitRootErrorRenderer({
     error,
     getHierarchyLevelDetails,
     reloadTree
-}: StrataKitRootErrorRendererProps): React.JSX.Element;
+}: StrataKitRootErrorRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 type StrataKitRootErrorRendererProps = {
@@ -264,7 +265,7 @@ export function TreeErrorRenderer({
     errorNodes,
     renderError,
     ...errorItemRendererProps
-}: TreeErrorRendererProps): React.JSX.Element;
+}: TreeErrorRendererProps): JSX_2.Element;
 
 // @alpha
 interface TreeErrorRendererOwnProps {
@@ -387,7 +388,7 @@ interface UseNodeHighlightingProps {
 
 // @alpha
 interface UseNodeHighlightingResult {
-    getLabel: (node: TreeNode) => React.ReactElement;
+    getLabel: (node: TreeNode) => ReactElement;
 }
 
 // @public
