@@ -3,17 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-// Explicit namespace import to ensure stable API Extractor alias
-// This import is not used directly but ensures react/jsx-runtime gets a consistent alias in API reports
-
-import type * as ReactJsxRuntime from "react/jsx-runtime";
-
-/**
- * @internal
- * Do not use - this export exists only to ensure deterministic API Extractor import aliases
- */
-export type { ReactJsxRuntime };
-
 export type { GenericErrorInfo, TreeNode, ErrorInfo, ResultSetTooLargeErrorInfo } from "./presentation-hierarchies-react/TreeNode.js";
 export { useTree, useUnifiedSelectionTree } from "./presentation-hierarchies-react/UseTree.js";
 export { useNodeHighlighting } from "./presentation-hierarchies-react/UseNodeHighlighting.js";
