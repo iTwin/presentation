@@ -266,8 +266,7 @@ function FilterablePropertyGrid({
             console.log(`Updated new value`, newValue); // eslint-disable-line no-console
             return true;
           }}
-          alwaysShowEditor={() => true}
-          editorSystem="legacy"
+          editorSystem="new"
         />
       </NavigationPropertyEditorContextProvider>
       {contextMenuArgs && <PropertiesWidgetContextMenu args={contextMenuArgs} dataProvider={dataProvider} onCloseContextMenu={onCloseContextMenu} />}
