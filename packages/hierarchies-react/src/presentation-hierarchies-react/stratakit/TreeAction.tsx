@@ -6,7 +6,7 @@
 import { memo } from "react";
 import { DropdownMenu, Tree } from "@stratakit/structures";
 
-import type { ComponentProps } from "react";
+import type { ComponentProps, NamedExoticComponent } from "react";
 
 /**
  * Attributes used to decide how to render tree actions. They allow to differentiate action style based on the context
@@ -51,7 +51,13 @@ export type TreeActionBaseProps = ComponentProps<typeof Tree.ItemAction> & TreeA
  *
  * @alpha
  */
-export const TreeActionBase = memo(function TreeActionBase({ hide, variant = "default", dot, visible, ...actionProps }: TreeActionBaseProps) {
+export const TreeActionBase: NamedExoticComponent<TreeActionBaseProps> = memo(function TreeActionBase({
+  hide,
+  variant = "default",
+  dot,
+  visible,
+  ...actionProps
+}: TreeActionBaseProps) {
   if (hide) {
     return variant === "inline" ? <Tree.ItemAction {...actionProps} visible={false} /> : undefined;
   }

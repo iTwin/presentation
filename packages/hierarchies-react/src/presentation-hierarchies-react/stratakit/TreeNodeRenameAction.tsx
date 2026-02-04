@@ -8,7 +8,7 @@ import renameSvg from "@stratakit/icons/rename.svg";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionBase } from "./TreeAction.js";
 
-import type { PropsWithChildren } from "react";
+import type { NamedExoticComponent, PropsWithChildren } from "react";
 import type { TreeNode } from "../TreeNode.js";
 import type { TreeActionBaseAttributes } from "./TreeAction.js";
 
@@ -23,7 +23,10 @@ import type { TreeActionBaseAttributes } from "./TreeAction.js";
  *
  * @alpha
  */
-export const TreeNodeRenameAction = memo(function TreeNodeRenameAction({ node, ...actionAttributes }: TreeActionBaseAttributes & { node: TreeNode }) {
+export const TreeNodeRenameAction: NamedExoticComponent<TreeActionBaseAttributes & { node: TreeNode }> = memo(function TreeNodeRenameAction({
+  node,
+  ...actionAttributes
+}: TreeActionBaseAttributes & { node: TreeNode }) {
   const { localizedStrings } = useLocalizationContext();
   const context = useTreeNodeRenameContext();
   const { rename } = localizedStrings;

@@ -8,6 +8,7 @@ import filterSvg from "@stratakit/icons/filter.svg";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionBase } from "./TreeAction.js";
 
+import type { NamedExoticComponent } from "react";
 import type { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
 import type { TreeNode } from "../TreeNode.js";
 import type { TreeActionBaseAttributes } from "./TreeAction.js";
@@ -31,7 +32,7 @@ type TreeNodeFilterActionProps = {
  *
  * @alpha
  */
-export const TreeNodeFilterAction = memo(function TreeNodeFilterAction({
+export const TreeNodeFilterAction: NamedExoticComponent<TreeNodeFilterActionProps & { node: TreeNode }> = memo(function TreeNodeFilterAction({
   node,
   onFilter,
   getHierarchyLevelDetails,

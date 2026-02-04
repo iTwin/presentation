@@ -17,12 +17,12 @@ import { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { HierarchySearchPath } from '@itwin/presentation-hierarchies';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
+import { NamedExoticComponent } from 'react';
 import { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import { Props } from '@itwin/presentation-shared';
 import { PropsWithChildren } from 'react';
 import { PropsWithoutRef } from 'react';
-import * as react0 from 'react';
-import * as react_jsx_runtime2 from 'react/jsx-runtime';
+import { default as React_2 } from 'react';
 import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 import { RefAttributes } from 'react';
@@ -57,7 +57,7 @@ export function ErrorItemRenderer({
     filterHierarchyLevel,
     reloadTree,
     scrollToNode
-}: ErrorItemRendererProps): react_jsx_runtime2.JSX.Element;
+}: ErrorItemRendererProps): React_2.JSX.Element;
 
 // @alpha (undocumented)
 interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
@@ -139,7 +139,7 @@ type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 export function LocalizationContextProvider({
     localizedStrings,
     children
-}: PropsWithChildren<LocalizationContextProviderProps>): react_jsx_runtime2.JSX.Element;
+}: PropsWithChildren<LocalizationContextProviderProps>): React.JSX.Element;
 
 // @public
 interface LocalizationContextProviderProps {
@@ -224,7 +224,7 @@ export function StrataKitRootErrorRenderer({
     error,
     getHierarchyLevelDetails,
     reloadTree
-}: StrataKitRootErrorRendererProps): react_jsx_runtime2.JSX.Element;
+}: StrataKitRootErrorRendererProps): React_2.JSX.Element;
 
 // @alpha (undocumented)
 type StrataKitRootErrorRendererProps = {
@@ -248,7 +248,7 @@ export interface StrataKitTreeRendererAttributes {
 type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "filterHierarchyLevel"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
 // @alpha
-export const TreeActionBase: react0.NamedExoticComponent<TreeActionBaseProps>;
+export const TreeActionBase: NamedExoticComponent<TreeActionBaseProps>;
 
 // @alpha
 export interface TreeActionBaseAttributes {
@@ -265,7 +265,7 @@ export function TreeErrorRenderer({
     errorNodes,
     renderError,
     ...errorItemRendererProps
-}: TreeErrorRendererProps): react_jsx_runtime2.JSX.Element;
+}: TreeErrorRendererProps): React_2.JSX.Element;
 
 // @alpha
 interface TreeErrorRendererOwnProps {
@@ -307,14 +307,17 @@ interface TreeNodeEditingProps {
 }
 
 // @alpha
-export const TreeNodeFilterAction: react0.NamedExoticComponent<{
-    onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
-} & TreeActionBaseAttributes & Pick<TreeRendererProps, "getHierarchyLevelDetails"> & {
+export const TreeNodeFilterAction: NamedExoticComponent<TreeNodeFilterActionProps & {
     node: TreeNode;
 }>;
 
+// @alpha (undocumented)
+type TreeNodeFilterActionProps = {
+    onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
+} & TreeActionBaseAttributes & Pick<TreeRendererProps, "getHierarchyLevelDetails">;
+
 // @alpha
-export const TreeNodeRenameAction: react0.NamedExoticComponent<TreeActionBaseAttributes & {
+export const TreeNodeRenameAction: NamedExoticComponent<TreeActionBaseAttributes & {
     node: TreeNode;
 }>;
 
