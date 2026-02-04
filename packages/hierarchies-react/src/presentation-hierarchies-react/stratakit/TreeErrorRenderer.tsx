@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { cloneElement } from "react";
+import { cloneElement, JSX } from "react";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 import { ErrorItemRenderer } from "./ErrorItemRenderer.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
@@ -38,7 +38,7 @@ export type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemR
  *
  * @alpha
  */
-export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): React.JSX.Element {
+export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): JSX.Element {
   const { localizedStrings } = useLocalizationContext();
   const errorItems = errorNodes.map((errorNode) => {
     const errorRendererProps: ErrorItemRendererProps = {

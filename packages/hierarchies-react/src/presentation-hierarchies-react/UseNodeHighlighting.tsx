@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useCallback } from "react";
+import { JSX, ReactElement, useCallback } from "react";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 
 import type { TreeNode } from "./TreeNode.js";
@@ -23,7 +23,7 @@ interface UseNodeHighlightingProps {
  */
 interface UseNodeHighlightingResult {
   /** Function that creates highlighted node labels. */
-  getLabel: (node: TreeNode) => React.ReactElement;
+  getLabel: (node: TreeNode) => ReactElement;
 }
 
 /**
@@ -56,7 +56,7 @@ export function useNodeHighlighting({ highlightText }: UseNodeHighlightingProps)
       }
 
       // Create the final label with highlighted parts
-      const finalLabel = new Array<React.JSX.Element>();
+      const finalLabel = new Array<JSX.Element>();
       let lastAddedPosition = 0;
       for (let i = 0; i < matchedIndexes.length; ++i) {
         const matchedIndex = matchedIndexes[i];

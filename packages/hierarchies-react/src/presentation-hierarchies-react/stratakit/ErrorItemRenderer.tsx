@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { JSX } from "react";
 import { Anchor, Text } from "@stratakit/bricks";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
@@ -39,7 +40,7 @@ export function ErrorItemRenderer({
   filterHierarchyLevel,
   reloadTree,
   scrollToNode,
-}: ErrorItemRendererProps): React.JSX.Element {
+}: ErrorItemRendererProps): JSX.Element {
   const { localizedStrings } = useLocalizationContext();
 
   if (errorNode.error.type === "ResultSetTooLarge") {

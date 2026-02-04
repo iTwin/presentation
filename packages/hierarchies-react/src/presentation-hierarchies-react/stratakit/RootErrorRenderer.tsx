@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { JSX } from "react";
 import { Button, Text } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import errorSvg from "@stratakit/icons/status-error.svg";
@@ -26,7 +27,7 @@ export type StrataKitRootErrorRendererProps = {
  *
  * @alpha
  */
-export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): React.JSX.Element {
+export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): JSX.Element {
   const { localizedStrings } = useLocalizationContext();
 
   if (error.type === "ResultSetTooLarge") {
