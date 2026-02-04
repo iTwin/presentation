@@ -32,6 +32,7 @@ describe("<QuantityPropertyEditorInput />", () => {
   const format = new Format("test format");
   const formatterSpec = {
     applyFormatting: sinon.stub<[number], string>(),
+    unitConversions: [{ name: "test unit", label: "unit" }],
     format,
   };
   const parserSpec = {
