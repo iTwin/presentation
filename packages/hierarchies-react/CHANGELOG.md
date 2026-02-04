@@ -1,5 +1,21 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.54
+
+### Patch Changes
+
+- [#1198](https://github.com/iTwin/presentation/pull/1198): Change `HierarchyProvider.hierarchyChanged` argument to be required.
+
+  This simplifies the API for users of `HierarchyProvider`, as they no longer need to check for `undefined` when handling hierarchy changes.
+
+  For implementors of custom `HierarchyProvider`, this change means that they must always provide an even argument when raising the `hierarchyChanged` event. Since all members of the argument type are optional, it's okay to raise the even with an empty object, e.g.: `this.hierarchyChanged.raiseEvent({})`.
+
+- [#1200](https://github.com/iTwin/presentation/pull/1200): Removed unnecessary, always-truthy condition checks.
+- [#1193](https://github.com/iTwin/presentation/pull/1193): Process package output with [React Compiler](https://react.dev/reference/react-compiler/compiling-libraries).
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.7
+  - @itwin/presentation-hierarchies@2.0.0-alpha.11
+
 ## 2.0.0-alpha.53
 
 ### Patch Changes
