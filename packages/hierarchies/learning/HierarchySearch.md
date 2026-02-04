@@ -74,14 +74,14 @@ The following code snippet shows, how to create a search path that includes the 
 ```ts
 import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
+// Get a grouping node that groups the "C" element
 const searchPath: HierarchySearchPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
+  // Supply options for the search path
   options: {
-    // Auto-expand all nodes up to element "C".
+    // Reveal the target "C" node in hierarchy by setting auto-expand flag on all its ancestor nodes
     reveal: true,
-    // Auto-expand the search target ("C" node) as well.
-    autoExpand: true,
   },
 };
 ```

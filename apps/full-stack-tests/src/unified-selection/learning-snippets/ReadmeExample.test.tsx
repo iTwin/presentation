@@ -8,15 +8,19 @@
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useEffect, useState } from "react";
+import { KeySet } from "@itwin/presentation-common";
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.Imports
 import { IModelConnection } from "@itwin/core-frontend";
-import { KeySet } from "@itwin/presentation-common";
-import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
+import { createIModelKey } from "@itwin/presentation-core-interop";
+import { createStorage, Selectables } from "@itwin/unified-selection";
+// __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.IModelSelectionSync.Imports
+import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+import { enableUnifiedSelectionSyncWithIModel, SelectionStorage } from "@itwin/unified-selection";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.LegacySelectionManagerSelectionSync.Imports
 import { Presentation } from "@itwin/presentation-frontend";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { createStorage, enableUnifiedSelectionSyncWithIModel, Selectables, SelectionStorage } from "@itwin/unified-selection";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";

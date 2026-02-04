@@ -28,8 +28,8 @@ The API consists of a few very basic concepts:
 
 ```ts
 import { IModelConnection } from "@itwin/core-frontend";
-import { KeySet } from "@itwin/presentation-common";
-import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
+import { createIModelKey } from "@itwin/presentation-core-interop";
+import { createStorage, Selectables } from "@itwin/unified-selection";
 
 // Create a global selection store (generally, somewhere in main.ts or similar). This store
 // must be shared across all the application's components to ensure unified selection experience.

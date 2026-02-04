@@ -30,8 +30,6 @@ Before the deprecation, we made sure that migration is as smooth as possible by 
 
    ```ts
    import { Presentation } from "@itwin/presentation-frontend";
-   import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-   import { createStorage, enableUnifiedSelectionSyncWithIModel, Selectables, SelectionStorage } from "@itwin/unified-selection";
 
    const selectionStorage = createStorage();
 
