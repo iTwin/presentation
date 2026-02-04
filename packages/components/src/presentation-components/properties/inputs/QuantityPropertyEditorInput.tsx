@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
@@ -40,7 +40,7 @@ QuantityPropertyEditorInput.displayName = "QuantityPropertyEditorInput";
 type QuantityPropertyValueInputProps = QuantityPropertyEditorImplProps & UseQuantityValueInputProps;
 
 const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, QuantityPropertyValueInputProps>(
-  ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus }, ref) => {
+  ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus, onCancel }, ref) => {
     const { quantityValue, inputProps } = useQuantityValueInput({ koqName, schemaContext, initialRawValue });
     const [isEditing, setEditing] = useState(false);
     const value = isEditing ? quantityValue.highPrecisionFormattedValue : quantityValue.defaultFormattedValue;
@@ -60,7 +60,7 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
       [quantityValue.defaultFormattedValue, quantityValue.rawValue, quantityValue.roundingError],
     );
 
-    const onBlur = () => {
+    const onBlur = useCallback(() => {
       onCommit &&
         onCommit({
           propertyRecord,
@@ -71,13 +71,25 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
             roundingError: quantityValue.roundingError,
           },
         });
-    };
+    }, [onCommit, propertyRecord, quantityValue.defaultFormattedValue, quantityValue.rawValue, quantityValue.roundingError]);
 
     useEffect(() => {
       if (setFocus && !inputProps.disabled) {
         inputRef.current && inputRef.current.focus();
       }
     }, [inputProps.disabled, setFocus]);
+
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Escape") {
+          onCancel?.();
+        }
+        if (e.key === "Enter") {
+          inputRef.current?.blur();
+        }
+      },
+      [onCancel],
+    );
 
     return (
       <Input
@@ -94,6 +106,7 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
           setEditing(true);
           inputRef.current?.setSelectionRange(0, 9999);
         }}
+        onKeyDown={handleKeyDown}
       />
     );
   },
