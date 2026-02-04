@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createContext, JSX, useContext, useMemo } from "react";
+import { createContext, useContext, useMemo } from "react";
 
-import type { PropsWithChildren } from "react";
+import type { JSX, PropsWithChildren } from "react";
 
 /**
  * Localized strings used in the components.

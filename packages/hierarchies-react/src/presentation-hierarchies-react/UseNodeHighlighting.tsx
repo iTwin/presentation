@@ -3,9 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { JSX, ReactElement, useCallback } from "react";
+import { useCallback } from "react";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 
+import type { JSX, ReactElement } from "react";
 import type { TreeNode } from "./TreeNode.js";
 
 /**
