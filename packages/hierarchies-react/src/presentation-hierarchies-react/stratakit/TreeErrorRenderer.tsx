@@ -8,7 +8,6 @@ import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 import { ErrorItemRenderer } from "./ErrorItemRenderer.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
-import type React from "react";
 import type { ReactElement } from "react";
 import type { ErrorItemRendererProps } from "./ErrorItemRenderer.js";
 import type { useErrorNodes } from "./FlatTreeNode.js";

@@ -22,7 +22,6 @@ import { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import { Props } from '@itwin/presentation-shared';
 import { PropsWithChildren } from 'react';
 import { PropsWithoutRef } from 'react';
-import { default as React_2 } from 'react';
 import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 import { RefAttributes } from 'react';
@@ -57,7 +56,7 @@ export function ErrorItemRenderer({
     filterHierarchyLevel,
     reloadTree,
     scrollToNode
-}: ErrorItemRendererProps): React_2.JSX.Element;
+}: ErrorItemRendererProps): React.JSX.Element;
 
 // @alpha (undocumented)
 interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
@@ -224,7 +223,7 @@ export function StrataKitRootErrorRenderer({
     error,
     getHierarchyLevelDetails,
     reloadTree
-}: StrataKitRootErrorRendererProps): React_2.JSX.Element;
+}: StrataKitRootErrorRendererProps): React.JSX.Element;
 
 // @alpha (undocumented)
 type StrataKitRootErrorRendererProps = {
@@ -265,7 +264,7 @@ export function TreeErrorRenderer({
     errorNodes,
     renderError,
     ...errorItemRendererProps
-}: TreeErrorRendererProps): React_2.JSX.Element;
+}: TreeErrorRendererProps): React.JSX.Element;
 
 // @alpha
 interface TreeErrorRendererOwnProps {
