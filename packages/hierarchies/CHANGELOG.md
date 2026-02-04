@@ -1,5 +1,105 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.11
+
+### Major Changes
+
+- [#1198](https://github.com/iTwin/presentation/pull/1198): Change `HierarchyProvider.hierarchyChanged` argument to be required.
+
+  This simplifies the API for users of `HierarchyProvider`, as they no longer need to check for `undefined` when handling hierarchy changes.
+
+  For implementors of custom `HierarchyProvider`, this change means that they must always provide an even argument when raising the `hierarchyChanged` event. Since all members of the argument type are optional, it's okay to raise the even with an empty object, e.g.: `this.hierarchyChanged.raiseEvent({})`.
+
+- [#1202](https://github.com/iTwin/presentation/pull/1202): Change `NodePreProcessor` and `NodePostProcessor` function types to take a props object instead of a node.
+
+  In addition, the props object now contains the `parentNode` property, which provides access to the parent node of the current node being processed. This allows for more context-aware processing of nodes within the hierarchy.
+
+  The change breaks consumers that have `HierarchyDefinition` implementations with `preProcessNode` or `postProcessNode` functions defined. Reacting to the change is straightforward:
+
+  ```ts
+  const myHierarchyDefinition: HierarchyDefinition = {
+    // Before:
+    preProcessNode: async (node) => {
+      // process node
+    },
+    postProcessNode: async (node) => {
+      // process node
+    },
+
+    // After:
+    preProcessNode: async ({ node, parentNode }) => {
+      // process node with access to parentNode
+    },
+    postProcessNode: async ({ node, parentNode }) => {
+      // process node with access to parentNode
+    },
+
+    // ... the rest of implementation
+  };
+  ```
+
+### Minor Changes
+
+- [#1204](https://github.com/iTwin/presentation/pull/1204): Add `createHierarchyProvider` utility function.
+
+  This function simplifies the creation of custom hierarchy providers by allowing developers to define only the necessary methods, while providing default implementations for the rest. This enhancement improves developer experience and reduces boilerplate code when working with custom hierarchy providers in the `@itwin/presentation-hierarchies` package.
+
+  **Before:**
+
+  ```ts
+  const beforeAsPlainObject: HierarchyProvider = {
+    hierarchyChanged: new BeEvent(),
+    async *getNodes({ parentNode }) {
+      // yield nodes...
+    },
+    async *getNodeInstanceKeys() {},
+    setFormatter() {},
+    setHierarchySearch() {},
+  };
+
+  const beforeAsClassObject = new (class implements HierarchyProvider {
+    public hierarchyChanged: new BeEvent(),
+    public async *getNodes({ parentNode }) {
+      // yield nodes...
+    },
+    public async *getNodeInstanceKeys() {},
+    public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
+      // set formatter...
+      hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: formatter } });
+    },
+    public setHierarchySearch() {},
+  })();
+  ```
+
+  **After:**
+
+  ```ts
+  const afterAsPlainObject = createHierarchyProvider(() => ({
+    async *getNodes({ parentNode }) {
+      // yield nodes...
+    },
+  }));
+
+  // or, provide implementation as a class instance:
+  const afterAsClassObject = createHierarchyProvider(
+    ({ hierarchyChanged }) =>
+      new (class implements Pick<HierarchyProvider, "getNodes" | "setFormatter"> {
+        public async *getNodes({ parentNode }): ReturnType<HierarchyProvider["getNodes"]> {
+          // yield nodes...
+        }
+        public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
+          // set formatter...
+          hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: formatter } });
+        }
+      })(),
+  );
+  ```
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.7
+
 ## 2.0.0-alpha.10
 
 ### Patch Changes

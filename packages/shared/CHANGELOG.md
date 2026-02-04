@@ -1,5 +1,26 @@
 # @itwin/presentation-shared
 
+## 2.0.0-alpha.7
+
+### Major Changes
+
+- [#1200](https://github.com/iTwin/presentation/pull/1200): Made `EC.RelationshipConstraint.multiplicity` required.
+
+### Minor Changes
+
+- [#1204](https://github.com/iTwin/presentation/pull/1204): Add a `RaisableEvent` interface, which extends `Event` with additional `raiseEvent` method.
+
+### Patch Changes
+
+- [#1198](https://github.com/iTwin/presentation/pull/1198): Fix `Event` type to prohibit being assigned an event with no-argument listener (unless the target event uses a no-argument listener).
+
+  Now TS will complain about the following assignment, which it previously allowed:
+
+  ```ts
+  const noArg: Event<() => void> = {} as any;
+  const withArg: Event<(arg: number) => void> = noArg; // TS didn't complain, but it does
+  ```
+
 ## 2.0.0-alpha.6
 
 ### Patch Changes
