@@ -33,7 +33,13 @@ export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHier
  *
  * @alpha
  */
-export function ErrorItemRenderer({ errorNode, getHierarchyLevelDetails, filterHierarchyLevel, reloadTree, scrollToNode }: ErrorItemRendererProps) {
+export function ErrorItemRenderer({
+  errorNode,
+  getHierarchyLevelDetails,
+  filterHierarchyLevel,
+  reloadTree,
+  scrollToNode,
+}: ErrorItemRendererProps): React.JSX.Element {
   const { localizedStrings } = useLocalizationContext();
 
   if (errorNode.error.type === "ResultSetTooLarge") {

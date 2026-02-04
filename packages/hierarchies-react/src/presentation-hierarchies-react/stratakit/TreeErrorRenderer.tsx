@@ -38,7 +38,7 @@ export type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemR
  *
  * @alpha
  */
-export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...errorItemRendererProps }: TreeErrorRendererProps) {
+export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): React.JSX.Element {
   const { localizedStrings } = useLocalizationContext();
   const errorItems = errorNodes.map((errorNode) => {
     const errorRendererProps: ErrorItemRendererProps = {

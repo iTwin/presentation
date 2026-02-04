@@ -26,7 +26,7 @@ export type StrataKitRootErrorRendererProps = {
  *
  * @alpha
  */
-export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps) {
+export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): React.JSX.Element {
   const { localizedStrings } = useLocalizationContext();
 
   if (error.type === "ResultSetTooLarge") {
