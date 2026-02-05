@@ -86,6 +86,7 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         }
         if (e.key === "Enter") {
           inputRef.current?.blur();
+          e.stopPropagation();
         }
       },
       [onCancel],
