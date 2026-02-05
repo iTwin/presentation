@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
@@ -60,7 +60,7 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
       [quantityValue.defaultFormattedValue, quantityValue.rawValue, quantityValue.roundingError],
     );
 
-    const onBlur = useCallback(() => {
+    const onBlur = () => {
       onCommit &&
         onCommit({
           propertyRecord,
@@ -71,7 +71,7 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
             roundingError: quantityValue.roundingError,
           },
         });
-    }, [onCommit, propertyRecord, quantityValue.defaultFormattedValue, quantityValue.rawValue, quantityValue.roundingError]);
+    };
 
     useEffect(() => {
       if (setFocus && !inputProps.disabled) {
@@ -79,18 +79,15 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
       }
     }, [inputProps.disabled, setFocus]);
 
-    const handleKeyDown = useCallback(
-      (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Escape") {
-          onCancel?.();
-        }
-        if (e.key === "Enter") {
-          inputRef.current?.blur();
-          e.stopPropagation();
-        }
-      },
-      [onCancel],
-    );
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Escape") {
+        onCancel?.();
+      }
+      if (e.key === "Enter") {
+        inputRef.current?.blur();
+        e.stopPropagation();
+      }
+    };
 
     return (
       <Input
