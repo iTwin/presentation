@@ -134,6 +134,7 @@ export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputPro
       }
       if (e.key === "Enter") {
         inputRef.current?.blur();
+        e.stopPropagation();
       }
     };
 
