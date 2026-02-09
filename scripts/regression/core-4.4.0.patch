@@ -59,7 +59,7 @@ index 4282b2d9..6761fbdc 100644
      });
    }
 diff --git a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
-index e094e24d..7cef9c80 100644
+index e094e24d..7431ce91 100644
 --- a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
 +++ b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
 @@ -6,13 +6,10 @@
@@ -77,115 +77,20 @@ index e094e24d..7cef9c80 100644
  import { buildIModel, importSchema } from "../../IModelUtils.js";
  import { initialize, terminate } from "../../IntegrationTests.js";
  import { render, waitFor } from "../../RenderUtils.js";
-@@ -29,111 +26,6 @@ describe("Property editors", () => {
+@@ -29,6 +26,7 @@ describe("Property editors", () => {
      await terminate();
    });
  
--  afterEach(() => {
--    IModelApp.resetFormatsProvider();
--  });
--
--  it("renders property values with koq's overridden through `IModelApp.formatsProvider`", async function () {
--    const { imodel, schema, ...imodelKeys } = await buildIModel(this, async (builder, mochaContext) => {
--      const mySchema = await importSchema(
--        mochaContext,
--        builder,
--        `
--          <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
--          <ECSchemaReference name="Units" version="01.00.09" alias="u" />
--          <ECSchemaReference name="Formats" version="01.00.00" alias="f" />
--          <KindOfQuantity typeName="TestKOQ" displayLabel="Test KOQ" persistenceUnit="u:M" relativeError="0.001" presentationUnits="f:DefaultRealU(4)[u:M]" />
--          <ECEntityClass typeName="MyPhysicalObject">
--            <BaseClass>bis:PhysicalElement</BaseClass>
--            <ECProperty propertyName="MyProperty" typeName="double" kindOfQuantity="TestKOQ" />
--          </ECEntityClass>
--        `,
--      );
--      const model = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
--      const category = insertSpatialCategory({ builder, codeValue: "TestSpatialCategory" });
--      const element = insertPhysicalElement({
--        builder,
--        modelId: model.id,
--        categoryId: category.id,
--        classFullName: mySchema.items.MyPhysicalObject.fullName,
--        userLabel: "My element",
--        ["MyProperty"]: 1.234,
--      });
--      return { element, schema: mySchema };
--    });
--
--    IModelApp.formatsProvider = {
--      async getFormat(name: string): Promise<FormatDefinition | undefined> {
--        if (name === schema.items.TestKOQ.fullName.replaceAll(".", ":")) {
--          return {
--            name: "TestFormat",
--            label: "Test format override",
--            composite: {
--              includeZero: true,
--              spacer: "",
--              units: [{ label: "in", name: "Units.IN" }],
--            },
--            formatTraits: ["keepSingleZero", "showUnitLabel"],
--            precision: 1,
--            type: "Decimal",
--          };
--        }
--        return undefined;
--      },
--      onFormatsChanged: new BeEvent(),
--    };
--
--    const provider = new PresentationPropertyDataProvider({ imodel });
--    provider.keys = new KeySet([imodelKeys.element]);
--
--    const descriptor = await provider.getContentDescriptor();
--    const field = descriptor!.getFieldByDescriptor(
--      {
--        type: FieldDescriptorType.Properties,
--        pathFromSelectToPropertyClass: [],
--        properties: [
--          {
--            class: schema.items.MyPhysicalObject.fullName.replaceAll(".", ":"),
--            name: "MyProperty",
--          },
--        ],
--      },
--      true,
--    );
--    expect(field).to.not.be.undefined;
--
--    const propertyData = await provider.getData();
--    const propertyRecord = propertyData.records[field!.category.name].find((r) => r.property.name === field!.name);
--    expect(propertyRecord).to.not.be.undefined;
--    expect(propertyRecord!.property.kindOfQuantityName).to.eq(schema.items.TestKOQ.fullName.replaceAll(".", ":"));
--
--    // ensure the display value is formatted with the overridden format
--    expect((propertyRecord!.value as PrimitiveValue).displayValue).to.eq("48.6 in");
--
--    // render an editor for the property
--    const commitSpy = sinon.spy();
--    const cancelSpy = sinon.spy();
--    const { getByPlaceholderText, findByRole, user } = render(
--      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={(x) => x.schemaContext}>
--        <EditorContainer propertyRecord={propertyRecord!} onCommit={commitSpy} onCancel={cancelSpy} />
--      </SchemaMetadataContextProvider>,
--    );
--    // ensure the input value is formatted
--    await waitFor(() => getByPlaceholderText("in"));
--    // ensure the input is editable
--    const input = await findByRole("textbox");
--    await user.clear(input);
--    await user.type(input, "4.56");
--    await user.keyboard("{Enter}");
--    // ensure the commit callback is called with the new value
--    await waitFor(() => {
--      expect(commitSpy).to.have.been.calledOnce;
--      expect(commitSpy.firstCall.args[0].newValue.displayValue).to.eq("4.6 in"); // what is displayed after formatting
--      expect(commitSpy.firstCall.args[0].newValue.value.toFixed(6)).to.eq("0.115824"); // converted to persistence unit - meters
--      expect(commitSpy.firstCall.args[0].newValue.roundingError.toFixed(6)).to.eq("0.000127");
--    });
--  });
--
++<<<<<<< Updated upstream
+   afterEach(() => {
+     IModelApp.resetFormatsProvider();
+   });
+@@ -134,6 +132,8 @@ describe("Property editors", () => {
+     });
+   });
+ 
++=======
++>>>>>>> Stashed changes
    it("edits merged values", async function () {
      const { imodel, schema, ...imodelKeys } = await buildIModel(this, async (builder, mochaContext) => {
        const mySchema = await importSchema(
@@ -369,6 +274,1824 @@ index 63947822..621c6df2 100644
      // __PUBLISH_EXTRACT_END__
    });
  
+diff --git a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap b/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
+index c2ba40a4..6c2c3bc3 100644
+--- a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
++++ b/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
+@@ -3,13 +3,6 @@
+ exports[`Generic:PhysicalObject-0x74`] = `
+ Array [
+   PropertyRecord {
+-    "autoExpand": undefined,
+-    "description": undefined,
+-    "extendedData": undefined,
+-    "isDisabled": undefined,
+-    "isMerged": undefined,
+-    "isReadonly": undefined,
+-    "links": undefined,
+     "property": Object {
+       "displayLabel": "Code",
+       "name": "pc_bis_Element_CodeValue",
+@@ -22,13 +15,6 @@ Array [
+     },
+   },
+   PropertyRecord {
+-    "autoExpand": undefined,
+-    "description": undefined,
+-    "extendedData": undefined,
+-    "isDisabled": undefined,
+-    "isMerged": undefined,
+-    "isReadonly": undefined,
+-    "links": undefined,
+     "property": Object {
+       "displayLabel": "User Label",
+       "name": "pc_bis_Element_UserLabel",
+@@ -41,13 +27,7 @@ Array [
+     },
+   },
+   PropertyRecord {
+-    "autoExpand": undefined,
+-    "description": undefined,
+-    "extendedData": undefined,
+-    "isDisabled": undefined,
+-    "isMerged": undefined,
+     "isReadonly": true,
+-    "links": undefined,
+     "property": Object {
+       "displayLabel": "area",
+       "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect",
+@@ -56,13 +36,7 @@ Array [
+     "value": Object {
+       "items": Array [
+         PropertyRecord {
+-          "autoExpand": undefined,
+-          "description": undefined,
+-          "extendedData": undefined,
+-          "isDisabled": undefined,
+-          "isMerged": undefined,
+           "isReadonly": true,
+-          "links": undefined,
+           "property": Object {
+             "displayLabel": "area",
+             "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect",
+@@ -71,13 +45,7 @@ Array [
+           "value": Object {
+             "members": Object {
+               "pc_MyProp_areaElementAspect_Acres": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 acres",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "Acres",
+                   "editor": Object {
+@@ -95,13 +63,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_cm2": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 cm²",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "cm2",
+                   "editor": Object {
+@@ -119,13 +81,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_ft2": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 ft²",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "ft2",
+                   "editor": Object {
+@@ -143,13 +99,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_ft__x0020__ft": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 ft·ft",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "ft ft",
+                   "editor": Object {
+@@ -167,13 +117,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_ft__x0020__mi": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 ft·mi",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "ft mi",
+                   "editor": Object {
+@@ -191,13 +135,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_ha": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 ha",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "ha",
+                   "editor": Object {
+@@ -215,13 +153,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_in2": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 in²",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "in2",
+                   "editor": Object {
+@@ -239,13 +171,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_in__x0020__ft": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 in·ft",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "in ft",
+                   "editor": Object {
+@@ -263,13 +189,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_in__x0020__m": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 in·m",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "in m",
+                   "editor": Object {
+@@ -287,13 +207,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_in__x0020__mi": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 in·mi",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "in mi",
+                   "editor": Object {
+@@ -311,13 +225,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_km2": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 km²",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "km2",
+                   "editor": Object {
+@@ -335,13 +243,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_m2": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 m²",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "m2",
+                   "editor": Object {
+@@ -359,13 +261,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_m__x0020__km": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 m·km",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "m km",
+                   "editor": Object {
+@@ -383,13 +279,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_m__x0020__m": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 mm·m",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "m m",
+                   "editor": Object {
+@@ -407,13 +297,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_mi2": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 mi²",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "mi2",
+                   "editor": Object {
+@@ -431,13 +315,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_mm__x0020__km": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 mm·km",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "mm km",
+                   "editor": Object {
+@@ -455,13 +333,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_areaElementAspect_thousand__x0020__ft2": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.1235 thousand ft²",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "thousand ft2",
+                   "editor": Object {
+@@ -488,13 +360,7 @@ Array [
+     },
+   },
+   PropertyRecord {
+-    "autoExpand": undefined,
+-    "description": undefined,
+-    "extendedData": undefined,
+-    "isDisabled": undefined,
+-    "isMerged": undefined,
+     "isReadonly": true,
+-    "links": undefined,
+     "property": Object {
+       "displayLabel": "firstTry",
+       "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect",
+@@ -503,13 +369,7 @@ Array [
+     "value": Object {
+       "items": Array [
+         PropertyRecord {
+-          "autoExpand": undefined,
+-          "description": undefined,
+-          "extendedData": undefined,
+-          "isDisabled": undefined,
+-          "isMerged": undefined,
+           "isReadonly": true,
+-          "links": undefined,
+           "property": Object {
+             "displayLabel": "firstTry",
+             "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect",
+@@ -518,13 +378,7 @@ Array [
+           "value": Object {
+             "members": Object {
+               "pc_MyProp_firstTryElementAspect_email": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "justas.lauzadis@bentley.com",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "email",
+                   "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_email",
+@@ -537,13 +391,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_firstTryElementAspect_full__x0020__URL": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "http://www.google.lt",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "full URL",
+                   "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_full__x0020__URL",
+@@ -556,13 +404,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_firstTryElementAspect_mailto": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "mailto:justas.lauzadis@bentley.com",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "mailto",
+                   "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_mailto",
+@@ -575,13 +417,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_firstTryElementAspect_without__x0020__http": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "www.bbc.co.uk",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "without http",
+                   "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_without__x0020__http",
+@@ -594,13 +430,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_firstTryElementAspect_without__x0020__www": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "gmail.com",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "without www",
+                   "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_without__x0020__www",
+@@ -622,13 +452,7 @@ Array [
+     },
+   },
+   PropertyRecord {
+-    "autoExpand": undefined,
+-    "description": undefined,
+-    "extendedData": undefined,
+-    "isDisabled": undefined,
+-    "isMerged": undefined,
+     "isReadonly": true,
+-    "links": undefined,
+     "property": Object {
+       "displayLabel": "workingUnitsProp",
+       "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect",
+@@ -637,13 +461,7 @@ Array [
+     "value": Object {
+       "items": Array [
+         PropertyRecord {
+-          "autoExpand": undefined,
+-          "description": undefined,
+-          "extendedData": undefined,
+-          "isDisabled": undefined,
+-          "isMerged": undefined,
+           "isReadonly": true,
+-          "links": undefined,
+           "property": Object {
+             "displayLabel": "workingUnitsProp",
+             "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect",
+@@ -652,13 +470,7 @@ Array [
+           "value": Object {
+             "members": Object {
+               "pc_MyProp_workingUnitsPropElementAspect_Angle": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "2.62",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "Angle",
+                   "editor": Object {
+@@ -674,13 +486,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_workingUnitsPropElementAspect_Area": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.12",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "Area",
+                   "editor": Object {
+@@ -696,13 +502,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_workingUnitsPropElementAspect_Distance": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.12",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "Distance",
+                   "editor": Object {
+@@ -718,13 +518,7 @@ Array [
+                 },
+               },
+               "pc_MyProp_workingUnitsPropElementAspect_Volume": PropertyRecord {
+-                "autoExpand": undefined,
+                 "description": "150.12",
+-                "extendedData": undefined,
+-                "isDisabled": undefined,
+-                "isMerged": undefined,
+-                "isReadonly": undefined,
+-                "links": undefined,
+                 "property": Object {
+                   "displayLabel": "Volume",
+                   "editor": Object {
+diff --git a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-hierarchy.snap b/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-hierarchy.snap
+index 97e65eb8..c7a05a84 100644
+--- a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-hierarchy.snap
++++ b/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-hierarchy.snap
+@@ -17,13 +17,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -42,13 +35,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -67,13 +53,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -92,13 +71,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -117,13 +89,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -142,13 +107,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -167,13 +125,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -192,13 +143,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -217,13 +161,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -242,13 +179,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -267,13 +197,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -292,13 +215,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -317,13 +233,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -342,13 +251,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -367,13 +269,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -392,13 +287,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -417,13 +305,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -442,13 +323,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -467,13 +341,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -492,13 +359,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -517,13 +377,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -542,13 +395,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -567,13 +413,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -592,13 +431,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -617,13 +449,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -642,13 +467,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -667,13 +485,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -692,13 +503,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -717,13 +521,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -742,13 +539,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -767,13 +557,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -792,13 +575,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -817,13 +593,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -842,13 +611,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -867,13 +629,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -892,13 +647,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -917,13 +665,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -942,13 +683,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -967,13 +701,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -992,13 +719,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1017,13 +737,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1042,13 +755,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1067,13 +773,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1092,13 +791,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1117,13 +809,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1142,13 +827,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1167,13 +845,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1192,13 +863,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1217,13 +881,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1242,13 +899,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1267,13 +917,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1292,13 +935,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1317,13 +953,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1342,13 +971,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1367,13 +989,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1392,13 +1007,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1417,13 +1025,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1442,13 +1043,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1467,13 +1061,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1492,13 +1079,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1517,13 +1097,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1542,13 +1115,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -1568,13 +1134,6 @@ Array [
+                 },
+                 "hasChildren": true,
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -1588,19 +1147,8 @@ Array [
+                 },
+               },
+             ],
+-            "filtering": Object {
+-              "ancestorFilters": Array [],
+-              "descriptor": [Function],
+-            },
+             "hasChildren": true,
+             "label": PropertyRecord {
+-              "autoExpand": undefined,
+-              "description": undefined,
+-              "extendedData": undefined,
+-              "isDisabled": undefined,
+-              "isMerged": undefined,
+-              "isReadonly": undefined,
+-              "links": undefined,
+               "property": Object {
+                 "displayLabel": "Label",
+                 "name": "node_label",
+@@ -1619,13 +1167,6 @@ Array [
+               "descriptor": [Function],
+             },
+             "label": PropertyRecord {
+-              "autoExpand": undefined,
+-              "description": undefined,
+-              "extendedData": undefined,
+-              "isDisabled": undefined,
+-              "isMerged": undefined,
+-              "isReadonly": undefined,
+-              "links": undefined,
+               "property": Object {
+                 "displayLabel": "Label",
+                 "name": "node_label",
+@@ -1644,13 +1185,6 @@ Array [
+               "descriptor": [Function],
+             },
+             "label": PropertyRecord {
+-              "autoExpand": undefined,
+-              "description": undefined,
+-              "extendedData": undefined,
+-              "isDisabled": undefined,
+-              "isMerged": undefined,
+-              "isReadonly": undefined,
+-              "links": undefined,
+               "property": Object {
+                 "displayLabel": "Label",
+                 "name": "node_label",
+@@ -1669,13 +1203,6 @@ Array [
+               "descriptor": [Function],
+             },
+             "label": PropertyRecord {
+-              "autoExpand": undefined,
+-              "description": undefined,
+-              "extendedData": undefined,
+-              "isDisabled": undefined,
+-              "isMerged": undefined,
+-              "isReadonly": undefined,
+-              "links": undefined,
+               "property": Object {
+                 "displayLabel": "Label",
+                 "name": "node_label",
+@@ -1696,13 +1223,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -1721,13 +1241,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -1746,13 +1259,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -1771,13 +1277,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -1796,13 +1295,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -1821,13 +1313,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -1846,13 +1331,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -1871,13 +1349,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -1896,13 +1367,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -1921,13 +1385,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -1946,13 +1403,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -1971,13 +1421,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -1996,13 +1439,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -2021,13 +1457,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -2046,13 +1475,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -2071,13 +1493,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -2096,13 +1511,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -2121,13 +1529,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -2146,13 +1547,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -2171,13 +1565,6 @@ Array [
+                   "descriptor": [Function],
+                 },
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -2198,13 +1585,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -2224,13 +1604,6 @@ Array [
+                 },
+                 "hasChildren": true,
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -2251,13 +1624,6 @@ Array [
+                       "descriptor": [Function],
+                     },
+                     "label": PropertyRecord {
+-                      "autoExpand": undefined,
+-                      "description": undefined,
+-                      "extendedData": undefined,
+-                      "isDisabled": undefined,
+-                      "isMerged": undefined,
+-                      "isReadonly": undefined,
+-                      "links": undefined,
+                       "property": Object {
+                         "displayLabel": "Label",
+                         "name": "node_label",
+@@ -2277,13 +1643,6 @@ Array [
+                 },
+                 "hasChildren": true,
+                 "label": PropertyRecord {
+-                  "autoExpand": undefined,
+-                  "description": undefined,
+-                  "extendedData": undefined,
+-                  "isDisabled": undefined,
+-                  "isMerged": undefined,
+-                  "isReadonly": undefined,
+-                  "links": undefined,
+                   "property": Object {
+                     "displayLabel": "Label",
+                     "name": "node_label",
+@@ -2303,13 +1662,6 @@ Array [
+             },
+             "hasChildren": true,
+             "label": PropertyRecord {
+-              "autoExpand": undefined,
+-              "description": undefined,
+-              "extendedData": undefined,
+-              "isDisabled": undefined,
+-              "isMerged": undefined,
+-              "isReadonly": undefined,
+-              "links": undefined,
+               "property": Object {
+                 "displayLabel": "Label",
+                 "name": "node_label",
+@@ -2323,19 +1675,8 @@ Array [
+             },
+           },
+         ],
+-        "filtering": Object {
+-          "ancestorFilters": Array [],
+-          "descriptor": [Function],
+-        },
+         "hasChildren": true,
+         "label": PropertyRecord {
+-          "autoExpand": undefined,
+-          "description": undefined,
+-          "extendedData": undefined,
+-          "isDisabled": undefined,
+-          "isMerged": undefined,
+-          "isReadonly": undefined,
+-          "links": undefined,
+           "property": Object {
+             "displayLabel": "Label",
+             "name": "node_label",
+@@ -2349,19 +1690,8 @@ Array [
+         },
+       },
+     ],
+-    "filtering": Object {
+-      "ancestorFilters": Array [],
+-      "descriptor": [Function],
+-    },
+     "hasChildren": true,
+     "label": PropertyRecord {
+-      "autoExpand": undefined,
+-      "description": undefined,
+-      "extendedData": undefined,
+-      "isDisabled": undefined,
+-      "isMerged": undefined,
+-      "isReadonly": undefined,
+-      "links": undefined,
+       "property": Object {
+         "displayLabel": "Label",
+         "name": "node_label",
 diff --git a/apps/full-stack-tests/src/unified-selection/learning-snippets/HiliteSets.test.ts b/apps/full-stack-tests/src/unified-selection/learning-snippets/HiliteSets.test.ts
 index cefd419e..bdaa1cdb 100644
 --- a/apps/full-stack-tests/src/unified-selection/learning-snippets/HiliteSets.test.ts
