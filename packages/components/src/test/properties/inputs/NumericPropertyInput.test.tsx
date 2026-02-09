@@ -335,6 +335,28 @@ describe("<NumericInput />", () => {
     expect(spy).to.be.be.calledOnce;
   });
 
+  it("commits value and blurs input when Enter is pressed", async () => {
+    const onBlurSpy = sinon.spy();
+    const { getByRole, user } = render(<NumericInput onBlur={onBlurSpy} onChange={() => {}} value="123" />);
+    const inputContainer = await waitFor(() => getByRole("textbox"));
+    
+    await user.click(inputContainer);
+    await user.keyboard("{Enter}");
+    
+    expect(onBlurSpy).to.be.calledOnce;
+  });
+
+  it("reverts changes and calls onCancel when Escape is pressed", async () => {
+    const onCancelSpy = sinon.spy();
+    const { getByRole, user } = render(<NumericInput onCancel={onCancelSpy} onChange={() => {}} value="5" />);
+    const inputContainer = await waitFor(() => getByRole("textbox"));
+    
+    await user.click(inputContainer);
+    await user.keyboard("{Escape}");
+    
+    expect(onCancelSpy).to.be.calledOnce;
+  });
+
   it("should focus on input if setFocus is true", async () => {
     const { getByRole } = render(<NumericInput onChange={() => {}} value="1" setFocus={true} />);
 
