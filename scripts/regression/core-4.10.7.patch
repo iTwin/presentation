@@ -59,7 +59,7 @@ index 4282b2d9..6761fbdc 100644
      });
    }
 diff --git a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
-index 497eb88e..7cef9c80 100644
+index e094e24d..7cef9c80 100644
 --- a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
 +++ b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
 @@ -6,13 +6,10 @@
@@ -171,7 +171,7 @@ index 497eb88e..7cef9c80 100644
 -      </SchemaMetadataContextProvider>,
 -    );
 -    // ensure the input value is formatted
--    await waitFor(async () => getByPlaceholderText("48.6 in"));
+-    await waitFor(() => getByPlaceholderText("in"));
 -    // ensure the input is editable
 -    const input = await findByRole("textbox");
 -    await user.clear(input);

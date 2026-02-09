@@ -32,6 +32,7 @@ describe("<QuantityPropertyEditorInput />", () => {
   const format = new Format("test format");
   const formatterSpec = {
     applyFormatting: sinon.stub<[number], string>(),
+    unitConversions: [{ name: "test unit", label: "unit" }],
     format,
   };
   const parserSpec = {
@@ -184,5 +185,37 @@ describe("<QuantityPropertyEditorInput />", () => {
     await waitFor(() => {
       expect(input).to.be.eq(document.activeElement);
     });
+  });
+
+  it("commits value and blurs input when Enter is pressed", async () => {
+    const record = createRecord({ initialValue: 10, kindOfQuantityName: "TestKOQ" });
+    const onCommitSpy = sinon.spy();
+    const { getByRole, user } = render(
+      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+        <QuantityPropertyEditorInput propertyRecord={record} onCommit={onCommitSpy} />
+      </SchemaMetadataContextProvider>,
+    );
+    const inputContainer = await waitFor(() => getByRole("textbox"));
+
+    await user.click(inputContainer);
+    await user.keyboard("{Enter}");
+
+    expect(onCommitSpy).to.be.calledOnce;
+  });
+
+  it("calls onCancel when Escape is pressed", async () => {
+    const record = createRecord({ initialValue: 10, kindOfQuantityName: "TestKOQ" });
+    const onCancelSpy = sinon.spy();
+    const { getByRole, user } = render(
+      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+        <QuantityPropertyEditorInput propertyRecord={record} onCancel={onCancelSpy} />
+      </SchemaMetadataContextProvider>,
+    );
+    const inputContainer = await waitFor(() => getByRole("textbox"));
+
+    await user.click(inputContainer);
+    await user.keyboard("{Escape}");
+
+    expect(onCancelSpy).to.be.calledOnce;
   });
 });
