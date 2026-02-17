@@ -29,7 +29,7 @@ import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { SchemaMetadataContextProvider } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel, HiliteSet, SelectionScope } from "@itwin/unified-selection";
+import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel, HiliteSet, Selectable, Selectables, SelectionScope } from "@itwin/unified-selection";
 import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
@@ -41,6 +41,8 @@ import { RulesDrivenTreeWidget } from "../tree-widget/RulesDrivenTree";
 import { StatelessTreeV2 } from "../tree-widget/StatelessTree";
 import { UnitSystemSelector } from "../unit-system-selector/UnitSystemSelector";
 import ViewportContentControl from "../viewport/ViewportContentControl";
+
+/* eslint-disable no-console */
 
 export interface State {
   imodel?: IModelConnection;
@@ -105,6 +107,31 @@ export function App() {
       void IModelApp.quantityFormatter.resetToUseInternalUnitsProvider();
     };
   }, [state.imodel]);
+
+  useEffect(() => {
+    return MyAppFrontend.selectionStorage.selectionChangeEvent.addListener(async (args) => {
+      if (!state.imodel) {
+        return;
+      }
+      const imodelKey = createIModelKey(state.imodel);
+      if (args.imodelKey !== imodelKey) {
+        return;
+      }
+
+      const selection = MyAppFrontend.selectionStorage.getSelection({ imodelKey });
+      let selectedElement: string | undefined;
+      Selectables.forEach(selection, (selectable) => {
+        if (selectedElement === undefined && Selectable.isInstanceKey(selectable)) {
+          selectedElement = selectable.id;
+        }
+      });
+
+      if (selectedElement) {
+        console.log("Formatted properties:",await MyAppFrontend.getElementProperties(state.imodel, selectedElement));
+        console.log("Raw properties:", await MyAppFrontend.getRawProperties(state.imodel, selectedElement));
+      }
+    });
+  })
 
   useEffect(() => {
     const cancel = new Subject<void>();

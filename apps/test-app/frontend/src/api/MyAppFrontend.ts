@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
 
-import { Guid, Id64Arg, Logger, OpenMode } from "@itwin/core-bentley";
-import { ElementProps, IModelConnectionProps, IModelError, ViewQueryParams } from "@itwin/core-common";
+import { assert, Guid, Id64Arg, Logger, OpenMode } from "@itwin/core-bentley";
+import { ElementProps, IModelConnectionProps, IModelError, RpcManager, ViewQueryParams } from "@itwin/core-common";
 import { BriefcaseConnection, IpcApp, SnapshotConnection } from "@itwin/core-frontend";
 import { UnitSystemKey } from "@itwin/core-quantity";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.PerformanceTuning.Imports
@@ -15,6 +15,8 @@ import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 // __PUBLISH_EXTRACT_END__
 import { createStorage } from "@itwin/unified-selection";
 import { PRESENTATION_TEST_APP_IPC_CHANNEL_NAME, SampleIpcInterface, SampleRpcInterface } from "@test-app/common";
+import { ContentFlags, DefaultContentDisplayTypes, Descriptor, ElementProperties, Item, KeySet, PresentationRpcInterface } from "@itwin/presentation-common";
+import { createElementPropertiesBuilder } from "./ElementPropertiesBuilder";
 
 const LOCAL_STORAGE_KEY_AppSettings = "presentation-test-app/settings";
 
@@ -35,6 +37,44 @@ export class MyAppFrontend {
 
   public static async getAvailableRulesets(): Promise<string[]> {
     return SampleRpcInterface.getClient().getAvailableRulesets();
+  }
+
+  public static async getRawProperties(imodel: IModelConnection, elementId: string): Promise<ElementProperties | undefined> {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    const response = await RpcManager.getClientForInterface(PresentationRpcInterface).getPagedContent(
+      imodel.getRpcProps(),
+      {
+         rulesetOrId: {
+          id: "ElementProperties",
+          rules: [{
+            ruleType: "Content",
+            specifications: [{
+              specType: "SelectedNodeInstances",
+            }],
+          }]
+         },
+      descriptor: {
+        displayType: DefaultContentDisplayTypes.PropertyPane,
+        contentFlags: ContentFlags.ShowLabels,
+      },
+      keys: new KeySet([{ className: "BisCore:Element", id: elementId }]).toJSON(),
+      omitFormattedValues: false
+      }
+    );
+    assert(response.result !== undefined);
+
+    const { descriptor, contentSet } = response.result;
+
+    const builder = createElementPropertiesBuilder();
+    const elementProperties = builder(Descriptor.fromJSON(descriptor)!, Item.fromJSON(contentSet.items[0])!);
+    return elementProperties;
+  }
+
+  public static async getElementProperties(imodel: IModelConnection, elementId: string) {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    const response = await RpcManager.getClientForInterface(PresentationRpcInterface).getElementProperties(imodel.getRpcProps(),{ elementId});
+    assert(response.result !== undefined);
+    return response.result;
   }
 
   public static async openIModel(path: string): Promise<IModelConnection | undefined> {
