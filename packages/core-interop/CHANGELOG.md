@@ -1,5 +1,13 @@
 # @itwin/presentation-core-interop
 
+## 1.4.0-alpha.6
+
+### Patch Changes
+
+- [#1200](https://github.com/iTwin/presentation/pull/1200): Removed unnecessary, always-truthy condition checks.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.7
+
 ## 1.4.0-alpha.5
 
 ### Patch Changes

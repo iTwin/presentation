@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-core-interop",
-  "version": "1.4.0-alpha.5",
+  "version": "1.4.0-alpha.6",
   "description": "The package acts as a layer between iTwin.js Core and Presentation packages.",
   "license": "MIT",
   "author": {
