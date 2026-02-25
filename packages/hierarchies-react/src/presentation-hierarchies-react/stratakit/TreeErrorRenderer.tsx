@@ -34,7 +34,7 @@ export type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemR
 
 /**
  * A component that renders error display dropdown using the `unstable_ErrorRegion` component from `@stratakit/structures`.
- * As input, the component uses a list of `ErrorNode` objects, which are generally created using the `useErrorList` hook.
+ * As input, the component uses a list of `ErrorNode` objects, which are generally created using the `useErrorNodes` hook.
  *
  * @alpha
  */
