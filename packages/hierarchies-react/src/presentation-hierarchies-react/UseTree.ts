@@ -86,6 +86,8 @@ export interface UseTreeProps {
   onHierarchyLimitExceeded?: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void;
   /** Action to perform when an error occurs while loading hierarchy. */
   onHierarchyLoadError?: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void;
+  /** Callback to override created TreeNode. */
+  onTreeNodeCreation?: (node: TreeNode) => TreeNode;
 }
 
 /** @public */
@@ -139,6 +141,7 @@ function useTreeInternal({
   onPerformanceMeasured,
   onHierarchyLimitExceeded,
   onHierarchyLoadError,
+  onTreeNodeCreation,
 }: UseTreeProps): UseTreeResult & {
   getTreeModelNode: (nodeId: string) => TreeModelRootNode | TreeModelHierarchyNode | undefined;
 } {
@@ -154,7 +157,7 @@ function useTreeInternal({
     () =>
       new TreeActions(
         (model) => {
-          const rootNodes = model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model) : undefined;
+          const rootNodes = model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model, onTreeNodeCreation) : undefined;
           setState({
             model,
             rootNodes,
@@ -232,9 +235,9 @@ function useTreeInternal({
       if (!node || node.id === undefined) {
         return undefined;
       }
-      return createTreeNode(node, state.model);
+      return createTreeNode(node, state.model, onTreeNodeCreation);
     },
-    [actions, state.model],
+    [actions, onTreeNodeCreation, state.model],
   );
 
   const expandNode = useCallback<TreeRendererProps["expandNode"]>(
@@ -335,7 +338,11 @@ function useTreeInternal({
   };
 }
 
-function generateTreeStructure(parentNodeId: string | undefined, model: TreeModel): Array<TreeNode> | undefined {
+function generateTreeStructure(
+  parentNodeId: string | undefined,
+  model: TreeModel,
+  onTreeNodeCreation?: (node: TreeNode) => TreeNode,
+): Array<TreeNode> | undefined {
   const currentChildren = model.parentChildMap.get(parentNodeId);
   if (!currentChildren) {
     return undefined;
@@ -345,17 +352,19 @@ function generateTreeStructure(parentNodeId: string | undefined, model: TreeMode
     .map((childId) => model.idToNode.get(childId))
     .filter((node): node is TreeModelHierarchyNode => !!node)
     .map<TreeNode>((node) => {
-      return createTreeNode(node, model);
+      const treeNode = createTreeNode(node, model, onTreeNodeCreation);
+      const adjustedTreeNode = onTreeNodeCreation?.(treeNode);
+      return adjustedTreeNode ?? treeNode;
     });
 }
 
-function createTreeNode(modelNode: TreeModelHierarchyNode, model: TreeModel): TreeNode {
+function createTreeNode(modelNode: TreeModelHierarchyNode, model: TreeModel, onTreeNodeCreation?: (node: TreeNode) => TreeNode): TreeNode {
   let children: Array<TreeNode> | undefined;
   return {
     ...toTreeNodeBase(modelNode),
     get children() {
       if (!children) {
-        children = generateTreeStructure(modelNode.id, model);
+        children = generateTreeStructure(modelNode.id, model, onTreeNodeCreation);
       }
       return children ? children : modelNode.children === true ? true : [];
     },
