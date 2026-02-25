@@ -80,8 +80,7 @@ type StrataKitTreeRendererProps = TreeRendererProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
 /**
- * A component that renders a tree using the `Tree` component from `@stratakit/structures`. The tree nodes
- * are rendered using `StrataKitTreeNodeRenderer` component from this package.
+ * A component that renders a tree using the `Tree` component from `@stratakit/structures`.
  *
  * @alpha
  */
