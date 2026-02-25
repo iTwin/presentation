@@ -113,7 +113,7 @@ describe("useTree", () => {
     });
   });
 
-  it("loads root nodes with minimal provider setup", async () => {
+  it("loads and overrides root nodes with minimal provider setup", async () => {
     const customHierarchyProvider = createHierarchyProvider(() => ({
       async *getNodes({}) {
         yield createTestHierarchyNode({ id: "root-1" });
