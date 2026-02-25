@@ -23,6 +23,7 @@ export interface QuantityValue {
   /** Formatted value with unit label based on active unit system or user input. Default precision. */
   defaultFormattedValue: string;
   roundingError?: number;
+  isSingleUnit?: boolean;
 }
 
 /**
@@ -53,6 +54,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
       highPrecisionFormattedValue: "",
       defaultFormattedValue: "",
       roundingError: undefined,
+      isSingleUnit: undefined,
     },
     placeholder: "",
   }));
@@ -64,8 +66,13 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
 
     setState((prev): State => {
       /* c8 ignore next 1 */
-      const defaultValue = initialRawValueRef.current ? (defaultFormatter ?? highPrecisionFormatter).applyFormatting(initialRawValueRef.current) : "";
-      const newFormattedValue = prev.quantityValue.rawValue !== undefined ? highPrecisionFormatter.applyFormatting(prev.quantityValue.rawValue) : "";
+      const defaultValue = initialRawValueRef.current
+        ? (defaultFormatter ?? highPrecisionFormatter).applyFormatting(initialRawValueRef.current)
+        : highPrecisionFormatter.unitConversions[0].label;
+      const newFormattedValue =
+        prev.quantityValue.rawValue !== undefined
+          ? highPrecisionFormatter.applyFormatting(prev.quantityValue.rawValue)
+          : highPrecisionFormatter.unitConversions[0].label;
       const placeholderUnit = highPrecisionFormatter.unitConversions[0].label;
       const roundingError = getPersistenceUnitRoundingError(newFormattedValue, parser);
 
@@ -76,6 +83,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
           highPrecisionFormattedValue: newFormattedValue,
           defaultFormattedValue: defaultValue,
           roundingError,
+          isSingleUnit: highPrecisionFormatter.unitConversions.length === 1,
         },
         placeholder: placeholderUnit,
       };
@@ -97,6 +105,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
           defaultFormattedValue: defaultFormattedValue ?? newValue,
           rawValue: parseResult.ok ? parseResult.value : undefined,
           roundingError: parseResult.ok ? roundingError : undefined,
+          isSingleUnit: prev.quantityValue.isSingleUnit,
         },
       }),
     );

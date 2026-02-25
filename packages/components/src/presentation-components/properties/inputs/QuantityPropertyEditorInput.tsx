@@ -102,7 +102,15 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         }}
         onFocus={() => {
           setEditing(true);
-          inputRef.current?.setSelectionRange(0, 9999);
+          requestAnimationFrame(() => {
+            if (quantityValue.isSingleUnit && quantityValue.highPrecisionFormattedValue.endsWith(inputProps.placeholder)) {
+              const valueBeforeUnit = quantityValue.highPrecisionFormattedValue.slice(0, -inputProps.placeholder.length);
+              // Check if the value before the unit consists of digits, separators, whitespace or minus sign - if so, select only that part, otherwise select the entire input value
+              inputRef.current?.setSelectionRange(0, /^[\d.,\s/-]+$/.test(valueBeforeUnit) ? valueBeforeUnit.length : 9999);
+              return;
+            }
+            inputRef.current?.setSelectionRange(0, 9999);
+          });
         }}
         onKeyDown={handleKeyDown}
       />
