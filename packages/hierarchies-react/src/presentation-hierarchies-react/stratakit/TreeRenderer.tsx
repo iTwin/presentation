@@ -80,10 +80,9 @@ type StrataKitTreeRendererProps = TreeRendererProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
 /**
- * A component that renders a tree using the `Tree` component from `@itwin/itwinui-react`. The tree nodes
- * are rendered using `TreeNodeRenderer` component from this package.
+ * A component that renders a tree using the `Tree` component from `@stratakit/structures`. The tree nodes
+ * are rendered using `StrataKitTreeNodeRenderer` component from this package.
  *
- * @see https://itwinui.bentley.com/docs/tree
  * @alpha
  */
 export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProps> & RefAttributes<StrataKitTreeRendererAttributes>> = forwardRef<

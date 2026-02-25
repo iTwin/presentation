@@ -58,7 +58,7 @@ export type StrataKitTreeItemProps = Omit<
 export type TreeNodeRendererProps = StrataKitTreeItemProps & TreeNodeRendererOwnProps;
 
 /**
- * A component that renders given `FlatTreeNode` using the `Tree.Item` component from `@itwin/itwinui-react`. The
+ * A component that renders given `FlatTreeNode` using the `Tree.Item` component from `@stratakit/structures`. The
  * `FlatTreeNode` objects for this renderer are generally created using the `useFlatTreeNodeList` hook.
  *
  * @internal
