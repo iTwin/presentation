@@ -135,7 +135,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     });
   });
 
-  it.only("allows entering quantity value when schema context is available", async () => {
+  it("allows entering quantity value when schema context is available", async () => {
     const ref = createRef<PropertyEditorAttributes>();
     const spy = sinon.spy();
     const record = createRecord({ initialValue: undefined, kindOfQuantityName: "TestKOQ" });
