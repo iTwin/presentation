@@ -14,10 +14,27 @@ The below sections provide examples of how to migrate from the old system to the
 Before the deprecation, we made sure that migration is as smooth as possible by updating all our higher level components to support the new system as well as stay compatible with the old one.
 
 1. All components that we own are compatible with the new system as the first class citizen.
+   - The [Tree](./SyncWithTree.md), [Table](./SyncWithTable.md) and [Property grid](./SyncWithPropertyGrid.md) components simply got a new `selectionStorage` prop, which tells them to use the new system (click on the links for specific APIs). For Table and Property grid components, the new prop is optional to keep them backwards compatible - in that case they continue working with the deprecated API.
 
-   The [Tree](./SyncWithTree.md), [Table](./SyncWithTable.md) and [Property grid](./SyncWithPropertyGrid.md) components simply got a new `selectionStorage` prop, which tells them to use the new system (click on the links for specific APIs). For Table and Property grid components, the new prop is optional to keep them backwards compatible - in that case they continue working with the deprecated API.
+   - The [viewWithUnifiedSelection](https://www.itwinjs.org/reference/presentation-components/viewport/viewwithunifiedselection/) HOC was deprecated in favor of the `enableUnifiedSelectionSyncWithIModel` provided by this package. The API is quite a bit different, but it's clearer about what it does and is more flexible in how it can be used. To migrate, two changes are needed:
+     1. Call the `enableUnifiedSelectionSyncWithIModel` function in the top-level component that has access to the iModel connection and the `SelectionStorage` instance. This will enable unified selection synchronization for all viewports associated with that iModel connection. See the [iModel selection synchronization with unified selection](./SyncWithIModelConnection.md) learning page for more information and example for using it in a React app.
 
-   The [viewWithUnifiedSelection](https://www.itwinjs.org/reference/presentation-components/viewport/viewwithunifiedselection/) HOC was deprecated in favor of the `enableUnifiedSelectionSyncWithIModel` provided by this package. The API is quite a bit different, but it's more clear about what it does and is more flexible in how it can be used. See the [iModel selection synchronization with unified selection](./SyncWithIModelConnection.md) learning page for more information and example for using it in a React app. **Warning:** the two approaches - `enableUnifiedSelectionSyncWithIModel` function and the deprecated `viewWithUnifiedSelection` HOC - are not compatible with each other and may result in unexpected selection changes. If you use the `enableUnifiedSelectionSyncWithIModel` function, you should NOT use the HOC.
+     2. Instead of wrapping viewport components with the `viewWithUnifiedSelection` HOC, just render them as they are - there is no need for any HOC anymore:
+
+        ```tsx
+        // before
+        const UnifiedSelectionViewport = viewWithUnifiedSelection(ViewportComponent);
+        function MyViewport(props: { imodel: IModelConnection; initialViewState: ViewState }) {
+          return <UnifiedSelectionViewport imodel={props.imodel} viewState={props.initialViewState} />;
+        }
+
+        // after
+        function MyViewport(props: { imodel: IModelConnection; initialViewState: ViewState }) {
+          return <ViewportComponent imodel={props.imodel} viewState={props.initialViewState} />;
+        }
+        ```
+
+     **Warning:** the two approaches - `enableUnifiedSelectionSyncWithIModel` function and the deprecated `viewWithUnifiedSelection` HOC - are not compatible with each other and may result in unexpected selection changes. If you use the `enableUnifiedSelectionSyncWithIModel` function, you should NOT use the HOC.
 
 2. Existing components, that haven't migrated to the new system, continue working as expected.
 
