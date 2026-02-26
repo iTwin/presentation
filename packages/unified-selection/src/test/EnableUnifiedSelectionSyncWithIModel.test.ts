@@ -14,7 +14,7 @@ import { CoreSelectionSetEventType } from "../unified-selection/types/IModel.js"
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
 import type { Id64Arg } from "@itwin/core-bentley";
-import type { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow, EventArgs, Props } from "@itwin/presentation-shared";
+import type { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow, EventListener, Props } from "@itwin/presentation-shared";
 import type { EnableUnifiedSelectionSyncWithIModelProps } from "../unified-selection/EnableUnifiedSelectionSyncWithIModel.js";
 import type { HiliteSet, HiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
 import type { Selectable, SelectableInstanceKey } from "../unified-selection/Selectable.js";
@@ -97,7 +97,7 @@ describe("IModelSelectionHandler", () => {
       clearSelection: sinon.stub<[Props<SelectionStorage["clearSelection"]>], void>(),
       getSelection: sinon.stub<[{ imodelKey: string }], Selectables>().returns({ custom: new Map(), instanceKeys: new Map() }),
       getSelectionLevels: sinon.stub<[{ imodelKey: string }], number[]>().returns([]),
-      selectionChangeEvent: new BeUiEvent<EventArgs<SelectionStorage["selectionChangeEvent"]>>(),
+      selectionChangeEvent: new BeUiEvent<Parameters<EventListener<SelectionStorage["selectionChangeEvent"]>>[0]>(),
       clearStorage: sinon.stub<[{ imodelKey: string }], void>(),
     };
     return {
