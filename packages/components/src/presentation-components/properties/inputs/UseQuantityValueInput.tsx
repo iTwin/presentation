@@ -116,7 +116,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     inputProps: {
       onChange,
       placeholder,
-      disabled: !highPrecisionFormatter || !parser,
+      disabled: !highPrecisionFormatter || !parser || quantityValue.isSingleUnit === undefined,
     },
   };
 }

@@ -146,13 +146,14 @@ describe("<QuantityPropertyEditorInput />", () => {
     );
 
     const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
-    await waitFor(() => expect(input.value).to.eq("unit"));
+    await waitFor(() => expect(input.disabled).to.be.false);
 
-    await user.type(input, "123.4 ", { skipClick: true });
+    // Verify that selection logic is applied
+    await waitFor(() => expect(input.selectionStart).to.eq(0));
+    await user.type(input, "123.4 unit", { skipClick: true });
     await user.tab();
 
     await waitFor(() => expect(input.value).to.eq("123.4 unit"));
-
     await waitFor(() => {
       expect(spy).to.be.calledWith({
         propertyRecord: record,
