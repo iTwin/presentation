@@ -74,10 +74,11 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
     };
 
     useEffect(() => {
-      if (setFocus && !inputProps.disabled) {
+      // check if quantityValue has set it's state before applying focus, in this case isSingleUnit is not set only when in initial state
+      if (setFocus && !inputProps.disabled && quantityValue.isSingleUnit !== undefined) {
         inputRef.current && inputRef.current.focus();
       }
-    }, [inputProps.disabled, setFocus]);
+    }, [inputProps.disabled, quantityValue.isSingleUnit, setFocus]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Escape") {

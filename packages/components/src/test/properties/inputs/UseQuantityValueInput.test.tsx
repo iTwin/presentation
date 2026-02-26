@@ -112,6 +112,7 @@ describe("UseQuantityValueInput", () => {
 
     const input = getByRole("textbox");
 
+    await user.clear(input);
     await user.type(input, "1.23 unit");
     await waitFor(() => {
       const value = spy.lastCall.args[0];

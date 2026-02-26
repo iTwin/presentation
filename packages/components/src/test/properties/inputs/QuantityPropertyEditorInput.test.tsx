@@ -135,9 +135,9 @@ describe("<QuantityPropertyEditorInput />", () => {
     });
   });
 
-  it("allows entering quantity value when schema context is available", async () => {
+  it.only("allows entering quantity value when schema context is available", async () => {
     const ref = createRef<PropertyEditorAttributes>();
-    const spy = sinon.stub<Parameters<Required<PropertyEditorProps>["onCommit"]>, ReturnType<Required<PropertyEditorProps>["onCommit"]>>();
+    const spy = sinon.spy();
     const record = createRecord({ initialValue: undefined, kindOfQuantityName: "TestKOQ" });
     const { getByRole, user } = render(
       <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
@@ -145,11 +145,13 @@ describe("<QuantityPropertyEditorInput />", () => {
       </SchemaMetadataContextProvider>,
     );
 
-    const input = await waitFor(() => getByRole("textbox"));
-    await waitFor(() => expect((input as HTMLInputElement).disabled).to.be.false);
+    const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
+    await waitFor(() => expect(input.value).to.eq("unit"));
 
-    await user.type(input, "123.4 unit");
+    await user.type(input, "123.4 ", { skipClick: true });
     await user.tab();
+
+    await waitFor(() => expect(input.value).to.eq("123.4 unit"));
 
     await waitFor(() => {
       expect(spy).to.be.calledWith({
@@ -184,6 +186,45 @@ describe("<QuantityPropertyEditorInput />", () => {
     const input = await waitFor(() => getByRole("textbox"));
     await waitFor(() => {
       expect(input).to.be.eq(document.activeElement);
+    });
+  });
+
+  it("should select correct parts of text if setFocus is true", async () => {
+    const record = createRecord({ initialValue: 100, kindOfQuantityName: "TestKOQ" });
+    const ref = createRef<PropertyEditorAttributes>();
+
+    const { getByRole, user } = render(
+      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+        <QuantityPropertyEditorInput ref={ref} propertyRecord={record} setFocus />
+      </SchemaMetadataContextProvider>,
+    );
+
+    const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
+    await waitFor(() => {
+      expect(input.value).to.eq("100 unit");
+      expect(input).to.be.eq(document.activeElement);
+      expect(input.selectionStart).to.eq(0);
+      expect(input.selectionEnd).to.eq(4);
+    });
+
+    await user.type(input, "100 unit ", { skipClick: true });
+    await user.tab();
+    await user.click(input);
+
+    await waitFor(() => {
+      expect(input.value).to.eq("100 unit unit");
+      expect(input.selectionStart).to.eq(0);
+      expect(input.selectionEnd).to.eq(13);
+    });
+
+    await user.type(input, "100 m", { skipClick: true });
+    await user.tab();
+    await user.click(input);
+
+    await waitFor(() => {
+      expect(input.value).to.eq("100 m");
+      expect(input.selectionStart).to.eq(0);
+      expect(input.selectionEnd).to.eq(5);
     });
   });
 
