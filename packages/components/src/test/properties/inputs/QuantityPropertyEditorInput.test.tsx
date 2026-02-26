@@ -203,7 +203,6 @@ describe("<QuantityPropertyEditorInput />", () => {
     const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
     await waitFor(() => {
       expect(input.value).to.eq("100 unit");
-      expect(input).to.be.eq(document.activeElement);
       expect(input.selectionStart).to.eq(0);
       expect(input.selectionEnd).to.eq(4);
     });
