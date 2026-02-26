@@ -60,14 +60,14 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
   }));
 
   useEffect(() => {
-    if (!highPrecisionFormatter || !parser) {
+    if (!highPrecisionFormatter || !parser || !defaultFormatter) {
       return;
     }
 
     setState((prev): State => {
       /* c8 ignore next 1 */
       const defaultValue = initialRawValueRef.current
-        ? (defaultFormatter ?? highPrecisionFormatter).applyFormatting(initialRawValueRef.current)
+        ? defaultFormatter.applyFormatting(initialRawValueRef.current)
         : highPrecisionFormatter.unitConversions[0].label;
       const newFormattedValue =
         prev.quantityValue.rawValue !== undefined
