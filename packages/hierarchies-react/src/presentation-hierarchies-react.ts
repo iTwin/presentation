@@ -21,6 +21,8 @@ export type { FlatTreeItem } from "./presentation-hierarchies-react/stratakit/Fl
 export { useFlatTreeItems, useErrorNodes } from "./presentation-hierarchies-react/stratakit/FlatTreeNode.js";
 export { LocalizationContextProvider } from "./presentation-hierarchies-react/stratakit/LocalizationContext.js";
 
+export { LOCALIZATION_NAMESPACE } from "./presentation-hierarchies-react/internal/LocalizedStrings.js";
+
 export type { HierarchyProvider } from "@itwin/presentation-hierarchies";
 export { GenericInstanceFilter, HierarchyNode, getLogger, setLogger } from "@itwin/presentation-hierarchies";
 export type { SelectionStorage } from "@itwin/unified-selection";

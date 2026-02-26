@@ -135,41 +135,20 @@ type IModelAccess = IModelHierarchyProviderProps["imodelAccess"];
 // @public (undocumented)
 type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 
+// @alpha
+export const LOCALIZATION_NAMESPACE = "PresentationHierarchies1.0";
+
 // @public
 export function LocalizationContextProvider({
-    localizedStrings,
+    localization,
     children
 }: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
 
 // @public
 interface LocalizationContextProviderProps {
-    localizedStrings?: Partial<LocalizedStrings>;
-}
-
-// @public
-interface LocalizedStrings {
-    cancel: string;
-    clearHierarchyLevelFilter: string;
-    confirm: string;
-    failedToCreateHierarchy: string;
-    failedToCreateRootHierarchy: string;
-    filterHierarchyLevel: string;
-    filterHierarchyLevelActiveDescription: string;
-    increaseHierarchyLimit: string;
-    increaseHierarchyLimitToUnlimited: string;
-    increaseHierarchyLimitWithFiltering: string;
-    issuesForTree: string;
-    issuesFound: string;
-    loading: string;
-    more: string;
-    newLabel: string;
-    noFilteredChildren: string;
-    noFilteredChildrenChangeFilter: string;
-    noIssuesFound: string;
-    rename: string;
-    resultLimitExceeded: string;
-    retry: string;
-    rootResultLimitExceeded: string;
+    localization: {
+        getLocalizedString: (key: string) => string;
+    };
 }
 
 // @public
