@@ -5,6 +5,7 @@ alpha;function;ErrorItemRenderer
 alpha;type;FlatTreeItem
 public;interface;GenericErrorInfo
 public;interface;HierarchyLevelDetails
+alpha;const;LOCALIZATION_NAMESPACES
 public;function;LocalizationContextProvider
 public;interface;ResultSetTooLargeErrorInfo
 alpha;function;StrataKitRootErrorRenderer

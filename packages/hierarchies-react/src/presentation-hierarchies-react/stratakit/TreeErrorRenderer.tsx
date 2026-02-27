@@ -6,7 +6,7 @@
 import { cloneElement } from "react";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 import { ErrorItemRenderer } from "./ErrorItemRenderer.js";
-import { useLocalizationContext } from "./LocalizationContext.js";
+import { useTranslation } from "./LocalizationContext.js";
 
 import type { JSX, ReactElement } from "react";
 import type { ErrorItemRendererProps } from "./ErrorItemRenderer.js";
@@ -39,7 +39,7 @@ export type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemR
  * @alpha
  */
 export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): JSX.Element {
-  const { localizedStrings } = useLocalizationContext();
+  const translate = useTranslation();
   const errorItems = errorNodes.map((errorNode) => {
     const errorRendererProps: ErrorItemRendererProps = {
       errorNode,
@@ -56,10 +56,8 @@ export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...error
   return (
     <ErrorRegion.Root
       style={{ width: "100%" }}
-      aria-label={localizedStrings.issuesForTree.replace("{{tree_label}}", treeLabel)}
-      label={
-        errorNodes.length === 0 ? localizedStrings.noIssuesFound : localizedStrings.issuesFound.replace("{{number_of_issues}}", errorNodes.length.toString())
-      }
+      aria-label={translate("issuesForTree").replace("{{tree_label}}", treeLabel)}
+      label={errorNodes.length === 0 ? translate("noIssuesFound") : translate("issuesFound").replace("{{number_of_issues}}", errorNodes.length.toString())}
       items={errorItems}
     />
   );

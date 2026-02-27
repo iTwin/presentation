@@ -9,7 +9,7 @@ import { defineConfig } from "tsdown";
 const testFiles = await glob("src/test/**/*.{ts,tsx}");
 export default defineConfig({
   entry: testFiles,
-  outDir: "./lib/esm/test",
+  outDir: "./lib/test",
   format: ["esm"],
   fixedExtension: false,
   unbundle: true,

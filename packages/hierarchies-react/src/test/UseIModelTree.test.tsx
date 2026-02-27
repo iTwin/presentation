@@ -43,7 +43,6 @@ describe("useIModelTree hooks", () => {
     const initialProps: UseIModelTreeProps = {
       imodelAccess: {} as UseIModelTreeProps["imodelAccess"],
       getHierarchyDefinition: () => hierarchyDefinition,
-      localizedStrings: {} as UseIModelTreeProps["localizedStrings"],
     };
 
     it("creates imodel hierarchy provider using given imodel and hierarchy definition", async () => {
@@ -54,11 +53,7 @@ describe("useIModelTree hooks", () => {
       });
       expect(stubs.createIModelHierarchyProvider).to.be.calledWith(
         sinon.match((props: Props<typeof stubs.createIModelHierarchyProvider>) => {
-          return (
-            props.imodelAccess === initialProps.imodelAccess &&
-            props.hierarchyDefinition === hierarchyDefinition &&
-            props.localizedStrings === initialProps.localizedStrings
-          );
+          return props.imodelAccess === initialProps.imodelAccess && props.hierarchyDefinition === hierarchyDefinition;
         }),
       );
     });
@@ -85,7 +80,6 @@ describe("useIModelTree hooks", () => {
     const initialProps: UseIModelTreeProps = {
       imodelAccess: {} as UseIModelTreeProps["imodelAccess"],
       getHierarchyDefinition: () => hierarchyDefinition,
-      localizedStrings: {} as UseIModelTreeProps["localizedStrings"],
       sourceName: "test-component",
       selectionStorage,
     };
@@ -102,11 +96,7 @@ describe("useIModelTree hooks", () => {
       });
       expect(stubs.createIModelHierarchyProvider).to.be.calledWith(
         sinon.match((props: Props<typeof stubs.createIModelHierarchyProvider>) => {
-          return (
-            props.imodelAccess === initialProps.imodelAccess &&
-            props.hierarchyDefinition === hierarchyDefinition &&
-            props.localizedStrings === initialProps.localizedStrings
-          );
+          return props.imodelAccess === initialProps.imodelAccess && props.hierarchyDefinition === hierarchyDefinition;
         }),
       );
     });

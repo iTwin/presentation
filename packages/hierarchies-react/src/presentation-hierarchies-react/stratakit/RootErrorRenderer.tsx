@@ -6,7 +6,7 @@
 import { Button, Text } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import errorSvg from "@stratakit/icons/status-error.svg";
-import { useLocalizationContext } from "./LocalizationContext.js";
+import { useTranslation } from "./LocalizationContext.js";
 
 import type { JSX } from "react";
 import type { RootErrorRendererProps } from "../Renderers.js";
@@ -28,17 +28,17 @@ export type StrataKitRootErrorRendererProps = {
  * @alpha
  */
 export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): JSX.Element {
-  const { localizedStrings } = useLocalizationContext();
+  const translate = useTranslation();
 
   if (error.type === "ResultSetTooLarge") {
     const onOverrideLimit = () => getHierarchyLevelDetails(undefined)?.setSizeLimit("unbounded");
     return (
       <RootErrorContainer
-        message={localizedStrings.rootResultLimitExceeded.replace("{{limit}}", error.resultSetSizeLimit.toString())}
+        message={translate("rootResultLimitExceeded").replace("{{limit}}", error.resultSetSizeLimit.toString())}
         actions={[
           {
             action: onOverrideLimit,
-            label: localizedStrings.increaseHierarchyLimitToUnlimited,
+            label: translate("increaseHierarchyLimitToUnlimited"),
             condition: () => true,
           },
         ]}
@@ -48,11 +48,11 @@ export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, re
 
   return (
     <RootErrorContainer
-      message={localizedStrings.failedToCreateRootHierarchy}
+      message={translate("failedToCreateRootHierarchy")}
       actions={[
         {
           action: () => reloadTree({ parentNodeId: undefined, state: "reset" }),
-          label: localizedStrings.retry,
+          label: translate("retry"),
           condition: () => true,
         },
       ]}

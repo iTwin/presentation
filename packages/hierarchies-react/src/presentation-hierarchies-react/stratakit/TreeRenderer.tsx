@@ -9,12 +9,11 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
 import { isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "./FlatTreeNode.js";
-import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
 import { TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./TreeNodeRenameAction.js";
 import { PlaceholderNode, StrataKitTreeNodeRenderer } from "./TreeNodeRenderer.js";
 
-import type { ComponentProps, ComponentPropsWithoutRef, CSSProperties, FC, PropsWithoutRef, ReactElement, ReactNode, RefAttributes } from "react";
+import type { ComponentProps, CSSProperties, FC, PropsWithoutRef, ReactElement, ReactNode, RefAttributes } from "react";
 import type { TreeRendererProps } from "../Renderers.js";
 import type { TreeNode } from "../TreeNode.js";
 import type { SelectionMode } from "../UseSelectionHandler.js";
@@ -74,10 +73,7 @@ export interface StrataKitTreeRendererAttributes {
 }
 
 /** @alpha */
-type StrataKitTreeRendererProps = TreeRendererProps &
-  Pick<TreeErrorRendererProps, "filterHierarchyLevel"> &
-  TreeRendererOwnProps &
-  ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
+type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "filterHierarchyLevel"> & TreeRendererOwnProps;
 
 /**
  * A component that renders a tree using the `Tree` component from `@stratakit/structures`.
@@ -95,7 +91,6 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
     selectionMode,
     expandNode,
     treeLabel,
-    localizedStrings,
     getHierarchyLevelDetails,
     filterHierarchyLevel,
     reloadTree,
@@ -174,7 +169,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
   }, [flatItems, isNodeSelected]);
 
   return (
-    <LocalizationContextProvider localizedStrings={localizedStrings}>
+    <>
       {errorRenderer ? errorRenderer(errorRendererProps) : <TreeErrorRenderer {...errorRendererProps} />}
       <div id={id} style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
         <Tree.Root
@@ -207,7 +202,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
           </TreeNodeRenameContextProvider>
         </Tree.Root>
       </div>
-    </LocalizationContextProvider>
+    </>
   );
 });
 

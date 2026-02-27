@@ -8,7 +8,7 @@ import { babel } from "@rollup/plugin-babel";
 
 export default defineConfig({
   entry: "./src/presentation-hierarchies-react.ts",
-  outDir: "./lib/esm",
+  outDir: "./lib",
   format: ["esm"],
   fixedExtension: false,
   unbundle: true,
