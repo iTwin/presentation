@@ -217,7 +217,12 @@ function MyTreeComponentInternal({ imodelAccess, selectionStorage }: { imodelAcc
 This package delivers a locale JSON file with English strings that follows the [`i18next JSON format`](https://www.i18next.com/misc/json-format). To enable localization, register `LOCALIZATION_NAMESPACE` during initialization and wrap components in `LocalizationContextProvider`:
 
 ```tsx
-import { LocalizationContextProvider, LOCALIZATION_NAMESPACE, SceneContextProvider, SceneControl } from "@itwin/presentation-hierarchies-react";
+import {
+  LocalizationContextProvider,
+  LOCALIZATION_NAMESPACE,
+  StrataKitTreeRenderer,
+  useIModelUnifiedSelectionTree,
+} from "@itwin/presentation-hierarchies-react";
 
 // Register localization namespace with `i18next` based localization provider.
 await localization.registerNamespace(LOCALIZATION_NAMESPACE);
@@ -240,7 +245,7 @@ function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
   if (!rootNodes) {
     return <Spinner />;
   }
-  return <TreeRenderer rootNodes={rootNodes} expandNode={expandNode} />;
+  return <StrataKitTreeRenderer rootNodes={rootNodes} expandNode={expandNode} />;
 }
 ```
 
