@@ -7,4 +7,4 @@ Reworked `localization` to use `i18next`-compatible approach. Instead of passing
 **Breaking changes**
 
 - `LocalizationContextProvider` no longer accepts a `localizedStrings` object. It now requires a `localization` prop — an object with a `getLocalizedString(key: string): string` method (compatible with `Localization` from @itwin/core-common).
-- `LOCALIZATION_NAMESPACE` must be registered with your localization provider during app initialization to make localized strings available.
+- `LOCALIZATION_NAMESPACES` must be registered with your localization provider during app initialization to make localized strings available.

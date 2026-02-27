@@ -136,7 +136,7 @@ type IModelAccess = IModelHierarchyProviderProps["imodelAccess"];
 type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 
 // @alpha
-export const LOCALIZATION_NAMESPACE = "PresentationHierarchies1.0";
+export const LOCALIZATION_NAMESPACES: string[];
 
 // @public
 export function LocalizationContextProvider({

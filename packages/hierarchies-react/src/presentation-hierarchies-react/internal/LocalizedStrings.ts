@@ -161,8 +161,11 @@ type ObjectKeys<TObject extends object, Acc extends string = never> =
  */
 export type LocalizationKey = ObjectKeys<typeof LOCALIZED_STRINGS>;
 
+/** @internal */
+export const HIERARCHIES_REACT_LOCALIZATION_NAMESPACE = "PresentationHierarchies1.0";
+
 /**
- * Namespace used for localization of presentation hierarchies components.
+ * Namespaces used for localization of presentation hierarchies components.
  * @alpha
  */
-export const LOCALIZATION_NAMESPACE = "PresentationHierarchies1.0";
+export const LOCALIZATION_NAMESPACES = [HIERARCHIES_REACT_LOCALIZATION_NAMESPACE];

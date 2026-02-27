@@ -214,18 +214,20 @@ function MyTreeComponentInternal({ imodelAccess, selectionStorage }: { imodelAcc
 
 ## Localization
 
-This package delivers a locale JSON file with English strings that follows the [`i18next JSON format`](https://www.i18next.com/misc/json-format). To enable localization, register `LOCALIZATION_NAMESPACE` during initialization and wrap components in `LocalizationContextProvider`:
+This package delivers a locale JSON file with English strings that follows the [`i18next JSON format`](https://www.i18next.com/misc/json-format). To enable localization, register `LOCALIZATION_NAMESPACES` during initialization and wrap components in `LocalizationContextProvider`:
 
 ```tsx
 import {
   LocalizationContextProvider,
-  LOCALIZATION_NAMESPACE,
+  LOCALIZATION_NAMESPACES,
   StrataKitTreeRenderer,
   useIModelUnifiedSelectionTree,
 } from "@itwin/presentation-hierarchies-react";
 
-// Register localization namespace with `i18next` based localization provider.
-await localization.registerNamespace(LOCALIZATION_NAMESPACE);
+// Register localization namespaces with `i18next` based localization provider.
+for (const namespace of LOCALIZATION_NAMESPACES) {
+  await localization.registerNamespace(namespace);
+}
 
 // Wrap components with LocalizationContextProvider
 function Tree() {
@@ -249,4 +251,4 @@ function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
 }
 ```
 
-`LocalizationContextProvider` accepts a `localization` prop — an object with a `getLocalizedString(key: string): string` method. It is designed to work with the `Localization` interface from `@itwin/core-common`, but a custom implementation can be used as well by providing an object with a custom `getLocalizedString` function. The provider uses it internally to resolve translation keys prefixed with the `LOCALIZATION_NAMESPACE`.
+`LocalizationContextProvider` accepts a `localization` prop — an object with a `getLocalizedString(key: string): string` method. It is designed to work with the `Localization` interface from `@itwin/core-common`, but a custom implementation can be used as well by providing an object with a custom `getLocalizedString` function. The provider uses it internally to resolve translation keys prefixed with localization namespace.
