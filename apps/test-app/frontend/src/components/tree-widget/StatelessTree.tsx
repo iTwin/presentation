@@ -6,13 +6,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { debounceTime, Subject } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
+import { IModelApp } from "@itwin/core-frontend";
 import { Button, Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
 import { DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
 import { PresentationInstanceFilter, PresentationInstanceFilterDialog } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey, registerTxnListeners } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyNodeKey } from "@itwin/presentation-hierarchies";
-import { StrataKitRootErrorRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { LocalizationContextProvider, StrataKitRootErrorRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { Selectable, Selectables } from "@itwin/unified-selection";
@@ -47,7 +48,11 @@ export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection
     return null;
   }
 
-  return <Tree {...props} imodel={imodel} imodelAccess={imodelAccess} />;
+  return (
+    <LocalizationContextProvider localization={IModelApp.localization}>
+      <Tree {...props} imodel={imodel} imodelAccess={imodelAccess} />
+    </LocalizationContextProvider>
+  );
 }
 
 function Tree({

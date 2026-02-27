@@ -17,6 +17,7 @@ import { ITwinLocalization } from "@itwin/core-i18n";
 // __PUBLISH_EXTRACT_START__ Presentation.Frontend.Imports
 import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, Presentation } from "@itwin/presentation-frontend";
 // __PUBLISH_EXTRACT_END__
+import { LOCALIZATION_NAMESPACE } from "@itwin/presentation-hierarchies-react";
 import { rpcInterfaces } from "@test-app/common";
 import { MyAppFrontend } from "./frontendApi/MyAppFrontend";
 import { App } from "./components/app/App";
@@ -52,6 +53,7 @@ async function initializeApp() {
   }
   await Promise.all([
     IModelApp.localization.registerNamespace("Sample"),
+    IModelApp.localization.registerNamespace(LOCALIZATION_NAMESPACE),
     initializePresentation(),
     UiFramework.initialize(),
     IModelApp.quantityFormatter.setActiveUnitSystem("metric"),
