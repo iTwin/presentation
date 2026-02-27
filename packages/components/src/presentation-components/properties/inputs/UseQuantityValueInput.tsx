@@ -23,7 +23,6 @@ export interface QuantityValue {
   /** Formatted value with unit label based on active unit system or user input. Default precision. */
   defaultFormattedValue: string;
   roundingError?: number;
-  isSingleUnit?: boolean;
 }
 
 /**
@@ -54,7 +53,6 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
       highPrecisionFormattedValue: "",
       defaultFormattedValue: "",
       roundingError: undefined,
-      isSingleUnit: undefined,
     },
     placeholder: "",
   }));
@@ -83,7 +81,6 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
           highPrecisionFormattedValue: newFormattedValue,
           defaultFormattedValue: defaultValue,
           roundingError,
-          isSingleUnit: highPrecisionFormatter.unitConversions.length === 1,
         },
         placeholder: placeholderUnit,
       };
@@ -105,7 +102,6 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
           defaultFormattedValue: defaultFormattedValue ?? newValue,
           rawValue: parseResult.ok ? parseResult.value : undefined,
           roundingError: parseResult.ok ? roundingError : undefined,
-          isSingleUnit: prev.quantityValue.isSingleUnit,
         },
       }),
     );
@@ -116,7 +112,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     inputProps: {
       onChange,
       placeholder,
-      disabled: !highPrecisionFormatter || !parser || quantityValue.isSingleUnit === undefined,
+      disabled: !highPrecisionFormatter || !parser,
     },
   };
 }

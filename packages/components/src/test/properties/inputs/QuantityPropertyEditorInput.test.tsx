@@ -150,7 +150,7 @@ describe("<QuantityPropertyEditorInput />", () => {
 
     // Verify that selection logic is applied
     await waitFor(() => expect(input.selectionStart).to.eq(0));
-    await user.type(input, "123.4 unit", { skipClick: true });
+    await user.type(input, "123.4 ", { skipClick: true });
     await user.tab();
 
     await waitFor(() => expect(input.value).to.eq("123.4 unit"));
@@ -187,44 +187,6 @@ describe("<QuantityPropertyEditorInput />", () => {
     const input = await waitFor(() => getByRole("textbox"));
     await waitFor(() => {
       expect(input).to.be.eq(document.activeElement);
-    });
-  });
-
-  it("should select correct parts of text if setFocus is true", async () => {
-    const record = createRecord({ initialValue: 100, kindOfQuantityName: "TestKOQ" });
-    const ref = createRef<PropertyEditorAttributes>();
-
-    const { getByRole, user } = render(
-      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
-        <QuantityPropertyEditorInput ref={ref} propertyRecord={record} setFocus />
-      </SchemaMetadataContextProvider>,
-    );
-
-    const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
-    await waitFor(() => {
-      expect(input.value).to.eq("100 unit");
-      expect(input.selectionStart).to.eq(0);
-      expect(input.selectionEnd).to.eq(4);
-    });
-
-    await user.type(input, "100 unit ", { skipClick: true });
-    await user.tab();
-    await user.click(input);
-
-    await waitFor(() => {
-      expect(input.value).to.eq("100 unit unit");
-      expect(input.selectionStart).to.eq(0);
-      expect(input.selectionEnd).to.eq(13);
-    });
-
-    await user.type(input, "100 m", { skipClick: true });
-    await user.tab();
-    await user.click(input);
-
-    await waitFor(() => {
-      expect(input.value).to.eq("100 m");
-      expect(input.selectionStart).to.eq(0);
-      expect(input.selectionEnd).to.eq(5);
     });
   });
 
