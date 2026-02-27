@@ -113,7 +113,7 @@ describe("useTree", () => {
     });
   });
 
-  it("loads and overrides root nodes with minimal provider setup", async () => {
+  it("loads and sets custom error to root nodes with minimal provider setup", async () => {
     const customHierarchyProvider = createHierarchyProvider(() => ({
       async *getNodes({}) {
         yield createTestHierarchyNode({ id: "root-1" });
@@ -122,8 +122,8 @@ describe("useTree", () => {
 
     const customProps: UseTreeProps = {
       getHierarchyProvider: () => customHierarchyProvider,
-      onTreeNodeCreation: (node) => {
-        return { ...node, error: { id: `${node.id}-error`, type: "Unknown", message: "Test error" } };
+      getTreeNodeError: (node) => {
+        return { id: `${node.label}-error`, type: "Unknown", message: "Test error" };
       },
     };
 
@@ -132,7 +132,7 @@ describe("useTree", () => {
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps!.rootNodes[0].error).to.deep.equal({ id: "generic,root-1-error", type: "Unknown", message: "Test error" });
+      expect(treeRenderProps!.rootNodes[0].error).to.deep.equal({ id: "root-1-error", type: "Unknown", message: "Test error" });
     });
   });
 
