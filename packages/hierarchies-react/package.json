@@ -37,7 +37,7 @@
   },
   "scripts": {
     "build": "tsdown && npm run -s build:locale && npm run -s copy && npm run -s build:test",
-    "build:locale": "tsc -p tsconfig.utils.json && node ./lib/utils/BuildLocale.js",
+    "build:locale": "tsc -p tsconfig.utils.json && node ./lib/build/utils/BuildLocale.js",
     "copy": "npm run -s copy:css && npm run -s copy:assets",
     "copy:css": "cpx \"./src/**/*.css\" \"./lib\"",
     "copy:assets": "cpx \"./src/public/**/*\" \"./lib/public\"",

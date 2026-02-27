@@ -12,4 +12,4 @@
 
 # then ignore some stuff again
 lib/**/test/**
-lib/utils/**
+lib/build/**
