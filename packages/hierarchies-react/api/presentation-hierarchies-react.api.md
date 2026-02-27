@@ -402,7 +402,7 @@ interface UseTreeProps {
     }: {
         abortSignal: AbortSignal;
     }) => Promise<HierarchySearchPath[] | undefined>;
-    getTreeNodeError?: (node: HierarchyNode) => ErrorInfo;
+    getTreeNodeError?: (node: HierarchyNode) => ErrorInfo | undefined;
     onHierarchyLimitExceeded?: (props: {
         parentId?: string;
         filter?: GenericInstanceFilter;

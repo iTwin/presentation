@@ -90,7 +90,7 @@ export interface UseTreeProps {
    *
    * **Note:** Internal errors take precedence over custom ones.
    */
-  getTreeNodeError?: (node: HierarchyNode) => ErrorInfo;
+  getTreeNodeError?: (node: HierarchyNode) => ErrorInfo | undefined;
 }
 
 /** @public */
@@ -346,7 +346,7 @@ function useTreeInternal({
 function generateTreeStructure(
   parentNodeId: string | undefined,
   model: TreeModel,
-  getTreeNodeError?: (node: HierarchyNode) => ErrorInfo,
+  getTreeNodeError?: (node: HierarchyNode) => ErrorInfo | undefined,
 ): Array<TreeNode> | undefined {
   const currentChildren = model.parentChildMap.get(parentNodeId);
   if (!currentChildren) {
@@ -361,28 +361,22 @@ function generateTreeStructure(
     });
 }
 
-function createTreeNode(modelNode: TreeModelHierarchyNode, model: TreeModel, getTreeNodeError?: (node: HierarchyNode) => ErrorInfo): TreeNode {
+function createTreeNode(modelNode: TreeModelHierarchyNode, model: TreeModel, getTreeNodeError?: (node: HierarchyNode) => ErrorInfo | undefined): TreeNode {
   let children: Array<TreeNode> | undefined;
   return {
-    ...toTreeNodeBase(modelNode, getTreeNodeError),
+    id: modelNode.id,
+    label: modelNode.label,
+    nodeData: modelNode.nodeData,
+    isLoading: !!modelNode.isLoading,
+    isExpanded: !!modelNode.isExpanded,
+    isFilterable: !HierarchyNode.isGroupingNode(modelNode.nodeData) && !!modelNode.nodeData.supportsFiltering && modelNode.children,
+    isFiltered: !!modelNode.instanceFilter,
+    error: modelNode.error ?? getTreeNodeError?.(modelNode.nodeData),
     get children() {
       if (!children) {
         children = generateTreeStructure(modelNode.id, model, getTreeNodeError);
       }
       return children ? children : modelNode.children === true ? true : [];
     },
-  };
-}
-
-function toTreeNodeBase(node: TreeModelHierarchyNode, getTreeNodeError?: (node: HierarchyNode) => ErrorInfo): Omit<TreeNode, "children"> {
-  return {
-    id: node.id,
-    label: node.label,
-    nodeData: node.nodeData,
-    isLoading: !!node.isLoading,
-    isExpanded: !!node.isExpanded,
-    isFilterable: !HierarchyNode.isGroupingNode(node.nodeData) && !!node.nodeData.supportsFiltering && node.children,
-    isFiltered: !!node.instanceFilter,
-    error: node.error ?? getTreeNodeError?.(node.nodeData),
   };
 }
