@@ -5,6 +5,11 @@
 
 /**
  * Localized strings used in the components.
+ *
+ * The version suffix in `LOCALIZATION_NAMESPACE` should be bumped when making changes to this object:
+ * - minor bump when new strings are added or exists string values are changed,
+ * - major bump when a string is removed.
+ *
  * @internal
  */
 export const LOCALIZED_STRINGS = {
@@ -162,10 +167,10 @@ type ObjectKeys<TObject extends object, Acc extends string = never> =
 export type LocalizationKey = ObjectKeys<typeof LOCALIZED_STRINGS>;
 
 /** @internal */
-export const HIERARCHIES_REACT_LOCALIZATION_NAMESPACE = "PresentationHierarchies1.0";
+export const LOCALIZATION_NAMESPACE = "PresentationHierarchies_1.0";
 
 /**
  * Namespaces used for localization of presentation hierarchies components.
  * @alpha
  */
-export const LOCALIZATION_NAMESPACES = [HIERARCHIES_REACT_LOCALIZATION_NAMESPACE];
+export const LOCALIZATION_NAMESPACES = [LOCALIZATION_NAMESPACE];
