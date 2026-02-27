@@ -507,7 +507,7 @@ export namespace PrimitiveValue {
 type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
 // @public
-export type Props<TFunc extends (...args: any[]) => any> = Parameters<TFunc>[0];
+export type Props<TFunc extends (...args: any[]) => any> = Parameters<TFunc> extends [infer TProps] ? Exclude<TProps, undefined> extends object ? TProps : never : Parameters<TFunc> extends [(infer TProps)?] ? Exclude<TProps, undefined> extends object ? TProps | undefined : never : never;
 
 // @public
 export interface RaisableEvent<TListener extends (...args: any[]) => void = () => void> extends Event_2<TListener> {
