@@ -2,4 +2,4 @@
 "@itwin/presentation-hierarchies-react": minor
 ---
 
-Add `getTreeNodeError` to useTree hooks allowing a way to provide custom errors to tree nodes.
+Add `getTreeNodeError` callback prop to `useTree` hook and its derivatives, providing a way to set custom errors on tree nodes.
