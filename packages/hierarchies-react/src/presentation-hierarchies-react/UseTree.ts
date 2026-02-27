@@ -86,7 +86,10 @@ export interface UseTreeProps {
   onHierarchyLimitExceeded?: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void;
   /** Action to perform when an error occurs while loading hierarchy. */
   onHierarchyLoadError?: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void;
-  /** Callback to set custom TreeNode errors. */
+  /** Callback to set custom TreeNode errors.
+   *
+   * **Note:** Internal errors take precedence over custom ones.
+   */
   getTreeNodeError?: (node: HierarchyNode) => ErrorInfo;
 }
 

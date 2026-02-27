@@ -949,6 +949,35 @@ describe("useTree", () => {
         .and.containSubset([{ id: createNodeId(nodeAfter) }]);
     });
   });
+
+  it("getTreeNodeError to does not override internal error", async () => {
+    hierarchyProvider.getNodes.callsFake(({ parentNode }) => {
+      if (!parentNode) {
+        return createAsyncIterator([createTestHierarchyNode({ id: "root-1", children: true })]);
+      }
+      return throwingAsyncIterator(new Error("Children load failed"));
+    });
+
+    const { result } = renderHook(useTree, {
+      initialProps: { ...initialProps, getTreeNodeError: () => ({ id: "custom-error", type: "Unknown", message: "Custom error" }) },
+    });
+
+    await waitFor(() => {
+      const treeRenderProps = getTreeRendererProps(result.current);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].error?.type).to.eq("Unknown");
+    });
+
+    const initialTreeRenderProps = getTreeRendererProps(result.current)!;
+    await act(async () => {
+      initialTreeRenderProps.expandNode(initialTreeRenderProps.rootNodes[0].id, true);
+    });
+
+    await waitFor(() => {
+      const treeRenderProps = getTreeRendererProps(result.current)!;
+      expect(treeRenderProps.rootNodes[0].error?.type).to.equal("ChildrenLoad");
+    });
+  });
 });
 
 describe("useUnifiedSelectionTree", () => {
