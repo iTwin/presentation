@@ -159,7 +159,7 @@ function useTreeInternal({
       new TreeActions(
         (model) => {
           const rootNodes =
-            model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model, getTreeNodeErrorRef?.current) : undefined;
+            model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model, getTreeNodeErrorRef.current) : undefined;
           setState({
             model,
             rootNodes,
