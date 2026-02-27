@@ -152,12 +152,14 @@ function useTreeInternal({
   const onPerformanceMeasuredRef = useLatest(onPerformanceMeasured);
   const onHierarchyLimitExceededRef = useLatest(onHierarchyLimitExceeded);
   const onHierarchyLoadErrorRef = useLatest(onHierarchyLoadError);
+  const getTreeNodeErrorRef = useLatest(getTreeNodeError);
 
   const [actions] = useState<TreeActions>(
     () =>
       new TreeActions(
         (model) => {
-          const rootNodes = model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model, getTreeNodeError) : undefined;
+          const rootNodes =
+            model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model, getTreeNodeErrorRef?.current) : undefined;
           setState({
             model,
             rootNodes,
