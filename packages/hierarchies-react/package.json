@@ -36,7 +36,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsdown && npm run -s copy && npm run -s build:locale && npm run -s build:test",
+    "build": "tsdown && npm run -s build:locale && npm run -s copy && npm run -s build:test",
     "build:locale": "tsc -p tsconfig.utils.json && node ./lib/utils/BuildLocale.js",
     "copy": "npm run -s copy:css && npm run -s copy:assets",
     "copy:css": "cpx \"./src/**/*.css\" \"./lib\"",
