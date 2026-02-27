@@ -237,9 +237,9 @@ function useTreeInternal({
       if (!node || node.id === undefined) {
         return undefined;
       }
-      return createTreeNode(node, state.model, getTreeNodeError);
+      return createTreeNode(node, state.model, getTreeNodeErrorRef.current);
     },
-    [actions, getTreeNodeError, state.model],
+    [actions, state.model],
   );
 
   const expandNode = useCallback<TreeRendererProps["expandNode"]>(
