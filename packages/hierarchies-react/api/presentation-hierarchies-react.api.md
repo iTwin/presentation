@@ -224,7 +224,7 @@ export interface StrataKitTreeRendererAttributes {
 }
 
 // @alpha (undocumented)
-type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "filterHierarchyLevel"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
+type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "filterHierarchyLevel"> & TreeRendererOwnProps;
 
 // @alpha
 export const TreeActionBase: NamedExoticComponent<TreeActionBaseProps>;
@@ -342,7 +342,7 @@ export function useFlatTreeItems(rootNodes: TreeNode[]): FlatTreeItem[];
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult;
 
 // @public
-type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearchPaths"> & Pick<IModelHierarchyProviderProps, "localizedStrings" | "imodelAccess" | "imodelChanged"> & {
+type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearchPaths"> & Pick<IModelHierarchyProviderProps, "imodelAccess" | "imodelChanged"> & {
     getHierarchyDefinition: (props: {
         imodelAccess: IModelAccess;
     }) => HierarchyDefinition;

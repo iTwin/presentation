@@ -118,6 +118,16 @@ export const LOCALIZED_STRINGS = {
    * Default value: `New label`.
    */
   newLabel: "New label",
+  /**
+   * A string for "Other". Used for label of a range property grouping node that
+   * groups values which don't fit into any other range.
+   */
+  other: "Other",
+  /**
+   * A string for "Unspecified". Used for labels of property grouping nodes
+   * that group by an empty value.
+   */
+  unspecified: "Unspecified",
 };
 
 type AddPrefix<TPrefix extends string, TPath extends string> = [TPrefix] extends [never] ? `${TPath}` : `${TPrefix}.${TPath}`;
