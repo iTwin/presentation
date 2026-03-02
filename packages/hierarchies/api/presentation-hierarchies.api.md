@@ -573,7 +573,7 @@ interface MergeHierarchyProvidersProps {
 }
 
 // @public
-export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & {
+export function mergeProviders(input: MergeHierarchyProvidersProps): HierarchyProvider & {
     [Symbol.dispose]: () => void;
 };
 

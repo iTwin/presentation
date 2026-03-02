@@ -51,13 +51,7 @@ interface CommonRendererProps {
 export type ErrorInfo = GenericErrorInfo | ResultSetTooLargeErrorInfo | NoFilterMatchesErrorInfo | ChildrenLoadErrorInfo;
 
 // @alpha
-export function ErrorItemRenderer({
-    errorNode,
-    getHierarchyLevelDetails,
-    filterHierarchyLevel,
-    reloadTree,
-    scrollToNode
-}: ErrorItemRendererProps): JSX_2.Element;
+export function ErrorItemRenderer(input: ErrorItemRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
@@ -139,10 +133,7 @@ type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 export const LOCALIZATION_NAMESPACES: string[];
 
 // @public
-export function LocalizationContextProvider({
-    localization,
-    children
-}: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
+export function LocalizationContextProvider(input: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
 
 // @public
 interface LocalizationContextProviderProps {
@@ -199,11 +190,7 @@ export { SelectionStorage }
 export { setLogger }
 
 // @alpha
-export function StrataKitRootErrorRenderer({
-    error,
-    getHierarchyLevelDetails,
-    reloadTree
-}: StrataKitRootErrorRendererProps): JSX_2.Element;
+export function StrataKitRootErrorRenderer(input: StrataKitRootErrorRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 type StrataKitRootErrorRendererProps = {
@@ -239,12 +226,7 @@ export interface TreeActionBaseAttributes {
 type TreeActionBaseProps = ComponentProps<typeof Tree.ItemAction> & TreeActionBaseAttributes;
 
 // @alpha
-export function TreeErrorRenderer({
-    treeLabel,
-    errorNodes,
-    renderError,
-    ...errorItemRendererProps
-}: TreeErrorRendererProps): JSX_2.Element;
+export function TreeErrorRenderer(input: TreeErrorRendererProps): JSX_2.Element;
 
 // @alpha
 interface TreeErrorRendererOwnProps {
@@ -356,9 +338,7 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearch
 export function useIModelUnifiedSelectionTree(props: UseIModelTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
 
 // @alpha
-export function useNodeHighlighting({
-    highlightText
-}: UseNodeHighlightingProps): UseNodeHighlightingResult;
+export function useNodeHighlighting(input: UseNodeHighlightingProps): UseNodeHighlightingResult;
 
 // @alpha
 interface UseNodeHighlightingProps {
@@ -376,9 +356,7 @@ export function useTree(props: UseTreeProps): UseTreeResult;
 // @public (undocumented)
 interface UseTreeProps {
     getHierarchyProvider: () => HierarchyProvider;
-    getSearchPaths?: ({
-        abortSignal
-    }: {
+    getSearchPaths?: (input: {
         abortSignal: AbortSignal;
     }) => Promise<HierarchySearchPath[] | undefined>;
     getTreeNodeError?: (node: HierarchyNode) => ErrorInfo | undefined;
@@ -403,12 +381,7 @@ type UseTreeResult = {
 } & RendererProps;
 
 // @public
-export function useUnifiedSelectionTree({
-    sourceName,
-    selectionStorage,
-    createSelectableForGenericNode,
-    ...props
-}: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
+export function useUnifiedSelectionTree(input: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
 
 // @public (undocumented)
 interface UseUnifiedTreeSelectionProps {

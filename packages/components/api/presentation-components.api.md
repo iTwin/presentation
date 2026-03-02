@@ -343,7 +343,7 @@ export interface IUnifiedSelectionComponent {
 export const NavigationPropertyEditor: new () => PropertyEditorBase;
 
 // @public
-export function NavigationPropertyEditorContextProvider({ children, ...props }: PropsWithChildren<NavigationPropertyEditorContextProviderProps>): JSX_2.Element;
+export function NavigationPropertyEditorContextProvider(input: PropsWithChildren<NavigationPropertyEditorContextProviderProps>): JSX_2.Element;
 
 // @public
 export interface NavigationPropertyEditorContextProviderProps {
@@ -355,7 +355,7 @@ export interface NavigationPropertyEditorContextProviderProps {
 export const NavigationPropertyTargetEditor: new (props: PropertyEditorProps) => TypeEditor & PureComponent<PropertyEditorProps>;
 
 // @public @deprecated
-export function PortalTargetContextProvider({ portalTarget, children }: PropsWithChildren<PortalTargetContextProviderProps>): JSX_2.Element;
+export function PortalTargetContextProvider(input: PropsWithChildren<PortalTargetContextProviderProps>): JSX_2.Element;
 
 // @public @deprecated
 export interface PortalTargetContextProviderProps {
@@ -372,7 +372,7 @@ export enum PresentationComponentsLoggerCategory {
 }
 
 // @public
-export function PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, selectedClasses, ...props }: PresentationFilterBuilderValueRendererProps): JSX_2.Element;
+export function PresentationFilterBuilderValueRenderer(input: PresentationFilterBuilderValueRendererProps): JSX_2.Element;
 
 // @public
 export interface PresentationFilterBuilderValueRendererProps extends PropertyFilterBuilderRuleValueRendererProps {
@@ -524,7 +524,7 @@ export interface PresentationPropertyDataProviderProps extends DiagnosticsProps 
 }
 
 // @public @deprecated
-export function PresentationTree<TEventHandler extends TreeEventHandler>({ state, ...props }: PresentationTreeProps<TEventHandler>): JSX_2.Element;
+export function PresentationTree<TEventHandler extends TreeEventHandler>(input: PresentationTreeProps<TEventHandler>): JSX_2.Element;
 
 // @public @deprecated
 export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, Disposable {
@@ -711,7 +711,7 @@ export interface SchemaMetadataContext {
 }
 
 // @public
-export function SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren<SchemaMetadataContextProviderProps>): JSX_2.Element;
+export function SchemaMetadataContextProvider(input: PropsWithChildren<SchemaMetadataContextProviderProps>): JSX_2.Element;
 
 // @public
 export interface SchemaMetadataContextProviderProps {
@@ -782,9 +782,9 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
     // @deprecated (undocumented)
     protected getNodeKey(node: TreeNodeItem): NodeKey;
     // (undocumented)
-    onSelectionModified({ modifications }: TreeSelectionModificationEventArgs): Subscription | undefined;
+    onSelectionModified(input: TreeSelectionModificationEventArgs): Subscription | undefined;
     // (undocumented)
-    onSelectionReplaced({ replacements }: TreeSelectionReplacementEventArgs): Subscription | undefined;
+    onSelectionReplaced(input: TreeSelectionReplacementEventArgs): Subscription | undefined;
     // (undocumented)
     selectNodes(modelChange?: TreeModelChanges): void;
     protected shouldSelectNode(node: TreeNodeItem, selection: Readonly<KeySet>): boolean;
@@ -808,7 +808,7 @@ export function useControlledPresentationTreeFiltering(props: ControlledPresenta
 };
 
 // @public @deprecated
-export function useFilterablePresentationTree({ nodeLoader, onFilterApplied }: useFilterablePresentationTreeProps): FilterableTreeProps;
+export function useFilterablePresentationTree(input: useFilterablePresentationTreeProps): FilterableTreeProps;
 
 // @public @deprecated
 export interface useFilterablePresentationTreeProps {
@@ -833,7 +833,7 @@ export interface UseHierarchyLevelFilteringProps {
 }
 
 // @public
-export function useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilterPropertyInfosProps): {
+export function useInstanceFilterPropertyInfos(input: UseInstanceFilterPropertyInfosProps): {
     propertyInfos: PresentationInstanceFilterPropertyInfo[];
     propertyRenderer: (name: string) => JSX_2.Element;
 };
@@ -887,7 +887,7 @@ export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> 
 export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult;
 
 // @public @deprecated
-export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({ onHierarchyLimitExceeded, onNodeLoaded, eventHandlerFactory, seedTreeModel, filteringParams, ...dataProviderProps }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined;
+export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>(input: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined;
 
 // @public @deprecated
 export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {

@@ -33,6 +33,7 @@ describe("UseQuantityValueInput", () => {
   const format = new Format("test format");
   const formatterSpec = {
     applyFormatting: sinon.stub<[number], string>(),
+    unitConversions: [{ name: "test unit", label: "unit" }],
     format,
   };
   const parserSpec = {
@@ -88,7 +89,7 @@ describe("UseQuantityValueInput", () => {
 
   it("renders with placeholder", async () => {
     const { queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
-    await waitFor(() => expect(queryByPlaceholderText("12.34 unit")).to.not.be.null);
+    await waitFor(() => expect(queryByPlaceholderText("unit")).to.not.be.null);
   });
 
   it("renders with formatted initial raw value", async () => {
@@ -111,10 +112,11 @@ describe("UseQuantityValueInput", () => {
   it("parses entered value", async () => {
     const spy = sinon.stub<[QuantityValue], void>();
     const { user, getByRole, queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" onChange={spy} />);
-    await waitFor(() => expect(queryByPlaceholderText("12.34 unit")).to.not.be.null);
+    await waitFor(() => expect(queryByPlaceholderText("unit")).to.not.be.null);
 
     const input = getByRole("textbox");
 
+    await user.clear(input);
     await user.type(input, "1.23 unit");
     await waitFor(() => {
       const value = spy.lastCall.args[0];
@@ -125,10 +127,11 @@ describe("UseQuantityValueInput", () => {
 
   it("reacts to format change", async () => {
     const { queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
-    await waitFor(() => expect(queryByPlaceholderText("12.34 unit")).to.not.be.null);
+    await waitFor(() => expect(queryByPlaceholderText("unit")).to.not.be.null);
 
     const newFormatterSpec = {
       applyFormatting: (num: number) => `${num} new unit`,
+      unitConversions: [{ name: "test unit", label: "new unit" }],
       format,
     };
     const newParserSpec = {
@@ -146,7 +149,7 @@ describe("UseQuantityValueInput", () => {
 
     formatProvider.onFormatsChanged.raiseEvent();
 
-    await waitFor(() => expect(queryByPlaceholderText("12.34 new unit")).to.not.be.null);
+    await waitFor(() => expect(queryByPlaceholderText("new unit")).to.not.be.null);
   });
 
   it("sets precision to 12 for Decimal format types", async () => {
@@ -156,13 +159,14 @@ describe("UseQuantityValueInput", () => {
     };
     const decimalFormatterSpec = {
       applyFormatting: sinon.stub<[number], string>(),
+      unitConversions: [{ name: "test unit", label: "unit" }],
       format: decimalFormat,
     };
 
     decimalFormatterSpec.applyFormatting.callsFake((raw) => `${raw} unit`);
     getFormatterSpecStub.resolves(decimalFormatterSpec as unknown as FormatterSpec);
 
-    render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
+    render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={0.123456} />);
     await waitFor(() => expect(decimalFormatterSpec.applyFormatting).to.be.called);
 
     // Verify that precision was set to 12 for Decimal format
@@ -176,13 +180,14 @@ describe("UseQuantityValueInput", () => {
     };
     const fractionalFormatterSpec = {
       applyFormatting: sinon.stub<[number], string>(),
+      unitConversions: [{ name: "test unit", label: "unit" }],
       format: fractionalFormat,
     };
 
     fractionalFormatterSpec.applyFormatting.callsFake((raw) => `${raw} unit`);
     getFormatterSpecStub.resolves(fractionalFormatterSpec as unknown as FormatterSpec);
 
-    render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
+    render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={0.123456} />);
     await waitFor(() => expect(fractionalFormatterSpec.applyFormatting).to.be.called);
 
     // Verify that precision was NOT modified for Fractional format

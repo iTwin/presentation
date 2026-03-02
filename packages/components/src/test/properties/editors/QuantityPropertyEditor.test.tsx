@@ -31,6 +31,7 @@ describe("<QuantityPropertyEditor />", () => {
     const format = new Format("test format");
     const formatterSpec = {
       applyFormatting: (raw: number) => `${raw} unit`,
+      unitConversions: [{ name: "test unit", label: "unit" }],
       format,
     };
     const parserSpec = {

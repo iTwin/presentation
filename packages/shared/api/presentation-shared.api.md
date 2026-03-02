@@ -102,7 +102,7 @@ function createNullableSelector(props: {
 }): string;
 
 // @public
-function createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias, propertyClassName, propertyName, }: {
+function createPrimitivePropertyValueSelectorProps(input: {
     schemaProvider: ECSchemaProvider;
     propertyClassName: string;
     propertyClassAlias: string;

@@ -1,5 +1,13 @@
 # @itwin/unified-selection
 
+## 1.6.7
+
+### Patch Changes
+
+- [#1215](https://github.com/iTwin/presentation/pull/1215): Update dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.9
+
 ## 1.6.6
 
 ### Patch Changes
