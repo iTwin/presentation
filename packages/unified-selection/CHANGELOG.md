@@ -1,5 +1,13 @@
 # @itwin/unified-selection
 
+## 1.6.8-alpha.0
+
+### Patch Changes
+
+- [#1229](https://github.com/iTwin/presentation/pull/1229): Version bump
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.8
+
 ## 1.6.7
 
 ### Patch Changes

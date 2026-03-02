@@ -1,5 +1,27 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.55
+
+### Major Changes
+
+- [#1223](https://github.com/iTwin/presentation/pull/1223): Reworked `localization` to use `i18next`-compatible approach. Instead of passing a `localizedStrings` object into `LocalizationContextProvider`, the package now delivers an English locale JSON file and resolves strings through a `getLocalizedString` function at runtime.
+
+  **Breaking changes**
+  - `LocalizationContextProvider` no longer accepts a `localizedStrings` object. It now requires a `localization` prop — an object with a `getLocalizedString(key: string): string` method (compatible with `Localization` from @itwin/core-common).
+  - `LOCALIZATION_NAMESPACES` must be registered with your localization provider during app initialization to make localized strings available.
+
+### Minor Changes
+
+- [#1221](https://github.com/iTwin/presentation/pull/1221): Add `getTreeNodeError` callback prop to `useTree` hook and its derivatives, providing a way to set custom errors on tree nodes.
+
+### Patch Changes
+
+- [#1219](https://github.com/iTwin/presentation/pull/1219): Fix component documentation mentioning iTwinUI
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.8
+  - @itwin/presentation-hierarchies@2.0.0-alpha.12
+  - @itwin/unified-selection@1.6.8-alpha.0
+
 ## 2.0.0-alpha.54
 
 ### Patch Changes

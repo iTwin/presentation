@@ -1,5 +1,13 @@
 # @itwin/presentation-shared
 
+## 2.0.0-alpha.8
+
+### Major Changes
+
+- [#1222](https://github.com/iTwin/presentation/pull/1222): Enhance the `Props` type to only accept functions that have one object argument.
+
+  The term "props" refers to a props object, meaning there should only be one argument. For cases when a function has multiple arguments, use TypeScript's `Parameters` utility type instead.
+
 ## 2.0.0-alpha.7
 
 ### Major Changes
