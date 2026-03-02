@@ -1,5 +1,22 @@
 # Change Log - @itwin/presentation-components
 
+## 5.13.0
+
+### Minor Changes
+
+- [#1213](https://github.com/iTwin/presentation/pull/1213): Improved numeric and quantity property editors keyboard interactions and changed quantity editor placeholders to display only units.
+  - Quantity editor placeholders now show only the unit label instead of full formatted values.
+  - Escape key now calls `onCancel`.
+  - Enter key commits changes and removes focus from the input.
+
+### Patch Changes
+
+- [#1215](https://github.com/iTwin/presentation/pull/1215): Update dependencies.
+- Updated dependencies:
+  - @itwin/presentation-core-interop@1.3.9
+  - @itwin/presentation-shared@1.2.9
+  - @itwin/unified-selection@1.6.7
+
 ## 5.12.18
 
 ### Patch Changes

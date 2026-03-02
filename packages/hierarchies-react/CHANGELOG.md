@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.9.12
+
+### Patch Changes
+
+- [#1215](https://github.com/iTwin/presentation/pull/1215): Update dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.10
+  - @itwin/presentation-shared@1.2.9
+  - @itwin/unified-selection@1.6.7
+
 ## 1.9.11
 
 ### Patch Changes

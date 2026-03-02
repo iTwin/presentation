@@ -1,5 +1,13 @@
 # @itwin/presentation-core-interop
 
+## 1.3.9
+
+### Patch Changes
+
+- [#1215](https://github.com/iTwin/presentation/pull/1215): Update dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.9
+
 ## 1.3.8
 
 ### Patch Changes
