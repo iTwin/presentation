@@ -25,8 +25,6 @@ export interface QuantityValue {
   roundingError?: number;
 }
 
-const PLACEHOLDER_RAW_VALUE = 12.34;
-
 /**
  * Props for [[useQuantityValueInput]]
  * @internal
@@ -60,14 +58,20 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
   }));
 
   useEffect(() => {
-    if (!highPrecisionFormatter || !parser) {
+    if (!highPrecisionFormatter || !parser || !defaultFormatter) {
       return;
     }
 
     setState((prev): State => {
       /* c8 ignore next 1 */
-      const { defaultValue, placeholderValue } = getDefaultFormattedValues(initialRawValueRef.current, defaultFormatter ?? highPrecisionFormatter);
-      const newFormattedValue = prev.quantityValue.rawValue !== undefined ? highPrecisionFormatter.applyFormatting(prev.quantityValue.rawValue) : "";
+      const defaultValue = initialRawValueRef.current
+        ? defaultFormatter.applyFormatting(initialRawValueRef.current)
+        : highPrecisionFormatter.unitConversions[0].label;
+      const newFormattedValue =
+        prev.quantityValue.rawValue !== undefined
+          ? highPrecisionFormatter.applyFormatting(prev.quantityValue.rawValue)
+          : highPrecisionFormatter.unitConversions[0].label;
+      const placeholderUnit = highPrecisionFormatter.unitConversions[0].label;
       const roundingError = getPersistenceUnitRoundingError(newFormattedValue, parser);
 
       return {
@@ -78,7 +82,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
           defaultFormattedValue: defaultValue,
           roundingError,
         },
-        placeholder: placeholderValue,
+        placeholder: placeholderUnit,
       };
     });
   }, [highPrecisionFormatter, parser, defaultFormatter]);
@@ -161,16 +165,5 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
     highPrecisionFormatter: state?.highPrecisionFormatter,
     parser: state?.parserSpec,
     defaultFormatter: state?.defaultFormatter,
-  };
-}
-
-function getDefaultFormattedValues(initialRawValue: number | undefined, formatter: FormatterSpec): { defaultValue: string; placeholderValue: string } {
-  if (initialRawValue !== undefined) {
-    const formatted = formatter.applyFormatting(initialRawValue);
-    return { defaultValue: formatted, placeholderValue: formatted };
-  }
-  return {
-    defaultValue: "",
-    placeholderValue: formatter.applyFormatting(PLACEHOLDER_RAW_VALUE),
   };
 }

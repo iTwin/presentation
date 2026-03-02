@@ -119,7 +119,7 @@ describe("Property editors", () => {
       </SchemaMetadataContextProvider>,
     );
     // ensure the input value is formatted
-    await waitFor(async () => getByPlaceholderText("48.6 in"));
+    await waitFor(() => getByPlaceholderText("in"));
     // ensure the input is editable
     const input = await findByRole("textbox");
     await user.clear(input);

@@ -32,6 +32,7 @@ describe("<QuantityPropertyEditorInput />", () => {
   const format = new Format("test format");
   const formatterSpec = {
     applyFormatting: sinon.stub<[number], string>(),
+    unitConversions: [{ name: "test unit", label: "unit" }],
     format,
   };
   const parserSpec = {
@@ -136,7 +137,7 @@ describe("<QuantityPropertyEditorInput />", () => {
 
   it("allows entering quantity value when schema context is available", async () => {
     const ref = createRef<PropertyEditorAttributes>();
-    const spy = sinon.stub<Parameters<Required<PropertyEditorProps>["onCommit"]>, ReturnType<Required<PropertyEditorProps>["onCommit"]>>();
+    const spy = sinon.spy();
     const record = createRecord({ initialValue: undefined, kindOfQuantityName: "TestKOQ" });
     const { getByRole, user } = render(
       <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
@@ -144,12 +145,15 @@ describe("<QuantityPropertyEditorInput />", () => {
       </SchemaMetadataContextProvider>,
     );
 
-    const input = await waitFor(() => getByRole("textbox"));
-    await waitFor(() => expect((input as HTMLInputElement).disabled).to.be.false);
+    const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
+    await waitFor(() => expect(input.disabled).to.be.false);
 
-    await user.type(input, "123.4 unit");
+    // Verify that selection logic is applied
+    await waitFor(() => expect(input.selectionEnd).to.eq(0));
+    await user.type(input, "123.4 ", { skipClick: true });
     await user.tab();
 
+    await waitFor(() => expect(input.value).to.eq("123.4 unit"));
     await waitFor(() => {
       expect(spy).to.be.calledWith({
         propertyRecord: record,
@@ -184,5 +188,37 @@ describe("<QuantityPropertyEditorInput />", () => {
     await waitFor(() => {
       expect(input).to.be.eq(document.activeElement);
     });
+  });
+
+  it("commits value and blurs input when Enter is pressed", async () => {
+    const record = createRecord({ initialValue: 10, kindOfQuantityName: "TestKOQ" });
+    const onCommitSpy = sinon.spy();
+    const { getByRole, user } = render(
+      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+        <QuantityPropertyEditorInput propertyRecord={record} onCommit={onCommitSpy} />
+      </SchemaMetadataContextProvider>,
+    );
+    const inputContainer = await waitFor(() => getByRole("textbox"));
+
+    await user.click(inputContainer);
+    await user.keyboard("{Enter}");
+
+    expect(onCommitSpy).to.be.calledOnce;
+  });
+
+  it("calls onCancel when Escape is pressed", async () => {
+    const record = createRecord({ initialValue: 10, kindOfQuantityName: "TestKOQ" });
+    const onCancelSpy = sinon.spy();
+    const { getByRole, user } = render(
+      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+        <QuantityPropertyEditorInput propertyRecord={record} onCancel={onCancelSpy} />
+      </SchemaMetadataContextProvider>,
+    );
+    const inputContainer = await waitFor(() => getByRole("textbox"));
+
+    await user.click(inputContainer);
+    await user.keyboard("{Escape}");
+
+    expect(onCancelSpy).to.be.calledOnce;
   });
 });
