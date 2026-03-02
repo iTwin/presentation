@@ -40,7 +40,7 @@ QuantityPropertyEditorInput.displayName = "QuantityPropertyEditorInput";
 type QuantityPropertyValueInputProps = QuantityPropertyEditorImplProps & UseQuantityValueInputProps;
 
 const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, QuantityPropertyValueInputProps>(
-  ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus }, ref) => {
+  ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus, onCancel }, ref) => {
     const { quantityValue, inputProps } = useQuantityValueInput({ koqName, schemaContext, initialRawValue });
     const [isEditing, setEditing] = useState(false);
     const value = isEditing ? quantityValue.highPrecisionFormattedValue : quantityValue.defaultFormattedValue;
@@ -79,6 +79,16 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
       }
     }, [inputProps.disabled, setFocus]);
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Escape") {
+        onCancel?.();
+      }
+      if (e.key === "Enter") {
+        inputRef.current?.blur();
+        e.stopPropagation();
+      }
+    };
+
     return (
       <Input
         {...inputProps}
@@ -92,8 +102,15 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         }}
         onFocus={() => {
           setEditing(true);
-          inputRef.current?.setSelectionRange(0, 9999);
+          requestAnimationFrame(() => {
+            if (quantityValue.highPrecisionFormattedValue === inputProps.placeholder) {
+              inputRef.current?.setSelectionRange(0, 0);
+              return;
+            }
+            inputRef.current?.setSelectionRange(0, 9999);
+          });
         }}
+        onKeyDown={handleKeyDown}
       />
     );
   },
