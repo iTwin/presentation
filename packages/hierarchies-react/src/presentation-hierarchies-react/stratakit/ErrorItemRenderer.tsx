@@ -6,7 +6,7 @@
 import { Anchor, Text } from "@stratakit/bricks";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
-import { useLocalizationContext } from "./LocalizationContext.js";
+import { useTranslation } from "./LocalizationContext.js";
 
 import type { JSX } from "react";
 import type { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
@@ -27,9 +27,9 @@ export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHier
 
 /**
  * Renders StrataKit `<ErrorRegion.Item />` for all supported error types:
- * - `ResultSetTooLarge` - renders `LocalizedStrings.resultLimitExceeded` message with actions to increase limit or apply filtering
- * - `NoFilterMatches` - renders `LocalizedStrings.noFilteredChildren` message with action to change filter
- * - `ChildrenLoad` - renders `LocalizedStrings.failedToCreateHierarchy` message with action to retry loading
+ * - `ResultSetTooLarge` - renders `resultLimitExceeded` message with actions to increase limit or apply filtering
+ * - `NoFilterMatches` - renders `noFilteredChildren` message with action to change filter
+ * - `ChildrenLoad` - renders `failedToCreateHierarchy` message with action to retry loading
  * - `Unknown` - renders message set on error object.
  *
  * @alpha
@@ -41,7 +41,7 @@ export function ErrorItemRenderer({
   reloadTree,
   scrollToNode,
 }: ErrorItemRendererProps): JSX.Element {
-  const { localizedStrings } = useLocalizationContext();
+  const translate = useTranslation();
 
   if (errorNode.error.type === "ResultSetTooLarge") {
     const limit = errorNode.error.resultSetSizeLimit;
@@ -54,7 +54,7 @@ export function ErrorItemRenderer({
             action: () => {
               onOverrideLimit();
             },
-            label: localizedStrings.increaseHierarchyLimit.replace("{{limit}}", MAX_LIMIT_OVERRIDE.toString()),
+            label: translate("increaseHierarchyLimit").replace("{{limit}}", MAX_LIMIT_OVERRIDE.toString()),
             condition: () => limit < MAX_LIMIT_OVERRIDE,
           },
           {
@@ -62,11 +62,11 @@ export function ErrorItemRenderer({
               const hierarchyLevelDetails = getHierarchyLevelDetails(errorNode.id);
               hierarchyLevelDetails && filterHierarchyLevel?.(hierarchyLevelDetails);
             },
-            label: localizedStrings.increaseHierarchyLimitWithFiltering,
+            label: translate("increaseHierarchyLimitWithFiltering"),
             condition: () => !!filterHierarchyLevel && !!errorNode.isFilterable,
           },
         ]}
-        message={localizedStrings.resultLimitExceeded.replace("{{limit}}", limit.toString())}
+        message={translate("resultLimitExceeded").replace("{{limit}}", limit.toString())}
         scrollToElement={() => scrollToNode(errorNode)}
       />
     );
@@ -81,11 +81,11 @@ export function ErrorItemRenderer({
               const hierarchyLevelDetails = getHierarchyLevelDetails(errorNode.id);
               hierarchyLevelDetails && filterHierarchyLevel?.(hierarchyLevelDetails);
             },
-            label: localizedStrings.noFilteredChildrenChangeFilter,
+            label: translate("noFilteredChildrenChangeFilter"),
             condition: () => true,
           },
         ]}
-        message={localizedStrings.noFilteredChildren}
+        message={translate("noFilteredChildren")}
         scrollToElement={() => scrollToNode(errorNode)}
       />
     );
@@ -97,11 +97,11 @@ export function ErrorItemRenderer({
         actions={[
           {
             action: () => reloadTree({ parentNodeId: errorNode.id }),
-            label: localizedStrings.retry,
+            label: translate("retry"),
             condition: () => true,
           },
         ]}
-        message={localizedStrings.failedToCreateHierarchy}
+        message={translate("failedToCreateHierarchy")}
         scrollToElement={() => scrollToNode(errorNode)}
       />
     );

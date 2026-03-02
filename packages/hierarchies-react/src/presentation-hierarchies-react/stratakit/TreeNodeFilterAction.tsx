@@ -5,7 +5,7 @@
 
 import { memo, useCallback } from "react";
 import filterSvg from "@stratakit/icons/filter.svg";
-import { useLocalizationContext } from "./LocalizationContext.js";
+import { useTranslation } from "./LocalizationContext.js";
 import { TreeActionBase } from "./TreeAction.js";
 
 import type { NamedExoticComponent } from "react";
@@ -38,8 +38,9 @@ export const TreeNodeFilterAction: NamedExoticComponent<TreeNodeFilterActionProp
   getHierarchyLevelDetails,
   ...actionAttributes
 }: TreeNodeFilterActionProps & { node: TreeNode }) {
-  const { localizedStrings } = useLocalizationContext();
-  const { filterHierarchyLevel, filterHierarchyLevelActiveDescription } = localizedStrings;
+  const translate = useTranslation();
+  const filterHierarchyLevel = translate("filterHierarchyLevel");
+  const filterHierarchyLevelActiveDescription = translate("filterHierarchyLevelActiveDescription");
 
   const handleClick = useCallback(() => {
     const hierarchyLevelDetails = getHierarchyLevelDetails(node.id);

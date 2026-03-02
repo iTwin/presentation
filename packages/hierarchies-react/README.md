@@ -214,79 +214,41 @@ function MyTreeComponentInternal({ imodelAccess, selectionStorage }: { imodelAcc
 
 ## Localization
 
-Localization can be enabled for `TreeRenderer` component and [tree state hooks](#tree-state-hooks) by providing an object with localized strings that will be used instead of the default English ones.
-
-Example:
+This package delivers a locale JSON file with English strings that follows the [`i18next JSON format`](https://www.i18next.com/misc/json-format). To enable localization, register `LOCALIZATION_NAMESPACES` during initialization and wrap components in `LocalizationContextProvider`:
 
 ```tsx
-import { Props } from "@itwin/presentation-shared";
+import {
+  LocalizationContextProvider,
+  LOCALIZATION_NAMESPACES,
+  StrataKitTreeRenderer,
+  useIModelUnifiedSelectionTree,
+} from "@itwin/presentation-hierarchies-react";
 
-import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+// Register localization namespaces with `i18next` based localization provider.
+for (const namespace of LOCALIZATION_NAMESPACES) {
+  await localization.registerNamespace(namespace);
+}
 
-type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
-
-const localizedStrings = {
-  // strings for the `useIModelUnifiedSelectionTree` hook
-  unspecified: "Unspecified",
-  other: "Other",
-
-  // strings for `TreeRenderer` and `TreeNodeRenderer`
-  loading: "Loading...",
-  filterHierarchyLevel: "Apply hierarchy filter",
-  clearHierarchyLevelFilter: "Clear active filter",
-  noFilteredChildren: "No child nodes match current filter",
-  resultLimitExceeded: "There are more items than allowed limit of {{limit}}.",
-  resultLimitExceededWithFiltering: "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
-  increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
-  increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
-};
+// Wrap components with LocalizationContextProvider
+function Tree() {
+  return (
+    <LocalizationContextProvider localization={localization}>
+      <MyTreeComponent imodelAccess={imodelAccess} />
+    </LocalizationContextProvider>
+  );
+}
 
 function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
   const { rootNodes, expandNode } = useIModelUnifiedSelectionTree({
     sourceName: "MyTreeComponent",
     imodelAccess,
-    localizedStrings,
     getHierarchyDefinition,
   });
   if (!rootNodes) {
-    return localizedStrings.loading;
+    return <Spinner />;
   }
-  return <TreeRenderer rootNodes={rootNodes} expandNode={expandNode} localizedStrings={localizedStrings} onFilterClick={() => {}} />;
+  return <StrataKitTreeRenderer rootNodes={rootNodes} expandNode={expandNode} />;
 }
 ```
 
-In case the `TreeNodeRenderer` component is used within a custom tree renderer, the tree component should supply localized strings through `LocalizationContextProvider`:
-
-```tsx
-import { Props } from "@itwin/presentation-shared";
-
-import { ComponentPropsWithoutRef, useCallback } from "react";
-import { Tree } from "@stratakit/bricks";
-import { LocalizationContextProvider, TreeRenderer, useFlatTreeNodeList } from "@itwin/presentation-hierarchies-react";
-
-type TreeRendererProps = Props<typeof TreeRenderer>;
-
-function MyTreeRenderer({ rootNodes }: TreeRendererProps) {
-  const flatNodes = useFlatTreeNodeList(rootNodes);
-
-  return (
-    <LocalizationContextProvider localizedStrings={localizedStrings}>
-      <Tree.Root>
-        {flatNodes.map((flatNode) =>
-          isPlaceholderNode(flatNode) ? (
-            <Tree.Item key={flatNode.id} aria-level={flatNode.level} aria-posinset={1} aria-setsize={1} label="Loading" />
-          ) : (
-            <Tree.Item
-              key={flatNode.id}
-              aria-level={flatNode.level}
-              aria-posinset={flatNode.posInLevel}
-              aria-setsize={flatNode.levelSize}
-              label={flatNode.label}
-            />
-          ),
-        )}
-      </Tree.Root>
-    </LocalizationContextProvider>
-  );
-}
-```
+`LocalizationContextProvider` accepts a `localization` prop — an object with a `getLocalizedString(key: string): string` method. It is designed to work with the `Localization` interface from `@itwin/core-common`, but a custom implementation can be used as well by providing an object with a custom `getLocalizedString` function. The provider uses it internally to resolve translation keys prefixed with localization namespace.

@@ -11,7 +11,7 @@ import checkmarkSvg from "@stratakit/icons/checkmark.svg";
 import dismissSvg from "@stratakit/icons/dismiss.svg";
 import refreshSvg from "@stratakit/icons/refresh.svg";
 import { DropdownMenu, unstable_Popover as Popover, Tree } from "@stratakit/structures";
-import { useLocalizationContext } from "./LocalizationContext.js";
+import { useTranslation } from "./LocalizationContext.js";
 import { TreeActionBase } from "./TreeAction.js";
 import { useTreeNodeRenameContext } from "./TreeNodeRenameAction.js";
 
@@ -65,7 +65,7 @@ export type TreeNodeRendererProps = StrataKitTreeItemProps & TreeNodeRendererOwn
 export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>> = memo(
   forwardRef<HTMLElement, TreeNodeRendererProps>(function HierarchyNode(props, forwardedRef) {
     const { node, decorations, inlineActions, menuActions, contextMenuActions, expandNode, reloadTree, ...treeItemProps } = props;
-    const { localizedStrings } = useLocalizationContext();
+    const translate = useTranslation();
     const renameContext = useTreeNodeRenameContext();
     const [contextMenuProps, setContextMenuProps] = useState<{ position: { x: number; y: number }; actions: ReactNode[] } | undefined>(undefined);
 
@@ -75,7 +75,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
         return [
           <TreeActionBase
             key="retry"
-            label={localizedStrings.retry}
+            label={translate("retry")}
             onClick={() => reloadTree({ parentNodeId: node.id, state: "reset" })}
             visible={true}
             icon={refreshSvg}
@@ -87,7 +87,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
         return undefined;
       }
       return injectActionVariant(inlineActions, "inline");
-    }, [node, inlineActions, localizedStrings.retry, reloadTree]);
+    }, [node, inlineActions, translate, reloadTree]);
 
     const menuActionItems = useMemo(() => {
       if (!menuActions) {
@@ -195,14 +195,9 @@ export const PlaceholderNode: FC<
     { ...props },
     forwardedRef,
   ) {
-    const { localizedStrings } = useLocalizationContext();
+    const translate = useTranslation();
     return (
-      <Tree.Item
-        {...props}
-        ref={forwardedRef}
-        label={localizedStrings.loading}
-        unstable_decorations={<Spinner size={"small"} title={localizedStrings.loading} />}
-      />
+      <Tree.Item {...props} ref={forwardedRef} label={translate("loading")} unstable_decorations={<Spinner size={"small"} title={translate("loading")} />} />
     );
   }),
 );
@@ -220,7 +215,7 @@ function LabelEditor({
   onCancel?: () => void;
   validate?: (newLabel: string) => boolean;
 }) {
-  const { localizedStrings } = useLocalizationContext();
+  const translate = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [newLabelValue, setNewLabelValue] = useState(initialLabel);
   const [hasError, setHasError] = useState<boolean>(false);
@@ -259,7 +254,7 @@ function LabelEditor({
           <TextBox.Input
             id={inputId}
             ref={inputRef}
-            aria-label={localizedStrings.newLabel}
+            aria-label={translate("newLabel")}
             value={newLabelValue}
             onChange={(event) => {
               setNewLabelValue(event.target.value);
@@ -274,8 +269,8 @@ function LabelEditor({
             }}
           />
         </TextBox.Root>
-        <IconButton icon={dismissSvg} label={localizedStrings.cancel} onClick={cancelLabelChange} />
-        <IconButton icon={checkmarkSvg} label={localizedStrings.confirm} onClick={handleLabelChange} disabled={!canRename} />
+        <IconButton icon={dismissSvg} label={translate("cancel")} onClick={cancelLabelChange} />
+        <IconButton icon={checkmarkSvg} label={translate("confirm")} onClick={handleLabelChange} disabled={!canRename} />
       </div>
       {labelValidationHint !== undefined ? (
         <Description id={inputId} tone={hasError ? "critical" : "neutral"} style={{ display: "flex" }}>

@@ -135,41 +135,20 @@ type IModelAccess = IModelHierarchyProviderProps["imodelAccess"];
 // @public (undocumented)
 type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 
+// @alpha
+export const LOCALIZATION_NAMESPACES: string[];
+
 // @public
 export function LocalizationContextProvider({
-    localizedStrings,
+    localization,
     children
 }: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
 
 // @public
 interface LocalizationContextProviderProps {
-    localizedStrings?: Partial<LocalizedStrings>;
-}
-
-// @public
-interface LocalizedStrings {
-    cancel: string;
-    clearHierarchyLevelFilter: string;
-    confirm: string;
-    failedToCreateHierarchy: string;
-    failedToCreateRootHierarchy: string;
-    filterHierarchyLevel: string;
-    filterHierarchyLevelActiveDescription: string;
-    increaseHierarchyLimit: string;
-    increaseHierarchyLimitToUnlimited: string;
-    increaseHierarchyLimitWithFiltering: string;
-    issuesForTree: string;
-    issuesFound: string;
-    loading: string;
-    more: string;
-    newLabel: string;
-    noFilteredChildren: string;
-    noFilteredChildrenChangeFilter: string;
-    noIssuesFound: string;
-    rename: string;
-    resultLimitExceeded: string;
-    retry: string;
-    rootResultLimitExceeded: string;
+    localization: {
+        getLocalizedString: (key: string) => string;
+    };
 }
 
 // @public
@@ -245,7 +224,7 @@ export interface StrataKitTreeRendererAttributes {
 }
 
 // @alpha (undocumented)
-type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "filterHierarchyLevel"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
+type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "filterHierarchyLevel"> & TreeRendererOwnProps;
 
 // @alpha
 export const TreeActionBase: NamedExoticComponent<TreeActionBaseProps>;
@@ -363,7 +342,7 @@ export function useFlatTreeItems(rootNodes: TreeNode[]): FlatTreeItem[];
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult;
 
 // @public
-type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearchPaths"> & Pick<IModelHierarchyProviderProps, "localizedStrings" | "imodelAccess" | "imodelChanged"> & {
+type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearchPaths"> & Pick<IModelHierarchyProviderProps, "imodelAccess" | "imodelChanged"> & {
     getHierarchyDefinition: (props: {
         imodelAccess: IModelAccess;
     }) => HierarchyDefinition;
