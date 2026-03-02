@@ -113,6 +113,29 @@ describe("useTree", () => {
     });
   });
 
+  it("loads and sets custom error to root nodes with minimal provider setup", async () => {
+    const customHierarchyProvider = createHierarchyProvider(() => ({
+      async *getNodes({}) {
+        yield createTestHierarchyNode({ id: "root-1" });
+      },
+    }));
+
+    const customProps: UseTreeProps = {
+      getHierarchyProvider: () => customHierarchyProvider,
+      getTreeNodeError: (node) => {
+        return { id: `${node.label}-error`, type: "Unknown", message: "Test error" };
+      },
+    };
+
+    const { result } = renderHook(useTree, { initialProps: customProps });
+
+    await waitFor(() => {
+      const treeRenderProps = getTreeRendererProps(result.current);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].error).to.deep.equal({ id: "root-1-error", type: "Unknown", message: "Test error" });
+    });
+  });
+
   it("loads searched nodes paths", async () => {
     hierarchyProvider.getNodes.callsFake((props) => {
       return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);
@@ -924,6 +947,35 @@ describe("useTree", () => {
       expect(treeRenderProps!.rootNodes)
         .to.have.lengthOf(1)
         .and.containSubset([{ id: createNodeId(nodeAfter) }]);
+    });
+  });
+
+  it("getTreeNodeError to does not override internal error", async () => {
+    hierarchyProvider.getNodes.callsFake(({ parentNode }) => {
+      if (!parentNode) {
+        return createAsyncIterator([createTestHierarchyNode({ id: "root-1", children: true })]);
+      }
+      return throwingAsyncIterator(new Error("Children load failed"));
+    });
+
+    const { result } = renderHook(useTree, {
+      initialProps: { ...initialProps, getTreeNodeError: () => ({ id: "custom-error", type: "Unknown", message: "Custom error" }) },
+    });
+
+    await waitFor(() => {
+      const treeRenderProps = getTreeRendererProps(result.current);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].error?.type).to.eq("Unknown");
+    });
+
+    const initialTreeRenderProps = getTreeRendererProps(result.current)!;
+    await act(async () => {
+      initialTreeRenderProps.expandNode(initialTreeRenderProps.rootNodes[0].id, true);
+    });
+
+    await waitFor(() => {
+      const treeRenderProps = getTreeRendererProps(result.current)!;
+      expect(treeRenderProps.rootNodes[0].error?.type).to.equal("ChildrenLoad");
     });
   });
 });
