@@ -58,7 +58,7 @@ type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;
 
 // @public
-export function LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
+export function LocalizationContextProvider(input: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
 
 // @public
 interface LocalizationContextProviderProps {
@@ -207,7 +207,7 @@ type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof TreeNodeRenderer>
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 
 // @public
-export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getLabel, getSublabel, getHierarchyLevelDetails, reloadTree, selectionMode, localizedStrings, size, filterButtonsVisibility, getActions, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer(input: TreeRendererProps): JSX_2.Element;
 
 // @public (undocumented)
 interface TreeRendererOwnProps {
@@ -219,7 +219,7 @@ interface TreeRendererOwnProps {
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> & Pick<TreeNodeRendererProps_2, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel" | "filterButtonsVisibility" | "getActions"> & TreeRendererOwnProps & Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization"> & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
 // @public @deprecated
-export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{
+export function UnifiedSelectionProvider(input: PropsWithChildren<{
     storage: SelectionStorage;
 }>): JSX_2.Element;
 
@@ -259,7 +259,7 @@ export function useTree(props: UseTreeProps): UseTreeResult;
 
 // @public (undocumented)
 interface UseTreeProps {
-    getFilteredPaths?: ({ abortSignal }: {
+    getFilteredPaths?: (input: {
         abortSignal: AbortSignal;
     }) => Promise<HierarchyFilteringPath[] | undefined>;
     getHierarchyProvider: () => HierarchyProvider;
@@ -290,7 +290,7 @@ interface UseTreeResult {
 }
 
 // @public
-export function useUnifiedSelectionTree({ sourceName, selectionStorage, createSelectableForGenericNode, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
+export function useUnifiedSelectionTree(input: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
 
 // @public (undocumented)
 interface UseUnifiedTreeSelectionProps {
