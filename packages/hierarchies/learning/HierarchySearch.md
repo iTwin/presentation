@@ -131,9 +131,9 @@ const searchPath: HierarchySearchPath = {
 
 <!-- END EXTRACTION -->
 
-Also, hierarchies may contain grouping nodes, which don't represent anything by themselves, which means they can't be a search target. In some cases it may be necessary to auto-expand the hierarchy up to a desired grouping node (and not auto-expand grouping nodes below them), which can be achieved by setting the `autoExpand` property to `{ depthInHierarchy: number }`, where depth represents grouping node depth in the hierarchy:
+Also, hierarchies may contain grouping nodes, which don't represent anything by themselves, which means they can't be a search target. In some cases it may be necessary to auto-expand the hierarchy up to a desired grouping node (and not auto-expand grouping nodes below them), which can be achieved by setting the `reveal` property to `{ groupingLevel: number }`, where `groupingLevel` represents the grouping node distance from the nearest non-grouping ancestor or root of the hierarchy.
 
-<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.AutoExpandUntilDepthInHierarchy.SearchPath], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.RevealGroupingLevel.SearchPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
@@ -148,9 +148,9 @@ const searchPath: HierarchySearchPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
-    // Reveal (set auto-expand flag for all nodes up to the specified depth) hierarchy up to (but not including) the last label grouping node.
-    // The `depthInHierarchy` attribute is the index of the last label grouping node. It is equal to the number of parents.
-    reveal: { depthInHierarchy: groupingNode.parentKeys.length },
+    // Reveal (set auto-expand flag for matching grouping ancestors) by grouping level.
+    // `groupingLevel` is counted from the first non-grouping ancestor of the target branch.
+    reveal: { groupingLevel: 2 },
   },
 };
 ```

@@ -7,13 +7,13 @@ import { defaultIfEmpty, defer, filter, firstValueFrom, map, merge, mergeAll, me
 import { compareFullClassNames } from "@itwin/presentation-shared";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
-import { createHierarchySearchHelper, HierarchySearchPath, shouldAutoExpandBasedOnReveal } from "../HierarchySearch.js";
+import { createHierarchySearchHelper, HierarchySearchPath } from "../HierarchySearch.js";
 import { HierarchyNodesDefinition } from "../imodel/IModelHierarchyDefinition.js";
-import { ProcessedHierarchyNode } from "../imodel/IModelHierarchyNode.js";
 import { NodeSelectClauseColumnNames } from "../imodel/NodeSelectQueryFactory.js";
 import { defaultNodesParser } from "../imodel/TreeNodesReader.js";
 import { fromPossiblyPromise } from "../internal/Common.js";
 import { partition } from "../internal/operators/Partition.js";
+import { ProcessedHierarchyNode } from "./IModelHierarchyNode.js";
 
 import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
@@ -25,8 +25,8 @@ import type {
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
 } from "../imodel/IModelHierarchyDefinition.js";
-import type { ProcessedGroupingHierarchyNode, ProcessedInstanceHierarchyNode } from "../imodel/IModelHierarchyNode.js";
 import type { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "../internal/RxjsHierarchyDefinition.js";
+import type { ProcessedGroupingHierarchyNode } from "./IModelHierarchyNode.js";
 
 interface SearchHierarchyDefinitionProps {
   imodelAccess: ECClassHierarchyInspector;
@@ -69,22 +69,13 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     return (props) =>
       (this._source.postProcessNode ? this._source.postProcessNode(props) : of(props.node)).pipe(
         map((processedNode) => {
-          const parentKeysWithoutGroupingNodesLength = processedNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
-          const parentKeysLength = processedNode.parentKeys.length;
           const shouldAutoExpand = ProcessedHierarchyNode.isGroupingNode(processedNode)
-            ? shouldAutoExpandGroupingNodeBasedOnNestedChildren({
-                directOrIndirectChildren: processedNode.children,
-                parentKeysWithoutGroupingNodesLength,
-                parentKeysLength,
-              })
+            ? shouldAutoExpandGroupingNode({ node: processedNode })
             : (processedNode.search?.isSearchTarget && !!processedNode.search.searchTargetOptions?.autoExpand) ||
-              processedNode.search?.childrenTargetPaths?.some((path) =>
-                shouldAutoExpandBasedOnReveal({
-                  reveal: HierarchySearchPath.normalize(path).options?.reveal,
-                  nodePositionInPath: parentKeysWithoutGroupingNodesLength,
-                  nodePositionInHierarchy: parentKeysLength,
-                }),
-              );
+              shouldRevealNodeBasedOnSearchChildrenTargetPaths({
+                childrenTargetPaths: processedNode.search?.childrenTargetPaths,
+                parentKeys: processedNode.parentKeys,
+              });
           if (shouldAutoExpand) {
             Object.assign(processedNode, { autoExpand: true });
           }
@@ -98,42 +89,46 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     return (props) =>
       this._nodesParser(props).pipe(
         mergeMap((parsedNode) => {
-          const { row, parentNode, imodelKey } = props;
+          const { row, parentNode: parentInstanceNode, imodelKey } = props;
           if (!row[ECSQL_COLUMN_NAME_SearchECInstanceId] || !row[ECSQL_COLUMN_NAME_SearchClassName]) {
             return of(parsedNode);
           }
           const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_SearchClassName], id: row[ECSQL_COLUMN_NAME_SearchECInstanceId] };
-          const searchHelper = createHierarchySearchHelper(this._targetPaths, parentNode);
-          const nodeSearchPropPossiblyPromise = searchHelper.createChildNodeProps({
-            asyncPathMatcher: (identifier): boolean | Promise<boolean> => {
-              if (identifier.id !== rowInstanceKey.id) {
-                return false;
-              }
-              if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
-                return false;
-              }
-              if (identifier.imodelKey && identifier.imodelKey !== imodelKey) {
-                return false;
-              }
-              if (compareFullClassNames(identifier.className, rowInstanceKey.className) === 0) {
-                return true;
-              }
-              return firstValueFrom(
-                merge(
-                  fromPossiblyPromise(this._imodelAccess.classDerivesFrom(identifier.className, rowInstanceKey.className)),
-                  fromPossiblyPromise(this._imodelAccess.classDerivesFrom(rowInstanceKey.className, identifier.className)),
-                ).pipe(
-                  filter((classDerives) => classDerives),
-                  defaultIfEmpty(false),
-                  take(1),
-                ),
-              );
-            },
-          });
-          return fromPossiblyPromise(nodeSearchPropPossiblyPromise).pipe(
+          return fromPossiblyPromise(
+            createHierarchySearchHelper(this._targetPaths, parentInstanceNode).createChildNodeProps({
+              nodeKey: parsedNode.key,
+              asyncPathMatcher: (identifier: HierarchyNodeIdentifier): boolean | Promise<boolean> => {
+                if (identifier.id !== rowInstanceKey.id) {
+                  return false;
+                }
+                if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
+                  return false;
+                }
+                if (identifier.imodelKey && identifier.imodelKey !== imodelKey) {
+                  return false;
+                }
+                if (compareFullClassNames(identifier.className, rowInstanceKey.className) === 0) {
+                  return true;
+                }
+                return firstValueFrom(
+                  merge(
+                    fromPossiblyPromise(this._imodelAccess.classDerivesFrom(identifier.className, rowInstanceKey.className)),
+                    fromPossiblyPromise(this._imodelAccess.classDerivesFrom(rowInstanceKey.className, identifier.className)),
+                  ).pipe(
+                    filter((classDerives) => classDerives),
+                    defaultIfEmpty(false),
+                    take(1),
+                  ),
+                );
+              },
+            }),
+          ).pipe(
             map((nodeExtraProps) => {
               if (nodeExtraProps?.search) {
                 parsedNode.search = nodeExtraProps.search;
+              }
+              if (nodeExtraProps?.autoExpand) {
+                parsedNode.autoExpand = nodeExtraProps.autoExpand;
               }
               return parsedNode;
             }),
@@ -168,7 +163,10 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               ...definition,
               node: {
                 ...definition.node,
-                ...searchHelper.createChildNodeProps({ pathMatcher: ({ id }) => id === definition.node.key }),
+                ...searchHelper.createChildNodeProps({
+                  nodeKey: { type: "generic", id: definition.node.key },
+                  pathMatcher: ({ id }: HierarchyNodeIdentifier) => id === definition.node.key,
+                }),
               },
             };
           }
@@ -317,61 +315,81 @@ export function applyECInstanceIdsSelector(def: InstanceNodesQueryDefinition): I
   };
 }
 
-function shouldAutoExpandGroupingNodeBasedOnNestedChildren({
-  directOrIndirectChildren,
-  parentKeysLength,
-  parentKeysWithoutGroupingNodesLength,
+function shouldAutoExpandGroupingNode({
+  node,
+  nodeGroupingLevel,
+  nodeNonGroupingDepth,
 }: {
-  directOrIndirectChildren: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-  parentKeysLength: number;
-  parentKeysWithoutGroupingNodesLength: number;
-}) {
-  for (const child of directOrIndirectChildren) {
-    if (ProcessedHierarchyNode.isGroupingNode(child)) {
-      // Need to check if the same grouping node needs to be expanded, but check the indirect children instead
-      if (
-        shouldAutoExpandGroupingNodeBasedOnNestedChildren({ directOrIndirectChildren: child.children, parentKeysLength, parentKeysWithoutGroupingNodesLength })
-      ) {
-        return true;
-      }
-      continue;
-    }
-
-    /* c8 ignore next 3 */
-    if (!child.search) {
-      continue;
-    }
-
-    if (
-      child.search.isSearchTarget &&
-      shouldAutoExpandBasedOnReveal({
-        reveal: child.search.searchTargetOptions?.reveal,
-        nodePositionInHierarchy: parentKeysLength,
-        // Grouping node is not in search path, but we can assume that it is at the position of 1 less than `parentKeysWithoutGroupingNodesLength`
-        nodePositionInPath: parentKeysWithoutGroupingNodesLength - 1,
-      })
-    ) {
-      return true;
-    }
-
-    if (!child.search.childrenTargetPaths) {
-      /* c8 ignore next */
-      continue;
-    }
-
-    for (const path of child.search.childrenTargetPaths) {
-      if (
-        "path" in path &&
-        shouldAutoExpandBasedOnReveal({
-          reveal: path.options?.reveal,
-          nodePositionInHierarchy: parentKeysLength,
-          // Grouping node is not in search path, but we can assume that it is at the position of 1 less than `parentKeysWithoutGroupingNodesLength`
-          nodePositionInPath: parentKeysWithoutGroupingNodesLength - 1,
-        })
-      ) {
-        return true;
+  node: ProcessedGroupingHierarchyNode;
+  nodeGroupingLevel?: number;
+  nodeNonGroupingDepth?: number;
+}): boolean {
+  if (nodeGroupingLevel === undefined) {
+    nodeGroupingLevel = 1;
+    for (let i = node.parentKeys.length - 1; i >= 0; i--) {
+      if (HierarchyNodeKey.isGrouping(node.parentKeys[i])) {
+        nodeGroupingLevel++;
+      } else {
+        break;
       }
     }
   }
-  return false;
+  if (nodeNonGroupingDepth === undefined) {
+    nodeNonGroupingDepth = node.parentKeys.filter((k) => !HierarchyNodeKey.isGrouping(k)).length;
+  }
+  return node.children.some((child) => {
+    if (ProcessedHierarchyNode.isGroupingNode(child)) {
+      return shouldAutoExpandGroupingNode({ node: child, nodeGroupingLevel: nodeGroupingLevel + 1, nodeNonGroupingDepth });
+    }
+
+    if (!child.search) {
+      return false;
+    }
+
+    // if direct child is search target, check if it has reveal option or if grouping level reveal option is satisfied
+    if (child.search.isSearchTarget && child.search.searchTargetOptions) {
+      // `reveal = true` means we should auto-expand the grouping node no matter what
+      if (child.search.searchTargetOptions.reveal === true) {
+        return true;
+      }
+
+      // if `reveal` is an object with `groupingLevel`, check if the grouping level condition is satisfied
+      if (
+        child.search.searchTargetOptions.reveal &&
+        "groupingLevel" in child.search.searchTargetOptions.reveal &&
+        child.search.searchTargetOptions.reveal.groupingLevel > nodeGroupingLevel
+      ) {
+        return true;
+      }
+
+      // if `reveal` is an object with `depthInPath`, check if the depth in path condition is satisfied
+      if (
+        child.search.searchTargetOptions.reveal &&
+        "depthInPath" in child.search.searchTargetOptions.reveal &&
+        child.search.searchTargetOptions.reveal.depthInPath >= nodeNonGroupingDepth
+      ) {
+        return true;
+      }
+    }
+
+    return shouldRevealNodeBasedOnSearchChildrenTargetPaths({ childrenTargetPaths: child.search.childrenTargetPaths, nodeNonGroupingDepth });
+  });
+}
+
+function shouldRevealNodeBasedOnSearchChildrenTargetPaths(
+  props: { childrenTargetPaths: HierarchySearchPath[] | undefined } & ({ nodeNonGroupingDepth: number } | { parentKeys: HierarchyNodeKey[] }),
+) {
+  const nodeNonGroupingDepth =
+    "nodeNonGroupingDepth" in props ? props.nodeNonGroupingDepth : props.parentKeys.filter((k) => !HierarchyNodeKey.isGrouping(k)).length + 1;
+  return props.childrenTargetPaths?.some((target) => {
+    const revealOption = HierarchySearchPath.normalize(target).options?.reveal;
+    if (!revealOption) {
+      return false;
+    }
+    return (
+      revealOption === true ||
+      ("depthInPath" in revealOption && revealOption.depthInPath >= nodeNonGroupingDepth) ||
+      ("groupingLevel" in revealOption && !!revealOption.groupingLevel)
+    );
+  });
 }

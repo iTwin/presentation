@@ -46,33 +46,20 @@ export function createHierarchyProvider<TPartialProvider extends Partial<Omit<Hi
 }) => TPartialProvider): TPartialProvider & HierarchyProvider;
 
 // @public
-export function createHierarchySearchHelper(rootLevelSearchProps: HierarchySearchPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined): {
+export function createHierarchySearchHelper(rootLevelSearchProps: HierarchySearchPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "parentKeys" | "search"> | undefined): {
     hasSearch: boolean;
     hasSearchTargetAncestor: boolean;
     getChildNodeSearchIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
     createChildNodeProps: {
         (props: {
-            parentKeys?: undefined;
-            nodeKey: InstancesNodeKey | GenericNodeKey;
-        }): Pick<NonGroupingHierarchyNode, "search"> | undefined;
-        (props: {
-            parentKeys?: undefined;
-            pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-        }): Pick<NonGroupingHierarchyNode, "search"> | undefined;
-        (props: {
-            parentKeys?: undefined;
-            asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-        }): Promise<Pick<NonGroupingHierarchyNode, "search"> | undefined> | Pick<NonGroupingHierarchyNode, "search"> | undefined;
-        (props: {
-            parentKeys: HierarchyNodeKey[];
             nodeKey: InstancesNodeKey | GenericNodeKey;
         }): Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
         (props: {
-            parentKeys: HierarchyNodeKey[];
+            nodeKey: InstancesNodeKey | GenericNodeKey;
             pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
         }): Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
         (props: {
-            parentKeys: HierarchyNodeKey[];
+            nodeKey: InstancesNodeKey | GenericNodeKey;
             asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
         }): Promise<Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined> | Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
     };
@@ -483,7 +470,11 @@ export namespace HierarchySearchPath {
 // @public (undocumented)
 export interface HierarchySearchPathOptions {
     autoExpand?: boolean;
-    reveal?: boolean | SearchPathRevealDepthInHierarchy | SearchPathRevealDepthInPath;
+    reveal?: boolean | {
+        depthInPath: number;
+    } | {
+        groupingLevel: number;
+    };
 }
 
 // @public (undocumented)
@@ -739,16 +730,6 @@ export class RowsLimitExceededError extends Error {
     constructor(limit: number);
     // (undocumented)
     readonly limit: number;
-}
-
-// @public (undocumented)
-interface SearchPathRevealDepthInHierarchy {
-    depthInHierarchy: number;
-}
-
-// @public (undocumented)
-interface SearchPathRevealDepthInPath {
-    depthInPath: number;
 }
 
 // @public

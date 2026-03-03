@@ -340,7 +340,7 @@ describe("Hierarchies", () => {
     });
 
     describe("instance nodes", () => {
-      it("sets auto-expand flag up to depthInHierarchy", async function () {
+      it("sets auto-expand flag up to specific grouping level", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
@@ -393,7 +393,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            hierarchySearchPaths: [{ path: [keys.childSubject1, keys.childSubject21, keys.childSubject3], options: { reveal: { depthInHierarchy: 4 } } }],
+            hierarchySearchPaths: [{ path: [keys.childSubject1, keys.childSubject21, keys.childSubject3], options: { reveal: { groupingLevel: 2 } } }],
           }),
           expect: [
             NodeValidators.createForClassGroupingNode({
@@ -413,15 +413,15 @@ describe("Hierarchies", () => {
                           className: keys.childSubject21.className,
                           children: [
                             NodeValidators.createForLabelGroupingNode({
-                              autoExpand: false,
+                              autoExpand: true,
                               label: "test subject 2.1",
                               children: [
                                 NodeValidators.createForInstanceNode({
                                   instanceKeys: [keys.childSubject21],
-                                  autoExpand: false,
+                                  autoExpand: true,
                                   children: [
                                     NodeValidators.createForClassGroupingNode({
-                                      autoExpand: false,
+                                      autoExpand: true,
                                       className: keys.childSubject21.className,
                                       children: [
                                         NodeValidators.createForLabelGroupingNode({
@@ -1171,7 +1171,7 @@ describe("Hierarchies", () => {
               path: [rootNodeKey, elementKey],
               options: {
                 reveal: {
-                  depthInHierarchy: 1,
+                  groupingLevel: 1,
                 },
               },
             })),
@@ -1244,7 +1244,7 @@ describe("Hierarchies", () => {
                 path: [rootNodeKey, keys.rootElement, keys.middleElement, keys.childElement],
                 options: {
                   reveal: {
-                    depthInHierarchy: 5, // root node + (grouping node and instance node for root and middle elements),
+                    groupingLevel: 1,
                   },
                 },
               },
@@ -1451,9 +1451,9 @@ describe("Hierarchies", () => {
           };
         });
 
-        it("sets auto-expand flag until class grouping node", async () => {
+        it("sets auto-expand flag until the first grouping node", async () => {
           const revealOptions = {
-            depthInHierarchy: 1,
+            groupingLevel: 1,
           };
           await validateHierarchy({
             provider: createProvider({
@@ -1500,9 +1500,9 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("sets auto-expand flag until property grouping node", async () => {
+        it("sets auto-expand flag until the second grouping node", async () => {
           const revealOptions = {
-            depthInHierarchy: 2,
+            groupingLevel: 2,
           } as const;
           await validateHierarchy({
             provider: createProvider({
@@ -1549,9 +1549,9 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("sets auto-expand flag until label grouping node", async () => {
+        it("sets auto-expand flag until the third grouping node", async () => {
           const revealOptions = {
-            depthInHierarchy: 3,
+            groupingLevel: 3,
           };
           await validateHierarchy({
             provider: createProvider({
@@ -1598,7 +1598,7 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("sets auto-expand flag until element instance node", async () => {
+        it("sets auto-expand flag until the instance node", async () => {
           await validateHierarchy({
             provider: createProvider({
               imodel,
@@ -1943,7 +1943,7 @@ describe("Hierarchies", () => {
                   }
                   const nodeMatchesSearch = searchHelper.getChildNodeSearchIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
                   if (nodeMatchesSearch) {
-                    return createAsyncIterator([{ ...myNode, ...searchHelper.createChildNodeProps({ nodeKey: myNode.key, parentKeys: myNode.parentKeys }) }]);
+                    return createAsyncIterator([{ ...myNode, ...searchHelper.createChildNodeProps({ nodeKey: myNode.key }) }]);
                   }
                 }
                 return createAsyncIterator([]);

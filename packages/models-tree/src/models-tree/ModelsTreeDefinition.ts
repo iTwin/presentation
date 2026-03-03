@@ -25,6 +25,7 @@ import { Guid } from "@itwin/core-bentley";
 import {
   createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  HierarchyNodeKey,
   NodeSelectClauseColumnNames,
   ProcessedHierarchyNode,
   RowsLimitExceededError,
@@ -699,7 +700,14 @@ function createGeometricElementInstanceKeyPaths(
             path,
             options: {
               reveal: {
-                depthInHierarchy: groupingNode.parentKeys.length,
+                groupingLevel: groupingNode.parentKeys.reduceRight(
+                  (res, parentKey) =>
+                    res.foundNonGroupingAncestor
+                      ? res
+                      : HierarchyNodeKey.isGrouping(parentKey)
+                        ? { groupingLevel: res.groupingLevel + 1, foundNonGroupingAncestor: false }
+                        : { groupingLevel: res.groupingLevel, foundNonGroupingAncestor: true },
+                  { groupingLevel: 1, foundNonGroupingAncestor: false }).groupingLevel,
               },
             },
           };

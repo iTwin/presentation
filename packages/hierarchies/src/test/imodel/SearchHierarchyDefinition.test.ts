@@ -17,6 +17,7 @@ import {
 } from "../../hierarchies/imodel/SearchHierarchyDefinition.js";
 import {
   createIModelAccessStub,
+  createTestClassGroupingNodeKey,
   createTestGenericNodeKey,
   createTestInstanceKey,
   createTestNodeKey,
@@ -29,7 +30,7 @@ import {
 import type { ECClassHierarchyInspector } from "@itwin/presentation-shared";
 import type { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import type { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier.js";
-import type { HierarchySearchPath, HierarchySearchPathOptions, SearchPathRevealDepthInPath } from "../../hierarchies/HierarchySearch.js";
+import type { HierarchySearchPath, HierarchySearchPathOptions } from "../../hierarchies/HierarchySearch.js";
 import type {
   GenericHierarchyNodeDefinition,
   HierarchyDefinitionParentNode,
@@ -411,8 +412,8 @@ describe("SearchHierarchyDefinition", () => {
         { condition: "`reveal: undefined`", reveal: undefined },
         { condition: "`depthInPath: 0`", reveal: { depthInPath: 0 } },
         { condition: "`depthInPath: 1`", reveal: { depthInPath: 1 } },
-        { condition: "`depthInHierarchy: 0`", reveal: { depthInHierarchy: 0 } },
-        { condition: "`depthInHierarchy: 1`", reveal: { depthInHierarchy: 1 } },
+        { condition: "`groupingLevel: 1`", reveal: { groupingLevel: 1 } },
+        { condition: "`groupingLevel: 2`", reveal: { groupingLevel: 2 } },
       ].forEach(({ condition, reveal }) => {
         it(`doesn't set auto-expand on search target instances node when ${condition}`, async () => {
           const inputNode = createTestProcessedInstanceNode({
@@ -452,7 +453,7 @@ describe("SearchHierarchyDefinition", () => {
           cases: [
             { condition: "`reveal: true`", reveal: true },
             { condition: "`depthInPath: 1`", reveal: { depthInPath: 1 } },
-            { condition: "`depthInHierarchy: 1`", reveal: { depthInHierarchy: 1 } },
+            { condition: "`groupingLevel: 1`", reveal: { groupingLevel: 1 } },
           ],
         },
         {
@@ -461,7 +462,7 @@ describe("SearchHierarchyDefinition", () => {
             { condition: "`reveal: false`", reveal: false },
             { condition: "`reveal: false`", reveal: undefined },
             { condition: "`depthInPath: 0`", reveal: { depthInPath: 0 } },
-            { condition: "`depthInHierarchy: 0`", reveal: { depthInHierarchy: 0 } },
+            { condition: "`groupingLevel: 0`", reveal: { groupingLevel: 0 } },
           ],
         },
       ].forEach(({ expectation, cases }) => {
@@ -469,6 +470,7 @@ describe("SearchHierarchyDefinition", () => {
           it(`${expectation ? "sets" : "doesn't set"} auto-expand on instances' node when it's an ancestor of search target node and ${condition}`, async () => {
             const inputNode = createTestProcessedInstanceNode({
               key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:element" }] },
+              parentKeys: [createTestClassGroupingNodeKey()],
               search: {
                 childrenTargetPaths: [{ path: [{ id: "child", type: "generic" }], options: { reveal } }],
               },
@@ -482,6 +484,7 @@ describe("SearchHierarchyDefinition", () => {
 
           it(`${expectation ? "sets" : "doesn't set"} auto-expand on generic node when it's an ancestor of search target node and ${condition}`, async () => {
             const inputNode = createTestProcessedGenericNode({
+              parentKeys: [createTestClassGroupingNodeKey()],
               search: {
                 childrenTargetPaths: [{ path: [{ id: "child", type: "generic" }], options: { reveal } }],
               },
@@ -659,7 +662,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("sets auto-expand on grouping node when it's at the root level and its children have depthInPath set to 0", async () => {
+      it("sets auto-expand on grouping node when it's at the root level and its children have `depthInPath = 0`", async () => {
         const groupingNode = createGroupingNode();
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...groupingNode,
@@ -687,7 +690,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("sets auto-expand on grouping node when its' child has depthInPath pointing to the child", async () => {
+      it("sets auto-expand on grouping node when its' child has `depthInPath` pointing to the child", async () => {
         const groupingNode = createGroupingNode();
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...groupingNode,
@@ -715,7 +718,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("sets auto-expand when depthInPath is higher than grouping node depth", async () => {
+      it("sets auto-expand when `depthInPath` is higher than grouping node depth", async () => {
         const groupingNode = createGroupingNode();
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...groupingNode,
@@ -743,25 +746,19 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("doesn't set auto-expand when depthInHierarchy is smaller than grouping node depth", async () => {
+      it("doesn't set auto-expand when `groupingLevel` is smaller than grouping node depth", async () => {
         const groupingNode = createGroupingNode();
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...groupingNode,
-          parentKeys: [createTestNodeKey()],
+          parentKeys: [createTestClassGroupingNodeKey()],
           children: [
             {
               ...createTestProcessedInstanceNode(),
               search: {
-                childrenTargetPaths: [
-                  {
-                    path: [createTestInstanceKey()],
-                    options: {
-                      reveal: {
-                        depthInHierarchy: 1,
-                      },
-                    },
-                  },
-                ],
+                isSearchTarget: true,
+                searchTargetOptions: {
+                  reveal: { groupingLevel: 1 },
+                },
               },
             },
           ],
@@ -771,11 +768,34 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.undefined;
       });
 
-      it("sets auto-expand when depthInHierarchy is higher than grouping node depth", async () => {
+      it("sets auto-expand when `groupingLevel` is higher than grouping node depth", async () => {
         const groupingNode = createGroupingNode();
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...groupingNode,
-          parentKeys: [createTestNodeKey()],
+          parentKeys: [createTestClassGroupingNodeKey()],
+          children: [
+            {
+              ...createTestProcessedInstanceNode(),
+              search: {
+                isSearchTarget: true,
+                searchTargetOptions: {
+                  reveal: {
+                    groupingLevel: 3,
+                  },
+                },
+              },
+            },
+          ],
+        };
+        const searchFactory = await createSearchHierarchyDefinition();
+        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
+        expect(result.autoExpand).to.be.true;
+      });
+
+      it("sets auto-expand when indirect children have `reveal.groupingLevel`", async () => {
+        const groupingNode = createGroupingNode();
+        const inputNode: ProcessedGroupingHierarchyNode = {
+          ...groupingNode,
           children: [
             {
               ...createTestProcessedInstanceNode(),
@@ -783,11 +803,7 @@ describe("SearchHierarchyDefinition", () => {
                 childrenTargetPaths: [
                   {
                     path: [createTestInstanceKey()],
-                    options: {
-                      reveal: {
-                        depthInHierarchy: 2,
-                      },
-                    },
+                    options: { reveal: { groupingLevel: 1 } },
                   },
                 ],
               },
@@ -799,7 +815,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("sets auto-expand when depthInPath is equal than the search target depth", async () => {
+      it("sets auto-expand when `depthInPath` is equal than the search target depth", async () => {
         const groupingNode = createGroupingNode();
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...groupingNode,
@@ -823,30 +839,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("sets auto-expand when depthInHierarchy is equal to search target depth", async function () {
-        const inputNode: ProcessedGroupingHierarchyNode = {
-          ...createGroupingNode(),
-          parentKeys: [createTestNodeKey()],
-          children: [
-            {
-              ...createTestProcessedInstanceNode(),
-              search: {
-                isSearchTarget: true,
-                searchTargetOptions: {
-                  reveal: {
-                    depthInHierarchy: 2,
-                  },
-                },
-              },
-            },
-          ],
-        };
-        const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode({ node: inputNode }));
-        expect(result.autoExpand).to.be.true;
-      });
-
-      it("doesn't set auto-expand for grouping node whose child has autoExpand depthInPath pointing to parent", async function () {
+      it("doesn't set auto-expand for grouping node whose child has `depthInPath` pointing to parent", async function () {
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...createGroupingNode(),
           parentKeys: [createTestNodeKey()],
@@ -869,7 +862,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(!!result.autoExpand).to.be.false;
       });
 
-      it("doesn't set auto-expand on grouping node when its' child depthInPath is pointing to grouping node parent", async () => {
+      it("doesn't set auto-expand on grouping node when its' child `depthInPath` is pointing to grouping node parent", async () => {
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...createGroupingNode(),
           parentKeys: [createTestNodeKey(), createTestNodeKey()],
@@ -1188,7 +1181,7 @@ describe("SearchHierarchyDefinition", () => {
             { path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "123" })], options: { reveal: true } },
             {
               path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "456" })],
-              options: { reveal: { depthInHierarchy: 1 } },
+              options: { reveal: { groupingLevel: 1 } },
             },
             [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "789" })],
           ],
@@ -1198,10 +1191,11 @@ describe("SearchHierarchyDefinition", () => {
           {
             node: {
               ...sourceDefinition.node,
+              autoExpand: true,
               search: {
                 childrenTargetPaths: [
                   { path: [createTestGenericNodeKey({ id: "123" })], options: { reveal: true } },
-                  { path: [createTestGenericNodeKey({ id: "456" })], options: { reveal: { depthInHierarchy: 1 } } },
+                  { path: [createTestGenericNodeKey({ id: "456" })], options: { reveal: { groupingLevel: 1 } } },
                   { path: [createTestGenericNodeKey({ id: "789" })], options: undefined },
                 ],
               },
@@ -1234,6 +1228,7 @@ describe("SearchHierarchyDefinition", () => {
           {
             node: {
               ...sourceDefinition.node,
+              autoExpand: true,
               search: {
                 childrenTargetPaths: [{ path: [createTestGenericNodeKey({ id: "123" })], options: { reveal: true } }],
                 isSearchTarget: true,
@@ -1584,9 +1579,9 @@ describe("SearchHierarchyDefinition", () => {
           className: "SearchPathClassName0",
           baseClass: queryClass,
         });
-        const autoExpandForGroupingNode1: SearchPathRevealDepthInPath = { depthInPath: 1 };
-        const autoExpandForGroupingNode2: SearchPathRevealDepthInPath = { depthInPath: 3 };
-        const autoExpandForGroupingNode3: SearchPathRevealDepthInPath = { depthInPath: 0 };
+        const revealForGroupingNode1 = { depthInPath: 1 };
+        const revealForGroupingNode2 = { depthInPath: 3 };
+        const revealForGroupingNode3 = { depthInPath: 0 };
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -1602,15 +1597,15 @@ describe("SearchHierarchyDefinition", () => {
           targetPaths: [
             {
               path: [{ className: searchPathClass0.fullName, id: "0x123" }],
-              options: { reveal: autoExpandForGroupingNode1 },
+              options: { reveal: revealForGroupingNode1 },
             },
             {
               path: [{ className: searchPathClass0.fullName, id: "0x123" }],
-              options: { reveal: autoExpandForGroupingNode2 },
+              options: { reveal: revealForGroupingNode2 },
             },
             {
               path: [{ className: searchPathClass0.fullName, id: "0x123" }],
-              options: { reveal: autoExpandForGroupingNode3 },
+              options: { reveal: revealForGroupingNode3 },
             },
           ],
         });

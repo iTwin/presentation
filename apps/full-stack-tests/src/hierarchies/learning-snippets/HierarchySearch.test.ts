@@ -6,12 +6,11 @@
 
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
-import { expand, filter, first, firstValueFrom, from } from "rxjs";
 import { assert, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createBisInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.HierarchyDefinitionImports
-import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.FindPathsImports
@@ -324,7 +323,7 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("sets auto-expand flag to parent nodes of the search target until specified depthInHierarchy", async function () {
+      it("sets auto-expand flag to parent nodes of the search target until specified groupingLevel", async function () {
         const imodelAccess = createIModelAccess(imodel);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -374,35 +373,15 @@ describe("Hierarchies", () => {
           },
         };
 
-        async function getSelectedGroupingNode(): Promise<GroupingHierarchyNode> {
-          const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
-          return firstValueFrom(
-            from(provider.getNodes({ parentNode: undefined })).pipe(
-              expand((parentNode) => provider.getNodes({ parentNode })),
-              filter((node) => HierarchyNode.isGroupingNode(node)),
-              first(
-                (node) =>
-                  InstanceKey.equals(node.groupedInstanceKeys[0], elementKeys.c) &&
-                  node.parentKeys.length > 0 &&
-                  node.parentKeys[node.parentKeys.length - 1].type !== "instances",
-              ),
-            ),
-          );
-        }
-
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.AutoExpandUntilDepthInHierarchy.SearchPath
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.RevealGroupingLevel.SearchPath
         // Hierarchy has this structure: A -> class grouping node -> label grouping node -> B -> class grouping node -> label grouping node -> C.
         // Hierarchy has two grouping nodes that group C element: one class grouping and one label grouping node.
-
-        // Get label grouping node that groups the "C" element
-        const groupingNode = await getSelectedGroupingNode();
         const searchPath: HierarchySearchPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
-            // Reveal (set auto-expand flag for all nodes up to the specified depth) hierarchy up to (but not including) the last label grouping node.
-            // The `depthInHierarchy` attribute is the index of the last label grouping node. It is equal to the number of parents.
-            reveal: { depthInHierarchy: groupingNode.parentKeys.length },
+            // Reveal the label grouping node by specifying its grouping level. Note that grouping level is counted from the first non-grouping ancestor node.
+            reveal: { groupingLevel: 2 },
           },
         };
         // __PUBLISH_EXTRACT_END__
