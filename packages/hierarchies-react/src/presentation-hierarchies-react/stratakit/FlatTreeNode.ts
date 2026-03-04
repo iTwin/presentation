@@ -67,9 +67,6 @@ function getFlatItems(nodes: TreeNode[], level: number) {
       return;
     }
 
-    // eslint-disable-next-line no-console
-    console.log("error", node);
-
     if (node.children !== true) {
       const childNodes = getFlatItems(node.children, level + 1);
       flatItems.push(...childNodes);
