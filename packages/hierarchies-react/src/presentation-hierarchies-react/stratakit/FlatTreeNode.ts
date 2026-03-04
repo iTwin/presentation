@@ -112,7 +112,9 @@ function getErrorNodes(parent: TreeNode) {
   parent.children.forEach((node) => {
     if (isErrorNode(node)) {
       errorList.push(node);
-      return;
+      if (node.error.type !== "Unknown" || !node.error.isExpandable) {
+        return;
+      }
     }
 
     if (node.children !== true) {
