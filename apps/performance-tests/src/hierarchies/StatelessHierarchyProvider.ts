@@ -5,7 +5,7 @@
 
 import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } from "rxjs";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { LOGGER } from "../util/Logging";
 
@@ -88,7 +88,7 @@ export class StatelessHierarchyProvider {
       imodelAccess,
       hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),
       queryCacheSize: 0,
-      search: this._props.search,
+      search: this._props.search ? { paths: HierarchySearchTree.createFromPathsList(this._props.search.paths) } : undefined,
     });
   }
 

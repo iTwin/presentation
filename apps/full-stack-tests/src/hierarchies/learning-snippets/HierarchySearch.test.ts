@@ -10,7 +10,7 @@ import { assert, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createBisInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.HierarchyDefinitionImports
-import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.FindPathsImports
@@ -183,7 +183,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-          search: { paths: searchPaths },
+          search: { paths: HierarchySearchTree.createFromPathsList(searchPaths) },
         });
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
         // Note that "E" has a child "F", even though it's not a search target. This is because subtrees under search target nodes
@@ -254,7 +254,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-          search: { paths: searchPaths },
+          search: { paths: HierarchySearchTree.createFromPathsList(searchPaths) },
         });
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
         // Note that "E" has a child "F", even though it's not a search target. This is because subtrees under search target nodes
@@ -297,7 +297,7 @@ describe("Hierarchies", () => {
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
           search: {
-            paths: [searchPath],
+            paths: HierarchySearchTree.createFromPathsList([searchPath]),
           },
         });
 
@@ -391,7 +391,7 @@ describe("Hierarchies", () => {
           imodelAccess,
           hierarchyDefinition,
           search: {
-            paths: [searchPath],
+            paths: HierarchySearchTree.createFromPathsList([searchPath]),
           },
         });
 
@@ -520,7 +520,7 @@ describe("Hierarchies", () => {
           imodelAccess,
           hierarchyDefinition,
           search: {
-            paths: [searchPath],
+            paths: HierarchySearchTree.createFromPathsList([searchPath]),
           },
         });
 
@@ -633,7 +633,7 @@ describe("Hierarchies", () => {
           imodelAccess,
           hierarchyDefinition,
           search: {
-            paths: [searchPath],
+            paths: HierarchySearchTree.createFromPathsList([searchPath]),
           },
         });
 

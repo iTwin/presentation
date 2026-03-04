@@ -19,6 +19,7 @@ import {
   createPredicateBasedHierarchyDefinition,
   HierarchyNode,
   HierarchyNodeIdentifier,
+  HierarchySearchTree,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
 import { StrataKitRootErrorRenderer, StrataKitTreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
@@ -77,7 +78,7 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
       return Promise.all([
         getModelsHierarchySearchPaths({ imodelAccess, searchText, componentId, componentName: "MultiDataSourceTree" }),
         RSS_PROVIDER.getSearchPaths(searchText),
-      ]).then(([imodelPaths, rssPaths]) => [...imodelPaths, ...rssPaths]);
+      ]).then(([imodelPaths, rssPaths]) => HierarchySearchTree.createFromPathsList([...imodelPaths, ...rssPaths]));
     };
   }, [searchText, imodelAccess, componentId]);
 
@@ -445,7 +446,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (fi
     return feed;
   }
 
-  let search: HierarchySearchPath[] | undefined;
+  let search: HierarchySearchTree[] | undefined;
   return createHierarchyProvider(({ hierarchyChanged }) => ({
     async getSearchPaths(searchText: string): Promise<HierarchySearchPath[]> {
       const feed = await getFeed();
@@ -521,7 +522,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (fi
     setHierarchySearch(
       props:
         | {
-            paths: HierarchySearchPath[];
+            paths: HierarchySearchTree[];
           }
         | undefined,
     ): void {

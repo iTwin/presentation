@@ -9,7 +9,7 @@ import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import * as sinon from "sinon";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.Imports
-import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, HierarchyNode, HierarchyProvider, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.IModelProviderImports
@@ -454,7 +454,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderExample.TraverseSearched1
         // Apply the search "of" and traverse the searched hierarchy. Notice that author node
         // of "The Fellowship of Ring" is included, even though it doesn't match the search.
-        provider.setHierarchySearch({ paths: await createSearchPaths("of") });
+        provider.setHierarchySearch({ paths: HierarchySearchTree.createFromPathsList(await createSearchPaths("of")) });
         await traverseHierarchy(provider);
         // Output:
         // J.R.R. Tolkien
@@ -475,7 +475,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderExample.TraverseSearched2
         // Apply the search "tom" and traverse the searched hierarchy. Notice that all books
         // of "Tom Clancy" are included, even though they don't match the search.
-        provider.setHierarchySearch({ paths: await createSearchPaths("tom") });
+        provider.setHierarchySearch({ paths: HierarchySearchTree.createFromPathsList(await createSearchPaths("tom")) });
         await traverseHierarchy(provider);
         // Output:
         // Mark Twain

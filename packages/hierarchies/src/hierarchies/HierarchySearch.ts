@@ -62,38 +62,6 @@ export interface HierarchySearchPathOptions {
   autoExpand?: boolean;
 }
 
-namespace HierarchySearchPathOptions {
-  export function mergeRevealOptions(
-    lhs: HierarchySearchPathOptions["reveal"],
-    rhs: HierarchySearchPathOptions["reveal"],
-  ): HierarchySearchPathOptions["reveal"] {
-    if (rhs === true || lhs === true) {
-      return true;
-    }
-    if (!rhs || !lhs) {
-      return !!rhs ? rhs : lhs;
-    }
-
-    if ("groupingLevel" in lhs) {
-      if ("groupingLevel" in rhs) {
-        return lhs.groupingLevel > rhs.groupingLevel ? lhs : rhs;
-      }
-      return lhs;
-    } else if ("groupingLevel" in rhs) {
-      return rhs;
-    }
-
-    return lhs.depthInPath > rhs.depthInPath ? lhs : rhs;
-  }
-
-  export function mergeAutoExpandOption(
-    lhs: HierarchySearchPathOptions["autoExpand"],
-    rhs: HierarchySearchPathOptions["autoExpand"],
-  ): HierarchySearchPathOptions["autoExpand"] {
-    return lhs || rhs ? true : undefined;
-  }
-}
-
 /**
  * A path of hierarchy node identifiers for search the hierarchy with additional options.
  * @public
@@ -121,8 +89,8 @@ export namespace HierarchySearchPath {
    * - else if only one of the inputs is an object, return it,
    * - else if both inputs are falsy, return `false` or `undefined`,
    * - else:
-    *    - if only one of the inputs has `groupingLevel` set, return that one,
-    *    - else compare by matching reveal type (`groupingLevel` or `depthInPath`) and return the deeper one.
+   *    - if only one of the inputs has `groupingLevel` set, return that one,
+   *    - else compare by matching reveal type (`groupingLevel` or `depthInPath`) and return the deeper one.
    *
    * @public
    */
@@ -130,8 +98,8 @@ export namespace HierarchySearchPath {
     lhs: HierarchySearchPathOptions | undefined,
     rhs: HierarchySearchPathOptions | undefined,
   ): HierarchySearchPathOptions | undefined {
-    const reveal = HierarchySearchPathOptions.mergeRevealOptions(lhs?.reveal, rhs?.reveal);
-    const autoExpand = HierarchySearchPathOptions.mergeAutoExpandOption(lhs?.autoExpand, rhs?.autoExpand);
+    const reveal = mergeRevealOptions(lhs?.reveal, rhs?.reveal);
+    const autoExpand = mergeAutoExpandOption(lhs?.autoExpand, rhs?.autoExpand);
     return reveal || autoExpand
       ? {
           ...(reveal !== undefined ? { reveal } : undefined),
@@ -139,14 +107,213 @@ export namespace HierarchySearchPath {
         }
       : undefined;
   }
+  function mergeRevealOptions(lhs: HierarchySearchPathOptions["reveal"], rhs: HierarchySearchPathOptions["reveal"]): HierarchySearchPathOptions["reveal"] {
+    if (rhs === true || lhs === true) {
+      return true;
+    }
+    if (!rhs || !lhs) {
+      return !!rhs ? rhs : lhs;
+    }
+
+    if ("groupingLevel" in lhs) {
+      if ("groupingLevel" in rhs) {
+        return lhs.groupingLevel > rhs.groupingLevel ? lhs : rhs;
+      }
+      return lhs;
+    } else if ("groupingLevel" in rhs) {
+      return rhs;
+    }
+
+    return lhs.depthInPath > rhs.depthInPath ? lhs : rhs;
+  }
+
+  function mergeAutoExpandOption(
+    lhs: HierarchySearchPathOptions["autoExpand"],
+    rhs: HierarchySearchPathOptions["autoExpand"],
+  ): HierarchySearchPathOptions["autoExpand"] {
+    return lhs || rhs ? true : undefined;
+  }
+}
+
+/**
+ * A tree structure representing hierarchy search paths. Each node in the tree corresponds
+ * to a hierarchy node identifier and may have children that represent deeper levels in the
+ * hierarchy. This is typically built from a flat list of search paths using `HierarchySearchTree.createFromPathsList`.
+ *
+ * @public
+ */
+export interface HierarchySearchTree {
+  /** Identifier of the hierarchy node this tree entry represents. */
+  identifier: HierarchyNodeIdentifier;
+
+  /**
+   * When `true`, indicates that this node is a search target.
+   *
+   * Note: `HierarchySearchTree` is also considered a search target if it has no children, even if `isTarget` is not explicitly set to `true`. This
+   * is because a node with no children represents the end of a search path.
+   */
+  isTarget?: boolean;
+
+  /** Provides options for handling this search tree entry, such as auto-expansion behavior. */
+  options?: {
+    /**
+     * - `true` to expand the node and its grouping nodes,
+     * - `{ groupingLevel: number }` to expand ancestor grouping nodes, e.g. for the following hierarchy:
+     *   ```
+     *   - Grouping node A
+     *     - Instance node A
+     *       - Grouping node B1
+     *         - Grouping node B2
+     *           - ...
+     *             - Grouping node Bn
+     *               - Instance node B
+     *   ```
+     *   For "Instance node B" search tree entry:
+     *   - `{ groupingLevel: 1 }` expands its first grouping node "Grouping node B1",
+     *   - `{ groupingLevel: 2 }` expands two levels to "Grouping node B2".
+     *   - `{ groupingLevel: Number.MAX_SAFE_INTEGER }` expands all grouping nodes of that instance node.
+     */
+    autoExpand?: boolean | { groupingLevel: number };
+  };
+
+  /** Child search tree entries representing the next level(s) in the hierarchy search paths. */
+  children?: HierarchySearchTree[];
+}
+
+/** @public */
+export namespace HierarchySearchTree {
+  /**
+   * Builds a list of `HierarchySearchTree` nodes from an iterable of search paths. Shared
+   * path prefixes are merged so that each unique hierarchy node identifier appears only once
+   * per level. The resulting trees carry `isTarget`, `options`, and `children` attributes
+   * derived from the paths and their options (`autoExpand`, `reveal`).
+   *
+   * @public
+   */
+  export function createFromPathsList(paths: Iterable<HierarchySearchPath>): HierarchySearchTree[] {
+    const roots: HierarchySearchTree[] = [];
+    for (const searchPath of paths) {
+      const normalized = HierarchySearchPath.normalize(searchPath);
+      const treePath: Array<{ entry: HierarchySearchTree; createdEntryForThisPath?: boolean }> = [];
+      for (let i = 0; i < normalized.path.length; i++) {
+        const identifier = normalized.path[i];
+        // find where we're going to look for / add the next entry in the tree path
+        let currentLevel = treePath.length > 0 ? treePath[treePath.length - 1]?.entry?.children : roots;
+        // try to find the entry in the current level
+        let entry = currentLevel?.find((node) => HierarchyNodeIdentifier.equal(node.identifier, identifier));
+        // we want to know if the entry was created for this path - when assigning the `children` attribute we use this
+        // information to know if the parent node should be marked as a search target
+        const createdEntryForThisPath = !entry;
+        if (!entry) {
+          entry = { identifier };
+          if (!currentLevel) {
+            const parentNode = treePath[treePath.length - 1];
+            currentLevel = parentNode.entry.children = [];
+            if (!parentNode.createdEntryForThisPath) {
+              parentNode.entry.isTarget = true;
+            }
+          }
+          currentLevel.push(entry);
+        }
+        treePath.push({ entry, createdEntryForThisPath });
+
+        // handle auto-expand / reveal options if we're at the end of the path
+        if (i === normalized.path.length - 1) {
+          // handle auto-expand
+          if (normalized.options?.autoExpand) {
+            (entry.options ??= {}).autoExpand = true;
+          }
+
+          // handle auto-reveal
+          if (normalized.options?.reveal === true) {
+            assignAutoExpandOnTreePath({
+              treePath,
+              targetEntryIndex: treePath.length - 1,
+              // auto-expand all grouping nodes of the revealed node
+              targetEntryAutoExpandOption: { groupingLevel: Number.MAX_SAFE_INTEGER },
+            });
+          } else if (normalized.options?.reveal && "groupingLevel" in normalized.options.reveal) {
+            assignAutoExpandOnTreePath({
+              treePath,
+              targetEntryIndex: treePath.length - 1,
+              // the last entry should have `autoExpand` with `groupingLevel` set to the value based on `reveal.groupingLevel`
+              targetEntryAutoExpandOption: { groupingLevel: Math.max(normalized.options.reveal.groupingLevel - 1, 0) },
+            });
+          } else if (normalized.options?.reveal && "depthInPath" in normalized.options.reveal) {
+            assignAutoExpandOnTreePath({
+              treePath,
+              targetEntryIndex: Math.min(normalized.options.reveal.depthInPath, treePath.length - 1),
+              // auto-expand all grouping nodes of the revealed node
+              targetEntryAutoExpandOption: { groupingLevel: Number.MAX_SAFE_INTEGER },
+            });
+          }
+        }
+      }
+    }
+    return roots;
+  }
+
+  function assignAutoExpandOnTreePath({
+    treePath,
+    targetEntryIndex,
+    targetEntryAutoExpandOption,
+  }: {
+    treePath: Array<{ entry: HierarchySearchTree; createdEntryForThisPath?: boolean }>;
+    targetEntryIndex: number;
+    targetEntryAutoExpandOption: NonNullable<HierarchySearchTree["options"]>["autoExpand"];
+  }) {
+    // set all parent entries to auto-expand
+    for (let j = 0; j < targetEntryIndex; j++) {
+      (treePath[j].entry.options ??= {}).autoExpand = true;
+    }
+    // set the target entry auto-expand value
+    const targetEntry = treePath[targetEntryIndex].entry;
+    (targetEntry.options ??= {}).autoExpand = mergeSearchTreeAutoExpandOption(targetEntry.options.autoExpand, targetEntryAutoExpandOption);
+  }
+
+  /**
+   * Merges two `HierarchySearchTree` option objects. For the `autoExpand` attribute,
+   * `true` takes precedence over `{ groupingLevel }`, and when both sides are
+   * `{ groupingLevel }` objects the larger value wins.
+   * @public
+   */
+  export function mergeOptions(
+    lhs: HierarchySearchTree["options"] | undefined,
+    rhs: HierarchySearchTree["options"] | undefined,
+  ): HierarchySearchTree["options"] | undefined {
+    if (!lhs) {
+      return rhs;
+    }
+    if (!rhs) {
+      return lhs;
+    }
+    const autoExpand = mergeSearchTreeAutoExpandOption(lhs.autoExpand, rhs.autoExpand);
+    const options: NonNullable<HierarchySearchTree["options"]> = {
+      ...(autoExpand ? { autoExpand } : undefined),
+    };
+    return Object.keys(options).length > 0 ? options : undefined;
+  }
+
+  function mergeSearchTreeAutoExpandOption(
+    lhs: NonNullable<HierarchySearchTree["options"]>["autoExpand"] | undefined,
+    rhs: NonNullable<HierarchySearchTree["options"]>["autoExpand"] | undefined,
+  ): NonNullable<HierarchySearchTree["options"]>["autoExpand"] | undefined {
+    if (!lhs) {
+      return rhs;
+    }
+    if (!rhs) {
+      return lhs;
+    }
+    return lhs === true || rhs === true ? true : { groupingLevel: Math.max(lhs.groupingLevel, rhs.groupingLevel) };
+  }
 }
 
 function extractSearchPropsInternal(
-  rootLevelSearchProps: HierarchySearchPath[] | undefined,
+  rootLevelSearchProps: HierarchySearchTree[] | undefined,
   parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined,
 ):
   | {
-      childrenTargetPaths?: HierarchySearchPath[];
+      childrenTargetPaths?: HierarchySearchTree[];
       hasSearchTargetAncestor: boolean;
     }
   | undefined {
@@ -154,7 +321,7 @@ function extractSearchPropsInternal(
     return rootLevelSearchProps ? { childrenTargetPaths: rootLevelSearchProps, hasSearchTargetAncestor: false } : undefined;
   }
   const searchProps: {
-    childrenTargetPaths?: HierarchySearchPath[];
+    childrenTargetPaths?: HierarchySearchTree[];
     hasSearchTargetAncestor: boolean;
   } = {
     ...(parentNode.search?.childrenTargetPaths ? { childrenTargetPaths: parentNode.search.childrenTargetPaths } : undefined),
@@ -170,8 +337,8 @@ function extractSearchPropsInternal(
  * @public
  */
 export function createHierarchySearchHelper(
-  rootLevelSearchProps: HierarchySearchPath[] | undefined,
-  parentNode: Pick<NonGroupingHierarchyNode, "parentKeys" | "search"> | undefined,
+  rootLevelSearchProps: HierarchySearchTree[] | undefined,
+  parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined,
 ) {
   const searchProps = extractSearchPropsInternal(rootLevelSearchProps, parentNode);
   const hasSearch = !!searchProps;
@@ -202,43 +369,37 @@ export function createHierarchySearchHelper(
       | {}
     ),
   ): void | Promise<void> {
-    // Passes down matching normalized paths to the reducer.
-    // It uses `nodeKey`, `pathMatcher` or `asyncPathMatcher` to check if `HierarchyNodeIdentifier` at the first position in search path matches the node
+    // Passes down matching hierarchy search trees to the reducer.
+    // It uses `nodeKey`, `pathMatcher` or `asyncPathMatcher` to check if `HierarchyNodeIdentifier` in the search tree item's identifier matches the node
     // and if it does, the path is passed down to the reducer.
-    // This function returns a promise only if asyncPathMatcher returns a promise.
+    // This function returns a promise only if `asyncPathMatcher` returns a promise.
     if (!searchProps?.childrenTargetPaths) {
       return;
     }
-    const matchedPathPromises = new Array<Promise<NormalizedSearchPath | undefined>>();
-    for (const childrenTargetPaths of searchProps.childrenTargetPaths) {
-      const normalizedPath = HierarchySearchPath.normalize(childrenTargetPaths);
-      /* c8 ignore next 3 */
-      if (normalizedPath.path.length === 0) {
-        continue;
-      }
-
+    const matchedTreePromises = new Array<Promise<HierarchySearchTree | undefined>>();
+    for (const childrenSearchTree of searchProps.childrenTargetPaths) {
       if ("asyncPathMatcher" in extractionProps) {
-        const matchesPossiblyPromise = extractionProps.asyncPathMatcher(normalizedPath.path[0]);
+        const matchesPossiblyPromise = extractionProps.asyncPathMatcher(childrenSearchTree.identifier);
         if (matchesPossiblyPromise instanceof Promise) {
-          matchedPathPromises.push(matchesPossiblyPromise.then((matches) => (matches ? normalizedPath : undefined)));
+          matchedTreePromises.push(matchesPossiblyPromise.then((matches) => (matches ? childrenSearchTree : undefined)));
         } else if (matchesPossiblyPromise) {
-          extractionProps.pathsReducer.accept(normalizedPath);
+          extractionProps.pathsReducer.accept(childrenSearchTree);
         }
       } else {
         const matches =
           "pathMatcher" in extractionProps
-            ? extractionProps.pathMatcher(normalizedPath.path[0])
-            : nodeKeyMatchesIdentifier(extractionProps.nodeKey, normalizedPath.path[0]);
+            ? extractionProps.pathMatcher(childrenSearchTree.identifier)
+            : nodeKeyMatchesIdentifier(extractionProps.nodeKey, childrenSearchTree.identifier);
         if (matches) {
-          extractionProps.pathsReducer.accept(normalizedPath);
+          extractionProps.pathsReducer.accept(childrenSearchTree);
         }
       }
     }
-    if (matchedPathPromises.length === 0) {
+    if (matchedTreePromises.length === 0) {
       return;
     }
-    return Promise.all(matchedPathPromises).then((matchedPath) =>
-      matchedPath.forEach((normalizedPath) => normalizedPath && extractionProps.pathsReducer.accept(normalizedPath)),
+    return Promise.all(matchedTreePromises).then((matchedTrees) =>
+      matchedTrees.forEach((matchedTree) => matchedTree && extractionProps.pathsReducer.accept(matchedTree)),
     );
   }
 
@@ -270,12 +431,12 @@ export function createHierarchySearchHelper(
     if ("asyncPathMatcher" in props) {
       const extractResult = saveSearchPropsFromPathsIntoReducer({ pathsReducer: reducer, nodeKey: props.nodeKey, asyncPathMatcher: props.asyncPathMatcher });
       if (extractResult instanceof Promise) {
-        return extractResult.then(() => createNodeSearchProps(reducer.aggregatedOptions, parentNode));
+        return extractResult.then(() => reducer.aggregatedOptions);
       }
     } else {
       saveSearchPropsFromPathsIntoReducer({ pathsReducer: reducer, ...props });
     }
-    return createNodeSearchProps(reducer.aggregatedOptions, parentNode);
+    return reducer.aggregatedOptions;
   }
 
   return {
@@ -296,10 +457,7 @@ export function createHierarchySearchHelper(
       if (!searchProps?.childrenTargetPaths) {
         return undefined;
       }
-      return searchProps.childrenTargetPaths
-        .map(HierarchySearchPath.normalize)
-        .filter(({ path }) => path.length > 0)
-        .map(({ path }) => path[0]);
+      return searchProps.childrenTargetPaths.map(({ identifier }) => identifier);
     },
     /**
      * When a hierarchy node is created for a filtered hierarchy level, it needs some attributes (e.g. `search`
@@ -325,35 +483,6 @@ function nodeKeyMatchesIdentifier(nodeKey: InstancesNodeKey | GenericNodeKey, id
   );
 }
 
-function createNodeSearchProps(options: MatchingSearchPathsReducer["aggregatedOptions"], parentNode?: Pick<NonGroupingHierarchyNode, "parentKeys">) {
-  const parentNodeNonGroupingDepth = parentNode ? parentNode.parentKeys.filter((k) => !HierarchyNodeKey.isGrouping(k)).length + 1 : 0;
-  const nodeProps = {
-    search: options.search,
-    autoExpand: options.autoExpand || shouldAutoExpandForRevealOption(options.reveal, parentNodeNonGroupingDepth),
-  };
-  return {
-    ...(nodeProps.search ? { search: nodeProps.search } : undefined),
-    ...(nodeProps.autoExpand ? { autoExpand: nodeProps.autoExpand } : undefined),
-  };
-}
-
-function shouldAutoExpandForRevealOption(revealOption: HierarchySearchPathOptions["reveal"], parentNodeNonGroupingDepth: number): boolean {
-  if (!revealOption) {
-    return false;
-  }
-  // Note: we're handling a non-grouping node here, so we don't care about grouping levels - if the `reveal` option for any child search target
-  // is truthy - we want to set `autoExpand` for this node
-  if (revealOption === true || "groupingLevel" in revealOption) {
-    return true;
-  }
-  if (revealOption.depthInPath > parentNodeNonGroupingDepth) {
-    return true;
-  }
-  return false;
-}
-
-type NormalizedSearchPath = ReturnType<(typeof HierarchySearchPath)["normalize"]>;
-
 /**
  * Extracts information from search paths and later returns `search` and `autoExpand` values from `HierarchyNode`.
  *
@@ -364,36 +493,36 @@ type NormalizedSearchPath = ReturnType<(typeof HierarchySearchPath)["normalize"]
  * - Saves `HierarchySearchPathOptions` and `childrenTargetPaths`
  */
 class MatchingSearchPathsReducer {
-  private _childrenTargetPaths = new Array<NormalizedSearchPath>();
+  private _childrenTargetPaths = new Array<HierarchySearchTree>();
   private _isSearchTarget = false;
-  private _searchTargetOptions: HierarchySearchPathOptions | undefined = undefined;
-  private _revealOption: HierarchySearchPathOptions["reveal"] = false;
+  private _options: HierarchySearchTree["options"] | undefined = undefined;
 
   public constructor(private _hasSearchTargetAncestor: boolean) {}
 
-  public accept(normalizedPath: NormalizedSearchPath): void {
-    const { path, options } = normalizedPath;
-    if (path.length === 1) {
+  public accept(tree: HierarchySearchTree): void {
+    if (tree.isTarget || tree.children === undefined) {
       this._isSearchTarget = true;
-      this._searchTargetOptions = HierarchySearchPath.mergeOptions(this._searchTargetOptions, options);
-    } else if (path.length > 1) {
-      this._childrenTargetPaths.push({ path: path.slice(1), options });
-      this._revealOption = HierarchySearchPathOptions.mergeRevealOptions(options?.reveal, this._revealOption);
     }
+    if (tree.children && tree.children.length > 0) {
+      this._childrenTargetPaths.push(...tree.children);
+    }
+    this._options = HierarchySearchTree.mergeOptions(this._options, tree.options);
   }
 
   public get aggregatedOptions() {
+    const search =
+      this._hasSearchTargetAncestor || this._isSearchTarget || this._childrenTargetPaths.length > 0 || this._options
+        ? {
+            ...(this._hasSearchTargetAncestor ? { hasSearchTargetAncestor: true } : undefined),
+            ...(this._isSearchTarget ? { isSearchTarget: true } : undefined),
+            ...(this._childrenTargetPaths.length > 0 ? { childrenTargetPaths: this._childrenTargetPaths } : undefined),
+            ...(this._options ? { options: this._options } : undefined),
+          }
+        : undefined;
+    const autoExpand = this._options?.autoExpand === true;
     return {
-      search:
-        this._hasSearchTargetAncestor || this._isSearchTarget || this._childrenTargetPaths.length > 0
-          ? {
-              ...(this._hasSearchTargetAncestor ? { hasSearchTargetAncestor: true } : undefined),
-              ...(this._isSearchTarget ? { isSearchTarget: true, searchTargetOptions: this._searchTargetOptions } : undefined),
-              ...(this._childrenTargetPaths.length > 0 ? { childrenTargetPaths: this._childrenTargetPaths } : undefined),
-            }
-          : undefined,
-      autoExpand: this._searchTargetOptions?.autoExpand,
-      reveal: this._revealOption,
+      ...(search ? { search } : undefined),
+      ...(autoExpand ? { autoExpand } : undefined),
     };
   }
 }

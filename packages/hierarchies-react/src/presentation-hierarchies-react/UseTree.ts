@@ -11,7 +11,7 @@ import { useUnifiedTreeSelection } from "./internal/UseUnifiedSelection.js";
 import { safeDispose } from "./internal/Utils.js";
 import { useLatest } from "./Utils.js";
 
-import type { GenericInstanceFilter, HierarchyProvider, HierarchySearchPath } from "@itwin/presentation-hierarchies";
+import type { GenericInstanceFilter, HierarchyProvider, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import type { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import type { TreeModelHierarchyNode, TreeModelRootNode } from "./internal/TreeModel.js";
 import type { UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
@@ -76,7 +76,7 @@ export interface UseTreeProps {
   /** Provides the hierarchy provider for the tree. */
   getHierarchyProvider: () => HierarchyProvider;
   /** Provides paths to search nodes. */
-  getSearchPaths?: ({ abortSignal }: { abortSignal: AbortSignal }) => Promise<HierarchySearchPath[] | undefined>;
+  getSearchPaths?: ({ abortSignal }: { abortSignal: AbortSignal }) => Promise<HierarchySearchTree[] | undefined>;
   /**
    * Callback that is called just after a certain action is finished.
    * Can be used for performance tracking.
@@ -210,7 +210,7 @@ function useTreeInternal({
       }
 
       setIsSearching(true);
-      let paths: HierarchySearchPath[] | undefined;
+      let paths: HierarchySearchTree[] | undefined;
       try {
         paths = await getSearchPaths({ abortSignal: controller.signal });
       } catch {
