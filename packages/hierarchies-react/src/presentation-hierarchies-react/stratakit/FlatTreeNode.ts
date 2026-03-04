@@ -87,13 +87,15 @@ export function useErrorNodes(rootNodes: TreeNode[]): Array<TreeNode & Pick<Requ
   return useMemo(
     () =>
       rootNodes.flatMap((rootNode) => {
-        if (isErrorNode(rootNode)) {
-          return [rootNode];
-        }
         if (rootNode.children === true) {
           return [];
         }
-        return getErrorNodes(rootNode);
+        const errors = isErrorNode(rootNode) ? [rootNode] : [];
+        if (errors.length === 1 && (rootNode.error?.type !== "Unknown" || !rootNode.error.isExpandable)) {
+          return errors;
+        }
+        errors.push(...getErrorNodes(rootNode));
+        return errors;
       }),
     [rootNodes],
   );
