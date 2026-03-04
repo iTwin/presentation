@@ -96,6 +96,7 @@ export interface GenericErrorInfo {
     additionalData?: unknown;
     // (undocumented)
     id: string;
+    isExpandable?: boolean;
     // (undocumented)
     message: string;
     // (undocumented)

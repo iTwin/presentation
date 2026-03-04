@@ -59,9 +59,17 @@ function getFlatItems(nodes: TreeNode[], level: number) {
   const flatItems: FlatTreeItem[] = [];
   nodes.forEach((node, index) => {
     flatItems.push({ node, id: node.id, level, levelSize: nodes.length, posInLevel: index + 1 });
-    if (!node.isExpanded || node.error) {
+    if (!node.isExpanded) {
       return;
     }
+
+    if (node.error && (node.error.type !== "Unknown" || !node.error.isExpandable)) {
+      return;
+    }
+
+    // eslint-disable-next-line no-console
+    console.log("error", node);
+
     if (node.children !== true) {
       const childNodes = getFlatItems(node.children, level + 1);
       flatItems.push(...childNodes);
