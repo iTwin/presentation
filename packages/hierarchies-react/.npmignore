@@ -12,4 +12,3 @@
 
 # then ignore some stuff again
 lib/**/test/**
-lib/build/**
