@@ -37,9 +37,9 @@
   },
   "scripts": {
     "build": "tsdown && npm run -s copy && npm run -s build:test",
-    "copy": "npm run -s copy:css && npm run -s copy:assets",
+    "copy": "npm run -s copy:css && npm run -s copy:public",
     "copy:css": "cpx \"./src/**/*.css\" \"./lib\"",
-    "copy:assets": "cpx \"./public/**/*\" \"./lib/public\"",
+    "copy:public": "cpx \"./src/public/**/*\" \"./lib/public\"",
     "build:test": "tsdown --config tsdown.test.config.ts",
     "clean": "rimraf lib build",
     "cover": "npm -s test",

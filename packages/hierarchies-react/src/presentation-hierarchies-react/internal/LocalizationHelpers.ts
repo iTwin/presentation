@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type localeJson from "@public/locales/en/PresentationHierarchies_1.0.json";
+import type localeJson from "../../public/locales/en/PresentationHierarchies_1.0.json";
 
 type AddPrefix<TPrefix extends string, TPath extends string> = [TPrefix] extends [never] ? `${TPath}` : `${TPrefix}.${TPath}`;
 
