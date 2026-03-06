@@ -107,8 +107,7 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         onFocus={() => {
           setEditing(true);
           requestAnimationFrame(() => {
-            // separate value for coverage to cover it correctly
-            const selectionEnd = quantityValue.highPrecisionFormattedValue === inputProps.placeholder ? 0 : 9999;
+            const selectionEnd = quantityValue.highPrecisionFormattedValue === inputProps.placeholder ? 0 : quantityValue.highPrecisionFormattedValue.length;
             inputRef.current?.setSelectionRange(0, selectionEnd);
           });
         }}
