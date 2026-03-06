@@ -41,7 +41,7 @@ describe("FlatTreeNode", () => {
           id: "error-1",
           type: "Unknown",
           message: "Something went wrong",
-          isExpandable: true,
+          isNodeExpandable: true,
         },
         children: [childNode1, childNode2],
       });
@@ -64,7 +64,7 @@ describe("FlatTreeNode", () => {
           id: "error-1",
           type: "Unknown",
           message: "Something went wrong",
-          isExpandable: false,
+          isNodeExpandable: false,
         },
         children: [childNode],
       });
@@ -75,7 +75,7 @@ describe("FlatTreeNode", () => {
       expect(result.current[0]).to.deep.include({ id: "parent" });
     });
 
-    it("does not include children when error has no isExpandable property", () => {
+    it("does not include children when error has no isNodeExpandable property", () => {
       const childNode = createTreeNode({ id: "child-1" });
       const parentNode = createTreeNode({
         id: "parent",
@@ -103,7 +103,7 @@ describe("FlatTreeNode", () => {
           id: "error-1",
           type: "Unknown",
           message: "Something went wrong",
-          isExpandable: true,
+          isNodeExpandable: true,
         },
         children: [childNode],
       });
@@ -132,7 +132,7 @@ describe("FlatTreeNode", () => {
           id: "error-2",
           type: "Unknown",
           message: "Child error",
-          isExpandable: true,
+          isNodeExpandable: true,
         },
         children: [grandChildNode],
       });
@@ -143,7 +143,7 @@ describe("FlatTreeNode", () => {
           id: "error-1",
           type: "Unknown",
           message: "Parent error",
-          isExpandable: true,
+          isNodeExpandable: true,
         },
         children: [childNode1, childNode2],
       });
@@ -172,7 +172,7 @@ describe("FlatTreeNode", () => {
           id: "error-1",
           type: "Unknown",
           message: "Parent error",
-          isExpandable: false,
+          isNodeExpandable: false,
         },
         children: [childNode],
       });
@@ -183,7 +183,7 @@ describe("FlatTreeNode", () => {
       expect(result.current[0].id).to.equal("parent");
     });
 
-    it("does not traverse children when error has no isExpandable property", () => {
+    it("does not traverse children when error has no isNodeExpandable property", () => {
       const childNode = createTreeNode({
         id: "child-1",
         error: {

@@ -63,7 +63,7 @@ function getFlatItems(nodes: TreeNode[], level: number) {
       return;
     }
 
-    if (node.error && (node.error.type !== "Unknown" || !node.error.isExpandable)) {
+    if (node.error && (node.error.type !== "Unknown" || !node.error.isNodeExpandable)) {
       return;
     }
 
@@ -91,7 +91,7 @@ export function useErrorNodes(rootNodes: TreeNode[]): Array<TreeNode & Pick<Requ
           return [];
         }
         const errors = isErrorNode(rootNode) ? [rootNode] : [];
-        if (errors.length === 1 && (rootNode.error?.type !== "Unknown" || !rootNode.error.isExpandable)) {
+        if (errors.length === 1 && (rootNode.error?.type !== "Unknown" || !rootNode.error.isNodeExpandable)) {
           return errors;
         }
         errors.push(...getErrorNodes(rootNode));
@@ -111,7 +111,7 @@ function getErrorNodes(parent: TreeNode) {
   parent.children.forEach((node) => {
     if (isErrorNode(node)) {
       errorList.push(node);
-      if (node.error.type !== "Unknown" || !node.error.isExpandable) {
+      if (node.error.type !== "Unknown" || !node.error.isNodeExpandable) {
         return;
       }
     }

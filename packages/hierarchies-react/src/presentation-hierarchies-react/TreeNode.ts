@@ -73,7 +73,7 @@ export interface GenericErrorInfo {
   type: "Unknown";
   message: string;
   /** Allows node expansion even when this error is present. */
-  isExpandable?: boolean;
+  isNodeExpandable?: boolean;
   additionalData?: unknown;
 }
 
