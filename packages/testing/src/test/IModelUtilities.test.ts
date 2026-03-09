@@ -18,7 +18,6 @@ describe("buildTestIModel", () => {
   const snapshotDb = {
     saveChanges: createStub<SnapshotDb["saveChanges"]>(),
     close: createStub<SnapshotDb["close"]>(),
-    getConnectionProps: sinon.stub().returns({}),
   };
   const testIModelConnection = Object.create(TestIModelConnection.prototype);
   testIModelConnection._db = snapshotDb;
