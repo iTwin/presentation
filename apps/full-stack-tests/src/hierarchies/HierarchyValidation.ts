@@ -122,7 +122,7 @@ export namespace NodeValidators {
       assert(node.search?.isSearchTarget, `[${node.label}] Expected node to be a search target`);
       expect(node.search.options).to.deep.eq(
         expectations.searchOptions,
-        `[${node.label}] Nodes's 'search.searchTargetOptions' flag property doesn't match the expectation.`,
+        `[${node.label}] Node's 'search.options' flag property doesn't match the expectation.`,
       );
     }
   }
