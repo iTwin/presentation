@@ -20,7 +20,13 @@ import { registerTxnListeners } from "@itwin/presentation-core-interop";
 import { ConcatenatedValue, ConcatenatedValuePart, createDefaultValueFormatter, IPrimitiveValueFormatter, julianToDateTime } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderImports
-import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath, HierarchySearchTree } from "@itwin/presentation-hierarchies";
+import {
+  createHierarchySearchHelper,
+  GenericNodeKey,
+  HierarchyNodeIdentifier,
+  HierarchySearchPath,
+  HierarchySearchTree,
+} from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports
 import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
@@ -379,8 +385,8 @@ describe("Hierarchies", () => {
               { type: "generic", id: `book:${book.key}` },
             ]);
           }
-          // The `HierarchyProvider` interface expects the search input to be provided in a form of a tree, but it's 
-          // generally more convenient to create the search result as a list of paths and then convert it to a tree 
+          // The `HierarchyProvider` interface expects the search input to be provided in a form of a tree, but it's
+          // generally more convenient to create the search result as a list of paths and then convert it to a tree
           // structure - `HierarchySearchTree.createFromPathsList` helper can be used for that.
           return HierarchySearchTree.createFromPathsList(results);
         }

@@ -381,7 +381,7 @@ describe("Hierarchies", () => {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
-            // Reveal the C's label grouping node by specifying its grouping level. 
+            // Reveal the C's label grouping node by specifying its grouping level.
             // Note that grouping level is counted from the first non-grouping ancestor node.
             reveal: { groupingLevel: 2 },
           },
