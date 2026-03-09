@@ -107,6 +107,8 @@ export class TestIModelConnection extends IModelConnection {
 
   public override async close(): Promise<void> {
     this._db.close();
+    this.onClose.raiseEvent(this);
+    IModelConnection.onClose.raiseEvent(this);
   }
 
   public static openFile(filePath: string): IModelConnection {
