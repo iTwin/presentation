@@ -115,6 +115,7 @@
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
     "eslint-plugin-react-hooks": "^7.0.1",
+    "fast-glob": "catalog:build-tools",
     "global-jsdom": "catalog:test-tools",
     "ignore-styles": "catalog:test-tools",
     "jsdom": "catalog:test-tools",

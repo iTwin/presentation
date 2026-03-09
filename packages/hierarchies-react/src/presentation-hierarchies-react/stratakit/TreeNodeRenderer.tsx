@@ -97,7 +97,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
     }, [menuActions]);
 
     const expanded = useMemo(() => {
-      if (node.error) {
+      if (node.error && (node.error.type !== "Unknown" || !node.error.isNodeExpandable)) {
         return undefined;
       }
 

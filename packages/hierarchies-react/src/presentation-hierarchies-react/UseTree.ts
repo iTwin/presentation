@@ -242,7 +242,7 @@ function useTreeInternal({
       }
       return createTreeNode(node, state.model, getTreeNodeErrorRef.current);
     },
-    [actions, state.model],
+    [actions, getTreeNodeErrorRef, state.model],
   );
 
   const expandNode = useCallback<TreeRendererProps["expandNode"]>(

@@ -11,7 +11,6 @@ import { BeUiEvent } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
 import { Format, FormatType, ParseError } from "@itwin/core-quantity";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
-import { stubRaf } from "../../_helpers/Common.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext.js";
 import { QuantityEditorName } from "../../../presentation-components/properties/editors/QuantityPropertyEditor.js";
@@ -49,8 +48,6 @@ describe("<QuantityPropertyEditorInput />", () => {
     ReturnType<KoqPropertyValueFormatter["getFormatterSpec"]>
   >;
   let getParserSpecStub: sinon.SinonStub<Parameters<KoqPropertyValueFormatter["getParserSpec"]>, ReturnType<KoqPropertyValueFormatter["getParserSpec"]>>;
-
-  stubRaf();
 
   before(() => {
     getFormatterSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec");

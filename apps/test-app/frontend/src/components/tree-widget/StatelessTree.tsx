@@ -107,6 +107,9 @@ function Tree({
     imodelChanged,
     getSearchPaths,
     getHierarchyDefinition,
+    getTreeNodeError: (node) => {
+      return { type: "Unknown", id: node.label, message: `test error node`, isNodeExpandable: true };
+    },
     onPerformanceMeasured: (action, duration) => {
       // eslint-disable-next-line no-console
       console.log(`Stateless-tree-${action}, Duration: ${duration}ms`);
