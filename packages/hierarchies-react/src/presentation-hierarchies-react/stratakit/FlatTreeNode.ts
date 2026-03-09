@@ -87,10 +87,11 @@ export function useErrorNodes(rootNodes: TreeNode[]): Array<TreeNode & Pick<Requ
   return useMemo(
     () =>
       rootNodes.flatMap((rootNode) => {
-        if (rootNode.children === true) {
-          return [];
-        }
         const errors = isErrorNode(rootNode) ? [rootNode] : [];
+        if (rootNode.children === true) {
+          return errors;
+        }
+
         if (errors.length === 1 && (rootNode.error?.type !== "Unknown" || !rootNode.error.isNodeExpandable)) {
           return errors;
         }

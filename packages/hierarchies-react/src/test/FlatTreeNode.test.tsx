@@ -208,5 +208,22 @@ describe("FlatTreeNode", () => {
       expect(result.current).to.have.lengthOf(1);
       expect(result.current[0].id).to.equal("parent");
     });
+
+    it("counts error root node when it is not expanded", () => {
+      const rootNode = createTreeNode({
+        id: "root",
+        error: {
+          id: "error-1",
+          type: "Unknown",
+          message: "Root error",
+        },
+        children: true,
+      });
+
+      const { result } = renderHook(() => useErrorNodes([rootNode]));
+
+      expect(result.current).to.have.lengthOf(1);
+      expect(result.current[0].id).to.equal("root");
+    });
   });
 });
