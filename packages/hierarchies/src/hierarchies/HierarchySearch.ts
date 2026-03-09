@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { Dictionary } from "@itwin/core-bentley";
 import { HierarchyNodeIdentifier } from "./HierarchyNodeIdentifier.js";
 import { HierarchyNodeKey } from "./HierarchyNodeKey.js";
 
@@ -190,17 +191,21 @@ export namespace HierarchySearchTree {
    *
    * @public
    */
-  export function createFromPathsList(paths: Iterable<HierarchySearchPath>): HierarchySearchTree[] {
-    const roots: HierarchySearchTree[] = [];
+  export async function createFromPathsList(paths: Iterable<HierarchySearchPath>): Promise<HierarchySearchTree[]> {
+    type HierarchySearchTreeDictionaryEntry = Omit<HierarchySearchTree, "children"> & { children?: HierarchySearchTreeDictionary };
+    type HierarchySearchTreeDictionary = Dictionary<HierarchyNodeIdentifier, HierarchySearchTreeDictionaryEntry>;
+    const rootsDictionary: HierarchySearchTreeDictionary = new Dictionary(HierarchyNodeIdentifier.compare);
+
+    let pathIndex = 0;
     for (const searchPath of paths) {
       const normalized = HierarchySearchPath.normalize(searchPath);
-      const treePath: Array<{ entry: HierarchySearchTree; createdEntryForThisPath?: boolean }> = [];
+      const treePath: Array<{ entry: HierarchySearchTreeDictionaryEntry; createdEntryForThisPath?: boolean }> = [];
       for (let i = 0; i < normalized.path.length; i++) {
         const identifier = normalized.path[i];
         // find where we're going to look for / add the next entry in the tree path
-        let currentLevel = treePath.length > 0 ? treePath[treePath.length - 1]?.entry?.children : roots;
+        let currentLevel = treePath.length > 0 ? treePath[treePath.length - 1]?.entry?.children : rootsDictionary;
         // try to find the entry in the current level
-        let entry = currentLevel?.find((node) => HierarchyNodeIdentifier.equal(node.identifier, identifier));
+        let entry = currentLevel?.get(identifier);
         // we want to know if the entry was created for this path - when assigning the `children` attribute we use this
         // information to know if the parent node should be marked as a search target
         const createdEntryForThisPath = !entry;
@@ -208,12 +213,12 @@ export namespace HierarchySearchTree {
           entry = { identifier };
           if (!currentLevel) {
             const parentNode = treePath[treePath.length - 1];
-            currentLevel = parentNode.entry.children = [];
+            currentLevel = parentNode.entry.children = new Dictionary(HierarchyNodeIdentifier.compare);
             if (!parentNode.createdEntryForThisPath) {
               parentNode.entry.isTarget = true;
             }
           }
-          currentLevel.push(entry);
+          currentLevel.set(identifier, entry);
         }
         treePath.push({ entry, createdEntryForThisPath });
 
@@ -249,8 +254,26 @@ export namespace HierarchySearchTree {
           }
         }
       }
+      /* c8 ignore next 4 */
+      if (pathIndex > 0 && pathIndex % 1000 === 0) {
+        // Yield to the event loop every 1000 iterations to avoid blocking it for too long when processing a large number of paths.
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+      ++pathIndex;
     }
-    return roots;
+
+    function mapDictionaryToTree(dictionary: HierarchySearchTreeDictionary): HierarchySearchTree[] {
+      const list: HierarchySearchTree[] = [];
+      for (const entry of dictionary.values()) {
+        list.push(mapDictionaryEntryToTree(entry));
+      }
+      return list;
+    }
+    function mapDictionaryEntryToTree(dictionaryEntry: HierarchySearchTreeDictionaryEntry): HierarchySearchTree {
+      const { children, ...entry } = dictionaryEntry;
+      return { ...entry, ...(children ? { children: mapDictionaryToTree(children) } : undefined) };
+    }
+    return mapDictionaryToTree(rootsDictionary);
   }
 
   function assignAutoExpandOnTreePath({
@@ -258,7 +281,7 @@ export namespace HierarchySearchTree {
     targetEntryIndex,
     targetEntryAutoExpandOption,
   }: {
-    treePath: Array<{ entry: HierarchySearchTree; createdEntryForThisPath?: boolean }>;
+    treePath: Array<{ entry: Pick<HierarchySearchTree, "options">; createdEntryForThisPath?: boolean }>;
     targetEntryIndex: number;
     targetEntryAutoExpandOption: NonNullable<HierarchySearchTree["options"]>["autoExpand"];
   }) {

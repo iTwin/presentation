@@ -197,7 +197,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: createHierarchyDefinition(imodelAccess),
   // Note the use of `HierarchySearchTree.createFromPathsList` utility function to create a search tree from a list of search paths.
-  search: { paths: HierarchySearchTree.createFromPathsList(searchPaths) },
+  search: { paths: await HierarchySearchTree.createFromPathsList(searchPaths) },
 });
 // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
 // Note that "E" has a child "F", even though it's not a search target. This is because subtrees under search target nodes

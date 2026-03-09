@@ -14,6 +14,8 @@ Start using tree structure for defining hierarchy search paths.
 
 - `HierarchyNode.getGroupingNodeLevel` utility function to get the level of a grouping node in the hierarchy. Convenient for specifying the `groupingLevel` prop in `HierarchySearchPath.options.reveal` and `HierarchySearchTree.options.autoExpand`.
 
+- `HierarchyNodeIdentifier.compare` static function to compare two `HierarchyNodeIdentifier` objects. Useful when using `HierarchyNodeIdentifier` as a key in a dictionary sorted set.
+
 **Breaking changes:**
 
 - `HierarchySearchPathOptions.reveal` type `{ depthInHierarchy: number }` was replaced with `{ groupingLevel: number }`.
@@ -48,7 +50,7 @@ Start using tree structure for defining hierarchy search paths.
     paths: searchPaths,
 
     // after
-    paths: HierarchySearchTree.createFromPathsList(searchPaths),
+    paths: await HierarchySearchTree.createFromPathsList(searchPaths),
   });
   ```
 
@@ -65,7 +67,7 @@ Start using tree structure for defining hierarchy search paths.
       paths: searchPaths,
 
       // after
-      paths: HierarchySearchTree.createFromPathsList(searchPaths),
+      paths: await HierarchySearchTree.createFromPathsList(searchPaths),
     },
   });
   ```

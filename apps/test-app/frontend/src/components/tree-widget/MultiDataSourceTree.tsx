@@ -78,7 +78,7 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
       return Promise.all([
         getModelsHierarchySearchPaths({ imodelAccess, searchText, componentId, componentName: "MultiDataSourceTree" }),
         RSS_PROVIDER.getSearchPaths(searchText),
-      ]).then(([imodelPaths, rssPaths]) => HierarchySearchTree.createFromPathsList([...imodelPaths, ...rssPaths]));
+      ]).then(async ([imodelPaths, rssPaths]) => HierarchySearchTree.createFromPathsList([...imodelPaths, ...rssPaths]));
     };
   }, [searchText, imodelAccess, componentId]);
 

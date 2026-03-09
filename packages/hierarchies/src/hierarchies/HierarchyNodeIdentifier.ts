@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
 import { InstanceKey } from "@itwin/presentation-shared";
 
 import type { GenericNodeKey, IModelInstanceKey } from "./HierarchyNodeKey.js";
@@ -34,13 +35,30 @@ export namespace HierarchyNodeIdentifier {
 
   /** Checks two identifiers for equality */
   export function equal(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier) {
-    if (isInstanceNodeIdentifier(lhs) && isInstanceNodeIdentifier(rhs)) {
-      return InstanceKey.equals(lhs, rhs) && lhs.imodelKey === rhs.imodelKey;
+    return compare(lhs, rhs) === 0;
+  }
+
+  /** Compares two identifiers */
+  export function compare(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): number {
+    if (HierarchyNodeIdentifier.isGenericNodeIdentifier(lhs)) {
+      if (HierarchyNodeIdentifier.isGenericNodeIdentifier(rhs)) {
+        const sourceCompareResult = compareStringsOrUndefined(lhs.source, rhs.source);
+        if (sourceCompareResult !== 0) {
+          return sourceCompareResult;
+        }
+        return compareStrings(lhs.id, rhs.id);
+      }
+      return -1;
     }
-    if (isGenericNodeIdentifier(lhs) && isGenericNodeIdentifier(rhs)) {
-      return lhs.source === rhs.source && lhs.id === rhs.id;
+    assert(HierarchyNodeIdentifier.isInstanceNodeIdentifier(lhs));
+    if (HierarchyNodeIdentifier.isInstanceNodeIdentifier(rhs)) {
+      const imodelKeyCompareResult = compareStringsOrUndefined(lhs.imodelKey, rhs.imodelKey);
+      if (imodelKeyCompareResult !== 0) {
+        return imodelKeyCompareResult;
+      }
+      return InstanceKey.compare(lhs, rhs);
     }
-    return false;
+    return 1;
   }
 }
 

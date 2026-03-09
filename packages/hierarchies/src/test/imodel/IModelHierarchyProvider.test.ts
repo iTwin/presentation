@@ -1963,7 +1963,7 @@ describe("createMergedIModelHierarchyProvider", () => {
               ],
       },
       search: {
-        paths: HierarchySearchTree.createFromPathsList([
+        paths: await HierarchySearchTree.createFromPathsList([
           { path: [{ className: "a.b", id: "0x123", imodelKey: "imodel 1" }], options: { reveal: true, autoExpand: true } },
           {
             path: [

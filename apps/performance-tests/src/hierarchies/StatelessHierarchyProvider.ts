@@ -5,19 +5,19 @@
 
 import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } from "rxjs";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchySearchTree } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { LOGGER } from "../util/Logging";
 
 import type { IModelDb } from "@itwin/core-backend";
-import type { HierarchyDefinition, HierarchyNode, HierarchyProvider, HierarchySearchPath } from "@itwin/presentation-hierarchies";
+import type { HierarchyDefinition, HierarchyNode, HierarchyProvider, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import type { EC, ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions } from "@itwin/presentation-shared";
 
 interface ProviderOptionsBase {
   rowLimit?: number | "unbounded";
   getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): HierarchyDefinition;
   search?: {
-    paths: HierarchySearchPath[];
+    paths: HierarchySearchTree[];
   };
 }
 type ProviderOptionsWithIModel = { iModel: IModelDb } & ProviderOptionsBase;
@@ -88,7 +88,7 @@ export class StatelessHierarchyProvider {
       imodelAccess,
       hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),
       queryCacheSize: 0,
-      search: this._props.search ? { paths: HierarchySearchTree.createFromPathsList(this._props.search.paths) } : undefined,
+      search: this._props.search ? { paths: this._props.search.paths } : undefined,
     });
   }
 

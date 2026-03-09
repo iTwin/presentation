@@ -55,22 +55,22 @@ describe("HierarchySearchPath", () => {
 
 describe("HierarchySearchTree", () => {
   describe("createFromPathsList", () => {
-    it("returns empty array for empty input", () => {
-      expect(HierarchySearchTree.createFromPathsList([])).to.deep.eq([]);
+    it("returns empty array for empty input", async () => {
+      expect(await HierarchySearchTree.createFromPathsList([])).to.deep.eq([]);
     });
 
-    it("skips empty paths", () => {
-      const result = HierarchySearchTree.createFromPathsList([[], [createTestGenericNodeKey({ id: "a" })]]);
+    it("skips empty paths", async () => {
+      const result = await HierarchySearchTree.createFromPathsList([[], [createTestGenericNodeKey({ id: "a" })]]);
       expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
     });
 
-    it("creates a single root entry from a single-node path", () => {
-      const result = HierarchySearchTree.createFromPathsList([[createTestGenericNodeKey({ id: "a" })]]);
+    it("creates a single root entry from a single-node path", async () => {
+      const result = await HierarchySearchTree.createFromPathsList([[createTestGenericNodeKey({ id: "a" })]]);
       expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
     });
 
-    it("creates a nested tree from a multi-node path", () => {
-      const result = HierarchySearchTree.createFromPathsList([
+    it("creates a nested tree from a multi-node path", async () => {
+      const result = await HierarchySearchTree.createFromPathsList([
         [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" }), createTestGenericNodeKey({ id: "c" })],
       ]);
       expect(result).to.deep.eq([
@@ -81,23 +81,23 @@ describe("HierarchySearchTree", () => {
       ]);
     });
 
-    it("handles array-form paths", () => {
-      const result = HierarchySearchTree.createFromPathsList([[createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })]]);
+    it("handles array-form paths", async () => {
+      const result = await HierarchySearchTree.createFromPathsList([[createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })]]);
       expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }), children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }] }]);
     });
 
-    it("handles object-form paths", () => {
-      const result = HierarchySearchTree.createFromPathsList([{ path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })] }]);
+    it("handles object-form paths", async () => {
+      const result = await HierarchySearchTree.createFromPathsList([{ path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })] }]);
       expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }), children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }] }]);
     });
 
-    it("handles instance key identifiers", () => {
-      const result = HierarchySearchTree.createFromPathsList([[createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })]]);
+    it("handles instance key identifiers", async () => {
+      const result = await HierarchySearchTree.createFromPathsList([[createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })]]);
       expect(result).to.deep.eq([{ identifier: createTestInstanceKey({ id: "0x1" }), children: [{ identifier: createTestInstanceKey({ id: "0x2" }) }] }]);
     });
 
-    it("merges paths with shared root", () => {
-      const result = HierarchySearchTree.createFromPathsList([
+    it("merges paths with shared root", async () => {
+      const result = await HierarchySearchTree.createFromPathsList([
         [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })],
         [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "c" })],
       ]);
@@ -109,13 +109,13 @@ describe("HierarchySearchTree", () => {
       ]);
     });
 
-    it("creates separate roots for unrelated paths", () => {
-      const result = HierarchySearchTree.createFromPathsList([[createTestGenericNodeKey({ id: "a" })], [createTestGenericNodeKey({ id: "b" })]]);
+    it("creates separate roots for unrelated paths", async () => {
+      const result = await HierarchySearchTree.createFromPathsList([[createTestGenericNodeKey({ id: "a" })], [createTestGenericNodeKey({ id: "b" })]]);
       expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }) }, { identifier: createTestGenericNodeKey({ id: "b" }) }]);
     });
 
-    it("merges paths with shared prefix and diverging suffixes", () => {
-      const result = HierarchySearchTree.createFromPathsList([
+    it("merges paths with shared prefix and diverging suffixes", async () => {
+      const result = await HierarchySearchTree.createFromPathsList([
         [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" }), createTestGenericNodeKey({ id: "d" })],
         [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" }), createTestGenericNodeKey({ id: "e" })],
       ]);
@@ -133,8 +133,8 @@ describe("HierarchySearchTree", () => {
     });
 
     describe("isTarget", () => {
-      it("marks parent as isTarget when extending a previously-leaf node with children", () => {
-        const result = HierarchySearchTree.createFromPathsList([
+      it("marks parent as isTarget when extending a previously-leaf node with children", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
           [createTestGenericNodeKey({ id: "a" })],
           [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })],
         ]);
@@ -147,15 +147,15 @@ describe("HierarchySearchTree", () => {
         ]);
       });
 
-      it("doesn't set isTarget on intermediate nodes created within the same path", () => {
-        const result = HierarchySearchTree.createFromPathsList([[createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })]]);
+      it("doesn't set isTarget on intermediate nodes created within the same path", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([[createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })]]);
         expect(result[0].isTarget).to.be.undefined;
       });
     });
 
     describe("autoExpand option", () => {
-      it("sets autoExpand on target when options.autoExpand is true", () => {
-        const result = HierarchySearchTree.createFromPathsList([
+      it("sets autoExpand on target when options.autoExpand is true", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
           { path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })], options: { autoExpand: true } },
         ]);
         expect(result).to.deep.eq([
@@ -166,20 +166,20 @@ describe("HierarchySearchTree", () => {
         ]);
       });
 
-      it("doesn't set autoExpand when options.autoExpand is false", () => {
-        const result = HierarchySearchTree.createFromPathsList([{ path: [createTestGenericNodeKey({ id: "a" })], options: { autoExpand: false } }]);
+      it("doesn't set autoExpand when options.autoExpand is false", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([{ path: [createTestGenericNodeKey({ id: "a" })], options: { autoExpand: false } }]);
         expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
       });
 
-      it("doesn't set autoExpand when options.autoExpand is undefined", () => {
-        const result = HierarchySearchTree.createFromPathsList([{ path: [createTestGenericNodeKey({ id: "a" })] }]);
+      it("doesn't set autoExpand when options.autoExpand is undefined", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([{ path: [createTestGenericNodeKey({ id: "a" })] }]);
         expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
       });
     });
 
     describe("reveal: true", () => {
-      it("auto-expands all ancestors and sets groupingLevel on target", () => {
-        const result = HierarchySearchTree.createFromPathsList([
+      it("auto-expands all ancestors and sets groupingLevel on target", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
           {
             path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" }), createTestGenericNodeKey({ id: "c" })],
             options: { reveal: true },
@@ -205,8 +205,8 @@ describe("HierarchySearchTree", () => {
         ]);
       });
 
-      it("sets groupingLevel on target for single-node path", () => {
-        const result = HierarchySearchTree.createFromPathsList([{ path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: true } }]);
+      it("sets groupingLevel on target for single-node path", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([{ path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: true } }]);
         expect(result).to.deep.eq([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
@@ -217,8 +217,8 @@ describe("HierarchySearchTree", () => {
     });
 
     describe("reveal: { groupingLevel }", () => {
-      it("auto-expands all ancestors and sets groupingLevel-1 on target", () => {
-        const result = HierarchySearchTree.createFromPathsList([
+      it("auto-expands all ancestors and sets groupingLevel-1 on target", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
           { path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })], options: { reveal: { groupingLevel: 3 } } },
         ]);
         expect(result).to.deep.eq([
@@ -235,20 +235,24 @@ describe("HierarchySearchTree", () => {
         ]);
       });
 
-      it("clamps groupingLevel to 0 when reveal.groupingLevel is 1", () => {
-        const result = HierarchySearchTree.createFromPathsList([{ path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: { groupingLevel: 1 } } }]);
+      it("clamps groupingLevel to 0 when reveal.groupingLevel is 1", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
+          { path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: { groupingLevel: 1 } } },
+        ]);
         expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }), options: { autoExpand: { groupingLevel: 0 } } }]);
       });
 
-      it("clamps groupingLevel to 0 when reveal.groupingLevel is 0", () => {
-        const result = HierarchySearchTree.createFromPathsList([{ path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: { groupingLevel: 0 } } }]);
+      it("clamps groupingLevel to 0 when reveal.groupingLevel is 0", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
+          { path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: { groupingLevel: 0 } } },
+        ]);
         expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }), options: { autoExpand: { groupingLevel: 0 } } }]);
       });
     });
 
     describe("reveal: { depthInPath }", () => {
-      it("auto-expands entries up to depthInPath and sets groupingLevel on entry at depthInPath", () => {
-        const result = HierarchySearchTree.createFromPathsList([
+      it("auto-expands entries up to depthInPath and sets groupingLevel on entry at depthInPath", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
           {
             path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" }), createTestGenericNodeKey({ id: "c" })],
             options: { reveal: { depthInPath: 1 } },
@@ -269,8 +273,8 @@ describe("HierarchySearchTree", () => {
         ]);
       });
 
-      it("sets groupingLevel on root when depthInPath is 0", () => {
-        const result = HierarchySearchTree.createFromPathsList([
+      it("sets groupingLevel on root when depthInPath is 0", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
           { path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })], options: { reveal: { depthInPath: 0 } } },
         ]);
         expect(result).to.deep.eq([
@@ -282,8 +286,8 @@ describe("HierarchySearchTree", () => {
         ]);
       });
 
-      it("clamps depthInPath to last entry when it exceeds path length", () => {
-        const result = HierarchySearchTree.createFromPathsList([
+      it("clamps depthInPath to last entry when it exceeds path length", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
           { path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })], options: { reveal: { depthInPath: 10 } } },
         ]);
         expect(result).to.deep.eq([
@@ -302,8 +306,8 @@ describe("HierarchySearchTree", () => {
     });
 
     describe("reveal: false", () => {
-      it("doesn't apply any reveal behavior", () => {
-        const result = HierarchySearchTree.createFromPathsList([
+      it("doesn't apply any reveal behavior", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
           { path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })], options: { reveal: false } },
         ]);
         expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }), children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }] }]);
@@ -311,8 +315,8 @@ describe("HierarchySearchTree", () => {
     });
 
     describe("combined options", () => {
-      it("applies both autoExpand and reveal", () => {
-        const result = HierarchySearchTree.createFromPathsList([
+      it("applies both autoExpand and reveal", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
           { path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })], options: { autoExpand: true, reveal: { groupingLevel: 2 } } },
         ]);
         expect(result).to.deep.eq([
@@ -326,24 +330,24 @@ describe("HierarchySearchTree", () => {
     });
 
     describe("merging from multiple paths", () => {
-      it("merges groupingLevel options when multiple paths target the same node", () => {
-        const result = HierarchySearchTree.createFromPathsList([
+      it("merges groupingLevel options when multiple paths target the same node", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
           { path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: { groupingLevel: 2 } } },
           { path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: { groupingLevel: 4 } } },
         ]);
         expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }), options: { autoExpand: { groupingLevel: 3 } } }]);
       });
 
-      it("merges to true when one path has autoExpand and another has reveal.groupingLevel", () => {
-        const result = HierarchySearchTree.createFromPathsList([
+      it("merges to true when one path has autoExpand and another has reveal.groupingLevel", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
           { path: [createTestGenericNodeKey({ id: "a" })], options: { autoExpand: true } },
           { path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: { groupingLevel: 2 } } },
         ]);
         expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }), options: { autoExpand: true } }]);
       });
 
-      it("merges ancestor autoExpand from multiple paths with reveal", () => {
-        const result = HierarchySearchTree.createFromPathsList([
+      it("merges ancestor autoExpand from multiple paths with reveal", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
           { path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })], options: { reveal: { groupingLevel: 2 } } },
           { path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "c" })], options: { reveal: true } },
         ]);

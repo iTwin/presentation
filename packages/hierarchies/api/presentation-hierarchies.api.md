@@ -347,6 +347,7 @@ export type HierarchyNodeIdentifier = IModelInstanceKey | GenericNodeKey;
 
 // @public (undocumented)
 export namespace HierarchyNodeIdentifier {
+    export function compare(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): number;
     export function equal(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): boolean;
     export function isGenericNodeIdentifier(id: HierarchyNodeIdentifier): id is GenericNodeKey;
     export function isInstanceNodeIdentifier(id: HierarchyNodeIdentifier): id is IModelInstanceKey;
@@ -489,7 +490,7 @@ export interface HierarchySearchTree {
 
 // @public (undocumented)
 export namespace HierarchySearchTree {
-    export function createFromPathsList(paths: Iterable<HierarchySearchPath>): HierarchySearchTree[];
+    export function createFromPathsList(paths: Iterable<HierarchySearchPath>): Promise<HierarchySearchTree[]>;
     export function mergeOptions(lhs: HierarchySearchTree["options"] | undefined, rhs: HierarchySearchTree["options"] | undefined): HierarchySearchTree["options"] | undefined;
 }
 
