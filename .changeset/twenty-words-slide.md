@@ -6,7 +6,7 @@ Start using tree structure for defining hierarchy search paths.
 
 **Additions:**
 
-- `HierarchySearchTree` type that represents a tree structure of hierarchy search paths and is not used for hierarchy search implementation in `HierarchyProvider`.
+- `HierarchySearchTree` type that represents a tree structure of hierarchy search paths and is now used for hierarchy search implementation in `HierarchyProvider`.
 
   In addition to the type, there's also a namespace with the same name, providing utility functions for working with the tree structure:
   - `HierarchySearchTree.createFromPathsList` function to create a hierarchy search tree from a list of hierarchy search paths.
