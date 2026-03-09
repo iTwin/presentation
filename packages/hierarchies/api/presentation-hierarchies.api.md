@@ -46,7 +46,7 @@ export function createHierarchyProvider<TPartialProvider extends Partial<Omit<Hi
 }) => TPartialProvider): TPartialProvider & HierarchyProvider;
 
 // @public
-export function createHierarchySearchHelper(rootLevelSearchProps: HierarchySearchPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "parentKeys" | "search"> | undefined): {
+export function createHierarchySearchHelper(rootLevelSearchProps: HierarchySearchTree[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined): {
     hasSearch: boolean;
     hasSearchTargetAncestor: boolean;
     getChildNodeSearchIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
@@ -258,6 +258,7 @@ export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
 
 // @public (undocumented)
 export namespace HierarchyNode {
+    export function getGroupingNodeLevel(groupingNode: Pick<GroupingHierarchyNode, "key" | "parentKeys">): number;
     export function isClassGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
@@ -434,15 +435,12 @@ export namespace HierarchyNodesDefinition {
 }
 
 // @public (undocumented)
-type HierarchyNodeSearchProps = {
+interface HierarchyNodeSearchProps {
+    childrenTargetPaths?: HierarchySearchTree[];
     hasSearchTargetAncestor?: boolean;
-    childrenTargetPaths?: HierarchySearchPath[];
-} & ({
-    isSearchTarget?: false;
-} | {
-    isSearchTarget: true;
-    searchTargetOptions?: HierarchySearchPathOptions;
-});
+    isSearchTarget?: boolean;
+    options?: HierarchySearchTree["options"];
+}
 
 // @public
 export interface HierarchyProvider {
@@ -451,7 +449,7 @@ export interface HierarchyProvider {
     readonly hierarchyChanged: Event_2<(args: HierarchyChangedEventArgs) => void>;
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
     setHierarchySearch(props: {
-        paths: HierarchySearchPath[];
+        paths: HierarchySearchTree[];
     } | undefined): void;
 }
 
@@ -475,6 +473,24 @@ export interface HierarchySearchPathOptions {
     } | {
         groupingLevel: number;
     };
+}
+
+// @public
+export interface HierarchySearchTree {
+    children?: HierarchySearchTree[];
+    identifier: HierarchyNodeIdentifier;
+    isTarget?: boolean;
+    options?: {
+        autoExpand?: boolean | {
+            groupingLevel: number;
+        };
+    };
+}
+
+// @public (undocumented)
+export namespace HierarchySearchTree {
+    export function createFromPathsList(paths: Iterable<HierarchySearchPath>): HierarchySearchTree[];
+    export function mergeOptions(lhs: HierarchySearchTree["options"] | undefined, rhs: HierarchySearchTree["options"] | undefined): HierarchySearchTree["options"] | undefined;
 }
 
 // @public (undocumented)
@@ -501,7 +517,7 @@ interface IModelHierarchyProviderProps {
     queryCacheSize?: number;
     queryConcurrency?: number;
     search?: {
-        paths: HierarchySearchPath[];
+        paths: HierarchySearchTree[];
     };
 }
 

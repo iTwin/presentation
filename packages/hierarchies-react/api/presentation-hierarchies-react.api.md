@@ -14,7 +14,7 @@ import { getLogger } from '@itwin/presentation-hierarchies';
 import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
-import { HierarchySearchPath } from '@itwin/presentation-hierarchies';
+import { HierarchySearchTree } from '@itwin/presentation-hierarchies';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { JSX as JSX_2 } from 'react';
@@ -331,7 +331,7 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearch
     getSearchPaths?: (props: {
         imodelAccess: IModelAccess;
         abortSignal: AbortSignal;
-    }) => Promise<HierarchySearchPath[] | undefined>;
+    }) => Promise<HierarchySearchTree[] | undefined>;
 };
 
 // @public
@@ -358,7 +358,7 @@ interface UseTreeProps {
     getHierarchyProvider: () => HierarchyProvider;
     getSearchPaths?: (input: {
         abortSignal: AbortSignal;
-    }) => Promise<HierarchySearchPath[] | undefined>;
+    }) => Promise<HierarchySearchTree[] | undefined>;
     getTreeNodeError?: (node: HierarchyNode) => ErrorInfo | undefined;
     onHierarchyLimitExceeded?: (props: {
         parentId?: string;

@@ -32,6 +32,8 @@ public;interface;HierarchyProvider
 public;type;HierarchySearchPath
 public;namespace;HierarchySearchPath
 public;interface;HierarchySearchPathOptions
+public;interface;HierarchySearchTree
+public;namespace;HierarchySearchTree
 public;type;IModelHierarchyNodeKey
 public;interface;IModelInstanceKey
 public;interface;InstancesNodeKey
