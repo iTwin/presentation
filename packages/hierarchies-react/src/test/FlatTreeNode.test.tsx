@@ -214,7 +214,7 @@ describe("FlatTreeNode", () => {
         id: "root",
         error: {
           id: "error-1",
-          type: "ChildrenLoad",
+          type: "Unknown",
           message: "Root error",
         },
         children: true,
