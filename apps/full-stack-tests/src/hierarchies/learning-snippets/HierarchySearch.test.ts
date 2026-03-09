@@ -183,6 +183,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
+          // Note the use of `HierarchySearchTree.createFromPathsList` utility function to create a search tree from a list of search paths.
           search: { paths: HierarchySearchTree.createFromPathsList(searchPaths) },
         });
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
@@ -380,7 +381,8 @@ describe("Hierarchies", () => {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
-            // Reveal the label grouping node by specifying its grouping level. Note that grouping level is counted from the first non-grouping ancestor node.
+            // Reveal the C's label grouping node by specifying its grouping level. 
+            // Note that grouping level is counted from the first non-grouping ancestor node.
             reveal: { groupingLevel: 2 },
           },
         };

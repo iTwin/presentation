@@ -22,7 +22,7 @@ The hierarchy definition that creates such a hierarchy would look like this:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { ECSqlBinding } from "@itwin/presentation-shared";
 
 function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinition {
@@ -196,7 +196,8 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-  search: { paths: searchPaths },
+  // Note the use of `HierarchySearchTree.createFromPathsList` utility function to create a search tree from a list of search paths.
+  search: { paths: HierarchySearchTree.createFromPathsList(searchPaths) },
 });
 // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
 // Note that "E" has a child "F", even though it's not a search target. This is because subtrees under search target nodes
