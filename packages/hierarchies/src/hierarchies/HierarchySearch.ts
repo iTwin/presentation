@@ -287,7 +287,7 @@ export namespace HierarchySearchTree {
   }) {
     // set all parent entries to auto-expand
     for (let j = 0; j < targetEntryIndex; j++) {
-      (treePath[j].entry.options ??= {}).autoExpand = true;
+      (treePath[j].entry.options ??= {}).autoExpand = mergeSearchTreeAutoExpandOption(treePath[j].entry.options?.autoExpand, true);
     }
     // set the target entry auto-expand value
     const targetEntry = treePath[targetEntryIndex].entry;
