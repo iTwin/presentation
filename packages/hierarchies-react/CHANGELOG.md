@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.56
+
+### Minor Changes
+
+- [#1230](https://github.com/iTwin/presentation/pull/1230): Added `isNodeExpandable` property to `GenericErrorInfo`, allowing nodes with generic errors to remain expandable.
+
 ## 2.0.0-alpha.55
 
 ### Major Changes
