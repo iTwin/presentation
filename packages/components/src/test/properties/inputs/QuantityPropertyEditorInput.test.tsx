@@ -153,7 +153,7 @@ describe("<QuantityPropertyEditorInput />", () => {
 
     // Verify that selection logic is applied
     await waitFor(() => expect(input.selectionEnd).to.eq(0));
-    await user.type(input, "123.4 ", { skipClick: true });
+    await user.type(input, "123.4 ", { skipClick: true, initialSelectionEnd: 0 });
     await user.tab();
 
     await waitFor(() => expect(input.value).to.eq("123.4 unit"));
