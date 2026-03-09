@@ -68,7 +68,7 @@ Let's say, we want the hierarchy to contain only the nodes with "C" label. In th
 
 The following code snippet shows, how to create a search path that includes the `autoExpand` flag:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.AutoExpand.SearchPath], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.Reveal.SearchPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
@@ -77,11 +77,10 @@ import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 const searchPath: HierarchySearchPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
+  // Supply options for the search path
   options: {
-    // Auto-expand all nodes up to element "C".
+    // Reveal the target "C" node in hierarchy by setting auto-expand flag on all its ancestor nodes
     reveal: true,
-    // Auto-expand the search target ("C" node) as well.
-    autoExpand: true,
   },
 };
 ```
@@ -90,7 +89,7 @@ const searchPath: HierarchySearchPath = {
 
 There is also an option to expand search targets, this can be achieved by setting `autoExpand` flag:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.autoExpand.SearchPath], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.AutoExpand.SearchPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts

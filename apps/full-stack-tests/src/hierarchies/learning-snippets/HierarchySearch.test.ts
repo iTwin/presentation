@@ -277,11 +277,10 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("sets auto-expand flag to parent nodes of the search target", async function () {
+      it("sets auto-expand flag to parent nodes of the revealed search target", async function () {
         const imodelAccess = createIModelAccess(imodel);
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.AutoExpand.SearchPath
-        // Get a grouping node that groups the "C" element
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.Reveal.SearchPath
         const searchPath: HierarchySearchPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
@@ -617,7 +616,7 @@ describe("Hierarchies", () => {
           },
         };
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.autoExpand.SearchPath
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.AutoExpand.SearchPath
         const searchPath: HierarchySearchPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
