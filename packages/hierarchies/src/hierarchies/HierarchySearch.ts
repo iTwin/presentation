@@ -169,10 +169,15 @@ export interface HierarchySearchTree {
      *             - Grouping node Bn
      *               - Instance node B
      *   ```
+     *
      *   For "Instance node B" search tree entry:
      *   - `{ groupingLevel: 1 }` expands its first grouping node "Grouping node B1",
      *   - `{ groupingLevel: 2 }` expands two levels to "Grouping node B2".
      *   - `{ groupingLevel: Number.MAX_SAFE_INTEGER }` expands all grouping nodes of that instance node.
+     *
+     *   Note that there's a slight difference between `HierarchySearchTree.options.autoExpand` and
+     *   `HierarchySearchPath.options.reveal`. The latter option reveals the search target node by expanding its ancestors,
+     *   while the `HierarchySearchTree.options.autoExpand` also expands the target node itself.
      */
     autoExpand?: boolean | { groupingLevel: number };
   };
