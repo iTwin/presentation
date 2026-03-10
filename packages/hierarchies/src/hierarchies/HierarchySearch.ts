@@ -181,8 +181,133 @@ export interface HierarchySearchTree {
   children?: HierarchySearchTree[];
 }
 
+type HierarchySearchTreeDictionaryEntry = Omit<HierarchySearchTree, "children"> & { children?: HierarchySearchTreeDictionary };
+type HierarchySearchTreeDictionary = Dictionary<HierarchyNodeIdentifier, HierarchySearchTreeDictionaryEntry>;
+
 /** @public */
 export namespace HierarchySearchTree {
+  function mapDictionaryToTree(dictionary: HierarchySearchTreeDictionary): HierarchySearchTree[] {
+    const list: HierarchySearchTree[] = [];
+    for (const value of dictionary.values()) {
+      const entry = { ...value, children: value.children ? mapDictionaryToTree(value.children) : undefined };
+      list.push(entry);
+    }
+    return list;
+  }
+
+  function getAutoExpandValue({
+    options,
+    pathLength,
+    currentIndex,
+    currentValue,
+  }: {
+    options: HierarchySearchPathOptions | undefined;
+    pathLength: number;
+    currentIndex: number;
+    currentValue: { groupingLevel: number } | undefined;
+  }): boolean | { groupingLevel: number } | undefined {
+    if (!options) {
+      return currentValue;
+    }
+    if (options.autoExpand) {
+      return true;
+    }
+    if (!options.reveal) {
+      return currentValue;
+    }
+    if (options.reveal === true) {
+      if (currentIndex < pathLength - 1) {
+        return true;
+      }
+      return { groupingLevel: Number.MAX_SAFE_INTEGER };
+    }
+    if ("groupingLevel" in options.reveal) {
+      if (currentIndex < pathLength - 1) {
+        return true;
+      }
+      return { groupingLevel: Math.max(options.reveal.groupingLevel, currentValue?.groupingLevel ?? 0) };
+    }
+    if (currentIndex === options.reveal.depthInPath) {
+      return { groupingLevel: Number.MAX_SAFE_INTEGER };
+    }
+    if (currentIndex < options.reveal.depthInPath) {
+      return true;
+    }
+    return currentValue;
+  }
+
+  export function createHierarchySearchTreeHelper(): {
+    accept: ({
+      normalizedPath,
+      overrideIsSearchTarget,
+    }: {
+      normalizedPath: Exclude<HierarchySearchPath, HierarchyNodeIdentifiersPath>;
+      overrideIsSearchTarget?: (props: { existingEntry?: Omit<HierarchySearchTree, "children"> & { children: boolean } }) => boolean;
+    }) => void;
+    getTreeList: () => HierarchySearchTree[] | undefined;
+  } {
+    const treeDictionary: HierarchySearchTreeDictionary = new Dictionary(HierarchyNodeIdentifier.compare);
+    let treeList: HierarchySearchTree[] | undefined;
+
+    return {
+      accept: ({ normalizedPath, overrideIsSearchTarget }) => {
+        let currentDictionary = treeDictionary;
+        for (let i = 0; i < normalizedPath.path.length; ++i) {
+          const identifier = normalizedPath.path[i];
+          let entry = currentDictionary.get(identifier);
+          if (!entry) {
+            treeList = undefined;
+            const autoExpand = getAutoExpandValue({
+              options: normalizedPath.options,
+              pathLength: normalizedPath.path.length,
+              currentIndex: i,
+              currentValue: undefined,
+            });
+            entry = {
+              identifier,
+              ...(autoExpand ? { options: { autoExpand } } : undefined),
+              isTarget: overrideIsSearchTarget ? overrideIsSearchTarget({ existingEntry: undefined }) : i === normalizedPath.path.length - 1,
+            };
+            currentDictionary.set(identifier, entry);
+          } else {
+            if (entry.options?.autoExpand !== true) {
+              const autoExpand = getAutoExpandValue({
+                options: normalizedPath.options,
+                pathLength: normalizedPath.path.length,
+                currentIndex: i,
+                currentValue: entry.options?.autoExpand === false ? undefined : entry.options?.autoExpand,
+              });
+              if (autoExpand) {
+                treeList = undefined;
+                entry.options = { autoExpand };
+              }
+            }
+          }
+
+          // Last entry in path is search target
+          if (i === normalizedPath.path.length - 1) {
+            if (overrideIsSearchTarget) {
+            }
+            if (!entry.isTarget && (!overrideIsSearchTarget || overrideIsSearchTarget({ existingEntry: { ...entry, children: !!entry.children } }))) {
+              treeList = undefined;
+              entry.isTarget = true;
+            }
+            break;
+          }
+
+          if (!entry.children) {
+            treeList = undefined;
+            entry.children = new Dictionary(HierarchyNodeIdentifier.compare);
+          }
+          currentDictionary = entry.children;
+        }
+      },
+      getTreeList: () => {
+        treeList ??= mapDictionaryToTree(treeDictionary);
+        return treeList.length > 0 ? treeList : undefined;
+      },
+    };
+  }
   /**
    * Builds a list of `HierarchySearchTree` nodes from an iterable of search paths. Shared
    * path prefixes are merged so that each unique hierarchy node identifier appears only once
@@ -192,8 +317,6 @@ export namespace HierarchySearchTree {
    * @public
    */
   export async function createFromPathsList(paths: Iterable<HierarchySearchPath>): Promise<HierarchySearchTree[]> {
-    type HierarchySearchTreeDictionaryEntry = Omit<HierarchySearchTree, "children"> & { children?: HierarchySearchTreeDictionary };
-    type HierarchySearchTreeDictionary = Dictionary<HierarchyNodeIdentifier, HierarchySearchTreeDictionaryEntry>;
     const rootsDictionary: HierarchySearchTreeDictionary = new Dictionary(HierarchyNodeIdentifier.compare);
 
     let pathIndex = 0;
@@ -262,17 +385,6 @@ export namespace HierarchySearchTree {
       ++pathIndex;
     }
 
-    function mapDictionaryToTree(dictionary: HierarchySearchTreeDictionary): HierarchySearchTree[] {
-      const list: HierarchySearchTree[] = [];
-      for (const entry of dictionary.values()) {
-        list.push(mapDictionaryEntryToTree(entry));
-      }
-      return list;
-    }
-    function mapDictionaryEntryToTree(dictionaryEntry: HierarchySearchTreeDictionaryEntry): HierarchySearchTree {
-      const { children, ...entry } = dictionaryEntry;
-      return { ...entry, ...(children ? { children: mapDictionaryToTree(children) } : undefined) };
-    }
     return mapDictionaryToTree(rootsDictionary);
   }
 
