@@ -286,8 +286,6 @@ export namespace HierarchySearchTree {
 
           // Last entry in path is search target
           if (i === normalizedPath.path.length - 1) {
-            if (overrideIsSearchTarget) {
-            }
             if (!entry.isTarget && (!overrideIsSearchTarget || overrideIsSearchTarget({ existingEntry: { ...entry, children: !!entry.children } }))) {
               treeList = undefined;
               entry.isTarget = true;
