@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.57
+
+### Patch Changes
+
+- [#1238](https://github.com/iTwin/presentation/pull/1238): Fix root nodes with errors not being counted when collapsed
+
 ## 2.0.0-alpha.56
 
 ### Minor Changes
