@@ -203,7 +203,10 @@ export namespace HierarchySearchTree {
     return list;
   }
 
-  /** @public */
+  /**
+   * An utility that accepts hierarchy search paths or search trees one by one and builds a `HierarchySearchTree` structure based on them.
+   * @public
+   */
   interface HierarchySearchTreeBuilder {
     /**
      * Accepts a hierarchy search path or paths' tree and adds it to the builder's internal tree structure. Use `getTree()` to create
@@ -217,7 +220,7 @@ export namespace HierarchySearchTree {
   }
 
   /**
-   * Create a `HierarchySearchTree` builder utility that accepts hierarchy search paths one by one and builds
+   * Create a `HierarchySearchTree` builder utility that accepts hierarchy search paths or search trees one by one and builds
    * a `HierarchySearchTree` structure based on them.
    *
    * Usage example:
@@ -229,6 +232,8 @@ export namespace HierarchySearchTree {
    * }
    * const searchTree = builder.getTree();
    * ```
+   *
+   * @public
    */
   export function createBuilder(): HierarchySearchTreeBuilder {
     return new (class implements HierarchySearchTreeBuilder {
