@@ -136,11 +136,13 @@ describe("Hierarchies", () => {
                       NodeValidators.createForInstanceNode({
                         label: "y1",
                         instanceKeys: [keys.base.y1],
+                        isSearchTarget: true,
                       }),
                       // exists only in the second imodel
                       NodeValidators.createForInstanceNode({
                         label: "y2",
                         instanceKeys: [keys.changeset1.y2],
+                        isSearchTarget: true,
                       }),
                     ],
                   }),
@@ -168,6 +170,7 @@ describe("Hierarchies", () => {
                       NodeValidators.createForInstanceNode({
                         label: "y1",
                         instanceKeys: [keys.base.y1],
+                        isSearchTarget: true,
                       }),
                     ],
                   }),
@@ -202,10 +205,12 @@ describe("Hierarchies", () => {
                       NodeValidators.createForInstanceNode({
                         label: "y1",
                         instanceKeys: [keys.changeset1.y1],
+                        isSearchTarget: true,
                       }),
                       NodeValidators.createForInstanceNode({
                         label: "y2",
                         instanceKeys: [keys.changeset1.y2],
+                        isSearchTarget: true,
                       }),
                     ],
                   }),

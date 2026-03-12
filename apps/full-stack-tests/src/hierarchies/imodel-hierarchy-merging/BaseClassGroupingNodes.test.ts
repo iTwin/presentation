@@ -146,14 +146,17 @@ describe("Hierarchies", () => {
               paths: [
                 {
                   identifier: keys.base.x,
+                  isTarget: true,
                   children: [{ identifier: keys.base.y1 }, { identifier: keys.base.y2 }, { identifier: keys.base.y3 }],
                 },
                 {
                   identifier: keys.changeset1.x,
+                  isTarget: true,
                   children: [{ identifier: keys.changeset1.y1 }, { identifier: keys.changeset1.y3 }, { identifier: keys.changeset1.q1 }],
                 },
                 {
                   identifier: keys.changeset1.w,
+                  isTarget: true,
                   children: [{ identifier: keys.changeset1.q2 }],
                 },
               ],
@@ -163,6 +166,7 @@ describe("Hierarchies", () => {
               expect: [
                 NodeValidators.createForInstanceNode({
                   label: "w",
+                  isSearchTarget: true,
                   children: [
                     NodeValidators.createForClassGroupingNode({
                       label: "Y",
@@ -171,6 +175,7 @@ describe("Hierarchies", () => {
                         NodeValidators.createForInstanceNode({
                           label: "q2",
                           instanceKeys: [keys.changeset1.q2],
+                          isSearchTarget: true,
                         }),
                       ],
                     }),
@@ -178,6 +183,7 @@ describe("Hierarchies", () => {
                 }),
                 NodeValidators.createForInstanceNode({
                   label: "x",
+                  isSearchTarget: true,
                   children: [
                     NodeValidators.createForClassGroupingNode({
                       label: "Y",
@@ -186,18 +192,22 @@ describe("Hierarchies", () => {
                         NodeValidators.createForInstanceNode({
                           label: "q1",
                           instanceKeys: [keys.changeset1.q1],
+                          isSearchTarget: true,
                         }),
                         NodeValidators.createForInstanceNode({
                           label: "y1",
                           instanceKeys: [keys.changeset1.y1, keys.base.y1],
+                          isSearchTarget: true,
                         }),
                         NodeValidators.createForInstanceNode({
                           label: "y2",
                           instanceKeys: [keys.base.y2],
+                          isSearchTarget: true,
                         }),
                         NodeValidators.createForInstanceNode({
                           label: "y3-updated",
                           instanceKeys: [keys.changeset1.y3, keys.base.y3],
+                          isSearchTarget: true,
                         }),
                       ],
                     }),
@@ -237,6 +247,7 @@ describe("Hierarchies", () => {
                         NodeValidators.createForInstanceNode({
                           label: "q2",
                           instanceKeys: [keys.changeset1.q2],
+                          isSearchTarget: true,
                         }),
                       ],
                     }),
@@ -252,10 +263,12 @@ describe("Hierarchies", () => {
                         NodeValidators.createForInstanceNode({
                           label: "q1",
                           instanceKeys: [keys.changeset1.q1],
+                          isSearchTarget: true,
                         }),
                         NodeValidators.createForInstanceNode({
                           label: "y2",
                           instanceKeys: [keys.base.y2],
+                          isSearchTarget: true,
                         }),
                       ],
                     }),

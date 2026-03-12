@@ -157,7 +157,12 @@ describe("Hierarchies", () => {
                 {
                   identifier: keys.changeset1.x,
                   isTarget: true,
-                  children: [{ identifier: keys.changeset1.y1 }, { identifier: keys.changeset1.y3 }, { identifier: keys.changeset1.q1 }],
+                  children: [
+                    { identifier: keys.changeset1.y1 },
+                    { identifier: keys.changeset1.y2 },
+                    { identifier: keys.changeset1.y3 },
+                    { identifier: keys.changeset1.q1 },
+                  ],
                 },
                 {
                   identifier: keys.changeset1.w,
@@ -171,6 +176,7 @@ describe("Hierarchies", () => {
               expect: [
                 NodeValidators.createForInstanceNode({
                   label: "w",
+                  isSearchTarget: true,
                   children: [
                     NodeValidators.createForLabelGroupingNode({
                       label: "q-group",
@@ -179,6 +185,7 @@ describe("Hierarchies", () => {
                         NodeValidators.createForInstanceNode({
                           label: "q-group",
                           instanceKeys: [keys.changeset1.q2],
+                          isSearchTarget: true,
                         }),
                       ],
                     }),
@@ -186,6 +193,7 @@ describe("Hierarchies", () => {
                 }),
                 NodeValidators.createForInstanceNode({
                   label: "x",
+                  isSearchTarget: true,
                   children: [
                     NodeValidators.createForLabelGroupingNode({
                       label: "mixed-group",
@@ -194,10 +202,12 @@ describe("Hierarchies", () => {
                         NodeValidators.createForInstanceNode({
                           label: "mixed-group",
                           instanceKeys: [keys.base.y3, keys.changeset1.y3],
+                          isSearchTarget: true,
                         }),
                         NodeValidators.createForInstanceNode({
                           label: "mixed-group",
                           instanceKeys: [keys.changeset1.q1],
+                          isSearchTarget: true,
                         }),
                       ],
                     }),
@@ -208,6 +218,7 @@ describe("Hierarchies", () => {
                         NodeValidators.createForInstanceNode({
                           label: "y-group",
                           instanceKeys: [keys.base.y1, keys.changeset1.y1],
+                          isSearchTarget: true,
                         }),
                       ],
                     }),
@@ -218,6 +229,7 @@ describe("Hierarchies", () => {
                         NodeValidators.createForInstanceNode({
                           label: "y-group-updated",
                           instanceKeys: [keys.base.y2, keys.changeset1.y2],
+                          isSearchTarget: true,
                         }),
                       ],
                     }),
@@ -257,6 +269,7 @@ describe("Hierarchies", () => {
                         NodeValidators.createForInstanceNode({
                           label: "q-group",
                           instanceKeys: [keys.changeset1.q2],
+                          isSearchTarget: true,
                         }),
                       ],
                     }),
@@ -272,6 +285,7 @@ describe("Hierarchies", () => {
                         NodeValidators.createForInstanceNode({
                           label: "mixed-group",
                           instanceKeys: [keys.changeset1.q1],
+                          isSearchTarget: true,
                         }),
                       ],
                     }),
@@ -282,6 +296,7 @@ describe("Hierarchies", () => {
                         NodeValidators.createForInstanceNode({
                           label: "y-group",
                           instanceKeys: [keys.base.y2],
+                          isSearchTarget: true,
                         }),
                       ],
                     }),
