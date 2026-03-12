@@ -102,7 +102,7 @@ export interface HierarchyProvider {
   setHierarchySearch(
     props:
       | {
-          /** A list of node identifiers from root to target node. */
+          /** A list of search trees that define paths from root to search target nodes. */
           paths: HierarchySearchTree[];
         }
       | undefined,

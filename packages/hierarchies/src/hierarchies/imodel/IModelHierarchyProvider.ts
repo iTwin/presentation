@@ -156,9 +156,14 @@ interface IModelHierarchyProviderProps {
    */
   formatter?: IPrimitiveValueFormatter;
 
-  /** Props for search the hierarchy. */
+  /**
+   * Props for searching the hierarchy.
+   *
+   * Note: this just provides a quick way to set the search when creating a new hierarchy provider, but the
+   * search can be changed at any time by calling `setHierarchySearch` on the provider instance.
+   */
   search?: {
-    /** A list of node identifiers from root to target node. */
+    /** A list of search trees that define paths from root to search target nodes. */
     paths: HierarchySearchTree[];
   };
 }
