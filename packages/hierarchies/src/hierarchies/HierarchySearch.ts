@@ -18,7 +18,7 @@ export interface HierarchySearchPathOptions {
    * - If it's `false` or `undefined`, nodes have no 'autoExpand' flag.
    * - If it's `true`, then all nodes up to the search target will have `autoExpand` flag.
    * - If it's a object with `groupingLevel` then `groupingLevel` determines the number of grouping levels to expand for
-   * the filter target.
+   * the search target.
    */
   reveal?:
     | boolean
@@ -45,11 +45,11 @@ export interface HierarchySearchPathOptions {
       }
     | {
         /**
-         * The number of grouping levels to expand for the filter target. For example, if `groupingLevel` is set to `2`, then all grouping nodes up to the second level
+         * The number of grouping levels to expand for the search target. For example, if `groupingLevel` is set to `2`, then all grouping nodes up to the second level
          * will have the `autoExpand` flag.
          *
-         * **Note:** if filter target has less grouping levels than specified by this attribute, then all grouping nodes up to the filter target will have
-         * the `autoExpand` flag, but the filter target itself won't have the `autoExpand` flag.
+         * **Note:** if search target has less grouping levels than specified by this attribute, then all grouping nodes up to the search target will have
+         * the `autoExpand` flag, but the search target itself won't have the `autoExpand` flag.
          */
         groupingLevel: number;
       };
