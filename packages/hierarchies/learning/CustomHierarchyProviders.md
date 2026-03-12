@@ -413,13 +413,7 @@ Let's start with the first step:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import {
-  createHierarchySearchHelper,
-  GenericNodeKey,
-  HierarchyNodeIdentifier,
-  HierarchySearchPath,
-  HierarchySearchTree,
-} from "@itwin/presentation-hierarchies";
+import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 
 // A function that matches given string against authors and books, and returns hierarchy tree
 // from root to the matched nodes. This function must be aware of the hierarchy structure to know what paths
@@ -455,13 +449,7 @@ Now that we're able to find the paths, let's enhance our hierarchy provider to s
 import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
-import {
-  createHierarchySearchHelper,
-  GenericNodeKey,
-  HierarchyNodeIdentifier,
-  HierarchySearchPath,
-  HierarchySearchTree,
-} from "@itwin/presentation-hierarchies";
+import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 
 let rootSearch: Props<HierarchyProvider["setHierarchySearch"]>;
 const provider = createHierarchyProvider(({ hierarchyChanged }) => ({
