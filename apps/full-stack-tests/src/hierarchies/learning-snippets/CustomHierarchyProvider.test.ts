@@ -24,7 +24,6 @@ import {
   createHierarchySearchHelper,
   GenericNodeKey,
   HierarchyNodeIdentifier,
-  HierarchySearchPath,
   HierarchySearchTree,
 } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
