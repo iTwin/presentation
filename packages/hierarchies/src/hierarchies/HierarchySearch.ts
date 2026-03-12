@@ -203,6 +203,19 @@ export namespace HierarchySearchTree {
     return list;
   }
 
+  /** @public */
+  interface HierarchySearchTreeBuilder {
+    /**
+     * Accepts a hierarchy search path or paths' tree and adds it to the builder's internal tree structure. Use `getTree()` to create
+     * a `HierarchySearchTree[]` from the added paths.
+     */
+    accept(props: { path: HierarchySearchPath } | { tree: HierarchySearchTree }): HierarchySearchTreeBuilder;
+    /**
+     * Create `HierarchySearchTree[]` from currently added search paths.
+     */
+    getTree(): HierarchySearchTree[];
+  }
+
   /**
    * Create a `HierarchySearchTree` builder utility that accepts hierarchy search paths one by one and builds
    * a `HierarchySearchTree` structure based on them.
@@ -217,37 +230,43 @@ export namespace HierarchySearchTree {
    * const searchTree = builder.getTree();
    * ```
    */
-  export function createBuilder() {
-    const rootsDictionary: HierarchySearchTreeDictionary = new Dictionary(HierarchyNodeIdentifier.compare);
-    return {
-      /**
-       * Accepts a hierarchy search path and adds it to the builder's internal tree structure. Use `getTree()` to create
-       * a `HierarchySearchTree[]` from the added paths.
-       */
-      accept(this, { path }: { path: HierarchySearchPath }) {
+  export function createBuilder(): HierarchySearchTreeBuilder {
+    return new (class implements HierarchySearchTreeBuilder {
+      #rootsDictionary: HierarchySearchTreeDictionary = new Dictionary(HierarchyNodeIdentifier.compare);
+
+      #getOrCreateEntry(level: HierarchySearchTreeDictionary, identifier: HierarchyNodeIdentifier) {
+        let entry = level.get(identifier);
+        const createdEntryForThisPath = !entry;
+        if (!entry) {
+          entry = { identifier };
+          level.set(identifier, entry);
+        }
+        return { entry, createdEntryForThisPath };
+      }
+
+      #ensureChildrenDictionary(entry: HierarchySearchTreeDictionaryEntry, preserveImpliedTarget: boolean): HierarchySearchTreeDictionary {
+        if (!entry.children) {
+          entry.children = new Dictionary(HierarchyNodeIdentifier.compare);
+          if (preserveImpliedTarget) {
+            // Existing leaf nodes are implied targets. Preserve that status when adding children.
+            entry.isTarget = true;
+          }
+        }
+        return entry.children;
+      }
+
+      #acceptPath({ path }: { path: HierarchySearchPath }) {
         const normalized = HierarchySearchPath.normalize(path);
         const treePath: Array<{ entry: HierarchySearchTreeDictionaryEntry; createdEntryForThisPath?: boolean }> = [];
         for (let i = 0; i < normalized.path.length; i++) {
           const identifier = normalized.path[i];
           // find where we're going to look for / add the next entry in the tree path
-          let currentLevel = treePath.length > 0 ? treePath[treePath.length - 1]?.entry?.children : rootsDictionary;
-          // try to find the entry in the current level
-          let entry = currentLevel?.get(identifier);
-          let createdEntryForThisPath = false;
-          if (!entry) {
-            entry = { identifier };
-            createdEntryForThisPath = true;
-            if (!currentLevel) {
-              const parentNode = treePath[treePath.length - 1];
-              currentLevel = parentNode.entry.children = new Dictionary(HierarchyNodeIdentifier.compare);
-              if (!parentNode.createdEntryForThisPath) {
-                // if the parent node didn't have any children, we have to set `isTarget = true` for it, otherwise it'll loose that status
-                // due to now having children
-                parentNode.entry.isTarget = true;
-              }
-            }
-            currentLevel.set(identifier, entry);
+          let currentLevel = treePath.length > 0 ? treePath[treePath.length - 1]?.entry?.children : this.#rootsDictionary;
+          if (!currentLevel) {
+            const parentNode = treePath[treePath.length - 1];
+            currentLevel = this.#ensureChildrenDictionary(parentNode.entry, !parentNode.createdEntryForThisPath);
           }
+          const { entry, createdEntryForThisPath } = this.#getOrCreateEntry(currentLevel, identifier);
           treePath.push({ entry, createdEntryForThisPath });
 
           // handle auto-expand / reveal options if we're at the end of the path
@@ -287,14 +306,50 @@ export namespace HierarchySearchTree {
             }
           }
         }
-        return this;
-      },
+      }
 
-      /** Create `HierarchySearchTree[]` from currently added search paths. */
-      getTree() {
-        return mapDictionaryToTree(rootsDictionary);
-      },
-    };
+      #acceptTree({ tree }: { tree: HierarchySearchTree }) {
+        const acceptTreeNode = (level: HierarchySearchTreeDictionary, node: HierarchySearchTree) => {
+          const { entry, createdEntryForThisPath } = this.#getOrCreateEntry(level, node.identifier);
+
+          const mergedOptions = HierarchySearchTree.mergeOptions(entry.options, node.options);
+          if (mergedOptions) {
+            entry.options = mergedOptions;
+          } else {
+            delete entry.options;
+          }
+
+          const nodeChildren = node.children ?? [];
+          const nodeHasChildren = nodeChildren.length > 0;
+          if (nodeHasChildren) {
+            const childrenLevel = this.#ensureChildrenDictionary(entry, !createdEntryForThisPath);
+            for (const child of nodeChildren) {
+              acceptTreeNode(childrenLevel, child);
+            }
+          }
+
+          const nodeIsTarget = node.isTarget || !nodeHasChildren;
+          if (nodeIsTarget && entry.children) {
+            entry.isTarget = true;
+          }
+        };
+
+        acceptTreeNode(this.#rootsDictionary, tree);
+      }
+
+      public accept(props: { path: HierarchySearchPath } | { tree: HierarchySearchTree }): HierarchySearchTreeBuilder {
+        if ("path" in props) {
+          this.#acceptPath(props);
+        } else {
+          this.#acceptTree(props);
+        }
+        return this;
+      }
+
+      public getTree() {
+        return mapDictionaryToTree(this.#rootsDictionary);
+      }
+    })();
   }
 
   /**

@@ -54,6 +54,96 @@ describe("HierarchySearchPath", () => {
 });
 
 describe("HierarchySearchTree", () => {
+  describe("createBuilder", () => {
+    describe("accept tree", () => {
+      it("adds a single tree", async () => {
+        const builder = HierarchySearchTree.createBuilder();
+        builder.accept({ tree: { identifier: createTestGenericNodeKey({ id: "a" }) } });
+
+        expect(builder.getTree()).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
+      });
+
+      it("merges tree branches with the same root", async () => {
+        const builder = HierarchySearchTree.createBuilder();
+        builder.accept({
+          tree: {
+            identifier: createTestGenericNodeKey({ id: "a" }),
+            children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }],
+          },
+        });
+        builder.accept({
+          tree: {
+            identifier: createTestGenericNodeKey({ id: "a" }),
+            children: [{ identifier: createTestGenericNodeKey({ id: "c" }) }],
+          },
+        });
+
+        expect(builder.getTree()).to.deep.eq([
+          {
+            identifier: createTestGenericNodeKey({ id: "a" }),
+            children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }, { identifier: createTestGenericNodeKey({ id: "c" }) }],
+          },
+        ]);
+      });
+
+      it("preserves implied target when extending an existing leaf", async () => {
+        const builder = HierarchySearchTree.createBuilder();
+        builder.accept({ tree: { identifier: createTestGenericNodeKey({ id: "a" }) } });
+        builder.accept({
+          tree: {
+            identifier: createTestGenericNodeKey({ id: "a" }),
+            children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }],
+          },
+        });
+
+        expect(builder.getTree()).to.deep.eq([
+          {
+            identifier: createTestGenericNodeKey({ id: "a" }),
+            isTarget: true,
+            children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }],
+          },
+        ]);
+      });
+
+      it("sets as target when node already exists", async () => {
+        const builder = HierarchySearchTree.createBuilder();
+        builder.accept({
+          tree: {
+            identifier: createTestGenericNodeKey({ id: "a" }),
+            children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }],
+          },
+        });
+        builder.accept({ tree: { identifier: createTestGenericNodeKey({ id: "a" }) } });
+
+        expect(builder.getTree()).to.deep.eq([
+          {
+            identifier: createTestGenericNodeKey({ id: "a" }),
+            isTarget: true,
+            children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }],
+          },
+        ]);
+      });
+
+      it("merges tree options for matching entries", async () => {
+        const builder = HierarchySearchTree.createBuilder();
+        builder.accept({
+          tree: {
+            identifier: createTestGenericNodeKey({ id: "a" }),
+            options: { autoExpand: { groupingLevel: 1 } },
+          },
+        });
+        builder.accept({
+          tree: {
+            identifier: createTestGenericNodeKey({ id: "a" }),
+            options: { autoExpand: true },
+          },
+        });
+
+        expect(builder.getTree()).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }), options: { autoExpand: true } }]);
+      });
+    });
+  });
+
   describe("createFromPathsList", () => {
     it("returns empty array for empty input", async () => {
       expect(await HierarchySearchTree.createFromPathsList([])).to.deep.eq([]);

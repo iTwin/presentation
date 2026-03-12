@@ -919,9 +919,14 @@ function mergeSearchAttribute(primary: SourceHierarchyNode["search"], secondary:
   }
 
   const hasSearchTargetAncestor = primary.hasSearchTargetAncestor || secondary.hasSearchTargetAncestor;
-  const childrenTargetPaths = [...(primary.childrenTargetPaths ?? []), ...(secondary.childrenTargetPaths ?? [])];
   const isSearchTarget = primary.isSearchTarget || secondary.isSearchTarget;
   const searchOptions = HierarchySearchTree.mergeOptions(primary.options, secondary.options);
+
+  const childrenTargetPathsBuilder = HierarchySearchTree.createBuilder();
+  primary.childrenTargetPaths?.forEach((tree) => childrenTargetPathsBuilder.accept({ tree }));
+  secondary.childrenTargetPaths?.forEach((tree) => childrenTargetPathsBuilder.accept({ tree }));
+  const childrenTargetPaths = childrenTargetPathsBuilder.getTree();
+
   return {
     ...(hasSearchTargetAncestor ? { hasSearchTargetAncestor } : undefined),
     ...(childrenTargetPaths.length ? { childrenTargetPaths } : undefined),
