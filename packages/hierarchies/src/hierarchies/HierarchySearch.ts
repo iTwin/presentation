@@ -150,7 +150,7 @@ export interface HierarchySearchTree {
   /**
    * When `true`, indicates that this node is a search target.
    *
-   * Note: `HierarchySearchTree` is also considered a search target if it has no children, even if `isTarget` is not explicitly set to `true`. This
+   * Note: A `HierarchySearchTree` node is considered a search target if it has no children, even if `isTarget` is not explicitly set to `true`. This
    * is because a node with no children represents the end of a search path.
    */
   isTarget?: boolean;
