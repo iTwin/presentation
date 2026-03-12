@@ -405,6 +405,9 @@ describe("HierarchySearchTree", () => {
       expect(HierarchySearchTree.mergeOptions({ autoExpand: { groupingLevel: 1 } }, { autoExpand: { groupingLevel: 3 } })).to.deep.eq({
         autoExpand: { groupingLevel: 3 },
       });
+      expect(HierarchySearchTree.mergeOptions({ autoExpand: { groupingLevel: 3 } }, { autoExpand: { groupingLevel: 1 } })).to.deep.eq({
+        autoExpand: { groupingLevel: 3 },
+      });
     });
 
     it("returns undefined when neither side has autoExpand", () => {
