@@ -9,6 +9,7 @@ Start using tree structure for defining hierarchy search paths.
 - `HierarchySearchTree` type that represents a tree structure of hierarchy search paths and is now used for hierarchy search implementation in `HierarchyProvider`.
 
   In addition to the type, there's also a namespace with the same name, providing utility functions for working with the tree structure:
+  - `HierarchySearchTree.createBuilder` function to create a builder for hierarchy search trees, which can be used to create a tree from individual paths or to merge multiple trees together.
   - `HierarchySearchTree.createFromPathsList` function to create a hierarchy search tree from a list of hierarchy search paths.
   - `HierarchySearchTree.mergeOptions` function to merge options of two hierarchy search trees. Used internally to merge options of the same nodes when creating a tree from a list of paths.
 
