@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
+import { compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
 import { InstanceKey } from "@itwin/presentation-shared";
 
 import type { GenericNodeKey, IModelInstanceKey } from "./HierarchyNodeKey.js";
@@ -50,7 +50,6 @@ export namespace HierarchyNodeIdentifier {
       }
       return -1;
     }
-    assert(HierarchyNodeIdentifier.isInstanceNodeIdentifier(lhs));
     if (HierarchyNodeIdentifier.isInstanceNodeIdentifier(rhs)) {
       const imodelKeyCompareResult = compareStringsOrUndefined(lhs.imodelKey, rhs.imodelKey);
       if (imodelKeyCompareResult !== 0) {
