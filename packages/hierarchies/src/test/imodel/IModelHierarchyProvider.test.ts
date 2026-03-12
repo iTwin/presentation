@@ -10,7 +10,6 @@ import { BeEvent, omit } from "@itwin/core-bentley";
 import { InstanceKey, trimWhitespace } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
 import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
-import { HierarchySearchTree } from "../../hierarchies/HierarchySearch.js";
 import {
   createMergedIModelHierarchyProvider,
   createIModelHierarchyProvider as origCreateIModelHierarchyProvider,
@@ -1963,16 +1962,20 @@ describe("createMergedIModelHierarchyProvider", () => {
               ],
       },
       search: {
-        paths: await HierarchySearchTree.createFromPathsList([
-          { path: [{ className: "a.b", id: "0x123", imodelKey: "imodel 1" }], options: { reveal: true, autoExpand: true } },
+        paths: [
           {
-            path: [
-              { className: "a.b", id: "0x123", imodelKey: "imodel 2" },
-              { className: "c.d", id: "0x456", imodelKey: "imodel 2" },
-            ],
-            options: { reveal: false, autoExpand: false },
+            identifier: { className: "a.b", id: "0x123", imodelKey: "imodel 1" },
+            options: { autoExpand: true },
           },
-        ]),
+          {
+            identifier: { className: "a.b", id: "0x123", imodelKey: "imodel 2" },
+            children: [
+              {
+                identifier: { className: "c.d", id: "0x456", imodelKey: "imodel 2" },
+              },
+            ],
+          },
+        ],
       },
     });
 

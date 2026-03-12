@@ -371,24 +371,23 @@ describe("Hierarchies", () => {
         // from root to the matched nodes. This function must be aware of the hierarchy structure to know what paths
         // to create.
         async function createHierarchySearchTree(searchText: string): Promise<HierarchySearchTree[]> {
-          const results: HierarchySearchPath[] = [];
+          const searchTreeBuilder = HierarchySearchTree.createBuilder();
           const [matchingAuthors, matchingBooks] = await Promise.all([
             booksService.getAuthors({ name: searchText }),
             booksService.getBooks({ title: searchText }),
           ]);
           for (const author of matchingAuthors) {
-            results.push([{ type: "generic", id: `author:${author.key}` }]);
+            searchTreeBuilder.accept({ path: [{ type: "generic", id: `author:${author.key}` }] });
           }
           for (const book of matchingBooks) {
-            results.push([
-              { type: "generic", id: `author:${book.authorKey}` },
-              { type: "generic", id: `book:${book.key}` },
-            ]);
+            searchTreeBuilder.accept({
+              path: [
+                { type: "generic", id: `author:${book.authorKey}` },
+                { type: "generic", id: `book:${book.key}` },
+              ],
+            });
           }
-          // The `HierarchyProvider` interface expects the search input to be provided in a form of a tree, but it's
-          // generally more convenient to create the search result as a list of paths and then convert it to a tree
-          // structure - `HierarchySearchTree.createFromPathsList` helper can be used for that.
-          return HierarchySearchTree.createFromPathsList(results);
+          return searchTreeBuilder.getTree();
         }
         // __PUBLISH_EXTRACT_END__
 

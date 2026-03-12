@@ -147,6 +147,20 @@ describe("HierarchySearchTree", () => {
         ]);
       });
 
+      it("marks node as isTarget when path points to already existing node with children", async () => {
+        const result = await HierarchySearchTree.createFromPathsList([
+          [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })],
+          [createTestGenericNodeKey({ id: "a" })],
+        ]);
+        expect(result).to.deep.eq([
+          {
+            identifier: createTestGenericNodeKey({ id: "a" }),
+            isTarget: true,
+            children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }],
+          },
+        ]);
+      });
+
       it("doesn't set isTarget on intermediate nodes created within the same path", async () => {
         const result = await HierarchySearchTree.createFromPathsList([[createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })]]);
         expect(result[0].isTarget).to.be.undefined;

@@ -490,6 +490,22 @@ export interface HierarchySearchTree {
 
 // @public (undocumented)
 export namespace HierarchySearchTree {
+    export function createBuilder(): {
+        accept(this: {
+            accept(this: /*elided*/ any, input: {
+                path: HierarchySearchPath;
+            }): /*elided*/ any;
+            getTree(): HierarchySearchTree[];
+        }, input: {
+            path: HierarchySearchPath;
+        }): {
+            accept(this: /*elided*/ any, input: {
+                path: HierarchySearchPath;
+            }): /*elided*/ any;
+            getTree(): HierarchySearchTree[];
+        };
+        getTree(): HierarchySearchTree[];
+    };
     export function createFromPathsList(paths: Iterable<HierarchySearchPath>): Promise<HierarchySearchTree[]>;
     export function mergeOptions(lhs: HierarchySearchTree["options"] | undefined, rhs: HierarchySearchTree["options"] | undefined): HierarchySearchTree["options"] | undefined;
 }

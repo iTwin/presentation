@@ -84,10 +84,10 @@ Let's consider two cases - searching by label and by target element ID:
   import { HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
   import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
 
-  // Define a function that returns `HierarchyNodeIdentifiersPath[]` based on given search string. In this case, we run
+  // Define a function that returns `HierarchySearchTree[]` based on given search string. In this case, we run
   // a query to find matching elements by their `UserLabel` property. Then, we construct paths to the root element using recursive
-  // CTE. Finally, we return the paths in reverse order to start from the root element.
-  async function createSearchTargetPaths(searchStrings: string[]): Promise<HierarchyNodeIdentifiersPath[]> {
+  // CTE. Finally, we use `HierarchySearchTree` builder to create a search tree based on those paths.
+  async function createHierarchySearchTree(searchStrings: string[]): Promise<HierarchySearchTree[]> {
     const query: ECSqlQueryDef = {
       ctes: [
         `MatchingElements(Path, ParentId) AS (
@@ -110,18 +110,28 @@ Let's consider two cases - searching by label and by target element ID:
       ecsql: `SELECT Path FROM MatchingElements WHERE ParentId IS NULL`,
       bindings: searchStrings.map((searchString) => ({ type: "string", value: searchString })),
     };
-    const result: HierarchyNodeIdentifiersPath[] = [];
+    const searchTreeBuilder = HierarchySearchTree.createBuilder();
     for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-      result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })));
+      searchTreeBuilder.accept({
+        path: (JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })),
+      });
     }
-    return result;
+    return searchTreeBuilder.getTree();
   }
   // Find paths to elements whose label contains "C" or "E"
-  const searchPaths = await createSearchTargetPaths(["C", "E"]);
+  const searchPaths = await createHierarchySearchTree(["C", "E"]);
   expect(searchPaths).to.deep.eq([
     // We expect to find two paths A -> B -> C and A -> E
-    [elementKeys.a, elementKeys.e],
-    [elementKeys.a, elementKeys.b, elementKeys.c],
+    {
+      identifier: elementKeys.a,
+      children: [
+        {
+          identifier: elementKeys.b,
+          children: [{ identifier: elementKeys.c }],
+        },
+        { identifier: elementKeys.e },
+      ],
+    },
   ]);
   ```
 
@@ -196,8 +206,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-  // Note the use of `HierarchySearchTree.createFromPathsList` utility function to create a search tree from a list of search paths.
-  search: { paths: await HierarchySearchTree.createFromPathsList(searchPaths) },
+  search: { paths: searchPaths },
 });
 // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
 // Note that "E" has a child "F", even though it's not a search target. This is because subtrees under search target nodes

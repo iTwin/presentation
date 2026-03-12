@@ -3,9 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { firstValueFrom, from, map, reduce } from "rxjs";
 import { Dictionary } from "@itwin/core-bentley";
 import { HierarchyNodeIdentifier } from "./HierarchyNodeIdentifier.js";
 import { HierarchyNodeKey } from "./HierarchyNodeKey.js";
+import { releaseMainThreadOnItemsCount } from "./internal/operators/ReleaseMainThread.js";
 
 import type { NonGroupingHierarchyNode } from "./HierarchyNode.js";
 import type { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
@@ -139,7 +141,10 @@ export namespace HierarchySearchPath {
 /**
  * A tree structure representing hierarchy search paths. Each node in the tree corresponds
  * to a hierarchy node identifier and may have children that represent deeper levels in the
- * hierarchy. This is typically built from a flat list of search paths using `HierarchySearchTree.createFromPathsList`.
+ * hierarchy.
+ *
+ * The `HierarchySearchTree.createBuilder` or `HierarchySearchTree.createFromPathsList` are
+ * typically used create this tree from a flat list of search paths.
  *
  * @public
  */
@@ -188,6 +193,110 @@ export interface HierarchySearchTree {
 
 /** @public */
 export namespace HierarchySearchTree {
+  type HierarchySearchTreeDictionaryEntry = Omit<HierarchySearchTree, "children"> & { children?: HierarchySearchTreeDictionary };
+  type HierarchySearchTreeDictionary = Dictionary<HierarchyNodeIdentifier, HierarchySearchTreeDictionaryEntry>;
+  function mapDictionaryToTree(dictionary: HierarchySearchTreeDictionary): HierarchySearchTree[] {
+    const list: HierarchySearchTree[] = [];
+    for (const { children, ...entry } of dictionary.values()) {
+      list.push({ ...entry, ...(children ? { children: mapDictionaryToTree(children) } : undefined) });
+    }
+    return list;
+  }
+
+  /**
+   * Create a `HierarchySearchTree` builder utility that accepts hierarchy search paths one by one and builds
+   * a `HierarchySearchTree` structure based on them.
+   *
+   * Usage example:
+   *
+   * ```ts
+   * const builder = HierarchySearchTree.createBuilder();
+   * for (const path of searchPaths) {
+   *   builder.accept({ path });
+   * }
+   * const searchTree = builder.getTree();
+   * ```
+   */
+  export function createBuilder() {
+    const rootsDictionary: HierarchySearchTreeDictionary = new Dictionary(HierarchyNodeIdentifier.compare);
+    return {
+      /**
+       * Accepts a hierarchy search path and adds it to the builder's internal tree structure. Use `getTree()` to create
+       * a `HierarchySearchTree[]` from the added paths.
+       */
+      accept(this, { path }: { path: HierarchySearchPath }) {
+        const normalized = HierarchySearchPath.normalize(path);
+        const treePath: Array<{ entry: HierarchySearchTreeDictionaryEntry; createdEntryForThisPath?: boolean }> = [];
+        for (let i = 0; i < normalized.path.length; i++) {
+          const identifier = normalized.path[i];
+          // find where we're going to look for / add the next entry in the tree path
+          let currentLevel = treePath.length > 0 ? treePath[treePath.length - 1]?.entry?.children : rootsDictionary;
+          // try to find the entry in the current level
+          let entry = currentLevel?.get(identifier);
+          let createdEntryForThisPath = false;
+          if (!entry) {
+            entry = { identifier };
+            createdEntryForThisPath = true;
+            if (!currentLevel) {
+              const parentNode = treePath[treePath.length - 1];
+              currentLevel = parentNode.entry.children = new Dictionary(HierarchyNodeIdentifier.compare);
+              if (!parentNode.createdEntryForThisPath) {
+                // if the parent node didn't have any children, we have to set `isTarget = true` for it, otherwise it'll loose that status
+                // due to now having children
+                parentNode.entry.isTarget = true;
+              }
+            }
+            currentLevel.set(identifier, entry);
+          }
+          treePath.push({ entry, createdEntryForThisPath });
+
+          // handle auto-expand / reveal options if we're at the end of the path
+          if (i === normalized.path.length - 1) {
+            // ensure the node has `isTarget` if it has `children` (if not, then it's considered a target anyway)
+            if (entry.children) {
+              entry.isTarget = true;
+            }
+
+            // handle auto-expand
+            if (normalized.options?.autoExpand) {
+              (entry.options ??= {}).autoExpand = true;
+            }
+
+            // handle auto-reveal
+            if (normalized.options?.reveal === true) {
+              assignAutoExpandOnTreePath({
+                treePath,
+                targetEntryIndex: treePath.length - 1,
+                // auto-expand all grouping nodes of the revealed node
+                targetEntryAutoExpandOption: { groupingLevel: Number.MAX_SAFE_INTEGER },
+              });
+            } else if (normalized.options?.reveal && "groupingLevel" in normalized.options.reveal) {
+              assignAutoExpandOnTreePath({
+                treePath,
+                targetEntryIndex: treePath.length - 1,
+                // the last entry should have `autoExpand` with `groupingLevel` set to the value based on `reveal.groupingLevel`
+                targetEntryAutoExpandOption: { groupingLevel: Math.max(normalized.options.reveal.groupingLevel - 1, 0) },
+              });
+            } else if (normalized.options?.reveal && "depthInPath" in normalized.options.reveal) {
+              assignAutoExpandOnTreePath({
+                treePath,
+                targetEntryIndex: Math.min(normalized.options.reveal.depthInPath, treePath.length - 1),
+                // auto-expand all grouping nodes of the revealed node
+                targetEntryAutoExpandOption: { groupingLevel: Number.MAX_SAFE_INTEGER },
+              });
+            }
+          }
+        }
+        return this;
+      },
+
+      /** Create `HierarchySearchTree[]` from currently added search paths. */
+      getTree() {
+        return mapDictionaryToTree(rootsDictionary);
+      },
+    };
+  }
+
   /**
    * Builds a list of `HierarchySearchTree` nodes from an iterable of search paths. Shared
    * path prefixes are merged so that each unique hierarchy node identifier appears only once
@@ -197,88 +306,13 @@ export namespace HierarchySearchTree {
    * @public
    */
   export async function createFromPathsList(paths: Iterable<HierarchySearchPath>): Promise<HierarchySearchTree[]> {
-    type HierarchySearchTreeDictionaryEntry = Omit<HierarchySearchTree, "children"> & { children?: HierarchySearchTreeDictionary };
-    type HierarchySearchTreeDictionary = Dictionary<HierarchyNodeIdentifier, HierarchySearchTreeDictionaryEntry>;
-    const rootsDictionary: HierarchySearchTreeDictionary = new Dictionary(HierarchyNodeIdentifier.compare);
-
-    let pathIndex = 0;
-    for (const searchPath of paths) {
-      const normalized = HierarchySearchPath.normalize(searchPath);
-      const treePath: Array<{ entry: HierarchySearchTreeDictionaryEntry; createdEntryForThisPath?: boolean }> = [];
-      for (let i = 0; i < normalized.path.length; i++) {
-        const identifier = normalized.path[i];
-        // find where we're going to look for / add the next entry in the tree path
-        let currentLevel = treePath.length > 0 ? treePath[treePath.length - 1]?.entry?.children : rootsDictionary;
-        // try to find the entry in the current level
-        let entry = currentLevel?.get(identifier);
-        // we want to know if the entry was created for this path - when assigning the `children` attribute we use this
-        // information to know if the parent node should be marked as a search target
-        const createdEntryForThisPath = !entry;
-        if (!entry) {
-          entry = { identifier };
-          if (!currentLevel) {
-            const parentNode = treePath[treePath.length - 1];
-            currentLevel = parentNode.entry.children = new Dictionary(HierarchyNodeIdentifier.compare);
-            if (!parentNode.createdEntryForThisPath) {
-              parentNode.entry.isTarget = true;
-            }
-          }
-          currentLevel.set(identifier, entry);
-        }
-        treePath.push({ entry, createdEntryForThisPath });
-
-        // handle auto-expand / reveal options if we're at the end of the path
-        if (i === normalized.path.length - 1) {
-          // handle auto-expand
-          if (normalized.options?.autoExpand) {
-            (entry.options ??= {}).autoExpand = true;
-          }
-
-          // handle auto-reveal
-          if (normalized.options?.reveal === true) {
-            assignAutoExpandOnTreePath({
-              treePath,
-              targetEntryIndex: treePath.length - 1,
-              // auto-expand all grouping nodes of the revealed node
-              targetEntryAutoExpandOption: { groupingLevel: Number.MAX_SAFE_INTEGER },
-            });
-          } else if (normalized.options?.reveal && "groupingLevel" in normalized.options.reveal) {
-            assignAutoExpandOnTreePath({
-              treePath,
-              targetEntryIndex: treePath.length - 1,
-              // the last entry should have `autoExpand` with `groupingLevel` set to the value based on `reveal.groupingLevel`
-              targetEntryAutoExpandOption: { groupingLevel: Math.max(normalized.options.reveal.groupingLevel - 1, 0) },
-            });
-          } else if (normalized.options?.reveal && "depthInPath" in normalized.options.reveal) {
-            assignAutoExpandOnTreePath({
-              treePath,
-              targetEntryIndex: Math.min(normalized.options.reveal.depthInPath, treePath.length - 1),
-              // auto-expand all grouping nodes of the revealed node
-              targetEntryAutoExpandOption: { groupingLevel: Number.MAX_SAFE_INTEGER },
-            });
-          }
-        }
-      }
-      /* c8 ignore next 4 */
-      if (pathIndex > 0 && pathIndex % 1000 === 0) {
-        // Yield to the event loop every 1000 iterations to avoid blocking it for too long when processing a large number of paths.
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      }
-      ++pathIndex;
-    }
-
-    function mapDictionaryToTree(dictionary: HierarchySearchTreeDictionary): HierarchySearchTree[] {
-      const list: HierarchySearchTree[] = [];
-      for (const entry of dictionary.values()) {
-        list.push(mapDictionaryEntryToTree(entry));
-      }
-      return list;
-    }
-    function mapDictionaryEntryToTree(dictionaryEntry: HierarchySearchTreeDictionaryEntry): HierarchySearchTree {
-      const { children, ...entry } = dictionaryEntry;
-      return { ...entry, ...(children ? { children: mapDictionaryToTree(children) } : undefined) };
-    }
-    return mapDictionaryToTree(rootsDictionary);
+    return firstValueFrom(
+      from(paths).pipe(
+        releaseMainThreadOnItemsCount(1000),
+        reduce((builder, path) => builder.accept({ path }), createBuilder()),
+        map((builder) => builder.getTree()),
+      ),
+    );
   }
 
   function assignAutoExpandOnTreePath({
