@@ -145,7 +145,7 @@ const searchPath: HierarchySearchPath = {
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
     // Reveal the C's label grouping node by specifying its grouping level.
-    // Note that grouping level is counted from the first non-grouping ancestor node.
+    // Note that grouping level is counted from the nearest non-grouping ancestor node.
     reveal: { groupingLevel: 2 },
   },
 };

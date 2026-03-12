@@ -228,7 +228,7 @@ describe("HierarchyNode", () => {
       ).to.eq(3);
     });
 
-    it("stops counting at the first non-grouping parent key from the end", () => {
+    it("stops counting at the nearest non-grouping parent key from the end", () => {
       expect(
         HierarchyNode.getGroupingNodeLevel({
           key: classGroupingNode.key,
