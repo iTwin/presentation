@@ -8,7 +8,7 @@ import * as fs from "fs";
 import hash from "object-hash";
 import { getFullSchemaXml } from "presentation-test-utilities";
 import { ECDb, ECSqlWriteStatement, IModelDb } from "@itwin/core-backend";
-import { BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
+import { assert, BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
@@ -219,7 +219,10 @@ export async function importSchema(
   const parsedSchema = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: "",
-    isArray: (_, jpath) => jpath.startsWith("ECSchema."),
+    isArray: (_, jpath) => {
+      assert(typeof jpath === "string");
+      return jpath.startsWith("ECSchema.");
+    },
   }).parse(schemaXml);
   const schemaItems = Object.values(parsedSchema.ECSchema)
     .flatMap<any>((itemDef) => itemDef)

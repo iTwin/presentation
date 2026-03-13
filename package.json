@@ -34,7 +34,7 @@
     "benchmark:unified-selection": "pnpm run -C ./apps/performance-tests benchmark:unified-selection"
   },
   "dependencies": {
-    "@changesets/cli": "^2.29.8",
+    "@changesets/cli": "^2.30.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
     "cpx2": "catalog:build-tools",
     "cspell": "^9.7.0",

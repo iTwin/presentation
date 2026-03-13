@@ -1,5 +1,5 @@
 diff --git a/apps/full-stack-tests/src/IModelUtils.ts b/apps/full-stack-tests/src/IModelUtils.ts
-index 4282b2d9..6761fbdc 100644
+index c037edc0..08bbaf13 100644
 --- a/apps/full-stack-tests/src/IModelUtils.ts
 +++ b/apps/full-stack-tests/src/IModelUtils.ts
 @@ -7,7 +7,7 @@ import { XMLParser } from "fast-xml-parser";
@@ -8,7 +8,7 @@ index 4282b2d9..6761fbdc 100644
  import { getFullSchemaXml } from "presentation-test-utilities";
 -import { ECDb, ECSqlWriteStatement, IModelDb } from "@itwin/core-backend";
 +import { ECDb, ECSqlStatement, IModelDb } from "@itwin/core-backend";
- import { BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
+ import { assert, BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
  import { IModelConnection } from "@itwin/core-frontend";
  import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
 @@ -46,7 +46,7 @@ export class ECDbBuilder {

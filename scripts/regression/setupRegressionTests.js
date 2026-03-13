@@ -151,12 +151,19 @@ function parseWorkspaceFile(workspaceRoot) {
 }
 
 function applyGitPatch(patchFile) {
+  let patchPath;
   try {
-    const patchPath = require.resolve(`./${patchFile}`);
+    patchPath = require.resolve(`./${patchFile}`);
+  } catch (e) {
+    console.log(`Patch file "${patchFile}" not found.`);
+    return;
+  }
+  try {
     // patch known build issues in full stack tests due to older types from itwinjs-core
     execSync(`git apply ${patchPath}`);
     console.log(`Applied patch file: ${patchFile}`);
   } catch (e) {
-    console.log(`Could not find patch file: ${patchFile}`);
+    console.log(`Error applying patch file "${patchFile}": ${e.message}`);
+    process.exit(1);
   }
 }
