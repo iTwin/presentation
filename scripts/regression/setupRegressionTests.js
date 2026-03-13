@@ -157,6 +157,7 @@ function applyGitPatch(patchFile) {
     execSync(`git apply ${patchPath}`);
     console.log(`Applied patch file: ${patchFile}`);
   } catch (e) {
-    console.log(`Could not find patch file: ${patchFile}`);
+    console.log(`Error applying patch file "${patchFile}": ${e.message}`);
+    process.exit(1);
   }
 }
