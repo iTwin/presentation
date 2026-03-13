@@ -151,8 +151,12 @@ function parseWorkspaceFile(workspaceRoot) {
 }
 
 function applyGitPatch(patchFile) {
+  const patchPath = require.resolve(`./${patchFile}`);
+  if (!fs.existsSync(patchPath)) {
+    console.log(`Patch file "${patchFile}" not found at path: ${patchPath}`);
+    return;
+  }
   try {
-    const patchPath = require.resolve(`./${patchFile}`);
     // patch known build issues in full stack tests due to older types from itwinjs-core
     execSync(`git apply ${patchPath}`);
     console.log(`Applied patch file: ${patchFile}`);
