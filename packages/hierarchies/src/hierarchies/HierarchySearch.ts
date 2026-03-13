@@ -193,16 +193,6 @@ export interface HierarchySearchTree {
 
 /** @public */
 export namespace HierarchySearchTree {
-  type HierarchySearchTreeDictionaryEntry = Omit<HierarchySearchTree, "children"> & { children?: HierarchySearchTreeDictionary };
-  type HierarchySearchTreeDictionary = Dictionary<HierarchyNodeIdentifier, HierarchySearchTreeDictionaryEntry>;
-  function mapDictionaryToTree(dictionary: HierarchySearchTreeDictionary): HierarchySearchTree[] {
-    const list: HierarchySearchTree[] = [];
-    for (const { children, ...entry } of dictionary.values()) {
-      list.push({ ...entry, ...(children ? { children: mapDictionaryToTree(children) } : undefined) });
-    }
-    return list;
-  }
-
   /**
    * An utility that accepts hierarchy search paths or search trees one by one and builds a `HierarchySearchTree` structure based on them.
    * @public
@@ -236,8 +226,18 @@ export namespace HierarchySearchTree {
    * @public
    */
   export function createBuilder(): HierarchySearchTreeBuilder {
-    return new (class implements HierarchySearchTreeBuilder {
+    type HierarchySearchTreeDictionaryEntry = Omit<HierarchySearchTree, "children"> & { children?: HierarchySearchTreeDictionary };
+    type HierarchySearchTreeDictionary = Dictionary<HierarchyNodeIdentifier, HierarchySearchTreeDictionaryEntry>;
+    return new (class Impl implements HierarchySearchTreeBuilder {
       #rootsDictionary: HierarchySearchTreeDictionary = new Dictionary(HierarchyNodeIdentifier.compare);
+
+      static #mapDictionaryToTree(dictionary: HierarchySearchTreeDictionary): HierarchySearchTree[] {
+        const list: HierarchySearchTree[] = [];
+        for (const { children, ...entry } of dictionary.values()) {
+          list.push({ ...entry, ...(children ? { children: Impl.#mapDictionaryToTree(children) } : undefined) });
+        }
+        return list;
+      }
 
       #getOrCreateEntry(level: HierarchySearchTreeDictionary, identifier: HierarchyNodeIdentifier) {
         let entry = level.get(identifier);
@@ -352,7 +352,7 @@ export namespace HierarchySearchTree {
       }
 
       public getTree() {
-        return mapDictionaryToTree(this.#rootsDictionary);
+        return Impl.#mapDictionaryToTree(this.#rootsDictionary);
       }
     })();
   }
