@@ -1,5 +1,13 @@
 # @itwin/presentation-core-interop
 
+## 1.3.10
+
+### Patch Changes
+
+- [#1242](https://github.com/iTwin/presentation/pull/1242): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.10
+
 ## 1.3.9
 
 ### Patch Changes
