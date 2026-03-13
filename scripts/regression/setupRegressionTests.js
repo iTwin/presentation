@@ -151,9 +151,11 @@ function parseWorkspaceFile(workspaceRoot) {
 }
 
 function applyGitPatch(patchFile) {
-  const patchPath = require.resolve(`./${patchFile}`);
-  if (!fs.existsSync(patchPath)) {
-    console.log(`Patch file "${patchFile}" not found at path: ${patchPath}`);
+  let patchPath;
+  try {
+    patchPath = require.resolve(`./${patchFile}`);
+  } catch (e) {
+    console.log(`Patch file "${patchFile}" not found.`);
     return;
   }
   try {
