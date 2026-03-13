@@ -14,7 +14,7 @@ import type {
   GenericNodeKey,
   GroupingHierarchyNode,
   HierarchyProvider,
-  HierarchySearchPathOptions,
+  HierarchySearchTree,
   InstancesNodeKey,
   NonGroupingHierarchyNode,
 } from "@itwin/presentation-hierarchies";
@@ -53,7 +53,7 @@ type BaseNodeExpectations = {
 type NonGroupingNodeExpectations = BaseNodeExpectations & {
   supportsFiltering?: boolean;
   isSearchTarget?: boolean;
-  searchTargetOptions?: HierarchySearchPathOptions;
+  searchOptions?: HierarchySearchTree["options"];
 };
 
 type GroupingNodeExpectations = BaseNodeExpectations & {
@@ -118,11 +118,11 @@ export namespace NodeValidators {
         )}, got ${optionalBooleanToString(node.search?.isSearchTarget)}`,
       );
     }
-    if (expectations.searchTargetOptions !== undefined) {
+    if (expectations.searchOptions !== undefined) {
       assert(node.search?.isSearchTarget, `[${node.label}] Expected node to be a search target`);
-      expect(node.search.searchTargetOptions).to.deep.eq(
-        expectations.searchTargetOptions,
-        `[${node.label}] Nodes's 'search.searchTargetOptions' flag property doesn't match the expectation.`,
+      expect(node.search.options).to.deep.eq(
+        expectations.searchOptions,
+        `[${node.label}] Node's 'search.options' flag property doesn't match the expectation.`,
       );
     }
   }

@@ -68,13 +68,12 @@ Let's say, we want the hierarchy to contain only the nodes with "C" label. In th
 
 The following code snippet shows, how to create a search path that includes the `autoExpand` flag:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.AutoExpand.SearchPath], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.Reveal.SearchPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
 import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
-// Get a grouping node that groups the "C" element
 const searchPath: HierarchySearchPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
@@ -90,7 +89,7 @@ const searchPath: HierarchySearchPath = {
 
 There is also an option to expand search targets, this can be achieved by setting `autoExpand` flag:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.autoExpand.SearchPath], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.AutoExpand.SearchPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
@@ -131,9 +130,9 @@ const searchPath: HierarchySearchPath = {
 
 <!-- END EXTRACTION -->
 
-Also, hierarchies may contain grouping nodes, which don't represent anything by themselves, which means they can't be a search target. In some cases it may be necessary to auto-expand the hierarchy up to a desired grouping node (and not auto-expand grouping nodes below them), which can be achieved by setting the `autoExpand` property to `{ depthInHierarchy: number }`, where depth represents grouping node depth in the hierarchy:
+Also, hierarchies may contain grouping nodes, which don't represent anything by themselves, which means they can't be a search target. In some cases it may be necessary to auto-expand the hierarchy up to a desired grouping node (and not auto-expand grouping nodes below them), which can be achieved by setting the `reveal` property to `{ groupingLevel: number }`, where `groupingLevel` represents the grouping node distance from the nearest non-grouping ancestor or root of the hierarchy.
 
-<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.AutoExpandUntilDepthInHierarchy.SearchPath], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.RevealGroupingLevel.SearchPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
@@ -141,16 +140,13 @@ import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
 // Hierarchy has this structure: A -> class grouping node -> label grouping node -> B -> class grouping node -> label grouping node -> C.
 // Hierarchy has two grouping nodes that group C element: one class grouping and one label grouping node.
-
-// Get label grouping node that groups the "C" element
-const groupingNode = await getSelectedGroupingNode();
 const searchPath: HierarchySearchPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
-    // Reveal (set auto-expand flag for all nodes up to the specified depth) hierarchy up to (but not including) the last label grouping node.
-    // The `depthInHierarchy` attribute is the index of the last label grouping node. It is equal to the number of parents.
-    reveal: { depthInHierarchy: groupingNode.parentKeys.length },
+    // Reveal the C's label grouping node by specifying its grouping level.
+    // Note that grouping level is counted from the nearest non-grouping ancestor node.
+    reveal: { groupingLevel: 2 },
   },
 };
 ```

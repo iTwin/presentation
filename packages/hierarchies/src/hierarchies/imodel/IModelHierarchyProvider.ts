@@ -32,7 +32,7 @@ import { createDefaultValueFormatter, formatConcatenatedValue, InstanceKey, norm
 import { RowsLimitExceededError } from "../HierarchyErrors.js";
 import { HierarchyNode } from "../HierarchyNode.js";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
-import { HierarchySearchPath } from "../HierarchySearch.js";
+import { HierarchySearchTree } from "../HierarchySearch.js";
 import {
   LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE,
   LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE_INTERNAL,
@@ -156,10 +156,15 @@ interface IModelHierarchyProviderProps {
    */
   formatter?: IPrimitiveValueFormatter;
 
-  /** Props for search the hierarchy. */
+  /**
+   * Props for searching the hierarchy.
+   *
+   * Note: this just provides a quick way to set the search when creating a new hierarchy provider, but the
+   * search can be changed at any time by calling `setHierarchySearch` on the provider instance.
+   */
   search?: {
-    /** A list of node identifiers from root to target node. */
-    paths: HierarchySearchPath[];
+    /** A list of search trees that define paths from root to search target nodes. */
+    paths: HierarchySearchTree[];
   };
 }
 
@@ -905,27 +910,40 @@ function mergeNodes(source: ObservableInput<MergeNodesInput>) {
     mergeAll(),
   );
 }
-function mergeSearchProps(primary: SourceHierarchyNode["search"], secondary: SourceHierarchyNode["search"]): SourceHierarchyNode["search"] {
-  if (!primary || !secondary) {
-    return primary ?? secondary;
+function mergeSearchAttribute(primary: SourceHierarchyNode["search"], secondary: SourceHierarchyNode["search"]): SourceHierarchyNode["search"] {
+  if (!primary) {
+    return secondary;
+  }
+  if (!secondary) {
+    return primary;
   }
 
   const hasSearchTargetAncestor = primary.hasSearchTargetAncestor || secondary.hasSearchTargetAncestor;
-  const childrenTargetPaths = [...(primary.childrenTargetPaths ?? []), ...(secondary.childrenTargetPaths ?? [])];
+  const isSearchTarget = primary.isSearchTarget || secondary.isSearchTarget;
+  const searchOptions = HierarchySearchTree.mergeOptions(primary.options, secondary.options);
+
+  const childrenTargetPathsBuilder = HierarchySearchTree.createBuilder();
+  primary.childrenTargetPaths?.forEach((tree) => childrenTargetPathsBuilder.accept({ tree }));
+  secondary.childrenTargetPaths?.forEach((tree) => childrenTargetPathsBuilder.accept({ tree }));
+  const childrenTargetPaths = childrenTargetPathsBuilder.getTree();
+
   return {
     ...(hasSearchTargetAncestor ? { hasSearchTargetAncestor } : undefined),
     ...(childrenTargetPaths.length ? { childrenTargetPaths } : undefined),
-    ...(primary.isSearchTarget || secondary.isSearchTarget
-      ? {
-          isSearchTarget: true,
-          searchTargetOptions: HierarchySearchPath.mergeOptions(
-            primary.isSearchTarget ? primary.searchTargetOptions : undefined,
-            secondary.isSearchTarget ? secondary.searchTargetOptions : undefined,
-          ),
-        }
-      : {
-          isSearchTarget: false,
-        }),
+    ...(isSearchTarget ? { isSearchTarget } : undefined),
+    ...(searchOptions ? { options: searchOptions } : undefined),
+  };
+}
+function mergeBaseNodeAttributes(
+  primary: Omit<SourceHierarchyNode, "key" | "label" | "extendedData" | "processingParams">,
+  secondary: Omit<SourceHierarchyNode, "key" | "label" | "extendedData" | "processingParams">,
+) {
+  const search = mergeSearchAttribute(primary.search, secondary.search);
+  return {
+    ...(primary.autoExpand || secondary.autoExpand ? { autoExpand: true } : undefined),
+    ...(primary.children && secondary.children ? { children: true } : undefined),
+    ...(primary.supportsFiltering || secondary.supportsFiltering ? { supportsFiltering: true } : undefined),
+    ...(search ? { search } : undefined),
   };
 }
 function tryMergeInstanceNodes(primary: SourceHierarchyNode, secondary: SourceHierarchyNode): SourceHierarchyNode | undefined {
@@ -934,24 +952,22 @@ function tryMergeInstanceNodes(primary: SourceHierarchyNode, secondary: SourceHi
     HierarchyNode.isInstancesNode(secondary) &&
     primary.key.instanceKeys.some((lhsKey) => secondary.key.instanceKeys.some((rhsKey) => InstanceKey.equals(lhsKey, rhsKey)))
   ) {
-    const searchProps = mergeSearchProps(primary.search, secondary.search);
     return {
       ...primary,
       key: {
         type: "instances",
         instanceKeys: primary.key.instanceKeys.concat(secondary.key.instanceKeys),
       },
-      ...(searchProps ? { search: searchProps } : undefined),
+      ...mergeBaseNodeAttributes(primary, secondary),
     };
   }
   return undefined;
 }
 function tryMergeGenericNodes(primary: SourceHierarchyNode, secondary: SourceHierarchyNode): SourceHierarchyNode | undefined {
   if (HierarchyNode.isGeneric(primary) && HierarchyNode.isGeneric(secondary) && primary.key.id === secondary.key.id) {
-    const searchProps = mergeSearchProps(primary.search, secondary.search);
     return {
       ...primary,
-      ...(searchProps ? { search: searchProps } : undefined),
+      ...mergeBaseNodeAttributes(primary, secondary),
     };
   }
   return undefined;

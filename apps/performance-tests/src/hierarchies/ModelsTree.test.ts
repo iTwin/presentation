@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import { SnapshotDb } from "@itwin/core-backend";
+import { HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition, ModelsTreeIdsCache } from "@itwin/presentation-models-tree";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
@@ -72,7 +73,7 @@ describe("models tree", () => {
       const provider = new StatelessHierarchyProvider({
         imodelAccess,
         getHierarchyFactory: () => new ModelsTreeDefinition({ imodelAccess, idsCache }),
-        search,
+        search: { paths: await HierarchySearchTree.createFromPathsList(search.paths) },
       });
       const result = await provider.loadHierarchy({ depth: 2 });
       expect(result).to.eq(2);
