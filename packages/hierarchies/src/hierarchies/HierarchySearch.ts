@@ -239,106 +239,129 @@ export namespace HierarchySearchTree {
         return list;
       }
 
-      #getOrCreateEntry(level: HierarchySearchTreeDictionary, identifier: HierarchyNodeIdentifier) {
-        let entry = level.get(identifier);
-        const createdEntryForThisPath = !entry;
-        if (!entry) {
-          entry = { identifier };
-          level.set(identifier, entry);
+      static #assignAutoExpandOptionsBasedOnReveal(
+        treePath: Pick<HierarchySearchTree, "options">[],
+        revealOption: HierarchySearchPathOptions["reveal"] | undefined,
+      ) {
+        if (revealOption === true) {
+          Impl.#assignAutoExpandOnTreePath({
+            treePath,
+            targetEntryIndex: treePath.length - 1,
+            // auto-expand all grouping nodes of the revealed node
+            targetEntryAutoExpandOption: { groupingLevel: Number.MAX_SAFE_INTEGER },
+          });
+        } else if (revealOption && "groupingLevel" in revealOption) {
+          Impl.#assignAutoExpandOnTreePath({
+            treePath,
+            targetEntryIndex: treePath.length - 1,
+            // the last entry should have `autoExpand` with `groupingLevel` set to the value based on `reveal.groupingLevel`
+            targetEntryAutoExpandOption: { groupingLevel: Math.max(revealOption.groupingLevel - 1, 0) },
+          });
+        } else if (revealOption && "depthInPath" in revealOption) {
+          Impl.#assignAutoExpandOnTreePath({
+            treePath,
+            targetEntryIndex: Math.min(revealOption.depthInPath, treePath.length - 1),
+            // auto-expand all grouping nodes of the revealed node
+            targetEntryAutoExpandOption: { groupingLevel: Number.MAX_SAFE_INTEGER },
+          });
         }
-        return { entry, createdEntryForThisPath };
+      }
+      static #assignAutoExpandOnTreePath({
+        treePath,
+        targetEntryIndex,
+        targetEntryAutoExpandOption,
+      }: {
+        treePath: Array<Pick<HierarchySearchTree, "options">>;
+        targetEntryIndex: number;
+        targetEntryAutoExpandOption: NonNullable<HierarchySearchTree["options"]>["autoExpand"];
+      }) {
+        // set all parent entries to auto-expand
+        for (let j = 0; j < targetEntryIndex; j++) {
+          (treePath[j].options ??= {}).autoExpand = mergeSearchTreeAutoExpandOption(treePath[j].options?.autoExpand, true);
+        }
+        // set the target entry auto-expand value
+        const targetEntry = treePath[targetEntryIndex];
+        (targetEntry.options ??= {}).autoExpand = mergeSearchTreeAutoExpandOption(targetEntry.options.autoExpand, targetEntryAutoExpandOption);
       }
 
-      #ensureChildrenDictionary(entry: HierarchySearchTreeDictionaryEntry, preserveImpliedTarget: boolean): HierarchySearchTreeDictionary {
-        if (!entry.children) {
-          entry.children = new Dictionary(HierarchyNodeIdentifier.compare);
-          if (preserveImpliedTarget) {
-            // Existing leaf nodes are implied targets. Preserve that status when adding children.
+      #acceptNode({
+        node,
+        level,
+      }: {
+        node: Omit<HierarchySearchTree, "children"> & { hasChildren: boolean };
+        level: HierarchySearchTreeDictionary;
+      }): HierarchySearchTreeDictionaryEntry {
+        let entry = level.get(node.identifier);
+        if (!entry) {
+          const { hasChildren: _, ...nodeProps } = node;
+          entry = { ...nodeProps, children: node.hasChildren ? new Dictionary(HierarchyNodeIdentifier.compare) : undefined };
+          level.set(node.identifier, entry);
+        } else {
+          const mergedOptions = HierarchySearchTree.mergeOptions(entry.options, node.options);
+          if (mergedOptions !== entry.options) {
+            entry.options = mergedOptions;
+          }
+          if (node.isTarget) {
             entry.isTarget = true;
           }
         }
-        return entry.children;
+
+        if (!node.hasChildren && entry.children) {
+          // This node is an implied target. Preserve this status when merging it with an entry that has children.
+          entry.isTarget = true;
+        }
+        if (node.hasChildren && !entry.children) {
+          // Existing leaf nodes are implied targets. Preserve that status when adding children.
+          entry.isTarget = true;
+          entry.children = new Dictionary(HierarchyNodeIdentifier.compare);
+        }
+        return entry;
       }
 
       #acceptPath({ path }: { path: HierarchySearchPath }) {
         const normalized = HierarchySearchPath.normalize(path);
-        const treePath: Array<{ entry: HierarchySearchTreeDictionaryEntry; createdEntryForThisPath?: boolean }> = [];
+        const treePath: Array<HierarchySearchTreeDictionaryEntry> = [];
+        let currentLevel: HierarchySearchTreeDictionary = this.#rootsDictionary;
         for (let i = 0; i < normalized.path.length; i++) {
           const identifier = normalized.path[i];
-          // find where we're going to look for / add the next entry in the tree path
-          let currentLevel = treePath.length > 0 ? treePath[treePath.length - 1]?.entry?.children : this.#rootsDictionary;
-          if (!currentLevel) {
-            const parentNode = treePath[treePath.length - 1];
-            currentLevel = this.#ensureChildrenDictionary(parentNode.entry, !parentNode.createdEntryForThisPath);
+          const acceptedNode = this.#acceptNode({
+            node: { identifier, hasChildren: i < normalized.path.length - 1 },
+            level: currentLevel,
+          });
+          treePath.push(acceptedNode);
+          if (!acceptedNode.children) {
+            break;
           }
-          const { entry, createdEntryForThisPath } = this.#getOrCreateEntry(currentLevel, identifier);
-          treePath.push({ entry, createdEntryForThisPath });
-
-          // handle auto-expand / reveal options if we're at the end of the path
-          if (i === normalized.path.length - 1) {
-            // ensure the node has `isTarget` if it has `children` (if not, then it's considered a target anyway)
-            if (entry.children) {
-              entry.isTarget = true;
-            }
-
-            // handle auto-expand
-            if (normalized.options?.autoExpand) {
-              (entry.options ??= {}).autoExpand = true;
-            }
-
-            // handle auto-reveal
-            if (normalized.options?.reveal === true) {
-              assignAutoExpandOnTreePath({
-                treePath,
-                targetEntryIndex: treePath.length - 1,
-                // auto-expand all grouping nodes of the revealed node
-                targetEntryAutoExpandOption: { groupingLevel: Number.MAX_SAFE_INTEGER },
-              });
-            } else if (normalized.options?.reveal && "groupingLevel" in normalized.options.reveal) {
-              assignAutoExpandOnTreePath({
-                treePath,
-                targetEntryIndex: treePath.length - 1,
-                // the last entry should have `autoExpand` with `groupingLevel` set to the value based on `reveal.groupingLevel`
-                targetEntryAutoExpandOption: { groupingLevel: Math.max(normalized.options.reveal.groupingLevel - 1, 0) },
-              });
-            } else if (normalized.options?.reveal && "depthInPath" in normalized.options.reveal) {
-              assignAutoExpandOnTreePath({
-                treePath,
-                targetEntryIndex: Math.min(normalized.options.reveal.depthInPath, treePath.length - 1),
-                // auto-expand all grouping nodes of the revealed node
-                targetEntryAutoExpandOption: { groupingLevel: Number.MAX_SAFE_INTEGER },
-              });
-            }
-          }
+          currentLevel = acceptedNode.children;
         }
+
+        if (treePath.length === 0) {
+          return;
+        }
+
+        // handle auto-expand
+        const lastNode = treePath[treePath.length - 1];
+        if (normalized.options?.autoExpand) {
+          (lastNode.options ??= {}).autoExpand = true;
+        }
+
+        // handle auto-reveal
+        Impl.#assignAutoExpandOptionsBasedOnReveal(treePath, normalized.options?.reveal);
       }
 
       #acceptTree({ tree }: { tree: HierarchySearchTree }) {
         const acceptTreeNode = (level: HierarchySearchTreeDictionary, node: HierarchySearchTree) => {
-          const { entry, createdEntryForThisPath } = this.#getOrCreateEntry(level, node.identifier);
-
-          const mergedOptions = HierarchySearchTree.mergeOptions(entry.options, node.options);
-          if (mergedOptions) {
-            entry.options = mergedOptions;
-          } else {
-            delete entry.options;
+          const currentLevel = this.#acceptNode({
+            node: { ...node, hasChildren: node.children !== undefined },
+            level,
+          }).children;
+          if (!node.children || !currentLevel) {
+            return;
           }
-
-          const nodeChildren = node.children ?? [];
-          const nodeHasChildren = nodeChildren.length > 0;
-          if (nodeHasChildren) {
-            const childrenLevel = this.#ensureChildrenDictionary(entry, !createdEntryForThisPath);
-            for (const child of nodeChildren) {
-              acceptTreeNode(childrenLevel, child);
-            }
-          }
-
-          const nodeIsTarget = node.isTarget || !nodeHasChildren;
-          if (nodeIsTarget && entry.children) {
-            entry.isTarget = true;
+          for (const child of node.children) {
+            acceptTreeNode(currentLevel, child);
           }
         };
-
         acceptTreeNode(this.#rootsDictionary, tree);
       }
 
@@ -373,24 +396,6 @@ export namespace HierarchySearchTree {
         map((builder) => builder.getTree()),
       ),
     );
-  }
-
-  function assignAutoExpandOnTreePath({
-    treePath,
-    targetEntryIndex,
-    targetEntryAutoExpandOption,
-  }: {
-    treePath: Array<{ entry: Pick<HierarchySearchTree, "options">; createdEntryForThisPath?: boolean }>;
-    targetEntryIndex: number;
-    targetEntryAutoExpandOption: NonNullable<HierarchySearchTree["options"]>["autoExpand"];
-  }) {
-    // set all parent entries to auto-expand
-    for (let j = 0; j < targetEntryIndex; j++) {
-      (treePath[j].entry.options ??= {}).autoExpand = mergeSearchTreeAutoExpandOption(treePath[j].entry.options?.autoExpand, true);
-    }
-    // set the target entry auto-expand value
-    const targetEntry = treePath[targetEntryIndex].entry;
-    (targetEntry.options ??= {}).autoExpand = mergeSearchTreeAutoExpandOption(targetEntry.options.autoExpand, targetEntryAutoExpandOption);
   }
 
   /**

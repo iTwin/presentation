@@ -74,6 +74,7 @@ describe("HierarchySearchTree", () => {
         builder.accept({
           tree: {
             identifier: createTestGenericNodeKey({ id: "a" }),
+            isTarget: true,
             children: [{ identifier: createTestGenericNodeKey({ id: "c" }) }],
           },
         });
@@ -81,6 +82,7 @@ describe("HierarchySearchTree", () => {
         expect(builder.getTree()).to.deep.eq([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
+            isTarget: true,
             children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }, { identifier: createTestGenericNodeKey({ id: "c" }) }],
           },
         ]);
