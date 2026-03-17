@@ -193,16 +193,57 @@ export interface HierarchySearchTree {
 
 /** @public */
 export namespace HierarchySearchTree {
+  /** @public */
+  type HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras extends Record<string, unknown>> = Readonly<
+    Pick<HierarchySearchTree, "identifier" | "options"> & {
+      extras: TExtras;
+    }
+  > &
+    Pick<HierarchySearchTree, "isTarget">;
+  /** @public */
+  type HierarchySearchTreeBuilderAcceptHandlerTreeInput = Readonly<Pick<HierarchySearchTree, "identifier" | "isTarget" | "options"> & { hasChildren: boolean }>;
+  /** @public */
+  interface HierarchySearchTreeBuilderAcceptHandler<TExtras extends Record<string, unknown>> {
+    /**
+     * Called when a new entry is added to the tree. Return `true` to accept the entry, `false` to reject it and all its children, if any.
+     */
+    onNewEntry?: (props: {
+      /** The parent entries of the new entry being added, from root to immediate parent. It's allowed to mutate these entries. */
+      parentEntries: Array<HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras>>;
+      /** The new entry being added to the tree. */
+      inputEntry: HierarchySearchTreeBuilderAcceptHandlerTreeInput;
+    }) => boolean;
+    /**
+     * Called when a new entry is added to the tree and accepted (either it's a new entry or it merges with an existing entry). This can be used to perform
+     * side effects such as assigning extra information to the tree entry.
+     */
+    onEntryHandled?: (props: {
+      /** The parent entries of the new entry being added, from root to immediate parent. It's allowed to mutate these entries. */
+      parentEntries: Array<HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras>>;
+      /** The tree entry that has been handled. It's allowed to mutate this entry. */
+      treeEntry: HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras>;
+      /** The input entry being added to the tree. */
+      inputEntry: HierarchySearchTreeBuilderAcceptHandlerTreeInput;
+    }) => void;
+  }
+  /** @public */
+  type HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras extends Record<string, unknown>> = (
+    | { path: HierarchySearchPath }
+    | { tree: HierarchySearchTree }
+  ) & {
+    /** An optional handler for customizing the behavior of the builder when accepting new entries. */
+    handler?: HierarchySearchTreeBuilderAcceptHandler<TAcceptHandlerExtras>;
+  };
   /**
    * An utility that accepts hierarchy search paths or search trees one by one and builds a `HierarchySearchTree` structure based on them.
    * @public
    */
-  interface HierarchySearchTreeBuilder {
+  interface HierarchySearchTreeBuilder<TAcceptHandlerExtras extends Record<string, unknown>> {
     /**
      * Accepts a hierarchy search path or paths' tree and adds it to the builder's internal tree structure. Use `getTree()` to create
      * a `HierarchySearchTree[]` from the added paths.
      */
-    accept(props: { path: HierarchySearchPath } | { tree: HierarchySearchTree }): HierarchySearchTreeBuilder;
+    accept(props: HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras>): HierarchySearchTreeBuilder<TAcceptHandlerExtras>;
     /**
      * Create `HierarchySearchTree[]` from currently added search paths.
      */
@@ -225,15 +266,21 @@ export namespace HierarchySearchTree {
    *
    * @public
    */
-  export function createBuilder(): HierarchySearchTreeBuilder {
-    type HierarchySearchTreeDictionaryEntry = Omit<HierarchySearchTree, "children"> & { children?: HierarchySearchTreeDictionary };
+  export function createBuilder<
+    TAcceptHandlerExtras extends Record<string, unknown> = Record<string, unknown>,
+  >(): HierarchySearchTreeBuilder<TAcceptHandlerExtras> {
+    type HierarchySearchTreeDictionaryEntry = Omit<HierarchySearchTree, "children"> & {
+      children?: HierarchySearchTreeDictionary;
+      extras: TAcceptHandlerExtras;
+    };
     type HierarchySearchTreeDictionary = Dictionary<HierarchyNodeIdentifier, HierarchySearchTreeDictionaryEntry>;
-    return new (class Impl implements HierarchySearchTreeBuilder {
+    type AcceptHandler = HierarchySearchTreeBuilderAcceptHandler<TAcceptHandlerExtras>;
+    return new (class Impl implements HierarchySearchTreeBuilder<TAcceptHandlerExtras> {
       #rootsDictionary: HierarchySearchTreeDictionary = new Dictionary(HierarchyNodeIdentifier.compare);
 
       static #mapDictionaryToTree(dictionary: HierarchySearchTreeDictionary): HierarchySearchTree[] {
         const list: HierarchySearchTree[] = [];
-        for (const { children, ...entry } of dictionary.values()) {
+        for (const { children, extras: _, ...entry } of dictionary.values()) {
           list.push({ ...entry, ...(children ? { children: Impl.#mapDictionaryToTree(children) } : undefined) });
         }
         return list;
@@ -266,6 +313,7 @@ export namespace HierarchySearchTree {
           });
         }
       }
+
       static #assignAutoExpandOnTreePath({
         treePath,
         targetEntryIndex,
@@ -285,16 +333,27 @@ export namespace HierarchySearchTree {
       }
 
       #acceptNode({
-        node,
+        parentEntries,
         level,
+        node,
+        handler,
       }: {
-        node: Omit<HierarchySearchTree, "children"> & { hasChildren: boolean };
+        parentEntries: HierarchySearchTreeDictionaryEntry[];
         level: HierarchySearchTreeDictionary;
-      }): HierarchySearchTreeDictionaryEntry {
+        node: Omit<HierarchySearchTree, "children"> & { hasChildren: boolean };
+        handler?: HierarchySearchTreeBuilderAcceptHandler<TAcceptHandlerExtras>;
+      }): HierarchySearchTreeDictionaryEntry | undefined {
         let entry = level.get(node.identifier);
         if (!entry) {
-          const { hasChildren: _, ...nodeProps } = node;
-          entry = { ...nodeProps, children: node.hasChildren ? new Dictionary(HierarchyNodeIdentifier.compare) : undefined };
+          if (handler?.onNewEntry && !handler.onNewEntry({ parentEntries, inputEntry: node })) {
+            return undefined;
+          }
+          const { hasChildren, ...nodeProps } = node;
+          entry = {
+            ...nodeProps,
+            children: hasChildren ? new Dictionary(HierarchyNodeIdentifier.compare) : undefined,
+            extras: {} as TAcceptHandlerExtras,
+          };
           level.set(node.identifier, entry);
         } else {
           const mergedOptions = HierarchySearchTree.mergeOptions(entry.options, node.options);
@@ -310,24 +369,30 @@ export namespace HierarchySearchTree {
           // This node is an implied target. Preserve this status when merging it with an entry that has children.
           entry.isTarget = true;
         }
-        if (node.hasChildren && !entry.children) {
+        if (!entry.children && node.hasChildren) {
           // Existing leaf nodes are implied targets. Preserve that status when adding children.
           entry.isTarget = true;
           entry.children = new Dictionary(HierarchyNodeIdentifier.compare);
         }
+        handler?.onEntryHandled?.({ parentEntries, treeEntry: entry, inputEntry: node });
         return entry;
       }
 
-      #acceptPath({ path }: { path: HierarchySearchPath }) {
+      #acceptPath({ path, handler }: { path: HierarchySearchPath; handler?: AcceptHandler }) {
         const normalized = HierarchySearchPath.normalize(path);
         const treePath: Array<HierarchySearchTreeDictionaryEntry> = [];
         let currentLevel: HierarchySearchTreeDictionary = this.#rootsDictionary;
         for (let i = 0; i < normalized.path.length; i++) {
           const identifier = normalized.path[i];
           const acceptedNode = this.#acceptNode({
+            parentEntries: treePath,
             node: { identifier, hasChildren: i < normalized.path.length - 1 },
             level: currentLevel,
+            handler,
           });
+          if (!acceptedNode) {
+            break;
+          }
           treePath.push(acceptedNode);
           if (!acceptedNode.children) {
             break;
@@ -349,23 +414,31 @@ export namespace HierarchySearchTree {
         Impl.#assignAutoExpandOptionsBasedOnReveal(treePath, normalized.options?.reveal);
       }
 
-      #acceptTree({ tree }: { tree: HierarchySearchTree }) {
-        const acceptTreeNode = (level: HierarchySearchTreeDictionary, node: HierarchySearchTree) => {
-          const currentLevel = this.#acceptNode({
+      #acceptTree({ tree, handler }: { tree: HierarchySearchTree; handler?: AcceptHandler }) {
+        const acceptTreeNode = (parentEntries: HierarchySearchTreeDictionaryEntry[], level: HierarchySearchTreeDictionary, node: HierarchySearchTree) => {
+          const acceptedNode = this.#acceptNode({
+            parentEntries,
             node: { ...node, hasChildren: node.children !== undefined },
             level,
-          }).children;
+            handler,
+          });
+          if (!acceptedNode) {
+            return;
+          }
+          const currentLevel = acceptedNode.children;
           if (!node.children || !currentLevel) {
             return;
           }
           for (const child of node.children) {
-            acceptTreeNode(currentLevel, child);
+            acceptTreeNode([...parentEntries, acceptedNode], currentLevel, child);
           }
         };
-        acceptTreeNode(this.#rootsDictionary, tree);
+        acceptTreeNode([], this.#rootsDictionary, tree);
       }
 
-      public accept(props: { path: HierarchySearchPath } | { tree: HierarchySearchTree }): HierarchySearchTreeBuilder {
+      public accept(
+        props: ({ path: HierarchySearchPath } | { tree: HierarchySearchTree }) & { handler?: AcceptHandler },
+      ): HierarchySearchTreeBuilder<TAcceptHandlerExtras> {
         if ("path" in props) {
           this.#acceptPath(props);
         } else {

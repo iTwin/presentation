@@ -490,16 +490,40 @@ export interface HierarchySearchTree {
 
 // @public (undocumented)
 export namespace HierarchySearchTree {
-    export function createBuilder(): HierarchySearchTreeBuilder;
+    export function createBuilder<TAcceptHandlerExtras extends Record<string, unknown> = Record<string, unknown>>(): HierarchySearchTreeBuilder<TAcceptHandlerExtras>;
     export function createFromPathsList(paths: Iterable<HierarchySearchPath>): Promise<HierarchySearchTree[]>;
-    export interface HierarchySearchTreeBuilder {
-        accept(props: {
-            path: HierarchySearchPath;
-        } | {
-            tree: HierarchySearchTree;
-        }): HierarchySearchTreeBuilder;
+    export interface HierarchySearchTreeBuilder<TAcceptHandlerExtras extends Record<string, unknown>> {
+        accept(props: HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras>): HierarchySearchTreeBuilder<TAcceptHandlerExtras>;
         getTree(): HierarchySearchTree[];
     }
+    // (undocumented)
+    export interface HierarchySearchTreeBuilderAcceptHandler<TExtras extends Record<string, unknown>> {
+        onEntryHandled?: (props: {
+            parentEntries: Array<HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras>>;
+            treeEntry: HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras>;
+            inputEntry: HierarchySearchTreeBuilderAcceptHandlerTreeInput;
+        }) => void;
+        onNewEntry?: (props: {
+            parentEntries: Array<HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras>>;
+            inputEntry: HierarchySearchTreeBuilderAcceptHandlerTreeInput;
+        }) => boolean;
+    }
+    // (undocumented)
+    export type HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras extends Record<string, unknown>> = Readonly<Pick<HierarchySearchTree, "identifier" | "options"> & {
+        extras: TExtras;
+    }> & Pick<HierarchySearchTree, "isTarget">;
+    // (undocumented)
+    export type HierarchySearchTreeBuilderAcceptHandlerTreeInput = Readonly<Pick<HierarchySearchTree, "identifier" | "isTarget" | "options"> & {
+        hasChildren: boolean;
+    }>;
+    // (undocumented)
+    export type HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras extends Record<string, unknown>> = ({
+        path: HierarchySearchPath;
+    } | {
+        tree: HierarchySearchTree;
+    }) & {
+        handler?: HierarchySearchTreeBuilderAcceptHandler<TAcceptHandlerExtras>;
+    };
     export function mergeOptions(lhs: HierarchySearchTree["options"] | undefined, rhs: HierarchySearchTree["options"] | undefined): HierarchySearchTree["options"] | undefined;
     export {};
 }
