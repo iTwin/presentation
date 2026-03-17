@@ -151,8 +151,11 @@ describe("<QuantityPropertyEditorInput />", () => {
     const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
     await waitFor(() => expect(input.disabled).to.be.false);
 
-    // Verify that selection logic is applied
-    await waitFor(() => expect(input.selectionEnd).to.eq(0));
+    // Verify that selection logic from animation frame is applied
+    await waitFor(() => {
+      expect(document.activeElement).to.eq(input);
+      expect(input.selectionEnd).to.eq(0);
+    });
     await user.type(input, "123.4 ", { skipClick: true });
     await user.tab();
 
