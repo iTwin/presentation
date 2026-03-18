@@ -5,12 +5,16 @@
 
 import { defineConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
-import react from "@vitejs/plugin-react";
+import react, { reactCompilerPreset} from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    babel({
+          presets: [reactCompilerPreset({ target: "18" })],
+        }),
     viteStaticCopy({
       targets: [
         {
@@ -21,13 +25,6 @@ export default defineConfig({
       ],
     }),
   ],
-  css: {
-    preprocessorOptions: {
-      scss: {
-        api: "modern-compiler",
-      },
-    },
-  },
   server: {
     port: 3000,
     strictPort: true,
