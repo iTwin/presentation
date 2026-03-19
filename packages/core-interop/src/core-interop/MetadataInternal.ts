@@ -395,16 +395,24 @@ async function createFromOptionalLazyLoaded<TSource extends CoreSchemaItem, TTar
   return source.then(convert);
 }
 
-const EMPTY_MAP: ReadonlyMap<string, EC.CustomAttribute> = new Map();
+const EMPTY_MAP: ReadonlyMap<EC.FullClassName, EC.CustomAttribute> = new Map();
 async function createCustomAttributesSet(coreCustomAttributes: CoreClass["customAttributes"]): Promise<EC.CustomAttributeSet> {
   if (!coreCustomAttributes) {
     return EMPTY_MAP;
   }
-  const attributes = new Map();
-  for (const [name, value] of coreCustomAttributes) {
-    attributes.set(name, value);
-  }
-  return attributes;
+  return {
+    *[Symbol.iterator]() {
+      for (const [className, ca] of coreCustomAttributes) {
+        const normalizedClassName = normalizeFullClassName(className);
+        yield [normalizedClassName, { ...ca, className: normalizedClassName }];
+      }
+    },
+    get(className: EC.FullClassName) {
+      const normalizedClassName = normalizeFullClassName(className);
+      const coreCustomAttribute = coreCustomAttributes.get(normalizedClassName);
+      return coreCustomAttribute ? { ...coreCustomAttribute, className: normalizedClassName } : undefined;
+    },
+  };
 }
 
 class ECRelationshipConstraintImpl implements EC.RelationshipConstraint {

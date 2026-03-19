@@ -167,7 +167,7 @@ export namespace EC {
     }
     export interface CustomAttributeSet {
         // (undocumented)
-        [Symbol.iterator]: () => IterableIterator<[string, CustomAttribute]>;
+        [Symbol.iterator]: () => IterableIterator<[FullClassName, CustomAttribute]>;
         // (undocumented)
         get(className: FullClassName): CustomAttribute | undefined;
     }
