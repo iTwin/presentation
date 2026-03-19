@@ -73,6 +73,7 @@
     "**/*.snap",
     "sample_documents",
     "**/*.patch",
-    ".oxfmtrc.json"
+    ".oxfmtrc.json",
+    "cspell.json"
   ]
 }
