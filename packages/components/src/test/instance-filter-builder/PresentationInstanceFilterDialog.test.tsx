@@ -12,8 +12,6 @@ import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createTestECClassInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../_helpers/Common.js";
-import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { translate } from "../../presentation-components/common/Utils.js";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
 import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
@@ -22,6 +20,8 @@ import {
   PresentationInstanceFilterDialog,
   PresentationInstanceFilterPropertiesSource,
 } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
+import { createTestECClassInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../_helpers/Common.js";
+import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import {
   act,
   getAllByRole,
