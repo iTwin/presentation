@@ -25,8 +25,8 @@
     "update-extractions": "npm run docs:all && npm run gather-docs && lage update-extractions",
     "check-extractions": "npm run docs:all && npm run gather-docs && lage check-extractions",
     "validate-markdowns": "lage validate-markdowns --grouped --continue",
-    "prettier": "prettier --check .",
-    "prettier:fix": "prettier --write .",
+    "format": "oxfmt --check",
+    "format:fix": "oxfmt",
     "prepare": "husky",
     "change": "changeset add",
     "change:empty": "changeset add --empty",
@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@changesets/cli": "^2.30.0",
-    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
     "cpx2": "catalog:build-tools",
     "cspell": "^9.7.0",
     "eslint": "catalog:build-tools",
@@ -49,7 +49,7 @@
     "lint-staged": "^15.5.2",
     "markdown-link-check": "^3.14.2",
     "npm-run-all": "^4.1.5",
-    "prettier": "^3.8.1",
+    "oxfmt": "^0.41.0",
     "rimraf": "catalog:build-tools",
     "yaml": "^2.8.2",
     "yargs": "^17.7.2"

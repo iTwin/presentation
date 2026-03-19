@@ -2,7 +2,8 @@
   "editor.insertSpaces": true,
   "editor.tabSize": 2,
   "editor.trimAutoWhitespace": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "oxc.fmt.configPath": ".oxfmtrc.json",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll": "explicit"
@@ -16,14 +17,14 @@
   ],
 
   "files.associations": {
-    ".nycrc": "json",
+    ".nycrc": "json"
   },
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,
   "files.trimTrailingWhitespace": true,
 
   "[markdown]": {
-    "editor.tabSize": 4,
+    "editor.tabSize": 4
   },
 
   "terminal.integrated.env.linux": {
@@ -35,5 +36,5 @@
   "terminal.integrated.env.windows": {
     "NODE_ENV": "development"
   },
-  "terminal.integrated.scrollback": 5000,
+  "terminal.integrated.scrollback": 5000
 }

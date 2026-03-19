@@ -11,6 +11,13 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import {
+  createInstanceFilterPropertyInfos,
+  DEFAULT_ROOT_CATEGORY_NAME,
+  filterRuleValidator,
+  INSTANCE_FILTER_FIELD_SEPARATOR,
+  useFilterBuilderNavigationPropertyEditorContextProviderProps,
+} from "../../presentation-components/instance-filter-builder/Utils.js";
 import { createTestECClassInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -19,13 +26,6 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
-import {
-  createInstanceFilterPropertyInfos,
-  DEFAULT_ROOT_CATEGORY_NAME,
-  filterRuleValidator,
-  INSTANCE_FILTER_FIELD_SEPARATOR,
-  useFilterBuilderNavigationPropertyEditorContextProviderProps,
-} from "../../presentation-components/instance-filter-builder/Utils.js";
 import { renderHook } from "../TestUtils.js";
 
 describe("createInstanceFilterPropertyInfos", () => {
