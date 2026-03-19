@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 const prettierConfig = require("eslint-config-prettier");
+const stylistic = require("@stylistic/eslint-plugin");
 
 module.exports = [
   {
@@ -13,6 +14,9 @@ module.exports = [
   },
   {
     files: ["**/*.{ts,tsx}"],
+    plugins: {
+      "@stylistic": stylistic,
+    },
     rules: {
       "@itwin/no-internal": [
         "error",
@@ -38,6 +42,11 @@ module.exports = [
         {
           allowObjectTypes: "always",
         },
+      ],
+      "@stylistic/padding-line-between-statements": [
+        "error",
+        { blankLine: "always", prev: "import", next: "*" },
+        { blankLine: "any", prev: "import", next: "import" },
       ],
       curly: ["error", "all"],
     },
