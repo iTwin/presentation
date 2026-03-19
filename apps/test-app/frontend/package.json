@@ -65,7 +65,6 @@
     "sass": "^1.97.3",
     "typescript": "catalog:build-tools",
     "vite": "catalog:build-tools",
-    "vite-plugin-static-copy": "catalog:build-tools",
-    "tsdown": "^0.21.4"
+    "vite-plugin-static-copy": "catalog:build-tools"
   }
 }

@@ -957,9 +957,6 @@ importers:
       sass:
         specifier: ^1.97.3
         version: 1.97.3
-      tsdown:
-        specifier: ^0.21.4
-        version: 0.21.4(typescript@5.7.3)
       typescript:
         specifier: catalog:build-tools
         version: 5.7.3
