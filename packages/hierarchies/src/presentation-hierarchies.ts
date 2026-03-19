@@ -51,5 +51,5 @@ export type { GetHierarchyNodesProps, HierarchyProvider } from "./hierarchies/Hi
 export { createHierarchyProvider } from "./hierarchies/HierarchyProvider.js";
 export { mergeProviders } from "./hierarchies/HierarchyMerge.js";
 export type { HierarchySearchPathOptions } from "./hierarchies/HierarchySearch.js";
-export { createHierarchySearchHelper, HierarchySearchPath } from "./hierarchies/HierarchySearch.js";
+export { createHierarchySearchHelper, HierarchySearchPath, HierarchySearchTree } from "./hierarchies/HierarchySearch.js";
 export { getLogger, setLogger } from "./hierarchies/Logging.js";

@@ -8,7 +8,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { useTranslation } from "./stratakit/LocalizationContext.js";
 import { useTree, useUnifiedSelectionTree } from "./UseTree.js";
 
-import type { HierarchyDefinition, HierarchySearchPath } from "@itwin/presentation-hierarchies";
+import type { HierarchyDefinition, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import type { Props } from "@itwin/presentation-shared";
 import type { UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
 import type { UseTreeProps, UseTreeResult } from "./UseTree.js";
@@ -42,7 +42,7 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearch
        * Signal indicating that that the request was canceled
        */
       abortSignal: AbortSignal;
-    }) => Promise<HierarchySearchPath[] | undefined>;
+    }) => Promise<HierarchySearchTree[] | undefined>;
   };
 
 /**

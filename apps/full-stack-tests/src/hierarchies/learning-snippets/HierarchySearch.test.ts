@@ -6,12 +6,11 @@
 
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
-import { expand, filter, first, firstValueFrom, from } from "rxjs";
 import { assert, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createBisInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.HierarchyDefinitionImports
-import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.FindPathsImports
@@ -138,10 +137,10 @@ describe("Hierarchies", () => {
       it("creates hierarchy searched by label", async function () {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.FindPathsByLabel
-        // Define a function that returns `HierarchyNodeIdentifiersPath[]` based on given search string. In this case, we run
+        // Define a function that returns `HierarchySearchTree[]` based on given search string. In this case, we run
         // a query to find matching elements by their `UserLabel` property. Then, we construct paths to the root element using recursive
-        // CTE. Finally, we return the paths in reverse order to start from the root element.
-        async function createSearchTargetPaths(searchStrings: string[]): Promise<HierarchyNodeIdentifiersPath[]> {
+        // CTE. Finally, we use `HierarchySearchTree` builder to create a search tree based on those paths.
+        async function createHierarchySearchTree(searchStrings: string[]): Promise<HierarchySearchTree[]> {
           const query: ECSqlQueryDef = {
             ctes: [
               `MatchingElements(Path, ParentId) AS (
@@ -164,18 +163,28 @@ describe("Hierarchies", () => {
             ecsql: `SELECT Path FROM MatchingElements WHERE ParentId IS NULL`,
             bindings: searchStrings.map((searchString) => ({ type: "string", value: searchString })),
           };
-          const result: HierarchyNodeIdentifiersPath[] = [];
+          const searchTreeBuilder = HierarchySearchTree.createBuilder();
           for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-            result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })));
+            searchTreeBuilder.accept({
+              path: (JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })),
+            });
           }
-          return result;
+          return searchTreeBuilder.getTree();
         }
         // Find paths to elements whose label contains "C" or "E"
-        const searchPaths = await createSearchTargetPaths(["C", "E"]);
+        const searchPaths = await createHierarchySearchTree(["C", "E"]);
         expect(searchPaths).to.deep.eq([
           // We expect to find two paths A -> B -> C and A -> E
-          [elementKeys.a, elementKeys.e],
-          [elementKeys.a, elementKeys.b, elementKeys.c],
+          {
+            identifier: elementKeys.a,
+            children: [
+              {
+                identifier: elementKeys.b,
+                children: [{ identifier: elementKeys.c }],
+              },
+              { identifier: elementKeys.e },
+            ],
+          },
         ]);
         // __PUBLISH_EXTRACT_END__
 
@@ -255,7 +264,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-          search: { paths: searchPaths },
+          search: { paths: await HierarchySearchTree.createFromPathsList(searchPaths) },
         });
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
         // Note that "E" has a child "F", even though it's not a search target. This is because subtrees under search target nodes
@@ -277,11 +286,10 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("sets auto-expand flag to parent nodes of the search target", async function () {
+      it("sets auto-expand flag to parent nodes of the revealed search target", async function () {
         const imodelAccess = createIModelAccess(imodel);
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.AutoExpand.SearchPath
-        // Get a grouping node that groups the "C" element
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.Reveal.SearchPath
         const searchPath: HierarchySearchPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
@@ -298,7 +306,7 @@ describe("Hierarchies", () => {
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
           search: {
-            paths: [searchPath],
+            paths: await HierarchySearchTree.createFromPathsList([searchPath]),
           },
         });
 
@@ -324,7 +332,7 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("sets auto-expand flag to parent nodes of the search target until specified depthInHierarchy", async function () {
+      it("sets auto-expand flag to parent nodes of the search target until specified groupingLevel", async function () {
         const imodelAccess = createIModelAccess(imodel);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -374,35 +382,16 @@ describe("Hierarchies", () => {
           },
         };
 
-        async function getSelectedGroupingNode(): Promise<GroupingHierarchyNode> {
-          const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
-          return firstValueFrom(
-            from(provider.getNodes({ parentNode: undefined })).pipe(
-              expand((parentNode) => provider.getNodes({ parentNode })),
-              filter((node) => HierarchyNode.isGroupingNode(node)),
-              first(
-                (node) =>
-                  InstanceKey.equals(node.groupedInstanceKeys[0], elementKeys.c) &&
-                  node.parentKeys.length > 0 &&
-                  node.parentKeys[node.parentKeys.length - 1].type !== "instances",
-              ),
-            ),
-          );
-        }
-
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.AutoExpandUntilDepthInHierarchy.SearchPath
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.RevealGroupingLevel.SearchPath
         // Hierarchy has this structure: A -> class grouping node -> label grouping node -> B -> class grouping node -> label grouping node -> C.
         // Hierarchy has two grouping nodes that group C element: one class grouping and one label grouping node.
-
-        // Get label grouping node that groups the "C" element
-        const groupingNode = await getSelectedGroupingNode();
         const searchPath: HierarchySearchPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
-            // Reveal (set auto-expand flag for all nodes up to the specified depth) hierarchy up to (but not including) the last label grouping node.
-            // The `depthInHierarchy` attribute is the index of the last label grouping node. It is equal to the number of parents.
-            reveal: { depthInHierarchy: groupingNode.parentKeys.length },
+            // Reveal the C's label grouping node by specifying its grouping level.
+            // Note that grouping level is counted from the nearest non-grouping ancestor node.
+            reveal: { groupingLevel: 2 },
           },
         };
         // __PUBLISH_EXTRACT_END__
@@ -412,7 +401,7 @@ describe("Hierarchies", () => {
           imodelAccess,
           hierarchyDefinition,
           search: {
-            paths: [searchPath],
+            paths: await HierarchySearchTree.createFromPathsList([searchPath]),
           },
         });
 
@@ -541,7 +530,7 @@ describe("Hierarchies", () => {
           imodelAccess,
           hierarchyDefinition,
           search: {
-            paths: [searchPath],
+            paths: await HierarchySearchTree.createFromPathsList([searchPath]),
           },
         });
 
@@ -636,7 +625,7 @@ describe("Hierarchies", () => {
           },
         };
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.autoExpand.SearchPath
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.AutoExpand.SearchPath
         const searchPath: HierarchySearchPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
@@ -654,7 +643,7 @@ describe("Hierarchies", () => {
           imodelAccess,
           hierarchyDefinition,
           search: {
-            paths: [searchPath],
+            paths: await HierarchySearchTree.createFromPathsList([searchPath]),
           },
         });
 
