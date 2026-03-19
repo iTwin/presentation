@@ -10,7 +10,7 @@ const { execSync } = require("child_process");
 const { readdirSync } = require("fs");
 const { join } = require("path");
 
-const ignore = ["node_modules", ".git", "lib", "dist", ".husky", "pnpmfile", "npmignore", "mocharc", "nycrc"];
+const ignore = ["node_modules", ".git", "lib", "dist", ".husky", "pnpmfile", "npmignore", "mocharc", "nycrc", "oxfmtrc", "sample_documents"];
 
 /**
  * Recursively find all files in a directory
