@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import frontendPackageJson from "@itwin/presentation-frontend/package.json" with { type: "json" };
 import sinon from "sinon";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
@@ -21,6 +20,7 @@ import {
   RulesetVariable,
 } from "@itwin/presentation-common";
 import { PresentationManager } from "@itwin/presentation-frontend";
+import frontendPackageJson from "@itwin/presentation-frontend/package.json" with { type: "json" };
 
 export function stubVirtualization() {
   let stubs: sinon.SinonStub[] = [];

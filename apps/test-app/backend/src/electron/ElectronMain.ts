@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ElectronHost, ElectronHostOptions } from "@itwin/core-electron/lib/cjs/ElectronBackend.js";
 import { IModelHostOptions } from "@itwin/core-backend";
 import { RpcInterfaceDefinition } from "@itwin/core-common";
+import { ElectronHost, ElectronHostOptions } from "@itwin/core-electron/lib/cjs/ElectronBackend.js";
 import { SampleIpcHandler } from "../SampleIpcHandler.js";
 
 /**

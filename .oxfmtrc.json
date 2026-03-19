@@ -67,12 +67,12 @@
             {
               "groupName": "scoped",
               "modifiers": ["value"],
-              "elementNamePattern": ["@*/*"]
+              "elementNamePattern": ["@*/**"]
             },
             {
               "groupName": "type-scoped",
               "modifiers": ["type"],
-              "elementNamePattern": ["@*/*"]
+              "elementNamePattern": ["@*/**"]
             }
           ]
         }
