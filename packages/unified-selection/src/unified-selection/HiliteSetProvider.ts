@@ -12,6 +12,7 @@ import { formIdBindings, genericExecuteQuery, releaseMainThreadOnItemsCount } fr
 import type { Observable } from "rxjs";
 import type { GuidString, Id64String } from "@itwin/core-bentley";
 import type {
+  EC,
   ECClassHierarchyInspector,
   ECSqlBinding,
   ECSqlQueryDef,
@@ -158,7 +159,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
     return promise;
   }
 
-  private async getTypeImpl(fullClassName: string): Promise<InstanceIdType> {
+  private async getTypeImpl(fullClassName: EC.FullClassName): Promise<InstanceIdType> {
     return (
       (await this.checkType(fullClassName, "BisCore.Subject", "subject")) ??
       (await this.checkType(fullClassName, "BisCore.Model", "model")) ??
@@ -172,7 +173,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
     );
   }
 
-  private async checkType(keyClassName: string, checkClassName: string, type: InstanceIdType) {
+  private async checkType(keyClassName: EC.FullClassName, checkClassName: EC.FullClassName, type: InstanceIdType) {
     try {
       const res = this._imodelAccess.classDerivesFrom(keyClassName, checkClassName);
       const isOfType = typeof res === "boolean" ? res : await res;

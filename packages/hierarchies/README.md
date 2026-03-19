@@ -76,7 +76,7 @@ Here's a simple example of how to create a hierarchy provider and build a hierar
 ```ts
 import { IModelConnection } from "@itwin/core-frontend";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor, HierarchyLevelDefinition } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
 
 import {
@@ -138,7 +138,7 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
         {
           // For BisCore.Model parent nodes, select all BisCore.Element instances contained in corresponding model
           parentInstancesNodePredicate: "BisCore.Model",
-          definitions: async ({ parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps) => [
+          definitions: async ({ parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
             {
               fullClassName: "BisCore.Element",
               query: {

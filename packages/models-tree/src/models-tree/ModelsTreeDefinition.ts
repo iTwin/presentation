@@ -49,6 +49,7 @@ import type {
   NodesQueryClauseFactory,
 } from "@itwin/presentation-hierarchies";
 import type {
+  EC,
   ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlBinding,
@@ -71,7 +72,7 @@ export interface ModelsTreeHierarchyConfiguration {
   /** Should element nodes be grouped by class. Defaults to `enable`. */
   elementClassGrouping: "enable" | "enableWithCounts" | "disable";
   /** Full class name of a `GeometricElement3d` sub-class that should be used to load element nodes. Defaults to `BisCore.GeometricElement3d` */
-  elementClassSpecification: string;
+  elementClassSpecification: EC.FullClassName;
   /** Should models without elements be shown. Defaults to `false` */
   showEmptyModels: boolean;
 }
@@ -718,7 +719,7 @@ function releaseMainThreadOnItemsCount<T>(elementCount: number) {
   };
 }
 
-function parseQueryRow(row: ECSqlQueryRow, groupInfos: ElementsGroupInfo[], separator: string, elementClassName: string) {
+function parseQueryRow(row: ECSqlQueryRow, groupInfos: ElementsGroupInfo[], separator: string, elementClassName: EC.FullClassName) {
   const rowElements: string[] = row[1].split(separator);
   const path = new Array<InstanceKey>();
   for (let i = 0; i < rowElements.length; i += 2) {

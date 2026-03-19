@@ -12,7 +12,7 @@ import {
   createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, EC } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { BisCodeSpec } from "@itwin/core-common";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
@@ -67,7 +67,7 @@ describe("Hierarchies", () => {
           whereClauseFactory,
         }: {
           imodelAccess: DefineInstanceNodeChildHierarchyLevelProps["imodelAccess"];
-          fullClassName: string;
+          fullClassName: EC.FullClassName;
           whereClauseFactory?: (props: { alias: string }) => Promise<string>;
         }) {
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });

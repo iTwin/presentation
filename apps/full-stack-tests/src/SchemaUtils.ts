@@ -8,6 +8,8 @@ import { Context as MochaContext } from "mocha";
 import { getFullSchemaXml } from "presentation-test-utilities";
 import { Guid } from "@itwin/core-bentley";
 
+import type { EC } from "@itwin/presentation-shared";
+
 // cspell:words jpath
 
 export async function importSchema(
@@ -43,7 +45,7 @@ export async function importSchema(
 
   return {
     ...schemaProps,
-    items: schemaItems.reduce<{ [className: string]: { name: string; fullName: string; label: string } }>((classesObj, schemaItemDef) => {
+    items: schemaItems.reduce<{ [className: string]: { name: string; fullName: EC.FullClassNameDotNotation; label: string } }>((classesObj, schemaItemDef) => {
       const name = schemaItemDef.typeName;
       return {
         ...classesObj,

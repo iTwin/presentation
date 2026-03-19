@@ -3,32 +3,32 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert } from "@itwin/core-bentley";
+import type { EC } from "./Metadata.js";
 
 /**
  * An utility to parse schema and class names from full class name, where
  * schema and class names are separated by either `:` or `.`.
+ *
+ * @throws Error if the provided full class name is not valid.
  * @public
  */
 export function parseFullClassName(fullClassName: string) {
-  const [schemaName, className] = fullClassName.split(/[\.:]/);
-  assert(!!schemaName && !!className, "Invalid full class name");
+  const [schemaName, className, ...rest] = fullClassName.split(/[\.:]/);
+  if (!schemaName || !className || rest.length > 0) {
+    throw new Error(`Invalid full class name: ${fullClassName}`);
+  }
   return { schemaName, className };
 }
 
 /**
  * An utility to normalize full class name from either `SchemaName:ClassName` or
  * `SchemaName.ClassName` to always use the dot format.
+ *
+ * @throws Error if the provided full class name is not valid.
  * @public
  */
-export function normalizeFullClassName(fullClassName: string): string {
-  const colonPos = fullClassName.indexOf(":");
-  if (-1 === colonPos) {
-    assert(fullClassName.indexOf(".") !== -1, "Invalid full class name");
-    return fullClassName;
-  }
-  const schemaName = fullClassName.slice(0, colonPos);
-  const className = fullClassName.slice(colonPos + 1);
+export function normalizeFullClassName(fullClassName: string): EC.FullClassNameDotNotation {
+  const { schemaName, className } = parseFullClassName(fullClassName);
   return `${schemaName}.${className}`;
 }
 
@@ -37,7 +37,7 @@ export function normalizeFullClassName(fullClassName: string): string {
  * supported schema-class name separators (`.` or `:`).
  * @public
  */
-export function compareFullClassNames(lhs: string, rhs: string): number {
+export function compareFullClassNames(lhs: EC.FullClassName, rhs: EC.FullClassName): number {
   const parsed = {
     lhs: parseFullClassName(lhs),
     rhs: parseFullClassName(rhs),

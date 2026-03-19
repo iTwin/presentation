@@ -206,7 +206,7 @@ describe("createNodesQueryClauseFactory", () => {
                 abstractConstraint: Promise.resolve({ fullName: "testSchema.SourceClass" }),
               },
             }),
-          } as EC.NavigationProperty,
+          } as unknown as EC.NavigationProperty,
         ],
       });
       const result = await factory.createSelectClause({
@@ -589,7 +589,7 @@ describe("createNodesQueryClauseFactory", () => {
 
       describe("by properties", () => {
         interface TestPropertyFilterProps {
-          className: string;
+          className: EC.FullClassName;
           classAlias: string;
           rule: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup;
           expectedECSql: string;
@@ -1354,7 +1354,7 @@ describe("createNodesQueryClauseFactory", () => {
           imodelAccess
             .getSchemaStub("s2")
             .getCustomAttributes.resolves(
-              new Map<string, EC.CustomAttribute>([["CoreCustomAttributes.HiddenSchema", { className: "CoreCustomAttributes.HiddenSchema" }]]),
+              new Map<EC.FullClassName, EC.CustomAttribute>([["CoreCustomAttributes.HiddenSchema", { className: "CoreCustomAttributes.HiddenSchema" }]]),
             );
           const clauses = await factory.createFilterClauses({ contentClass: { fullName: selectClass.fullName, alias: "content-class" } });
           expect({ ...clauses, where: trimWhitespace(clauses.where) }).to.deep.eq({
@@ -1371,14 +1371,14 @@ describe("createNodesQueryClauseFactory", () => {
           imodelAccess
             .getSchemaStub("s2")
             .getCustomAttributes.resolves(
-              new Map<string, EC.CustomAttribute>([
+              new Map<EC.FullClassName, EC.CustomAttribute>([
                 ["CoreCustomAttributes.HiddenSchema", { className: "CoreCustomAttributes.HiddenSchema", ["ShowClasses"]: false }],
               ]),
             );
           imodelAccess
             .getSchemaStub("s3")
             .getCustomAttributes.resolves(
-              new Map<string, EC.CustomAttribute>([
+              new Map<EC.FullClassName, EC.CustomAttribute>([
                 ["CoreCustomAttributes.HiddenSchema", { className: "CoreCustomAttributes.HiddenSchema", ["ShowClasses"]: true }],
               ]),
             );
@@ -1401,7 +1401,7 @@ describe("createNodesQueryClauseFactory", () => {
           imodelAccess
             .getSchemaStub("s2")
             .getCustomAttributes.resolves(
-              new Map<string, EC.CustomAttribute>([
+              new Map<EC.FullClassName, EC.CustomAttribute>([
                 ["CoreCustomAttributes.HiddenSchema", { className: "CoreCustomAttributes.HiddenSchema", ["ShowClasses"]: false }],
               ]),
             );

@@ -6,6 +6,7 @@
 import { assert } from "@itwin/core-bentley";
 import { PrimitiveType, SchemaItemType, StrengthDirection } from "@itwin/ecschema-metadata";
 import * as ecschemaMetadata from "@itwin/ecschema-metadata";
+import { normalizeFullClassName } from "@itwin/presentation-shared";
 
 import type {
   ECClass as CoreClass,
@@ -57,7 +58,7 @@ abstract class ECSchemaItemImpl<TCoreSchemaItem extends CoreSchemaItem> implemen
     return this._schema;
   }
   public get fullName() {
-    return this._coreSchemaItem.fullName;
+    return normalizeFullClassName(this._coreSchemaItem.fullName);
   }
   public get name() {
     return this._coreSchemaItem.name;
@@ -394,12 +395,24 @@ async function createFromOptionalLazyLoaded<TSource extends CoreSchemaItem, TTar
   return source.then(convert);
 }
 
-const EMPTY_MAP: ReadonlyMap<string, EC.CustomAttribute> = new Map();
+const EMPTY_MAP: ReadonlyMap<EC.FullClassName, EC.CustomAttribute> = new Map();
 async function createCustomAttributesSet(coreCustomAttributes: CoreClass["customAttributes"]): Promise<EC.CustomAttributeSet> {
   if (!coreCustomAttributes) {
     return EMPTY_MAP;
   }
-  return coreCustomAttributes;
+  return {
+    *[Symbol.iterator]() {
+      for (const [className, ca] of coreCustomAttributes) {
+        const normalizedClassName = normalizeFullClassName(className);
+        yield [normalizedClassName, { ...ca, className: normalizedClassName }];
+      }
+    },
+    get(className: EC.FullClassName) {
+      const normalizedClassName = normalizeFullClassName(className);
+      const coreCustomAttribute = coreCustomAttributes.get(normalizedClassName);
+      return coreCustomAttribute ? { ...coreCustomAttribute, className: normalizedClassName } : undefined;
+    },
+  };
 }
 
 class ECRelationshipConstraintImpl implements EC.RelationshipConstraint {

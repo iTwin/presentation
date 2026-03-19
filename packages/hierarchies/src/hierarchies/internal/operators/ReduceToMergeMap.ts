@@ -16,8 +16,11 @@ import type { ObservableInput } from "rxjs";
  *
  * @internal
  */
-export function reduceToMergeMapList<TSourceItem, TMapItem>(key: (item: TSourceItem) => string, value: (item: TSourceItem) => TMapItem) {
-  return reduceToMergeMapItem<TSourceItem, TMapItem[]>(key, (item, list) => {
+export function reduceToMergeMapList<TSourceItem, TMapItem, TMapKey extends string>(
+  key: (item: TSourceItem) => TMapKey,
+  value: (item: TSourceItem) => TMapItem,
+) {
+  return reduceToMergeMapItem<TSourceItem, TMapItem[], TMapKey>(key, (item, list) => {
     if (!list) {
       list = [];
     }
@@ -35,13 +38,13 @@ export function reduceToMergeMapList<TSourceItem, TMapItem>(key: (item: TSourceI
  *
  * @internal
  */
-export function reduceToMergeMapItem<TSourceItem, TMapItem>(
-  key: (item: TSourceItem) => string,
+export function reduceToMergeMapItem<TSourceItem, TMapItem, TMapKey extends string>(
+  key: (item: TSourceItem) => TMapKey,
   mergeFunc: (sourceItem: TSourceItem, mapItem: TMapItem | undefined) => TMapItem,
 ) {
   return (source: ObservableInput<TSourceItem>) =>
     from(source).pipe(
-      reduce<TSourceItem, Map<string, TMapItem>>((mergedMap, item) => {
+      reduce<TSourceItem, Map<TMapKey, TMapItem>>((mergedMap, item) => {
         if (mergedMap === EMPTY_MAP) {
           // this helps us avoid creating an empty map for cases when source observable
           // doesn't emit any values

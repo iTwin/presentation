@@ -185,13 +185,10 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   });
 
   it("doesn't apply instance node level definitions marked with `onlyIfNotHandled` flag if any of the previous ones have been applied", async () => {
-    const rootNode = createParentNode({
-      key: {
-        type: "instances",
-        instanceKeys: [{ className: "TestSchema.ClassX", id: "0x1" }],
-      },
+    const unrelatedClass = imodelAccess.stubEntityClass({
+      schemaName: "TestSchema",
+      className: "UnrelatedClass",
     });
-
     const baseClass = imodelAccess.stubEntityClass({
       schemaName: "TestSchema",
       className: "BaseClass",
@@ -201,10 +198,17 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       className: "ChildClass",
       baseClass,
     });
-    imodelAccess.stubEntityClass({
+    const classX = imodelAccess.stubEntityClass({
       schemaName: "TestSchema",
       className: "ClassX",
       baseClass: childClass,
+    });
+
+    const rootNode = createParentNode({
+      key: {
+        type: "instances",
+        instanceKeys: [{ className: classX.fullName, id: "0x1" }],
+      },
     });
 
     const derivedClassDefs = sinon.stub().resolves([]);
@@ -242,7 +246,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
         rootNodes: async () => [],
         childNodes: [
           {
-            parentInstancesNodePredicate: "",
+            parentInstancesNodePredicate: unrelatedClass.fullName,
             definitions: async () => [],
           },
           {

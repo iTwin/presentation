@@ -7,7 +7,7 @@ import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } f
 
 import type { ConcatenatedValue } from "./ConcatenatedValue.js";
 import type { TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets.js";
-import type { ECClassHierarchyInspector } from "./Metadata.js";
+import type { EC, ECClassHierarchyInspector } from "./Metadata.js";
 
 /**
  * Props for `IInstanceLabelSelectClauseFactory.createSelectClause`.
@@ -35,7 +35,7 @@ interface CreateInstanceLabelSelectClauseProps {
    * implementations may be able to create a more efficient select clause (e.g. drop some pieces of clause
    * that don't apply for given class).
    */
-  className?: string;
+  className?: EC.FullClassName;
 
   /**
    * An optional function for concatenating multiple `TypedValueSelectClauseProps`. Selectors' concatenation
@@ -132,7 +132,7 @@ export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelS
  */
 interface ClassBasedLabelSelectClause {
   /** Full class name */
-  className: string;
+  className: EC.FullClassName;
   /** A factory method to create an instance label select clause */
   clause: (props: CreateInstanceLabelSelectClauseProps) => Promise<string>;
 }
@@ -168,7 +168,7 @@ interface ClassBasedInstanceLabelSelectClauseFactoryProps {
 export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory {
   const { classHierarchyInspector, clauses: labelClausesByClass } = props;
   const defaultClauseFactory = props.defaultClauseFactory ?? createDefaultInstanceLabelSelectClauseFactory();
-  async function getLabelClausesForClass(queryClassName: string) {
+  async function getLabelClausesForClass(queryClassName: EC.FullClassName) {
     const matchingLabelClauses = await Promise.all(
       labelClausesByClass.map(async (entry) => {
         if (await classHierarchyInspector.classDerivesFrom(entry.className, queryClassName)) {

@@ -13,7 +13,7 @@ export interface StubClassFuncProps {
   className: string;
   classLabel?: string;
   properties?: EC.Property[];
-  is?: (fullClassName: string) => Promise<boolean>;
+  is?: (fullClassName: EC.FullClassName) => Promise<boolean>;
 }
 export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
   source?: EC.RelationshipConstraint;
@@ -29,7 +29,7 @@ export interface ClassStubs {
   stubOtherClass: TStubClassFunc;
   resetHistory: () => void;
   restore: () => void;
-  stub: sinon.SinonStub<[schemaProvider: ECSchemaProvider, fullClassName: string], Promise<EC.Class>>;
+  stub: sinon.SinonStub<[schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassName], Promise<EC.Class>>;
 }
 export function createECSchemaProviderStub() {
   const schemaStubs = new Map<string, sinon.SinonStubbedInstance<EC.Schema>>();

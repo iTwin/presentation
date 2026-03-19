@@ -23,7 +23,7 @@ describe("HierarchyNode", () => {
     children: false,
   };
   const classGroupingNode: GroupingHierarchyNode = {
-    key: { type: "class-grouping", className: "c" },
+    key: { type: "class-grouping", className: "s.c" },
     groupedInstanceKeys: [],
     label: "class grouping node",
     parentKeys: [],
@@ -209,7 +209,7 @@ describe("HierarchyNode", () => {
           key: labelGroupingNode.key,
           parentKeys: [
             { type: "instances", instanceKeys: [] },
-            { type: "class-grouping", className: "c" },
+            { type: "class-grouping", className: "s.c" },
           ],
         }),
       ).to.eq(2);
@@ -221,7 +221,7 @@ describe("HierarchyNode", () => {
           key: propertyValueGroupingNode.key,
           parentKeys: [
             { type: "instances", instanceKeys: [] },
-            { type: "class-grouping", className: "c" },
+            { type: "class-grouping", className: "s.c" },
             { type: "label-grouping", label: "l" },
           ],
         }),
@@ -233,7 +233,7 @@ describe("HierarchyNode", () => {
         HierarchyNode.getGroupingNodeLevel({
           key: classGroupingNode.key,
           parentKeys: [
-            { type: "class-grouping", className: "a" },
+            { type: "class-grouping", className: "s.a" },
             { type: "instances", instanceKeys: [] },
             { type: "label-grouping", label: "l" },
           ],
@@ -255,7 +255,7 @@ describe("HierarchyNode", () => {
         HierarchyNode.getGroupingNodeLevel({
           key: classGroupingNode.key,
           parentKeys: [
-            { type: "class-grouping", className: "a" },
+            { type: "class-grouping", className: "s.a" },
             { type: "label-grouping", label: "l" },
             { type: "property-grouping:other", properties: [] },
           ],

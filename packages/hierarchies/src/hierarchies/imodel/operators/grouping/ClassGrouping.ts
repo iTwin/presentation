@@ -7,21 +7,21 @@ import { Dictionary } from "@itwin/core-bentley";
 import { compareFullClassNames, createMainThreadReleaseOnTimePassedHandler, getClass } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../../../HierarchyNode.js";
 
-import type { ECSchemaProvider } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ParentHierarchyNode } from "../../../HierarchyNode.js";
 import type { ClassGroupingNodeKey } from "../../../HierarchyNodeKey.js";
 import type { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
 import type { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
 
 interface ClassInfo {
-  fullName: string;
+  fullName: EC.FullClassName;
   name: string;
   label?: string;
 }
 
 interface ClassGroupingInformation {
   ungrouped: ProcessedInstanceHierarchyNode[];
-  grouped: Dictionary<string, { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>;
+  grouped: Dictionary<EC.FullClassName, { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>;
 }
 
 /** @internal */
@@ -31,7 +31,10 @@ export async function createClassGroups(
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<GroupingHandlerResult> {
   const parentNodeClass = parentNode && HierarchyNode.isClassGroupingNode(parentNode) ? parentNode.key.className : undefined;
-  const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Dictionary(compareFullClassNames) };
+  const groupings: ClassGroupingInformation = {
+    ungrouped: [],
+    grouped: new Dictionary<EC.FullClassName, { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>(compareFullClassNames),
+  };
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   for (const node of nodes) {
     await releaseMainThread();

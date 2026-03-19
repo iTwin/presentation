@@ -22,6 +22,7 @@ describe("parseFullClassName", () => {
 
   it("throws on invalid full class name", () => {
     expect(() => parseFullClassName("invalid")).to.throw();
+    expect(() => parseFullClassName("schema.class.whatever")).to.throw();
   });
 });
 
@@ -33,6 +34,7 @@ describe("normalizeFullClassName", () => {
 
   it("throws on invalid full class name", () => {
     expect(() => normalizeFullClassName("invalid")).to.throw();
+    expect(() => normalizeFullClassName("schema.class.whatever")).to.throw();
   });
 });
 

@@ -19,7 +19,7 @@ The `createIModelHierarchyProvider` factory function takes an `imodelAccess` pro
 ```ts
 import { IModelConnection } from "@itwin/core-frontend";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor, HierarchyLevelDefinition } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
 
 function createIModelAccess(imodel: IModelConnection) {

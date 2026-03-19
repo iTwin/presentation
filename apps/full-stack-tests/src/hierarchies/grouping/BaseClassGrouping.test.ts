@@ -7,7 +7,7 @@ import { insertPhysicalPartition, insertSubject } from "presentation-test-utilit
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, normalizeFullClassName } from "@itwin/presentation-shared";
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -15,18 +15,19 @@ import { createIModelAccess, createProvider } from "../Utils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import type { EC } from "@itwin/presentation-shared";
 
 describe("Hierarchies", () => {
   describe("Base class grouping", () => {
-    let subjectClassName: string;
-    let physicalPartitionClassName: string;
+    let subjectClassName: EC.FullClassName;
+    let physicalPartitionClassName: EC.FullClassName;
     let emptyIModel: IModelConnection;
 
     before(async function () {
       await initialize();
       emptyIModel = (await buildIModel(this)).imodel;
-      subjectClassName = Subject.classFullName.replace(":", ".");
-      physicalPartitionClassName = PhysicalPartition.classFullName.replace(":", ".");
+      subjectClassName = normalizeFullClassName(Subject.classFullName);
+      physicalPartitionClassName = normalizeFullClassName(PhysicalPartition.classFullName);
     });
 
     after(async () => {

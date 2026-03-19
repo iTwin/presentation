@@ -18,7 +18,13 @@ In its most simple form, a hierarchy definition may just have one `defineHierarc
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
+  HierarchyDefinition,
+  HierarchyLevelDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
@@ -73,7 +79,13 @@ However, some hierarchy definitions may choose to write SELECT clause manually a
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
+  HierarchyDefinition,
+  HierarchyLevelDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
@@ -125,7 +137,13 @@ For example, the following code snippet shows how to use the `preProcessNode` ca
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
+  HierarchyDefinition,
+  HierarchyLevelDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
@@ -179,7 +197,13 @@ For example, the following code snippet shows how to use the `postProcessNode` c
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
+  HierarchyDefinition,
+  HierarchyLevelDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
@@ -237,7 +261,13 @@ For example, the following code snippet shows how to define a hierarchy, similar
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
+  HierarchyDefinition,
+  HierarchyLevelDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 
 const queryClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
@@ -259,7 +289,7 @@ const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
       {
         // For the root node, return a query that selects all physical elements
         parentGenericNodePredicate: async (parentKey) => parentKey.id === "physical-elements",
-        definitions: async () => [
+        definitions: async (): Promise<HierarchyLevelDefinition> => [
           {
             fullClassName: "BisCore.PhysicalElement",
             query: {

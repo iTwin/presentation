@@ -21,6 +21,8 @@ import {
 } from "presentation-test-utilities";
 import { createIModel } from "./IModelUtilities";
 
+import type { EC } from "@itwin/presentation-shared";
+
 export const IMODEL_NAMES = [
   "baytown",
   "50k flat elements",
@@ -156,7 +158,7 @@ export class Datasets {
         for (let j = 0; j < elementsPerGroup; ++j) {
           insertPhysicalElement({
             builder,
-            classFullName: `${schemaName}:${defaultClassName}_${groupIdx}`,
+            classFullName: `${schemaName}:${defaultClassName}_${groupIdx}` satisfies EC.FullClassName,
             fullClassNameSeparator: ":",
             userLabel: `${defaultUserLabel}_${groupIdx}`,
             modelId,

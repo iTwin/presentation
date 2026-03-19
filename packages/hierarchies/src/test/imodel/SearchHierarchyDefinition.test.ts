@@ -18,8 +18,9 @@ import {
 import { createTestInstanceKey, createTestInstanceNodeKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../Utils.js";
 
 import type { ECClassHierarchyInspector } from "@itwin/presentation-shared";
+import type { HierarchyNodeIdentifier } from "../../hierarchies/HierarchyNodeIdentifier.js";
 import type { HierarchySearchTree } from "../../hierarchies/HierarchySearch.js";
-import type { DefineHierarchyLevelProps, InstanceNodesQueryDefinition } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
+import type { DefineHierarchyLevelProps, HierarchyLevelDefinition, InstanceNodesQueryDefinition } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
 import type {
   ProcessedGroupingHierarchyNode,
   ProcessedInstanceHierarchyNode,
@@ -210,7 +211,7 @@ describe("SearchHierarchyDefinition", () => {
     });
 
     it("assigns search props when row has matching search columns and target paths match", async () => {
-      const targetIdentifier = { className: "Schema:Class", id: "0x1", imodelKey: "imodel" };
+      const targetIdentifier: HierarchyNodeIdentifier = { className: "Schema:Class", id: "0x1", imodelKey: "imodel" };
       const targetPaths: HierarchySearchTree[] = [{ identifier: targetIdentifier }];
       const parsedNode = createSourceInstanceNode({
         key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Class", id: "0x1" }] }),
@@ -407,7 +408,7 @@ describe("SearchHierarchyDefinition", () => {
     } as unknown as DefineHierarchyLevelProps["imodelAccess"];
 
     it("returns source definitions when search identifiers are not applicable to the level", async () => {
-      const sourceDefs = [{ fullClassName: "Schema:Class", query: { ecsql: "SELECT *" } }];
+      const sourceDefs: HierarchyLevelDefinition = [{ fullClassName: "Schema:Class", query: { ecsql: "SELECT *" } }];
       const parentNode = {
         key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Parent", id: "0x2" }] }),
         label: "parent",
@@ -622,7 +623,7 @@ describe("applyECInstanceIdsSearch", () => {
   it("creates a valid CTE for search instance paths", () => {
     const result = applyECInstanceIdsSearch(
       {
-        fullClassName: "full-class-name",
+        fullClassName: "SchemaName.ClassName",
         query: {
           ctes: ["source cte"],
           ecsql: "source query",
@@ -640,7 +641,7 @@ describe("applyECInstanceIdsSearch", () => {
         },
       ],
     );
-    expect(result.fullClassName).to.eq("full-class-name");
+    expect(result.fullClassName).to.eq("SchemaName.ClassName");
     expect(result.query.ctes?.map(trimWhitespace)).to.deep.eq([
       "source cte",
       trimWhitespace(`
@@ -674,14 +675,14 @@ describe("applyECInstanceIdsSearch", () => {
 describe("applyECInstanceIdsSelector", () => {
   it("wraps query with search columns using IdToHex and FullClassName", () => {
     const result = applyECInstanceIdsSelector({
-      fullClassName: "full-class-name",
+      fullClassName: "SchemaName.ClassName",
       query: {
         ctes: ["source cte"],
         ecsql: "source query",
         bindings: [{ type: "string", value: "source binding" }],
       },
     });
-    expect(result.fullClassName).to.eq("full-class-name");
+    expect(result.fullClassName).to.eq("SchemaName.ClassName");
     expect(result.query.ctes).to.deep.eq(["source cte"]);
     expect(trimWhitespace(result.query.ecsql)).to.deep.eq(
       trimWhitespace(`
