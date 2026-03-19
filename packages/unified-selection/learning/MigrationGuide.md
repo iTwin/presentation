@@ -98,7 +98,9 @@ A similar example using the new `SelectionStorage` API:
 // manage its lifecycle
 const unifiedSelectionStorage = createStorage();
 IModelConnection.onClose.addListener((iModelConnection) => {
-  unifiedSelectionStorage.clearStorage({ imodelKey: createIModelKey(iModelConnection) });
+  unifiedSelectionStorage.clearStorage({
+    imodelKey: createIModelKey(iModelConnection),
+  });
 });
 
 // then, components can start listening to selection changes
@@ -107,7 +109,9 @@ unifiedSelectionStorage.selectionChangeEvent.addListener((args) => {
 });
 
 // ...or get the current selection
-const selection: Selectables = unifiedSelectionStorage.getSelection({ imodelKey: createIModelKey(iModelConnection) });
+const selection: Selectables = unifiedSelectionStorage.getSelection({
+  imodelKey: createIModelKey(iModelConnection),
+});
 
 // ...or modify the selection
 const onButtonClick = () => {
@@ -339,7 +343,9 @@ using provider = createIModelHiliteSetProvider({
   imodelProvider: (imodelKey) => getIModelAccessByKey(imodelKey),
   selectionStorage,
 });
-const hiliteSet: AsyncIterableIterator<HiliteSet> = provider.getHiliteSet({ imodelKey: createIModelKey(imodel) });
+const hiliteSet: AsyncIterableIterator<HiliteSet> = provider.getHiliteSet({
+  imodelKey: createIModelKey(imodel),
+});
 ```
 
 ### Getting hilite set for arbitrary elements / selectables
@@ -362,5 +368,7 @@ const provider = createHiliteSetProvider({
     ...createECSqlQueryExecutor(imodel),
   },
 });
-const hiliteSet: AsyncIterableIterator<HiliteSet> = provider.getHiliteSet({ selectables });
+const hiliteSet: AsyncIterableIterator<HiliteSet> = provider.getHiliteSet({
+  selectables,
+});
 ```
