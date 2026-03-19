@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 1.2.10
+
+### Patch Changes
+
+- [#1242](https://github.com/iTwin/presentation/pull/1242): Bump dependencies.
+
 ## 1.2.9
 
 ### Patch Changes
