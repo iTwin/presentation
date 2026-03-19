@@ -372,7 +372,7 @@ export function insertFunctionalPartition(
   props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<Omit<InformationPartitionElementProps, "id" | "parent" | "code">>,
 ) {
   const { builder, classFullName, codeValue, parentId, ...partitionProps } = props;
-  const defaultModelClassName: FullClassName = `Functional${props.fullClassNameSeparator ?? "."}FunctionalPartition `;
+  const defaultModelClassName: FullClassName = `Functional${props.fullClassNameSeparator ?? "."}FunctionalPartition`;
   const className = classFullName ?? defaultModelClassName;
   const partitionId = builder.insertElement({
     classFullName: className,
