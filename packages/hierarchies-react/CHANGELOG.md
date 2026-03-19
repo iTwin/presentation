@@ -1,5 +1,48 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.58
+
+### Major Changes
+
+- [#1236](https://github.com/iTwin/presentation/pull/1236): Start using tree structure for defining hierarchy search paths.
+
+  The expected return type of `useTree` hooks' `getSearchPaths` callback prop has changed from `Promise<HierarchySearchPath[] | undefined>` to `Promise<HierarchySearchTree[] | undefined>`. The newly added `HierarchySearchTree.createFromPathsList` from `@itwin/presentation-hierarchies` can be used to do the conversion:`
+
+  ```tsx
+  import { HierarchySearchTree } from "@itwin/presentation-hierarchies";
+
+  function MyTree() {
+    const [searchText, setSearchText] = useState("");
+    const treeProps = useIModelUnifiedSelectionTree({
+      // ...
+      getSearchPaths: useMemo<UseIModelTreeProps["getSearchPaths"]>(() => {
+        return async () => {
+          // before
+          return getSearchTargetPaths({ searchText }),
+          // after
+          return HierarchySearchTree.createFromPathsList(await getSearchTargetPaths({ searchText }));
+          };
+      }, [searchText]),
+    });
+
+    // ...
+
+    return (
+      <StrataKitTreeRenderer
+        {...treeProps.treeRendererProps}
+        // ...
+      />
+    );
+  }
+  ```
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/unified-selection@1.6.9-alpha.0
+  - @itwin/presentation-hierarchies@2.0.0-alpha.13
+  - @itwin/presentation-shared@2.0.0-alpha.9
+
 ## 2.0.0-alpha.57
 
 ### Patch Changes
@@ -19,6 +62,7 @@
 - [#1223](https://github.com/iTwin/presentation/pull/1223): Reworked `localization` to use `i18next`-compatible approach. Instead of passing a `localizedStrings` object into `LocalizationContextProvider`, the package now delivers an English locale JSON file and resolves strings through a `getLocalizedString` function at runtime.
 
   **Breaking changes**
+
   - `LocalizationContextProvider` no longer accepts a `localizedStrings` object. It now requires a `localization` prop — an object with a `getLocalizedString(key: string): string` method (compatible with `Localization` from @itwin/core-common).
   - `LOCALIZATION_NAMESPACES` must be registered with your localization provider during app initialization to make localized strings available.
 
@@ -80,6 +124,7 @@
 - [#1184](https://github.com/iTwin/presentation/pull/1184): Fixed selection handling in `StrataKitTreeRenderer`. Mouse double clicks are now correctly ignored to prevent rapid selection toggling. Keyboard selection using `Space` and `Enter` keys is working.
 
   **Breaking changes**
+
   - `useSelectionHandler` is no longer exported. This function is an internal implementation detail of `StrataKitTreeRenderer` and should not be used directly.
 
 - [#1181](https://github.com/iTwin/presentation/pull/1181): **Breaking change:** Rename `PresentationHierarchyNode` to `TreeNode` for clarity.
@@ -89,6 +134,7 @@
 - [#1183](https://github.com/iTwin/presentation/pull/1183): Clean up `TreeErrorRenderer` and `ErrorItemRenderer`.
 
   **Breaking changes:**
+
   - Replaced `useErrorList` hook with `useErrorNodes` hook that returns error nodes (`TreeNode[]`) instead of error items. The `expandTo` function became unnecessary, because expanding to error nodes is now handled internally. As a result, the whole `ErrorItem` type (result of `useErrorList`) was removed. Reacting to this, the following other breaking changes were made:
     - Renamed `errorItem` -> `errorNode` in `ErrorItemRenderer` component and changed the type from removed `ErrorItem` to `TreeNode`.
     - Renamed `errorList` -> `errorNodes` in `TreeErrorRenderer` component and changed the type from `ErrorItem[]` to `TreeNode[]`.
@@ -105,7 +151,10 @@
   Example:
 
   ```tsx
-  import { StrataKitTreeRenderer, StrataKitTreeRendererAttributes } from "@itwin/presentation-hierarchies-react";
+  import {
+    StrataKitTreeRenderer,
+    StrataKitTreeRendererAttributes,
+  } from "@itwin/presentation-hierarchies-react";
 
   function MyTree() {
     const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
@@ -115,7 +164,9 @@
         <div className="tree-header">
           <button
             onClick={() => {
-              treeRef.current?.renameNode((node) => node.label === "Node to rename");
+              treeRef.current?.renameNode(
+                (node) => node.label === "Node to rename"
+              );
             }}
           >
             Rename node
@@ -128,11 +179,13 @@
   ```
 
   **Breaking changes**
+
   - `StrataKitTreeNodeRenderer` is no longer exported.
   - `RenameContextProvider` is no longer exported. It is not necessary when using `StrataKitTreeRenderer`.
   - `RenameAction` now requires a `node` prop.
 
 - [#1179](https://github.com/iTwin/presentation/pull/1179): **Breaking change:** Rename tree node action components for clarity.
+
   - `FilterAction` -> `TreeNodeFilterAction`
   - `RenameAction` -> `TreeNodeRenameAction`
 
@@ -143,7 +196,9 @@
   ```tsx
   type TreeRendererProps = ComponentProps<typeof StrataKitTreeRenderer>;
 
-  const getEditingProps = useCallback<Required<TreeRendererProps>["getEditingProps"]>((node) => {
+  const getEditingProps = useCallback<
+    Required<TreeRendererProps>["getEditingProps"]
+  >((node) => {
     return {
       onLabelChanged: (newLabel: string) => {
         // Handle label change
@@ -153,10 +208,13 @@
     };
   }, []);
 
-  return <StrataKitTreeRenderer {...treeProps} getEditingProps={getEditingProps} />;
+  return (
+    <StrataKitTreeRenderer {...treeProps} getEditingProps={getEditingProps} />
+  );
   ```
 
   **Breaking changes**
+
   - `getEditingProps` callback was changed to require `onLabelChanged`. If node does not support renaming `getEditingProps` should return `undefined`.
 
 ### Patch Changes
@@ -175,6 +233,7 @@
   **Breaking changes**
 
   `StrataKitTreeNodeRenderer` props changes:
+
   - `getMenuActions` callback changed to `menuActions` prop (type: `ReactNode[]`)
   - `getInlineActions` callback changed to `inlineActions` prop (type: `ReactNode[]`)
   - `getContextMenuActions` callback changed to `contextMenuActions` prop (type: `ReactNode[]`)
@@ -185,6 +244,7 @@
   - `onNodeClick` and `onNodeKeyDown` callbacks removed - use `onClick` and `onKeyDown` props instead
 
   `StrataKitTreeRenderer` props changes:
+
   - Props previously passed to `StrataKitTreeNodeRenderer` are no longer accepted
   - Use `getTreeItemProps` callback to provide props to specific `Tree.Item` components
   - Use `getMenuActions`, `getInlineActions`, and `getContextMenuActions` on `StrataKitTreeRenderer` to provide actions for nodes
@@ -250,13 +310,19 @@
 - [#1113](https://github.com/iTwin/presentation/pull/1113): Pass selected nodes to tree node action getters to support actions that should be applied on all selected nodes.
 
   **Breaking changes**
+
   - `StrataKitTreeRenderer.getInlineActions` callback receives `{ targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }` props instead of `PresentationHierarchyNode`.
   - `StrataKitTreeRenderer.getMenuActions` callback receives `{ targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }` props instead of `PresentationHierarchyNode`.
 
   Before
 
   ```tsx
-  return <StrataKitTreeRenderer getInlineActions={(node) => [<InlineAction node={node} />]} getMenuActions={(node) => [<MenuAction node={node} />]} />;
+  return (
+    <StrataKitTreeRenderer
+      getInlineActions={(node) => [<InlineAction node={node} />]}
+      getMenuActions={(node) => [<MenuAction node={node} />]}
+    />
+  );
   ```
 
   After
@@ -264,7 +330,9 @@
   ```tsx
   return (
     <StrataKitTreeRenderer
-      getInlineActions={({ targetNode }) => [<InlineAction node={targetNode} />]}
+      getInlineActions={({ targetNode }) => [
+        <InlineAction node={targetNode} />,
+      ]}
       getMenuActions={({ targetNode }) => [<MenuAction node={targetNode} />]}
     />
   );
@@ -273,6 +341,7 @@
 - [#1115](https://github.com/iTwin/presentation/pull/1115): Unified tree actions handling to make it easier defining actions that could be reused in different contexts: inline, context menu and actions dropdown.
 
   **Breaking changes**
+
   - Removed `reserveSpace` property from `<RenameAction />` and `<FilterAction />`. These actions now automatically infer the context they're used in.
   - Added requirement to render newly introduced `<TreeActionBase />` component instead of `<Tree.ItemAction />` when rendering custom tree actions.
 
@@ -322,6 +391,7 @@
 ### Major Changes
 
 - [#1094](https://github.com/iTwin/presentation/pull/1094): Improve custom errors rendering API:
+
   - Separated `ChildrenLoad` error from the `Unknown` error. All expected tree errors have dedicated type and `Unknown` error can be used to handle custom errors encountered outside of tree.
   - Exposed `ErrorItemRenderer` that renders all error types supported by the tree.
   - Updated `TreeErrorRenderer` to pass all props necessary to render `ErrorItemRenderer` into `renderError` callback.
@@ -339,7 +409,12 @@
           {...errorProps}
           renderError={(errorItemProps) => {
             if (errorItemProps.errorItem.errorNode.error.type === "Unknown") {
-              return <ErrorRegion.Item message="Custom error" messageId={errorItemProps.errorItem.errorNode.id} />;
+              return (
+                <ErrorRegion.Item
+                  message="Custom error"
+                  messageId={errorItemProps.errorItem.errorNode.id}
+                />
+              );
             }
             return <ErrorItemRenderer {...errorItemProps} />;
           }}
@@ -356,6 +431,7 @@
 - [#1075](https://github.com/iTwin/presentation/pull/1075): Fix accessibility issues in `<TreeErrorRenderer />`.
 
   This involves a few localized string changes:
+
   - Added `issuesForTree`, defaulting to "Issues for {{tree_label}}.", used as a region landmark label for the error message container.
   - Added `noIssuesFound`, defaulting to "No issues found.", used as a label for errors' list when there are no issues.
   - Changed `issuesFound` to default to "{{number_of_issues}} issue(s) found.", and updated its usage to inject the number of issues found into the string instead of prefixing it before the string, which allows to place the number at any place in the string (may be a requirement for some languages). This is **a breaking change** for anyone, supplying their own localized strings.
@@ -390,13 +466,19 @@
   Example usage:
 
   ```ts
-  import { StrataKitTreeRenderer, useNodeHighlighting } from "@itwin/presentation-hierarchies-react";
+  import {
+    StrataKitTreeRenderer,
+    useNodeHighlighting,
+  } from "@itwin/presentation-hierarchies-react";
 
-  type BaseTreeRendererProps = React.ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>;
+  type BaseTreeRendererProps = React.ComponentPropsWithoutRef<
+    typeof StrataKitTreeRenderer
+  >;
 
   function MyComponent(props: BaseTreeRendererProps & { searchText: string }) {
     // Create highlight based on searchText
-    const highlightText = props.searchText !== "" ? props.searchText : undefined;
+    const highlightText =
+      props.searchText !== "" ? props.searchText : undefined;
     const { getLabel } = useNodeHighlighting({ highlightText });
 
     // Provide getLabel function to tree renderer
@@ -443,6 +525,7 @@
 - [#1023](https://github.com/iTwin/presentation/pull/1023): Split `getActions` into `getMenuActions` & `getInlineActions` for `StrataKitTreeRenderer` and `StrataKitTreeNodeRenderer`.
 
   Updated peer dependencies:
+
   - @stratakit/bricks@0.3.3
   - @stratakit/foundations@0.2.2
   - @stratakit/structures@0.3.1
@@ -497,12 +580,14 @@
 ### Major Changes
 
 - [#961](https://github.com/iTwin/presentation/pull/961): **Breaking changes** to tree state hooks `useTree`, `useUnifiedSelectionTree`, `useIModelTree`, `useIModelUnifiedSelectionTree`:
+
   - All tree rendering props have been moved under `treeRendererProps`. The value can be passed to `<StrataKitTreeRenderer />` component.
   - In case an error occurs while loading the root hierarchy level, instead of `treeRendererProps`, the `rootErrorRendererProps` are set, which can be passed to `<StrataKitRootErrorRenderer />` component to render the error state.
   - The `isLoading` attribute has been renamed to `isReloading`.
   - Errors are no longer defined as children of `PresentationHierarchyNode` and instead are now included as `error` attribute for more fluent API.
 
   When rendering tree state, the recommended order of checks is:
+
   1. If `rootErrorRendererProps` is defined, there was an error - render error state.
   2. If `treeRendererProps` is not defined, the component is doing the initial load - render loading state.
   3. If `treeRendererProps` is defined, the hierarchy is loaded - render the tree component.
@@ -541,6 +626,7 @@
 ### Major Changes
 
 - [#954](https://github.com/iTwin/presentation/pull/954): Add additional requirements for types in `EC` metadata namespace, whose objects are returned by `ECSchemaProvider`.
+
   - `EC.Schema`, `EC.Class` and `EC.Property` now all have an async `getCustomAttributes()` method that returns an `EC.CustomAttributeSet`, allowing consumers to access custom attributes of these schema items.
   - `EC.Class` now additionally has these members:
     - `baseClass: Promise<Class | undefined>`
@@ -581,6 +667,7 @@
 ### Major Changes
 
 - [#942](https://github.com/iTwin/presentation/pull/942): Unified selection API cleanup.
+
   - Remove deprecated `UnifiedSelectionProvider`.
   - Make `selectionStorage` prop required for unified selection - enabled tree state hooks (`useUnifiedSelectionTree` and `useIModelUnifiedSelectionTree`).
 
@@ -593,7 +680,10 @@
   Before:
 
   ```tsx
-  import { TreeNodeRenderer, useFilterAction } from "@itwin/presentation-hierarchies-react";
+  import {
+    TreeNodeRenderer,
+    useFilterAction,
+  } from "@itwin/presentation-hierarchies-react";
 
   const filterAction = useFilterAction({ onFilter, getHierarchyLevelDetails });
   return (
@@ -607,7 +697,7 @@
             icon: customIconHref,
           }),
         ],
-        [filterAction],
+        [filterAction]
       )}
     />
   );
@@ -617,16 +707,29 @@
 
   ```tsx
   import { Icon, Tree } from "@itwin/itwinui-react";
-  import { FilterAction, TreeNodeRenderer } from "@itwin/presentation-hierarchies-react";
+  import {
+    FilterAction,
+    TreeNodeRenderer,
+  } from "@itwin/presentation-hierarchies-react";
 
   return (
     <TreeNodeRenderer
       getActions={useCallback(
         (node) => [
-          <FilterAction key="filter" node={node} onFilter={onFilter} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
-          <Tree.ItemAction key="customAction" label="Custom action" onClick={() => log(node.label)} icon={<Icon href={customIconHref} />} />,
+          <FilterAction
+            key="filter"
+            node={node}
+            onFilter={onFilter}
+            getHierarchyLevelDetails={getHierarchyLevelDetails}
+          />,
+          <Tree.ItemAction
+            key="customAction"
+            label="Custom action"
+            onClick={() => log(node.label)}
+            icon={<Icon href={customIconHref} />}
+          />,
         ],
-        [onFilter, getHierarchyLevelDetails],
+        [onFilter, getHierarchyLevelDetails]
       )}
     />
   );
@@ -641,10 +744,10 @@
 
   ```ts
   <TreeRenderer
-      {...treeProps}
-      errorRenderer={(errorsRendererProps) => (
-          <MyErrorRenderer {...errorsRendererProps} />
-      )}
+    {...treeProps}
+    errorRenderer={(errorsRendererProps) => (
+      <MyErrorRenderer {...errorsRendererProps} />
+    )}
   />
   ```
 
@@ -670,10 +773,10 @@
 
   ```ts
   <TreeRenderer
-      {...treeProps}
-      rootErrorRenderer={(rootErrorRendererProps) => (
-          <MyRootErrorRenderer {...rootErrorRendererProps} />
-      )}
+    {...treeProps}
+    rootErrorRenderer={(rootErrorRendererProps) => (
+      <MyRootErrorRenderer {...rootErrorRendererProps} />
+    )}
   />
   ```
 
@@ -777,11 +880,13 @@
 ### Minor Changes
 
 - [#878](https://github.com/iTwin/presentation/pull/878): Tree node renderer now uses `Tree.ItemAction`. `Show` property now takes in undefined values, values behave like this:
+
   - `undefined` - visible on hover/focus,
   - `true` - visible at all times,
   - `false` - hidden at all times.
 
   Updated peer dependencies:
+
   - itwinui-icons to 5.0.0-alpha.3,
   - itwinui-react to 5.0.0-alpha.6,
 
@@ -811,6 +916,7 @@
 - [#862](https://github.com/iTwin/presentation/pull/862): Update `@itwin/itwinui-react` dependency to `5.0.0-alpha.3`.
 
   This fixes the following issues:
+
   - nodes being selected on expand,
   - node action buttons being rendered incorrectly.
 
@@ -959,9 +1065,17 @@
 
   const treeState = useUnifiedSelectionTree({
     selectionStorage,
-    createSelectableForGenericNode: useCallback<NonNullable<Props<typeof useUnifiedSelectionTree>["createSelectableForGenericNode"]>>(
-      (node, uniqueId) => ({ identifier: node.key.id, data: node, async *loadInstanceKeys() {} }),
-      [],
+    createSelectableForGenericNode: useCallback<
+      NonNullable<
+        Props<typeof useUnifiedSelectionTree>["createSelectableForGenericNode"]
+      >
+    >(
+      (node, uniqueId) => ({
+        identifier: node.key.id,
+        data: node,
+        async *loadInstanceKeys() {},
+      }),
+      []
     ),
     // ...other options
   });
@@ -1068,6 +1182,7 @@
 ### Minor Changes
 
 - [#841](https://github.com/iTwin/presentation/pull/841): Changed how tree state hooks access unified selection storage.
+
   - The tree state hooks that hook into unified selection system now accept a `selectionStorage` prop. At the moment the prop is optional, but will be made required in the next major release of the package.
   - The `UnifiedSelectionProvider` React context provider is now deprecated. The context is still used by tree state hooks if the selection storage is not provided through prop.
 
@@ -1143,7 +1258,11 @@
   Example usage:
 
   ```tsx
-  function MyTreeComponentInternal({ imodelAccess }: { imodelAccess: IModelAccess }) {
+  function MyTreeComponentInternal({
+    imodelAccess,
+  }: {
+    imodelAccess: IModelAccess;
+  }) {
     const {
       rootNodes,
       getNode,
@@ -1158,18 +1277,22 @@
       async (nodeId: string, isExpanded: boolean) => {
         const node = getNode(nodeId);
         if (node) {
-          console.log(`${isExpanded ? "Expanding" : "Collapsing"} node: ${node.label}`);
+          console.log(
+            `${isExpanded ? "Expanding" : "Collapsing"} node: ${node.label}`
+          );
         }
         doExpandNode(nodeId, isExpanded);
       },
-      [getNode, doExpandNode],
+      [getNode, doExpandNode]
     );
 
     // render the tree
     if (!rootNodes || !rootNodes.length) {
       return "No data to display";
     }
-    return <TreeRenderer {...state} expandNode={expandNode} rootNodes={rootNodes} />;
+    return (
+      <TreeRenderer {...state} expandNode={expandNode} rootNodes={rootNodes} />
+    );
   }
   ```
 
@@ -1323,6 +1446,7 @@
   See "Basic example" section in README learning page for the full example.
 
 - [#717](https://github.com/iTwin/presentation/pull/717): **BREAKING:** Add support for non-iModel-driven trees.
+
   - `useTree` and `useUnifiedSelectionTree` hooks have been changed to support non-iModel-driven trees. The hooks take a `getHierarchyProvider` prop, which returns a `HierarchyProvider`. The provider can return data from any data source.
   - New `useIModelTree` and `useIModelUnifiedSelectionTree` hooks have been added to cover the most common case, where a tree is created from a iModel's data. The API of these hooks is exactly the same as of the old `useTree` and `useUnifiedSelectionTree` hooks.
 
@@ -1515,11 +1639,12 @@
           const hierarchyLevelDetails = getHierarchyLevelDetails(nodeId);
           someFunc(hierarchyLevelDetails);
         }}
-
         // After the change
         onNodeClick={(node, isSelected, event) => someFunc(node.id)}
         onNodeKeyDown={(node, isSelected, event) => someFunc(node.id)}
-        onFilterClick={(hierarchyLevelDetails) => someFunc(hierarchyLevelDetails)}
+        onFilterClick={(hierarchyLevelDetails) =>
+          someFunc(hierarchyLevelDetails)
+        }
       />
     );
   }
@@ -1552,7 +1677,7 @@
       ...props,
       onHierarchyLimitExceeded: ({ nodeId, filter, limit }) => {
         console.log(`Hierarchy limit of ${limit} exceeded for node ${nodeId}.`);
-      }
+      },
     });
     return <TreeRenderer {...state} />;
   }
@@ -1563,7 +1688,7 @@
   ```ts
   import { registerTxnListeners } from "@itwin/presentation-core-interop";
 
-  function MyTree({ imodel, ...props}: Props) {
+  function MyTree({ imodel, ...props }: Props) {
     const { reloadTree, treeProps } = useTree(props);
     useEffect(() => {
       // listen for changes in iModel and reload tree
@@ -1589,7 +1714,7 @@
       ...props,
       onPerformanceMeasured: (action, duration) => {
         telemetryClient.log(`MyTree [${feature}] took ${duration} ms`);
-      }
+      },
     });
     return <TreeRenderer {...state} />;
   }
