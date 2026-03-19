@@ -90,7 +90,7 @@
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
     "@itwin/eslint-plugin": "catalog:build-tools",
-    "@rollup/plugin-babel": "catalog:build-tools",
+    "@rolldown/plugin-babel": "catalog:build-tools",
     "@stratakit/bricks": "catalog:stratakit",
     "@stratakit/foundations": "catalog:stratakit",
     "@stratakit/icons": "catalog:stratakit",
@@ -107,6 +107,7 @@
     "@types/react-dom": "catalog:react",
     "@types/sinon": "catalog:test-tools",
     "@types/sinon-chai": "catalog:test-tools",
+    "@vitejs/plugin-react": "catalog:build-tools",
     "babel-plugin-react-compiler": "catalog:build-tools",
     "chai": "catalog:test-tools",
     "chai-as-promised": "catalog:test-tools",
@@ -127,6 +128,7 @@
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
     "tsdown": "catalog:build-tools",
-    "typescript": "catalog:build-tools"
+    "typescript": "catalog:build-tools",
+    "vite": "catalog:build-tools"
   }
 }

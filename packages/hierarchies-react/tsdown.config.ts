@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { defineConfig } from "tsdown";
-import { babel } from "@rollup/plugin-babel";
+import babel from "@rolldown/plugin-babel";
+import { reactCompilerPreset } from "@vitejs/plugin-react";
 
 export default defineConfig({
   entry: "./src/presentation-hierarchies-react.ts",
@@ -15,20 +16,7 @@ export default defineConfig({
   external: [/\.css$/],
   plugins: [
     babel({
-      babelHelpers: "bundled",
-      parserOpts: {
-        sourceType: "module",
-        plugins: ["jsx", "typescript"],
-      },
-      plugins: [
-        [
-          "babel-plugin-react-compiler",
-          {
-            target: "18",
-          },
-        ],
-      ],
-      extensions: [".js", ".jsx", ".ts", ".tsx"],
+      presets: [reactCompilerPreset({ target: "18" })],
     }),
   ],
 });
