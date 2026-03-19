@@ -23,6 +23,24 @@ Start using tree structure for defining hierarchy search paths.
 
   - `HierarchySearchTree.createFromPathsList` function to create a hierarchy search tree from a list of hierarchy search paths. This is a quick & easy way to migrate from the old `HierarchySearchPath[]` structure to `HierarchySearchTree[]`, but it's' less efficient than using the builder if you need to create a tree from a large number of paths, as it needs to create an intermediate array.
 
+    The recommended way to handle multiple search paths is to use the builder and call `accept` for each path, as it allows to create a tree without having to create an array first:
+
+    ```ts
+    // Instead of doing this:
+    const searchPaths: HierarchySearchPath[] = [];
+    for (const item of items) {
+      searchPaths.push(createSearchPathForItem(item));
+    }
+    const tree: HierarchySearchTree = HierarchySearchTree.createFromPathsList(searchPaths);
+
+    // Do this:
+    const builder = HierarchySearchTree.createBuilder();
+    for (const item of items) {
+      builder.accept({ path: createSearchPathForItem(item) });
+    }
+    const tree: HierarchySearchTree = builder.getTree();
+    ```
+
   - `HierarchySearchTree.mergeOptions` function to merge options of two hierarchy search trees. Used internally to merge options of the same nodes when creating a tree from a list of paths.
 
 - `HierarchyNode.getGroupingNodeLevel` utility function to get the level of a grouping node in the hierarchy. Convenient for specifying the `groupingLevel` prop in `HierarchySearchPath.options.reveal` and `HierarchySearchTree.options.autoExpand`.
@@ -63,6 +81,8 @@ Start using tree structure for defining hierarchy search paths.
     paths: searchPaths,
 
     // after
+    // - see `HierarchySearchTree.createFromPathsList` description above for more efficient way to do this
+    // - quick migration:
     paths: await HierarchySearchTree.createFromPathsList(searchPaths),
   });
   ```
@@ -80,6 +100,8 @@ Start using tree structure for defining hierarchy search paths.
       paths: searchPaths,
 
       // after
+      // - see `HierarchySearchTree.createFromPathsList` description above for more efficient way to do this
+      // - quick migration:
       paths: await HierarchySearchTree.createFromPathsList(searchPaths),
     },
   });
