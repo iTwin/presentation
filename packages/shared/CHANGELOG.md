@@ -1,5 +1,50 @@
 # @itwin/presentation-shared
 
+## 2.0.0-alpha.9
+
+### Major Changes
+
+- [#1250](https://github.com/iTwin/presentation/pull/1250): Use type-safe full class names.
+
+  The full class names used in this package were defined as `string`, although we always expect them to be in specific format - either `Schema:Class` or `Schema.Class`. In many cases we rely on this format when parsing the name for compare or other purposes, so type safety for the format is highly beneficial. This change makes full class names type-safe(ier) through [TypeScript's template literal types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html), so that we can be sure that they are always in correct format.
+
+  ## Additions
+
+  - Added 3 new types to the `EC` namespace:
+    - `FullClassNameColonNotation` - matches the format `Schema:Class`,
+    - `FullClassNameDotNotation` - matches the format `Schema.Class`,
+    - `FullClassName` - union of the above two.
+
+  ## Non-breaking changes
+
+  - Updated `normalizeFullClassName` to return `EC.FullClassNameDotNotation` instead of `string`. The returned value is still assignable to `string`, but it adds type safety for the expected format of the full class name.
+
+  ## Breaking changes
+
+  - Changed `EC.CustomAttribute.className` to be of type `EC.FullClassName` instead of `string`.
+  - Changed `EC.CustomAttributeSet.get` argument to be of type `EC.FullClassName` instead of `string`.
+  - Changed `EC.SchemaItem.fullName` to be of type `EC.FullClassName` instead of `string`.
+  - Changed `compareFullClassNames` arguments to be of type `EC.FullClassName` instead of `string`.
+  - Changed `createClassBasedInstanceLabelSelectClauseFactory` prop `clauses` to take objects with `{ className: EC.FullClassName }` arguments instead of `{ className: string }`.
+  - Changed `IInstanceLabelSelectClauseFactory.createSelectClause` prop `className` to be of type `EC.FullClassName` instead of `string`.
+  - Changed `ECSql.createPrimitivePropertyValueSelectorProps` prop `propertyClassName` to be of type `EC.FullClassName` instead of `string`.
+  - Changed `ECSql.createRelationshipPathJoinClause` prop `path` to take class names (`relationshipName`, `sourceClassName` and `targetClassName`) of type `EC.FullClassName` instead of `string`.
+  - Changed `ECClassHierarchyInspector.classDerivesFrom` arguments to be of type `EC.FullClassName` instead of `string`.
+  - Changed the second argument of `getClass` to be of type `EC.FullClassName` instead of `string`.
+  - Changed `InstanceKey.className` to be of type `EC.FullClassName` instead of `string`.
+
+  In many cases migration will be seamless, as long as the input string matches the expected format. In some cases (e.g. when assigning a string variable to one of the affected properties), you may need to use `normalizeFullClassName` to ensure the value is of the correct type:
+
+  ```ts
+  const myClassName: string = "MySchema.MyClass";
+
+  // before
+  const myClass = getClass(schemaProvider, myClassName);
+
+  // after
+  const myClass = getClass(schemaProvider, normalizeFullClassName(myClassName));
+  ```
+
 ## 2.0.0-alpha.8
 
 ### Major Changes
@@ -72,6 +117,7 @@
 ### Major Changes
 
 - [#954](https://github.com/iTwin/presentation/pull/954): Add additional requirements for types in `EC` metadata namespace, whose objects are returned by `ECSchemaProvider`.
+
   - `EC.Schema`, `EC.Class` and `EC.Property` now all have an async `getCustomAttributes()` method that returns an `EC.CustomAttributeSet`, allowing consumers to access custom attributes of these schema items.
   - `EC.Class` now additionally has these members:
     - `baseClass: Promise<Class | undefined>`
@@ -147,6 +193,7 @@
 ### Minor Changes
 
 - [#791](https://github.com/iTwin/presentation/pull/791): Added a number of mapped types:
+
   - `Props<TFunc>` obtains the type of the first `TFunc` function argument.
 
     ```ts
@@ -200,10 +247,12 @@
 - [#703](https://github.com/iTwin/presentation/pull/703): **BREAKING:** Removed the option to specify value + ECProperty identifier when creating a `ConcatenatedValue`.
 
   The change provides two benefits:
+
   1. Access to schema is not required to format `ConcatenatedValue` parts as they already contain all the necessary metadata required for formatting the value. This is a step towards supporting multiple data sources, where schema information might be not available during formatting.
   2. Previously, the property type information had to be extracted for every row in the result set, which was inefficient. Now, the type information is extracted only once, when creating an ECSql query.
 
   Full list of changes:
+
   - `ConcatenatedValuePart.isProperty` - removed, as the "property" type was removed from the type union.
   - `ECSql.createConcatenatedValueJsonSelector` and `ECSql.createConcatenatedValueStringSelector` don't accept an option to specify value + ECProperty identifier as a selector argument anymore. Instead, the option that specifies value selector + type information should be used. The latter kind of selector can be created using the newly added `ECSql.createPrimitivePropertyValueSelectorProps` function (see below).
   - Added `ECSql.createPrimitivePropertyValueSelectorProps` function to help create a selector that specifies a value selector + type information. See README for more details.
@@ -279,13 +328,18 @@
 ### Minor Changes
 
 - [#628](https://github.com/iTwin/presentation/pull/628): Added support for nested concatenated values by adding `ConcatenatedValue` to the `ConcatenatedValuePart` union. In addition:
+
   - A type guard `ConcatenatedValuePart.isConcatenatedValue` has been added to distinguish it from other types of `ConcatenatedValuePart`.
   - `ConcatenatedValue.serialize` has been modified to handle the new type of part seamlessly, so the `partFormatter` prop function receives the same 3 types of `ConcatenatedValuePart`, expanded from nested `ConcatenatedValue` if necessary.
 
   The change makes combining multiple concatenated values easier, e.g. now you can do this:
 
   ```ts
-  const value: ConcatenatedValue = [createConcatenatedValueX(), { type: "String", value: " - " }, createConcatenatedValueY()];
+  const value: ConcatenatedValue = [
+    createConcatenatedValueX(),
+    { type: "String", value: " - " },
+    createConcatenatedValueY(),
+  ];
   ```
 
 ## 0.2.0
