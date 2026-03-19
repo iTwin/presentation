@@ -569,12 +569,12 @@ describe("PropertiesGrouping", () => {
         testCase: "full class names don't match",
         previousPropertiesGroupingInfo: [
           {
-            propertiesClassName: "TestSchema.other",
+            propertiesClassName: "TestSchema.other" as const,
             propertyName: "PropertyName",
           },
         ],
         nodesProperties: {
-          propertiesClassName: "TestSchema.Name",
+          propertiesClassName: "TestSchema.Name" as const,
           propertyGroups: [
             {
               propertyName: "PropertyName",
@@ -588,12 +588,12 @@ describe("PropertiesGrouping", () => {
         testCase: "property names don't match",
         previousPropertiesGroupingInfo: [
           {
-            propertiesClassName: "TestSchema.Name",
+            propertiesClassName: "TestSchema.Name" as const,
             propertyName: "OtherName",
           },
         ],
         nodesProperties: {
-          propertiesClassName: "TestSchema.Name",
+          propertiesClassName: "TestSchema.Name" as const,
           propertyGroups: [
             {
               propertyName: "PropertyName",
@@ -607,13 +607,13 @@ describe("PropertiesGrouping", () => {
         testCase: "ranged properties don't match",
         previousPropertiesGroupingInfo: [
           {
-            propertiesClassName: "TestSchema.Name",
+            propertiesClassName: "TestSchema.Name" as const,
             propertyName: "PropertyName",
             isRange: true,
           },
         ],
         nodesProperties: {
-          propertiesClassName: "TestSchema.Name",
+          propertiesClassName: "TestSchema.Name" as const,
           propertyGroups: [
             {
               propertyName: "PropertyName",
@@ -627,12 +627,12 @@ describe("PropertiesGrouping", () => {
         testCase: "all properties match",
         previousPropertiesGroupingInfo: [
           {
-            propertiesClassName: "TestSchema.Name",
+            propertiesClassName: "TestSchema.Name" as const,
             propertyName: "PropertyName",
           },
         ],
         nodesProperties: {
-          propertiesClassName: "TestSchema.Name",
+          propertiesClassName: "TestSchema.Name" as const,
           propertyGroups: [
             {
               propertyName: "PropertyName",

@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
 import { createNodesQueryClauseFactory, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, normalizeFullClassName } from "@itwin/presentation-shared";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
@@ -51,7 +51,7 @@ describe("search", () => {
       }
 
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
-      const fullClassName = PhysicalElement.classFullName.replace(":", ".");
+      const fullClassName = normalizeFullClassName(PhysicalElement.classFullName);
       const createHierarchyLevelDefinition = async (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector, whereClause: (alias: string) => string) => {
         const query = createNodesQueryClauseFactory({
           imodelAccess,

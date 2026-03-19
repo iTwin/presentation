@@ -50,7 +50,7 @@ export interface PropertyGroupInfo {
 }
 
 /** @internal */
-export type PreviousPropertiesGroupingInfo = Array<{ propertiesClassName: string; propertyName: string; isRange?: boolean }>;
+export type PreviousPropertiesGroupingInfo = Array<{ propertiesClassName: EC.FullClassName; propertyName: string; isRange?: boolean }>;
 
 /** @internal */
 export async function createPropertyGroups(
@@ -374,7 +374,7 @@ function getRangesAsString(ranges?: HierarchyNodePropertyValueRange[]): string {
 async function shouldCreatePropertyGroup(
   handlerGroupingParams: PropertyGroupInfo,
   nodePropertyGroupingParams: HierarchyNodePropertiesGroupingParams,
-  nodeFullClassName: string,
+  nodeFullClassName: EC.FullClassName,
   classHierarchyInspector: ECClassHierarchyInspector,
 ): Promise<boolean> {
   if (

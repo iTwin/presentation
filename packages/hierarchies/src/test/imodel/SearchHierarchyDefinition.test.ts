@@ -50,7 +50,7 @@ describe("SearchHierarchyDefinition", () => {
     it("uses `defaultNodeParser` when source definitions factory doesn't have one", async () => {
       const spy = sinon.spy();
       const row = {
-        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [NodeSelectClauseColumnNames.FullClassName]: "TestSchema.TestName",
       };
       const searchFactory = await createSearchHierarchyDefinition({ nodesParser: (rowProp) => of(spy(rowProp)) });
       await firstValueFrom(searchFactory.parseNode({ row, imodelKey }));
@@ -63,7 +63,7 @@ describe("SearchHierarchyDefinition", () => {
         parseNode: (rowProp: any) => from(stub(rowProp)),
       } as unknown as RxjsHierarchyDefinition;
       const row = {
-        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [NodeSelectClauseColumnNames.FullClassName]: "TestSchema.TestName",
       };
       const searchFactory = await createSearchHierarchyDefinition({
         sourceFactory,
@@ -86,7 +86,7 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths: paths,
       });
       const row = {
-        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [NodeSelectClauseColumnNames.FullClassName]: className,
         [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x5",
         [ECSQL_COLUMN_NAME_SearchClassName]: className,
       };
@@ -118,7 +118,7 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths: [],
       });
       const row = {
-        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [NodeSelectClauseColumnNames.FullClassName]: className,
         [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x5",
         [ECSQL_COLUMN_NAME_SearchClassName]: className,
       };
@@ -150,7 +150,7 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths: [],
       });
       const row = {
-        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [NodeSelectClauseColumnNames.FullClassName]: className,
         [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x4",
         [ECSQL_COLUMN_NAME_SearchClassName]: className,
       };
@@ -183,7 +183,7 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths: paths,
       });
       const row = {
-        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [NodeSelectClauseColumnNames.FullClassName]: className,
         [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x3",
         [ECSQL_COLUMN_NAME_SearchClassName]: className,
       };
@@ -210,11 +210,11 @@ describe("SearchHierarchyDefinition", () => {
 
       const class1 = imodelAccess.stubEntityClass({
         schemaName: "BisCore",
-        className: "SourceQueryClassName",
+        className: "TestSchema.SourceQueryClassName",
       });
       const class2 = imodelAccess.stubEntityClass({
         schemaName: "BisCore",
-        className: "SearchPathClassName0",
+        className: "TestSchema.SearchPathClassName0",
         baseClass: class1,
       });
       const paths: HierarchyNodeIdentifiersPath[] = [
@@ -228,7 +228,7 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths: [],
       });
       const row = {
-        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [NodeSelectClauseColumnNames.FullClassName]: "TestSchema.TestName",
         [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x5",
         [ECSQL_COLUMN_NAME_SearchClassName]: class1.fullName,
       };
@@ -266,7 +266,7 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths: paths,
       });
       const row = {
-        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [NodeSelectClauseColumnNames.FullClassName]: testClass.fullName,
         [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1",
         [ECSQL_COLUMN_NAME_SearchClassName]: testClass.fullName,
       };
@@ -289,7 +289,7 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths: [],
       });
       const row = {
-        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [NodeSelectClauseColumnNames.FullClassName]: className,
         [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x5",
         [ECSQL_COLUMN_NAME_SearchClassName]: className,
       };
@@ -501,14 +501,14 @@ describe("SearchHierarchyDefinition", () => {
             inputNode: createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:Element" }] } }),
             searchPathNodeKey: { type: "generic" as const, id: "0x1" },
           },
-          { inputNode: createTestProcessedGenericNode(), searchPathNodeKey: { id: "0x1", className: "bis:Element" }, imodelKey: "" },
+          { inputNode: createTestProcessedGenericNode(), searchPathNodeKey: { id: "0x1", className: "bis:Element" as const }, imodelKey: "" },
           {
             inputNode: createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:Element" }] } }),
-            searchPathNodeKey: { id: "0x2", className: "bis:Element", imodelKey: "" },
+            searchPathNodeKey: { id: "0x2", className: "bis:Element" as const, imodelKey: "" },
           },
           {
             inputNode: createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:Element", imodelKey: "a" }] } }),
-            searchPathNodeKey: { id: "0x1", className: "bis:Element", imodelKey: "b" },
+            searchPathNodeKey: { id: "0x1", className: "bis:Element" as const, imodelKey: "b" },
           },
         ].forEach(async ({ inputNode, searchPathNodeKey }) => {
           const imodelAccess = {
@@ -898,7 +898,7 @@ describe("SearchHierarchyDefinition", () => {
         return createTestProcessedGroupingNode({
           key: {
             type: "class-grouping",
-            className: "class name",
+            className: "class.name" as const,
           },
           groupedInstanceKeys: [],
           children: [],
@@ -928,7 +928,7 @@ describe("SearchHierarchyDefinition", () => {
         return createTestProcessedGroupingNode({
           key: {
             type: "property-grouping:value",
-            propertyClassName: "class",
+            propertyClassName: "schema.class",
             propertyName: "property",
             formattedPropertyValue: "value",
           },
@@ -945,7 +945,7 @@ describe("SearchHierarchyDefinition", () => {
         return createTestProcessedGroupingNode({
           key: {
             type: "property-grouping:range",
-            propertyClassName: "class",
+            propertyClassName: "schema.class",
             propertyName: "property",
             fromValue: 0,
             toValue: 1,
@@ -964,8 +964,8 @@ describe("SearchHierarchyDefinition", () => {
           key: {
             type: "property-grouping:other",
             properties: [
-              { className: "class 1", propertyName: "property 1" },
-              { className: "class 2", propertyName: "property 2" },
+              { className: "schema.class1", propertyName: "property 1" },
+              { className: "schema.class2", propertyName: "property 2" },
             ],
           },
           groupedInstanceKeys: [],
@@ -1723,7 +1723,7 @@ describe("SearchHierarchyDefinition", () => {
     it("creates a valid CTE for search instance paths", () => {
       const result = applyECInstanceIdsSearch(
         {
-          fullClassName: "full-class-name",
+          fullClassName: "full.class_name",
           query: {
             ctes: ["source cte"],
             ecsql: "source query",
@@ -1741,7 +1741,7 @@ describe("SearchHierarchyDefinition", () => {
           },
         ],
       );
-      expect(result.fullClassName).to.eq("full-class-name");
+      expect(result.fullClassName).to.eq("full.class_name");
       expect(result.query.ctes?.map(trimWhitespace)).to.deep.eq([
         "source cte",
         trimWhitespace(`

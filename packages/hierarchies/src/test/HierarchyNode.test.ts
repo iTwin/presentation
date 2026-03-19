@@ -23,7 +23,7 @@ describe("HierarchyNode", () => {
     children: false,
   };
   const classGroupingNode: GroupingHierarchyNode = {
-    key: { type: "class-grouping", className: "c" },
+    key: { type: "class-grouping", className: "s.c" },
     groupedInstanceKeys: [],
     label: "class grouping node",
     parentKeys: [],

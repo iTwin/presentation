@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { DictionaryModel, InformationPartitionElement, LinkModel, Model, Subject } from "@itwin/core-backend";
 import { createNodesQueryClauseFactory, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, InstanceKey, normalizeFullClassName } from "@itwin/presentation-shared";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils.js";
@@ -40,7 +40,7 @@ describe("Hierarchies", () => {
         async defineHierarchyLevel() {
           return [
             {
-              fullClassName: Subject.classFullName,
+              fullClassName: normalizeFullClassName(Subject.classFullName),
               query: {
                 ecsql: `
                   SELECT ${await selectQueryFactory.createSelectClause({
@@ -67,7 +67,7 @@ describe("Hierarchies", () => {
     });
 
     it("gets instance keys for instance node's child hierarchy level", async function () {
-      const rootSubjectKey: InstanceKey = { className: Subject.classFullName.replace(":", "."), id: "0x1" };
+      const rootSubjectKey: InstanceKey = { className: normalizeFullClassName(Subject.classFullName), id: "0x1" };
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
@@ -78,7 +78,7 @@ describe("Hierarchies", () => {
           if (parentNode && HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((ik) => InstanceKey.equals(ik, rootSubjectKey))) {
             return [
               {
-                fullClassName: Subject.classFullName,
+                fullClassName: normalizeFullClassName(Subject.classFullName),
                 query: {
                   ecsql: `
                     SELECT ${await selectQueryFactory.createSelectClause({
@@ -116,8 +116,8 @@ describe("Hierarchies", () => {
       expect(keys)
         .to.have.lengthOf(2)
         .and.to.containSubset([
-          { className: DictionaryModel.classFullName.replace(":", "."), id: "0x10" },
-          { className: LinkModel.classFullName.replace(":", "."), id: "0xe" },
+          { className: normalizeFullClassName(DictionaryModel.classFullName), id: "0x10" },
+          { className: normalizeFullClassName(LinkModel.classFullName), id: "0xe" },
         ]);
     });
 
@@ -132,7 +132,7 @@ describe("Hierarchies", () => {
           if (parentNode && HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "test") {
             return [
               {
-                fullClassName: Subject.classFullName,
+                fullClassName: normalizeFullClassName(Subject.classFullName),
                 query: {
                   ecsql: `
                     SELECT ${await selectQueryFactory.createSelectClause({
@@ -167,7 +167,7 @@ describe("Hierarchies", () => {
     });
 
     it("gets instance keys for hidden instance node's child hierarchy level", async function () {
-      const rootSubjectKey: InstanceKey = { className: Subject.classFullName.replace(":", "."), id: "0x1" };
+      const rootSubjectKey: InstanceKey = { className: normalizeFullClassName(Subject.classFullName), id: "0x1" };
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
@@ -178,7 +178,7 @@ describe("Hierarchies", () => {
           if (!parentNode) {
             return [
               {
-                fullClassName: Subject.classFullName,
+                fullClassName: normalizeFullClassName(Subject.classFullName),
                 query: {
                   ecsql: `
                     SELECT ${await selectQueryFactory.createSelectClause({
@@ -196,7 +196,7 @@ describe("Hierarchies", () => {
           if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((ik) => ik.id === rootSubjectKey.id)) {
             return [
               {
-                fullClassName: Subject.classFullName,
+                fullClassName: normalizeFullClassName(Subject.classFullName),
                 query: {
                   ecsql: `
                     SELECT ${await selectQueryFactory.createSelectClause({
@@ -254,7 +254,7 @@ describe("Hierarchies", () => {
           if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "test") {
             return [
               {
-                fullClassName: Subject.classFullName,
+                fullClassName: normalizeFullClassName(Subject.classFullName),
                 query: {
                   ecsql: `
                     SELECT ${await selectQueryFactory.createSelectClause({

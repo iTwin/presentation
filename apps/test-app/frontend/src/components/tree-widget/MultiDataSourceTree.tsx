@@ -33,6 +33,7 @@ import type {
   DefineInstanceNodeChildHierarchyLevelProps,
   GenericNodeKey,
   GetHierarchyNodesProps,
+  HierarchyLevelDefinition,
   HierarchyNodeIdentifiersPath,
   HierarchyProvider,
   HierarchySearchPath,
@@ -246,7 +247,7 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
       childNodes: [
         {
           parentInstancesNodePredicate: "BisCore.Subject",
-          definitions: async () => [
+          definitions: async (): Promise<HierarchyLevelDefinition> => [
             {
               fullClassName: "BisCore.Model",
               query: {
@@ -272,7 +273,7 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
           parentInstancesNodePredicate: "BisCore.Model",
           definitions: async ({ parentNode }: DefineInstanceNodeChildHierarchyLevelProps) => [
             {
-              fullClassName: "BisCore.Model",
+              fullClassName: "BisCore.Model" as const,
               query: {
                 ecsql: `
                   SELECT ${await clauses.createSelectClause({

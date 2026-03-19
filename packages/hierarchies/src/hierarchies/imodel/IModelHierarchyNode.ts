@@ -5,7 +5,7 @@
 
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 
-import type { ConcatenatedValue, InstanceKey, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
+import type { ConcatenatedValue, EC, InstanceKey, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
 import type { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../HierarchyNode.js";
 import type { GenericNodeKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
 
@@ -96,7 +96,7 @@ interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingPara
    *
    * Full class name format: `SchemaName.ClassName`.
    */
-  fullClassNames: string[];
+  fullClassNames: EC.FullClassName[];
 }
 
 /**
@@ -110,7 +110,7 @@ export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGrou
    *
    * Full class name format: `SchemaName.ClassName`.
    */
-  propertiesClassName: string;
+  propertiesClassName: EC.FullClassName;
   /**
    * Property grouping option that determines whether to group nodes whose grouping value is not set or is set to an empty string.
    *

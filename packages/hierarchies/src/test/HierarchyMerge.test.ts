@@ -82,21 +82,21 @@ describe("mergeProviders", () => {
     const providers = [
       createTestProvider({
         instanceKeys: () => [
-          { className: "1", id: "1" },
-          { className: "x", id: "x" },
+          { className: "s.one", id: "one" },
+          { className: "s.two", id: "two" },
         ],
       }),
       createTestProvider({
-        instanceKeys: () => [{ className: "2", id: "2" }],
+        instanceKeys: () => [{ className: "s.three", id: "three" }],
       }),
     ];
     const mergedProvider = mergeProviders({ providers });
     expect(await collect(mergedProvider.getNodeInstanceKeys({ parentNode: undefined })))
       .to.have.lengthOf(3)
       .and.to.containSubset([
-        { className: "1", id: "1" },
-        { className: "x", id: "x" },
-        { className: "2", id: "2" },
+        { className: "s.one", id: "one" },
+        { className: "s.two", id: "two" },
+        { className: "s.three", id: "three" },
       ]);
     providers.forEach((provider) => expect(provider.getNodeInstanceKeys.callCount).to.eq(1));
   });

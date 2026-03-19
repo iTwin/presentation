@@ -13,7 +13,7 @@ import { safeDispose } from "./Utils.js";
 
 import type { ECSqlWriteStatement } from "@itwin/core-backend";
 import type { Id64String } from "@itwin/core-bentley";
-import type { ECSqlBinding, InstanceKey } from "@itwin/presentation-shared";
+import type { EC, ECSqlBinding, InstanceKey } from "@itwin/presentation-shared";
 
 export class ECDbBuilder {
   public constructor(
@@ -124,7 +124,7 @@ export class ECDbBuilder {
     return { clause, binder: this.createECSqlStatementBinder({ ...props, ecInstanceId: key.id }) };
   }
 
-  public insertInstance(fullClassName: string, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
+  public insertInstance(fullClassName: EC.FullClassName, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
     const query = this.createInsertQuery(fullClassName, props);
     return this._ecdb.withWriteStatement(query.clause, (stmt) => {
       query.binder(stmt);
@@ -136,7 +136,12 @@ export class ECDbBuilder {
     });
   }
 
-  public insertRelationship(fullClassName: string, sourceId: Id64String, targetId: Id64String, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
+  public insertRelationship(
+    fullClassName: EC.FullClassName,
+    sourceId: Id64String,
+    targetId: Id64String,
+    props?: { [propertyName: string]: PrimitiveValue | undefined },
+  ) {
     const query = this.createInsertQuery(fullClassName, {
       ...props,
       sourceECInstanceId: sourceId,

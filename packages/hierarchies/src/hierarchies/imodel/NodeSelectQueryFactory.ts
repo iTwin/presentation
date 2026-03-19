@@ -5,7 +5,7 @@
 
 import { assert } from "@itwin/core-bentley";
 import { GenericInstanceFilter, GenericInstanceFilterRuleValue } from "@itwin/core-common";
-import { compareFullClassNames, ECSql, getClass, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
+import { compareFullClassNames, ECSql, getClass, normalizeFullClassName, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 
 import type { Id64String } from "@itwin/core-bentley";
 import type {
@@ -148,7 +148,7 @@ interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGro
    *
    * Full class name format: `SchemaName.ClassName`.
    */
-  propertiesClassName: string;
+  propertiesClassName: EC.FullClassName;
   /**
    * Property grouping option that determines whether to group nodes whose grouping value is not set or is set to an empty string.
    *
@@ -217,7 +217,7 @@ interface ECSqlSelectClausePropertyValueRange {
  * @public
  */
 interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
-  fullClassNames: string[] | ECSqlValueSelector[];
+  fullClassNames: EC.FullClassName[] | ECSqlValueSelector[];
 }
 
 /**
@@ -241,7 +241,7 @@ export interface NodesQueryClauseFactory {
    * don't exist in the iModel, a special result is returned to make sure the resulting query is valid and doesn't return anything.
    */
   createFilterClauses(props: {
-    contentClass: { fullName: string; alias: string };
+    contentClass: { fullName: EC.FullClassName; alias: string };
     filter?: GenericInstanceFilter;
   }): Promise<{ from: string; where: string; joins: string }>;
 }
@@ -306,7 +306,7 @@ class NodeSelectQueryFactory {
    * don't exist in the iModel, a special result is returned to make sure the resulting query is valid and doesn't return anything.
    */
   public async createFilterClauses(props: {
-    contentClass: { fullName: string; alias: string };
+    contentClass: { fullName: EC.FullClassName; alias: string };
     filter?: GenericInstanceFilter;
   }): Promise<{ from: string; where: string; joins: string }> {
     const { contentClass, filter } = props;
@@ -318,7 +318,7 @@ class NodeSelectQueryFactory {
           where: [],
         };
 
-    const fromClass = await getClass(this._imodelAccess, from);
+    const fromClass = await getClass(this._imodelAccess, normalizeFullClassName(from));
     const hiddenClasses = await getHiddenClassesTree(fromClass);
     const hiddenClassesWhereClause = createWhereClauseForHiddenClasses(hiddenClasses, contentClass.alias);
     hiddenClassesWhereClause.hideClause && where.push(hiddenClassesWhereClause.hideClause);
@@ -346,9 +346,9 @@ class NodeSelectQueryFactory {
  */
 async function createInstanceFilterClauses(props: {
   imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
-  contentClass: { fullName: string; alias: string };
+  contentClass: { fullName: EC.FullClassName; alias: string };
   filter: GenericInstanceFilter;
-}): Promise<{ from: string; where: string[]; joins: string[] }> {
+}): Promise<{ from: EC.FullClassName; where: string[]; joins: string[] }> {
   const { imodelAccess, contentClass, filter } = props;
 
   // In some cases the given filter means we want the query to return nothing - e.g. when filtering by classes that don't intersect
@@ -357,7 +357,7 @@ async function createInstanceFilterClauses(props: {
 
   const from = await specializeContentClass({
     classHierarchyInspector: {
-      async classDerivesFrom(derivedClassName: string, baseClassName: string): Promise<boolean> {
+      async classDerivesFrom(derivedClassName: EC.FullClassName, baseClassName: EC.FullClassName): Promise<boolean> {
         try {
           return await imodelAccess.classDerivesFrom(derivedClassName, baseClassName);
         } catch (e) {
@@ -371,18 +371,18 @@ async function createInstanceFilterClauses(props: {
       },
     },
     contentClassName: contentClass.fullName,
-    filterClassNames: filter.propertyClassNames,
+    filterClassNames: filter.propertyClassNames.map(normalizeFullClassName),
   });
   if (!from) {
     // filter class doesn't intersect with content class
     return DISABLE_QUERY;
   }
 
-  let filteredClassNamesInThisIModel: string[] | undefined;
+  let filteredClassNamesInThisIModel: EC.FullClassName[] | undefined;
   if (filter.filteredClassNames && filter.filteredClassNames.length > 0) {
     filteredClassNamesInThisIModel = (
       await Promise.all(
-        filter.filteredClassNames.map(async (fullClassName) => ({
+        filter.filteredClassNames.map(normalizeFullClassName).map(async (fullClassName) => ({
           fullClassName,
           filteredClass: await tryGetClass(imodelAccess, fullClassName),
         })),
@@ -416,8 +416,10 @@ async function createInstanceFilterClauses(props: {
     throw e;
   }
 
-  const classAliasMap = new Map<string, string>([[contentClass.alias, from]]);
-  filter.relatedInstances.forEach(({ path, alias }) => path.length > 0 && classAliasMap.set(alias, path[path.length - 1].targetClassName));
+  const classAliasMap = new Map<string, EC.FullClassName>([[contentClass.alias, from]]);
+  filter.relatedInstances.forEach(
+    ({ path, alias }) => path.length > 0 && classAliasMap.set(alias, normalizeFullClassName(path[path.length - 1].targetClassName)),
+  );
   let propertiesFilter: string | undefined;
   try {
     propertiesFilter = await createWhereClause(
@@ -817,19 +819,22 @@ function assignRelationshipPathAliases(
   sourceAlias: string,
   targetAlias: string,
 ): JoinRelationshipPath {
-  function createAlias(fullClassName: string, index: number) {
+  function createAlias(fullClassName: EC.FullClassName, index: number) {
     return `rel_${pathIndex}_${fullClassName.replaceAll(/[\.:]/g, "_")}_${index}`;
   }
   const result: JoinRelationshipPath = [];
   path.forEach((step, i) => {
+    const sourceClassName = normalizeFullClassName(step.sourceClassName);
+    const targetClassName = normalizeFullClassName(step.targetClassName);
+    const relationshipName = normalizeFullClassName(step.relationshipClassName);
     result.push({
-      targetClassName: step.targetClassName,
-      relationshipName: step.relationshipClassName,
-      sourceClassName: step.sourceClassName,
+      targetClassName,
+      relationshipName,
+      sourceClassName,
       relationshipReverse: !step.isForwardRelationship,
       sourceAlias: i === 0 ? sourceAlias : result[i - 1].targetAlias,
-      relationshipAlias: createAlias(step.relationshipClassName, i),
-      targetAlias: i === path.length - 1 ? targetAlias : createAlias(step.targetClassName, i),
+      relationshipAlias: createAlias(relationshipName, i),
+      targetAlias: i === path.length - 1 ? targetAlias : createAlias(targetClassName, i),
       joinType: "inner",
     });
   });
@@ -838,10 +843,10 @@ function assignRelationshipPathAliases(
 
 interface SpecializeContentClassProps {
   classHierarchyInspector: ECClassHierarchyInspector;
-  contentClassName: string;
-  filterClassNames: string[];
+  contentClassName: EC.FullClassName;
+  filterClassNames: EC.FullClassName[];
 }
-async function specializeContentClass(props: SpecializeContentClassProps): Promise<string | undefined> {
+async function specializeContentClass(props: SpecializeContentClassProps): Promise<EC.FullClassName | undefined> {
   const filterClass = await getSpecializedPropertyClass(props.classHierarchyInspector, props.filterClassNames);
   if (!filterClass) {
     return props.contentClassName;
@@ -855,7 +860,10 @@ async function specializeContentClass(props: SpecializeContentClassProps): Promi
   return undefined;
 }
 
-async function getSpecializedPropertyClass(classHierarchyInspector: ECClassHierarchyInspector, classes: string[]): Promise<string | undefined> {
+async function getSpecializedPropertyClass(
+  classHierarchyInspector: ECClassHierarchyInspector,
+  classes: EC.FullClassName[],
+): Promise<EC.FullClassName | undefined> {
   if (classes.length === 0) {
     return undefined;
   }
@@ -870,7 +878,7 @@ async function getSpecializedPropertyClass(classHierarchyInspector: ECClassHiera
 }
 
 interface HiddenClassNode {
-  fullName: string;
+  fullName: EC.FullClassName;
   state: "hide" | "show";
   children: HiddenClassNode[];
 }
@@ -973,7 +981,7 @@ function createWhereClauseForHiddenClasses(hiddenClasses: HiddenClassNode[], sel
   return res;
 }
 
-async function tryGetClass(schemaProvider: ECSchemaProvider, fullClassName: string): Promise<EC.Class | undefined> {
+async function tryGetClass(schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassName): Promise<EC.Class | undefined> {
   try {
     return await getClass(schemaProvider, fullClassName);
   } catch (e) {

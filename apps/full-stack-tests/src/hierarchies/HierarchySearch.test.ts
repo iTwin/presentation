@@ -24,7 +24,7 @@ import {
   HierarchySearchPath,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, normalizeFullClassName } from "@itwin/presentation-shared";
 import { createFileNameFromString } from "@itwin/presentation-testing";
 import { withECDb } from "../ECDbUtils.js";
 import { buildIModel } from "../IModelUtils.js";
@@ -42,15 +42,15 @@ import type {
   HierarchyProvider,
   IModelInstanceKey,
 } from "@itwin/presentation-hierarchies";
-import type { ECSqlBinding, InstanceKey, Props } from "@itwin/presentation-shared";
+import type { EC, ECSqlBinding, InstanceKey, Props } from "@itwin/presentation-shared";
 
 describe("Hierarchies", () => {
   describe("Hierarchy search", () => {
-    let subjectClassName: string;
+    let subjectClassName: EC.FullClassName;
 
     before(async function () {
       await initialize();
-      subjectClassName = Subject.classFullName.replace(":", ".");
+      subjectClassName = normalizeFullClassName(Subject.classFullName);
     });
 
     after(async () => {
@@ -1380,7 +1380,7 @@ describe("Hierarchies", () => {
         let hierarchy: HierarchyDefinition;
         let imodel: IModelConnection;
         let elementKey: InstanceKey;
-        let circleClassName: string;
+        let circleClassName: EC.FullClassName;
 
         before(async function () {
           const result = await buildIModel(this, async (builder) => {

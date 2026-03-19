@@ -22,7 +22,13 @@ The hierarchy definition that creates such a hierarchy would look like this:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  GroupingHierarchyNode,
+  HierarchyDefinition,
+  HierarchyLevelDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 import { ECSqlBinding } from "@itwin/presentation-shared";
 
 function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinition {
@@ -30,7 +36,13 @@ function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinit
     imodelAccess,
     instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
   });
-  const createHierarchyLevelDefinition = async ({ whereClause, bindings }: { whereClause?: string; bindings?: ECSqlBinding[] }) => [
+  const createHierarchyLevelDefinition = async ({
+    whereClause,
+    bindings,
+  }: {
+    whereClause?: string;
+    bindings?: ECSqlBinding[];
+  }): Promise<HierarchyLevelDefinition> => [
     {
       fullClassName: "BisCore.PhysicalElement",
       query: {

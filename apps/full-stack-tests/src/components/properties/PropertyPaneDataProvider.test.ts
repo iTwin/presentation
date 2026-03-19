@@ -351,7 +351,7 @@ describe("PropertyDataProvider", async () => {
       const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
       const elementKey = insertPhysicalElement({
         builder,
-        classFullName: `${schema.schemaAlias}:TestPhysicalObject`,
+        classFullName: `${schema.schemaAlias}:TestPhysicalObject` as const,
         userLabel: "Test element",
         modelId: modelKey.id,
         categoryId: categoryKey.id,

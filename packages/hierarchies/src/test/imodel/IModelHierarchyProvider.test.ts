@@ -1291,7 +1291,7 @@ describe("createIModelHierarchyProvider", () => {
           if (!parentNode) {
             return [
               {
-                fullClassName: "x.y",
+                fullClassName: "x.y" as const,
                 query: { ecsql: "root" },
               },
             ];
@@ -1299,7 +1299,7 @@ describe("createIModelHierarchyProvider", () => {
           if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((k) => k.className === "a.b")) {
             return [
               {
-                fullClassName: "x.y",
+                fullClassName: "x.y" as const,
                 query: { ecsql: "child" },
               },
             ];
@@ -1346,7 +1346,7 @@ describe("createIModelHierarchyProvider", () => {
           if (parentNode === undefined && requestedInstanceFilter) {
             return [
               {
-                fullClassName: "x.y",
+                fullClassName: "x.y" as const,
                 query: { ecsql: "root" },
               },
             ];
@@ -1386,7 +1386,7 @@ describe("createIModelHierarchyProvider", () => {
           if (parentNode === undefined) {
             return [
               {
-                fullClassName: "x.y",
+                fullClassName: "x.y" as const,
                 query: { ecsql: "root" },
               },
             ];

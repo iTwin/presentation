@@ -21,7 +21,7 @@ import { Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSql, julianToDateTime } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, ECSql, julianToDateTime, normalizeFullClassName } from "@itwin/presentation-shared";
 import { buildIModel } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
@@ -30,15 +30,16 @@ import { createIModelAccess, createProvider } from "./Utils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import type { EC } from "@itwin/presentation-shared";
 
 describe("Hierarchies", () => {
   let emptyIModel: IModelConnection;
-  let subjectClassName: string;
+  let subjectClassName: EC.FullClassName;
 
   before(async function () {
     await initialize();
     emptyIModel = (await buildIModel(this)).imodel;
-    subjectClassName = Subject.classFullName.replace(":", ".");
+    subjectClassName = normalizeFullClassName(Subject.classFullName);
   });
 
   after(async () => {

@@ -7,7 +7,13 @@
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Imports
-import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
+  HierarchyDefinition,
+  HierarchyLevelDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
@@ -284,7 +290,7 @@ describe("Hierarchies", () => {
               {
                 // For the root node, return a query that selects all physical elements
                 parentGenericNodePredicate: async (parentKey) => parentKey.id === "physical-elements",
-                definitions: async () => [
+                definitions: async (): Promise<HierarchyLevelDefinition> => [
                   {
                     fullClassName: "BisCore.PhysicalElement",
                     query: {

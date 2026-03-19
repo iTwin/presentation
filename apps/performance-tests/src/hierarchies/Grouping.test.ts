@@ -6,10 +6,12 @@
 import { Datasets } from "../util/Datasets";
 import { runHierarchyTest } from "./RunHierarchyTest";
 
+import type { EC } from "@itwin/presentation-shared";
+
 describe("grouping", () => {
   const { schemaName, baseClassName, customPropName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
   const expectedNodeCount = 50_000 + 50_000 / itemsPerGroup;
-  const baseFullClassName = `${schemaName}.${baseClassName}`;
+  const baseFullClassName: EC.FullClassName = `${schemaName}.${baseClassName}`;
 
   runHierarchyTest({
     testName: "by label",
@@ -42,10 +44,10 @@ describe("grouping", () => {
 
   const physicalElementFullClassName = "BisCore.PhysicalElement";
   const baseClassQueryLimit = 10;
-  const fullClassNames = [
+  const fullClassNames: EC.FullClassName[] = [
     physicalElementFullClassName,
     baseFullClassName,
-    ...[...Array(baseClassQueryLimit).keys()].map((i) => `${schemaName}.${defaultClassName}_${i}`),
+    ...[...Array(baseClassQueryLimit).keys()].map((i): EC.FullClassName => `${schemaName}.${defaultClassName}_${i}`),
   ];
   runHierarchyTest({
     testName: `by base class (${baseClassQueryLimit} classes)`,

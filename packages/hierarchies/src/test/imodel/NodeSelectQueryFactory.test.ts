@@ -206,7 +206,7 @@ describe("createNodesQueryClauseFactory", () => {
                 abstractConstraint: Promise.resolve({ fullName: "testSchema.SourceClass" }),
               },
             }),
-          } as EC.NavigationProperty,
+          } as unknown as EC.NavigationProperty,
         ],
       });
       const result = await factory.createSelectClause({
@@ -589,7 +589,7 @@ describe("createNodesQueryClauseFactory", () => {
 
       describe("by properties", () => {
         interface TestPropertyFilterProps {
-          className: string;
+          className: EC.FullClassName;
           classAlias: string;
           rule: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup;
           expectedECSql: string;

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { GenericInstanceFilter } from "@itwin/core-common";
-import type { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef } from "@itwin/presentation-shared";
+import type { EC, ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef } from "@itwin/presentation-shared";
 import type { NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
 import type {
   ProcessedGenericHierarchyNode,
@@ -33,7 +33,7 @@ export interface InstanceNodesQueryDefinition {
    * points to a base class of multiple different classes of instances returned by the query, however
    * the more specific this class is, the more efficient hierarchy building process is.
    */
-  fullClassName: string;
+  fullClassName: EC.FullClassName;
   /**
    * An ECSQL query that selects nodes from an iModel. `SELECT` clause of the query is expected
    * to be built using `NodeSelectQueryFactory.createSelectClause`.

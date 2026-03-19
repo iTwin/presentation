@@ -5,7 +5,7 @@
 
 import sinon from "sinon";
 import { Dictionary, Logger } from "@itwin/core-bentley";
-import { compareFullClassNames, getClass } from "@itwin/presentation-shared";
+import { compareFullClassNames, getClass, normalizeFullClassName } from "@itwin/presentation-shared";
 
 import type { LogLevel } from "@itwin/core-bentley";
 import type { EC } from "@itwin/presentation-shared";
@@ -122,7 +122,7 @@ export function createTestProcessedGroupingNode<TChild = ProcessedGroupingHierar
     label: "test",
     key: {
       type: "class-grouping",
-      className: "test class",
+      className: normalizeFullClassName("TestSchema.TestClass"),
     },
     parentKeys: [],
     groupedInstanceKeys: [],
@@ -203,8 +203,8 @@ export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps)
 
 export function createECSchemaProviderStub() {
   const schemaStubs = new Map<string, sinon.SinonStubbedInstance<EC.Schema>>();
-  const classes = new Dictionary<string, EC.Class>(compareFullClassNames); // className -> class
-  const classHierarchy = new Dictionary<string, string>(compareFullClassNames); // className -> baseClassName
+  const classes = new Dictionary<EC.FullClassName, EC.Class>(compareFullClassNames); // className -> class
+  const classHierarchy = new Dictionary<EC.FullClassName, EC.FullClassName>(compareFullClassNames); // className -> baseClassName
   const getSchemaStub = sinon.stub<[string], sinon.SinonStubbedInstance<EC.Schema>>().callsFake((schemaName: string) => {
     let schemaStub = schemaStubs.get(schemaName);
     if (!schemaStub) {
@@ -217,7 +217,7 @@ export function createECSchemaProviderStub() {
     }
     return schemaStub;
   });
-  const getDerivedClasses = (classFullName: string): EC.Class[] => {
+  const getDerivedClasses = (classFullName: EC.FullClassName): EC.Class[] => {
     const derivedClasses = new Array<EC.Class>();
     for (const { key: derivedClassName, value: baseClassName } of classHierarchy) {
       if (compareFullClassNames(baseClassName, classFullName) === 0) {
@@ -227,7 +227,7 @@ export function createECSchemaProviderStub() {
     }
     return derivedClasses;
   };
-  const getBaseClasses = (classFullName: string): EC.Class[] => {
+  const getBaseClasses = (classFullName: EC.FullClassName): EC.Class[] => {
     const baseClasses = new Array<EC.Class>();
     const baseClassName = classHierarchy.get(classFullName);
     if (baseClassName) {
@@ -254,8 +254,9 @@ export function createECSchemaProviderStub() {
     },
     getDerivedClasses: async () => getDerivedClasses(`${props.schemaName}.${props.className}`),
     is: async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
-      const myName = `${props.schemaName}.${props.className}`;
-      const targetName = typeof targetClassOrClassName === "string" ? `${schemaName!}.${targetClassOrClassName}` : targetClassOrClassName.fullName;
+      const myName: EC.FullClassName = `${props.schemaName}.${props.className}`;
+      const targetName: EC.FullClassName =
+        typeof targetClassOrClassName === "string" ? `${schemaName!}.${targetClassOrClassName}` : targetClassOrClassName.fullName;
       return (
         compareFullClassNames(targetName, myName) === 0 ||
         getBaseClasses(myName).some((baseClass) => compareFullClassNames(baseClass.fullName, targetName) === 0)
@@ -315,7 +316,7 @@ export function createClassHierarchyInspectorStub(schemaProvider = createECSchem
     stubEntityClass: schemaProvider.stubEntityClass,
     stubRelationshipClass: schemaProvider.stubRelationshipClass,
     stubOtherClass: schemaProvider.stubOtherClass,
-    classDerivesFrom: sinon.fake(async (derived: string, base: string) => {
+    classDerivesFrom: sinon.fake(async (derived: EC.FullClassName, base: EC.FullClassName) => {
       const derivedClass = await getClass(schemaProvider, derived);
       const baseClass = await getClass(schemaProvider, base);
       return derivedClass.is(baseClass);

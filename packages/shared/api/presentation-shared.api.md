@@ -24,12 +24,12 @@ interface ClassBasedInstanceLabelSelectClauseFactoryProps {
 
 // @public
 interface ClassBasedLabelSelectClause {
-    className: string;
+    className: EC.FullClassName;
     clause: (props: CreateInstanceLabelSelectClauseProps) => Promise<string>;
 }
 
 // @public
-export function compareFullClassNames(lhs: string, rhs: string): number;
+export function compareFullClassNames(lhs: EC.FullClassName, rhs: EC.FullClassName): number;
 
 // @public
 export type ConcatenatedValue = ConcatenatedValuePart[];
@@ -88,7 +88,7 @@ function createInstanceKeySelector(props: {
 // @public
 interface CreateInstanceLabelSelectClauseProps {
     classAlias: string;
-    className?: string;
+    className?: EC.FullClassName;
     selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string;
 }
 
@@ -104,7 +104,7 @@ function createNullableSelector(props: {
 // @public
 function createPrimitivePropertyValueSelectorProps(input: {
     schemaProvider: ECSchemaProvider;
-    propertyClassName: string;
+    propertyClassName: EC.FullClassName;
     propertyClassAlias: string;
     propertyName: string;
 }): Promise<TypedPrimitiveValueSelectorProps>;
@@ -163,13 +163,13 @@ export namespace EC {
         // (undocumented)
         [propName: string]: any;
         // (undocumented)
-        className: string;
+        className: FullClassName;
     }
     export interface CustomAttributeSet {
         // (undocumented)
         [Symbol.iterator]: () => IterableIterator<[string, CustomAttribute]>;
         // (undocumented)
-        get(className: string): CustomAttribute | undefined;
+        get(className: FullClassName): CustomAttribute | undefined;
     }
     export type EntityClass = Class;
     export interface Enumeration extends SchemaItem {
@@ -197,6 +197,12 @@ export namespace EC {
         // (undocumented)
         value: T;
     }
+    // (undocumented)
+    export type FullClassName = FullClassNameColonNotation | FullClassNameDotNotation;
+    // (undocumented)
+    export type FullClassNameColonNotation = `${string}:${string}`;
+    // (undocumented)
+    export type FullClassNameDotNotation = `${string}.${string}`;
     export type KindOfQuantity = SchemaItem;
     export type Mixin = Class;
     export interface NavigationProperty extends Property {
@@ -267,7 +273,7 @@ export namespace EC {
     }
     export interface SchemaItem {
         // (undocumented)
-        fullName: string;
+        fullName: FullClassName;
         // (undocumented)
         label?: string;
         // (undocumented)
@@ -286,7 +292,7 @@ export namespace EC {
 // @public
 export interface ECClassHierarchyInspector {
     // (undocumented)
-    classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
+    classDerivesFrom(derivedClassFullName: EC.FullClassName, candidateBaseClassFullName: EC.FullClassName): Promise<boolean> | boolean;
 }
 
 // @public
@@ -398,7 +404,7 @@ export function formatConcatenatedValue(props: {
 }): Promise<string>;
 
 // @public
-export function getClass(schemaProvider: ECSchemaProvider, fullClassName: string): Promise<EC.Class>;
+export function getClass(schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassName): Promise<EC.Class>;
 
 // @public
 export interface IInstanceLabelSelectClauseFactory {
@@ -421,7 +427,7 @@ export interface ILogger {
 
 // @public
 export interface InstanceKey {
-    className: string;
+    className: EC.FullClassName;
     id: Id64String;
 }
 
@@ -462,7 +468,7 @@ export type LogLevel = "error" | "warning" | "info" | "trace";
 export const NOOP_LOGGER: ILogger;
 
 // @public
-export function normalizeFullClassName(fullClassName: string): string;
+export function normalizeFullClassName(fullClassName: string): EC.FullClassNameDotNotation;
 
 // @public
 export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
@@ -520,10 +526,10 @@ type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep>
 
 // @public
 interface RelationshipPathStep {
-    relationshipName: string;
+    relationshipName: EC.FullClassName;
     relationshipReverse?: boolean;
-    sourceClassName: string;
-    targetClassName: string;
+    sourceClassName: EC.FullClassName;
+    targetClassName: EC.FullClassName;
 }
 
 // @public

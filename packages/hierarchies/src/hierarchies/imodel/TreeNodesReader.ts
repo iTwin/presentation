@@ -5,13 +5,13 @@
 
 import { from, mergeMap, of } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
-import { parseInstanceLabel } from "@itwin/presentation-shared";
+import { normalizeFullClassName, parseInstanceLabel } from "@itwin/presentation-shared";
 import { LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE } from "../internal/Common.js";
 import { log } from "../internal/LoggingUtils.js";
 
 import type { Observable, ObservedValueOf } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
-import type { ECSqlQueryDef, Props } from "@itwin/presentation-shared";
+import type { EC, ECSqlQueryDef, Props } from "@itwin/presentation-shared";
 import type { RxjsNodeParser } from "../internal/RxjsHierarchyDefinition.js";
 import type { InstanceHierarchyNodeProcessingParams, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
 import type { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
@@ -51,7 +51,7 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
  * @internal
  */
 export interface RowDef {
-  [NodeSelectClauseColumnNames.FullClassName]: string;
+  [NodeSelectClauseColumnNames.FullClassName]: EC.FullClassName;
   [NodeSelectClauseColumnNames.ECInstanceId]: Id64String;
   [NodeSelectClauseColumnNames.DisplayLabel]: string;
   [NodeSelectClauseColumnNames.HasChildren]?: boolean;
@@ -76,7 +76,7 @@ export const defaultNodesParser: (props: Pick<Props<RxjsNodeParser>, "row">) => 
     label: parseInstanceLabel(typedRow.DisplayLabel),
     key: {
       type: "instances",
-      instanceKeys: [{ className: typedRow.FullClassName.replace(":", "."), id: typedRow.ECInstanceId }],
+      instanceKeys: [{ className: normalizeFullClassName(typedRow.FullClassName), id: typedRow.ECInstanceId }],
     },
     ...(typedRow.HasChildren !== undefined ? { children: !!typedRow.HasChildren } : undefined),
     ...(typedRow.AutoExpand ? { autoExpand: true } : undefined),

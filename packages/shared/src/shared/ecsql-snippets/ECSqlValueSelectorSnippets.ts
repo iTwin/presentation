@@ -7,7 +7,7 @@ import { Id64 } from "@itwin/core-bentley";
 import { getClass } from "../Metadata.js";
 import { PrimitiveValue } from "../Values.js";
 
-import type { ECSchemaProvider, PrimitiveValueType } from "../Metadata.js";
+import type { EC, ECSchemaProvider, PrimitiveValueType } from "../Metadata.js";
 import type { TypedPrimitiveValue } from "../Values.js";
 
 /**
@@ -64,7 +64,7 @@ export async function createPrimitivePropertyValueSelectorProps({
   /** Access to schema information. */
   schemaProvider: ECSchemaProvider;
   /** Full class name of the property. Format: `SchemaName.ClassName`. */
-  propertyClassName: string;
+  propertyClassName: EC.FullClassName;
   /** Query alias of the class that contains the property. */
   propertyClassAlias: string;
   /** Name of the property to create `TypedPrimitiveValue` for. */

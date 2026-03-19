@@ -6,6 +6,8 @@
 import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
 import { InstanceKey, normalizeFullClassName } from "@itwin/presentation-shared";
 
+import type { EC } from "@itwin/presentation-shared";
+
 /**
  * An instance key that may be associated with specific iModel.
  * @public
@@ -59,7 +61,7 @@ export interface ClassGroupingNodeKey {
   type: "class-grouping";
 
   /** Full name of the ECClass that this grouping node is grouping by. */
-  className: string;
+  className: EC.FullClassName;
 }
 
 /**
@@ -90,7 +92,7 @@ export interface PropertyOtherValuesGroupingNodeKey {
   type: "property-grouping:other";
   /** Identifiers of properties whose values are grouped under this node. */
   properties: Array<{
-    className: string;
+    className: EC.FullClassName;
     propertyName: string;
   }>;
 }
@@ -107,7 +109,7 @@ export interface PropertyValueGroupingNodeKey {
   propertyName: string;
 
   /** Full name of the ECClass containing the property. */
-  propertyClassName: string;
+  propertyClassName: EC.FullClassName;
 
   /** Formatted property value that this node is grouping by. */
   formattedPropertyValue: string;
@@ -125,7 +127,7 @@ export interface PropertyValueRangeGroupingNodeKey {
   propertyName: string;
 
   /** Full name of the ECClass containing the property. */
-  propertyClassName: string;
+  propertyClassName: EC.FullClassName;
 
   /** Defines the start of the values' range that this node is grouping by. */
   fromValue: number;

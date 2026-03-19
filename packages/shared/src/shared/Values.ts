@@ -7,7 +7,7 @@ import { compareStrings, Id64 } from "@itwin/core-bentley";
 import { normalizeFullClassName } from "./Utils.js";
 
 import type { Id64String } from "@itwin/core-bentley";
-import type { PrimitiveValueType } from "./Metadata.js";
+import type { EC, PrimitiveValueType } from "./Metadata.js";
 
 /**
  * A data structure uniquely identifying an ECInstance in an iModel.
@@ -15,7 +15,7 @@ import type { PrimitiveValueType } from "./Metadata.js";
  */
 export interface InstanceKey {
   /** Full class name in format `SchemaName.ClassName` */
-  className: string;
+  className: EC.FullClassName;
   /** ECInstance ID */
   id: Id64String;
 }

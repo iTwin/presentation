@@ -6,6 +6,7 @@
 import { assert } from "@itwin/core-bentley";
 import { PrimitiveType, SchemaItemType, StrengthDirection } from "@itwin/ecschema-metadata";
 import * as ecschemaMetadata from "@itwin/ecschema-metadata";
+import { normalizeFullClassName } from "@itwin/presentation-shared";
 
 import type {
   ECClass as CoreClass,
@@ -57,7 +58,7 @@ abstract class ECSchemaItemImpl<TCoreSchemaItem extends CoreSchemaItem> implemen
     return this._schema;
   }
   public get fullName() {
-    return this._coreSchemaItem.fullName;
+    return normalizeFullClassName(this._coreSchemaItem.fullName);
   }
   public get name() {
     return this._coreSchemaItem.name;
@@ -399,7 +400,11 @@ async function createCustomAttributesSet(coreCustomAttributes: CoreClass["custom
   if (!coreCustomAttributes) {
     return EMPTY_MAP;
   }
-  return coreCustomAttributes;
+  const attributes = new Map();
+  for (const [name, value] of coreCustomAttributes) {
+    attributes.set(name, value);
+  }
+  return attributes;
 }
 
 class ECRelationshipConstraintImpl implements EC.RelationshipConstraint {

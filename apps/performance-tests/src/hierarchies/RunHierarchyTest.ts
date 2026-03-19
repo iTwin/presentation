@@ -6,13 +6,13 @@
 import { expect } from "chai";
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, normalizeFullClassName } from "@itwin/presentation-shared";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 
 import type { DefineHierarchyLevelProps, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import type { ECClassHierarchyInspector, ECSchemaProvider, Props } from "@itwin/presentation-shared";
+import type { EC, ECClassHierarchyInspector, ECSchemaProvider, Props } from "@itwin/presentation-shared";
 import type { IModelName } from "../util/Datasets";
 import type { RunOptions } from "../util/TestUtilities";
 
@@ -24,7 +24,7 @@ import type { RunOptions } from "../util/TestUtilities";
 export function runHierarchyTest(
   testProps: {
     iModelName: IModelName;
-    fullClassName?: string;
+    fullClassName?: EC.FullClassName;
     nodeSelectProps?: Partial<Props<NodesQueryClauseFactory["createSelectClause"]>>;
     expectedNodeCount?: number;
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
@@ -34,7 +34,7 @@ export function runHierarchyTest(
     ...testProps,
     setup: () => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath(iModelName));
-      const fullClassName = testProps.fullClassName ?? PhysicalElement.classFullName.replace(":", ".");
+      const fullClassName = testProps.fullClassName ?? normalizeFullClassName(PhysicalElement.classFullName);
       return {
         iModel,
         getHierarchyFactory: (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector) => ({

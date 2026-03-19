@@ -32,7 +32,7 @@ describe("readNodes", () => {
     const nodes = ids.map((id) =>
       createTestSourceInstanceNode({
         label: id.toString(),
-        key: { type: "instances", instanceKeys: [{ className: "x", id: id.toString() }] },
+        key: { type: "instances", instanceKeys: [{ className: "s.x", id: id.toString() }] },
         children: false,
       }),
     );

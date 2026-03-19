@@ -85,7 +85,7 @@ describe("HierarchyNodeKey", () => {
       expect(
         HierarchyNodeKey.equals(
           { type: "property-grouping:other", properties: [] },
-          { type: "property-grouping:value", propertyClassName: "", propertyName: "", formattedPropertyValue: "" },
+          { type: "property-grouping:value", propertyClassName: "s.x", propertyName: "", formattedPropertyValue: "" },
         ),
       ).to.be.false;
     });

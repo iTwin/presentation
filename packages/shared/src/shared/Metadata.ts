@@ -22,7 +22,7 @@ export interface ECSchemaProvider {
  * @public
  */
 export interface ECClassHierarchyInspector {
-  classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
+  classDerivesFrom(derivedClassFullName: EC.FullClassName, candidateBaseClassFullName: EC.FullClassName): Promise<boolean> | boolean;
 }
 
 /**
@@ -36,11 +36,11 @@ export function createCachingECClassHierarchyInspector(props: {
   cacheSize?: number;
 }): ECClassHierarchyInspector {
   const map = new LRUMap<string, Promise<boolean> | boolean>(props.cacheSize ?? 0);
-  function createCacheKey(derivedClassName: string, baseClassName: string) {
+  function createCacheKey(derivedClassName: EC.FullClassName, baseClassName: EC.FullClassName) {
     return `${derivedClassName}/${baseClassName}`;
   }
   return {
-    classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean {
+    classDerivesFrom(derivedClassFullName: EC.FullClassName, candidateBaseClassFullName: EC.FullClassName): Promise<boolean> | boolean {
       const cacheKey = createCacheKey(derivedClassFullName, candidateBaseClassFullName);
       let result = map.get(cacheKey);
       if (result === undefined) {
@@ -64,6 +64,10 @@ export function createCachingECClassHierarchyInspector(props: {
  * @see `ECSchemaProvider`
  */
 export namespace EC {
+  export type FullClassNameDotNotation = `${string}.${string}`;
+  export type FullClassNameColonNotation = `${string}:${string}`;
+  export type FullClassName = FullClassNameColonNotation | FullClassNameDotNotation;
+
   /**
    * Represents an ECSchema that contains classes, relationships, etc.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/schema/
@@ -82,7 +86,7 @@ export namespace EC {
    */
   export interface SchemaItem {
     schema: Schema;
-    fullName: string;
+    fullName: FullClassName;
     name: string;
     label?: string;
   }
@@ -297,7 +301,7 @@ export namespace EC {
    */
   export interface CustomAttributeSet {
     [Symbol.iterator]: () => IterableIterator<[string, CustomAttribute]>;
-    get(className: string): CustomAttribute | undefined;
+    get(className: FullClassName): CustomAttribute | undefined;
   }
 
   /**
@@ -306,7 +310,7 @@ export namespace EC {
    * @public
    */
   export interface CustomAttribute {
-    className: string;
+    className: FullClassName;
     [propName: string]: any;
   }
 }
@@ -323,11 +327,11 @@ export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IG
  */
 export interface RelationshipPathStep {
   /** Full name of the source ECClass */
-  sourceClassName: string;
+  sourceClassName: EC.FullClassName;
   /** Full name of the target ECClass */
-  targetClassName: string;
+  targetClassName: EC.FullClassName;
   /** Full name of the ECRelationshipClass */
-  relationshipName: string;
+  relationshipName: EC.FullClassName;
   /**
    * Indicates that the relationship direction be reversed. This should be set to `true` when step direction
    * doesn't match relationship direction, e.g. relationship is from source `A` to target `B` and the step
@@ -347,7 +351,7 @@ export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPa
  * @throws Error if the schema or class is not found.
  * @public
  */
-export async function getClass(schemaProvider: ECSchemaProvider, fullClassName: string): Promise<EC.Class> {
+export async function getClass(schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassName): Promise<EC.Class> {
   const { schemaName, className } = parseFullClassName(fullClassName);
   const schema = await schemaProvider.getSchema(schemaName);
   if (!schema) {

@@ -13,7 +13,7 @@ import { Logger } from "@itwin/core-bentley";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccessImports
 import { IModelConnection } from "@itwin/core-frontend";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor, HierarchyLevelDefinition } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 
@@ -84,7 +84,7 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
         {
           // For BisCore.Model parent nodes, select all BisCore.Element instances contained in corresponding model
           parentInstancesNodePredicate: "BisCore.Model",
-          definitions: async ({ parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps) => [
+          definitions: async ({ parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
             {
               fullClassName: "BisCore.Element",
               query: {
