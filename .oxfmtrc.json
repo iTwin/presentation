@@ -21,7 +21,7 @@
   ],
   "overrides": [
     {
-      "files": ["*"],
+      "files": ["**/*"],
       "excludeFiles": [
         "**/learning-snippets/**/*.ts*",
         "**/test/**/setup.ts",
