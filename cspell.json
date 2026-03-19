@@ -73,6 +73,6 @@
     "**/*.snap",
     "sample_documents",
     "**/*.patch",
-    ".prettierrc"
+    ".oxfmtrc.json"
   ]
 }

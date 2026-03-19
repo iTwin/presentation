@@ -20,13 +20,13 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install
 
-      - name: Run prettier
-        run: pnpm prettier
+      - name: Run oxfmt
+        run: pnpm format
 
       - name: Run cspell
         run: pnpm cspell
@@ -50,7 +50,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install
