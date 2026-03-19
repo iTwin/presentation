@@ -101,9 +101,9 @@ stages:
             clean: true
 
           - task: UseNode@1
-            displayName: "Use Node 22"
+            displayName: "Use Node 24"
             inputs:
-              version: 22
+              version: 24
 
           - task: Cache@2
             displayName: Cache pnpm
