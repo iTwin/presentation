@@ -7,12 +7,14 @@
 // get rid of various xhr errors in the console
 import globalJsdom from "global-jsdom";
 import * as jsdom from "jsdom";
+
 globalJsdom(undefined, {
   virtualConsole: new jsdom.VirtualConsole().sendTo(console, { omitJSDOMErrors: true }),
 });
 
 // supply mocha hooks
 import v8 from "node:v8";
+
 const { cleanup } = await import("@testing-library/react");
 export const mochaHooks = {
   beforeAll() {
