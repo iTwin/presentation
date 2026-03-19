@@ -413,24 +413,26 @@ Let's start with the first step:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
+import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 
-// A function that matches given string against authors and books, and returns hierarchy paths
-// from root to the matched node. This function must be aware of the hierarchy structure to know what paths
+// A function that matches given string against authors and books, and returns hierarchy tree
+// from root to the matched nodes. This function must be aware of the hierarchy structure to know what paths
 // to create.
-async function createSearchPaths(searchText: string): Promise<HierarchySearchPath[]> {
-  const results: HierarchySearchPath[] = [];
+async function createHierarchySearchTree(searchText: string): Promise<HierarchySearchTree[]> {
+  const searchTreeBuilder = HierarchySearchTree.createBuilder();
   const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: searchText }), booksService.getBooks({ title: searchText })]);
   for (const author of matchingAuthors) {
-    results.push([{ type: "generic", id: `author:${author.key}` }]);
+    searchTreeBuilder.accept({ path: [{ type: "generic", id: `author:${author.key}` }] });
   }
   for (const book of matchingBooks) {
-    results.push([
-      { type: "generic", id: `author:${book.authorKey}` },
-      { type: "generic", id: `book:${book.key}` },
-    ]);
+    searchTreeBuilder.accept({
+      path: [
+        { type: "generic", id: `author:${book.authorKey}` },
+        { type: "generic", id: `book:${book.key}` },
+      ],
+    });
   }
-  return results;
+  return searchTreeBuilder.getTree();
 }
 ```
 
@@ -447,7 +449,7 @@ Now that we're able to find the paths, let's enhance our hierarchy provider to s
 import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
-import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
+import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 
 let rootSearch: Props<HierarchyProvider["setHierarchySearch"]>;
 const provider = createHierarchyProvider(({ hierarchyChanged }) => ({
@@ -473,7 +475,7 @@ const provider = createHierarchyProvider(({ hierarchyChanged }) => ({
           label: author.name,
           children: author.hasBooks,
           parentKeys: [],
-          ...searchHelper?.createChildNodeProps({ nodeKey, parentKeys: [] }),
+          ...searchHelper?.createChildNodeProps({ nodeKey }),
         };
       }
     } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
@@ -496,13 +498,12 @@ const provider = createHierarchyProvider(({ hierarchyChanged }) => ({
       });
       for (const book of books) {
         const nodeKey: GenericNodeKey = { type: "generic", id: `book:${book.key}` };
-        const parentKeys = [...parentNode.parentKeys, parentNode.key];
         yield {
           key: nodeKey,
           label: book.title,
           children: false,
-          parentKeys,
-          ...searchHelper?.createChildNodeProps({ nodeKey, parentKeys }),
+          parentKeys: [...parentNode.parentKeys, parentNode.key],
+          ...searchHelper?.createChildNodeProps({ nodeKey }),
         };
       }
     }
@@ -529,7 +530,7 @@ With the above provider, we can now search the books hierarchy by label:
 ```ts
 // Apply the search "of" and traverse the searched hierarchy. Notice that author node
 // of "The Fellowship of Ring" is included, even though it doesn't match the search.
-provider.setHierarchySearch({ paths: await createSearchPaths("of") });
+provider.setHierarchySearch({ paths: await createHierarchySearchTree("of") });
 await traverseHierarchy(provider);
 // Output:
 // J.R.R. Tolkien
@@ -540,7 +541,7 @@ await traverseHierarchy(provider);
 
 // Apply the search "tom" and traverse the searched hierarchy. Notice that all books
 // of "Tom Clancy" are included, even though they don't match the search.
-provider.setHierarchySearch({ paths: await createSearchPaths("tom") });
+provider.setHierarchySearch({ paths: await createHierarchySearchTree("tom") });
 await traverseHierarchy(provider);
 // Output:
 // Mark Twain

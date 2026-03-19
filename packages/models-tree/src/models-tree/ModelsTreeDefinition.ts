@@ -25,6 +25,7 @@ import { Guid } from "@itwin/core-bentley";
 import {
   createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  HierarchyNode,
   NodeSelectClauseColumnNames,
   ProcessedHierarchyNode,
   RowsLimitExceededError,
@@ -36,7 +37,6 @@ import type { Observable, ObservableInput } from "rxjs";
 import type { Id64Array, Id64String } from "@itwin/core-bentley";
 import type {
   ClassGroupingNodeKey,
-  createIModelHierarchyProvider,
   DefineHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
@@ -44,6 +44,7 @@ import type {
   HierarchyDefinition,
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
+  HierarchySearchPath,
   LimitingECSqlQueryExecutor,
   NodesQueryClauseFactory,
 } from "@itwin/presentation-hierarchies";
@@ -56,7 +57,6 @@ import type {
   ECSqlQueryRow,
   IInstanceLabelSelectClauseFactory,
   InstanceKey,
-  Props,
 } from "@itwin/presentation-shared";
 
 /** @beta */
@@ -120,9 +120,6 @@ type ModelsTreeInstanceKeyPathsFromInstanceLabelProps = {
 } & ModelsTreeInstanceKeyPathsBaseProps;
 
 export type ModelsTreeInstanceKeyPathsProps = ModelsTreeInstanceKeyPathsFromTargetItemsProps | ModelsTreeInstanceKeyPathsFromInstanceLabelProps;
-type HierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
-type HierarchySearchPaths = NonNullable<NonNullable<HierarchyProviderProps["search"]>["paths"]>;
-type HierarchySearchPath = HierarchySearchPaths[number];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ModelsTreeInstanceKeyPathsProps {
@@ -698,11 +695,7 @@ function createGeometricElementInstanceKeyPaths(
           }
           return {
             path,
-            options: {
-              reveal: {
-                depthInHierarchy: groupingNode.parentKeys.length,
-              },
-            },
+            options: { reveal: { groupingLevel: HierarchyNode.getGroupingNodeLevel(groupingNode) } },
           };
         }),
       ),

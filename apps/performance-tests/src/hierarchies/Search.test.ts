@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
-import { createNodesQueryClauseFactory, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyNode, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, normalizeFullClassName } from "@itwin/presentation-shared";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
@@ -117,8 +117,12 @@ describe("search", () => {
     cleanup: (props: { iModel: IModelDb }) => {
       props.iModel.close();
     },
-    test: async (props) => {
-      const provider = new StatelessHierarchyProvider({ ...props, rowLimit: "unbounded" });
+    test: async ({ search, ...props }) => {
+      const provider = new StatelessHierarchyProvider({
+        ...props,
+        search: { paths: await HierarchySearchTree.createFromPathsList(search.paths) },
+        rowLimit: "unbounded",
+      });
       const nodeCount = await provider.loadHierarchy();
       expect(nodeCount).to.eq(totalNumberOfSearchPaths);
     },

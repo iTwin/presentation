@@ -210,7 +210,7 @@ async function cloneECDb<TResult extends {}>(
   targetECDbName: string,
   setup: (db: ECDbBuilder) => Promise<TResult>,
 ): Promise<TResult & { ecdb: ECDb; ecdbPath: string }> {
-  const targetECDbPath = setupOutputFileLocation(`${targetECDbName}.bim`);
+  const targetECDbPath = setupOutputFileLocation(`${createFileNameFromString(targetECDbName)}.bim`);
   IModelJsFs.existsSync(targetECDbPath) && IModelJsFs.unlinkSync(targetECDbPath);
   IModelJsFs.copySync(sourceECDbPath, targetECDbPath);
 

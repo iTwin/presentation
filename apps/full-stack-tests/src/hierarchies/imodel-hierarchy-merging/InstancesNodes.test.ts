@@ -137,16 +137,21 @@ describe("Hierarchies", () => {
         it("creates hierarchy when targeting all instances from both imodels", async () => {
           provider.setHierarchySearch({
             paths: [
-              [keys.base.x],
-              [keys.base.x, keys.base.y1],
-              [keys.base.x, keys.base.y2],
-              [keys.base.x, keys.base.y3],
-              [keys.changeset1.x],
-              [keys.changeset1.x, keys.changeset1.y1],
-              [keys.changeset1.x, keys.changeset1.y3],
-              [keys.changeset1.x, keys.changeset1.q1],
-              [keys.changeset1.w],
-              [keys.changeset1.w, keys.changeset1.q2],
+              {
+                identifier: keys.base.x,
+                isTarget: true,
+                children: [{ identifier: keys.base.y1 }, { identifier: keys.base.y2 }, { identifier: keys.base.y3 }],
+              },
+              {
+                identifier: keys.changeset1.x,
+                isTarget: true,
+                children: [{ identifier: keys.changeset1.y1 }, { identifier: keys.changeset1.y3 }, { identifier: keys.changeset1.q1 }],
+              },
+              {
+                identifier: keys.changeset1.w,
+                isTarget: true,
+                children: [{ identifier: keys.changeset1.q2 }],
+              },
             ],
           });
           await validateHierarchy({
@@ -155,35 +160,42 @@ describe("Hierarchies", () => {
               // the whole branch exists only in the second imodel, also comes from schema that also exists only in the second imodel
               NodeValidators.createForInstanceNode({
                 label: "w",
+                isSearchTarget: true,
                 children: [
                   NodeValidators.createForInstanceNode({
                     label: "q2",
                     instanceKeys: [keys.changeset1.q2],
+                    isSearchTarget: true,
                   }),
                 ],
               }),
               NodeValidators.createForInstanceNode({
                 label: "x",
+                isSearchTarget: true,
                 children: [
                   // exists only in the second imodel, also comes from schema that also exists only in the second imodel
                   NodeValidators.createForInstanceNode({
                     label: "q1",
                     instanceKeys: [keys.changeset1.q1],
+                    isSearchTarget: true,
                   }),
                   // exists in both imodels
                   NodeValidators.createForInstanceNode({
                     label: "y1",
                     instanceKeys: [keys.changeset1.y1, keys.base.y1],
+                    isSearchTarget: true,
                   }),
                   // exists only in the first imodel
                   NodeValidators.createForInstanceNode({
                     label: "y2",
                     instanceKeys: [keys.base.y2],
+                    isSearchTarget: true,
                   }),
                   // exists in both, but have different values
                   NodeValidators.createForInstanceNode({
                     label: "y3-updated",
                     instanceKeys: [keys.changeset1.y3, keys.base.y3],
+                    isSearchTarget: true,
                   }),
                 ],
               }),
@@ -194,9 +206,18 @@ describe("Hierarchies", () => {
         it("creates hierarchy when targeting instances from different imodels", async () => {
           provider.setHierarchySearch({
             paths: [
-              [keys.base.x, keys.base.y2],
-              [keys.changeset1.x, keys.changeset1.q1],
-              [keys.changeset1.w, keys.changeset1.q2],
+              {
+                identifier: keys.base.x,
+                children: [{ identifier: keys.base.y2 }],
+              },
+              {
+                identifier: keys.changeset1.x,
+                children: [{ identifier: keys.changeset1.q1 }],
+              },
+              {
+                identifier: keys.changeset1.w,
+                children: [{ identifier: keys.changeset1.q2 }],
+              },
             ],
           });
           await validateHierarchy({
@@ -209,6 +230,7 @@ describe("Hierarchies", () => {
                   NodeValidators.createForInstanceNode({
                     label: "q2",
                     instanceKeys: [keys.changeset1.q2],
+                    isSearchTarget: true,
                   }),
                 ],
               }),
@@ -219,11 +241,13 @@ describe("Hierarchies", () => {
                   NodeValidators.createForInstanceNode({
                     label: "q1",
                     instanceKeys: [keys.changeset1.q1],
+                    isSearchTarget: true,
                   }),
                   // exists only in the first imodel
                   NodeValidators.createForInstanceNode({
                     label: "y2",
                     instanceKeys: [keys.base.y2],
+                    isSearchTarget: true,
                   }),
                 ],
               }),

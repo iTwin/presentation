@@ -12,7 +12,7 @@ import { DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
 import { PresentationInstanceFilter, PresentationInstanceFilterDialog } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey, registerTxnListeners } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyNodeKey } from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyNodeKey, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { LocalizationContextProvider, StrataKitRootErrorRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
@@ -75,11 +75,13 @@ function Tree({
       if (!searchText) {
         return undefined;
       }
-      return ModelsTreeDefinition.createInstanceKeyPaths({
-        imodelAccess: searchIModelAccess,
-        label: searchText,
-        abortSignal,
-      });
+      return HierarchySearchTree.createFromPathsList(
+        await ModelsTreeDefinition.createInstanceKeyPaths({
+          imodelAccess: searchIModelAccess,
+          label: searchText,
+          abortSignal,
+        }),
+      );
     };
   }, [searchText]);
 

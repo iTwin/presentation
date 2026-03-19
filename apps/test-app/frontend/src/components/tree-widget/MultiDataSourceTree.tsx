@@ -19,6 +19,7 @@ import {
   createPredicateBasedHierarchyDefinition,
   HierarchyNode,
   HierarchyNodeIdentifier,
+  HierarchySearchTree,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
 import { StrataKitRootErrorRenderer, StrataKitTreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
@@ -75,10 +76,14 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
       if (!searchText) {
         return undefined;
       }
-      return Promise.all([
-        getModelsHierarchySearchPaths({ imodelAccess, searchText, componentId, componentName: "MultiDataSourceTree" }),
-        RSS_PROVIDER.getSearchPaths(searchText),
-      ]).then(([imodelPaths, rssPaths]) => [...imodelPaths, ...rssPaths]);
+      const searchTreeBuilder = HierarchySearchTree.createBuilder();
+      for await (const path of getModelsHierarchySearchPaths({ imodelAccess, searchText, componentId, componentName: "MultiDataSourceTree" })) {
+        searchTreeBuilder.accept({ path });
+      }
+      for await (const path of RSS_PROVIDER.getSearchPaths(searchText)) {
+        searchTreeBuilder.accept({ path });
+      }
+      return searchTreeBuilder.getTree();
     };
   }, [searchText, imodelAccess, componentId]);
 
@@ -304,7 +309,7 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
     },
   });
 }
-async function getModelsHierarchySearchPaths({
+async function* getModelsHierarchySearchPaths({
   imodelAccess,
   searchText,
   componentId,
@@ -314,13 +319,17 @@ async function getModelsHierarchySearchPaths({
   searchText: string;
   componentId: string;
   componentName: string;
-}): Promise<HierarchySearchPath[]> {
+}): AsyncIterableIterator<HierarchySearchPath> {
   const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-  const [rootSubjectPath, modelPaths] = await Promise.all([
+  const [rootSubjectPathPromise, modelPaths] = [
     getRootSubjectSearchedPath({ imodelAccess, searchText, labelsFactory, componentId, componentName }),
-    Array.fromAsync(getModelsSearchPaths({ imodelAccess, searchText, labelsFactory, componentId, componentName })),
-  ]);
-  return [...(rootSubjectPath ? [rootSubjectPath] : []), ...modelPaths];
+    getModelsSearchPaths({ imodelAccess, searchText, labelsFactory, componentId, componentName }),
+  ];
+  const rootSubjectPath = await rootSubjectPathPromise;
+  if (rootSubjectPath) {
+    yield rootSubjectPath;
+  }
+  yield* modelPaths;
 }
 async function* getModelsSearchPaths({
   imodelAccess,
@@ -432,7 +441,7 @@ function getIcon(node: TreeNode): ReactElement | undefined {
   return undefined;
 }
 
-function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (filter: string) => Promise<HierarchySearchPath[]> } {
+function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (filter: string) => AsyncIterableIterator<HierarchySearchPath> } {
   let feedPromise: Promise<{ title?: string; items: Array<{ title?: string; guid: GuidString }> }> | undefined;
   async function getFeed() {
     if (!feedPromise) {
@@ -446,26 +455,24 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (fi
     return feed;
   }
 
-  let search: HierarchySearchPath[] | undefined;
+  let search: HierarchySearchTree[] | undefined;
   return createHierarchyProvider(({ hierarchyChanged }) => ({
-    async getSearchPaths(searchText: string): Promise<HierarchySearchPath[]> {
+    async *getSearchPaths(searchText: string): AsyncIterableIterator<HierarchySearchPath> {
       const feed = await getFeed();
-      const paths = new Array<HierarchyNodeIdentifiersPath>();
-
       if ((feed.title ?? "<no title>").toLocaleLowerCase().includes(searchText.toLocaleLowerCase())) {
-        paths.push([{ type: "generic", id: "rss-root", source: "rss" }]);
+        yield { path: [{ type: "generic", id: "rss-root", source: "rss" }], options: { reveal: true } };
       }
-
-      feed.items.forEach((item) => {
+      for (const item of feed.items) {
         if ((item.title ?? "<no title>").toLocaleLowerCase().includes(searchText.toLocaleLowerCase())) {
-          paths.push([
-            { type: "generic", id: "rss-root", source: "rss" },
-            { type: "generic", id: `rss-${item.guid}`, source: "rss" },
-          ]);
+          yield {
+            path: [
+              { type: "generic", id: "rss-root", source: "rss" },
+              { type: "generic", id: `rss-${item.guid}`, source: "rss" },
+            ],
+            options: { reveal: true },
+          };
         }
-      });
-
-      return paths.map((path) => ({ path, options: { reveal: true } }));
+      }
     },
 
     async *getNodes({ parentNode }: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode> {
@@ -522,7 +529,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (fi
     setHierarchySearch(
       props:
         | {
-            paths: HierarchySearchPath[];
+            paths: HierarchySearchTree[];
           }
         | undefined,
     ): void {

@@ -5,34 +5,35 @@
 
 import { defaultIfEmpty, defer, filter, firstValueFrom, map, merge, mergeAll, mergeMap, of, take, toArray } from "rxjs";
 import { compareFullClassNames } from "@itwin/presentation-shared";
+import { HierarchyNode } from "../HierarchyNode.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
-import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
-import { createHierarchySearchHelper, HierarchySearchPath, shouldAutoExpandBasedOnReveal } from "../HierarchySearch.js";
+import { createHierarchySearchHelper } from "../HierarchySearch.js";
 import { HierarchyNodesDefinition } from "../imodel/IModelHierarchyDefinition.js";
-import { ProcessedHierarchyNode } from "../imodel/IModelHierarchyNode.js";
 import { NodeSelectClauseColumnNames } from "../imodel/NodeSelectQueryFactory.js";
 import { defaultNodesParser } from "../imodel/TreeNodesReader.js";
 import { fromPossiblyPromise } from "../internal/Common.js";
 import { partition } from "../internal/operators/Partition.js";
+import { ProcessedHierarchyNode } from "./IModelHierarchyNode.js";
 
 import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
 import type { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import type { IModelInstanceKey } from "../HierarchyNodeKey.js";
+import type { HierarchySearchTree } from "../HierarchySearch.js";
 import type {
   DefineHierarchyLevelProps,
   GenericHierarchyNodeDefinition,
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
 } from "../imodel/IModelHierarchyDefinition.js";
-import type { ProcessedGroupingHierarchyNode, ProcessedInstanceHierarchyNode } from "../imodel/IModelHierarchyNode.js";
 import type { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "../internal/RxjsHierarchyDefinition.js";
+import type { ProcessedGroupingHierarchyNode } from "./IModelHierarchyNode.js";
 
 interface SearchHierarchyDefinitionProps {
   imodelAccess: ECClassHierarchyInspector;
   source: RxjsHierarchyDefinition;
   sourceName: string;
-  targetPaths: HierarchySearchPath[];
+  targetPaths: HierarchySearchTree[];
   nodesParser?: RxjsNodeParser;
 }
 
@@ -40,7 +41,7 @@ interface SearchHierarchyDefinitionProps {
 export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
   private _imodelAccess: ECClassHierarchyInspector;
   private _source: RxjsHierarchyDefinition;
-  private _targetPaths: HierarchySearchPath[];
+  private _targetPaths: HierarchySearchTree[];
   private _nodesParser: RxjsNodeParser;
   #sourceName: string;
 
@@ -69,26 +70,9 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     return (props) =>
       (this._source.postProcessNode ? this._source.postProcessNode(props) : of(props.node)).pipe(
         map((processedNode) => {
-          const parentKeysWithoutGroupingNodesLength = processedNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
-          const parentKeysLength = processedNode.parentKeys.length;
-          const shouldAutoExpand = ProcessedHierarchyNode.isGroupingNode(processedNode)
-            ? shouldAutoExpandGroupingNodeBasedOnNestedChildren({
-                directOrIndirectChildren: processedNode.children,
-                parentKeysWithoutGroupingNodesLength,
-                parentKeysLength,
-              })
-            : (processedNode.search?.isSearchTarget && !!processedNode.search.searchTargetOptions?.autoExpand) ||
-              processedNode.search?.childrenTargetPaths?.some((path) =>
-                shouldAutoExpandBasedOnReveal({
-                  reveal: HierarchySearchPath.normalize(path).options?.reveal,
-                  nodePositionInPath: parentKeysWithoutGroupingNodesLength,
-                  nodePositionInHierarchy: parentKeysLength,
-                }),
-              );
-          if (shouldAutoExpand) {
+          if (ProcessedHierarchyNode.isGroupingNode(processedNode) && shouldAutoExpandGroupingNode({ node: processedNode })) {
             Object.assign(processedNode, { autoExpand: true });
           }
-
           return processedNode;
         }),
       );
@@ -98,42 +82,46 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     return (props) =>
       this._nodesParser(props).pipe(
         mergeMap((parsedNode) => {
-          const { row, parentNode, imodelKey } = props;
+          const { row, parentNode: parentInstanceNode, imodelKey } = props;
           if (!row[ECSQL_COLUMN_NAME_SearchECInstanceId] || !row[ECSQL_COLUMN_NAME_SearchClassName]) {
             return of(parsedNode);
           }
           const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_SearchClassName], id: row[ECSQL_COLUMN_NAME_SearchECInstanceId] };
-          const searchHelper = createHierarchySearchHelper(this._targetPaths, parentNode);
-          const nodeSearchPropPossiblyPromise = searchHelper.createChildNodeProps({
-            asyncPathMatcher: (identifier): boolean | Promise<boolean> => {
-              if (identifier.id !== rowInstanceKey.id) {
-                return false;
-              }
-              if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
-                return false;
-              }
-              if (identifier.imodelKey && identifier.imodelKey !== imodelKey) {
-                return false;
-              }
-              if (compareFullClassNames(identifier.className, rowInstanceKey.className) === 0) {
-                return true;
-              }
-              return firstValueFrom(
-                merge(
-                  fromPossiblyPromise(this._imodelAccess.classDerivesFrom(identifier.className, rowInstanceKey.className)),
-                  fromPossiblyPromise(this._imodelAccess.classDerivesFrom(rowInstanceKey.className, identifier.className)),
-                ).pipe(
-                  filter((classDerives) => classDerives),
-                  defaultIfEmpty(false),
-                  take(1),
-                ),
-              );
-            },
-          });
-          return fromPossiblyPromise(nodeSearchPropPossiblyPromise).pipe(
+          return fromPossiblyPromise(
+            createHierarchySearchHelper(this._targetPaths, parentInstanceNode).createChildNodeProps({
+              nodeKey: parsedNode.key,
+              asyncPathMatcher: (identifier: HierarchyNodeIdentifier): boolean | Promise<boolean> => {
+                if (identifier.id !== rowInstanceKey.id) {
+                  return false;
+                }
+                if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
+                  return false;
+                }
+                if (identifier.imodelKey && identifier.imodelKey !== imodelKey) {
+                  return false;
+                }
+                if (compareFullClassNames(identifier.className, rowInstanceKey.className) === 0) {
+                  return true;
+                }
+                return firstValueFrom(
+                  merge(
+                    fromPossiblyPromise(this._imodelAccess.classDerivesFrom(identifier.className, rowInstanceKey.className)),
+                    fromPossiblyPromise(this._imodelAccess.classDerivesFrom(rowInstanceKey.className, identifier.className)),
+                  ).pipe(
+                    filter((classDerives) => classDerives),
+                    defaultIfEmpty(false),
+                    take(1),
+                  ),
+                );
+              },
+            }),
+          ).pipe(
             map((nodeExtraProps) => {
               if (nodeExtraProps?.search) {
                 parsedNode.search = nodeExtraProps.search;
+              }
+              if (nodeExtraProps?.autoExpand) {
+                parsedNode.autoExpand = nodeExtraProps.autoExpand;
               }
               return parsedNode;
             }),
@@ -168,7 +156,10 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               ...definition,
               node: {
                 ...definition.node,
-                ...searchHelper.createChildNodeProps({ pathMatcher: ({ id }) => id === definition.node.key }),
+                ...searchHelper.createChildNodeProps({
+                  nodeKey: { type: "generic", id: definition.node.key },
+                  pathMatcher: ({ id }: HierarchyNodeIdentifier) => id === definition.node.key,
+                }),
               },
             };
           }
@@ -317,61 +308,32 @@ export function applyECInstanceIdsSelector(def: InstanceNodesQueryDefinition): I
   };
 }
 
-function shouldAutoExpandGroupingNodeBasedOnNestedChildren({
-  directOrIndirectChildren,
-  parentKeysLength,
-  parentKeysWithoutGroupingNodesLength,
-}: {
-  directOrIndirectChildren: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-  parentKeysLength: number;
-  parentKeysWithoutGroupingNodesLength: number;
-}) {
-  for (const child of directOrIndirectChildren) {
-    if (ProcessedHierarchyNode.isGroupingNode(child)) {
-      // Need to check if the same grouping node needs to be expanded, but check the indirect children instead
-      if (
-        shouldAutoExpandGroupingNodeBasedOnNestedChildren({ directOrIndirectChildren: child.children, parentKeysLength, parentKeysWithoutGroupingNodesLength })
-      ) {
-        return true;
-      }
-      continue;
-    }
-
-    /* c8 ignore next 3 */
-    if (!child.search) {
-      continue;
-    }
-
-    if (
-      child.search.isSearchTarget &&
-      shouldAutoExpandBasedOnReveal({
-        reveal: child.search.searchTargetOptions?.reveal,
-        nodePositionInHierarchy: parentKeysLength,
-        // Grouping node is not in search path, but we can assume that it is at the position of 1 less than `parentKeysWithoutGroupingNodesLength`
-        nodePositionInPath: parentKeysWithoutGroupingNodesLength - 1,
-      })
-    ) {
-      return true;
-    }
-
-    if (!child.search.childrenTargetPaths) {
-      /* c8 ignore next */
-      continue;
-    }
-
-    for (const path of child.search.childrenTargetPaths) {
-      if (
-        "path" in path &&
-        shouldAutoExpandBasedOnReveal({
-          reveal: path.options?.reveal,
-          nodePositionInHierarchy: parentKeysLength,
-          // Grouping node is not in search path, but we can assume that it is at the position of 1 less than `parentKeysWithoutGroupingNodesLength`
-          nodePositionInPath: parentKeysWithoutGroupingNodesLength - 1,
-        })
-      ) {
-        return true;
-      }
-    }
+function shouldAutoExpandGroupingNode({ node, nodeGroupingLevel }: { node: ProcessedGroupingHierarchyNode; nodeGroupingLevel?: number }): boolean {
+  if (nodeGroupingLevel === undefined) {
+    nodeGroupingLevel = HierarchyNode.getGroupingNodeLevel(node);
   }
-  return false;
+  return node.children.some((child) => {
+    if (ProcessedHierarchyNode.isGroupingNode(child)) {
+      return shouldAutoExpandGroupingNode({ node: child, nodeGroupingLevel: nodeGroupingLevel + 1 });
+    }
+
+    if (!child.search) {
+      return false;
+    }
+
+    // check if node has search options with `autoExpand` option
+    if (child.search.options?.autoExpand) {
+      // `autoExpand === true` means we want to expand all its grouping nodes
+      if (child.search.options.autoExpand === true) {
+        return true;
+      }
+
+      // else, check if the grouping level condition is satisfied
+      if (child.search.options.autoExpand.groupingLevel >= nodeGroupingLevel) {
+        return true;
+      }
+    }
+
+    return false;
+  });
 }
