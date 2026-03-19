@@ -9,8 +9,20 @@ Start using tree structure for defining hierarchy search paths.
 - `HierarchySearchTree` type that represents a tree structure of hierarchy search paths and is now used for hierarchy search implementation in `HierarchyProvider`.
 
   In addition to the type, there's also a namespace with the same name, providing utility functions for working with the tree structure:
-  - `HierarchySearchTree.createBuilder` function to create a builder for hierarchy search trees, which can be used to create a tree from individual paths or to merge multiple trees together.
-  - `HierarchySearchTree.createFromPathsList` function to create a hierarchy search tree from a list of hierarchy search paths.
+  - `HierarchySearchTree.createBuilder` function to create a builder for hierarchy search trees, which can be used to create a tree from individual paths or to merge multiple trees together:
+
+    ```ts
+    const builder = HierarchySearchTree.createBuilder();
+    builder.accept({ path: searchPath1 });
+    builder.accept({ path: searchPath2 });
+    builder.accept({ tree: partialSearchTree });
+    const tree: HierarchySearchTree = builder.getTree();
+    ```
+
+    This is the preferred way to create a `HierarchySearchTree`, as it allows to create a tree without having to create an array first, as opposed to `HierarchySearchTree.createFromPathsList` function described below.
+
+  - `HierarchySearchTree.createFromPathsList` function to create a hierarchy search tree from a list of hierarchy search paths. This is a quick & easy way to migrate from the old `HierarchySearchPath[]` structure to `HierarchySearchTree[]`, but it's' less efficient than using the builder if you need to create a tree from a large number of paths, as it needs to create an intermediate array.
+
   - `HierarchySearchTree.mergeOptions` function to merge options of two hierarchy search trees. Used internally to merge options of the same nodes when creating a tree from a list of paths.
 
 - `HierarchyNode.getGroupingNodeLevel` utility function to get the level of a grouping node in the hierarchy. Convenient for specifying the `groupingLevel` prop in `HierarchySearchPath.options.reveal` and `HierarchySearchTree.options.autoExpand`.
