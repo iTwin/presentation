@@ -10,6 +10,7 @@ import { BeUiEvent } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
 import { Content, KeySet, SortDirection } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import { ROWS_RELOAD_PAGE_SIZE, useRows } from "../../presentation-components/table/UseRows.js";
 import { createTestECInstanceKey, createTestPropertyInfo, TestErrorBoundary } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -18,7 +19,6 @@ import {
   createTestNestedContentField,
   createTestPropertiesContentField,
 } from "../_helpers/Content.js";
-import { ROWS_RELOAD_PAGE_SIZE, useRows } from "../../presentation-components/table/UseRows.js";
 import { act, render, renderHook, waitFor } from "../TestUtils.js";
 
 import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";

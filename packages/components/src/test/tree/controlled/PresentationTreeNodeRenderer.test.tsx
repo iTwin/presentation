@@ -10,10 +10,10 @@ import { PropertyRecord } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createTestPropertyInfo } from "../../_helpers/Common.js";
-import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
 import { PresentationTreeNodeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeNodeRenderer.js";
 import { InfoTreeNodeItemType } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
+import { createTestPropertyInfo } from "../../_helpers/Common.js";
+import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
 import { fireEvent, render, waitFor } from "../../TestUtils.js";
 import { createInfoTreeNodeItem, createTreeModelNode, createTreeNodeItem } from "./Helpers.js";
 

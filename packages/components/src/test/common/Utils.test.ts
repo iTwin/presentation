@@ -6,6 +6,7 @@
 import { expect } from "chai";
 import { Component } from "react";
 import { combineFieldNames } from "@itwin/presentation-common";
+import { AsyncTasksTracker, createLabelRecord, deserializeUniqueValues, findField, getDisplayName } from "../../presentation-components/common/Utils.js";
 import { createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestContentDescriptor,
@@ -14,7 +15,6 @@ import {
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
 import { createTestLabelCompositeValue, createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
-import { AsyncTasksTracker, createLabelRecord, deserializeUniqueValues, findField, getDisplayName } from "../../presentation-components/common/Utils.js";
 
 import type { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
 import type { LabelCompositeValue } from "@itwin/presentation-common";

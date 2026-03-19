@@ -6,6 +6,9 @@
 import { expect } from "chai";
 import { StandardTypeNames, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
 import { createContentTraverser, PropertyValueFormat } from "@itwin/presentation-common";
+import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder.js";
+import { NumericEditorName } from "../../presentation-components/properties/editors/NumericPropertyEditor.js";
+import { QuantityEditorName } from "../../presentation-components/properties/editors/QuantityPropertyEditor.js";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -16,9 +19,6 @@ import {
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
-import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder.js";
-import { NumericEditorName } from "../../presentation-components/properties/editors/NumericPropertyEditor.js";
-import { QuantityEditorName } from "../../presentation-components/properties/editors/QuantityPropertyEditor.js";
 
 import type { ArrayValue, PropertyDescription, PropertyRecord, StructValue } from "@itwin/appui-abstract";
 import type { EnumerationInfo } from "@itwin/presentation-common";

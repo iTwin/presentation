@@ -10,13 +10,13 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Content, LabelDefinition } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
 import { VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
 import {
   NavigationPropertyItemsLoader,
   useNavigationPropertyTargetsLoader,
   useNavigationPropertyTargetsRuleset,
 } from "../../../presentation-components/properties/inputs/UseNavigationPropertyTargetsLoader.js";
+import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
 import { renderHook, waitFor } from "../../TestUtils.js";
 
 import type { PropertyDescription } from "@itwin/appui-abstract";

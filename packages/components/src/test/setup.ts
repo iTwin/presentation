@@ -9,6 +9,7 @@ import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import chaiJestSnapshot from "chai-jest-snapshot";
 import sinonChai from "sinon-chai";
+
 chai.use(chaiAsPromised);
 chai.use(chaiJestSnapshot);
 chai.use(sinonChai);
@@ -16,6 +17,7 @@ chai.use(sinonChai);
 // get rid of various xhr errors in the console
 import globalJsdom from "global-jsdom";
 import * as jsdom from "jsdom";
+
 globalJsdom(undefined, {
   virtualConsole: new jsdom.VirtualConsole().sendTo(console, { omitJSDOMErrors: true }),
 });
@@ -30,6 +32,7 @@ global.ResizeObserver = class ResizeObserver {
 // supply mocha hooks
 import path from "path";
 import v8 from "node:v8";
+
 const { cleanup, configure } = await import("@testing-library/react");
 export const mochaHooks = {
   beforeAll() {

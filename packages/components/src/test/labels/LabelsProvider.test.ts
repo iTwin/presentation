@@ -9,8 +9,8 @@ import sinon from "sinon";
 import { EmptyLocalization } from "@itwin/core-common";
 import { DEFAULT_KEYS_BATCH_SIZE } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { PresentationLabelsProvider } from "../../presentation-components/labels/LabelsProvider.js";
+import { createTestECInstanceKey } from "../_helpers/Common.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { InstanceKey } from "@itwin/presentation-common";

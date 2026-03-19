@@ -20,7 +20,11 @@ Finally, the APIs used to create hierarchies are also slightly different:
 
   ```ts
   // The Presentation system has to first be statically initialized by calling `Presentation.initialize`
-  for await (const node of Presentation.presentation.getNodesIterator({ imodel, rulesetOrId: ruleset, parentKey: undefined })) {
+  for await (const node of Presentation.presentation.getNodesIterator({
+    imodel,
+    rulesetOrId: ruleset,
+    parentKey: undefined,
+  })) {
     // do something with the node
   }
   ```
@@ -213,14 +217,23 @@ Example of an instance nodes of specific classes specification in Presentation R
 {
   "specType": "InstanceNodesOfSpecificClasses",
   "classes": { "schemaName": "BisCore", "classNames": ["GeometricModel"] },
-  "excludeClasses": { "schemaName": "BisCore", "classNames": ["GeometricModel2d"] },
+  "excludeClasses": {
+    "schemaName": "BisCore",
+    "classNames": ["GeometricModel2d"]
+  },
   "relatedInstances": [
     {
       "relationshipPath": [
         {
-          "relationship": { "schemaName": "BisCore", "className": "ModelModelsElement" },
+          "relationship": {
+            "schemaName": "BisCore",
+            "className": "ModelModelsElement"
+          },
           "direction": "Forward",
-          "targetClass": { "schemaName": "BisCore", "className": "InformationPartitionElement" }
+          "targetClass": {
+            "schemaName": "BisCore",
+            "className": "InformationPartitionElement"
+          }
         }
       ],
       "alias": "partition",
@@ -287,16 +300,25 @@ Example of a related instance nodes specification in Presentation Rules:
   "specType": "RelatedInstanceNodes",
   "relationshipPaths": [
     {
-      "relationship": { "schemaName": "BisCore", "className": "ModelContainsElements" },
+      "relationship": {
+        "schemaName": "BisCore",
+        "className": "ModelContainsElements"
+      },
       "direction": "Forward",
-      "targetClass": { "schemaName": "BisCore", "className": "GeometricElement3d" }
+      "targetClass": {
+        "schemaName": "BisCore",
+        "className": "GeometricElement3d"
+      }
     }
   ],
   "relatedInstances": [
     {
       "relationshipPath": [
         {
-          "relationship": { "schemaName": "BisCore", "className": "GeometricElement3dIsInCategory" },
+          "relationship": {
+            "schemaName": "BisCore",
+            "className": "GeometricElement3dIsInCategory"
+          },
           "direction": "Forward"
         }
       ],
@@ -364,7 +386,10 @@ The purpose of a custom query instance nodes specification in Presentation Rules
       "specifications": [
         {
           "specType": "InstanceNodesOfSpecificClasses",
-          "classes": { "schemaName": "MyDomain", "classNames": ["MyParentElement"] },
+          "classes": {
+            "schemaName": "MyDomain",
+            "classNames": ["MyParentElement"]
+          },
           "groupByClass": false,
           "groupByLabel": false
         }
@@ -379,7 +404,10 @@ The purpose of a custom query instance nodes specification in Presentation Rules
           "queries": [
             {
               "specType": "ECPropertyValue",
-              "class": { "schemaName": "MyDomain", "className": "MyChildElement" },
+              "class": {
+                "schemaName": "MyDomain",
+                "className": "MyChildElement"
+              },
               "parentPropertyName": "ChildrenQuery"
             }
           ],
@@ -469,7 +497,11 @@ Example of base class grouping specifications in Presentation Rules:
     "specifications": [
       {
         "specType": "InstanceNodesOfSpecificClasses",
-        "classes": { "schemaName": "BisCore", "classNames": ["GeometricElement"], "arePolymorphic": true },
+        "classes": {
+          "schemaName": "BisCore",
+          "classNames": ["GeometricElement"],
+          "arePolymorphic": true
+        },
         "groupByClass": false,
         "groupByLabel": false
       }
@@ -481,7 +513,10 @@ Example of base class grouping specifications in Presentation Rules:
         "groups": [
           {
             "specType": "Class",
-            "baseClass": { "schemaName": "BisCore", "className": "GeometricElement3d" }
+            "baseClass": {
+              "schemaName": "BisCore",
+              "className": "GeometricElement3d"
+            }
           }
         ]
       },
@@ -491,7 +526,10 @@ Example of base class grouping specifications in Presentation Rules:
         "groups": [
           {
             "specType": "Class",
-            "baseClass": { "schemaName": "BisCore", "className": "PhysicalElement" }
+            "baseClass": {
+              "schemaName": "BisCore",
+              "className": "PhysicalElement"
+            }
           }
         ]
       }
@@ -543,7 +581,11 @@ Class grouping option simply puts instance nodes under class grouping nodes of t
 ```json
 {
   "specType": "InstanceNodesOfSpecificClasses",
-  "classes": { "schemaName": "BisCore", "classNames": ["Element"], "arePolymorphic": true },
+  "classes": {
+    "schemaName": "BisCore",
+    "classNames": ["Element"],
+    "arePolymorphic": true
+  },
   "groupByClass": true
 }
 ```
@@ -595,7 +637,11 @@ Example of property grouping specifications in Presentation Rules:
     "specifications": [
       {
         "specType": "InstanceNodesOfSpecificClasses",
-        "classes": { "schemaName": "BisCore", "classNames": ["GeometricElement3d"], "arePolymorphic": true }
+        "classes": {
+          "schemaName": "BisCore",
+          "classNames": ["GeometricElement3d"],
+          "arePolymorphic": true
+        }
       }
     ],
     "customizationRules": [
@@ -687,7 +733,11 @@ Label grouping option, simply puts instance nodes under label grouping nodes bas
 ```json
 {
   "specType": "InstanceNodesOfSpecificClasses",
-  "classes": { "schemaName": "BisCore", "classNames": ["Element"], "arePolymorphic": true },
+  "classes": {
+    "schemaName": "BisCore",
+    "classNames": ["Element"],
+    "arePolymorphic": true
+  },
   "groupByLabel": true
 }
 ```
@@ -751,7 +801,10 @@ Example of same label grouping specifications in Presentation Rules:
     "customizationRules": [
       {
         "ruleType": "Grouping",
-        "class": { "schemaName": "BisCore", "className": "InformationPartitionElement" },
+        "class": {
+          "schemaName": "BisCore",
+          "className": "InformationPartitionElement"
+        },
         "groups": [
           {
             "specType": "SameLabelInstance",

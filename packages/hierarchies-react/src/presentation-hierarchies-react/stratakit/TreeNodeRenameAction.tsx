@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createContext, memo, useCallback, useContext, useMemo, useState } from "react";
-import renameSvg from "@stratakit/icons/rename.svg";
 import { useTranslation } from "./LocalizationContext.js";
 import { TreeActionBase } from "./TreeAction.js";
+
+import renameSvg from "@stratakit/icons/rename.svg";
 
 import type { NamedExoticComponent, PropsWithChildren } from "react";
 import type { TreeNode } from "../TreeNode.js";

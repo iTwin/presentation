@@ -10,8 +10,8 @@ import { StandardTypeNames } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { NumericInput, NumericPropertyInput } from "../../../presentation-components/properties/inputs/NumericPropertyInput.js";
+import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 
 import type { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";

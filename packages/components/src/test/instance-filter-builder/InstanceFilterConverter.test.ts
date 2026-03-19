@@ -9,11 +9,11 @@ import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyFilterRuleGroupOperator } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { PropertyValueFormat as TypeValueFormat } from "@itwin/presentation-common";
-import { createTestECClassInfo, createTestPropertyInfo } from "../_helpers/Common.js";
-import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { serializeUniqueValues } from "../../presentation-components/common/Utils.js";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
 import { createInstanceFilterDefinition } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import { createTestECClassInfo, createTestPropertyInfo } from "../_helpers/Common.js";
+import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content.js";
 
 import type { PropertyValue } from "@itwin/appui-abstract";
 import type { PropertyFilterRuleOperator } from "@itwin/components-react";

@@ -29,6 +29,7 @@ export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit
   treeRenderer?: (props: TreeRendererProps & { nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider> }) => ReactElement;
 };
 
+/* c8 ignore start */
 /**
  * Component that provides a convenient API for using [[usePresentationTreeState]] hook with [ControlledTree]($components-react).
  *
@@ -63,3 +64,4 @@ export function PresentationTree<TEventHandler extends TreeEventHandler>({ state
     />
   );
 }
+/* c8 ignore end */

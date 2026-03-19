@@ -7,6 +7,8 @@ import { expect } from "chai";
 import { join } from "path";
 import sinon from "sinon";
 import { IModelJsFs, SnapshotDb } from "@itwin/core-backend";
+import { BeEvent } from "@itwin/core-bentley";
+import { IModelConnection } from "@itwin/core-frontend";
 import { createFileNameFromString, getTestOutputDir } from "../presentation-testing/FilenameUtils.js";
 import { buildTestIModel, TestIModelConnection } from "../presentation-testing/IModelUtilities.js";
 import { createStub } from "./Utils.js";
@@ -19,13 +21,15 @@ describe("buildTestIModel", () => {
     saveChanges: createStub<SnapshotDb["saveChanges"]>(),
     close: createStub<SnapshotDb["close"]>(),
   };
+  const testIModelConnection = Object.create(TestIModelConnection.prototype);
+  testIModelConnection._db = snapshotDb;
+  testIModelConnection.onClose = new BeEvent();
 
-  const testIModelConnection = {} as TestIModelConnection;
   let createSnapshotDb: SinonStub<[filePath: string, options: CreateEmptySnapshotIModelProps], SnapshotDb>;
 
   beforeEach(() => {
     createSnapshotDb = sinon.stub(SnapshotDb, "createEmpty").returns(snapshotDb as unknown as SnapshotDb);
-    sinon.stub(TestIModelConnection, "openFile").resolves(testIModelConnection as unknown as TestIModelConnection);
+    sinon.stub(TestIModelConnection, "openFile").resolves(testIModelConnection);
   });
 
   afterEach(() => {
@@ -140,5 +144,18 @@ describe("buildTestIModel", () => {
     const result = await promise;
 
     expect(result).to.equal(testIModelConnection);
+  });
+
+  it("raises onClose event when TestIModelConnection.close is called", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    const result = await buildTestIModel("name", async () => {});
+    expect(result).to.equal(testIModelConnection);
+    const imodelListenerStub = sinon.stub();
+    const imodelConnectionListenerStub = sinon.stub();
+    result.onClose.addOnce(imodelListenerStub);
+    IModelConnection.onClose.addOnce(imodelConnectionListenerStub);
+    await result.close();
+    expect(imodelListenerStub).to.be.calledOnce;
+    expect(imodelConnectionListenerStub).to.be.calledOnce;
   });
 });

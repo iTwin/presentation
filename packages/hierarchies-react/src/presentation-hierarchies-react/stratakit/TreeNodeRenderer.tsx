@@ -7,13 +7,14 @@ import "./TreeNodeRenderer.css";
 
 import { cloneElement, forwardRef, isValidElement, memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Description, IconButton, Spinner, Text, TextBox } from "@stratakit/bricks";
-import checkmarkSvg from "@stratakit/icons/checkmark.svg";
-import dismissSvg from "@stratakit/icons/dismiss.svg";
-import refreshSvg from "@stratakit/icons/refresh.svg";
 import { DropdownMenu, unstable_Popover as Popover, Tree } from "@stratakit/structures";
 import { useTranslation } from "./LocalizationContext.js";
 import { TreeActionBase } from "./TreeAction.js";
 import { useTreeNodeRenameContext } from "./TreeNodeRenameAction.js";
+
+import checkmarkSvg from "@stratakit/icons/checkmark.svg";
+import dismissSvg from "@stratakit/icons/dismiss.svg";
+import refreshSvg from "@stratakit/icons/refresh.svg";
 
 import type { ComponentPropsWithoutRef, FC, PropsWithRef, ReactNode, RefAttributes } from "react";
 import type { TreeRendererProps } from "../Renderers.js";

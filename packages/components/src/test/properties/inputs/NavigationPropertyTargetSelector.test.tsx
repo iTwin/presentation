@@ -11,10 +11,10 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Content, LabelDefinition } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { stubVirtualization } from "../../_helpers/Common.js";
-import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
 import { VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
 import { NavigationPropertyTargetSelector } from "../../../presentation-components/properties/inputs/NavigationPropertyTargetSelector.js";
+import { stubVirtualization } from "../../_helpers/Common.js";
+import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
 import { render, waitFor } from "../../TestUtils.js";
 
 import type { PrimitiveValue, PropertyDescription, PropertyValue } from "@itwin/appui-abstract";

@@ -14,9 +14,9 @@ import { TreeModelSource, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEvent, SelectionChangeType, SelectionHelper, SelectionManager } from "@itwin/presentation-frontend";
+import { UnifiedSelectionTreeEventHandler, useUnifiedSelectionTreeEventHandler } from "../../../presentation-components/tree/controlled/UseUnifiedSelection.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
 import { createTestTreeNodeItem } from "../../_helpers/UiComponents.js";
-import { UnifiedSelectionTreeEventHandler, useUnifiedSelectionTreeEventHandler } from "../../../presentation-components/tree/controlled/UseUnifiedSelection.js";
 import { configure, renderHook } from "../../TestUtils.js";
 
 import type { ObservableInput } from "rxjs/internal/types";

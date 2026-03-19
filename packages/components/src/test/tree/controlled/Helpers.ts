@@ -6,8 +6,8 @@
 
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { CheckBoxState } from "@itwin/components-react";
-import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
 import { InfoTreeNodeItemType } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
+import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
 
 import type { TreeModelNode, TreeModelNodeInput, TreeNodeItem } from "@itwin/components-react";
 import type { PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";

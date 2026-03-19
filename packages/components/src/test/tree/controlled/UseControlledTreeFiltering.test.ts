@@ -9,9 +9,9 @@ import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
 import { UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
-import { createTestPropertyRecord, createTestTreeNodeItem } from "../../_helpers/UiComponents.js";
 import { useFilteredNodeLoader, useNodeHighlightingProps } from "../../../presentation-components/tree/controlled/UseControlledTreeFiltering.js";
 import { FilteredPresentationTreeDataProvider } from "../../../presentation-components/tree/FilteredDataProvider.js";
+import { createTestPropertyRecord, createTestTreeNodeItem } from "../../_helpers/UiComponents.js";
 import { act, createStub, renderHook, waitFor } from "../../TestUtils.js";
 
 import type { TreeModelNode, TreeNodeItem } from "@itwin/components-react";

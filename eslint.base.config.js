@@ -15,6 +15,9 @@ module.exports = [
   },
   {
     files: ["**/*.{ts,tsx}"],
+    plugins: {
+      "@stylistic": stylistic,
+    },
     rules: {
       "@itwin/no-internal": [
         "error",
@@ -46,6 +49,11 @@ module.exports = [
         {
           allowObjectTypes: "always",
         },
+      ],
+      "@stylistic/padding-line-between-statements": [
+        "error",
+        { blankLine: "always", prev: "import", next: "*" },
+        { blankLine: "any", prev: "import", next: "import" },
       ],
       curly: ["error", "all"],
     },

@@ -11,6 +11,7 @@ import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
 import { combineFieldNames, Content, KeySet, PropertyValueFormat, RegisteredRuleset } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { CacheInvalidationProps, ContentDataProvider } from "../../presentation-components/common/ContentDataProvider.js";
 import { createTestECInstanceKey, createTestPropertyInfo, createTestRuleset } from "../_helpers/Common.js";
 import {
   createTestContentDescriptor,
@@ -19,7 +20,6 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
-import { CacheInvalidationProps, ContentDataProvider } from "../../presentation-components/common/ContentDataProvider.js";
 
 import type { PrimitiveValue, PropertyDescription } from "@itwin/appui-abstract";
 import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";

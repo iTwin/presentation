@@ -11,10 +11,10 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
 import { createStorage, Selectables } from "@itwin/unified-selection";
+import { usePresentationTable, usePresentationTableWithUnifiedSelection } from "../../presentation-components/table/UsePresentationTable.js";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
-import { usePresentationTable, usePresentationTableWithUnifiedSelection } from "../../presentation-components/table/UsePresentationTable.js";
 import { act, renderHook, waitFor } from "../TestUtils.js";
 
 import type { FormattingUnitSystemChangedArgs } from "@itwin/core-frontend";

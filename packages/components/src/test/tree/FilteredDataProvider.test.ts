@@ -9,11 +9,11 @@ import sinon from "sinon";
 import { BeEvent } from "@itwin/core-bentley";
 import { LabelDefinition } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { createTestECInstanceKey } from "../_helpers/Common.js";
-import { createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy.js";
 import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider.js";
 import { FilteredPresentationTreeDataProvider } from "../../presentation-components/tree/FilteredDataProvider.js";
 import { createTreeNodeItem } from "../../presentation-components/tree/Utils.js";
+import { createTestECInstanceKey } from "../_helpers/Common.js";
+import { createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy.js";
 import { createStub } from "../TestUtils.js";
 
 import type { PageOptions } from "@itwin/components-react";

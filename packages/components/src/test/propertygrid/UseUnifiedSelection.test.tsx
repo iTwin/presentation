@@ -8,11 +8,11 @@ import sinon from "sinon";
 import { KeySet } from "@itwin/presentation-common";
 import { SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
 import { createStorage, Selectables } from "@itwin/unified-selection";
-import { createTestECInstanceKey } from "../_helpers/Common.js";
 import {
   SelectionHandlerContextProvider,
   usePropertyDataProviderWithUnifiedSelection,
 } from "../../presentation-components/propertygrid/UseUnifiedSelection.js";
+import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { act, renderHook, waitFor } from "../TestUtils.js";
 
 import type { PropsWithChildren } from "react";

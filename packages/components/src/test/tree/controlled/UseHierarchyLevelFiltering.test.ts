@@ -11,10 +11,10 @@ import sinon from "sinon";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { TreeModelSource, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
+import { useHierarchyLevelFiltering } from "../../../presentation-components/tree/controlled/UseHierarchyLevelFiltering.js";
 import { createTestPropertyInfo } from "../../_helpers/Common.js";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
-import { useHierarchyLevelFiltering } from "../../../presentation-components/tree/controlled/UseHierarchyLevelFiltering.js";
 import { createStub, renderHook } from "../../TestUtils.js";
 
 import type { ITreeNodeLoader, TreeModelNode, TreeModelNodeInput, TreeNodeLoadResult } from "@itwin/components-react";

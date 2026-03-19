@@ -820,6 +820,17 @@
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
 
+## 1.9.13
+
+### Patch Changes
+
+- [#1242](https://github.com/iTwin/presentation/pull/1242): Bump dependencies.
+- [#1252](https://github.com/iTwin/presentation/pull/1252): Fix tree node outline not appearing on touch devices.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.11
+  - @itwin/presentation-shared@1.2.10
+  - @itwin/unified-selection@1.6.8
+
 ## 1.9.12
 
 ### Patch Changes

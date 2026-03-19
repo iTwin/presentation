@@ -5,8 +5,8 @@
 
 import { expect } from "chai";
 import { LabelDefinition } from "@itwin/presentation-common";
-import { createTestECClassGroupingNodeKey, createTestECInstancesNode } from "../_helpers/Hierarchy.js";
 import { createPartialTreeNodeItem, createTreeNodeItem, createTreeNodeItems, pageOptionsUiToPresentation } from "../../presentation-components/tree/Utils.js";
+import { createTestECClassGroupingNodeKey, createTestECInstancesNode } from "../_helpers/Hierarchy.js";
 
 import type { PageOptions } from "@itwin/components-react";
 import type { Node } from "@itwin/presentation-common";

@@ -1,5 +1,19 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.4.17
+
+### Patch Changes
+
+- [#1242](https://github.com/iTwin/presentation/pull/1242): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-components@5.13.1
+
+## 5.4.16
+
+### Patch Changes
+
+- [#1237](https://github.com/iTwin/presentation/pull/1237): Raise `onClose` event when `buildTestIModel.close()` is called.
+
 ## 5.4.16-alpha.0
 
 ### Patch Changes

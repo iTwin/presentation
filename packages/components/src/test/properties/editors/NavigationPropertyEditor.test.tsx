@@ -10,14 +10,14 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Content, KeySet, LabelDefinition } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { stubVirtualization } from "../../_helpers/Common.js";
-import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../../_helpers/Content.js";
-import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { NavigationPropertyTargetEditor } from "../../../presentation-components/properties/editors/NavigationPropertyEditor.js";
 import {
   NavigationPropertyEditorContextProvider,
   useNavigationPropertyEditorContextProviderProps,
 } from "../../../presentation-components/properties/editors/NavigationPropertyEditorContext.js";
+import { stubVirtualization } from "../../_helpers/Common.js";
+import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../../_helpers/Content.js";
+import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { renderHook, render as renderRTL, waitFor } from "../../TestUtils.js";
 
 import type { PropertyDescription } from "@itwin/appui-abstract";

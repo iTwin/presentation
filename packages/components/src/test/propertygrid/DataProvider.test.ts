@@ -21,6 +21,8 @@ import {
   RelationshipMeaning,
 } from "@itwin/presentation-common";
 import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils.js";
+import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -30,8 +32,6 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
-import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils.js";
-import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 
 import type { PrimitiveValue } from "@itwin/appui-abstract";
 import type { PropertyCategory } from "@itwin/components-react";

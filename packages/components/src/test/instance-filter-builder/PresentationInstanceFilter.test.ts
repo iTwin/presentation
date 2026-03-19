@@ -5,6 +5,9 @@
 
 import { expect } from "chai";
 import { PropertyValueFormat } from "@itwin/appui-abstract";
+import { PresentationInstanceFilter } from "../../presentation-components.js";
+import { serializeUniqueValues } from "../../presentation-components/common/Utils.js";
+import { INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils.js";
 import { createTestECClassInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -12,9 +15,6 @@ import {
   createTestNestedContentField,
   createTestPropertiesContentField,
 } from "../_helpers/Content.js";
-import { serializeUniqueValues } from "../../presentation-components/common/Utils.js";
-import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
-import { INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils.js";
 
 import type { PrimitiveValue, PropertyDescription } from "@itwin/appui-abstract";
 import type { PropertyFilter, PropertyFilterRule, PropertyFilterRuleGroup } from "@itwin/components-react";

@@ -4,7 +4,10 @@
   "repository": {
     "url": "https://github.com/iTwin/presentation.git"
   },
-  "packageManager": "pnpm@10.13.1",
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": "^24.0.0"
+  },
   "scripts": {
     "start:web": "run-p --silent start:frontend start:web-backend",
     "start:electron": "run-p --silent start:frontend start:electron-backend",
@@ -22,8 +25,8 @@
     "update-extractions": "npm run docs:all && npm run gather-docs && lage update-extractions",
     "check-extractions": "npm run docs:all && npm run gather-docs && lage check-extractions",
     "validate-markdowns": "lage validate-markdowns --grouped --continue",
-    "prettier": "prettier --check .",
-    "prettier:fix": "prettier --write .",
+    "format": "oxfmt --check",
+    "format:fix": "oxfmt",
     "prepare": "husky",
     "change": "changeset add",
     "change:empty": "changeset add --empty",
@@ -37,7 +40,6 @@
   },
   "dependencies": {
     "@changesets/cli": "^2.29.8",
-    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
     "@stylistic/eslint-plugin": "catalog:build-tools",
     "eslint-plugin-unused-imports": "catalog:build-tools",
     "cpx2": "catalog:build-tools",
@@ -46,11 +48,11 @@
     "eslint-config-prettier": "^9.1.2",
     "fast-glob": "^3.3.3",
     "husky": "^9.1.7",
-    "lage": "^2.14.19",
+    "lage": "^2.15.0",
     "lint-staged": "^15.5.2",
     "markdown-link-check": "^3.14.2",
     "npm-run-all": "^4.1.5",
-    "prettier": "^3.8.1",
+    "oxfmt": "^0.41.0",
     "rimraf": "catalog:build-tools",
     "yaml": "^2.8.2",
     "yargs": "^17.7.2"

@@ -13,13 +13,13 @@ import { BeEvent, Logger } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { Descriptor, PresentationError, PresentationStatus } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { translate } from "../../presentation-components/common/Utils.js";
+import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider.js";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy.js";
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
 import { createTestTreeNodeItem } from "../_helpers/UiComponents.js";
-import { translate } from "../../presentation-components/common/Utils.js";
-import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider.js";
 
 import type { PageOptions } from "@itwin/components-react";
 import type { IModelConnection } from "@itwin/core-frontend";

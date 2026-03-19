@@ -12,9 +12,9 @@ import { IModelApp } from "@itwin/core-frontend";
 import { ViewportComponent } from "@itwin/imodel-components-react";
 import { KeySet } from "@itwin/presentation-common";
 import { HiliteSetProvider, Presentation, SelectionChangeEvent, SelectionChangeType } from "@itwin/presentation-frontend";
-import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { ViewportSelectionHandler } from "../../presentation-components/viewport/ViewportSelectionHandler.js";
 import { ViewportSelectionHandlerContextProvider, viewWithUnifiedSelection } from "../../presentation-components/viewport/WithUnifiedSelection.js";
+import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { render, waitFor } from "../TestUtils.js";
 
 import type { Id64Arg, Id64String } from "@itwin/core-bentley";

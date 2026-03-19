@@ -5,8 +5,9 @@
 
 import { Button, Text } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
-import errorSvg from "@stratakit/icons/status-error.svg";
 import { useTranslation } from "./LocalizationContext.js";
+
+import errorSvg from "@stratakit/icons/status-error.svg";
 
 import type { JSX } from "react";
 import type { RootErrorRendererProps } from "../Renderers.js";

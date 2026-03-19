@@ -7,9 +7,9 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { useColumns } from "../../presentation-components/table/UseColumns.js";
 import { createTestECInstanceKey, TestErrorBoundary } from "../_helpers/Common.js";
 import { createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content.js";
-import { useColumns } from "../../presentation-components/table/UseColumns.js";
 import { render, renderHook, waitFor } from "../TestUtils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";

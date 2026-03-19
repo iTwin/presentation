@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { memo, useCallback } from "react";
-import filterSvg from "@stratakit/icons/filter.svg";
 import { useTranslation } from "./LocalizationContext.js";
 import { TreeActionBase } from "./TreeAction.js";
+
+import filterSvg from "@stratakit/icons/filter.svg";
 
 import type { NamedExoticComponent } from "react";
 import type { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";

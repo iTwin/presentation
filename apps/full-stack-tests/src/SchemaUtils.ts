@@ -6,7 +6,7 @@
 import { XMLParser } from "fast-xml-parser";
 import { Context as MochaContext } from "mocha";
 import { getFullSchemaXml } from "presentation-test-utilities";
-import { Guid } from "@itwin/core-bentley";
+import { assert, Guid } from "@itwin/core-bentley";
 
 import type { EC } from "@itwin/presentation-shared";
 
@@ -37,7 +37,10 @@ export async function importSchema(
   const parsedSchema = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: "",
-    isArray: (_, jpath) => jpath.startsWith("ECSchema."),
+    isArray: (_, jpath) => {
+      assert(typeof jpath === "string");
+      return jpath.startsWith("ECSchema.");
+    },
   }).parse(schemaXml);
   const schemaItems = Object.values(parsedSchema.ECSchema)
     .flatMap<any>((itemDef) => itemDef)

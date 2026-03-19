@@ -19,13 +19,10 @@ import type { Observable } from "rxjs";
  */
 export function sortNodesByLabelOperator<TNode extends { label: string }>(nodes: Observable<TNode>): Observable<TNode> {
   return nodes.pipe(
-    reduce(
-      (sorted, node) => {
-        sorted.insert(node);
-        return sorted;
-      },
-      new SortedArray<TNode>(compareNodesByLabel, DuplicatePolicy.Allow),
-    ),
+    reduce((sorted, node) => {
+      sorted.insert(node);
+      return sorted;
+    }, new SortedArray<TNode>(compareNodesByLabel, DuplicatePolicy.Allow)),
     map((sortedArray) => sortedArray.extractArray()),
     concatAll(),
   );
