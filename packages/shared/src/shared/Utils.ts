@@ -13,8 +13,8 @@ import type { EC } from "./Metadata.js";
  * @public
  */
 export function parseFullClassName(fullClassName: string) {
-  const [schemaName, className] = fullClassName.split(/[\.:]/);
-  if (!schemaName || !className) {
+  const [schemaName, className, ...rest] = fullClassName.split(/[\.:]/);
+  if (!schemaName || !className || rest.length > 0) {
     throw new Error(`Invalid full class name: ${fullClassName}`);
   }
   return { schemaName, className };
