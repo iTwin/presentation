@@ -759,10 +759,10 @@ describe("createIModelHierarchyProvider", () => {
         },
         search: {
           paths: [
-            [
-              { className: "a.b", id: "0x123" },
-              { className: "c.d", id: "0x456" },
-            ],
+            {
+              identifier: { className: "a.b", id: "0x123" },
+              children: [{ identifier: { className: "c.d", id: "0x456" } }],
+            },
           ],
         },
       });
@@ -807,7 +807,7 @@ describe("createIModelHierarchyProvider", () => {
           label: "test label",
           children: false,
           search: {
-            childrenTargetPaths: [{ path: [{ className: "c.d", id: "0x456" }], options: undefined }],
+            childrenTargetPaths: [{ identifier: { className: "c.d", id: "0x456" } }],
           },
         },
       ]);
@@ -896,12 +896,7 @@ describe("createIModelHierarchyProvider", () => {
 
       // set the search and request nodes AFTER the root node query has been executed
       provider.setHierarchySearch({
-        paths: [
-          [
-            { className: "a.b", id: "0x123" },
-            { className: "c.d", id: "0x456" },
-          ],
-        ],
+        paths: [{ identifier: { className: "a.b", id: "0x123" }, children: [{ identifier: { className: "c.d", id: "0x456" } }] }],
       });
       const searchedRootNodeIter = provider.getNodes({ parentNode: undefined }).next();
 
@@ -934,7 +929,7 @@ describe("createIModelHierarchyProvider", () => {
         },
         children: false,
         search: {
-          childrenTargetPaths: [{ path: [{ className: "c.d", id: "0x456" }], options: undefined }],
+          childrenTargetPaths: [{ identifier: { className: "c.d", id: "0x456" } }],
         },
       });
 
@@ -991,7 +986,7 @@ describe("createIModelHierarchyProvider", () => {
 
       // set the search and request searched nodes AFTER the root node query has been executed
       provider.setHierarchySearch({
-        paths: [[{ className: "a.b", id: "0x456" }]],
+        paths: [{ identifier: { className: "a.b", id: "0x456" } }],
       });
       const searchedRootNodeIter = provider.getNodes({ parentNode: undefined }).next();
 
@@ -1968,13 +1963,17 @@ describe("createMergedIModelHierarchyProvider", () => {
       },
       search: {
         paths: [
-          { path: [{ className: "a.b", id: "0x123", imodelKey: "imodel 1" }], options: { reveal: true, autoExpand: true } },
           {
-            path: [
-              { className: "a.b", id: "0x123", imodelKey: "imodel 2" },
-              { className: "c.d", id: "0x456", imodelKey: "imodel 2" },
+            identifier: { className: "a.b", id: "0x123", imodelKey: "imodel 1" },
+            options: { autoExpand: true },
+          },
+          {
+            identifier: { className: "a.b", id: "0x123", imodelKey: "imodel 2" },
+            children: [
+              {
+                identifier: { className: "c.d", id: "0x456", imodelKey: "imodel 2" },
+              },
             ],
-            options: { reveal: false, autoExpand: false },
           },
         ],
       },
@@ -1995,11 +1994,10 @@ describe("createMergedIModelHierarchyProvider", () => {
         children: false,
         search: {
           isSearchTarget: true,
-          searchTargetOptions: {
-            reveal: true,
+          options: {
             autoExpand: true,
           },
-          childrenTargetPaths: [{ path: [{ className: "c.d", id: "0x456", imodelKey: "imodel 2" }], options: { reveal: false, autoExpand: false } }],
+          childrenTargetPaths: [{ identifier: { className: "c.d", id: "0x456", imodelKey: "imodel 2" } }],
         },
         autoExpand: true,
       } satisfies HierarchyNode,

@@ -19,26 +19,19 @@ import type {
   PropertyValueGroupingNodeKey,
   PropertyValueRangeGroupingNodeKey,
 } from "./HierarchyNodeKey.js";
-import type { HierarchySearchPath, HierarchySearchPathOptions } from "./HierarchySearch.js";
+import type { HierarchySearchTree } from "./HierarchySearch.js";
 
 /** @public */
-export type HierarchyNodeSearchProps = {
+export interface HierarchyNodeSearchProps {
   /** If set to true, then one of the ancestor nodes in the hierarchy is the search target. */
   hasSearchTargetAncestor?: boolean;
   /** Paths to node's children that are search targets. */
-  childrenTargetPaths?: HierarchySearchPath[];
-} & (
-  | {
-      /** Whether or not this node is a search target. */
-      isSearchTarget?: false;
-    }
-  | {
-      /** Whether or not this node is a search target. */
-      isSearchTarget: true;
-      /** Options that were used to search the node. */
-      searchTargetOptions?: HierarchySearchPathOptions;
-    }
-);
+  childrenTargetPaths?: HierarchySearchTree[];
+  /** Whether or not this node is a search target. */
+  isSearchTarget?: boolean;
+  /** Options assigned to this node through search. */
+  options?: HierarchySearchTree["options"];
+}
 
 /**
  * A data structure that defines attributes that are common to all types of hierarchy nodes.
@@ -151,6 +144,23 @@ export namespace HierarchyNode {
     node: TNode,
   ): node is TNode & { key: PropertyGroupingNodeKey; supportsFiltering?: undefined } & GroupingHierarchyNode {
     return HierarchyNodeKey.isPropertyGrouping(node.key);
+  }
+
+  /**
+   * Gets the grouping level of the given grouping node.
+   *
+   * May be useful when setting `groupingLevel` for `HierarchySearchTree.options.autoExpand` or `HierarchySearchPathOptions.reveal`.
+   */
+  export function getGroupingNodeLevel(groupingNode: Pick<GroupingHierarchyNode, "key" | "parentKeys">): number {
+    let level = 1;
+    for (let i = groupingNode.parentKeys.length - 1; i >= 0; i--) {
+      if (HierarchyNodeKey.isGrouping(groupingNode.parentKeys[i])) {
+        level++;
+      } else {
+        break;
+      }
+    }
+    return level;
   }
 }
 

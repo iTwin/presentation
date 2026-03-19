@@ -22,7 +22,7 @@ The hierarchy definition that creates such a hierarchy would look like this:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { ECSqlBinding } from "@itwin/presentation-shared";
 
 function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinition {
@@ -84,10 +84,10 @@ Let's consider two cases - searching by label and by target element ID:
   import { HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
   import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
 
-  // Define a function that returns `HierarchyNodeIdentifiersPath[]` based on given search string. In this case, we run
+  // Define a function that returns `HierarchySearchTree[]` based on given search string. In this case, we run
   // a query to find matching elements by their `UserLabel` property. Then, we construct paths to the root element using recursive
-  // CTE. Finally, we return the paths in reverse order to start from the root element.
-  async function createSearchTargetPaths(searchStrings: string[]): Promise<HierarchyNodeIdentifiersPath[]> {
+  // CTE. Finally, we use `HierarchySearchTree` builder to create a search tree based on those paths.
+  async function createHierarchySearchTree(searchStrings: string[]): Promise<HierarchySearchTree[]> {
     const query: ECSqlQueryDef = {
       ctes: [
         `MatchingElements(Path, ParentId) AS (
@@ -110,18 +110,28 @@ Let's consider two cases - searching by label and by target element ID:
       ecsql: `SELECT Path FROM MatchingElements WHERE ParentId IS NULL`,
       bindings: searchStrings.map((searchString) => ({ type: "string", value: searchString })),
     };
-    const result: HierarchyNodeIdentifiersPath[] = [];
+    const searchTreeBuilder = HierarchySearchTree.createBuilder();
     for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-      result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })));
+      searchTreeBuilder.accept({
+        path: (JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })),
+      });
     }
-    return result;
+    return searchTreeBuilder.getTree();
   }
   // Find paths to elements whose label contains "C" or "E"
-  const searchPaths = await createSearchTargetPaths(["C", "E"]);
+  const searchPaths = await createHierarchySearchTree(["C", "E"]);
   expect(searchPaths).to.deep.eq([
     // We expect to find two paths A -> B -> C and A -> E
-    [elementKeys.a, elementKeys.e],
-    [elementKeys.a, elementKeys.b, elementKeys.c],
+    {
+      identifier: elementKeys.a,
+      children: [
+        {
+          identifier: elementKeys.b,
+          children: [{ identifier: elementKeys.c }],
+        },
+        { identifier: elementKeys.e },
+      ],
+    },
   ]);
   ```
 

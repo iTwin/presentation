@@ -37,7 +37,7 @@ export function createProvider(
         imodelChanged?: Event<() => void>;
         hierarchy: HierarchyDefinition;
         localizedStrings?: Props<typeof createIModelHierarchyProvider>["localizedStrings"];
-        hierarchySearchPaths?: HierarchySearchPaths;
+        search?: HierarchySearchPaths;
         queryCacheSize?: number;
       }
     | {
@@ -48,12 +48,12 @@ export function createProvider(
     imodelChanged?: Event<() => void>;
     hierarchy: HierarchyDefinition;
     localizedStrings?: Props<typeof createIModelHierarchyProvider>["localizedStrings"];
-    hierarchySearchPaths?: HierarchySearchPaths;
+    search?: HierarchySearchPaths;
     queryCacheSize?: number;
     sourceName?: string;
   },
 ) {
-  const { imodelChanged, hierarchy, localizedStrings, hierarchySearchPaths, queryCacheSize } = props;
+  const { imodelChanged, hierarchy, localizedStrings, search, queryCacheSize } = props;
   const formatter = "imodel" in props && props.formatterFactory ? props.formatterFactory(createSchemaContext(props.imodel)) : undefined;
   return createIModelHierarchyProvider({
     imodelAccess: "imodelAccess" in props ? props.imodelAccess : createIModelAccess(props.imodel),
@@ -61,7 +61,7 @@ export function createProvider(
     hierarchyDefinition: hierarchy,
     formatter,
     localizedStrings,
-    search: hierarchySearchPaths ? { paths: hierarchySearchPaths } : undefined,
+    search: search ? { paths: search } : undefined,
     queryCacheSize: queryCacheSize ?? 0,
     // @ts-expect-error: using non-exposed way to override source name
     sourceName: props.sourceName,

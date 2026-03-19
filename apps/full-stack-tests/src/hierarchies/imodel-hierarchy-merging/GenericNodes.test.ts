@@ -111,8 +111,14 @@ describe("Hierarchies", () => {
         it("creates hierarchy when targeting instances from both imodels", async () => {
           provider.setHierarchySearch({
             paths: [
-              [keys.base.x, { type: "generic", id: "y-elements" }, keys.base.y1],
-              [keys.changeset1.x, { type: "generic", id: "y-elements" }, keys.changeset1.y2],
+              {
+                identifier: keys.base.x,
+                children: [{ identifier: { type: "generic", id: "y-elements" }, children: [{ identifier: keys.base.y1 }] }],
+              },
+              {
+                identifier: keys.changeset1.x,
+                children: [{ identifier: { type: "generic", id: "y-elements" }, children: [{ identifier: keys.changeset1.y2 }] }],
+              },
             ],
           });
           await validateHierarchy({
@@ -130,11 +136,13 @@ describe("Hierarchies", () => {
                       NodeValidators.createForInstanceNode({
                         label: "y1",
                         instanceKeys: [keys.base.y1],
+                        isSearchTarget: true,
                       }),
                       // exists only in the second imodel
                       NodeValidators.createForInstanceNode({
                         label: "y2",
                         instanceKeys: [keys.changeset1.y2],
+                        isSearchTarget: true,
                       }),
                     ],
                   }),
@@ -146,7 +154,7 @@ describe("Hierarchies", () => {
 
         it("creates hierarchy when targeting instances from base imodel", async () => {
           provider.setHierarchySearch({
-            paths: [[keys.base.x, { type: "generic", id: "y-elements" }, keys.base.y1]],
+            paths: [{ identifier: keys.base.x, children: [{ identifier: { type: "generic", id: "y-elements" }, children: [{ identifier: keys.base.y1 }] }] }],
           });
           await validateHierarchy({
             provider,
@@ -162,6 +170,7 @@ describe("Hierarchies", () => {
                       NodeValidators.createForInstanceNode({
                         label: "y1",
                         instanceKeys: [keys.base.y1],
+                        isSearchTarget: true,
                       }),
                     ],
                   }),
@@ -174,8 +183,12 @@ describe("Hierarchies", () => {
         it("creates hierarchy when targeting instances from changeset1 imodel", async () => {
           provider.setHierarchySearch({
             paths: [
-              [keys.changeset1.x, { type: "generic", id: "y-elements" }, keys.changeset1.y1],
-              [keys.changeset1.x, { type: "generic", id: "y-elements" }, keys.changeset1.y2],
+              {
+                identifier: keys.changeset1.x,
+                children: [
+                  { identifier: { type: "generic", id: "y-elements" }, children: [{ identifier: keys.changeset1.y1 }, { identifier: keys.changeset1.y2 }] },
+                ],
+              },
             ],
           });
           await validateHierarchy({
@@ -192,10 +205,12 @@ describe("Hierarchies", () => {
                       NodeValidators.createForInstanceNode({
                         label: "y1",
                         instanceKeys: [keys.changeset1.y1],
+                        isSearchTarget: true,
                       }),
                       NodeValidators.createForInstanceNode({
                         label: "y2",
                         instanceKeys: [keys.changeset1.y2],
+                        isSearchTarget: true,
                       }),
                     ],
                   }),

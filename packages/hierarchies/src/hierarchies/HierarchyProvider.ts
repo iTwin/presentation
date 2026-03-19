@@ -8,7 +8,7 @@ import { BeEvent } from "@itwin/core-bentley";
 import type { GenericInstanceFilter } from "@itwin/core-common";
 import type { Event, EventListener, InstanceKey, IPrimitiveValueFormatter, Props, RaisableEvent } from "@itwin/presentation-shared";
 import type { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
-import type { HierarchySearchPath } from "./HierarchySearch.js";
+import type { HierarchySearchTree } from "./HierarchySearch.js";
 
 /**
  * Props for the `HierarchyProvider.getNodes` call.
@@ -102,8 +102,8 @@ export interface HierarchyProvider {
   setHierarchySearch(
     props:
       | {
-          /** A list of node identifiers from root to target node. */
-          paths: HierarchySearchPath[];
+          /** A list of search trees that define paths from root to search target nodes. */
+          paths: HierarchySearchTree[];
         }
       | undefined,
   ): void;

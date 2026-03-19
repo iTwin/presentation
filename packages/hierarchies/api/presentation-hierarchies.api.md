@@ -46,33 +46,20 @@ export function createHierarchyProvider<TPartialProvider extends Partial<Omit<Hi
 }) => TPartialProvider): TPartialProvider & HierarchyProvider;
 
 // @public
-export function createHierarchySearchHelper(rootLevelSearchProps: HierarchySearchPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined): {
+export function createHierarchySearchHelper(rootLevelSearchProps: HierarchySearchTree[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined): {
     hasSearch: boolean;
     hasSearchTargetAncestor: boolean;
     getChildNodeSearchIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
     createChildNodeProps: {
         (props: {
-            parentKeys?: undefined;
-            nodeKey: InstancesNodeKey | GenericNodeKey;
-        }): Pick<NonGroupingHierarchyNode, "search"> | undefined;
-        (props: {
-            parentKeys?: undefined;
-            pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-        }): Pick<NonGroupingHierarchyNode, "search"> | undefined;
-        (props: {
-            parentKeys?: undefined;
-            asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-        }): Promise<Pick<NonGroupingHierarchyNode, "search"> | undefined> | Pick<NonGroupingHierarchyNode, "search"> | undefined;
-        (props: {
-            parentKeys: HierarchyNodeKey[];
             nodeKey: InstancesNodeKey | GenericNodeKey;
         }): Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
         (props: {
-            parentKeys: HierarchyNodeKey[];
+            nodeKey: InstancesNodeKey | GenericNodeKey;
             pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
         }): Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
         (props: {
-            parentKeys: HierarchyNodeKey[];
+            nodeKey: InstancesNodeKey | GenericNodeKey;
             asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
         }): Promise<Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined> | Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
     };
@@ -271,6 +258,7 @@ export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
 
 // @public (undocumented)
 export namespace HierarchyNode {
+    export function getGroupingNodeLevel(groupingNode: Pick<GroupingHierarchyNode, "key" | "parentKeys">): number;
     export function isClassGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
@@ -359,6 +347,7 @@ export type HierarchyNodeIdentifier = IModelInstanceKey | GenericNodeKey;
 
 // @public (undocumented)
 export namespace HierarchyNodeIdentifier {
+    export function compare(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): number;
     export function equal(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): boolean;
     export function isGenericNodeIdentifier(id: HierarchyNodeIdentifier): id is GenericNodeKey;
     export function isInstanceNodeIdentifier(id: HierarchyNodeIdentifier): id is IModelInstanceKey;
@@ -447,15 +436,12 @@ export namespace HierarchyNodesDefinition {
 }
 
 // @public (undocumented)
-type HierarchyNodeSearchProps = {
+interface HierarchyNodeSearchProps {
+    childrenTargetPaths?: HierarchySearchTree[];
     hasSearchTargetAncestor?: boolean;
-    childrenTargetPaths?: HierarchySearchPath[];
-} & ({
-    isSearchTarget?: false;
-} | {
-    isSearchTarget: true;
-    searchTargetOptions?: HierarchySearchPathOptions;
-});
+    isSearchTarget?: boolean;
+    options?: HierarchySearchTree["options"];
+}
 
 // @public
 export interface HierarchyProvider {
@@ -464,7 +450,7 @@ export interface HierarchyProvider {
     readonly hierarchyChanged: Event_2<(args: HierarchyChangedEventArgs) => void>;
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
     setHierarchySearch(props: {
-        paths: HierarchySearchPath[];
+        paths: HierarchySearchTree[];
     } | undefined): void;
 }
 
@@ -483,7 +469,63 @@ export namespace HierarchySearchPath {
 // @public (undocumented)
 export interface HierarchySearchPathOptions {
     autoExpand?: boolean;
-    reveal?: boolean | SearchPathRevealDepthInHierarchy | SearchPathRevealDepthInPath;
+    reveal?: boolean | {
+        depthInPath: number;
+    } | {
+        groupingLevel: number;
+    };
+}
+
+// @public
+export interface HierarchySearchTree {
+    children?: HierarchySearchTree[];
+    identifier: HierarchyNodeIdentifier;
+    isTarget?: boolean;
+    options?: {
+        autoExpand?: boolean | {
+            groupingLevel: number;
+        };
+    };
+}
+
+// @public (undocumented)
+export namespace HierarchySearchTree {
+    export function createBuilder<TAcceptHandlerExtras extends Record<string, unknown> = Record<string, unknown>>(): HierarchySearchTreeBuilder<TAcceptHandlerExtras>;
+    export function createFromPathsList(paths: Iterable<HierarchySearchPath>): Promise<HierarchySearchTree[]>;
+    export interface HierarchySearchTreeBuilder<TAcceptHandlerExtras extends Record<string, unknown>> {
+        accept(props: HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras>): HierarchySearchTreeBuilder<TAcceptHandlerExtras>;
+        getTree(): HierarchySearchTree[];
+    }
+    // (undocumented)
+    export interface HierarchySearchTreeBuilderAcceptHandler<TExtras extends Record<string, unknown>> {
+        onEntryHandled?: (props: {
+            parentEntries: Array<HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras>>;
+            treeEntry: HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras>;
+            inputEntry: HierarchySearchTreeBuilderAcceptHandlerTreeInput;
+        }) => void;
+        onNewEntry?: (props: {
+            parentEntries: Array<HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras>>;
+            inputEntry: HierarchySearchTreeBuilderAcceptHandlerTreeInput;
+        }) => boolean;
+    }
+    // (undocumented)
+    export type HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras extends Record<string, unknown>> = Readonly<Pick<HierarchySearchTree, "identifier" | "options"> & {
+        extras: TExtras;
+    }> & Pick<HierarchySearchTree, "isTarget">;
+    // (undocumented)
+    export type HierarchySearchTreeBuilderAcceptHandlerTreeInput = Readonly<Pick<HierarchySearchTree, "identifier" | "isTarget" | "options"> & {
+        hasChildren: boolean;
+    }>;
+    // (undocumented)
+    export type HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras extends Record<string, unknown>> = ({
+        path: HierarchySearchPath;
+    } | {
+        tree: HierarchySearchTree;
+    }) & {
+        handler?: HierarchySearchTreeBuilderAcceptHandler<TAcceptHandlerExtras>;
+    };
+    export function mergeOptions(lhs: HierarchySearchTree["options"] | undefined, rhs: HierarchySearchTree["options"] | undefined): HierarchySearchTree["options"] | undefined;
+    export {};
 }
 
 // @public (undocumented)
@@ -510,7 +552,7 @@ interface IModelHierarchyProviderProps {
     queryCacheSize?: number;
     queryConcurrency?: number;
     search?: {
-        paths: HierarchySearchPath[];
+        paths: HierarchySearchTree[];
     };
 }
 
@@ -739,16 +781,6 @@ export class RowsLimitExceededError extends Error {
     constructor(limit: number);
     // (undocumented)
     readonly limit: number;
-}
-
-// @public (undocumented)
-interface SearchPathRevealDepthInHierarchy {
-    depthInHierarchy: number;
-}
-
-// @public (undocumented)
-interface SearchPathRevealDepthInPath {
-    depthInPath: number;
 }
 
 // @public
