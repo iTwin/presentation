@@ -54,7 +54,7 @@
       builder.accept({ path: searchPath1 });
       builder.accept({ path: searchPath2 });
       builder.accept({ tree: partialSearchTree });
-      const tree: HierarchySearchTree = builder.getTree();
+      const tree: HierarchySearchTree[] = builder.getTree();
       ```
 
       This is the preferred way to create a `HierarchySearchTree`, as it allows to create a tree without having to create an array first, as opposed to `HierarchySearchTree.createFromPathsList` function described below.
@@ -77,7 +77,7 @@
       for (const item of items) {
         builder.accept({ path: createSearchPathForItem(item) });
       }
-      const tree: HierarchySearchTree = builder.getTree();
+      const tree: HierarchySearchTree[] = builder.getTree();
       ```
 
     - `HierarchySearchTree.mergeOptions` function to merge options of two hierarchy search trees. Used internally to merge options of the same nodes when creating a tree from a list of paths.
