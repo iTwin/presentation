@@ -69,8 +69,7 @@
       for (const item of items) {
         searchPaths.push(createSearchPathForItem(item));
       }
-      const tree: HierarchySearchTree =
-        HierarchySearchTree.createFromPathsList(searchPaths);
+      const tree: HierarchySearchTree[] = await HierarchySearchTree.createFromPathsList(searchPaths);
 
       // Do this:
       const builder = HierarchySearchTree.createBuilder();
