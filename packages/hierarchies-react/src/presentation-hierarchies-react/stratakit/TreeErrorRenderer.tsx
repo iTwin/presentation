@@ -5,12 +5,12 @@
 
 import { cloneElement } from "react";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
+import { useTranslation } from "../LocalizationContext.js";
 import { ErrorItemRenderer } from "./ErrorItemRenderer.js";
-import { useTranslation } from "./LocalizationContext.js";
 
 import type { JSX, ReactElement } from "react";
+import type { useErrorNodes } from "../internal/FlatTreeNode.js";
 import type { ErrorItemRendererProps } from "./ErrorItemRenderer.js";
-import type { useErrorNodes } from "./FlatTreeNode.js";
 
 /**
  * Interface containing building blocks for `TreeErrorRenderer`.

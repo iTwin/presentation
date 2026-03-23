@@ -8,7 +8,7 @@ import "./TreeNodeRenderer.css";
 import { cloneElement, forwardRef, isValidElement, memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Description, IconButton, Spinner, Text, TextBox } from "@stratakit/bricks";
 import { DropdownMenu, unstable_Popover as Popover, Tree } from "@stratakit/structures";
-import { useTranslation } from "./LocalizationContext.js";
+import { useTranslation } from "../LocalizationContext.js";
 import { TreeActionBase } from "./TreeAction.js";
 import { useTreeNodeRenameContext } from "./TreeNodeRenameAction.js";
 

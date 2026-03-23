@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { memo, useCallback } from "react";
-import { useTranslation } from "./LocalizationContext.js";
+import { useTranslation } from "../LocalizationContext.js";
 import { TreeActionBase } from "./TreeAction.js";
 
 import filterSvg from "@stratakit/icons/filter.svg";
