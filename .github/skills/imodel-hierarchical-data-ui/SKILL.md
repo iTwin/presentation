@@ -5,11 +5,11 @@ description: Instructions and best practices for building/modifying a UI Tree co
 
 # Goal
 
-Build/modify UI Tree component displaying iModel data in a hierarchical way defined by user.
+Build/modify UI Tree component displaying iModel data in a hierarchical way defined by the user.
 
 ## How to build tree component
 
-Tree component should be built in two parts - data generation and UI. Data generation part should be responsible for pulling data from IModel . UI part should be responsible for rendering the tree structure based on the data provided by the data generation part.
+The tree component should be built in two parts: a data generation layer and a UI layer. The data generation layer is responsible for pulling data from the iModel. The UI layer is responsible for rendering the tree structure based on the data provided by the data generation layer.
 
 To pull data from iModel, use `@itwin/presentation-hierarchies` library. This library provides a way to define how data should be pulled for each level of the tree.
 
