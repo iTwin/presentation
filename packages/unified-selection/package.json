@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "@itwin/core-bentley": "catalog:itwinjs-core",
-    "@itwin/presentation-shared": "workspace:^",
+    "@itwin/presentation-shared": "workspace:*",
     "rxjs": "catalog:rxjs",
     "rxjs-for-await": "catalog:rxjs"
   },
@@ -71,7 +71,7 @@
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "mocha": "catalog:test-tools",
-    "presentation-test-utilities": "workspace:^",
+    "presentation-test-utilities": "workspace:*",
     "rimraf": "catalog:build-tools",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",

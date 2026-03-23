@@ -61,7 +61,7 @@
     "chai-as-promised": "catalog:test-tools",
     "eslint": "catalog:build-tools",
     "mocha": "catalog:test-tools",
-    "presentation-test-utilities": "workspace:^",
+    "presentation-test-utilities": "workspace:*",
     "rimraf": "catalog:build-tools",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
