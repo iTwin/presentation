@@ -92,7 +92,7 @@
     "ignore-styles": "catalog:test-tools",
     "jsdom": "catalog:test-tools",
     "mocha": "catalog:test-tools",
-    "presentation-test-utilities": "workspace:^",
+    "presentation-test-utilities": "workspace:*",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
     "typescript": "catalog:build-tools"

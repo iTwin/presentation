@@ -51,7 +51,7 @@
     "@itwin/core-bentley": "catalog:itwinjs-core",
     "@itwin/core-common": "catalog:itwinjs-core",
     "@itwin/core-geometry": "catalog:itwinjs-core",
-    "@itwin/presentation-shared": "workspace:^",
+    "@itwin/presentation-shared": "workspace:*",
     "natural-compare-lite": "^1.4.0",
     "rxjs": "catalog:rxjs"
   },
@@ -71,7 +71,7 @@
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "mocha": "catalog:test-tools",
-    "presentation-test-utilities": "workspace:^",
+    "presentation-test-utilities": "workspace:*",
     "rimraf": "catalog:build-tools",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
