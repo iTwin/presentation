@@ -36,6 +36,14 @@
       "import": "./lib/esm/presentation-hierarchies-react.js",
       "require": "./lib/cjs/presentation-hierarchies-react.js"
     },
+    "./core": {
+      "import": "./lib/esm/presentation-hierarchies-react-core.js",
+      "require": "./lib/cjs/presentation-hierarchies-react-core.js"
+    },
+    "./components": {
+      "import": "./lib/esm/presentation-hierarchies-react-components.js",
+      "require": "./lib/cjs/presentation-hierarchies-react-components.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

@@ -3,5 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export * from "./presentation-hierarchies-react-core.js";
-export * from "./presentation-hierarchies-react-components.js";
+export { TreeNodeRenderer } from "./presentation-hierarchies-react/itwinui/TreeNodeRenderer.js";
+export { RenderedTreeNode, TreeRenderer, createRenderedTreeNodeData } from "./presentation-hierarchies-react/itwinui/TreeRenderer.js";
+export { LocalizationContextProvider } from "./presentation-hierarchies-react/itwinui/LocalizationContext.js";
