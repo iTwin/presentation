@@ -1,13 +1,5 @@
 # @itwin/unified-selection
 
-## 1.6.9-alpha.0
-
-### Patch Changes
-
-- [#1250](https://github.com/iTwin/presentation/pull/1250): React to changes in `@itwin/presentation-shared`.
-- Updated dependencies:
-  - @itwin/presentation-shared@2.0.0-alpha.9
-
 ## 1.6.8
 
 ### Patch Changes
@@ -15,14 +7,6 @@
 - [#1242](https://github.com/iTwin/presentation/pull/1242): Bump dependencies.
 - Updated dependencies:
   - @itwin/presentation-shared@1.2.10
-
-## 1.6.8-alpha.0
-
-### Patch Changes
-
-- [#1229](https://github.com/iTwin/presentation/pull/1229): Version bump
-- Updated dependencies:
-  - @itwin/presentation-shared@2.0.0-alpha.8
 
 ## 1.6.7
 
@@ -39,14 +23,6 @@
 - [#1208](https://github.com/iTwin/presentation/pull/1208): Bump dependencies.
 - Updated dependencies:
   - @itwin/presentation-shared@1.2.8
-
-## 1.6.6-alpha.0
-
-### Patch Changes
-
-- [#1180](https://github.com/iTwin/presentation/pull/1180): Version bump
-- Updated dependencies:
-  - @itwin/presentation-shared@2.0.0-alpha.6
 
 ## 1.6.5
 
@@ -73,12 +49,6 @@
 - Updated dependencies:
   - @itwin/presentation-shared@1.2.5
 
-## 1.6.3-alpha.0
-
-### Patch Changes
-
-- [#1130](https://github.com/iTwin/presentation/pull/1130): Version bump
-
 ## 1.6.2
 
 ### Patch Changes
@@ -86,14 +56,6 @@
 - [#1124](https://github.com/iTwin/presentation/pull/1124): Bump dependencies.
 - Updated dependencies:
   - @itwin/presentation-shared@1.2.4
-
-## 1.6.2-alpha.0
-
-### Patch Changes
-
-- [#1112](https://github.com/iTwin/presentation/pull/1112): Version bump
-- Updated dependencies:
-  - @itwin/presentation-shared@2.0.0-alpha.3
 
 ## 1.6.1
 
@@ -126,20 +88,6 @@
 - [#1039](https://github.com/iTwin/presentation/pull/1039): Bump iTwin.js core dependencies to `^5.1.1`.
 - Updated dependencies:
   - @itwin/presentation-shared@1.2.3
-
-## 1.5.1-alpha.1
-
-### Patch Changes
-
-- [#1042](https://github.com/iTwin/presentation/pull/1042): Version bump
-- Updated dependencies:
-  - @itwin/presentation-shared@2.0.0-alpha.2
-
-## 1.5.1-alpha.0
-
-### Patch Changes
-
-- [#1031](https://github.com/iTwin/presentation/pull/1031): Version bump
 
 ## 1.5.0
 
@@ -181,13 +129,6 @@
   });
   ```
 
-## 1.4.3-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-shared@2.0.0-alpha.1
-
 ## 1.4.2
 
 ### Patch Changes
@@ -195,13 +136,6 @@
 - [#982](https://github.com/iTwin/presentation/pull/982): Update itwinjs-core dependencies to v5.0.0
 - Updated dependencies:
   - @itwin/presentation-shared@1.2.2
-
-## 1.4.2-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-shared@2.0.0-alpha.0
 
 ## 1.4.1
 
