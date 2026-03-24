@@ -11,13 +11,14 @@ import {
   TreeErrorRenderer,
   TreeNodeFilterAction,
   TreeNodeRenameAction,
-} from "@itwin/presentation-hierarchies-react";
+} from "@itwin/presentation-hierarchies-react/stratakit";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 
 import addSvg from "@stratakit/icons/add.svg";
 
 import type { ComponentProps } from "react";
-import type { StrataKitTreeRendererAttributes, TreeActionBaseAttributes, TreeNode } from "@itwin/presentation-hierarchies-react";
+import type { TreeNode } from "@itwin/presentation-hierarchies-react";
+import type { StrataKitTreeRendererAttributes, TreeActionBaseAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
 
 /* eslint-disable no-console */
 

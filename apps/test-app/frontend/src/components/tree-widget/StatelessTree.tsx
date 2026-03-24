@@ -13,7 +13,8 @@ import { PresentationInstanceFilter, PresentationInstanceFilterDialog } from "@i
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey, registerTxnListeners } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyNodeKey, HierarchySearchTree } from "@itwin/presentation-hierarchies";
-import { LocalizationContextProvider, StrataKitRootErrorRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { LocalizationContextProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { StrataKitRootErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { Selectable, Selectables } from "@itwin/unified-selection";
@@ -26,7 +27,8 @@ import type { ComponentPropsWithoutRef } from "react";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { ClassInfo, Descriptor, InstanceKey } from "@itwin/presentation-common";
 import type { PresentationInstanceFilterInfo, PresentationInstanceFilterPropertiesSource } from "@itwin/presentation-components";
-import type { HierarchyLevelDetails, StrataKitTreeRendererAttributes, TreeNode } from "@itwin/presentation-hierarchies-react";
+import type { HierarchyLevelDetails, TreeNode } from "@itwin/presentation-hierarchies-react";
+import type { StrataKitTreeRendererAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
 import type { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 
 type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;

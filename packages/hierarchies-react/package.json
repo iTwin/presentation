@@ -34,13 +34,9 @@
       "types": "./lib/presentation-hierarchies-react.d.ts",
       "import": "./lib/presentation-hierarchies-react.js"
     },
-    "./core": {
-      "types": "./lib/presentation-hierarchies-react-core.d.ts",
-      "import": "./lib/presentation-hierarchies-react-core.js"
-    },
-    "./components": {
-      "types": "./lib/presentation-hierarchies-react-components.d.ts",
-      "import": "./lib/presentation-hierarchies-react-components.js"
+    "./stratakit": {
+      "types": "./lib/presentation-hierarchies-react-stratakit.d.ts",
+      "import": "./lib/presentation-hierarchies-react-stratakit.js"
     },
     "./package.json": "./package.json"
   },
