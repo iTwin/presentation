@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { FormatterSpec, Format as QuantityFormat } from "@itwin/core-quantity";
-import { OverrideFormat, SchemaKey, SchemaMatchType, SchemaUnitProvider } from "@itwin/ecschema-metadata";
-import { Format, InvertedUnit, KindOfQuantity, LazyLoadedFormat, SchemaContext, Unit } from "@itwin/ecschema-metadata";
+import { KindOfQuantity, OverrideFormat, SchemaKey, SchemaMatchType, SchemaUnitProvider } from "@itwin/ecschema-metadata";
 import { createDefaultValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
 
 import type { FormatProps, UnitsProvider, UnitSystemKey } from "@itwin/core-quantity";
+import type { Format, InvertedUnit, LazyLoadedFormat, SchemaContext, Unit } from "@itwin/ecschema-metadata";
 import type { IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-shared";
 
 /**

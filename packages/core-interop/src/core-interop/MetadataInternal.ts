@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { PrimitiveType, SchemaItemType, StrengthDirection } from "@itwin/ecschema-metadata";
-import {
-  ECClass as CoreClass,
+import { ECClass as CoreClass, PrimitiveType, SchemaItemType, StrengthDirection } from "@itwin/ecschema-metadata";
+import { normalizeFullClassName } from "@itwin/presentation-shared";
+
+import type {
   EntityClass as CoreEntityClass,
   Enumeration as CoreEnumeration,
   EnumerationArrayProperty as CoreEnumerationArrayProperty,
@@ -26,8 +27,6 @@ import {
   StructProperty as CoreStructProperty,
   LazyLoadedSchemaItem,
 } from "@itwin/ecschema-metadata";
-import { normalizeFullClassName } from "@itwin/presentation-shared";
-
 import type { EC } from "@itwin/presentation-shared";
 
 /** @internal */
