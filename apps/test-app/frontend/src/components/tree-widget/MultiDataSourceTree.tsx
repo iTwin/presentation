@@ -27,7 +27,8 @@ import {
   HierarchyProvider,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
-import { PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { PresentationHierarchyNode, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
 import {
   createBisInstanceLabelSelectClauseFactory,
   createCachingECClassHierarchyInspector,

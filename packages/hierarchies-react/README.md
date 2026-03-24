@@ -4,6 +4,16 @@ Copyright © Bentley Systems, Incorporated. All rights reserved. See LICENSE.md 
 
 The `@itwin/presentation-hierarchies-react` package provides APIs for building a headless UI for rendering tree components based on data in an [iTwin.js iModel](https://www.itwinjs.org/learning/imodels/#imodel-overview). In addition, it delivers a set of [iTwinUI](https://itwinui.bentley.com/)-based components for rendering the tree.
 
+## Entry points
+
+Because `@itwin/itwinui-react` is an optional peer dependency, the package exposes three entry points:
+
+| Entry point                                     | Requires `@itwin/itwinui-react` | Description                                                                                      |
+| ----------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `@itwin/presentation-hierarchies-react`         | ✔️                              | Full API — all hooks, utilities, and iTwinUI-based components. Kept for backwards compatibility. |
+| `@itwin/presentation-hierarchies-react/core`    | ❌                              | Hooks and utilities only, safe to use without `@itwin/itwinui-react`.                            |
+| `@itwin/presentation-hierarchies-react/itwinui` | ✔️                              | iTwinUI-based components only (`TreeRenderer`, `TreeNodeRenderer`).                              |
+
 ## Headless UI
 
 ### Tree state hooks
@@ -130,7 +140,7 @@ Our [tree renderer implementation](#treerenderer) calls this hook and passes the
 
 ## iTwinUI components
 
-While the package provides a headless UI, it also delivers a set of [iTwinUI](https://itwinui.bentley.com/)-based components for rendering the tree, which should cover majority of use cases. Consumers using the below components are required to provide a compatible `@itwin/itwinui-react` package, which is an optional peer dependency to this package.
+The package delivers a set of [iTwinUI](https://itwinui.bentley.com/)-based components for rendering the tree, covering the majority of use cases. These components are available via the `@itwin/presentation-hierarchies-react/itwinui` entry point, or the root entry point. They require `@itwin/itwinui-react` to be installed — see [Entry points](#entry-points).
 
 ### `TreeRenderer`
 
@@ -162,7 +172,8 @@ import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, Hierar
 
 import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 
-import { TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
 
@@ -323,13 +334,8 @@ import { Props } from "@itwin/presentation-shared";
 
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react";
-import {
-  createRenderedTreeNodeData,
-  LocalizationContextProvider,
-  RenderedTreeNode,
-  TreeNodeRenderer,
-  TreeRenderer,
-} from "@itwin/presentation-hierarchies-react";
+import { LocalizationContextProvider } from "@itwin/presentation-hierarchies-react";
+import { createRenderedTreeNodeData, RenderedTreeNode, TreeNodeRenderer, TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
 
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 type TreeRendererProps = Props<typeof TreeRenderer>;

@@ -11,9 +11,9 @@ import { SvgFilter, SvgFilterHollow, SvgMore, SvgRemove } from "@itwin/itwinui-i
 import { Anchor, ButtonGroup, DropdownMenu, Flex, IconButton, MenuItem, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
+import { useLocalizationContext } from "../LocalizationContext.js";
 import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, UseTreeResult } from "../UseTree.js";
-import { useLocalizationContext } from "./LocalizationContext.js";
 import { RenderedTreeNode } from "./TreeRenderer.js";
 
 /** @public */
