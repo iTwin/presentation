@@ -21,13 +21,8 @@ import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-r
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.TreeRenderer.Imports
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react";
-import {
-  createRenderedTreeNodeData,
-  LocalizationContextProvider,
-  RenderedTreeNode,
-  TreeNodeRenderer,
-  TreeRenderer,
-} from "@itwin/presentation-hierarchies-react";
+import { LocalizationContextProvider } from "@itwin/presentation-hierarchies-react";
+import { createRenderedTreeNodeData, RenderedTreeNode, TreeNodeRenderer, TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
 import { render, waitFor } from "../../RenderUtils.js";
