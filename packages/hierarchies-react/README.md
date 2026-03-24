@@ -4,6 +4,15 @@ Copyright © Bentley Systems, Incorporated. All rights reserved. See LICENSE.md 
 
 The `@itwin/presentation-hierarchies-react` package provides APIs for building a headless UI for rendering tree components based on data in an [iTwin.js iModel](https://www.itwinjs.org/learning/imodels/#imodel-overview). In addition, it delivers a set of [StrataKit](https://www.npmjs.com/package/@stratakit/bricks)-based components for rendering the tree.
 
+## Entry points
+
+Because StrataKit packages are optional peer dependencies, the package exposes two entry points:
+
+| Entry point                                       | Requires StrataKit peer dependencies | Description                                                                                                       |
+| ------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `@itwin/presentation-hierarchies-react`           | ❌                                   | Core API - headless hooks and utilities, including localization helpers.                                          |
+| `@itwin/presentation-hierarchies-react/stratakit` | ✔️                                   | StrataKit-based components and actions (`StrataKitTreeRenderer`, `TreeNodeFilterAction`, `TreeNodeRenameAction`). |
+
 ## Headless UI
 
 ### Tree state hooks
@@ -15,26 +24,22 @@ The package provides different flavors of the same hook for creating and managin
 | Supported data source                                                                                | any       | iModel          | any                       | iModel                          |
 | Integration with [Unified Selection](https://www.itwinjs.org/presentation/unified-selection/) system | ❌        | ❌              | ✔️                        | ✔️                              |
 
-All these hooks return the same state object, which contains properties and functions to manage the tree component:
+All these hooks return a `UseTreeResult` object with top-level properties and two optional renderer prop bags:
 
-- `isLoading` is a boolean indicating whether the root tree nodes are being loaded. Set to `true` on initial load and on reload (e.g. when iModel data changes).
+- `isReloading` is a boolean that is `true` while the tree is being reloaded (does not apply to the initial load).
 
-- `rootNodes` is an array of `TreeNode` and is what the component should render.
+- `getNode` function to get a tree node by its id.
 
-- `expandNode` function to expand or collapse a node.
+- `setFormatter` function to set the active node label formatter.
 
-- `isNodeSelected` and `selectNodes` function to inspect and change tree selection.
+- `rootErrorRendererProps` is defined (and `treeRendererProps` is `undefined`) when root nodes fail to load. Pass it directly to `StrataKitRootErrorRenderer` or use it to build a custom error UI.
 
-- `getNode` function to get node by its id.
-
-- `getHierarchyLevelDetails` function to access details of a specific hierarchy level. The returned object provides access to:
-  - hierarchy level size limit,
-  - hierarchy level instance filter,
-  - instance keys of the nodes in the hierarchy level.
-
-- `reloadTree` function to reload part of the tree, optionally keeping its state.
-
-- `setFormatter` function to set active node label formatter.
+- `treeRendererProps` is defined once root nodes have loaded successfully. It is `undefined` during the initial load. Pass it directly to `StrataKitTreeRenderer` or use it to build a custom tree renderer. It contains:
+  - `rootNodes` — array of `TreeNode` items to render.
+  - `expandNode` — function to expand or collapse a node.
+  - `isNodeSelected` and `selectNodes` — functions to inspect and change tree selection.
+  - `getHierarchyLevelDetails` — function to get details of a specific hierarchy level (size limit, instance filter, instance key iterator).
+  - `reloadTree` — function to reload part of the tree, optionally keeping its state.
 
 #### `useTree` props
 
@@ -84,39 +89,13 @@ In addition to [props required by `useIModelTree`](#useimodeltree-props), the ho
 - `selectionStorage` - unified selection storage used across different app's components, allowing them all to share selection state.
 - `sourceName` - a string that distinguishes selection changes being made by different components. The value should be unique for each component.
 
-### `useSelectionHandler` hook
-
-This is a React hook that helps implement different selection modes in a tree, whose state is managed through one of the [tree state hooks](#tree-state-hooks).
-
-It takes 3 required properties:
-
-- `rootNodes` and `selectNodes` are the corresponding properties from the tree state object, created using one of the [tree state hooks](#tree-state-hooks).
-
-- `selectionMode` is a string that defines the selection mode. It can be one of the following values:
-  - `none` - no selection is allowed,
-  - `single` - only one node can be selected at a time,
-  - `extended` - multiple nodes can be selected using shift and ctrl keys,
-  - `multiple` - multiple nodes can be selected without using shift or ctrl keys.
-
-The returned object contains 2 functions, that should be called by the node renderer: `onNodeClick` and `onNodeKeyDown`.
-
-Our [tree renderer implementation](#treerenderer) calls this hook and passes the callbacks to the [node renderer](#treenoderenderer), so there's no need to use it unless implementing a custom tree renderer.
-
 ## StrataKit components
 
 While the package provides a headless UI, it also delivers a set of [StrataKit](https://www.npmjs.com/package/@stratakit/bricks)-based components for rendering the tree, which should cover majority of use cases. Consumers using the below components are required to provide compatible `@stratakit/bricks`/`@stratakit/icons`/`@stratakit/foundations` packages, which are optional peer dependencies to this package.
 
-### `TreeRenderer`
+### `StrataKitTreeRenderer`
 
-The component is based on StrataKit `Tree` component and uses our [`TreeNodeRenderer`](#treenoderenderer) to render the nodes. In addition, it makes use of the [`useSelectionHandler` hook](#useselectionhandler-hook) to add selection modes' support.
-
-### `TreeNodeRenderer`
-
-The component is based on `Tree.Item` component from StrataKit library and supports the following features:
-
-- Reporting click and key down events for use with [`useSelectionHandler` hook](#useselectionhandler-hook).
-- Icons, selection, expand / collapse.
-- Action buttons to clear / set hierarchy level instance filter.
+The component renders a virtualized tree using the `Tree` component from `@stratakit/structures`. It handles node selection modes, error display, and virtualized scrolling. It accepts a required `treeLabel` prop (used for accessibility) and spreads `treeRendererProps` returned by the tree state hooks.
 
 ## Full example
 
@@ -128,7 +107,8 @@ import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, Hierar
 
 import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 
-import { TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { StrataKitTreeRenderer, StrataKitRootErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
 
@@ -195,7 +175,7 @@ function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }
 
 /** Internal component that creates and renders tree state. */
 function MyTreeComponentInternal({ imodelAccess, selectionStorage }: { imodelAccess: IModelAccess; selectionStorage: SelectionStorage }) {
-  const { rootNodes, setFormatter, isLoading, ...state } = useIModelUnifiedSelectionTree({
+  const treeProps = useIModelUnifiedSelectionTree({
     // the unified selection storage used by all app components let them share selection state
     selectionStorage,
     // the source name is used to distinguish selection changes being made by different components
@@ -205,10 +185,17 @@ function MyTreeComponentInternal({ imodelAccess, selectionStorage }: { imodelAcc
     // supply the hierarchy definition
     getHierarchyDefinition,
   });
-  if (!rootNodes) {
+
+  if (treeProps.rootErrorRendererProps) {
+    // render error component if tree fails to load
+    return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
+  }
+
+  if (treeProps.isReloading || treeProps.treeRendererProps === undefined) {
     return "Loading...";
   }
-  return <TreeRenderer {...state} rootNodes={rootNodes} />;
+
+  return <StrataKitTreeRenderer {...treeProps.treeRendererProps} treeLabel="My Tree" />;
 }
 ```
 
@@ -217,12 +204,8 @@ function MyTreeComponentInternal({ imodelAccess, selectionStorage }: { imodelAcc
 This package delivers a locale JSON file with English strings that follows the [`i18next JSON format`](https://www.i18next.com/misc/json-format). To enable localization, register `LOCALIZATION_NAMESPACES` during initialization and wrap components in `LocalizationContextProvider`:
 
 ```tsx
-import {
-  LocalizationContextProvider,
-  LOCALIZATION_NAMESPACES,
-  StrataKitTreeRenderer,
-  useIModelUnifiedSelectionTree,
-} from "@itwin/presentation-hierarchies-react";
+import { LocalizationContextProvider, LOCALIZATION_NAMESPACES, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 
 // Register localization namespaces with `i18next` based localization provider.
 for (const namespace of LOCALIZATION_NAMESPACES) {
@@ -239,15 +222,21 @@ function Tree() {
 }
 
 function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
-  const { rootNodes, expandNode } = useIModelUnifiedSelectionTree({
+  const treeProps = useIModelUnifiedSelectionTree({
     sourceName: "MyTreeComponent",
     imodelAccess,
     getHierarchyDefinition,
   });
-  if (!rootNodes) {
-    return <Spinner />;
+
+  if (treeProps.rootErrorRendererProps) {
+    return <div>Error</div>;
   }
-  return <StrataKitTreeRenderer rootNodes={rootNodes} expandNode={expandNode} />;
+
+  if (treeProps.isReloading || treeProps.treeRendererProps === undefined) {
+    return <div>Loading...</div>;
+  }
+
+  return <StrataKitTreeRenderer {...treeProps.treeRendererProps} treeLabel="My Tree" />;
 }
 ```
 
