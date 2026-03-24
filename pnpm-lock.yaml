@@ -385,31 +385,31 @@ importers:
         specifier: catalog:itwinjs-core-dev
         version: 5.7.2(@itwin/core-bentley@5.7.2)(@itwin/core-common@5.7.2(@itwin/core-bentley@5.7.2)(@itwin/core-geometry@5.7.2))(@itwin/core-quantity@5.7.2(@itwin/core-bentley@5.7.2))(@itwin/ecschema-metadata@5.7.2(@itwin/core-bentley@5.7.2)(@itwin/core-quantity@5.7.2(@itwin/core-bentley@5.7.2)))
       '@itwin/presentation-components':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/components
       '@itwin/presentation-core-interop':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/core-interop
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core-dev
         version: 5.7.2(7acdf07d221fa42a3858ac8584ec0fe4)
       '@itwin/presentation-hierarchies':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/hierarchies
       '@itwin/presentation-hierarchies-react':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/hierarchies-react
       '@itwin/presentation-shared':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/shared
       '@itwin/presentation-testing':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/testing
       '@itwin/unified-selection':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/unified-selection
       '@itwin/unified-selection-react':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/unified-selection-react
       '@testing-library/dom':
         specifier: catalog:test-tools
@@ -499,7 +499,7 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       presentation-test-utilities:
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/test-utilities
       react:
         specifier: catalog:react
@@ -11144,7 +11144,7 @@ snapshots:
       rimraf: 6.1.3
       tree-kill: 1.2.2
       typedoc: 0.26.11(typescript@5.6.3)
-      typedoc-plugin-merge-modules: 6.1.0(typedoc@0.26.11(typescript@5.6.3))
+      typedoc-plugin-merge-modules: 6.1.0(typedoc@0.26.11(typescript@5.7.3))
       typescript: 5.6.3
       wtfnode: 0.9.4
       yargs: 17.7.2
@@ -17725,7 +17725,7 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typedoc-plugin-merge-modules@6.1.0(typedoc@0.26.11(typescript@5.6.3)):
+  typedoc-plugin-merge-modules@6.1.0(typedoc@0.26.11(typescript@5.7.3)):
     dependencies:
       typedoc: 0.26.11(typescript@5.6.3)
 

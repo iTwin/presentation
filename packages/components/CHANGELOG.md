@@ -1,14 +1,5 @@
 # Change Log - @itwin/presentation-components
 
-## 5.13.2-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/unified-selection@1.6.9-alpha.0
-  - @itwin/presentation-core-interop@1.4.0-alpha.8
-  - @itwin/presentation-shared@2.0.0-alpha.9
-
 ## 5.13.1
 
 ### Patch Changes
@@ -18,15 +9,6 @@
   - @itwin/presentation-core-interop@1.3.10
   - @itwin/presentation-shared@1.2.10
   - @itwin/unified-selection@1.6.8
-
-## 5.13.1-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-shared@2.0.0-alpha.8
-  - @itwin/presentation-core-interop@1.4.0-alpha.7
-  - @itwin/unified-selection@1.6.8-alpha.0
 
 ## 5.13.0
 
@@ -53,17 +35,6 @@
 - Updated dependencies:
   - @itwin/presentation-shared@1.2.8
   - @itwin/unified-selection@1.6.6
-
-## 5.12.18-alpha.0
-
-### Patch Changes
-
-- [#1180](https://github.com/iTwin/presentation/pull/1180): Version bump
-- Updated dependencies:
-  - @itwin/presentation-core-interop@1.4.0-alpha.5
-  - @itwin/presentation-shared@2.0.0-alpha.6
-  - @itwin/unified-selection@1.6.6-alpha.0
-  - @itwin/unified-selection-react@1.0.6-alpha.0
 
 ## 5.12.17
 
@@ -108,14 +79,6 @@
   - @itwin/unified-selection@1.6.3
   - @itwin/unified-selection-react@1.0.3
 
-## 5.12.15-alpha.0
-
-### Patch Changes
-
-- [#1130](https://github.com/iTwin/presentation/pull/1130): Version bump
-- Updated dependencies:
-  - @itwin/unified-selection@1.6.3-alpha.0
-
 ## 5.12.14
 
 ### Patch Changes
@@ -127,15 +90,6 @@
   - @itwin/presentation-core-interop@1.3.5
   - @itwin/presentation-shared@1.2.4
   - @itwin/unified-selection-react@1.0.2
-
-## 5.12.14-alpha.0
-
-### Patch Changes
-
-- [#1110](https://github.com/iTwin/presentation/pull/1110): Bump dependencies.
-- Updated dependencies:
-  - @itwin/presentation-shared@2.0.0-alpha.3
-  - @itwin/unified-selection@1.6.2-alpha.0
 
 ## 5.12.13
 
@@ -171,12 +125,6 @@
 
 - [#1072](https://github.com/iTwin/presentation/pull/1072): Fixed `usePresentationTable` not loading data when grouping node is selected.
 
-## 5.12.9-alpha.0
-
-### Patch Changes
-
-- [#1070](https://github.com/iTwin/presentation/pull/1070): Version bump
-
 ## 5.12.8
 
 ### Patch Changes
@@ -189,23 +137,6 @@
 
 - [#1047](https://github.com/iTwin/presentation/pull/1047): Fix content data providers not reacting to formats' changes, resulting in content components (table, property grid) showing property values, formatted with stale formatting settings.
 - [#1050](https://github.com/iTwin/presentation/pull/1050): Quantity properties editor now reacts to format settings change and updates value.
-
-## 5.12.6-alpha.1
-
-### Patch Changes
-
-- [#1042](https://github.com/iTwin/presentation/pull/1042): Version bump
-- Updated dependencies:
-  - @itwin/presentation-core-interop@1.4.0-alpha.3
-  - @itwin/presentation-shared@2.0.0-alpha.2
-  - @itwin/unified-selection@1.5.1-alpha.1
-
-## 5.12.6-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/unified-selection@1.5.1-alpha.0
 
 ## 5.12.6
 
@@ -225,15 +156,6 @@
 - Updated dependencies:
   - @itwin/unified-selection@1.5.0
 
-## 5.12.5-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-core-interop@1.4.0-alpha.2
-  - @itwin/presentation-shared@2.0.0-alpha.1
-  - @itwin/unified-selection@1.4.3-alpha.0
-
 ## 5.12.4
 
 ### Patch Changes
@@ -250,23 +172,6 @@
 ### Patch Changes
 
 - [#967](https://github.com/iTwin/presentation/pull/967): Fix potential infinite recursion when disposing objects of one of the following classes: `ContentDataProvider`, `PresentationPropertyDataProvider`, `UnifiedSelectionTreeEventHandler`, `PresentationTreeDataProvider`.
-
-## 5.12.2-alpha.1
-
-### Patch Changes
-
-- [#963](https://github.com/iTwin/presentation/pull/963): Fix support for `itwinjs-core@5.0-rc`.
-- Updated dependencies:
-  - @itwin/presentation-core-interop@1.4.0-alpha.1
-
-## 5.12.2-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-core-interop@1.4.0-alpha.0
-  - @itwin/presentation-shared@2.0.0-alpha.0
-  - @itwin/unified-selection@1.4.2-alpha.0
 
 ## 5.12.2
 

@@ -1,12 +1,5 @@
 # Change Log - @itwin/presentation-testing
 
-## 5.4.18-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-components@5.13.2-alpha.0
-
 ## 5.4.17
 
 ### Patch Changes
@@ -20,13 +13,6 @@
 ### Patch Changes
 
 - [#1237](https://github.com/iTwin/presentation/pull/1237): Raise `onClose` event when `buildTestIModel.close()` is called.
-
-## 5.4.16-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-components@5.13.1-alpha.0
 
 ## 5.4.15
 
@@ -43,13 +29,6 @@
 - [#1208](https://github.com/iTwin/presentation/pull/1208): Bump dependencies.
 - Updated dependencies:
   - @itwin/presentation-components@5.12.18
-
-## 5.4.14-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-components@5.12.18-alpha.0
 
 ## 5.4.13
 
@@ -76,13 +55,6 @@
 - Updated dependencies:
   - @itwin/presentation-components@5.12.15
 
-## 5.4.11-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-components@5.12.15-alpha.0
-
 ## 5.4.10
 
 ### Patch Changes
@@ -90,13 +62,6 @@
 - [#1124](https://github.com/iTwin/presentation/pull/1124): Bump dependencies.
 - Updated dependencies:
   - @itwin/presentation-components@5.12.14
-
-## 5.4.10-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-components@5.12.14-alpha.0
 
 ## 5.4.9
 
@@ -121,41 +86,12 @@
 - Updated dependencies:
   - @itwin/presentation-components@5.12.6
 
-## 5.4.7-alpha.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-components@5.12.9-alpha.0
-
-## 5.4.7-alpha.1
-
-### Patch Changes
-
-- [#1042](https://github.com/iTwin/presentation/pull/1042): Version bump
-- Updated dependencies:
-  - @itwin/presentation-components@5.12.6-alpha.1
-
-## 5.4.7-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-components@5.12.6-alpha.0
-
 ## 5.4.6
 
 ### Patch Changes
 
 - Updated dependencies:
   - @itwin/presentation-components@5.12.5
-
-## 5.4.6-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-components@5.12.5-alpha.0
 
 ## 5.4.5
 
@@ -171,21 +107,6 @@
 
 - Updated dependencies:
   - @itwin/presentation-components@5.12.3
-
-## 5.4.3-alpha.1
-
-### Patch Changes
-
-- [#963](https://github.com/iTwin/presentation/pull/963): Fix support for `itwinjs-core@5.0-rc`.
-- Updated dependencies:
-  - @itwin/presentation-components@5.12.2-alpha.1
-
-## 5.4.3-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-components@5.12.2-alpha.0
 
 ## 5.4.3
 
