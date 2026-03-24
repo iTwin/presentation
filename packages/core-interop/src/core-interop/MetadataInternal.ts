@@ -4,12 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { PrimitiveType, SchemaItemType, StrengthDirection } from "@itwin/ecschema-metadata";
-import * as ecschemaMetadata from "@itwin/ecschema-metadata";
+import { ECClass as CoreClass, PrimitiveType, SchemaItemType, StrengthDirection } from "@itwin/ecschema-metadata";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
 
 import type {
-  ECClass as CoreClass,
   EntityClass as CoreEntityClass,
   Enumeration as CoreEnumeration,
   EnumerationArrayProperty as CoreEnumerationArrayProperty,
@@ -36,9 +34,8 @@ export function createECSchema(schema: CoreSchema): EC.Schema {
   return {
     name: schema.name,
     async getClass(name) {
-      // TODO: replace with `schema.getItem(name, CoreClass)` when itwinjs-core 4.x is dropped
-      const item = await schema.getItem(name);
-      return item ? createECClass(item as CoreClass, this) : undefined;
+      const item = await schema.getItem(name, CoreClass);
+      return item ? createECClass(item, this) : undefined;
     },
     async getCustomAttributes() {
       return createCustomAttributesSet(schema.customAttributes);
@@ -109,16 +106,7 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
     return this._coreSchemaItem.is(classOrClassName.name, classOrClassName.schema.name);
   }
   public async getProperty(name: string): Promise<EC.Property | undefined> {
-    const coreProperty = await this._coreSchemaItem.getProperty(
-      name,
-      // TODO: remove this when itwinjs-core 4.x support is dropped.
-      // `SchemaFormatsProvider` was introduced around the same time the meaning of this second argument was changed
-      // from `includeInherited` to `excludeInherited` - we're using its existence to determine what we need to pass to get
-      // inherited properties.
-      /* c8 ignore next 2 */
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      ecschemaMetadata.SchemaFormatsProvider ? false : true,
-    );
+    const coreProperty = await this._coreSchemaItem.getProperty(name, false);
     return coreProperty ? createECProperty(coreProperty, this) : undefined;
   }
   public async getProperties(): Promise<Array<EC.Property>> {
