@@ -10,8 +10,8 @@ export type { HierarchyLevelDetails, TreeRendererProps } from "./presentation-hi
 export { useIModelTree, useIModelUnifiedSelectionTree } from "./presentation-hierarchies-react/UseIModelTree.js";
 
 export { LOCALIZATION_NAMESPACES } from "./presentation-hierarchies-react/internal/LocalizedStrings.js";
-export type { FlatTreeItem } from "./presentation-hierarchies-react/internal/FlatTreeNode.js";
-export { useFlatTreeItems, useErrorNodes } from "./presentation-hierarchies-react/internal/FlatTreeNode.js";
+export type { FlatTreeItem } from "./presentation-hierarchies-react/FlatTreeNode.js";
+export { useFlatTreeItems, useErrorNodes } from "./presentation-hierarchies-react/FlatTreeNode.js";
 export { LocalizationContextProvider } from "./presentation-hierarchies-react/LocalizationContext.js";
 
 export type { HierarchyProvider } from "@itwin/presentation-hierarchies";

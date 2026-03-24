@@ -6,7 +6,7 @@
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import { Tree } from "@stratakit/structures";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "../internal/FlatTreeNode.js";
+import { isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "../FlatTreeNode.js";
 import { useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
 import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
@@ -14,7 +14,7 @@ import { TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./
 import { PlaceholderNode, StrataKitTreeNodeRenderer } from "./TreeNodeRenderer.js";
 
 import type { ComponentProps, CSSProperties, FC, PropsWithoutRef, ReactElement, ReactNode, RefAttributes } from "react";
-import type { FlatTreeItem, FlatTreeNodeItem } from "../internal/FlatTreeNode.js";
+import type { FlatTreeItem, FlatTreeNodeItem } from "../FlatTreeNode.js";
 import type { TreeRendererProps } from "../Renderers.js";
 import type { TreeNode } from "../TreeNode.js";
 import type { SelectionMode } from "../UseSelectionHandler.js";

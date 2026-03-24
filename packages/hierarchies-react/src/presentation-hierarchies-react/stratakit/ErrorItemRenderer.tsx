@@ -9,7 +9,7 @@ import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { useTranslation } from "../LocalizationContext.js";
 
 import type { JSX } from "react";
-import type { useErrorNodes } from "../internal/FlatTreeNode.js";
+import type { useErrorNodes } from "../FlatTreeNode.js";
 import type { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
 import type { TreeNode } from "../TreeNode.js";
 

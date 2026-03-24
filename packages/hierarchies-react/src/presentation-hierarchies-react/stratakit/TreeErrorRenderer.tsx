@@ -9,7 +9,7 @@ import { useTranslation } from "../LocalizationContext.js";
 import { ErrorItemRenderer } from "./ErrorItemRenderer.js";
 
 import type { JSX, ReactElement } from "react";
-import type { useErrorNodes } from "../internal/FlatTreeNode.js";
+import type { useErrorNodes } from "../FlatTreeNode.js";
 import type { ErrorItemRendererProps } from "./ErrorItemRenderer.js";
 
 /**
