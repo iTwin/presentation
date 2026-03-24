@@ -5,10 +5,10 @@
 
 import { FormatterSpec, Format as QuantityFormat } from "@itwin/core-quantity";
 import { OverrideFormat, SchemaKey, SchemaMatchType, SchemaUnitProvider } from "@itwin/ecschema-metadata";
+import { Format, InvertedUnit, KindOfQuantity, LazyLoadedFormat, SchemaContext, Unit } from "@itwin/ecschema-metadata";
 import { createDefaultValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
 
 import type { FormatProps, UnitsProvider, UnitSystemKey } from "@itwin/core-quantity";
-import type { Format, InvertedUnit, KindOfQuantity, LazyLoadedFormat, SchemaContext, Unit } from "@itwin/ecschema-metadata";
 import type { IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-shared";
 
 /**
@@ -75,12 +75,11 @@ async function getKindOfQuantity(schemas: SchemaContext, fullName: string) {
   if (!schema) {
     throw new Error(`Invalid schema "${schemaName}" specified in KoQ full name "${fullName}"`);
   }
-  // TODO: replace with `schema.getItem(koqName, KindOfQuantity)` when itwinjs-core 4.x is dropped
-  const koq = await schema.getItem(koqName);
+  const koq = await schema.getItem(koqName, KindOfQuantity);
   if (!koq) {
     throw new Error(`Invalid kind of quantity "${koqName}" specified in KoQ full name "${fullName}" - it does not exist in schema "${schemaName}"`);
   }
-  return koq as KindOfQuantity;
+  return koq;
 }
 
 async function getFormatterSpec(unitsProvider: UnitsProvider, koq: KindOfQuantity, unitSystem?: UnitSystemKey) {
