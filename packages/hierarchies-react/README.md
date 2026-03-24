@@ -8,11 +8,11 @@ The `@itwin/presentation-hierarchies-react` package provides APIs for building a
 
 Because `@itwin/itwinui-react` is an optional peer dependency, the package exposes three entry points:
 
-| Entry point                                     | Requires `@itwin/itwinui-react` | Description                                                                                        |
-| ----------------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `@itwin/presentation-hierarchies-react`         | ✔️                              | Full API — all hooks, utilities, and iTwinUI-based components. Kept for backwards compatibility.   |
-| `@itwin/presentation-hierarchies-react/core`    | ❌                              | Hooks and utilities only, safe to use without `@itwin/itwinui-react`.                              |
-| `@itwin/presentation-hierarchies-react/itwinui` | ✔️                              | iTwinUI-based components only (`TreeRenderer`, `TreeNodeRenderer`, `LocalizationContextProvider`). |
+| Entry point                                     | Requires `@itwin/itwinui-react` | Description                                                                                      |
+| ----------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `@itwin/presentation-hierarchies-react`         | ✔️                              | Full API — all hooks, utilities, and iTwinUI-based components. Kept for backwards compatibility. |
+| `@itwin/presentation-hierarchies-react/core`    | ❌                              | Hooks and utilities only, safe to use without `@itwin/itwinui-react`.                            |
+| `@itwin/presentation-hierarchies-react/itwinui` | ✔️                              | iTwinUI-based components only (`TreeRenderer`, `TreeNodeRenderer`).                              |
 
 ## Headless UI
 
