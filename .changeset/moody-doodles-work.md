@@ -1,5 +1,4 @@
 ---
-"@itwin/presentation-components": patch
 "@itwin/presentation-core-interop": patch
 "@itwin/presentation-testing": patch
 ---
