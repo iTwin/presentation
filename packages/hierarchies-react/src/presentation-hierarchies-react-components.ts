@@ -5,4 +5,3 @@
 
 export { TreeNodeRenderer } from "./presentation-hierarchies-react/itwinui/TreeNodeRenderer.js";
 export { RenderedTreeNode, TreeRenderer, createRenderedTreeNodeData } from "./presentation-hierarchies-react/itwinui/TreeRenderer.js";
-export { LocalizationContextProvider } from "./presentation-hierarchies-react/itwinui/LocalizationContext.js";

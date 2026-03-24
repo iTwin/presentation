@@ -16,6 +16,7 @@ export { UnifiedSelectionProvider } from "./presentation-hierarchies-react/Unifi
 export { useSelectionHandler } from "./presentation-hierarchies-react/UseSelectionHandler.js";
 export { HierarchyLevelDetails, useTree, useUnifiedSelectionTree } from "./presentation-hierarchies-react/UseTree.js";
 export { useIModelTree, useIModelUnifiedSelectionTree } from "./presentation-hierarchies-react/UseIModelTree.js";
+export { LocalizationContextProvider } from "./presentation-hierarchies-react/LocalizationContext.js";
 
 export { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 export { SelectionStorage } from "@itwin/unified-selection";
