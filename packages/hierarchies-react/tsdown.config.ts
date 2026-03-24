@@ -8,7 +8,7 @@ import babel from "@rolldown/plugin-babel";
 import { reactCompilerPreset } from "@vitejs/plugin-react";
 
 export default defineConfig({
-  entry: ["./src/presentation-hierarchies-react.ts", "./src/presentation-hierarchies-react-stratakit.ts"],
+  entry: ["./src/presentation-hierarchies-react.ts", "./src/presentation-hierarchies-react-core.ts", "./src/presentation-hierarchies-react-stratakit.ts"],
   outDir: "./lib",
   format: ["esm"],
   fixedExtension: false,
