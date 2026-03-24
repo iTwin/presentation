@@ -19,7 +19,8 @@ import {
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey, registerTxnListeners } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
-import { HierarchyLevelDetails, PresentationHierarchyNode, TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { HierarchyLevelDetails, PresentationHierarchyNode, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { Selectable, Selectables } from "@itwin/unified-selection";

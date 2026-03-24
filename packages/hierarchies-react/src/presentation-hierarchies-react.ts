@@ -4,4 +4,4 @@
  *--------------------------------------------------------------------------------------------*/
 
 export * from "./presentation-hierarchies-react-core.js";
-export * from "./presentation-hierarchies-react-components.js";
+export * from "./presentation-hierarchies-react-itwinui.js";
