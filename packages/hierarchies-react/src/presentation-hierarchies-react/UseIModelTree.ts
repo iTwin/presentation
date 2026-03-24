@@ -5,7 +5,7 @@
 
 import { useCallback } from "react";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { useTranslation } from "./stratakit/LocalizationContext.js";
+import { useTranslation } from "./LocalizationContext.js";
 import { useTree, useUnifiedSelectionTree } from "./UseTree.js";
 
 import type { HierarchyDefinition, HierarchySearchTree } from "@itwin/presentation-hierarchies";

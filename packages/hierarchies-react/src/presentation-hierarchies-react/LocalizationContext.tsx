@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createContext, useContext, useMemo } from "react";
-import { LOCALIZATION_NAMESPACE } from "../internal/LocalizedStrings.js";
+import { LOCALIZATION_NAMESPACE } from "./internal/LocalizedStrings.js";
 
 import type { JSX, PropsWithChildren } from "react";
-import type { LocalizationKey } from "../internal/LocalizedStrings.js";
+import type { LocalizationKey } from "./internal/LocalizedStrings.js";
 
 type TranslateFunc = (key: LocalizationKey) => string;
 

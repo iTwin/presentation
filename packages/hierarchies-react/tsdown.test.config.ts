@@ -14,7 +14,9 @@ export default defineConfig({
   fixedExtension: false,
   unbundle: true,
   clean: false,
-  external: (id) => {
-    return !id.startsWith("src/test/");
+  deps: {
+    neverBundle: (id) => {
+      return !id.startsWith("src/test/");
+    },
   },
 });

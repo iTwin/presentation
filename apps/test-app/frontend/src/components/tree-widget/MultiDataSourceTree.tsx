@@ -22,7 +22,8 @@ import {
   HierarchySearchTree,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
-import { StrataKitRootErrorRenderer, StrataKitTreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector, ECSql } from "@itwin/presentation-shared";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { SampleRpcInterface } from "@test-app/common";

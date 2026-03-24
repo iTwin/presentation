@@ -31,7 +31,12 @@
   "types": "lib/presentation-hierarchies-react.d.ts",
   "exports": {
     ".": {
+      "types": "./lib/presentation-hierarchies-react.d.ts",
       "import": "./lib/presentation-hierarchies-react.js"
+    },
+    "./stratakit": {
+      "types": "./lib/presentation-hierarchies-react-stratakit.d.ts",
+      "import": "./lib/presentation-hierarchies-react-stratakit.js"
     },
     "./package.json": "./package.json"
   },
@@ -47,8 +52,8 @@
     "lint": "eslint \"./src/**/*.{ts,tsx}\"",
     "test:dev": "node --experimental-test-module-mocks --enable-source-maps --import presentation-test-utilities/node-hooks/ignore-styles ./node_modules/mocha/bin/mocha.js --config ./.mocharc.json",
     "test": "npm run test:dev -- --parallel --jobs=4",
-    "extract-api": "betools extract-api --entry=lib/presentation-hierarchies-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
-    "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-hierarchies-react.api.md",
+    "extract-api": "betools extract-api --entry=lib/presentation-hierarchies-react-extract --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-hierarchies-react-extract.api.md",
     "update-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md",
     "check-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md --check",
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"

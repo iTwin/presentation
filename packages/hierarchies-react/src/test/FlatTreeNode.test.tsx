@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import { renderHook } from "@testing-library/react";
-import { useErrorNodes, useFlatTreeItems } from "../presentation-hierarchies-react/stratakit/FlatTreeNode.js";
+import { useErrorNodes, useFlatTreeItems } from "../presentation-hierarchies-react/FlatTreeNode.js";
 
 import type { HierarchyNode } from "@itwin/presentation-hierarchies";
 import type { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
