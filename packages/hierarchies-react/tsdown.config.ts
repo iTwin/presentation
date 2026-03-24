@@ -13,7 +13,9 @@ export default defineConfig({
   format: ["esm"],
   fixedExtension: false,
   unbundle: true,
-  external: [/\.css$/],
+  deps: {
+    neverBundle: [/\.css$/],
+  },
   plugins: [
     babel({
       presets: [reactCompilerPreset({ target: "18" })],
