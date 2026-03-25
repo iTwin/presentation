@@ -40,7 +40,6 @@
     "@itwin/presentation-hierarchies": "workspace:^",
     "@itwin/presentation-hierarchies-react": "workspace:^",
     "@itwin/presentation-shared": "workspace:^",
-    "@itwin/presentation-testing": "workspace:^",
     "@itwin/unified-selection": "workspace:^",
     "@itwin/unified-selection-react": "workspace:^",
     "@testing-library/dom": "catalog:test-tools",
