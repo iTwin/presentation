@@ -11,8 +11,8 @@ import { IModelApp, IModelConnection, ITwinIdArg, PreferenceArg, PreferenceKeyAr
 import { Field, KeySet } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
-import { TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { TestIModelConnection } from "../../TestIModelSetup.js";
 
 describe("Favorite properties", () => {
   const FAVORITES_CATEGORY_NAME = "Favorite";

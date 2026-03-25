@@ -13,7 +13,8 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { ECSqlBinding, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
-import { buildTestIModel, createFileNameFromString, limitFilePathLength, setupOutputFileLocation, TestIModelBuilder } from "@itwin/presentation-testing";
+import { createFileNameFromString, limitFilePathLength, setupOutputFileLocation } from "./FilenameUtils.js";
+import { buildTestIModel, TestIModelBuilder } from "./TestIModelSetup.js";
 import { safeDispose } from "./Utils.js";
 
 // cspell:words jpath

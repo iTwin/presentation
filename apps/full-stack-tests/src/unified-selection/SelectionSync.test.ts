@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import path from "path";
 import {
   getDefaultSubcategoryKey,
   insertDrawingCategory,
@@ -22,14 +21,10 @@ import {
   waitFor,
 } from "presentation-test-utilities";
 import { Id64Arg, Id64Set } from "@itwin/core-bentley";
-import { RpcConfiguration, RpcManager } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
-import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
-import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
 import {
   createStorage,
   enableUnifiedSelectionSyncWithIModel,
@@ -40,6 +35,8 @@ import {
   SelectionStorage,
 } from "@itwin/unified-selection";
 import { createSchemaContext } from "../IModelUtils.js";
+import { initialize, terminate } from "../IntegrationTests.js";
+import { buildTestIModel } from "../TestIModelSetup.js";
 import { getSchemaFromPackage } from "./getSchema.js";
 
 describe("Unified selection sync with iModel", () => {
@@ -47,14 +44,7 @@ describe("Unified selection sync with iModel", () => {
   let selectionStorage: SelectionStorage;
 
   before(async () => {
-    await initialize({
-      backendHostProps: {
-        cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`),
-      },
-    });
-    RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);
-    RpcConfiguration.developmentMode = true;
-    RpcManager.initializeInterface(ECSchemaRpcInterface);
+    await initialize();
   });
 
   after(async () => {

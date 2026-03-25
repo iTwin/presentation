@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import path from "path";
 import {
   getDefaultSubcategoryKey,
   insertDrawingCategory,
@@ -20,27 +19,18 @@ import {
   insertSubCategory,
   insertSubject,
 } from "presentation-test-utilities";
-import { RpcConfiguration, RpcManager } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
-import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
-import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
 import { createHiliteSetProvider, SelectableInstanceKey, Selectables } from "@itwin/unified-selection";
 import { createIModelAccess } from "../hierarchies/Utils.js";
+import { initialize, terminate } from "../IntegrationTests.js";
+import { buildTestIModel } from "../TestIModelSetup.js";
 import { getSchemaFromPackage } from "./getSchema.js";
 
 describe("HiliteSet", () => {
   let iModel: IModelConnection;
 
   before(async () => {
-    await initialize({
-      backendHostProps: {
-        cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`),
-      },
-    });
-    RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);
-    RpcConfiguration.developmentMode = true;
-    RpcManager.initializeInterface(ECSchemaRpcInterface);
+    await initialize();
   });
 
   after(async () => {
@@ -73,7 +63,7 @@ describe("HiliteSet", () => {
       it("hilites models directly under subject", async function () {
         let subjectKey: SelectableInstanceKey;
         let modelKeys: SelectableInstanceKey[];
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
+
         iModel = await buildTestIModel(this, async (builder) => {
           subjectKey = insertSubject({ builder, codeValue: "test subject" });
           modelKeys = [
@@ -95,7 +85,7 @@ describe("HiliteSet", () => {
       it("hilites models nested deeply under subject", async function () {
         let subjectKey: SelectableInstanceKey;
         let modelKeys: SelectableInstanceKey[];
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
+
         iModel = await buildTestIModel(this, async (builder) => {
           subjectKey = insertSubject({ builder, codeValue: "test subject" });
           const subject2 = insertSubject({ builder, codeValue: "subject 2", parentId: subjectKey.id });
@@ -119,7 +109,7 @@ describe("HiliteSet", () => {
     describe("Model", () => {
       it("hilites model", async function () {
         let modelKey: SelectableInstanceKey;
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
+
         iModel = await buildTestIModel(this, async (builder) => {
           modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         });
@@ -137,7 +127,7 @@ describe("HiliteSet", () => {
       it("hilites category's subcategories", async function () {
         let categoryKey: SelectableInstanceKey;
         let subCategoryKeys: SelectableInstanceKey[];
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
+
         iModel = await buildTestIModel(this, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           subCategoryKeys = [
@@ -158,7 +148,7 @@ describe("HiliteSet", () => {
 
       it("hilites subcategory", async function () {
         let categoryKey: SelectableInstanceKey;
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
+
         iModel = await buildTestIModel(this, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         });
@@ -174,7 +164,7 @@ describe("HiliteSet", () => {
       it("hilites when category and subcategory selected", async function () {
         let categoryKey: SelectableInstanceKey;
         let subCategoryKeys: SelectableInstanceKey[];
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
+
         iModel = await buildTestIModel(this, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           subCategoryKeys = [
@@ -198,7 +188,7 @@ describe("HiliteSet", () => {
       it("hilites assembly element", async function () {
         let assemblyKey: SelectableInstanceKey;
         let expectedHighlightedElementKeys: SelectableInstanceKey[];
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
+
         iModel = await buildTestIModel(this, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
@@ -235,7 +225,7 @@ describe("HiliteSet", () => {
 
       it("hilites leaf element", async function () {
         let elementKey: SelectableInstanceKey;
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
+
         iModel = await buildTestIModel(this, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
@@ -253,7 +243,7 @@ describe("HiliteSet", () => {
 
       it("hilites all selected elements", async function () {
         let elementKeys: SelectableInstanceKey[];
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
+
         iModel = await buildTestIModel(this, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
@@ -281,7 +271,7 @@ describe("HiliteSet", () => {
         let functionalElement: SelectableInstanceKey;
         let physicalElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
+
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -332,7 +322,7 @@ describe("HiliteSet", () => {
         let functionalElement: SelectableInstanceKey;
         let graphicsElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
+
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -376,7 +366,7 @@ describe("HiliteSet", () => {
       it("hilites group information element related physical elements", async function () {
         let groupInformationElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
+
         iModel = await buildTestIModel(this, async (builder) => {
           const groupModel = insertGroupInformationModelWithPartition({ builder, codeValue: "group information model" });
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");

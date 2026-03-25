@@ -75,6 +75,7 @@
     "react-dom": "catalog:react",
     "rimraf": "catalog:build-tools",
     "rxjs": "catalog:rxjs",
+    "sanitize-filename": "^1.6.3",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
     "typescript": "catalog:build-tools"

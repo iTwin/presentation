@@ -9,10 +9,10 @@ import { PropertyValueRendererManager, UiComponents } from "@itwin/components-re
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey, Ruleset } from "@itwin/presentation-common";
 import { TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
-import { buildTestIModel } from "@itwin/presentation-testing";
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, getByText, render, waitFor } from "../../RenderUtils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
 
 describe("Learning snippets", async () => {
