@@ -349,9 +349,6 @@ importers:
       '@itwin/presentation-shared':
         specifier: workspace:^
         version: link:../../packages/shared
-      '@itwin/presentation-testing':
-        specifier: workspace:^
-        version: link:../../packages/testing
       '@itwin/unified-selection':
         specifier: workspace:^
         version: link:../../packages/unified-selection
