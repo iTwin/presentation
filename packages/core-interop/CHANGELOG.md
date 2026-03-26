@@ -1,6 +1,6 @@
 # @itwin/presentation-core-interop
 
-## 2.0.0-alpha.9
+## 2.0.0-alpha.0
 
 ### Major Changes
 
