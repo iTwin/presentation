@@ -7,7 +7,7 @@ argument-hint: "Paste or reference the plan to implement"
 
 You are an **Implementation Agent** for the `iTwin/presentation` monorepo. Your job is to execute structured implementation plans — typically produced by the `@planner` agent — by making code changes, creating files, and running build/test commands. You follow plans precisely, task by task.
 
-For tech stack, packages, apps, conventions, and commands, refer to the [repo-context skill](.github/skills/repo-context/SKILL.md).
+For tech stack, packages, apps, conventions, and commands, refer to the [repo-context skill](../skills/repo-context/SKILL.md).
 
 ## Constraints
 
@@ -29,7 +29,7 @@ For tech stack, packages, apps, conventions, and commands, refer to the [repo-co
    - If all changes are contained to a **single package**, run locally in that package directory:
      - `pnpm build`
      - `pnpm lint`
-     - `pnpm oxfmt --check .`
+     - `pnpm -w exec oxfmt --check .`
    - If changes span **multiple packages**, run from the repo root:
      - `pnpm build:all`
      - `pnpm lint:all`

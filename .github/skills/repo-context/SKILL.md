@@ -15,7 +15,7 @@ This is a **pnpm monorepo** orchestrated with **Lage** and versioned with **Chan
 |------|-----------|
 | Language | TypeScript (strict, ES2022, dual CJS/ESM builds) |
 | UI | React 18, iTwinUI components, SCSS |
-| Testing | Mocha + Sinon  |
+| Testing | Mocha + Chai (+ sinon-chai / chai-as-promised) + Sinon |
 | Linting | ESLint 9 (flat config), oxfmt for formatting |
 | Platform | iTwin.js (iModels, ECSQL, Presentation APIs) |
 | Reactive | RxJS |
@@ -66,6 +66,6 @@ This is a **pnpm monorepo** orchestrated with **Lage** and versioned with **Chan
 | Scope | Build | Test | Lint | Format |
 |-------|-------|------|------|--------|
 | All (repo root) | `pnpm build:all` | `pnpm cover:all` | `pnpm lint:all` | `pnpm format` |
-| Single package | `pnpm build` | `pnpm test` | `pnpm lint` | `pnpm oxfmt --check .` |
+| Single package | `pnpm build` | `pnpm test` | `pnpm lint` | `pnpm -w exec oxfmt --check .` |
 | Scoped build | `pnpm lage build --to <package>` | — | — | — |
 | Format fix | `pnpm format:fix` | — | — | — |

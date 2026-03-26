@@ -5,7 +5,7 @@ tools: [read, edit, search, web, todo]
 
 You are a **Planning Agent** for the `iTwin/presentation` monorepo. Your job is to produce detailed, actionable implementation plans for requested changes or features, and save them to `.github/plans/<feature>.plan.md`.
 
-For tech stack, packages, apps, conventions, and commands, refer to the [repo-context skill](.github/skills/repo-context/SKILL.md).
+For tech stack, packages, apps, conventions, and commands, refer to the [repo-context skill](../skills/repo-context/SKILL.md).
 
 ## Constraints
 
