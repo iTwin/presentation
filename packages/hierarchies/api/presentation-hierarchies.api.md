@@ -528,7 +528,9 @@ export namespace HierarchySearchTree {
         processEntry?: (props: {
             treeEntry: HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TAcceptHandlerExtras>;
             parentEntries: Array<HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TAcceptHandlerExtras>>;
-        }) => Omit<HierarchySearchTree, "children"> | undefined;
+        }) => (Omit<HierarchySearchTree, "children"> & {
+            extras: TAcceptHandlerExtras;
+        }) | undefined;
     }
     export function mergeOptions(lhs: HierarchySearchTree["options"] | undefined, rhs: HierarchySearchTree["options"] | undefined): HierarchySearchTree["options"] | undefined;
     export {};

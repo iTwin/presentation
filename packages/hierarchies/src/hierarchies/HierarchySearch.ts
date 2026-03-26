@@ -252,7 +252,7 @@ export namespace HierarchySearchTree {
     processEntry?: (props: {
       treeEntry: HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TAcceptHandlerExtras>;
       parentEntries: Array<HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TAcceptHandlerExtras>>;
-    }) => Omit<HierarchySearchTree, "children"> | undefined;
+    }) => (Omit<HierarchySearchTree, "children"> & { extras: TAcceptHandlerExtras }) | undefined;
   }
   /**
    * An utility that accepts hierarchy search paths or search trees one by one and builds a `HierarchySearchTree` structure based on them.
@@ -305,7 +305,7 @@ export namespace HierarchySearchTree {
       ): HierarchySearchTree[] {
         const list: HierarchySearchTree[] = [];
         for (const { children, ...entry } of dictionary.values()) {
-          let processedEntry: (Omit<HierarchySearchTree, "children"> & { extras?: TAcceptHandlerExtras }) | undefined = entry;
+          let processedEntry: (Omit<HierarchySearchTree, "children"> & { extras: TAcceptHandlerExtras }) | undefined = entry;
           if (props?.processEntry) {
             processedEntry = props.processEntry({ treeEntry: entry, parentEntries });
           }
@@ -313,7 +313,7 @@ export namespace HierarchySearchTree {
             continue;
           }
           const { extras: _, ...entryWithoutExtras } = processedEntry;
-          parentEntries.push(entry);
+          parentEntries.push(processedEntry);
           list.push({ ...entryWithoutExtras, ...(children ? { children: Impl.#mapDictionaryToTree(children, parentEntries, props) } : undefined) });
           parentEntries.pop();
         }
