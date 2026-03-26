@@ -247,7 +247,7 @@ export namespace HierarchySearchTree {
     /**
      * A function that can be used to process each tree entry before it's added to the final tree.
      *
-     * Return `undefined` to omit the entry and all its branch from the resulting tree.
+     * Return `undefined` to omit the entry and its entire branch from the resulting tree.
      */
     processEntry?: (props: {
       treeEntry: HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TAcceptHandlerExtras>;
