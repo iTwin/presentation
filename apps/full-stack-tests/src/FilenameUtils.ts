@@ -29,7 +29,7 @@ export function setupOutputFileLocation(fileName: string): LocalFileName {
 }
 
 export function createFileNameFromString(str: string) {
-  return sanitize(str.replace(/[ ]+/g, "-").replaceAll("`", "").replaceAll("'", "")).toLocaleLowerCase();
+  return sanitize(str.replace(/[ ]+/g, "-").replaceAll("`", "").replaceAll("'", "")).toLowerCase();
 }
 
 const FILE_PATH_RESERVED_CHARACTERS = 13;
