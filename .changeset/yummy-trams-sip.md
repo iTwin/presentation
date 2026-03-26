@@ -9,7 +9,7 @@ Example:
 ```ts
 const builder = HierarchySearchTree.createBuilder<{ heat?: number }>();
 builder.accept({
-  subTree,
+  tree: subTree,
   handler: {
     onEntryHandled: ({ treeEntry, parentEntries }) => {
       // Assign some extra information to the entry and its ancestors. This will allow us to test
