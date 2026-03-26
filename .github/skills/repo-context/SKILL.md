@@ -27,14 +27,14 @@ This is a **pnpm monorepo** orchestrated with **Lage** and versioned with **Chan
 | Package | Path | Purpose |
 |---------|------|---------|
 | `@itwin/presentation-shared` | `packages/shared` | Shared utilities and types |
-| `@itwin/presentation-core-interop` | `packages/core-interop` | Interop layer with iTwin.js Presentation |
-| `@itwin/presentation-hierarchies` | `packages/hierarchies` | Hierarchy building from iModel data |
+| `@itwin/presentation-core-interop` | `packages/core-interop` | Interop layer with iTwin.js Core |
+| `@itwin/presentation-hierarchies` | `packages/hierarchies` | Hierarchy building from iModels and other sources |
 | `@itwin/presentation-hierarchies-react` | `packages/hierarchies-react` | React bindings for hierarchies |
-| `@itwin/presentation-components` | `packages/components` | React components (trees, property grids, tables) |
+| `@itwin/presentation-components` | `packages/components` | React components (lists, property grids, tables) |
 | `@itwin/unified-selection` | `packages/unified-selection` | Unified selection storage |
 | `@itwin/unified-selection-react` | `packages/unified-selection-react` | React bindings for unified selection |
 | `@itwin/presentation-opentelemetry` | `packages/opentelemetry` | OpenTelemetry diagnostics integration |
-| `@itwin/presentation-models-tree` | `packages/models-tree` | Models tree widget |
+| `@itwin/presentation-models-tree` | `packages/models-tree` | Models tree widget for internal testing |
 | `@itwin/presentation-testing` | `packages/testing` | Test helpers |
 | `@itwin/presentation-test-utilities` | `packages/test-utilities` | Internal test utilities |
 
