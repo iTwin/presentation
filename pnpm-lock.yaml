@@ -1586,6 +1586,9 @@ importers:
       '@itwin/core-orbitgt':
         specifier: catalog:itwinjs-core-dev
         version: 5.7.2
+      '@itwin/ecschema-metadata':
+        specifier: catalog:itwinjs-core-dev
+        version: 5.7.2(@itwin/core-bentley@5.7.2)(@itwin/core-quantity@5.7.2(@itwin/core-bentley@5.7.2))
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.1.0(eslint@9.39.4)(typescript@5.7.3)

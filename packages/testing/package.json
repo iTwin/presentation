@@ -70,6 +70,7 @@
     "@itwin/core-frontend": "catalog:itwinjs-core-dev",
     "@itwin/core-orbitgt": "catalog:itwinjs-core-dev",
     "@itwin/eslint-plugin": "catalog:build-tools",
+    "@itwin/ecschema-metadata": "catalog:itwinjs-core-dev",
     "@itwin/presentation-backend": "catalog:itwinjs-core-dev",
     "@itwin/presentation-common": "catalog:itwinjs-core-dev",
     "@itwin/presentation-frontend": "catalog:itwinjs-core-dev",
