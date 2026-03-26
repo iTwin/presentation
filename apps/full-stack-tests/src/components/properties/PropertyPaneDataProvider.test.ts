@@ -18,9 +18,9 @@ import { assert } from "@itwin/core-bentley";
 import { ArrayPropertiesField, combineFieldNames, InstanceKey, KeySet, PropertiesField, RuleTypes, StructPropertiesField } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider, PresentationPropertyDataProviderProps } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { buildTestIModel } from "@itwin/presentation-testing";
 import { buildIModel, importSchema } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("PropertyDataProvider", async () => {
   before(async () => {

@@ -5,8 +5,8 @@
 
 import { IModelConnection } from "@itwin/core-frontend";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
-import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests.js";
+import { buildTestIModel } from "../TestIModelSetup.js";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation.js";
 import { createProvider } from "./Utils.js";
 

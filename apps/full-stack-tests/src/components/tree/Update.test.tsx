@@ -21,9 +21,9 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { ChildNodeSpecificationTypes, Ruleset, RuleTypes } from "@itwin/presentation-common";
 import { IPresentationTreeDataProvider, usePresentationTreeState, UsePresentationTreeStateProps } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { renderHook, waitFor } from "../../RenderUtils.js";
+import { TestIModelConnection } from "../../TestIModelSetup.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 

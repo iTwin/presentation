@@ -15,3 +15,5 @@ built-packages
 
 npm-debug.log*
 pnpm-debug.log*
+
+scripts/**/*.sh

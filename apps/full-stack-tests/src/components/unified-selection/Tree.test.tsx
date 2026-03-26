@@ -17,9 +17,9 @@ import {
   usePresentationTreeState,
 } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, fireEvent, render, waitFor } from "../../RenderUtils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 import { getNodeByLabel, isNodeSelectedInTree, toggleExpandNode } from "../TreeUtils.js";
 
 describe("Learning snippets", async () => {

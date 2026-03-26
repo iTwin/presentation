@@ -12,9 +12,9 @@ import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/component
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { PresentationRpcInterface, Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
-import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getByRole, render, waitFor } from "../../RenderUtils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
 
 describe("Learning snippets", () => {

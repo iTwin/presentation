@@ -14,9 +14,9 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getByRole, render, waitFor } from "../../RenderUtils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 import { isIterableManager } from "../../Utils.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
 

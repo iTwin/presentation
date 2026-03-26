@@ -14,9 +14,9 @@ import { UiIModelComponents, ViewportComponent } from "@itwin/imodel-components-
 import { InstanceKey, KeySet } from "@itwin/presentation-common";
 import { viewWithUnifiedSelection } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Learning snippets", async () => {
   describe("Viewport", () => {

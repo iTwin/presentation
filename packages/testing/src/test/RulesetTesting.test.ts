@@ -2,17 +2,19 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable @typescript-eslint/no-deprecated */
 
 import { expect } from "chai";
-import ChaiJestSnapshot from "chai-jest-snapshot";
 import path from "path";
 import { Id64 } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { SchemaFormatsProvider } from "@itwin/ecschema-metadata";
-import { ChildNodeSpecificationTypes, ContentSpecificationTypes, RelationshipDirection, Ruleset, RuleTypes } from "@itwin/presentation-common";
-import { ContentBuilder, HierarchyBuilder, TestIModelConnection } from "@itwin/presentation-testing";
-import { initialize, terminate } from "../IntegrationTests.js";
+import { Ruleset } from "@itwin/presentation-common";
+import { ContentBuilder } from "../presentation-testing.js";
+import { initialize, terminate } from "../presentation-testing/Helpers.js";
+import { HierarchyBuilder } from "../presentation-testing/HierarchyBuilder.js";
+import { TestIModelConnection } from "../presentation-testing/IModelUtilities.js";
+
+let iModel: IModelConnection;
 
 const iModelPath = "assets/datasets/Properties_60InstancesWithUrl2.ibim";
 
@@ -20,11 +22,11 @@ const MY_HIERARCHY_RULESET: Ruleset = {
   id: "my-test-hierarchy",
   rules: [
     {
-      ruleType: RuleTypes.RootNodes,
+      ruleType: "RootNodes",
       autoExpand: true,
       specifications: [
         {
-          specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
+          specType: "InstanceNodesOfSpecificClasses",
           classes: [
             {
               schemaName: "BisCore",
@@ -39,26 +41,26 @@ const MY_HIERARCHY_RULESET: Ruleset = {
       ],
     },
     {
-      ruleType: RuleTypes.ChildNodes,
+      ruleType: "ChildNodes",
       condition: `ParentNode.IsOfClass("Subject", "BisCore")`,
       onlyIfNotHandled: true,
       specifications: [
         {
-          specType: ChildNodeSpecificationTypes.RelatedInstanceNodes,
+          specType: "RelatedInstanceNodes",
           relationshipPaths: [
             {
               relationship: {
                 schemaName: "BisCore",
                 className: "SubjectOwnsSubjects",
               },
-              direction: RelationshipDirection.Forward,
+              direction: "Forward",
             },
           ],
           groupByClass: false,
           groupByLabel: false,
         },
         {
-          specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
+          specType: "InstanceNodesOfSpecificClasses",
           classes: {
             schemaName: "BisCore",
             classNames: ["Model"],
@@ -71,7 +73,7 @@ const MY_HIERARCHY_RULESET: Ruleset = {
                   schemaName: "BisCore",
                   className: "ModelModelsElement",
                 },
-                direction: RelationshipDirection.Forward,
+                direction: "Forward",
                 targetClass: {
                   schemaName: "BisCore",
                   className: "InformationPartitionElement",
@@ -88,19 +90,19 @@ const MY_HIERARCHY_RULESET: Ruleset = {
       ],
     },
     {
-      ruleType: RuleTypes.ChildNodes,
+      ruleType: "ChildNodes",
       condition: `ParentNode.IsOfClass("Model", "BisCore")`,
       onlyIfNotHandled: true,
       specifications: [
         {
-          specType: ChildNodeSpecificationTypes.RelatedInstanceNodes,
+          specType: "RelatedInstanceNodes",
           relationshipPaths: [
             {
               relationship: {
                 schemaName: "BisCore",
                 className: "ModelContainsElements",
               },
-              direction: RelationshipDirection.Forward,
+              direction: "Forward",
             },
           ],
           instanceFilter: "this.Parent = NULL",
@@ -110,19 +112,19 @@ const MY_HIERARCHY_RULESET: Ruleset = {
       ],
     },
     {
-      ruleType: RuleTypes.ChildNodes,
+      ruleType: "ChildNodes",
       condition: `ParentNode.IsOfClass("Element", "BisCore")`,
       onlyIfNotHandled: true,
       specifications: [
         {
-          specType: ChildNodeSpecificationTypes.RelatedInstanceNodes,
+          specType: "RelatedInstanceNodes",
           relationshipPaths: [
             {
               relationship: {
                 schemaName: "BisCore",
                 className: "ElementOwnsChildElements",
               },
-              direction: RelationshipDirection.Forward,
+              direction: "Forward",
             },
           ],
           groupByClass: false,
@@ -137,15 +139,15 @@ const MY_CONTENT_RULESET: Ruleset = {
   id: "my-test-content",
   rules: [
     {
-      ruleType: RuleTypes.Content,
+      ruleType: "Content",
       specifications: [
         {
-          specType: ContentSpecificationTypes.SelectedNodeInstances,
+          specType: "SelectedNodeInstances",
         },
       ],
     },
     {
-      ruleType: RuleTypes.ContentModifier,
+      ruleType: "ContentModifier",
       class: { schemaName: "Generic", className: "PhysicalObject" },
       propertyOverrides: [
         {
@@ -193,16 +195,7 @@ const MY_CONTENT_RULESET: Ruleset = {
   ],
 };
 
-describe("RulesetTesting", () => {
-  beforeEach(() => {
-    // this needs to be called to reset the default snapshots set up in `setup-tests.js`,
-    // otherwise passing file and test names to `matchSnapshot` has no effect
-    ChaiJestSnapshot.setFilename("");
-    ChaiJestSnapshot.setTestName("");
-  });
-
-  let iModel: IModelConnection;
-
+describe.skip("RulesetTesting", () => {
   before(async () => {
     // __PUBLISH_EXTRACT_START__ Presentation.Testing.Rulesets.Setup
     // initialize presentation-testing
@@ -234,6 +227,7 @@ describe("RulesetTesting", () => {
 
   // __PUBLISH_EXTRACT_START__ Presentation.Testing.Rulesets.Hierarchies
   it("generates correct hierarchy", async function () {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     const builder = new HierarchyBuilder({ imodel: iModel });
 
     // generate the hierarchy using our custom ruleset

@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import path from "path";
 import {
   insertDrawingCategory,
   insertDrawingGraphic,
@@ -15,28 +14,19 @@ import {
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
-import { RpcConfiguration, RpcManager } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
-import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { Props } from "@itwin/presentation-shared";
-import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
 import { computeSelection, SelectableInstanceKey } from "@itwin/unified-selection";
+import { initialize, terminate } from "../IntegrationTests.js";
+import { buildTestIModel } from "../TestIModelSetup.js";
 import { getSchemaFromPackage } from "./getSchema.js";
 
 describe("SelectionScope", () => {
   let iModel: IModelConnection;
 
   before(async () => {
-    await initialize({
-      backendHostProps: {
-        cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`),
-      },
-    });
-    RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);
-    RpcConfiguration.developmentMode = true;
-    RpcManager.initializeInterface(ECSchemaRpcInterface);
+    await initialize();
   });
 
   after(async () => {
