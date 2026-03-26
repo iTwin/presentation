@@ -313,7 +313,9 @@ export namespace HierarchySearchTree {
             continue;
           }
           const { extras: _, ...entryWithoutExtras } = processedEntry;
-          list.push({ ...entryWithoutExtras, ...(children ? { children: Impl.#mapDictionaryToTree(children, [...parentEntries, entry], props) } : undefined) });
+          parentEntries.push(entry);
+          list.push({ ...entryWithoutExtras, ...(children ? { children: Impl.#mapDictionaryToTree(children, parentEntries, props) } : undefined) });
+          parentEntries.pop();
         }
         return list;
       }
