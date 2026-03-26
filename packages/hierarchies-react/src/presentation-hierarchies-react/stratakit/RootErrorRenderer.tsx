@@ -11,25 +11,20 @@ import errorSvg from "@stratakit/icons/status-error.svg";
 
 import type { JSX } from "react";
 import type { RootErrorRendererProps } from "../Renderers.js";
-import type { ErrorInfo } from "../TreeNode.js";
 
 /**
  * @alpha
  */
-export type StrataKitRootErrorRendererProps = {
-  /**
-   * Root error to be displayed
-   */
-  error: ErrorInfo;
-} & RootErrorRendererProps;
+export type StrataKitRootErrorRendererProps = RootErrorRendererProps;
 
 /**
  * A component that renders root node error state.
  *
  * @alpha
  */
-export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): JSX.Element {
+export function StrataKitRootErrorRenderer({ errors, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): JSX.Element {
   const translate = useTranslation();
+  const error = errors[0];
 
   if (error.type === "ResultSetTooLarge") {
     const onOverrideLimit = () => getHierarchyLevelDetails(undefined)?.setSizeLimit("unbounded");
@@ -68,7 +63,16 @@ interface RootErrorContainerProps {
 
 function RootErrorContainer({ actions, message }: RootErrorContainerProps) {
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "0.5rem" }}>
+    <div
+      style={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: "0.5rem",
+      }}
+    >
       <Icon href={errorSvg} size="large" />
       <Text variant={"body-sm"} style={{ textAlign: "center" }}>
         {message}

@@ -9,18 +9,22 @@ import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { useTranslation } from "../LocalizationContext.js";
 
 import type { JSX } from "react";
-import type { useErrorNodes } from "../FlatTreeNode.js";
 import type { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
-import type { TreeNode } from "../TreeNode.js";
+import type { ErrorInfo, TreeNode } from "../TreeNode.js";
 
 /** @alpha */
-export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
-  /** A node containing an error. */
-  errorNode: ReturnType<typeof useErrorNodes>[number];
+export interface ErrorItemRendererProps extends Pick<
+  TreeRendererProps,
+  "getHierarchyLevelDetails"
+> {
+  /** The tree node associated with the error. Used for displaying the node label in error messages and for scrolling to the node. */
+  treeNode: Omit<TreeNode, "errors">;
+  /** The error to render. */
+  error: ErrorInfo;
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
   reloadTree: (options: { parentNodeId: string | undefined }) => void;
   /** A callback to scroll to the node associated with the error. */
-  scrollToNode: (errorNode: TreeNode) => void;
+  scrollToNode: (treeNode: Omit<TreeNode, "errors">) => void;
   /** A callback to initiate filtering of the given hierarchy level. */
   filterHierarchyLevel?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
 }
@@ -35,7 +39,8 @@ export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHier
  * @alpha
  */
 export function ErrorItemRenderer({
-  errorNode,
+  treeNode,
+  error,
   getHierarchyLevelDetails,
   filterHierarchyLevel,
   reloadTree,
@@ -43,84 +48,119 @@ export function ErrorItemRenderer({
 }: ErrorItemRendererProps): JSX.Element {
   const translate = useTranslation();
 
-  if (errorNode.error.type === "ResultSetTooLarge") {
-    const limit = errorNode.error.resultSetSizeLimit;
-    const onOverrideLimit = () => getHierarchyLevelDetails(errorNode.id)?.setSizeLimit(MAX_LIMIT_OVERRIDE);
+  if (error.type === "ResultSetTooLarge") {
+    const limit = error.resultSetSizeLimit;
+    const onOverrideLimit = () =>
+      getHierarchyLevelDetails(treeNode.id)?.setSizeLimit(MAX_LIMIT_OVERRIDE);
     return (
       <ErrorItemContainer
-        errorNode={errorNode}
+        treeNode={treeNode}
+        error={error}
         actions={[
           {
             action: () => {
               onOverrideLimit();
             },
-            label: translate("increaseHierarchyLimit").replace("{{limit}}", MAX_LIMIT_OVERRIDE.toString()),
+            label: translate("increaseHierarchyLimit").replace(
+              "{{limit}}",
+              MAX_LIMIT_OVERRIDE.toString(),
+            ),
             condition: () => limit < MAX_LIMIT_OVERRIDE,
           },
           {
             action: () => {
-              const hierarchyLevelDetails = getHierarchyLevelDetails(errorNode.id);
-              hierarchyLevelDetails && filterHierarchyLevel?.(hierarchyLevelDetails);
+              const hierarchyLevelDetails = getHierarchyLevelDetails(
+                treeNode.id,
+              );
+              hierarchyLevelDetails &&
+                filterHierarchyLevel?.(hierarchyLevelDetails);
             },
             label: translate("increaseHierarchyLimitWithFiltering"),
-            condition: () => !!filterHierarchyLevel && !!errorNode.isFilterable,
+            condition: () => !!filterHierarchyLevel && !!treeNode.isFilterable,
           },
         ]}
-        message={translate("resultLimitExceeded").replace("{{limit}}", limit.toString())}
-        scrollToElement={() => scrollToNode(errorNode)}
+        message={translate("resultLimitExceeded").replace(
+          "{{limit}}",
+          limit.toString(),
+        )}
+        scrollToElement={() => scrollToNode(treeNode)}
       />
     );
   }
-  if (errorNode.error.type === "NoFilterMatches") {
+  if (error.type === "NoFilterMatches") {
     return (
       <ErrorItemContainer
-        errorNode={errorNode}
+        treeNode={treeNode}
+        error={error}
         actions={[
           {
             action: () => {
-              const hierarchyLevelDetails = getHierarchyLevelDetails(errorNode.id);
-              hierarchyLevelDetails && filterHierarchyLevel?.(hierarchyLevelDetails);
+              const hierarchyLevelDetails = getHierarchyLevelDetails(
+                treeNode.id,
+              );
+              hierarchyLevelDetails &&
+                filterHierarchyLevel?.(hierarchyLevelDetails);
             },
             label: translate("noFilteredChildrenChangeFilter"),
             condition: () => true,
           },
         ]}
         message={translate("noFilteredChildren")}
-        scrollToElement={() => scrollToNode(errorNode)}
+        scrollToElement={() => scrollToNode(treeNode)}
       />
     );
   }
-  if (errorNode.error.type === "ChildrenLoad") {
+  if (error.type === "ChildrenLoad") {
     return (
       <ErrorItemContainer
-        errorNode={errorNode}
+        treeNode={treeNode}
+        error={error}
         actions={[
           {
-            action: () => reloadTree({ parentNodeId: errorNode.id }),
+            action: () => reloadTree({ parentNodeId: treeNode.id }),
             label: translate("retry"),
             condition: () => true,
           },
         ]}
         message={translate("failedToCreateHierarchy")}
-        scrollToElement={() => scrollToNode(errorNode)}
+        scrollToElement={() => scrollToNode(treeNode)}
       />
     );
   }
-
-  return <ErrorItemContainer errorNode={errorNode} message={errorNode.error.message} scrollToElement={() => scrollToNode(errorNode)} />;
+  return (
+    <ErrorItemContainer
+      treeNode={treeNode}
+      error={error}
+      message={error.message}
+      scrollToElement={() => scrollToNode(treeNode)}
+    />
+  );
 }
 
 type ErrorItemContainerProps = {
-  errorNode: TreeNode;
+  treeNode: Omit<TreeNode, "errors">;
+  error: ErrorInfo;
   message: string;
   actions?: { action: () => void; label: string; condition: () => boolean }[];
 } & Pick<MessageWithLinkProps, "scrollToElement">;
 
-function ErrorItemContainer({ errorNode, message, actions, scrollToElement }: ErrorItemContainerProps) {
+function ErrorItemContainer({
+  treeNode,
+  error,
+  message,
+  actions,
+  scrollToElement,
+}: ErrorItemContainerProps) {
   return (
     <ErrorRegion.Item
-      message={<MessageWithLink linkLabel={errorNode.label} scrollToElement={scrollToElement} message={message} />}
-      messageId={errorNode.id}
+      message={
+        <MessageWithLink
+          linkLabel={treeNode.label}
+          scrollToElement={scrollToElement}
+          message={message}
+        />
+      }
+      messageId={error.id}
       actions={actions
         ?.filter(({ condition }) => condition())
         .map(({ label, action }) => (
@@ -140,7 +180,11 @@ interface MessageWithLinkProps {
   linkLabel?: string;
 }
 
-function MessageWithLink({ linkLabel, scrollToElement, message }: MessageWithLinkProps) {
+function MessageWithLink({
+  linkLabel,
+  scrollToElement,
+  message,
+}: MessageWithLinkProps) {
   const splitMessage = message.split("{{node}}", 2);
   return (
     <div style={{ display: "flex", whiteSpace: "pre", flexWrap: "wrap" }}>

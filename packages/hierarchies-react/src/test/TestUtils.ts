@@ -66,7 +66,11 @@ export function createTreeModel(seed: ModelInput) {
     }
 
     if (input.id === undefined) {
-      model.rootNode = { ...model.rootNode, instanceFilter: input.instanceFilter, hierarchyLimit: input.hierarchyLimit };
+      model.rootNode = {
+        ...model.rootNode,
+        instanceFilter: input.instanceFilter,
+        hierarchyLimit: input.hierarchyLimit,
+      };
       continue;
     }
 
@@ -113,7 +117,12 @@ export function createTestChildrenLoadErrorInfo({ id, ...props }: Partial<Childr
   };
 }
 
-export function createTestNoFilterMatchesErrorInfo({ id, ...props }: Partial<NoFilterMatchesErrorInfo> & { id: string }): NoFilterMatchesErrorInfo {
+export function createTestNoFilterMatchesErrorInfo({
+  id,
+  ...props
+}: Partial<NoFilterMatchesErrorInfo> & {
+  id: string;
+}): NoFilterMatchesErrorInfo {
   return {
     ...props,
     id,
@@ -121,7 +130,12 @@ export function createTestNoFilterMatchesErrorInfo({ id, ...props }: Partial<NoF
   };
 }
 
-export function createTestResultSetTooLargeErrorInfo({ id, ...props }: Partial<ResultSetTooLargeErrorInfo> & { id: string }): ResultSetTooLargeErrorInfo {
+export function createTestResultSetTooLargeErrorInfo({
+  id,
+  ...props
+}: Partial<ResultSetTooLargeErrorInfo> & {
+  id: string;
+}): ResultSetTooLargeErrorInfo {
   return {
     ...props,
     id,
@@ -130,7 +144,12 @@ export function createTestResultSetTooLargeErrorInfo({ id, ...props }: Partial<R
   };
 }
 
-export function createTestHierarchyNode({ id, ...props }: Partial<NonGroupingHierarchyNode> & { id: string }): NonGroupingHierarchyNode {
+export function createTestHierarchyNode({
+  id,
+  ...props
+}: Partial<NonGroupingHierarchyNode> & {
+  id: string;
+}): NonGroupingHierarchyNode {
   return {
     ...props,
     key: props.key ?? { type: "generic", id },
@@ -194,7 +213,11 @@ export function createHierarchyProviderStub(customizations?: Partial<StubbedHier
     [Symbol.dispose]: createStub<() => void>(),
     ...customizations,
   }));
-  provider.setFormatter.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: arg } }));
+  provider.setFormatter.callsFake((arg) =>
+    provider.hierarchyChanged.raiseEvent({
+      formatterChange: { newFormatter: arg },
+    }),
+  );
   provider.setHierarchySearch.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ searchChange: { newSearch: arg } }));
   return provider;
 }

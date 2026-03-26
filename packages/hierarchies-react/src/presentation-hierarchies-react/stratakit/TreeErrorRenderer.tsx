@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { cloneElement } from "react";
+import { cloneElement, useMemo } from "react";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 import { useTranslation } from "../LocalizationContext.js";
 import { ErrorItemRenderer } from "./ErrorItemRenderer.js";
@@ -30,7 +30,8 @@ interface TreeErrorRendererOwnProps {
 }
 
 /** @alpha */
-export type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemRendererProps, "errorNode">;
+export type TreeErrorRendererProps = TreeErrorRendererOwnProps &
+  Omit<ErrorItemRendererProps, "treeNode" | "error">;
 
 /**
  * A component that renders error display dropdown using the `unstable_ErrorRegion` component from `@stratakit/structures`.
@@ -38,26 +39,56 @@ export type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemR
  *
  * @alpha
  */
-export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): JSX.Element {
+export function TreeErrorRenderer({
+  treeLabel,
+  errorNodes,
+  renderError,
+  ...errorItemRendererProps
+}: TreeErrorRendererProps): JSX.Element {
   const translate = useTranslation();
-  const errorItems = errorNodes.map((errorNode) => {
-    const errorRendererProps: ErrorItemRendererProps = {
-      errorNode,
-      ...errorItemRendererProps,
-    };
+  const errorItems = errorNodes.flatMap((errorNode) =>
+    errorNode.errors.map((error) => {
+      if (renderError) {
+        return cloneElement(
+          renderError({
+            treeNode: errorNode,
+            error,
+            ...errorItemRendererProps,
+          }),
+          { key: error.id },
+        );
+      }
+      return (
+        <ErrorItemRenderer
+          key={error.id}
+          treeNode={errorNode}
+          error={error}
+          {...errorItemRendererProps}
+        />
+      );
+    }),
+  );
 
-    if (renderError) {
-      return cloneElement(renderError(errorRendererProps), { key: errorNode.id });
-    }
-
-    return <ErrorItemRenderer key={errorNode.id} {...errorRendererProps} />;
-  });
+  const totalErrorCount = useMemo(
+    () => errorNodes.reduce((sum, n) => sum + n.errors.length, 0),
+    [errorNodes],
+  );
 
   return (
     <ErrorRegion.Root
       style={{ width: "100%" }}
-      aria-label={translate("issuesForTree").replace("{{tree_label}}", treeLabel)}
-      label={errorNodes.length === 0 ? translate("noIssuesFound") : translate("issuesFound").replace("{{number_of_issues}}", errorNodes.length.toString())}
+      aria-label={translate("issuesForTree").replace(
+        "{{tree_label}}",
+        treeLabel,
+      )}
+      label={
+        totalErrorCount === 0
+          ? translate("noIssuesFound")
+          : translate("issuesFound").replace(
+              "{{number_of_issues}}",
+              totalErrorCount.toString(),
+            )
+      }
       items={errorItems}
     />
   );

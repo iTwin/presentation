@@ -72,7 +72,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
 
     const label = treeItemProps.label ?? node.label;
     const inlineActionItems = useMemo(() => {
-      if (node.error !== undefined && node.error.type === "ChildrenLoad") {
+      if (node.errors.some((e) => e.type === "ChildrenLoad")) {
         return [
           <TreeActionBase
             key="retry"
@@ -98,7 +98,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
     }, [menuActions]);
 
     const expanded = useMemo(() => {
-      if (node.error && (node.error.type !== "Unknown" || !node.error.isNodeExpandable)) {
+      if (node.errors.some((e) => e.type !== "Unknown" || !e.isNodeExpandable)) {
         return undefined;
       }
 
@@ -138,7 +138,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
             inlineActions={inlineActionItems}
             actions={menuActionItems}
             unstable_decorations={decorations}
-            error={node.error ? node.error.id : undefined}
+            error={node.errors.length > 0 ? node.errors[0].id : undefined}
             onContextMenu={(e) => {
               if (treeItemProps.onContextMenu) {
                 treeItemProps.onContextMenu(e);
@@ -174,7 +174,14 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
           key={`${node.id}-${contextMenuProps?.position.x ?? ""}-${contextMenuProps?.position.y ?? ""}`}
         >
           {contextMenuProps ? (
-            <DropdownMenu.Button style={{ position: "fixed", top: contextMenuProps.position.y, left: contextMenuProps.position.x }} render={<div />} />
+            <DropdownMenu.Button
+              style={{
+                position: "fixed",
+                top: contextMenuProps.position.y,
+                left: contextMenuProps.position.x,
+              }}
+              render={<div />}
+            />
           ) : null}
           {/* `autoFocus` prop is coming from ariakit and is not native HTML `autoFocus` prop. */}
           {/* `focusable` is needed for `autoFocus` to work. StrataKit exposes only `autoFocus` and does not set `focusable` internally. */}

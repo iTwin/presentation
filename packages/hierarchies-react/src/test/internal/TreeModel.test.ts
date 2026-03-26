@@ -546,7 +546,11 @@ describe("TreeModel", () => {
   });
 
   describe("setInstanceFilter", () => {
-    const filter: GenericInstanceFilter = { rules: { operator: "and", rules: [] }, propertyClassNames: [], relatedInstances: [] };
+    const filter: GenericInstanceFilter = {
+      rules: { operator: "and", rules: [] },
+      propertyClassNames: [],
+      relatedInstances: [],
+    };
 
     it("sets filter on tree root", () => {
       const model = createTreeModel([]);
@@ -843,8 +847,20 @@ describe("TreeModel", () => {
 describe("isTreeModelHierarchyNode", () => {
   it("returns correct result", () => {
     expect(isTreeModelHierarchyNode({ id: undefined, nodeData: undefined })).to.be.false;
-    expect(isTreeModelHierarchyNode({ id: "info-node", type: "Unknown", message: "info" })).to.be.false;
-    expect(isTreeModelHierarchyNode({ id: "hierarchy-node", label: "Node", children: false, nodeData: createTestHierarchyNode({ id: "hierarchy-node" }) })).to
-      .be.true;
+    expect(
+      isTreeModelHierarchyNode({
+        id: "info-node",
+        type: "Unknown",
+        message: "info",
+      }),
+    ).to.be.false;
+    expect(
+      isTreeModelHierarchyNode({
+        id: "hierarchy-node",
+        label: "Node",
+        children: false,
+        nodeData: createTestHierarchyNode({ id: "hierarchy-node" }),
+      }),
+    ).to.be.true;
   });
 });

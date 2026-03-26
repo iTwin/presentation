@@ -120,6 +120,7 @@ function createTreeNode(partial?: Partial<TreeNode>): TreeNode {
     isFiltered: false,
     nodeData: createNonGroupingHierarchyNode(),
     children: [],
+    errors: [],
     ...partial,
   };
 }
