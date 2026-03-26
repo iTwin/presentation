@@ -5,7 +5,7 @@
 ### Patch Changes
 
 - Updated dependencies:
-  - @itwin/presentation-core-interop@2.0.0-alpha.9
+  - @itwin/presentation-core-interop@2.0.0-alpha.0
 
 ## 5.13.1
 
