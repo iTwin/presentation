@@ -35,7 +35,7 @@
     "build:esm": "tsc -p tsconfig.esm.json",
     "clean": "rimraf lib build",
     "cover": "c8 npm -s test",
-    "docs": "npm run -s docs:reference && npm run -s docs:changelog",
+    "docs": "npm run -s docs:reference && npm run -s docs:changelog && npm run -s docs:extract",
     "docs:changelog": "cpx ./CHANGELOG.md ./build/docs/reference/presentation-testing",
     "docs:reference": "cross-env NODE_PROJECT_ROOT_DIRECTORY=../../ betools docs --json=./build/docs/reference/presentation-testing/file.json --tsIndexFile=presentation-testing.ts --onlyJson --testExcludeGlob=./src/test/**",
     "docs:extract": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract",
