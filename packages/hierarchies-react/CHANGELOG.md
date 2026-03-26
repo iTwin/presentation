@@ -1,5 +1,17 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.59
+
+### Major Changes
+
+- [#1259](https://github.com/iTwin/presentation/pull/1259): Introduce separate import path for StrataKit based components. StrataKit based components have to be imported through `@itwin/presentation-hierarchies-react/stratakit`. This allows to use this package with or without StrataKit dependencies.
+
+### Patch Changes
+
+- [#1256](https://github.com/iTwin/presentation/pull/1256): Fix `alpha` dependencies being specified with a range (`^`), allowing package manager to use higher versions, possibly with breaking changes.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.14
+
 ## 2.0.0-alpha.58
 
 ### Major Changes

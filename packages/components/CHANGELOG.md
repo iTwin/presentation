@@ -1,5 +1,12 @@
 # Change Log - @itwin/presentation-components
 
+## 5.13.2-alpha.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-core-interop@2.0.0-alpha.0
+
 ## 5.13.1
 
 ### Patch Changes
