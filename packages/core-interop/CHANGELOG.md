@@ -1,5 +1,15 @@
 # @itwin/presentation-core-interop
 
+## 2.0.0-alpha.9
+
+### Major Changes
+
+- [#1262](https://github.com/iTwin/presentation/pull/1262): Drop support for iTwin.js Core v4.
+
+### Patch Changes
+
+- [#1256](https://github.com/iTwin/presentation/pull/1256): Fix `alpha` dependencies being specified with a range (`^`), allowing package manager to use higher versions, possibly with breaking changes.
+
 ## 1.4.0-alpha.8
 
 ### Patch Changes
