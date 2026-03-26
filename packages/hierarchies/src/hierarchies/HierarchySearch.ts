@@ -226,7 +226,11 @@ export namespace HierarchySearchTree {
       inputEntry: HierarchySearchTreeBuilderAcceptHandlerTreeInput;
     }) => void;
   }
-  /** @public */
+  /**
+   * Props supplied to HierarchySearchTreeBuilder.accept() method for accepting a hierarchy search path or tree with an optional handler for customizing
+   * the behavior of the builder when accepting new entries.
+   * @public
+   */
   type HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras extends Record<string, unknown>> = (
     | { path: HierarchySearchPath }
     | { tree: HierarchySearchTree }
@@ -234,6 +238,22 @@ export namespace HierarchySearchTree {
     /** An optional handler for customizing the behavior of the builder when accepting new entries. */
     handler?: HierarchySearchTreeBuilderAcceptHandler<TAcceptHandlerExtras>;
   };
+  /**
+   * Props supplied to HierarchySearchTreeBuilder.getTree() method for customizing the resulting tree entries, e.g. by omitting some of them or
+   * assigning extra information to them.
+   * @public
+   */
+  interface HierarchySearchTreeBuilderFinalizeTreeProps<TAcceptHandlerExtras extends Record<string, unknown>> {
+    /**
+     * A function that can be used to process each tree entry before it's added to the final tree.
+     *
+     * Return `undefined` to omit the entry and all its branch from the resulting tree.
+     */
+    processEntry?: (props: {
+      treeEntry: HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TAcceptHandlerExtras>;
+      parentEntries: Array<HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TAcceptHandlerExtras>>;
+    }) => Omit<HierarchySearchTree, "children"> | undefined;
+  }
   /**
    * An utility that accepts hierarchy search paths or search trees one by one and builds a `HierarchySearchTree` structure based on them.
    * @public
@@ -247,7 +267,7 @@ export namespace HierarchySearchTree {
     /**
      * Create `HierarchySearchTree[]` from currently added search paths.
      */
-    getTree(): HierarchySearchTree[];
+    getTree(props?: HierarchySearchTreeBuilderFinalizeTreeProps<TAcceptHandlerExtras>): HierarchySearchTree[];
   }
 
   /**
@@ -278,10 +298,22 @@ export namespace HierarchySearchTree {
     return new (class Impl implements HierarchySearchTreeBuilder<TAcceptHandlerExtras> {
       #rootsDictionary: HierarchySearchTreeDictionary = new Dictionary(HierarchyNodeIdentifier.compare);
 
-      static #mapDictionaryToTree(dictionary: HierarchySearchTreeDictionary): HierarchySearchTree[] {
+      static #mapDictionaryToTree(
+        dictionary: HierarchySearchTreeDictionary,
+        parentEntries: Array<HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TAcceptHandlerExtras>>,
+        props?: HierarchySearchTreeBuilderFinalizeTreeProps<TAcceptHandlerExtras>,
+      ): HierarchySearchTree[] {
         const list: HierarchySearchTree[] = [];
-        for (const { children, extras: _, ...entry } of dictionary.values()) {
-          list.push({ ...entry, ...(children ? { children: Impl.#mapDictionaryToTree(children) } : undefined) });
+        for (const { children, ...entry } of dictionary.values()) {
+          let processedEntry: (Omit<HierarchySearchTree, "children"> & { extras?: TAcceptHandlerExtras }) | undefined = entry;
+          if (props?.processEntry) {
+            processedEntry = props.processEntry({ treeEntry: entry, parentEntries });
+          }
+          if (!processedEntry) {
+            continue;
+          }
+          const { extras: _, ...entryWithoutExtras } = processedEntry;
+          list.push({ ...entryWithoutExtras, ...(children ? { children: Impl.#mapDictionaryToTree(children, [...parentEntries, entry], props) } : undefined) });
         }
         return list;
       }
@@ -469,8 +501,8 @@ export namespace HierarchySearchTree {
         return this;
       }
 
-      public getTree() {
-        return Impl.#mapDictionaryToTree(this.#rootsDictionary);
+      public getTree(props?: HierarchySearchTreeBuilderFinalizeTreeProps<TAcceptHandlerExtras>) {
+        return Impl.#mapDictionaryToTree(this.#rootsDictionary, [], props);
       }
     })();
   }

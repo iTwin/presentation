@@ -495,7 +495,7 @@ export namespace HierarchySearchTree {
     export function createFromPathsList(paths: Iterable<HierarchySearchPath>): Promise<HierarchySearchTree[]>;
     export interface HierarchySearchTreeBuilder<TAcceptHandlerExtras extends Record<string, unknown>> {
         accept(props: HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras>): HierarchySearchTreeBuilder<TAcceptHandlerExtras>;
-        getTree(): HierarchySearchTree[];
+        getTree(props?: HierarchySearchTreeBuilderFinalizeTreeProps<TAcceptHandlerExtras>): HierarchySearchTree[];
     }
     // (undocumented)
     export interface HierarchySearchTreeBuilderAcceptHandler<TExtras extends Record<string, unknown>> {
@@ -517,7 +517,6 @@ export namespace HierarchySearchTree {
     export type HierarchySearchTreeBuilderAcceptHandlerTreeInput = Readonly<Pick<HierarchySearchTree, "identifier" | "isTarget" | "options"> & {
         hasChildren: boolean;
     }>;
-    // (undocumented)
     export type HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras extends Record<string, unknown>> = ({
         path: HierarchySearchPath;
     } | {
@@ -525,6 +524,12 @@ export namespace HierarchySearchTree {
     }) & {
         handler?: HierarchySearchTreeBuilderAcceptHandler<TAcceptHandlerExtras>;
     };
+    export interface HierarchySearchTreeBuilderFinalizeTreeProps<TAcceptHandlerExtras extends Record<string, unknown>> {
+        processEntry?: (props: {
+            treeEntry: HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TAcceptHandlerExtras>;
+            parentEntries: Array<HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TAcceptHandlerExtras>>;
+        }) => Omit<HierarchySearchTree, "children"> | undefined;
+    }
     export function mergeOptions(lhs: HierarchySearchTree["options"] | undefined, rhs: HierarchySearchTree["options"] | undefined): HierarchySearchTree["options"] | undefined;
     export {};
 }
