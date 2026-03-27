@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
 
-import { expect } from "chai";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { collect, insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.BasicProviderImports
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
@@ -22,16 +22,16 @@ import { initialize, terminate } from "../../IntegrationTests.js";
 describe("Unified selection", () => {
   describe("Learning snippets", () => {
     describe("Hilite sets", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
-      it("Basic hilite set provider", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("Basic hilite set provider", async () => {
+        const { imodel, ...keys } = await buildIModel("Basic hilite set provider", async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           const elementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -54,7 +54,7 @@ describe("Unified selection", () => {
         // __PUBLISH_EXTRACT_END__
 
         const hiliteSet = await collect(hiliteSetIterator);
-        expect(hiliteSet).to.deep.eq([
+        expect(hiliteSet).toEqual([
           {
             elements: [keys.elementKey.id],
             models: [],
@@ -63,8 +63,8 @@ describe("Unified selection", () => {
         ]);
       });
 
-      it("iModel hilite set provider", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("iModel hilite set provider", async () => {
+        const { imodel, ...keys } = await buildIModel("iModel hilite set provider", async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           const elementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -98,7 +98,7 @@ describe("Unified selection", () => {
         // __PUBLISH_EXTRACT_END__
 
         const hiliteSet = await collect(hiliteSetIterator);
-        expect(hiliteSet).to.deep.eq([
+        expect(hiliteSet).toEqual([
           {
             elements: [keys.elementKey.id],
             models: [],

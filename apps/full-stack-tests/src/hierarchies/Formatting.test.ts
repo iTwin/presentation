@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import {
   insertDrawingCategory,
   insertDrawingGraphic,
@@ -15,7 +14,7 @@ import {
   insertSheetIndexFolder,
   insertSpatialCategory,
 } from "presentation-test-utilities";
-import sinon from "sinon";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { Subject } from "@itwin/core-backend";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
@@ -32,18 +31,18 @@ describe("Hierarchies", () => {
   let emptyIModel: IModelConnection;
   let subjectClassName: string;
 
-  before(async function () {
+  beforeAll(async () => {
     await initialize();
-    emptyIModel = (await buildIModel(this)).imodel;
+    emptyIModel = (await buildIModel("Hierarchies")).imodel;
     subjectClassName = Subject.classFullName.replace(":", ".");
   });
 
-  after(async () => {
+  afterAll(async () => {
     await terminate();
   });
 
   describe("Labels formatting", () => {
-    it("formats labels with parts of different types", async function () {
+    it("formats labels with parts of different types", async () => {
       const date = new Date();
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
@@ -76,7 +75,7 @@ describe("Hierarchies", () => {
             node: (node) => {
               const expectedLabel = `${date.toLocaleString()}|0.12-2`;
               const actualLabel = node.label;
-              expect(actualLabel).to.eq(expectedLabel);
+              expect(actualLabel).toBe(expectedLabel);
             },
           },
         ],
@@ -84,11 +83,11 @@ describe("Hierarchies", () => {
     });
 
     describe("KindOfQuantity", () => {
-      it("formats instance node labels", async function () {
-        const { imodel, schema } = await buildIModel(this, async (builder, mochaContext) => {
+      it("formats instance node labels", async () => {
+        const { imodel, schema } = await buildIModel("formats instance node labels", async (builder, testName) => {
           // eslint-disable-next-line @typescript-eslint/no-shadow
           const schema = await importSchema(
-            mochaContext,
+            testName,
             builder,
             `
               <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
@@ -159,7 +158,7 @@ describe("Hierarchies", () => {
           }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`[123.5 m]`),
+              node: (node) => expect(node.label).toBe(`[123.5 m]`),
             },
           ],
         });
@@ -171,7 +170,7 @@ describe("Hierarchies", () => {
           }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`[405.0 ft]`),
+              node: (node) => expect(node.label).toBe(`[405.0 ft]`),
             },
           ],
         });
@@ -183,7 +182,7 @@ describe("Hierarchies", () => {
           }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`[405.0 ft]`),
+              node: (node) => expect(node.label).toBe(`[405.0 ft]`),
             },
           ],
         });
@@ -195,7 +194,7 @@ describe("Hierarchies", () => {
           }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`[405.04 ft (US Survey)]`),
+              node: (node) => expect(node.label).toBe(`[405.04 ft (US Survey)]`),
             },
           ],
         });
@@ -203,7 +202,7 @@ describe("Hierarchies", () => {
     });
 
     describe("Id", () => {
-      it("formats generic node labels", async function () {
+      it("formats generic node labels", async () => {
         const id = Id64.fromLocalAndBriefcaseIds(1, 2);
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -232,7 +231,7 @@ describe("Hierarchies", () => {
               node: (node) => {
                 const expectedLabel = `[${id}]`;
                 const actualLabel = node.label;
-                expect(actualLabel).to.eq(expectedLabel);
+                expect(actualLabel).toBe(expectedLabel);
               },
             },
           ],
@@ -241,7 +240,7 @@ describe("Hierarchies", () => {
     });
 
     describe("DateTime", () => {
-      it("formats instance node labels", async function () {
+      it("formats instance node labels", async () => {
         const imodelAccess = createIModelAccess(emptyIModel);
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -291,14 +290,14 @@ describe("Hierarchies", () => {
                 const unformattedLastMod = node.extendedData!.lastMod as number;
                 const expectedLabel = `[${julianToDateTime(unformattedLastMod).toLocaleString()}]`;
                 const actualLabel = node.label;
-                expect(actualLabel).to.eq(expectedLabel);
+                expect(actualLabel).toBe(expectedLabel);
               },
             },
           ],
         });
       });
 
-      it("formats generic node labels", async function () {
+      it("formats generic node labels", async () => {
         const date = new Date();
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -327,14 +326,14 @@ describe("Hierarchies", () => {
               node: (node) => {
                 const expectedLabel = `[${date.toLocaleString()}]`;
                 const actualLabel = node.label;
-                expect(actualLabel).to.eq(expectedLabel);
+                expect(actualLabel).toBe(expectedLabel);
               },
             },
           ],
         });
       });
 
-      it("formats using short date format", async function () {
+      it("formats using short date format", async () => {
         const date = new Date();
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -363,7 +362,7 @@ describe("Hierarchies", () => {
               node: (node) => {
                 const expectedLabel = `[${date.toLocaleDateString()}]`;
                 const actualLabel = node.label;
-                expect(actualLabel).to.eq(expectedLabel);
+                expect(actualLabel).toBe(expectedLabel);
               },
             },
           ],
@@ -372,8 +371,8 @@ describe("Hierarchies", () => {
     });
 
     describe("Boolean", () => {
-      it("formats instance node labels", async function () {
-        const { imodel, modelClassName } = await buildIModel(this, async (builder) => {
+      it("formats instance node labels", async () => {
+        const { imodel, modelClassName } = await buildIModel("formats instance node labels", async (builder) => {
           const p1 = insertPhysicalPartition({ builder, codeValue: "p1", parentId: IModel.rootSubjectId });
           insertPhysicalSubModel({ builder, modeledElementId: p1.id, isPrivate: false });
           const p2 = insertPhysicalPartition({ builder, codeValue: "p2", parentId: IModel.rootSubjectId });
@@ -423,16 +422,16 @@ describe("Hierarchies", () => {
           provider: createProvider({ imodel, hierarchy }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`[false]`),
+              node: (node) => expect(node.label).toBe(`[false]`),
             },
             {
-              node: (node) => expect(node.label).to.eq(`[true]`),
+              node: (node) => expect(node.label).toBe(`[true]`),
             },
           ],
         });
       });
 
-      it("formats generic node labels", async function () {
+      it("formats generic node labels", async () => {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -457,7 +456,7 @@ describe("Hierarchies", () => {
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`true-false`),
+              node: (node) => expect(node.label).toBe(`true-false`),
             },
           ],
         });
@@ -465,8 +464,8 @@ describe("Hierarchies", () => {
     });
 
     describe("Integer", () => {
-      it("formats instance node labels", async function () {
-        const { imodel, sheetIndexFolder } = await buildIModel(this, async (builder) => {
+      it("formats instance node labels", async () => {
+        const { imodel, sheetIndexFolder } = await buildIModel("formats instance node labels", async (builder) => {
           return { sheetIndexFolder: insertSheetIndexFolder({ builder, entryPriority: 2 }) };
         });
         const imodelAccess = createIModelAccess(imodel);
@@ -512,12 +511,12 @@ describe("Hierarchies", () => {
           provider: createProvider({ imodel, hierarchy }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`[2]`),
+              node: (node) => expect(node.label).toBe(`[2]`),
             },
           ],
         });
       });
-      it("formats generic node labels", async function () {
+      it("formats generic node labels", async () => {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -542,7 +541,7 @@ describe("Hierarchies", () => {
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`[124]`),
+              node: (node) => expect(node.label).toBe(`[124]`),
             },
           ],
         });
@@ -550,8 +549,8 @@ describe("Hierarchies", () => {
     });
 
     describe("Double", () => {
-      it("formats instance node labels", async function () {
-        const { imodel, element } = await buildIModel(this, async (builder) => {
+      it("formats instance node labels", async () => {
+        const { imodel, element } = await buildIModel("formats instance node labels", async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -611,13 +610,13 @@ describe("Hierarchies", () => {
           provider: createProvider({ imodel, hierarchy }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`[90.79]`),
+              node: (node) => expect(node.label).toBe(`[90.79]`),
             },
           ],
         });
       });
 
-      it("formats generic node labels", async function () {
+      it("formats generic node labels", async () => {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -642,7 +641,7 @@ describe("Hierarchies", () => {
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`[123.79]`),
+              node: (node) => expect(node.label).toBe(`[123.79]`),
             },
           ],
         });
@@ -650,8 +649,8 @@ describe("Hierarchies", () => {
     });
 
     describe("Point2d", () => {
-      it("formats instance node labels", async function () {
-        const { imodel, element } = await buildIModel(this, async (builder) => {
+      it("formats instance node labels", async () => {
+        const { imodel, element } = await buildIModel("formats instance node labels", async (builder) => {
           const model = insertDrawingModelWithPartition({ builder, codeValue: "model" });
           const category = insertDrawingCategory({ builder, codeValue: "category" });
           // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -709,13 +708,13 @@ describe("Hierarchies", () => {
           provider: createProvider({ imodel, hierarchy }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`[(1.48, 2.59)]`),
+              node: (node) => expect(node.label).toBe(`[(1.48, 2.59)]`),
             },
           ],
         });
       });
 
-      it("formats generic node labels", async function () {
+      it("formats generic node labels", async () => {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -740,7 +739,7 @@ describe("Hierarchies", () => {
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`[(1.48, 2.59)]`),
+              node: (node) => expect(node.label).toBe(`[(1.48, 2.59)]`),
             },
           ],
         });
@@ -748,8 +747,8 @@ describe("Hierarchies", () => {
     });
 
     describe("Point3d", () => {
-      it("formats instance node labels", async function () {
-        const { imodel, element } = await buildIModel(this, async (builder) => {
+      it("formats instance node labels", async () => {
+        const { imodel, element } = await buildIModel("formats instance node labels", async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -807,13 +806,13 @@ describe("Hierarchies", () => {
           provider: createProvider({ imodel, hierarchy }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`[(1.23, 4.57, 7.89)]`),
+              node: (node) => expect(node.label).toBe(`[(1.23, 4.57, 7.89)]`),
             },
           ],
         });
       });
 
-      it("formats generic node labels", async function () {
+      it("formats generic node labels", async () => {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -838,7 +837,7 @@ describe("Hierarchies", () => {
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`[(1.48, 2.59, 3.70)]`),
+              node: (node) => expect(node.label).toBe(`[(1.48, 2.59, 3.70)]`),
             },
           ],
         });
@@ -846,9 +845,9 @@ describe("Hierarchies", () => {
     });
 
     describe("Guid", () => {
-      it("formats instance node labels", async function () {
+      it("formats instance node labels", async () => {
         const guid = Guid.createValue();
-        const { imodel, element } = await buildIModel(this, async (builder) => {
+        const { imodel, element } = await buildIModel("formats instance node labels", async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -903,7 +902,7 @@ describe("Hierarchies", () => {
           provider: createProvider({ imodel, hierarchy }),
           expect: [
             {
-              node: (node) => expect(node.label).to.eq(`[${guid}]`),
+              node: (node) => expect(node.label).toBe(`[${guid}]`),
             },
           ],
         });
@@ -912,11 +911,11 @@ describe("Hierarchies", () => {
   });
 
   describe("Changing formatter", () => {
-    after(() => {
-      sinon.restore();
+    afterAll(() => {
+      vi.restoreAllMocks();
     });
 
-    it("reacts to changed formatter without running queries", async function () {
+    it("reacts to changed formatter without running queries", async () => {
       const imodelAccess = createIModelAccess(emptyIModel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
@@ -946,27 +945,27 @@ describe("Hierarchies", () => {
       };
 
       const provider = createProvider({ imodel: emptyIModel, hierarchy, queryCacheSize: 10 });
-      const queryReaderSpy = sinon.spy(emptyIModel, "createQueryReader");
+      const queryReaderSpy = vi.spyOn(emptyIModel, "createQueryReader");
       await validateHierarchy({
         provider,
         expect: [
           {
-            node: (node) => expect(node.label).to.eq(""),
+            node: (node) => expect(node.label).toBe(""),
           },
         ],
       });
-      expect(queryReaderSpy).to.be.calledOnce;
-      queryReaderSpy.resetHistory();
+      expect(queryReaderSpy).toHaveBeenCalledOnce();
+      queryReaderSpy.mockClear();
       provider.setFormatter(async () => "formatted");
       await validateHierarchy({
         provider,
         expect: [
           {
-            node: (node) => expect(node.label).to.eq("formatted"),
+            node: (node) => expect(node.label).toBe("formatted"),
           },
         ],
       });
-      expect(queryReaderSpy).to.not.be.called;
+      expect(queryReaderSpy).not.toHaveBeenCalled();
     });
   });
 });

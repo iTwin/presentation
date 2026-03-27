@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyData } from "@itwin/components-react";
 import { IModelApp, IModelConnection, ITwinIdArg, PreferenceArg, PreferenceKeyArg, TokenArg } from "@itwin/core-frontend";
@@ -20,15 +19,15 @@ describe("Favorite properties", () => {
   let imodel: IModelConnection;
   function openIModel() {
     imodel = TestIModelConnection.openFile("assets/datasets/Properties_60InstancesWithUrl2.ibim");
-    expect(imodel).is.not.null;
+    expect(imodel).not.toBeNull();
   }
 
-  before(async () => {
+  beforeAll(async () => {
     await initialize();
     openIModel();
   });
 
-  after(async () => {
+  afterAll(async () => {
     await imodel.close();
     await terminate();
   });
@@ -66,7 +65,7 @@ describe("Favorite properties", () => {
       propertiesDataProvider.keys = new KeySet([{ className: "PCJ_TestSchema:TestClass", id: "0x38" }]);
       let propertyData = await propertiesDataProvider.getData();
       const categoriesCountBefore = propertyData.categories.length;
-      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.false;
+      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(false);
 
       // find the property record to make the property favorite
       const record = getPropertyRecordByLabel(propertyData, "Country")!;
@@ -75,8 +74,8 @@ describe("Favorite properties", () => {
 
       // verify we have a new favorites category
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.length).to.be.eq(categoriesCountBefore + 1);
-      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.true;
+      expect(propertyData.categories.length).toBe(categoriesCountBefore + 1);
+      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(true);
     });
 
     it("favorites all properties under nested content field", async () => {
@@ -84,7 +83,7 @@ describe("Favorite properties", () => {
       propertiesDataProvider.keys = new KeySet([{ className: "Generic:PhysicalObject", id: "0x74" }]);
       let propertyData = await propertiesDataProvider.getData();
       const categoriesCountBefore = propertyData.categories.length;
-      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.false;
+      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(false);
 
       // request properties for 2 elements
       propertiesDataProvider.keys = new KeySet([
@@ -92,7 +91,7 @@ describe("Favorite properties", () => {
         { className: "Generic:PhysicalObject", id: "0x74" },
       ]);
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.false;
+      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(false);
 
       // find the property record to make the property favorite
       const record = getPropertyRecordByLabel(propertyData, "area")!;
@@ -102,15 +101,15 @@ describe("Favorite properties", () => {
       // request properties for 1 element again
       propertiesDataProvider.keys = new KeySet([{ className: "Generic:PhysicalObject", id: "0x74" }]);
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.length).to.eq(categoriesCountBefore + 1);
-      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.true;
+      expect(propertyData.categories.length).toBe(categoriesCountBefore + 1);
+      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(true);
     });
 
     it("favorites common properties of different element types", async () => {
       propertiesDataProvider.keys = new KeySet([{ className: "Generic:PhysicalObject", id: "0x74" }]);
       let propertyData = await propertiesDataProvider.getData();
       const categoriesCountBefore = propertyData.categories.length;
-      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.false;
+      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(false);
 
       // find the property record to make the property favorite
       const record = getPropertyRecordByLabel(propertyData, "Model")!;
@@ -119,22 +118,22 @@ describe("Favorite properties", () => {
 
       // verify the property is now in favorites group
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.length).to.eq(categoriesCountBefore + 1);
-      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.true;
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq("Model");
+      expect(propertyData.categories.length).toBe(categoriesCountBefore + 1);
+      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(true);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Model");
 
       // verify the same property is now in favorites group when requesting content for another type of element
       propertiesDataProvider.keys = new KeySet([{ className: "PCJ_TestSchema:TestClass", id: "0x38" }]);
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.true;
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq("Model");
+      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(true);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Model");
     });
 
     it("favorites nested content property with the same name as a property on primary instance", async () => {
       propertiesDataProvider.keys = new KeySet([{ className: "Generic:PhysicalObject", id: "0x74" }]);
       let propertyData = await propertiesDataProvider.getData();
       const categoriesCountBefore = propertyData.categories.length;
-      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.false;
+      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(false);
 
       // find the property record to make the property favorite
       const sourceInfoModelSourceCategory = propertyData.categories.find((c) => c.name.endsWith("model_source"))!;
@@ -144,9 +143,9 @@ describe("Favorite properties", () => {
 
       // verify the property is now in favorites group
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.length).to.eq(categoriesCountBefore + 1);
-      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.true;
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq(sourceFileNameRecord.property.displayLabel);
+      expect(propertyData.categories.length).toBe(categoriesCountBefore + 1);
+      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(true);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe(sourceFileNameRecord.property.displayLabel);
     });
   });
 
@@ -176,22 +175,22 @@ describe("Favorite properties", () => {
       await makeFieldFavorite(propertyData, "Category");
 
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).to.eq(2);
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq("Model");
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).to.eq("Category");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).toBe(2);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Model");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).toBe("Category");
 
       const visibleFavoriteFields = await Promise.all(
         propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
       );
-      expect(visibleFavoriteFields.every((f) => f !== undefined)).to.be.true;
+      expect(visibleFavoriteFields.every((f) => f !== undefined)).toBe(true);
 
       const record = getPropertyRecordByLabel(propertyData, "Category")!;
       const field = await propertiesDataProvider.getFieldByPropertyDescription(record.property);
       await Presentation.favoriteProperties.changeFieldPriority(imodel, field!, undefined, visibleFavoriteFields as Field[]);
 
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq("Category");
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).to.eq("Model");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Category");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).toBe("Model");
     });
 
     it("keeps the logical order of non-visible fields when there are relevant fields", async () => {
@@ -206,10 +205,10 @@ describe("Favorite properties", () => {
       await makeFieldFavorite(propertyData, "Model"); // `Model` is relevant for property `area`
 
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).to.eq(3);
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq("Code");
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).to.eq("area");
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][2].property.displayLabel).to.eq("Model");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).toBe(3);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Code");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).toBe("area");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][2].property.displayLabel).toBe("Model");
 
       propertiesDataProvider.keys = new KeySet([{ className: "PCJ_TestSchema:TestClass", id: "0x65" }]); // element without `area` property
       propertyData = await propertiesDataProvider.getData();
@@ -217,7 +216,7 @@ describe("Favorite properties", () => {
       const visibleFavoriteFields = await Promise.all(
         propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
       );
-      expect(visibleFavoriteFields.every((f) => f !== undefined)).to.be.true;
+      expect(visibleFavoriteFields.every((f) => f !== undefined)).toBe(true);
 
       let record = getPropertyRecordByLabel(propertyData, "Code")!;
       const codeField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
@@ -230,9 +229,9 @@ describe("Favorite properties", () => {
         { className: "Generic:PhysicalObject", id: "0x74" },
       ]);
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq("area");
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).to.eq("Model");
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][2].property.displayLabel).to.eq("Code");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("area");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).toBe("Model");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][2].property.displayLabel).toBe("Code");
     });
 
     it("keeps the logical order of non-visible fields when there are no relevant fields", async () => {
@@ -247,10 +246,10 @@ describe("Favorite properties", () => {
       await makeFieldFavorite(propertyData, "Country"); // `Country` is irrelevant for property `area`
 
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).to.eq(3);
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq("Code");
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).to.eq("area");
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][2].property.displayLabel).to.eq("Country");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).toBe(3);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Code");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).toBe("area");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][2].property.displayLabel).toBe("Country");
 
       propertiesDataProvider.keys = new KeySet([{ className: "PCJ_TestSchema:TestClass", id: "0x65" }]); // element without `area` property
       propertyData = await propertiesDataProvider.getData();
@@ -258,7 +257,7 @@ describe("Favorite properties", () => {
       const visibleFavoriteFields = await Promise.all(
         propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
       );
-      expect(visibleFavoriteFields.every((f) => f !== undefined)).to.be.true;
+      expect(visibleFavoriteFields.every((f) => f !== undefined)).toBe(true);
 
       let record = getPropertyRecordByLabel(propertyData, "Code")!;
       const codeField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
@@ -271,23 +270,27 @@ describe("Favorite properties", () => {
         { className: "Generic:PhysicalObject", id: "0x74" },
       ]);
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq("Country");
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).to.eq("Code");
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][2].property.displayLabel).to.eq("area");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Country");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).toBe("Code");
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][2].property.displayLabel).toBe("area");
     });
   });
 
   describe("re-initialization", () => {
     const storage = new Map<string, any>();
-    before(async () => {
-      sinon.stub(IModelApp, "userPreferences").get(() => ({
+    beforeAll(async () => {
+      vi.spyOn(IModelApp, "userPreferences", "get").mockReturnValue({
         get: async (arg: PreferenceKeyArg & ITwinIdArg & TokenArg) => storage.get(arg.key),
-        save: async (arg: PreferenceArg & ITwinIdArg & TokenArg) => storage.set(arg.key, arg.content),
-        delete: async (arg: PreferenceKeyArg & ITwinIdArg & TokenArg) => storage.delete(arg.key),
-      }));
-      sinon.stub(IModelApp, "authorizationClient").get(() => ({
+        save: async (arg: PreferenceArg & ITwinIdArg & TokenArg) => {
+          storage.set(arg.key, arg.content);
+        },
+        delete: async (arg: PreferenceKeyArg & ITwinIdArg & TokenArg) => {
+          storage.delete(arg.key);
+        },
+      });
+      vi.spyOn(IModelApp, "authorizationClient", "get").mockReturnValue({
         getAccessToken: async () => "accessToken",
-      }));
+      });
       Presentation.terminate();
       await Presentation.initialize({
         favorites: {
@@ -296,15 +299,15 @@ describe("Favorite properties", () => {
       });
     });
 
-    after(() => {
-      sinon.restore();
+    afterAll(() => {
+      vi.restoreAllMocks();
     });
 
     it("favorite properties survive Presentation re-initialization", async () => {
       propertiesDataProvider.keys = new KeySet([{ className: "Generic:PhysicalObject", id: "0x74" }]);
       let propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.length).to.be.eq(5);
-      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.false;
+      expect(propertyData.categories.length).toBe(5);
+      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(false);
 
       // find the property record to make the property favorite
       const record = getPropertyRecordByLabel(propertyData, "Model")!;
@@ -313,10 +316,10 @@ describe("Favorite properties", () => {
 
       // verify the property is now in favorites group
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.length).to.eq(6);
-      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.true;
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).to.eq(1);
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq("Model");
+      expect(propertyData.categories.length).toBe(6);
+      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(true);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).toBe(1);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Model");
 
       // refresh Presentation
       Presentation.terminate();
@@ -332,10 +335,10 @@ describe("Favorite properties", () => {
 
       // verify the property is still in favorites group
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.length).to.eq(6);
-      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.true;
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).to.eq(1);
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq("Model");
+      expect(propertyData.categories.length).toBe(6);
+      expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(true);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).toBe(1);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Model");
     });
   });
 });

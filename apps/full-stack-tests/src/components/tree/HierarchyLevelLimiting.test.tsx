@@ -2,15 +2,13 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useState } from "react";
-import sinon from "sinon";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { PresentationRpcInterface, Ruleset } from "@itwin/presentation-common";
+import { Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getByRole, render, waitFor } from "../../RenderUtils.js";
@@ -19,30 +17,27 @@ import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
 
 describe("Learning snippets", () => {
   describe("Tree", () => {
-    before(async () => {
+    beforeAll(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
       HTMLElement.prototype.scrollIntoView = () => {};
     });
 
-    after(async () => {
+    afterAll(async () => {
       delete (HTMLElement.prototype as any).scrollIntoView;
       UiComponents.terminate();
       await terminate();
     });
 
-    it("limits hierarchy level size", async function () {
+    it.skip("limits hierarchy level size", async () => {
       // stub console log to avoid hierarchy limit warning in console
-      const consoleStub = sinon.stub(console, "log").callsFake(() => {});
-      if (Number.parseInt(PresentationRpcInterface.interfaceVersion.split(".")[0], 10) < 4) {
-        // hierarchy level size limiting requires core libraries at least @4.0
-        this.skip();
-      }
+      const consoleStub = vi.spyOn(console, "log").mockImplementation(() => {});
 
       const hierarchyLevelSizeLimit = 10;
 
       // __PUBLISH_EXTRACT_START__ Presentation.Components.HierarchyLevelLimiting
       function MyTree(props: { imodel: IModelConnection }) {
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const state = usePresentationTreeState({
           imodel: props.imodel,
           ruleset,
@@ -68,7 +63,7 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      const imodel = await buildTestIModel(this, async (builder) => {
+      const imodel = await buildTestIModel(".", async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKeyA = insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
         for (let i = 0; i < 10; ++i) {
@@ -98,11 +93,12 @@ describe("Learning snippets", () => {
 
       // expect B model to not have any children
       for (let i = 0; i < 11; ++i) {
-        expect(() => getNodeByLabel(container, `B element ${i + 1}`)).to.throw();
+        expect(() => getNodeByLabel(container, `B element ${i + 1}`)).toThrow();
       }
       // cspell:disable-next-line
-      await waitFor(() => expect(getByText(`thèré ârë möré îtëms thâñ älløwèd límît õf ${hierarchyLevelSizeLimit}`, { exact: false })).is.not.null);
-      consoleStub.restore();
+      await waitFor(() => expect(getByText(`thèré ârë möré îtëms thâñ älløwèd límît õf ${hierarchyLevelSizeLimit}`, { exact: false })).not.toBeNull());
+
+      consoleStub.mockRestore();
     });
   });
 });

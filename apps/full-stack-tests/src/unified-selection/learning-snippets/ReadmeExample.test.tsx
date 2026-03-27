@@ -5,7 +5,7 @@
 /* eslint-disable no-duplicate-imports */
 /* eslint-disable no-console */
 
-import { expect } from "chai";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useEffect, useState } from "react";
 import { KeySet } from "@itwin/presentation-common";
@@ -30,18 +30,18 @@ import { isSelectionStorageSupported, stubVirtualization } from "../../Utils.js"
 describe("Unified selection", () => {
   describe("Learning snippets", () => {
     describe("Readme example", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
       stubVirtualization();
 
-      it("Basic usage example", async function () {
-        const { imodel } = await buildIModel(this, async () => {});
+      it("Basic usage example", async () => {
+        const { imodel } = await buildIModel("Basic usage example", async () => {});
 
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.CreateStorage
         // Create a global selection store (generally, somewhere in main.ts or similar). This store
@@ -79,7 +79,7 @@ describe("Unified selection", () => {
         // __PUBLISH_EXTRACT_END__
 
         // Verify selection is initially empty
-        expect(Selectables.isEmpty(unifiedSelection.getSelection({ imodelKey: createIModelKey(imodel) }))).to.be.true;
+        expect(Selectables.isEmpty(unifiedSelection.getSelection({ imodelKey: createIModelKey(imodel) }))).toBe(true);
 
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.InteractiveComponent
         // An interactive component that allows selecting elements, representing something in an iModel, may want to
@@ -89,14 +89,14 @@ describe("Unified selection", () => {
         // __PUBLISH_EXTRACT_END__
 
         // Verify selection was added
-        expect(Selectables.size(unifiedSelection.getSelection({ imodelKey: createIModelKey(imodel) }))).to.eq(1);
+        expect(Selectables.size(unifiedSelection.getSelection({ imodelKey: createIModelKey(imodel) }))).toBe(1);
       });
 
-      it("Unified selection sync with iModel selection", async function () {
+      it("Unified selection sync with iModel selection", async () => {
         const {
           imodel,
           elementKey: { id: geometricElementId },
-        } = await buildIModel(this, async (builder) => {
+        } = await buildIModel("Unified selection sync with iModel selection", async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           const elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -170,17 +170,17 @@ describe("Unified selection", () => {
         }
 
         const { getByRole, getByText, user } = render(<App />);
-        await waitFor(() => expect(getByText("Number of selected elements: 0")).to.not.be.null);
+        await waitFor(() => expect(getByText("Number of selected elements: 0")).not.toBeNull());
 
         await user.click(getByRole("button"));
-        await waitFor(() => expect(getByText("Number of selected elements: 1")).to.not.be.null);
+        await waitFor(() => expect(getByText("Number of selected elements: 1")).not.toBeNull());
       });
 
       if (isSelectionStorageSupported()) {
-        it("Unified selection sync with legacy SelectionManager", async function () {
+        it("Unified selection sync with legacy SelectionManager", async () => {
           Presentation.terminate();
 
-          const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+          const { imodel, ...keys } = await buildIModel("Unified selection sync with legacy SelectionManager", async (builder) => {
             const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
             const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
             const elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -199,12 +199,12 @@ describe("Unified selection", () => {
           });
           // __PUBLISH_EXTRACT_END__
 
-          expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key }))).to.be.true;
+          expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key }))).toBe(true);
 
           // eslint-disable-next-line @typescript-eslint/no-deprecated
           Presentation.selection.addToSelection("test", imodel, new KeySet([keys.elementKey]));
           await waitFor(() => {
-            expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key }))).to.eq(1);
+            expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key }))).toBe(1);
           });
         });
       }

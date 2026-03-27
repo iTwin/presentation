@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import {
   getDefaultSubcategoryKey,
   insertDrawingCategory,
@@ -19,6 +18,7 @@ import {
   insertSubCategory,
   insertSubject,
 } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createHiliteSetProvider, SelectableInstanceKey, Selectables } from "@itwin/unified-selection";
 import { createIModelAccess } from "../hierarchies/Utils.js";
@@ -29,11 +29,11 @@ import { getSchemaFromPackage } from "./getSchema.js";
 describe("HiliteSet", () => {
   let iModel: IModelConnection;
 
-  before(async () => {
+  beforeAll(async () => {
     await initialize();
   });
 
-  after(async () => {
+  afterAll(async () => {
     await terminate();
   });
 
@@ -60,11 +60,11 @@ describe("HiliteSet", () => {
 
   describe("Hiliting selection", () => {
     describe("Subject", () => {
-      it("hilites models directly under subject", async function () {
+      it("hilites models directly under subject", async () => {
         let subjectKey: SelectableInstanceKey;
         let modelKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel("hilites models directly under subject", async (builder) => {
           subjectKey = insertSubject({ builder, codeValue: "test subject" });
           modelKeys = [
             insertPhysicalModelWithPartition({ builder, codeValue: "model 1", partitionParentId: subjectKey.id }),
@@ -74,19 +74,18 @@ describe("HiliteSet", () => {
 
         const hiliteSet = await loadHiliteSet(Selectables.create([subjectKey!]));
 
-        expect(hiliteSet.models)
-          .to.have.lengthOf(modelKeys!.length)
-          .and.to.include.members(modelKeys!.map((k) => k.id));
-        expect(hiliteSet.subCategories).to.be.empty;
-        expect(hiliteSet.elements).to.be.empty;
-        expect(iModel.selectionSet.size).to.eq(0);
+        expect(hiliteSet.models).toHaveLength(modelKeys!.length);
+        expect(hiliteSet.models).toEqual(expect.arrayContaining(modelKeys!.map((k) => k.id)));
+        expect(hiliteSet.subCategories).toHaveLength(0);
+        expect(hiliteSet.elements).toHaveLength(0);
+        expect(iModel.selectionSet.size).toBe(0);
       });
 
-      it("hilites models nested deeply under subject", async function () {
+      it("hilites models nested deeply under subject", async () => {
         let subjectKey: SelectableInstanceKey;
         let modelKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel("hilites models nested deeply under subject", async (builder) => {
           subjectKey = insertSubject({ builder, codeValue: "test subject" });
           const subject2 = insertSubject({ builder, codeValue: "subject 2", parentId: subjectKey.id });
           const subject3 = insertSubject({ builder, codeValue: "subject 3", parentId: subjectKey.id });
@@ -98,37 +97,37 @@ describe("HiliteSet", () => {
         });
         const hiliteSet = await loadHiliteSet(Selectables.create([subjectKey!]));
 
-        expect(hiliteSet.models)
-          .to.have.lengthOf(modelKeys!.length)
-          .and.to.include.members(modelKeys!.map((k) => k.id));
-        expect(hiliteSet.subCategories).to.be.empty;
-        expect(hiliteSet.elements).to.be.empty;
+        expect(hiliteSet.models).toHaveLength(modelKeys!.length);
+        expect(hiliteSet.models).toEqual(expect.arrayContaining(modelKeys!.map((k) => k.id)));
+        expect(hiliteSet.subCategories).toHaveLength(0);
+        expect(hiliteSet.elements).toHaveLength(0);
       });
     });
 
     describe("Model", () => {
-      it("hilites model", async function () {
+      it("hilites model", async () => {
         let modelKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel("hilites model", async (builder) => {
           modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         });
 
         const hiliteSet = await loadHiliteSet(Selectables.create([modelKey!]));
 
-        expect(hiliteSet.models).to.have.lengthOf(1).and.to.include(modelKey!.id);
-        expect(hiliteSet.subCategories).to.be.empty;
-        expect(hiliteSet.elements).to.be.empty;
-        expect(iModel.selectionSet.size).to.eq(0);
+        expect(hiliteSet.models).toHaveLength(1);
+        expect(hiliteSet.models).toContain(modelKey!.id);
+        expect(hiliteSet.subCategories).toHaveLength(0);
+        expect(hiliteSet.elements).toHaveLength(0);
+        expect(iModel.selectionSet.size).toBe(0);
       });
     });
 
     describe("Category", () => {
-      it("hilites category's subcategories", async function () {
+      it("hilites category's subcategories", async () => {
         let categoryKey: SelectableInstanceKey;
         let subCategoryKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel("hilites category's subcategories", async (builder) => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           subCategoryKeys = [
             getDefaultSubcategoryKey(categoryKey.id),
@@ -139,33 +138,33 @@ describe("HiliteSet", () => {
 
         const hiliteSet = await loadHiliteSet(Selectables.create([categoryKey!]));
 
-        expect(hiliteSet.models).to.be.empty;
-        expect(hiliteSet.subCategories)
-          .to.have.lengthOf(subCategoryKeys!.length)
-          .and.to.include.members(subCategoryKeys!.map((k) => k.id));
-        expect(hiliteSet.elements).to.be.empty;
+        expect(hiliteSet.models).toHaveLength(0);
+        expect(hiliteSet.subCategories).toHaveLength(subCategoryKeys!.length);
+        expect(hiliteSet.subCategories).toEqual(expect.arrayContaining(subCategoryKeys!.map((k) => k.id)));
+        expect(hiliteSet.elements).toHaveLength(0);
       });
 
-      it("hilites subcategory", async function () {
+      it("hilites subcategory", async () => {
         let categoryKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel("hilites subcategory", async (builder) => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         });
 
         const subCategoryKey = getDefaultSubcategoryKey(categoryKey!.id);
         const hiliteSet = await loadHiliteSet(Selectables.create([subCategoryKey]));
 
-        expect(hiliteSet.models).to.be.empty;
-        expect(hiliteSet.subCategories).to.have.lengthOf(1).and.to.include(subCategoryKey.id);
-        expect(hiliteSet.elements).to.be.empty;
+        expect(hiliteSet.models).toHaveLength(0);
+        expect(hiliteSet.subCategories).toHaveLength(1);
+        expect(hiliteSet.subCategories).toContain(subCategoryKey.id);
+        expect(hiliteSet.elements).toHaveLength(0);
       });
 
-      it("hilites when category and subcategory selected", async function () {
+      it("hilites when category and subcategory selected", async () => {
         let categoryKey: SelectableInstanceKey;
         let subCategoryKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel("hilites when category and subcategory selected", async (builder) => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           subCategoryKeys = [
             getDefaultSubcategoryKey(categoryKey.id),
@@ -176,20 +175,19 @@ describe("HiliteSet", () => {
 
         const hiliteSet = await loadHiliteSet(Selectables.create([categoryKey!, subCategoryKeys![0]]));
 
-        expect(hiliteSet.models).to.be.empty;
-        expect(hiliteSet.subCategories)
-          .to.have.lengthOf(subCategoryKeys!.length)
-          .and.to.include.members(subCategoryKeys!.map((k) => k.id));
-        expect(hiliteSet.elements).to.be.empty;
+        expect(hiliteSet.models).toHaveLength(0);
+        expect(hiliteSet.subCategories).toHaveLength(subCategoryKeys!.length);
+        expect(hiliteSet.subCategories).toEqual(expect.arrayContaining(subCategoryKeys!.map((k) => k.id)));
+        expect(hiliteSet.elements).toHaveLength(0);
       });
     });
 
     describe("Element", () => {
-      it("hilites assembly element", async function () {
+      it("hilites assembly element", async () => {
         let assemblyKey: SelectableInstanceKey;
         let expectedHighlightedElementKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel("hilites assembly element", async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -216,17 +214,16 @@ describe("HiliteSet", () => {
 
         const hiliteSet = await loadHiliteSet(Selectables.create([assemblyKey!]));
 
-        expect(hiliteSet.models).to.be.empty;
-        expect(hiliteSet.subCategories).to.be.empty;
-        expect(hiliteSet.elements)
-          .to.have.lengthOf(expectedHighlightedElementKeys!.length)
-          .and.to.include.members(expectedHighlightedElementKeys!.map((k) => k.id));
+        expect(hiliteSet.models).toHaveLength(0);
+        expect(hiliteSet.subCategories).toHaveLength(0);
+        expect(hiliteSet.elements).toHaveLength(expectedHighlightedElementKeys!.length);
+        expect(hiliteSet.elements).toEqual(expect.arrayContaining(expectedHighlightedElementKeys!.map((k) => k.id)));
       });
 
-      it("hilites leaf element", async function () {
+      it("hilites leaf element", async () => {
         let elementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel("hilites leaf element", async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -236,15 +233,16 @@ describe("HiliteSet", () => {
 
         const hiliteSet = await loadHiliteSet(Selectables.create([elementKey!]));
 
-        expect(hiliteSet.models).to.be.empty;
-        expect(hiliteSet.subCategories).to.be.empty;
-        expect(hiliteSet.elements).to.have.lengthOf(1).and.to.include(elementKey!.id);
+        expect(hiliteSet.models).toHaveLength(0);
+        expect(hiliteSet.subCategories).toHaveLength(0);
+        expect(hiliteSet.elements).toHaveLength(1);
+        expect(hiliteSet.elements).toContain(elementKey!.id);
       });
 
-      it("hilites all selected elements", async function () {
+      it("hilites all selected elements", async () => {
         let elementKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel("hilites all selected elements", async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -258,21 +256,20 @@ describe("HiliteSet", () => {
 
         const hiliteSet = await loadHiliteSet(Selectables.create(elementKeys!));
 
-        expect(hiliteSet.models).to.be.empty;
-        expect(hiliteSet.subCategories).to.be.empty;
-        expect(hiliteSet.elements)
-          .to.have.lengthOf(elementKeys!.length)
-          .and.to.include.members(elementKeys!.map((k) => k.id));
+        expect(hiliteSet.models).toHaveLength(0);
+        expect(hiliteSet.subCategories).toHaveLength(0);
+        expect(hiliteSet.elements).toHaveLength(elementKeys!.length);
+        expect(hiliteSet.elements).toEqual(expect.arrayContaining(elementKeys!.map((k) => k.id)));
       });
     });
 
     describe("Functional element", () => {
-      it("hilites functional element related physical elements", async function () {
+      it("hilites functional element related physical elements", async () => {
         let functionalElement: SelectableInstanceKey;
         let physicalElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel("hilites functional element related physical elements", async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -311,19 +308,18 @@ describe("HiliteSet", () => {
 
         const hiliteSet = await loadHiliteSet(Selectables.create([functionalElement!]));
 
-        expect(hiliteSet.models).to.be.empty;
-        expect(hiliteSet.subCategories).to.be.empty;
-        expect(hiliteSet.elements)
-          .to.have.lengthOf(expectedElements!.length)
-          .and.to.include.members(expectedElements!.map((k) => k.id));
+        expect(hiliteSet.models).toHaveLength(0);
+        expect(hiliteSet.subCategories).toHaveLength(0);
+        expect(hiliteSet.elements).toHaveLength(expectedElements!.length);
+        expect(hiliteSet.elements).toEqual(expect.arrayContaining(expectedElements!.map((k) => k.id)));
       });
 
-      it("hilites functional element related graphic elements", async function () {
+      it("hilites functional element related graphic elements", async () => {
         let functionalElement: SelectableInstanceKey;
         let graphicsElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel("hilites functional element related graphic elements", async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -354,20 +350,19 @@ describe("HiliteSet", () => {
 
         const hiliteSet = await loadHiliteSet(Selectables.create([functionalElement!]));
 
-        expect(hiliteSet.models).to.be.empty;
-        expect(hiliteSet.subCategories).to.be.empty;
-        expect(hiliteSet.elements)
-          .to.have.lengthOf(expectedElements!.length)
-          .and.to.include.members(expectedElements!.map((k) => k.id));
+        expect(hiliteSet.models).toHaveLength(0);
+        expect(hiliteSet.subCategories).toHaveLength(0);
+        expect(hiliteSet.elements).toHaveLength(expectedElements!.length);
+        expect(hiliteSet.elements).toEqual(expect.arrayContaining(expectedElements!.map((k) => k.id)));
       });
     });
 
     describe("Hilites GroupInformationElement", () => {
-      it("hilites group information element related physical elements", async function () {
+      it("hilites group information element related physical elements", async () => {
         let groupInformationElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel("hilites group information element related physical elements", async (builder) => {
           const groupModel = insertGroupInformationModelWithPartition({ builder, codeValue: "group information model" });
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -411,11 +406,10 @@ describe("HiliteSet", () => {
 
         const hiliteSet = await loadHiliteSet(Selectables.create([groupInformationElement!]));
 
-        expect(hiliteSet.models).to.be.empty;
-        expect(hiliteSet.subCategories).to.be.empty;
-        expect(hiliteSet.elements)
-          .to.have.lengthOf(expectedElements!.length)
-          .and.to.include.members(expectedElements!.map((k) => k.id));
+        expect(hiliteSet.models).toHaveLength(0);
+        expect(hiliteSet.subCategories).toHaveLength(0);
+        expect(hiliteSet.elements).toHaveLength(expectedElements!.length);
+        expect(hiliteSet.elements).toEqual(expect.arrayContaining(expectedElements!.map((k) => k.id)));
       });
     });
   });

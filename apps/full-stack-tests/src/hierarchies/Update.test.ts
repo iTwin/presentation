@@ -5,6 +5,7 @@
 
 import * as fs from "fs";
 import { collect } from "presentation-test-utilities";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, it } from "vitest";
 import {
   Element,
   ElementOwnsExternalSourceAspects,
@@ -48,7 +49,7 @@ describe("Hierarchies", () => {
     let db: StandaloneDb;
     let connection: BriefcaseConnection;
 
-    before(async function () {
+    beforeAll(async () => {
       const socket = new TestSocket();
       await IpcHost.startup({
         ipcHost: {
@@ -73,14 +74,14 @@ describe("Hierarchies", () => {
       RpcManager.initializeInterface(ECSchemaRpcInterface);
     });
 
-    after(async () => {
+    afterAll(async () => {
       // eslint-disable-next-line @itwin/no-internal
       await IpcApp.shutdown();
       await IpcHost.shutdown();
     });
 
-    beforeEach(async function () {
-      const fileName = createFileNameFromString(this.test!.fullTitle());
+    beforeEach(async (ctx) => {
+      const fileName = createFileNameFromString(ctx.task.name);
       const filePath = setupOutputFileLocation(fileName);
 
       if (fs.existsSync(filePath)) {
@@ -121,7 +122,7 @@ describe("Hierarchies", () => {
           imodel = getIModel();
         });
 
-        it("updates hierarchy when an element is inserted", async function () {
+        it("updates hierarchy when an element is inserted", async () => {
           const provider = createRootSubjectChildrenProvider();
           validateHierarchyLevel({
             nodes: await collect(
@@ -145,7 +146,7 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("updates hierarchy when an element is updated", async function () {
+        it("updates hierarchy when an element is updated", async () => {
           const subjectId = insertSubject("0x1", "test subject");
           db.saveChanges();
 
@@ -182,7 +183,7 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("updates hierarchy when an element is deleted", async function () {
+        it("updates hierarchy when an element is deleted", async () => {
           const subjectId = insertSubject("0x1", "test subject");
           db.saveChanges();
 
@@ -214,7 +215,7 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("updates hierarchy when an aspect is inserted", async function () {
+        it("updates hierarchy when an aspect is inserted", async () => {
           const subjectId = insertSubject("0x1", "test subject");
           db.saveChanges();
 
@@ -251,7 +252,7 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("updates hierarchy when an aspect is updated", async function () {
+        it("updates hierarchy when an aspect is updated", async () => {
           const subjectId = insertSubject("0x1", "test subject");
           const aspectId = insertExternalSourceAspect(subjectId, "test aspect");
           db.saveChanges();
@@ -289,7 +290,7 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("updates hierarchy when an aspect is deleted", async function () {
+        it("updates hierarchy when an aspect is deleted", async () => {
           const subjectId = insertSubject("0x1", "test subject");
           const aspectId = insertExternalSourceAspect(subjectId, "test aspect");
           db.saveChanges();
@@ -327,7 +328,7 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("updates hierarchy when a model is inserted", async function () {
+        it("updates hierarchy when a model is inserted", async () => {
           const partitionId = insertPhysicalPartition("0x1");
           db.saveChanges();
 
@@ -354,7 +355,7 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("updates hierarchy when a model is updated", async function () {
+        it("updates hierarchy when a model is updated", async () => {
           const partitionId = insertPhysicalPartition("0x1", "test");
           const modelId = insertPhysicalModel(partitionId, false);
           db.saveChanges();
@@ -392,7 +393,7 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("updates hierarchy when a model is deleted", async function () {
+        it("updates hierarchy when a model is deleted", async () => {
           const partitionId = insertPhysicalPartition("0x1");
           const modelId = insertPhysicalModel(partitionId, false);
           db.saveChanges();

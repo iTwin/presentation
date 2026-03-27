@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
@@ -18,18 +19,18 @@ describe("Hierarchies", () => {
     let subjectClassName: string;
     let physicalPartitionClassName: string;
 
-    before(async function () {
+    beforeAll(async () => {
       await initialize();
       subjectClassName = Subject.classFullName.replace(":", ".");
       physicalPartitionClassName = PhysicalPartition.classFullName.replace(":", ".");
     });
 
-    after(async () => {
+    afterAll(async () => {
       await terminate();
     });
 
-    it("creates different groups for different classes", async function () {
-      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+    it("creates different groups for different classes", async () => {
+      const { imodel, ...keys } = await buildIModel("creates different groups for different classes", async (builder) => {
         const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: IModel.rootSubjectId });
         const childPartition2 = insertPhysicalPartition({ builder, codeValue: "2", parentId: IModel.rootSubjectId });
         const childSubject3 = insertSubject({ builder, codeValue: "3", parentId: IModel.rootSubjectId });

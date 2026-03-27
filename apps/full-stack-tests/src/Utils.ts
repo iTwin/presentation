@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import sinon from "sinon";
+import { afterEach, beforeEach, type MockInstance, vi } from "vitest";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
   ClientDiagnosticsAttribute,
@@ -23,14 +23,14 @@ import { PresentationManager } from "@itwin/presentation-frontend";
 import frontendPackageJson from "@itwin/presentation-frontend/package.json" with { type: "json" };
 
 export function stubVirtualization() {
-  let stubs: sinon.SinonStub[] = [];
+  let stubs: MockInstance[] = [];
 
   beforeEach(() => {
-    stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetHeight").get(() => 800));
-    stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetWidth").get(() => 800));
+    stubs.push(vi.spyOn(window.HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(800));
+    stubs.push(vi.spyOn(window.HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(800));
 
     stubs.push(
-      sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
+      vi.spyOn(window.Element.prototype, "getBoundingClientRect").mockReturnValue({
         height: 20,
         width: 20,
         x: 0,
@@ -45,7 +45,7 @@ export function stubVirtualization() {
   });
 
   afterEach(() => {
-    stubs.forEach((stub) => stub.restore());
+    stubs.forEach((stub) => stub.mockRestore());
     stubs = [];
   });
 }

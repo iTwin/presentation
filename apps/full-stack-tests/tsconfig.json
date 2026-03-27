@@ -3,13 +3,14 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "noEmit": true,
     "sourceMap": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "noUnusedLocals": false,
     "jsx": "react-jsx",
     "outDir": "lib",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
   },
-  "include": ["src"]
+  "include": ["src", "vitest.config.ts"],
 }

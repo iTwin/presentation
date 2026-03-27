@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collect } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { importSchema, withECDb } from "../IModelUtils.js";
@@ -13,20 +14,20 @@ import { createIModelAccess, createProvider } from "./Utils.js";
 
 describe("Hierarchies", () => {
   describe("Hierarchy level filtering", () => {
-    before(async () => {
+    beforeAll(async () => {
       await initialize();
     });
 
-    after(async () => {
+    afterAll(async () => {
       await terminate();
     });
 
-    it("filters root hierarchy level", async function () {
+    it("filters root hierarchy level", async () => {
       await withECDb(
-        this,
+        "filters root hierarchy level",
         async (db) => {
           const schema = await importSchema(
-            this,
+            "filters root hierarchy level",
             db,
             `
               <ECEntityClass typeName="X">
@@ -101,12 +102,12 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters child hierarchy level", async function () {
+    it("filters child hierarchy level", async () => {
       await withECDb(
-        this,
+        "filters child hierarchy level",
         async (db) => {
           const schema = await importSchema(
-            this,
+            "filters child hierarchy level",
             db,
             `
               <ECEntityClass typeName="X" />
@@ -191,12 +192,12 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters grouped hierarchy level", async function () {
+    it("filters grouped hierarchy level", async () => {
       await withECDb(
-        this,
+        "filters grouped hierarchy level",
         async (db) => {
           const schema = await importSchema(
-            this,
+            "filters grouped hierarchy level",
             db,
             `
               <ECEntityClass typeName="X" />
@@ -287,12 +288,12 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters by property class", async function () {
+    it("filters by property class", async () => {
       await withECDb(
-        this,
+        "filters by property class",
         async (db) => {
           const schema = await importSchema(
-            this,
+            "filters by property class",
             db,
             `
               <ECEntityClass typeName="X" />
@@ -365,12 +366,12 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters by filter class", async function () {
+    it("filters by filter class", async () => {
       await withECDb(
-        this,
+        "filters by filter class",
         async (db) => {
           const schema = await importSchema(
-            this,
+            "filters by filter class",
             db,
             `
               <ECEntityClass typeName="X" />
@@ -444,12 +445,12 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters by direct property", async function () {
+    it("filters by direct property", async () => {
       await withECDb(
-        this,
+        "filters by direct property",
         async (db) => {
           const schema = await importSchema(
-            this,
+            "filters by direct property",
             db,
             `
               <ECEntityClass typeName="X">
@@ -524,12 +525,12 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters by related property", async function () {
+    it("filters by related property", async () => {
       await withECDb(
-        this,
+        "filters by related property",
         async (db) => {
           const schema = await importSchema(
-            this,
+            "filters by related property",
             db,
             `
               <ECEntityClass typeName="X" />

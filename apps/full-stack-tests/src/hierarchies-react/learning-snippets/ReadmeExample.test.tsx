@@ -5,7 +5,7 @@
 /* eslint-disable no-duplicate-imports */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { expect } from "chai";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess.Imports
 import { IModelConnection } from "@itwin/core-frontend";
@@ -70,7 +70,7 @@ describe("Hierarchies React", () => {
       beforeEach(async function () {
         await initialize();
         iModel = (
-          await buildIModel(this, async (builder) => {
+          await buildIModel("Readme example", async (builder) => {
             insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
             insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
           })
@@ -81,7 +81,7 @@ describe("Hierarchies React", () => {
         await terminate();
       });
 
-      it("Tree", async function () {
+      it("Tree", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.SelectionStorage
         // Not part of the package - this should be created once and reused across different components of the application.
         const unifiedSelectionStorage = createStorage();
@@ -154,8 +154,8 @@ describe("Hierarchies React", () => {
         const { getByRole, getByText } = render(<MyTreeComponent imodel={iModel} />);
         await waitFor(() => getByRole("tree"));
 
-        expect(getByText("My Model A")).to.not.be.null;
-        expect(getByText("My Model B")).to.not.be.null;
+        expect(getByText("My Model A")).not.toBeNull();
+        expect(getByText("My Model B")).not.toBeNull();
       });
     });
   });

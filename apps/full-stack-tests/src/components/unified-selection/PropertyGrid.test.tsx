@@ -5,6 +5,7 @@
 
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useCallback, useState } from "react";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey } from "@itwin/presentation-common";
@@ -18,17 +19,17 @@ import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils.js";
 
 describe("Learning snippets", async () => {
   describe("Property grid", () => {
-    before(async () => {
+    beforeAll(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
     });
 
-    after(async () => {
+    afterAll(async () => {
       UiComponents.terminate();
       await terminate();
     });
 
-    it("renders unified selection property grid", async function () {
+    it("renders unified selection property grid", async () => {
       // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.PropertyGrid
       // Create a single unified selection storage to be shared between all application's components
       const selectionStorage = createStorage();
@@ -77,7 +78,7 @@ describe("Learning snippets", async () => {
       // set up imodel for the test
       const elementKeys: InstanceKey[] = [];
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      const imodel = await buildTestIModel(this, (builder) => {
+      const imodel = await buildTestIModel("renders unified selection property grid", (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
         elementKeys.push(

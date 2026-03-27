@@ -51,11 +51,7 @@ class TestIModelBuilderImpl implements TestIModelBuilder {
   }
 }
 
-export async function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => void | Promise<void>): Promise<IModelConnection>;
-// eslint-disable-next-line @typescript-eslint/unified-signatures
-export async function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => void | Promise<void>): Promise<IModelConnection>;
-export async function buildTestIModel(nameParam: string | Mocha.Context, cb: (builder: TestIModelBuilder) => void | Promise<void>): Promise<IModelConnection> {
-  const name = typeof nameParam === "string" ? nameParam : createFileNameFromString(nameParam.test!.fullTitle());
+export async function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => void | Promise<void>): Promise<IModelConnection> {
   const outputFile = setupOutputFileLocation(`${name}.bim`);
   const db = SnapshotDb.createEmpty(outputFile, { rootSubject: { name } });
   const builder = new TestIModelBuilderImpl(db);

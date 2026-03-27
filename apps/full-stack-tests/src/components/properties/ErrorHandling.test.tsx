@@ -5,7 +5,7 @@
 
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useCallback, useState } from "react";
-import sinon from "sinon";
+import { afterAll, beforeAll, describe, it, vi } from "vitest";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
@@ -22,23 +22,19 @@ import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils.js";
 
 describe("Learning snippets", () => {
   describe("Property grid", () => {
-    before(async () => {
+    beforeAll(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
     });
 
-    after(async () => {
+    afterAll(async () => {
       UiComponents.terminate();
       await terminate();
     });
 
-    it("handles errors", async function () {
+    it.skipIf(Number.parseInt(PresentationRpcInterface.interfaceVersion.split(".")[0], 10) < 4)("handles errors", async () => {
       // stub console log to avoid ErrorBoundary warning in console
-      const consoleStub = sinon.stub(console, "error").callsFake(() => {});
-      if (Number.parseInt(PresentationRpcInterface.interfaceVersion.split(".")[0], 10) < 4) {
-        // property grid started supporting error boundaries since appui@4.0
-        this.skip();
-      }
+      const consoleStub = vi.spyOn(console, "error").mockImplementation(() => {});
 
       // __PUBLISH_EXTRACT_START__ Presentation.Components.PropertyGrid.ErrorHandling
       function MyPropertyGrid(props: { imodel: IModelConnection; elementKey: InstanceKey }) {
@@ -73,7 +69,7 @@ describe("Learning snippets", () => {
       // set up imodel for the test
       let elementKey: InstanceKey | undefined;
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      const imodel = await buildTestIModel(this, async (builder) => {
+      const imodel = await buildTestIModel(".", async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
         elementKey = insertPhysicalElement({ builder, userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -88,15 +84,19 @@ describe("Learning snippets", () => {
       // simulate a network error in RPC request
       const manager = Presentation.presentation;
       if (isIterableManager(manager)) {
-        sinon.stub(manager, "getContentIterator").throws(new Error("Network error"));
+        vi.spyOn(manager, "getContentIterator").mockImplementation(() => {
+          throw new Error("Network error");
+        });
       } else {
-        sinon.stub(Presentation.presentation, "getContentAndSize").throws(new Error("Network error"));
+        vi.spyOn(Presentation.presentation, "getContentAndSize").mockImplementation(() => {
+          throw new Error("Network error");
+        });
       }
 
       // re-render the component, ensure we now get an error
       rerender(<MyPropertyGrid imodel={imodel} elementKey={{ ...elementKey }} />);
       await ensureHasError(container, "Network error");
-      consoleStub.restore();
+      consoleStub.mockRestore();
     });
   });
 });

@@ -2,18 +2,19 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-const { execFileSync } = require("child_process");
-const cpx = require("cpx2");
-const fs = require("fs");
-const path = require("path");
+import { execFileSync } from "child_process";
+import cpx from "cpx2";
+import fs from "fs";
+import path from "path";
 
-const libDir = "./lib";
-const cacheDir = path.join(libDir, ".cache");
-fs.mkdirSync(cacheDir, { recursive: true });
+const outDir = "./build";
+const cacheDir = path.join(outDir, ".cache");
 
-cpx.copySync(`assets/**/*`, path.join(libDir, "assets"));
-copyITwinFrontendAssets("lib/public");
-pseudoLocalize("lib/public/locales");
+export async function setup() {
+  fs.mkdirSync(cacheDir, { recursive: true });
+  copyITwinFrontendAssets(path.join(outDir, "public"));
+  pseudoLocalize(path.join(outDir, "public/locales"));
+}
 
 function copyITwinFrontendAssets(outputDir) {
   const iTwinPackagesPath = "node_modules/@itwin";

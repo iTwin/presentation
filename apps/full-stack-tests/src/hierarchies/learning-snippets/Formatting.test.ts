@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Formatting.BasicFormatterExample.Imports
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
@@ -16,11 +16,11 @@ import { initialize, terminate } from "../../IntegrationTests.js";
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Formatting", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
@@ -33,16 +33,16 @@ describe("Hierarchies", () => {
           }
           return defaultFormatter(value);
         };
-        expect(await myFormatter({ type: "Boolean", value: true })).to.eq("yes!");
-        expect(await myFormatter({ type: "Boolean", value: false })).to.eq("no!");
+        expect(await myFormatter({ type: "Boolean", value: true })).toBe("yes!");
+        expect(await myFormatter({ type: "Boolean", value: false })).toBe("no!");
         // __PUBLISH_EXTRACT_END__
       });
 
-      it("formats values with units", async function () {
-        const { imodel, schema } = await buildIModel(this, async (builder, mochaContext) => {
+      it("formats values with units", async () => {
+        const { imodel, schema } = await buildIModel("formats values with units", async (builder, testName) => {
           return {
             schema: await importSchema(
-              mochaContext,
+              testName,
               builder,
               `
                 <ECSchemaReference name="Formats" version="01.00.00" alias="f"/>
@@ -73,13 +73,13 @@ describe("Hierarchies", () => {
         const koqName = `${mySchemaName}.FlowRate`;
 
         // Not passing `koqName` formats the value without units using the default formatter:
-        expect(await metricFormatter({ type: "Double", value })).to.eq("1.23");
+        expect(await metricFormatter({ type: "Double", value })).toBe("1.23");
 
         // Metric formatter formats the value in liters per minute:
-        expect(await metricFormatter({ type: "Double", value, koqName })).to.eq("74040.0 L/min");
+        expect(await metricFormatter({ type: "Double", value, koqName })).toBe("74040.0 L/min");
 
         // Imperial formatter formats the value in gallons per minute:
-        expect(await imperialFormatter({ type: "Double", value, koqName })).to.eq("19559.2988 gal/min");
+        expect(await imperialFormatter({ type: "Double", value, koqName })).toBe("19559.2988 gal/min");
         // __PUBLISH_EXTRACT_END__
       });
     });

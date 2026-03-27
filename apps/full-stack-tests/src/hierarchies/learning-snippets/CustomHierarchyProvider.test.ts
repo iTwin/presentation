@@ -6,9 +6,8 @@
 /* eslint-disable no-duplicate-imports */
 /* eslint-disable @typescript-eslint/no-base-to-string */
 
-import { expect } from "chai";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { collect } from "presentation-test-utilities";
-import * as sinon from "sinon";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.Imports
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
@@ -40,19 +39,19 @@ import { initialize, terminate } from "../../IntegrationTests.js";
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Custom hierarchy providers", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
       afterEach(() => {
-        sinon.restore();
+        vi.restoreAllMocks();
       });
 
-      it("creates basic provider", async function () {
+      it("creates basic provider", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.BasicProviderExample
         // Create a hierarchy provider that returns an infinite hierarchy, where each node has one child node.
         const provider: HierarchyProvider = {
@@ -79,37 +78,34 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
 
         const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
-        expect(rootNodes)
-          .to.have.lengthOf(1)
-          .and.to.containSubset([
-            {
-              label: "Root node",
-              children: true,
-            },
-          ]);
+        expect(rootNodes).toHaveLength(1);
+        expect(rootNodes).toMatchObject([
+          {
+            label: "Root node",
+            children: true,
+          },
+        ]);
         const childNodes1 = await collect(provider.getNodes({ parentNode: rootNodes[0] }));
-        expect(childNodes1)
-          .to.have.lengthOf(1)
-          .and.to.containSubset([
-            {
-              label: "Child 1",
-              children: true,
-            },
-          ]);
+        expect(childNodes1).toHaveLength(1);
+        expect(childNodes1).toMatchObject([
+          {
+            label: "Child 1",
+            children: true,
+          },
+        ]);
         const childNodes2 = await collect(provider.getNodes({ parentNode: childNodes1[0] }));
-        expect(childNodes2)
-          .to.have.lengthOf(1)
-          .and.to.containSubset([
-            {
-              label: "Child 2",
-              children: true,
-            },
-          ]);
+        expect(childNodes2).toHaveLength(1);
+        expect(childNodes2).toMatchObject([
+          {
+            label: "Child 2",
+            children: true,
+          },
+        ]);
       });
 
-      it("creates iModel provider", async function () {
-        const { imodel } = await buildIModel(this, async () => {});
-        const consoleLogSpy = sinon.stub(console, "log");
+      it("creates iModel provider", async () => {
+        const { imodel } = await buildIModel("creates iModel provider", async () => {});
+        const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.CustomIModelProviderExample
         // Create a hierarchy provider that returns the root bis.Subject and a hierarchy of its children.
@@ -219,14 +215,14 @@ describe("Hierarchies", () => {
         await traverseHierarchy(provider);
         // __PUBLISH_EXTRACT_END__
 
-        expect(consoleLogSpy.callCount).to.eq(3);
-        expect(consoleLogSpy.getCall(0).args[0]).to.eq(imodel.rootSubject.name);
-        expect(consoleLogSpy.getCall(1).args[0]).to.eq("  BisCore.RealityDataSources");
-        expect(consoleLogSpy.getCall(2).args[0]).to.eq("  BisCore.DictionaryModel");
+        expect(consoleLogSpy.mock.calls.length).toBe(3);
+        expect(consoleLogSpy.mock.calls[0][0]).toBe(imodel.rootSubject.name);
+        expect(consoleLogSpy.mock.calls[1][0]).toBe("  BisCore.RealityDataSources");
+        expect(consoleLogSpy.mock.calls[2][0]).toBe("  BisCore.DictionaryModel");
       });
 
-      it("creates 3rd party service provider", async function () {
-        const consoleLogSpy = sinon.stub(console, "log");
+      it("creates 3rd party service provider", async () => {
+        const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.3rdPartyServiceProviderExample
         // Create a fake books service that simulates fetching authors and books data.
@@ -281,7 +277,7 @@ describe("Hierarchies", () => {
         //   Executive orders
         // __PUBLISH_EXTRACT_END__
 
-        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq([
+        expect(consoleLogSpy.mock.calls.map((call) => call[0])).toEqual([
           "J.R.R. Tolkien",
           "  The Hobbit",
           "  The Fellowship of Ring",
@@ -297,8 +293,8 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("creates formatting provider", async function () {
-        const consoleLogSpy = sinon.stub(console, "log");
+      it("creates formatting provider", async () => {
+        const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FormattingProviderExample
         // Create a hierarchy provider that returns a single root node with formatted label. The formatter used by the
@@ -372,17 +368,17 @@ describe("Hierarchies", () => {
         console.log((await provider.getNodes().next()).value.label);
         // __PUBLISH_EXTRACT_END__
 
-        expect(consoleLogSpy.callCount).to.eq(2);
-        expect(consoleLogSpy.getCall(0).args[0]).to.eq(
+        expect(consoleLogSpy.mock.calls.length).toBe(2);
+        expect(consoleLogSpy.mock.calls[0][0]).toBe(
           `Boolean: true | Integer: 123 | Double: 4.56 | Date/Time: ${new Date(Date.UTC(2024, 11, 31)).toLocaleDateString()} | Point2d: (1.23, 5.68)`,
         );
-        expect(consoleLogSpy.getCall(1).args[0]).to.eq(
+        expect(consoleLogSpy.mock.calls[1][0]).toBe(
           "Boolean: Yes | Integer: i123 | Double: 4.6e+0 | Date/Time: 2024-12-31T00:00:00.000Z | Point2d: { x: 1.2e+0, y: 5.7e+0 }",
         );
       });
 
-      it("creates filtering provider", async function () {
-        const consoleLogSpy = sinon.stub(console, "log");
+      it("creates filtering provider", async () => {
+        const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
         const booksService = createBooksService();
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.PathsLookup
@@ -489,14 +485,14 @@ describe("Hierarchies", () => {
         //   Adventures of Huckleberry Finn
         //   The Adventures of Tom Sawyer
         // __PUBLISH_EXTRACT_END__
-        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq([
+        expect(consoleLogSpy.mock.calls.map((call) => call[0])).toEqual([
           "J.R.R. Tolkien",
           "  The Fellowship of Ring",
           "Mark Twain",
           "  Adventures of Huckleberry Finn",
           "  The Adventures of Tom Sawyer",
         ]);
-        consoleLogSpy.resetHistory();
+        consoleLogSpy.mockClear();
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered2
         // Apply the filter "tom" and traverse the filtered hierarchy. Notice that all books
@@ -511,7 +507,7 @@ describe("Hierarchies", () => {
         //   Red storm rising
         //   Executive orders
         // __PUBLISH_EXTRACT_END__
-        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq([
+        expect(consoleLogSpy.mock.calls.map((call) => call[0])).toEqual([
           "Mark Twain",
           "  The Adventures of Tom Sawyer",
           "Tom Clancy",
@@ -521,8 +517,8 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("creates provider with hierarchy level filtering support", async function () {
-        const consoleLogSpy = sinon.stub(console, "log");
+      it("creates provider with hierarchy level filtering support", async () => {
+        const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
         const booksService = createBooksService();
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Filter
@@ -625,8 +621,8 @@ describe("Hierarchies", () => {
           console.log(`- ${node.label}`);
         }
         // __PUBLISH_EXTRACT_END__
-        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq(["- Albert Einstein", "- Mark Twain"]);
-        consoleLogSpy.resetHistory();
+        expect(consoleLogSpy.mock.calls.map((call) => call[0])).toEqual(["- Albert Einstein", "- Mark Twain"]);
+        consoleLogSpy.mockClear();
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Result2
         // Create a filter to find books whose key contains "OL274" substring and title contains "Hobbit".
@@ -672,7 +668,7 @@ describe("Hierarchies", () => {
           console.log(`- ${node.label}`);
         }
         // __PUBLISH_EXTRACT_END__
-        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq(["- The Hobbit"]);
+        expect(consoleLogSpy.mock.calls.map((call) => call[0])).toEqual(["- The Hobbit"]);
       });
     });
   });

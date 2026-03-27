@@ -159,59 +159,58 @@ export class ECDbBuilder {
 }
 
 export async function withECDb(
-  mochaContext: Mocha.Context,
-  setup: (db: ECDbBuilder, mochaContext: Mocha.Context) => Promise<void>,
+  testName: string,
+  setup: (db: ECDbBuilder, testName: string) => Promise<void>,
   use: (db: ECDb) => Promise<void>,
 ): Promise<void>;
 export async function withECDb<TResult extends {}>(
-  mochaContext: Mocha.Context,
-  setup: (db: ECDbBuilder, mochaContext: Mocha.Context) => Promise<TResult>,
+  testName: string,
+  setup: (db: ECDbBuilder, testName: string) => Promise<TResult>,
   use: (db: ECDb, res: TResult) => Promise<void>,
 ): Promise<void>;
 export async function withECDb<TResult extends {} | undefined>(
-  mochaContext: Mocha.Context,
-  setup: (db: ECDbBuilder, mochaContext: Mocha.Context) => Promise<TResult | undefined>,
+  testName: string,
+  setup: (db: ECDbBuilder, testName: string) => Promise<TResult | undefined>,
   use: (db: ECDb, res: TResult | undefined) => Promise<void>,
 ) {
-  const name = createFileNameFromString(mochaContext.test!.fullTitle());
+  const name = createFileNameFromString(testName);
   const outputFile = setupOutputFileLocation(name);
   const db = new ECDb();
 
   db.createDb(outputFile);
-  const res = await setup(new ECDbBuilder(db, outputFile), mochaContext);
+  const res = await setup(new ECDbBuilder(db, outputFile), testName);
   db.saveChanges("Created test ECDb");
   await use(db, res);
   safeDispose(db);
 }
 
-export async function buildIModel<TFirstArg extends Mocha.Context | string>(
-  mochaContextOrTestName: TFirstArg,
-  setup?: (builder: TestIModelBuilder, mochaContextOrTestName: TFirstArg) => Promise<void>,
+export async function buildIModel(
+  testName: string,
+  setup?: (builder: TestIModelBuilder, testName: string) => Promise<void>,
 ): Promise<{ imodel: IModelConnection }>;
-export async function buildIModel<TFirstArg extends Mocha.Context | string, TResult extends {}>(
-  mochaContextOrTestName: TFirstArg,
-  setup: (builder: TestIModelBuilder, mochaContextOrTestName: TFirstArg) => Promise<TResult>,
+export async function buildIModel<TResult extends {}>(
+  testName: string,
+  setup: (builder: TestIModelBuilder, testName: string) => Promise<TResult>,
 ): Promise<{ imodel: IModelConnection } & TResult>;
-export async function buildIModel<TFirstArg extends Mocha.Context | string, TResult extends {} | undefined>(
-  mochaContextOrTestName: TFirstArg,
-  setup?: (builder: TestIModelBuilder, mochaContextOrTestName: TFirstArg) => Promise<TResult>,
+export async function buildIModel<TResult extends {} | undefined>(
+  testName: string,
+  setup?: (builder: TestIModelBuilder, testName: string) => Promise<TResult>,
 ) {
   let res!: TResult;
   // eslint-disable-next-line @typescript-eslint/no-deprecated
-  const imodel = await buildTestIModel(mochaContextOrTestName as any, async (builder) => {
+  const imodel = await buildTestIModel(testName, async (builder) => {
     if (setup) {
-      res = await setup(builder, mochaContextOrTestName);
+      res = await setup(builder, testName);
     }
   });
   return { ...res, imodel };
 }
 
 export async function importSchema(
-  mochaContextOrTestName: Mocha.Context | string,
+  testName: string,
   imodel: { importSchema: (xml: string) => Promise<void> | void },
   schemaContentXml: string,
 ) {
-  const testName = typeof mochaContextOrTestName === "string" ? mochaContextOrTestName : mochaContextOrTestName.test!.fullTitle();
   const schemaName = `SCHEMA_${testName}`.replace(/[^\w\d_]/gi, "_").replace(/_+/g, "_");
   const schemaAlias = `a_${Guid.createValue().replaceAll("-", "")}`;
   const schemaXml = getFullSchemaXml({ schemaName, schemaAlias, schemaContentXml });

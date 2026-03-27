@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
 
-import { expect } from "chai";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
@@ -60,7 +60,7 @@ describe("Hierarchies React", () => {
       beforeEach(async function () {
         await initialize();
         imodel = (
-          await buildIModel(this, async (builder) => {
+          await buildIModel("Localization", async (builder) => {
             insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
             insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
           })
@@ -108,7 +108,7 @@ describe("Hierarchies React", () => {
         await terminate();
       });
 
-      it("Tree localization", async function () {
+      it("Tree localization", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Tree
         function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
           const { rootNodes, expandNode } = useIModelUnifiedSelectionTree({
@@ -125,10 +125,10 @@ describe("Hierarchies React", () => {
         // __PUBLISH_EXTRACT_END__
 
         const { getAllByRole } = render(<MyTreeComponent imodelAccess={access} />);
-        await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).to.not.be.empty);
+        await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).not.toHaveLength(0));
       });
 
-      it("Tree renderer localization", async function () {
+      it("Tree renderer localization", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.TreeRenderer
         type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
         type TreeRendererProps = Props<typeof TreeRenderer>;
@@ -162,7 +162,7 @@ describe("Hierarchies React", () => {
         }
 
         const { getAllByRole } = render(<MyTreeComponent imodelAccess={access} />);
-        await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).to.not.be.empty);
+        await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).not.toHaveLength(0));
       });
     });
   });

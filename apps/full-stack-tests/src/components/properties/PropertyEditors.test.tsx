@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
-import sinon from "sinon";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import { EditorContainer, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
@@ -18,13 +17,13 @@ import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
 
 describe("Property editors", () => {
-  before(async () => {
+  beforeAll(async () => {
     await initialize();
     await UiComponents.initialize(IModelApp.localization);
   });
 
-  after(async () => {
-    sinon.restore();
+  afterAll(async () => {
+    vi.restoreAllMocks();
     UiComponents.terminate();
     await terminate();
   });
@@ -33,12 +32,14 @@ describe("Property editors", () => {
     IModelApp.resetFormatsProvider();
   });
 
-  it("renders property values with koq's overridden through `IModelApp.formatsProvider`", async function () {
-    const { imodel, schema, ...imodelKeys } = await buildIModel(this, async (builder, mochaContext) => {
-      const mySchema = await importSchema(
-        mochaContext,
-        builder,
-        `
+  it("renders property values with koq's overridden through `IModelApp.formatsProvider`", async () => {
+    const { imodel, schema, ...imodelKeys } = await buildIModel(
+      "renders property values with koq's overridden through `IModelApp.formatsProvider`",
+      async (builder, testName) => {
+        const mySchema = await importSchema(
+          testName,
+          builder,
+          `
           <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
           <ECSchemaReference name="Units" version="01.00.09" alias="u" />
           <ECSchemaReference name="Formats" version="01.00.00" alias="f" />
@@ -48,19 +49,20 @@ describe("Property editors", () => {
             <ECProperty propertyName="MyProperty" typeName="double" kindOfQuantity="TestKOQ" />
           </ECEntityClass>
         `,
-      );
-      const model = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
-      const category = insertSpatialCategory({ builder, codeValue: "TestSpatialCategory" });
-      const element = insertPhysicalElement({
-        builder,
-        modelId: model.id,
-        categoryId: category.id,
-        classFullName: mySchema.items.MyPhysicalObject.fullName,
-        userLabel: "My element",
-        ["MyProperty"]: 1.234,
-      });
-      return { element, schema: mySchema };
-    });
+        );
+        const model = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
+        const category = insertSpatialCategory({ builder, codeValue: "TestSpatialCategory" });
+        const element = insertPhysicalElement({
+          builder,
+          modelId: model.id,
+          categoryId: category.id,
+          classFullName: mySchema.items.MyPhysicalObject.fullName,
+          userLabel: "My element",
+          ["MyProperty"]: 1.234,
+        });
+        return { element, schema: mySchema };
+      },
+    );
 
     IModelApp.formatsProvider = {
       async getFormat(name: string): Promise<FormatDefinition | undefined> {
@@ -100,19 +102,19 @@ describe("Property editors", () => {
       },
       true,
     );
-    expect(field).to.not.be.undefined;
+    expect(field).toBeDefined();
 
     const propertyData = await provider.getData();
     const propertyRecord = propertyData.records[field!.category.name].find((r) => r.property.name === field!.name);
-    expect(propertyRecord).to.not.be.undefined;
-    expect(propertyRecord!.property.kindOfQuantityName).to.eq(schema.items.TestKOQ.fullName.replaceAll(".", ":"));
+    expect(propertyRecord).toBeDefined();
+    expect(propertyRecord!.property.kindOfQuantityName).toBe(schema.items.TestKOQ.fullName.replaceAll(".", ":"));
 
     // ensure the display value is formatted with the overridden format
-    expect((propertyRecord!.value as PrimitiveValue).displayValue).to.eq("48.6 in");
+    expect((propertyRecord!.value as PrimitiveValue).displayValue).toBe("48.6 in");
 
     // render an editor for the property
-    const commitSpy = sinon.spy();
-    const cancelSpy = sinon.spy();
+    const commitSpy = vi.fn();
+    const cancelSpy = vi.fn();
     const { getByPlaceholderText, findByRole, user } = render(
       <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={(x) => x.schemaContext}>
         <EditorContainer propertyRecord={propertyRecord!} onCommit={commitSpy} onCancel={cancelSpy} />
@@ -127,17 +129,17 @@ describe("Property editors", () => {
     await user.keyboard("{Enter}");
     // ensure the commit callback is called with the new value
     await waitFor(() => {
-      expect(commitSpy).to.have.been.calledOnce;
-      expect(commitSpy.firstCall.args[0].newValue.displayValue).to.eq("4.6 in"); // what is displayed after formatting
-      expect(commitSpy.firstCall.args[0].newValue.value.toFixed(6)).to.eq("0.115824"); // converted to persistence unit - meters
-      expect(commitSpy.firstCall.args[0].newValue.roundingError.toFixed(6)).to.eq("0.000127");
+      expect(commitSpy).toHaveBeenCalledOnce();
+      expect(commitSpy.mock.calls[0][0].newValue.displayValue).toBe("4.6 in"); // what is displayed after formatting
+      expect(commitSpy.mock.calls[0][0].newValue.value.toFixed(6)).toBe("0.115824"); // converted to persistence unit - meters
+      expect(commitSpy.mock.calls[0][0].newValue.roundingError.toFixed(6)).toBe("0.000127");
     });
   });
 
-  it("edits merged values", async function () {
-    const { imodel, schema, ...imodelKeys } = await buildIModel(this, async (builder, mochaContext) => {
+  it("edits merged values", async () => {
+    const { imodel, schema, ...imodelKeys } = await buildIModel("edits merged values", async (builder, testName) => {
       const mySchema = await importSchema(
-        mochaContext,
+        testName,
         builder,
         `
           <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
@@ -184,17 +186,17 @@ describe("Property editors", () => {
       },
       true,
     );
-    expect(field).to.not.be.undefined;
+    expect(field).toBeDefined();
 
     const propertyData = await provider.getData();
     const propertyRecord = propertyData.records[field!.category.name].find((r) => r.property.name === field!.name);
-    expect(propertyRecord).to.not.be.undefined;
-    expect(propertyRecord!.isReadonly).to.not.be.true;
-    expect(propertyRecord!.isDisabled).to.not.be.true;
+    expect(propertyRecord).toBeDefined();
+    expect(propertyRecord!.isReadonly).not.toBe(true);
+    expect(propertyRecord!.isDisabled).not.toBe(true);
 
     // render an editor for the property
-    const commitSpy = sinon.spy();
-    const cancelSpy = sinon.spy();
+    const commitSpy = vi.fn();
+    const cancelSpy = vi.fn();
     const { findByRole, user } = render(<EditorContainer propertyRecord={propertyRecord!} onCommit={commitSpy} onCancel={cancelSpy} />);
 
     // ensure the input is editable
@@ -204,10 +206,10 @@ describe("Property editors", () => {
     await user.keyboard("{Enter}");
     // ensure the commit callback is called with the new value
     await waitFor(() => {
-      expect(commitSpy).to.have.been.calledOnce;
-      expect(commitSpy.firstCall.args[0].newValue.displayValue).to.eq("4.56");
-      expect(commitSpy.firstCall.args[0].newValue.value).to.eq(4.56);
-      expect(commitSpy.firstCall.args[0].newValue.roundingError).to.eq(0.005);
+      expect(commitSpy).toHaveBeenCalledOnce();
+      expect(commitSpy.mock.calls[0][0].newValue.displayValue).toBe("4.56");
+      expect(commitSpy.mock.calls[0][0].newValue.value).toBe(4.56);
+      expect(commitSpy.mock.calls[0][0].newValue.roundingError).toBe(0.005);
     });
   });
 });

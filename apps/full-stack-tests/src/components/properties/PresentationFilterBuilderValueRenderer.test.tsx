@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory, waitFor } from "presentation-test-utilities";
-import sinon from "sinon";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { UiComponents } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
 import { ClassInfo, DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
@@ -18,24 +17,26 @@ import { stubVirtualization } from "../../Utils.js";
 
 describe("Presentation filter builder value renderer", () => {
   stubVirtualization();
-  before(async () => {
+  beforeAll(async () => {
     await initialize();
     await UiComponents.initialize(IModelApp.localization);
   });
 
-  after(async () => {
-    sinon.restore();
+  afterAll(async () => {
+    vi.restoreAllMocks();
     UiComponents.terminate();
     await terminate();
   });
 
-  it("renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided", async function () {
+  it("renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided", async () => {
     let schemaAlias = "";
-    const imodel = await buildIModel(this, async (builder, mochaContext) => {
-      const schema = await importSchema(
-        mochaContext,
-        builder,
-        `
+    const imodel = await buildIModel(
+      "renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided",
+      async (builder, testName) => {
+        const schema = await importSchema(
+          testName,
+          builder,
+          `
           <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
           <ECEntityClass typeName="MyPhysicalObjectParent">
             <BaseClass>bis:PhysicalElement</BaseClass>
@@ -48,38 +49,39 @@ describe("Presentation filter builder value renderer", () => {
             <BaseClass>MyPhysicalObjectParent</BaseClass>
           </ECEntityClass>
         `,
-      );
-      schemaAlias = schema.schemaAlias;
-      const physicalModel = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
-      const category = insertSpatialCategory({ builder, codeValue: "Test SpatialCategory" });
-      const parentElement = insertPhysicalElement({
-        builder,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObjectParent.fullName,
-        userLabel: "Parent Test Class",
-        ["PropertyName"]: "Parent",
-      });
-      const element1 = insertPhysicalElement({
-        builder,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObject1.fullName,
-        parentId: parentElement.id,
-        userLabel: "Test Class",
-        ["PropertyName"]: "Value1",
-      });
-      const element2 = insertPhysicalElement({
-        builder,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObject2.fullName,
-        parentId: parentElement.id,
-        userLabel: "Test Class 2",
-        ["PropertyName"]: "Value2",
-      });
-      return { parentElement, element1, element2, category };
-    });
+        );
+        schemaAlias = schema.schemaAlias;
+        const physicalModel = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
+        const category = insertSpatialCategory({ builder, codeValue: "Test SpatialCategory" });
+        const parentElement = insertPhysicalElement({
+          builder,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObjectParent.fullName,
+          userLabel: "Parent Test Class",
+          ["PropertyName"]: "Parent",
+        });
+        const element1 = insertPhysicalElement({
+          builder,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObject1.fullName,
+          parentId: parentElement.id,
+          userLabel: "Test Class",
+          ["PropertyName"]: "Value1",
+        });
+        const element2 = insertPhysicalElement({
+          builder,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObject2.fullName,
+          parentId: parentElement.id,
+          userLabel: "Test Class 2",
+          ["PropertyName"]: "Value2",
+        });
+        return { parentElement, element1, element2, category };
+      },
+    );
 
     const testProperty = {
       name: `#pc_${schemaAlias}_MyPhysicalObjectParent_PropertyName`,
@@ -140,18 +142,20 @@ describe("Presentation filter builder value renderer", () => {
     const combobox = await findByRole("combobox");
     await user.click(combobox);
     await waitFor(async () => {
-      expect(queryByText(baseElement, "Value1")).to.not.be.null;
-      expect(queryByText(baseElement, "Value2")).to.be.null;
+      expect(queryByText(baseElement, "Value1")).not.toBeNull();
+      expect(queryByText(baseElement, "Value2")).toBeNull();
     });
   });
 
-  it("renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided without keys", async function () {
+  it("renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided without keys", async () => {
     let schemaAlias = "";
-    const imodel = await buildIModel(this, async (builder, mochaContext) => {
-      const schema = await importSchema(
-        mochaContext,
-        builder,
-        `
+    const imodel = await buildIModel(
+      "renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided without keys",
+      async (builder, testName) => {
+        const schema = await importSchema(
+          testName,
+          builder,
+          `
           <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
           <ECEntityClass typeName="MyPhysicalObjectParent">
             <BaseClass>bis:PhysicalElement</BaseClass>
@@ -164,38 +168,39 @@ describe("Presentation filter builder value renderer", () => {
             <BaseClass>MyPhysicalObjectParent</BaseClass>
           </ECEntityClass>
         `,
-      );
-      schemaAlias = schema.schemaAlias;
-      const physicalModel = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
-      const category = insertSpatialCategory({ builder, codeValue: "Test SpatialCategory" });
-      const parentElement = insertPhysicalElement({
-        builder,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObjectParent.fullName,
-        userLabel: "Parent Test Class",
-        ["PropertyName"]: "Parent",
-      });
-      const element1 = insertPhysicalElement({
-        builder,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObject1.fullName,
-        parentId: parentElement.id,
-        userLabel: "Test Class",
-        ["PropertyName"]: "Value1",
-      });
-      const element2 = insertPhysicalElement({
-        builder,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObject2.fullName,
-        parentId: parentElement.id,
-        userLabel: "Test Class 2",
-        ["PropertyName"]: "Value2",
-      });
-      return { parentElement, element1, element2, category };
-    });
+        );
+        schemaAlias = schema.schemaAlias;
+        const physicalModel = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
+        const category = insertSpatialCategory({ builder, codeValue: "Test SpatialCategory" });
+        const parentElement = insertPhysicalElement({
+          builder,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObjectParent.fullName,
+          userLabel: "Parent Test Class",
+          ["PropertyName"]: "Parent",
+        });
+        const element1 = insertPhysicalElement({
+          builder,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObject1.fullName,
+          parentId: parentElement.id,
+          userLabel: "Test Class",
+          ["PropertyName"]: "Value1",
+        });
+        const element2 = insertPhysicalElement({
+          builder,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObject2.fullName,
+          parentId: parentElement.id,
+          userLabel: "Test Class 2",
+          ["PropertyName"]: "Value2",
+        });
+        return { parentElement, element1, element2, category };
+      },
+    );
 
     const testProperty = {
       name: `#pc_${schemaAlias}_MyPhysicalObjectParent_PropertyName`,
@@ -255,8 +260,8 @@ describe("Presentation filter builder value renderer", () => {
     const combobox = await findByRole("combobox");
     await user.click(combobox);
     await waitFor(async () => {
-      expect(queryByText(baseElement, "Value1")).to.not.be.null;
-      expect(queryByText(baseElement, "Value2")).to.be.null;
+      expect(queryByText(baseElement, "Value1")).not.toBeNull();
+      expect(queryByText(baseElement, "Value2")).toBeNull();
     });
   });
 });

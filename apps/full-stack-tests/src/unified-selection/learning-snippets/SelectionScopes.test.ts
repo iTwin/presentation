@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { collect, insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.SelectionScopes.Imports
 import { computeSelection } from "@itwin/unified-selection";
@@ -15,16 +15,16 @@ import { initialize, terminate } from "../../IntegrationTests.js";
 describe("Unified selection", () => {
   describe("Learning snippets", () => {
     describe("Selection scopes", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
-      it("Basic selection scope", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("Basic selection scope", async () => {
+        const { imodel, ...keys } = await buildIModel("Basic selection scope", async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           const elementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -39,11 +39,11 @@ describe("Unified selection", () => {
         // __PUBLISH_EXTRACT_END__
 
         const selectedKeys = await collect(selection);
-        expect(selectedKeys).to.deep.eq([keys.elementKey]);
+        expect(selectedKeys).toEqual([keys.elementKey]);
       });
 
-      it("Selection scope with ancestor level", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("Selection scope with ancestor level", async () => {
+        const { imodel, ...keys } = await buildIModel("Selection scope with ancestor level", async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           const parentElementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -68,7 +68,7 @@ describe("Unified selection", () => {
 
         // In this case, since the element has no parent, it should return itself
         const selectedKeys = await collect(selection);
-        expect(selectedKeys).to.deep.eq([keys.parentElementKey]);
+        expect(selectedKeys).toEqual([keys.parentElementKey]);
       });
     });
   });

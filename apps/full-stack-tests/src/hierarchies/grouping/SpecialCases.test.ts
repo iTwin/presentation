@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { afterAll, beforeAll, describe, it } from "vitest";
 import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { importSchema, withECDb } from "../../IModelUtils.js";
@@ -12,20 +13,20 @@ import { createIModelAccess, createProvider } from "../Utils.js";
 
 describe("Hierarchies", () => {
   describe("Grouping special cases", () => {
-    before(async function () {
+    beforeAll(async () => {
       await initialize();
     });
 
-    after(async () => {
+    afterAll(async () => {
       await terminate();
     });
 
-    it("groups children of hidden hierarchy levels", async function () {
+    it("groups children of hidden hierarchy levels", async () => {
       await withECDb(
-        this,
+        "groups children of hidden hierarchy levels",
         async (db) => {
           const schema = await importSchema(
-            this,
+            "groups children of hidden hierarchy levels",
             db,
             `
             <ECEntityClass typeName="B" />

@@ -6,6 +6,7 @@
 
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { IModelConnection } from "@itwin/core-frontend";
+import { afterAll, beforeAll, describe, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Imports
 import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
@@ -21,10 +22,10 @@ describe("Hierarchies", () => {
     describe("Hierarchy definitions", () => {
       let imodel: IModelConnection;
 
-      before(async function () {
+      beforeAll(async () => {
         await initialize();
 
-        const res = await buildIModel(this, async (builder) => {
+        const res = await buildIModel("Hierarchy definitions", async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "A" });
@@ -34,11 +35,11 @@ describe("Hierarchies", () => {
         imodel = res.imodel;
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
-      it("creates a hierarchy using simple hierarchy definition", async function () {
+      it("creates a hierarchy using simple hierarchy definition", async () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Simple
         const hierarchyDefinition: HierarchyDefinition = {
@@ -93,7 +94,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("uses hierarchy definition's parseNode callback", async function () {
+      it("uses hierarchy definition's parseNode callback", async () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.ParseNode
         const hierarchyDefinition: HierarchyDefinition = {
@@ -139,7 +140,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("uses hierarchy definition's preProcessNode callback", async function () {
+      it("uses hierarchy definition's preProcessNode callback", async () => {
         const imodelAccess = createIModelAccess(imodel);
         const externalService = {
           getExternalId: async <TNode extends { label: string }>(node: TNode) => {
@@ -200,7 +201,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("uses hierarchy definition's postProcessNode callback", async function () {
+      it("uses hierarchy definition's postProcessNode callback", async () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PostProcessNode
         const hierarchyDefinition: HierarchyDefinition = {
@@ -261,7 +262,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("creates hierarchy using predicate based hierarchy definition", async function () {
+      it("creates hierarchy using predicate based hierarchy definition", async () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PredicateBasedHierarchyDefinition
         const queryClauseFactory = createNodesQueryClauseFactory({

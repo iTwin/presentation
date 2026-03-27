@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Localization.Imports
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
@@ -17,18 +17,18 @@ import { collectHierarchy } from "./Utils.js";
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Localization", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
-      it("localizes property grouping node labels", async function () {
-        const { imodel, myPhysicalObjectClassName } = await buildIModel(this, async (builder, mochaContext) => {
+      it("localizes property grouping node labels", async () => {
+        const { imodel, myPhysicalObjectClassName } = await buildIModel("localizes property grouping node labels", async (builder, testName) => {
           const schema = await importSchema(
-            mochaContext,
+            testName,
             builder,
             `
               <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
@@ -136,7 +136,7 @@ describe("Hierarchies", () => {
         //
         // As shown in the above table, we expect to get 3 grouping nodes: "1 - 5", "Other", and "Unspecified". The
         // latter two strings are localized using the `localizedStrings` object, provided to `createIModelHierarchyProvider`.
-        expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+        expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
           { label: "1 - 5", children: [{ label: "Element 1" }, { label: "Element 2" }] },
           { label: "Kita", children: [{ label: "Element 3" }] },
           { label: "Nenurodyta", children: [{ label: "Element 4" }] },

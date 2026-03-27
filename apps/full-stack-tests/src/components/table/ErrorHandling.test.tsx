@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
-import sinon from "sinon";
+import { afterAll, beforeAll, describe, it, vi } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager, UiComponents } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
@@ -21,19 +21,19 @@ import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
 
 describe("Learning snippets", () => {
   describe("Table", () => {
-    before(async () => {
+    beforeAll(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
     });
 
-    after(async () => {
+    afterAll(async () => {
       UiComponents.terminate();
       await terminate();
     });
 
-    it("handles errors", async function () {
+    it("handles errors", async () => {
       // stub console log to avoid ErrorBoundary warning in console
-      const consoleStub = sinon.stub(console, "error").callsFake(() => {});
+      const consoleStub = vi.spyOn(console, "error").mockImplementation(() => {});
       // __PUBLISH_EXTRACT_START__ Presentation.Components.Table.ErrorHandling
       /** Props for `MyTable` and `MyProtectedTable` components */
       interface MyTableProps {
@@ -118,7 +118,7 @@ describe("Learning snippets", () => {
       // set up imodel for the test
       let modelKey: InstanceKey | undefined;
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      const imodel = await buildTestIModel(this, async (builder) => {
+      const imodel = await buildTestIModel("handles errors", async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
         insertPhysicalElement({ builder, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -133,15 +133,19 @@ describe("Learning snippets", () => {
       // simulate a network error in RPC request
       const manager = Presentation.presentation;
       if (isIterableManager(manager)) {
-        sinon.stub(manager, "getContentIterator").throws(new Error("Network error"));
+        vi.spyOn(manager, "getContentIterator").mockImplementation(() => {
+          throw new Error("Network error");
+        });
       } else {
-        sinon.stub(Presentation.presentation, "getContentAndSize").throws(new Error("Network error"));
+        vi.spyOn(Presentation.presentation, "getContentAndSize").mockImplementation(() => {
+          throw new Error("Network error");
+        });
       }
 
       // re-render the component, ensure we now get an error
       rerender(<MyTable imodel={imodel} keys={new KeySet([modelKey])} />);
       await ensureHasError(container, "Network error");
-      consoleStub.restore();
+      consoleStub.mockRestore();
     });
   });
 });

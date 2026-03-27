@@ -6,6 +6,7 @@
 
 import { collect, insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { IModelConnection } from "@itwin/core-frontend";
+import { afterAll, beforeAll, describe, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.Imports
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
@@ -21,10 +22,10 @@ describe("Hierarchies", () => {
     describe("Hierarchy level filtering", () => {
       let imodel: IModelConnection;
 
-      before(async function () {
+      beforeAll(async () => {
         await initialize();
 
-        const res = await buildIModel(this, async (builder) => {
+        const res = await buildIModel("Hierarchy level filtering", async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "A" });
@@ -35,11 +36,11 @@ describe("Hierarchies", () => {
         imodel = res.imodel;
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
-      it("creates filterable generic node", async function () {
+      it("creates filterable generic node", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.GenericHierarchyNodeDefinition
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -70,7 +71,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("creates filterable instances node", async function () {
+      it("creates filterable instances node", async () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.InstanceNodesQueryDefinition
         const queryClauseFactory = createNodesQueryClauseFactory({
@@ -113,7 +114,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("applies filter", async function () {
+      it("applies filter", async () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.ApplyFilter
         const queryClauseFactory = createNodesQueryClauseFactory({
