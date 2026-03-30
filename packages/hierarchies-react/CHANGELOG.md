@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.10.0
+
+### Minor Changes
+
+- [#1258](https://github.com/iTwin/presentation/pull/1258): Introduced new import paths: `@itwin/presentation-hierarchies-react/core` and `@itwin/presentation-hierarchies-react/itwinui`. They should allow to use this package without `@itwin/itwinui-react` dependency.
+
 ## 1.9.13
 
 ### Patch Changes
@@ -139,9 +145,17 @@
 
   const treeState = useUnifiedSelectionTree({
     selectionStorage,
-    createSelectableForGenericNode: useCallback<NonNullable<Props<typeof useUnifiedSelectionTree>["createSelectableForGenericNode"]>>(
-      (node, uniqueId) => ({ identifier: node.key.id, data: node, async *loadInstanceKeys() {} }),
-      [],
+    createSelectableForGenericNode: useCallback<
+      NonNullable<
+        Props<typeof useUnifiedSelectionTree>["createSelectableForGenericNode"]
+      >
+    >(
+      (node, uniqueId) => ({
+        identifier: node.key.id,
+        data: node,
+        async *loadInstanceKeys() {},
+      }),
+      []
     ),
     // ...other options
   });
@@ -248,6 +262,7 @@
 ### Minor Changes
 
 - [#841](https://github.com/iTwin/presentation/pull/841): Changed how tree state hooks access unified selection storage.
+
   - The tree state hooks that hook into unified selection system now accept a `selectionStorage` prop. At the moment the prop is optional, but will be made required in the next major release of the package.
   - The `UnifiedSelectionProvider` React context provider is now deprecated. The context is still used by tree state hooks if the selection storage is not provided through prop.
 
@@ -323,7 +338,11 @@
   Example usage:
 
   ```tsx
-  function MyTreeComponentInternal({ imodelAccess }: { imodelAccess: IModelAccess }) {
+  function MyTreeComponentInternal({
+    imodelAccess,
+  }: {
+    imodelAccess: IModelAccess;
+  }) {
     const {
       rootNodes,
       getNode,
@@ -338,18 +357,22 @@
       async (nodeId: string, isExpanded: boolean) => {
         const node = getNode(nodeId);
         if (node) {
-          console.log(`${isExpanded ? "Expanding" : "Collapsing"} node: ${node.label}`);
+          console.log(
+            `${isExpanded ? "Expanding" : "Collapsing"} node: ${node.label}`
+          );
         }
         doExpandNode(nodeId, isExpanded);
       },
-      [getNode, doExpandNode],
+      [getNode, doExpandNode]
     );
 
     // render the tree
     if (!rootNodes || !rootNodes.length) {
       return "No data to display";
     }
-    return <TreeRenderer {...state} expandNode={expandNode} rootNodes={rootNodes} />;
+    return (
+      <TreeRenderer {...state} expandNode={expandNode} rootNodes={rootNodes} />
+    );
   }
   ```
 
@@ -503,6 +526,7 @@
   See "Basic example" section in README learning page for the full example.
 
 - [#717](https://github.com/iTwin/presentation/pull/717): **BREAKING:** Add support for non-iModel-driven trees.
+
   - `useTree` and `useUnifiedSelectionTree` hooks have been changed to support non-iModel-driven trees. The hooks take a `getHierarchyProvider` prop, which returns a `HierarchyProvider`. The provider can return data from any data source.
   - New `useIModelTree` and `useIModelUnifiedSelectionTree` hooks have been added to cover the most common case, where a tree is created from a iModel's data. The API of these hooks is exactly the same as of the old `useTree` and `useUnifiedSelectionTree` hooks.
 
@@ -695,11 +719,12 @@
           const hierarchyLevelDetails = getHierarchyLevelDetails(nodeId);
           someFunc(hierarchyLevelDetails);
         }}
-
         // After the change
         onNodeClick={(node, isSelected, event) => someFunc(node.id)}
         onNodeKeyDown={(node, isSelected, event) => someFunc(node.id)}
-        onFilterClick={(hierarchyLevelDetails) => someFunc(hierarchyLevelDetails)}
+        onFilterClick={(hierarchyLevelDetails) =>
+          someFunc(hierarchyLevelDetails)
+        }
       />
     );
   }
@@ -732,7 +757,7 @@
       ...props,
       onHierarchyLimitExceeded: ({ nodeId, filter, limit }) => {
         console.log(`Hierarchy limit of ${limit} exceeded for node ${nodeId}.`);
-      }
+      },
     });
     return <TreeRenderer {...state} />;
   }
@@ -743,7 +768,7 @@
   ```ts
   import { registerTxnListeners } from "@itwin/presentation-core-interop";
 
-  function MyTree({ imodel, ...props}: Props) {
+  function MyTree({ imodel, ...props }: Props) {
     const { reloadTree, treeProps } = useTree(props);
     useEffect(() => {
       // listen for changes in iModel and reload tree
@@ -769,7 +794,7 @@
       ...props,
       onPerformanceMeasured: (action, duration) => {
         telemetryClient.log(`MyTree [${feature}] took ${duration} ms`);
-      }
+      },
     });
     return <TreeRenderer {...state} />;
   }
