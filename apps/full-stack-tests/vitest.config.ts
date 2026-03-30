@@ -17,8 +17,12 @@ export default defineConfig({
       printBasicPrototype: true,
     },
     environmentOptions: {
-      jsdom: {
-        console: true,
+      happyDOM: {
+        settings: {
+          // Prevent DOMException [NetworkError] when iTwinUI injects Google Fonts <link> elements
+          disableCSSFileLoading: true,
+          handleDisabledFileLoadingAsSuccess: true,
+        },
       },
     },
     setupFiles: ["./src/setup.ts"],
@@ -26,7 +30,14 @@ export default defineConfig({
     css: false,
     server: {
       deps: {
-        inline: ["@itwin/core-react", "@itwin/appui-react", "@itwin/components-react", "@itwin/imodel-components-react", "@itwin/presentation-components"],
+        inline: [
+          "@itwin/core-react",
+          "@itwin/appui-react",
+          "@itwin/components-react",
+          "@itwin/imodel-components-react",
+          "@itwin/presentation-components",
+          "@itwin/presentation-hierarchies-react",
+        ],
       },
     },
   },
