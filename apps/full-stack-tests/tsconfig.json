@@ -10,7 +10,7 @@
     "noUnusedLocals": false,
     "jsx": "react-jsx",
     "outDir": "lib",
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   },
-  "include": ["src", "vitest.config.ts"],
+  "include": ["src", "vitest.config.ts"]
 }

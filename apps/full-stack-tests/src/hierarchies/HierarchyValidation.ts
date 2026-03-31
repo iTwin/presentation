@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert, expect } from "vitest";
 import { collect } from "presentation-test-utilities";
 import { isDeepStrictEqual } from "util";
+import { assert, expect } from "vitest";
 import { Logger } from "@itwin/core-bentley";
 import {
   GenericNodeKey,

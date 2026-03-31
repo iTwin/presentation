@@ -158,11 +158,7 @@ export class ECDbBuilder {
   }
 }
 
-export async function withECDb(
-  testName: string,
-  setup: (db: ECDbBuilder, testName: string) => Promise<void>,
-  use: (db: ECDb) => Promise<void>,
-): Promise<void>;
+export async function withECDb(testName: string, setup: (db: ECDbBuilder, testName: string) => Promise<void>, use: (db: ECDb) => Promise<void>): Promise<void>;
 export async function withECDb<TResult extends {}>(
   testName: string,
   setup: (db: ECDbBuilder, testName: string) => Promise<TResult>,
@@ -197,7 +193,7 @@ export async function buildIModel<TResult extends {} | undefined>(
   setup?: (builder: TestIModelBuilder, testName: string) => Promise<TResult>,
 ) {
   let res!: TResult;
-   
+
   const imodel = await buildTestIModel(testName, async (builder) => {
     if (setup) {
       res = await setup(builder, testName);
@@ -206,11 +202,7 @@ export async function buildIModel<TResult extends {} | undefined>(
   return { ...res, imodel };
 }
 
-export async function importSchema(
-  testName: string,
-  imodel: { importSchema: (xml: string) => Promise<void> | void },
-  schemaContentXml: string,
-) {
+export async function importSchema(testName: string, imodel: { importSchema: (xml: string) => Promise<void> | void }, schemaContentXml: string) {
   const schemaName = `SCHEMA_${testName}`.replace(/[^\w\d_]/gi, "_").replace(/_+/g, "_");
   const schemaAlias = `a_${Guid.createValue().replaceAll("-", "")}`;
   const schemaXml = getFullSchemaXml({ schemaName, schemaAlias, schemaContentXml });
