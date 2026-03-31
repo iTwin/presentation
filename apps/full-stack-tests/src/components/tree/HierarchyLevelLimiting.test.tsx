@@ -31,7 +31,7 @@ describe("Learning snippets", () => {
       await terminate();
     });
 
-    // TODO: unskip once core dependencies are bumped to >5.8.0
+    // TODO: remove skip once core dependencies are bumped to >5.8.0
     // it.skipIf(Number.parseInt(PresentationRpcInterface.interfaceVersion.split(".")[0], 10) < 4)("limits hierarchy level size", async () => {
     it.skip("limits hierarchy level size", async () => {
       // stub console log to avoid hierarchy limit warning in console
