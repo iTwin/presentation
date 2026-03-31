@@ -20,7 +20,7 @@ describe("Hierarchies", () => {
     beforeAll(async () => {
       await initialize();
 
-      imodel = await buildTestIModel("hierarchy-level-instance-keys", async () => {});
+      imodel = (await buildTestIModel("hierarchy-level-instance-keys")).imodel;
     });
 
     afterAll(async () => {

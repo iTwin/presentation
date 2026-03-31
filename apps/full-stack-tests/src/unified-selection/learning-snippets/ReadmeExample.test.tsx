@@ -22,10 +22,10 @@ import { enableUnifiedSelectionSyncWithIModel, SelectionStorage } from "@itwin/u
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.LegacySelectionManagerSelectionSync.Imports
 import { Presentation } from "@itwin/presentation-frontend";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
 import { isSelectionStorageSupported, stubVirtualization } from "../../Utils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Unified selection", () => {
   describe("Learning snippets", () => {
@@ -41,7 +41,7 @@ describe("Unified selection", () => {
       stubVirtualization();
 
       it("Basic usage example", async () => {
-        const { imodel } = await buildIModel(expect.getState().currentTestName!, async () => {});
+        const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async () => {});
 
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.CreateStorage
         // Create a global selection store (generally, somewhere in main.ts or similar). This store
@@ -96,7 +96,7 @@ describe("Unified selection", () => {
         const {
           imodel,
           elementKey: { id: geometricElementId },
-        } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           const elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -180,7 +180,7 @@ describe("Unified selection", () => {
         it("Unified selection sync with legacy SelectionManager", async () => {
           Presentation.terminate();
 
-          const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
             const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
             const elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });

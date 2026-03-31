@@ -9,8 +9,8 @@ import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "../Utils.js";
 
@@ -33,7 +33,7 @@ describe("Hierarchies", () => {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
       const description1 = "test description1";
-      const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+      const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const childSubject1 = insertSubject({
           builder,
           codeValue: "A1",

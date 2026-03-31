@@ -22,8 +22,9 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSql, julianToDateTime } from "@itwin/presentation-shared";
-import { buildIModel, importSchema } from "../IModelUtils.js";
+import { importSchema } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
+import { buildTestIModel } from "../TestIModelSetup.js";
 import { validateHierarchy } from "./HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "./Utils.js";
 
@@ -33,7 +34,7 @@ describe("Hierarchies", () => {
 
   beforeAll(async () => {
     await initialize();
-    emptyIModel = (await buildIModel("Hierarchies")).imodel;
+    emptyIModel = (await buildTestIModel("Hierarchies")).imodel;
     subjectClassName = Subject.classFullName.replace(":", ".");
   });
 
@@ -84,7 +85,7 @@ describe("Hierarchies", () => {
 
     describe("KindOfQuantity", () => {
       it("formats instance node labels", async () => {
-        const { imodel, schema } = await buildIModel(expect.getState().currentTestName!, async (builder, testName) => {
+        const { imodel, schema } = await buildTestIModel(expect.getState().currentTestName!, async (builder, testName) => {
           // eslint-disable-next-line @typescript-eslint/no-shadow
           const schema = await importSchema(
             testName,
@@ -372,7 +373,7 @@ describe("Hierarchies", () => {
 
     describe("Boolean", () => {
       it("formats instance node labels", async () => {
-        const { imodel, modelClassName } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel, modelClassName } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const p1 = insertPhysicalPartition({ builder, codeValue: "p1", parentId: IModel.rootSubjectId });
           insertPhysicalSubModel({ builder, modeledElementId: p1.id, isPrivate: false });
           const p2 = insertPhysicalPartition({ builder, codeValue: "p2", parentId: IModel.rootSubjectId });
@@ -465,7 +466,7 @@ describe("Hierarchies", () => {
 
     describe("Integer", () => {
       it("formats instance node labels", async () => {
-        const { imodel, sheetIndexFolder } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel, sheetIndexFolder } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           return { sheetIndexFolder: insertSheetIndexFolder({ builder, entryPriority: 2 }) };
         });
         const imodelAccess = createIModelAccess(imodel);
@@ -550,7 +551,7 @@ describe("Hierarchies", () => {
 
     describe("Double", () => {
       it("formats instance node labels", async () => {
-        const { imodel, element } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel, element } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -650,7 +651,7 @@ describe("Hierarchies", () => {
 
     describe("Point2d", () => {
       it("formats instance node labels", async () => {
-        const { imodel, element } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel, element } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const model = insertDrawingModelWithPartition({ builder, codeValue: "model" });
           const category = insertDrawingCategory({ builder, codeValue: "category" });
           // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -748,7 +749,7 @@ describe("Hierarchies", () => {
 
     describe("Point3d", () => {
       it("formats instance node labels", async () => {
-        const { imodel, element } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel, element } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -847,7 +848,7 @@ describe("Hierarchies", () => {
     describe("Guid", () => {
       it("formats instance node labels", async () => {
         const guid = Guid.createValue();
-        const { imodel, element } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel, element } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           // eslint-disable-next-line @typescript-eslint/no-shadow

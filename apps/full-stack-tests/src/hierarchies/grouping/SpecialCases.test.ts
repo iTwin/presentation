@@ -23,7 +23,6 @@ describe("Hierarchies", () => {
 
     it("groups children of hidden hierarchy levels", async () => {
       await withECDb(
-        "groups children of hidden hierarchy levels",
         async (db) => {
           const schema = await importSchema(
             "groups children of hidden hierarchy levels",

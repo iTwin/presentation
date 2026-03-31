@@ -9,8 +9,8 @@ import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "../Utils.js";
 
@@ -30,7 +30,7 @@ describe("Hierarchies", () => {
     });
 
     it("creates different groups for different classes", async () => {
-      const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+      const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: IModel.rootSubjectId });
         const childPartition2 = insertPhysicalPartition({ builder, codeValue: "2", parentId: IModel.rootSubjectId });
         const childSubject3 = insertSubject({ builder, codeValue: "3", parentId: IModel.rootSubjectId });

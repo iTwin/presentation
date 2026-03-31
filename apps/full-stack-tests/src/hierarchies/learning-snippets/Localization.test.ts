@@ -9,10 +9,11 @@ import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialC
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel, importSchema } from "../../IModelUtils.js";
+import { importSchema } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -26,7 +27,7 @@ describe("Hierarchies", () => {
       });
 
       it("localizes property grouping node labels", async () => {
-        const { imodel, myPhysicalObjectClassName } = await buildIModel(expect.getState().currentTestName!, async (builder, testName) => {
+        const { imodel, myPhysicalObjectClassName } = await buildTestIModel(expect.getState().currentTestName!, async (builder, testName) => {
           const schema = await importSchema(
             testName,
             builder,

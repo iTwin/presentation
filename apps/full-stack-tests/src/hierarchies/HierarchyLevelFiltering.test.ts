@@ -24,7 +24,6 @@ describe("Hierarchies", () => {
 
     it("filters root hierarchy level", async () => {
       await withECDb(
-        "filters root hierarchy level",
         async (db) => {
           const schema = await importSchema(
             "filters root hierarchy level",
@@ -104,7 +103,6 @@ describe("Hierarchies", () => {
 
     it("filters child hierarchy level", async () => {
       await withECDb(
-        "filters child hierarchy level",
         async (db) => {
           const schema = await importSchema(
             "filters child hierarchy level",
@@ -194,7 +192,6 @@ describe("Hierarchies", () => {
 
     it("filters grouped hierarchy level", async () => {
       await withECDb(
-        "filters grouped hierarchy level",
         async (db) => {
           const schema = await importSchema(
             "filters grouped hierarchy level",
@@ -290,7 +287,6 @@ describe("Hierarchies", () => {
 
     it("filters by property class", async () => {
       await withECDb(
-        "filters by property class",
         async (db) => {
           const schema = await importSchema(
             "filters by property class",
@@ -368,7 +364,6 @@ describe("Hierarchies", () => {
 
     it("filters by filter class", async () => {
       await withECDb(
-        "filters by filter class",
         async (db) => {
           const schema = await importSchema(
             "filters by filter class",
@@ -447,7 +442,6 @@ describe("Hierarchies", () => {
 
     it("filters by direct property", async () => {
       await withECDb(
-        "filters by direct property",
         async (db) => {
           const schema = await importSchema(
             "filters by direct property",
@@ -527,7 +521,6 @@ describe("Hierarchies", () => {
 
     it("filters by related property", async () => {
       await withECDb(
-        "filters by related property",
         async (db) => {
           const schema = await importSchema(
             "filters by related property",

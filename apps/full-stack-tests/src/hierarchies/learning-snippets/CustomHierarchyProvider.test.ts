@@ -33,8 +33,8 @@ import { createHierarchyFilteringHelper, GenericNodeKey, HierarchyFilteringPath,
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports
 import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -104,7 +104,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates iModel provider", async () => {
-        const { imodel } = await buildIModel(expect.getState().currentTestName!, async () => {});
+        const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async () => {});
         const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.CustomIModelProviderExample

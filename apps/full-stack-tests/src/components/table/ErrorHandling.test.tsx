@@ -117,7 +117,7 @@ describe("Learning snippets", () => {
 
       // set up imodel for the test
       let modelKey: InstanceKey | undefined;
-      const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+      const { imodel } = await buildTestIModel(async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
         insertPhysicalElement({ builder, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });

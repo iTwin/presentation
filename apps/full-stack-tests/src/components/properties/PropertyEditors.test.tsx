@@ -12,9 +12,10 @@ import { IModelApp } from "@itwin/core-frontend";
 import { FormatDefinition } from "@itwin/core-quantity";
 import { FieldDescriptorType, KeySet } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider, SchemaMetadataContextProvider } from "@itwin/presentation-components";
-import { buildIModel, importSchema } from "../../IModelUtils.js";
+import { importSchema } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Property editors", () => {
   beforeAll(async () => {
@@ -33,7 +34,7 @@ describe("Property editors", () => {
   });
 
   it("renders property values with koq's overridden through `IModelApp.formatsProvider`", async () => {
-    const { imodel, schema, ...imodelKeys } = await buildIModel(
+    const { imodel, schema, ...imodelKeys } = await buildTestIModel(
       "renders property values with koq's overridden through `IModelApp.formatsProvider`",
       async (builder, testName) => {
         const mySchema = await importSchema(
@@ -137,7 +138,7 @@ describe("Property editors", () => {
   });
 
   it("edits merged values", async () => {
-    const { imodel, schema, ...imodelKeys } = await buildIModel(expect.getState().currentTestName!, async (builder, testName) => {
+    const { imodel, schema, ...imodelKeys } = await buildTestIModel(expect.getState().currentTestName!, async (builder, testName) => {
       const mySchema = await importSchema(
         testName,
         builder,

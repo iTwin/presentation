@@ -10,8 +10,9 @@ import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/pr
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Formatting.CoreInteropFormatterExample.Imports
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel, createSchemaContext, importSchema } from "../../IModelUtils.js";
+import { createSchemaContext, importSchema } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -39,7 +40,7 @@ describe("Hierarchies", () => {
       });
 
       it("formats values with units", async () => {
-        const { imodel, schema } = await buildIModel(expect.getState().currentTestName!, async (builder, testName) => {
+        const { imodel, schema } = await buildTestIModel(expect.getState().currentTestName!, async (builder, testName) => {
           return {
             schema: await importSchema(
               testName,

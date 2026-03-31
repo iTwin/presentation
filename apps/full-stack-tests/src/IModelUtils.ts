@@ -7,6 +7,7 @@ import { XMLParser } from "fast-xml-parser";
 import * as fs from "fs";
 import hash from "object-hash";
 import { getFullSchemaXml } from "presentation-test-utilities";
+import { expect } from "vitest";
 import { ECDb, ECSqlWriteStatement, IModelDb } from "@itwin/core-backend";
 import { assert, BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -14,7 +15,6 @@ import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { ECSqlBinding, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 import { createFileNameFromString, limitFilePathLength, setupOutputFileLocation } from "./FilenameUtils.js";
-import { buildTestIModel, TestIModelBuilder } from "./TestIModelSetup.js";
 import { safeDispose } from "./Utils.js";
 
 // cspell:words jpath
@@ -158,6 +158,11 @@ export class ECDbBuilder {
   }
 }
 
+export async function withECDb(setup: (db: ECDbBuilder, testName: string) => Promise<void>, use: (db: ECDb) => Promise<void>): Promise<void>;
+export async function withECDb<TResult extends {}>(
+  setup: (db: ECDbBuilder, testName: string) => Promise<TResult>,
+  use: (db: ECDb, res: TResult) => Promise<void>,
+): Promise<void>;
 export async function withECDb(testName: string, setup: (db: ECDbBuilder, testName: string) => Promise<void>, use: (db: ECDb) => Promise<void>): Promise<void>;
 export async function withECDb<TResult extends {}>(
   testName: string,
@@ -165,10 +170,14 @@ export async function withECDb<TResult extends {}>(
   use: (db: ECDb, res: TResult) => Promise<void>,
 ): Promise<void>;
 export async function withECDb<TResult extends {} | undefined>(
-  testName: string,
-  setup: (db: ECDbBuilder, testName: string) => Promise<TResult | undefined>,
-  use: (db: ECDb, res: TResult | undefined) => Promise<void>,
+  testNameOrSetup: string | ((db: ECDbBuilder, testName: string) => Promise<TResult | undefined>),
+  setupOrUse: ((db: ECDbBuilder, testName: string) => Promise<TResult | undefined>) | ((db: ECDb, res: TResult | undefined) => Promise<void>),
+  useOrNone?: (db: ECDb, res: TResult | undefined) => Promise<void>,
 ) {
+  const testName = typeof testNameOrSetup === "string" ? testNameOrSetup : expect.getState().currentTestName!;
+  const setup = (typeof testNameOrSetup === "function" ? testNameOrSetup : setupOrUse) as (db: ECDbBuilder, testName: string) => Promise<TResult | undefined>;
+  const use = (typeof testNameOrSetup === "function" ? setupOrUse : useOrNone!) as (db: ECDb, res: TResult | undefined) => Promise<void>;
+
   const name = createFileNameFromString(testName);
   const outputFile = setupOutputFileLocation(name);
   const db = new ECDb();
@@ -178,28 +187,6 @@ export async function withECDb<TResult extends {} | undefined>(
   db.saveChanges("Created test ECDb");
   await use(db, res);
   safeDispose(db);
-}
-
-export async function buildIModel(
-  testName: string,
-  setup?: (builder: TestIModelBuilder, testName: string) => Promise<void>,
-): Promise<{ imodel: IModelConnection }>;
-export async function buildIModel<TResult extends {}>(
-  testName: string,
-  setup: (builder: TestIModelBuilder, testName: string) => Promise<TResult>,
-): Promise<{ imodel: IModelConnection } & TResult>;
-export async function buildIModel<TResult extends {} | undefined>(
-  testName: string,
-  setup?: (builder: TestIModelBuilder, testName: string) => Promise<TResult>,
-) {
-  let res!: TResult;
-
-  const imodel = await buildTestIModel(testName, async (builder) => {
-    if (setup) {
-      res = await setup(builder, testName);
-    }
-  });
-  return { ...res, imodel };
 }
 
 export async function importSchema(testName: string, imodel: { importSchema: (xml: string) => Promise<void> | void }, schemaContentXml: string) {

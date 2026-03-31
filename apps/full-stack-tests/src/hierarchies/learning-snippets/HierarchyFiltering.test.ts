@@ -25,10 +25,10 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport
 import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -41,7 +41,7 @@ describe("Hierarchies", () => {
       beforeAll(async () => {
         await initialize();
 
-        const res = await buildIModel("Hierarchies Learning snippets Hierarchy filtering", async (builder) => {
+        const res = await buildTestIModel("Hierarchies Learning snippets Hierarchy filtering", async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "A" });

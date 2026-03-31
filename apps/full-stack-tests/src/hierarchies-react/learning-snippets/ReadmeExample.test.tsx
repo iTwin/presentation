@@ -24,10 +24,10 @@ import { useEffect, useState } from "react";
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.CustomTreeExample.Imports
 import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
 import { stubVirtualization } from "../../Utils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess
 // Not really part of the package, but we need SchemaContext to create the tree state. It's
@@ -70,7 +70,7 @@ describe("Hierarchies React", () => {
       beforeEach(async function () {
         await initialize();
         iModel = (
-          await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
             insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
           })

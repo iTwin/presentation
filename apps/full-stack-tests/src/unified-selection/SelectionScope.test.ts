@@ -45,18 +45,20 @@ describe("SelectionScope", () => {
     it("returns element", async () => {
       let elementKey1: SelectableInstanceKey;
 
-      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-        const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id }).id;
-        elementKey1 = insertPhysicalElement({
-          builder,
-          userLabel: "element 1",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: assemblyKey,
-        });
-      });
+      iModel = (
+        await buildTestIModel(async (builder) => {
+          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+          const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id }).id;
+          elementKey1 = insertPhysicalElement({
+            builder,
+            userLabel: "element 1",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            parentId: assemblyKey,
+          });
+        })
+      ).imodel;
 
       const actual = await getSelection([elementKey1!.id], { id: "element" });
       expect(actual).toEqual(expect.arrayContaining([elementKey1!]));
@@ -65,18 +67,20 @@ describe("SelectionScope", () => {
     it("skips invalid ID's", async () => {
       let elementKey1: SelectableInstanceKey;
 
-      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-        const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id }).id;
-        elementKey1 = insertPhysicalElement({
-          builder,
-          userLabel: "element 1",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: assemblyKey,
-        });
-      });
+      iModel = (
+        await buildTestIModel(async (builder) => {
+          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+          const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id }).id;
+          elementKey1 = insertPhysicalElement({
+            builder,
+            userLabel: "element 1",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            parentId: assemblyKey,
+          });
+        })
+      ).imodel;
 
       const actual = await getSelection([elementKey1!.id, "invalid"], { id: "element" });
       expect(actual).toEqual(expect.arrayContaining([elementKey1!]));
@@ -87,25 +91,27 @@ describe("SelectionScope", () => {
       let elementKey1: SelectableInstanceKey;
       let elementKey2: SelectableInstanceKey;
 
-      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-        parentKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
-        elementKey1 = insertPhysicalElement({
-          builder,
-          userLabel: "element 1",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: parentKey.id,
-        });
-        elementKey2 = insertPhysicalElement({
-          builder,
-          userLabel: "element 2",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: parentKey.id,
-        });
-      });
+      iModel = (
+        await buildTestIModel(async (builder) => {
+          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+          parentKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
+          elementKey1 = insertPhysicalElement({
+            builder,
+            userLabel: "element 1",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            parentId: parentKey.id,
+          });
+          elementKey2 = insertPhysicalElement({
+            builder,
+            userLabel: "element 2",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            parentId: parentKey.id,
+          });
+        })
+      ).imodel;
       const actual = await getSelection([elementKey1!.id, elementKey2!.id], { id: "element", ancestorLevel: 1 });
       expect(actual).toEqual(expect.arrayContaining([parentKey!]));
     });
@@ -113,11 +119,13 @@ describe("SelectionScope", () => {
     it("returns element when it has no parent", async () => {
       let elementKey: SelectableInstanceKey;
 
-      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-        elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
-      });
+      iModel = (
+        await buildTestIModel(async (builder) => {
+          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+          elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
+        })
+      ).imodel;
 
       const actual = await getSelection([elementKey!.id], { id: "element", ancestorLevel: 1 });
       expect(actual).toEqual(expect.arrayContaining([elementKey!]));
@@ -127,25 +135,27 @@ describe("SelectionScope", () => {
       let grandParentKey: SelectableInstanceKey;
       let elementKey: SelectableInstanceKey;
 
-      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-        grandParentKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
-        const parentKey = insertPhysicalElement({
-          builder,
-          userLabel: "element 1",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: grandParentKey.id,
-        });
-        elementKey = insertPhysicalElement({
-          builder,
-          userLabel: "element 2",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: parentKey.id,
-        });
-      });
+      iModel = (
+        await buildTestIModel(async (builder) => {
+          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+          grandParentKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
+          const parentKey = insertPhysicalElement({
+            builder,
+            userLabel: "element 1",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            parentId: grandParentKey.id,
+          });
+          elementKey = insertPhysicalElement({
+            builder,
+            userLabel: "element 2",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            parentId: parentKey.id,
+          });
+        })
+      ).imodel;
 
       const actual = await getSelection([elementKey!.id], { id: "element", ancestorLevel: 2 });
       expect(actual).toEqual(expect.arrayContaining([grandParentKey!]));
@@ -155,18 +165,20 @@ describe("SelectionScope", () => {
       let parentKey: SelectableInstanceKey;
       let elementKey: SelectableInstanceKey;
 
-      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-        parentKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
-        elementKey = insertPhysicalElement({
-          builder,
-          userLabel: "element 1",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: parentKey.id,
-        });
-      });
+      iModel = (
+        await buildTestIModel(async (builder) => {
+          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+          parentKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
+          elementKey = insertPhysicalElement({
+            builder,
+            userLabel: "element 1",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            parentId: parentKey.id,
+          });
+        })
+      ).imodel;
 
       const actual = await getSelection([elementKey!.id], { id: "element", ancestorLevel: 2 });
       expect(actual).toEqual(expect.arrayContaining([parentKey!]));
@@ -175,15 +187,17 @@ describe("SelectionScope", () => {
     it("returns all selected elements", async () => {
       let elementKeys: SelectableInstanceKey[];
 
-      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-        elementKeys = [
-          insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
-          insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
-          insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
-        ];
-      });
+      iModel = (
+        await buildTestIModel(async (builder) => {
+          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+          elementKeys = [
+            insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
+            insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
+            insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
+          ];
+        })
+      ).imodel;
 
       const actual = await getSelection(
         elementKeys!.map((key) => key.id),
@@ -196,32 +210,34 @@ describe("SelectionScope", () => {
       let rootElementKey: SelectableInstanceKey;
       let elementKey3: SelectableInstanceKey;
 
-      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-        rootElementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
-        const elementKey1 = insertPhysicalElement({
-          builder,
-          userLabel: "element 1",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: rootElementKey.id,
-        });
-        const elementKey2 = insertPhysicalElement({
-          builder,
-          userLabel: "element 2",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: elementKey1.id,
-        });
-        elementKey3 = insertPhysicalElement({
-          builder,
-          userLabel: "element 3",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: elementKey2.id,
-        });
-      });
+      iModel = (
+        await buildTestIModel(async (builder) => {
+          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+          rootElementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
+          const elementKey1 = insertPhysicalElement({
+            builder,
+            userLabel: "element 1",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            parentId: rootElementKey.id,
+          });
+          const elementKey2 = insertPhysicalElement({
+            builder,
+            userLabel: "element 2",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            parentId: elementKey1.id,
+          });
+          elementKey3 = insertPhysicalElement({
+            builder,
+            userLabel: "element 3",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            parentId: elementKey2.id,
+          });
+        })
+      ).imodel;
 
       const actual = await getSelection([elementKey3!.id], { id: "element", ancestorLevel: -1 });
       expect(actual).toEqual(expect.arrayContaining([rootElementKey!]));
@@ -234,35 +250,37 @@ describe("SelectionScope", () => {
       let categoryKey2: SelectableInstanceKey;
       let elementIds: string[];
 
-      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-        categoryKey1 = insertSpatialCategory({ builder, codeValue: "test category 1" });
-        categoryKey2 = insertSpatialCategory({ builder, codeValue: "test category 2" });
-        const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey1.id });
-        elementIds = [
-          insertPhysicalElement({
-            builder,
-            userLabel: "element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey1.id,
-            parentId: assemblyKey.id,
-          }).id,
-          insertPhysicalElement({
-            builder,
-            userLabel: "element 2",
-            modelId: modelKey.id,
-            categoryId: categoryKey1.id,
-            parentId: assemblyKey.id,
-          }).id,
-          insertPhysicalElement({
-            builder,
-            userLabel: "element 2",
-            modelId: modelKey.id,
-            categoryId: categoryKey2.id,
-            parentId: assemblyKey.id,
-          }).id,
-        ];
-      });
+      iModel = (
+        await buildTestIModel(async (builder) => {
+          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          categoryKey1 = insertSpatialCategory({ builder, codeValue: "test category 1" });
+          categoryKey2 = insertSpatialCategory({ builder, codeValue: "test category 2" });
+          const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey1.id });
+          elementIds = [
+            insertPhysicalElement({
+              builder,
+              userLabel: "element 1",
+              modelId: modelKey.id,
+              categoryId: categoryKey1.id,
+              parentId: assemblyKey.id,
+            }).id,
+            insertPhysicalElement({
+              builder,
+              userLabel: "element 2",
+              modelId: modelKey.id,
+              categoryId: categoryKey1.id,
+              parentId: assemblyKey.id,
+            }).id,
+            insertPhysicalElement({
+              builder,
+              userLabel: "element 2",
+              modelId: modelKey.id,
+              categoryId: categoryKey2.id,
+              parentId: assemblyKey.id,
+            }).id,
+          ];
+        })
+      ).imodel;
 
       const actual = await getSelection(elementIds!, { id: "category" });
       expect(actual).toEqual(expect.arrayContaining([categoryKey1!, categoryKey2!]));
@@ -274,27 +292,29 @@ describe("SelectionScope", () => {
       let modelKey: SelectableInstanceKey;
       let elementIds: string[];
 
-      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-        modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-        const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
-        elementIds = [
-          insertPhysicalElement({
-            builder,
-            userLabel: "element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: assemblyKey.id,
-          }).id,
-          insertPhysicalElement({
-            builder,
-            userLabel: "element 2",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: assemblyKey.id,
-          }).id,
-        ];
-      });
+      iModel = (
+        await buildTestIModel(async (builder) => {
+          modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+          const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
+          elementIds = [
+            insertPhysicalElement({
+              builder,
+              userLabel: "element 1",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: assemblyKey.id,
+            }).id,
+            insertPhysicalElement({
+              builder,
+              userLabel: "element 2",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: assemblyKey.id,
+            }).id,
+          ];
+        })
+      ).imodel;
 
       const actual = await getSelection(elementIds!, { id: "model" });
       expect(actual).toEqual(expect.arrayContaining([modelKey!]));
@@ -307,20 +327,22 @@ describe("SelectionScope", () => {
         let physicalElement: SelectableInstanceKey;
         let functionalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          physicalElement = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
-          functionalElement = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: physicalElement.id,
-            relationshipName: "PhysicalElementFulfillsFunction",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            physicalElement = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
+            functionalElement = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: physicalElement.id,
+              relationshipName: "PhysicalElementFulfillsFunction",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([physicalElement!.id], { id: "functional" });
         expect(actual).toEqual(expect.arrayContaining([functionalElement!]));
@@ -329,13 +351,15 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement3d` when no related functional element exists", async () => {
         let physicalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          physicalElement = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            physicalElement = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
+          })
+        ).imodel;
 
         const actual = await getSelection([physicalElement!.id], { id: "functional" });
         expect(actual).toEqual(expect.arrayContaining([physicalElement!]));
@@ -344,27 +368,29 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement3d` when parent has related functional element", async () => {
         let physicalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const physicalElementParent = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
-          physicalElement = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElementParent.id,
-          });
-          insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: physicalElementParent.id,
-            relationshipName: "PhysicalElementFulfillsFunction",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            const physicalElementParent = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
+            physicalElement = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElementParent.id,
+            });
+            insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: physicalElementParent.id,
+              relationshipName: "PhysicalElementFulfillsFunction",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([physicalElement!.id], { id: "functional" });
         expect(actual).toEqual(expect.arrayContaining([physicalElement!]));
@@ -375,27 +401,29 @@ describe("SelectionScope", () => {
         let physicalElement2: SelectableInstanceKey;
         let functionalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          physicalElement1 = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
-          physicalElement2 = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElement1.id,
-          });
-          functionalElement = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: physicalElement1.id,
-            relationshipName: "PhysicalElementFulfillsFunction",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            physicalElement1 = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
+            physicalElement2 = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElement1.id,
+            });
+            functionalElement = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: physicalElement1.id,
+              relationshipName: "PhysicalElementFulfillsFunction",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([physicalElement1!.id, physicalElement2!.id], { id: "functional" });
         expect(actual).toEqual(expect.arrayContaining([functionalElement!, physicalElement2!]));
@@ -405,27 +433,29 @@ describe("SelectionScope", () => {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const physicalElementParent = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
-          physicalElement = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElementParent.id,
-          });
-          functionalElementKey = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: physicalElementParent.id,
-            relationshipName: "PhysicalElementFulfillsFunction",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            const physicalElementParent = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
+            physicalElement = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElementParent.id,
+            });
+            functionalElementKey = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: physicalElementParent.id,
+              relationshipName: "PhysicalElementFulfillsFunction",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([physicalElement!.id], { id: "functional", ancestorLevel: 1 });
         expect(actual).toEqual(expect.arrayContaining([functionalElementKey!]));
@@ -435,20 +465,22 @@ describe("SelectionScope", () => {
         let parentKey: SelectableInstanceKey;
         let physicalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          parentKey = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
-          physicalElement = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: parentKey.id,
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            parentKey = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
+            physicalElement = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: parentKey.id,
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([physicalElement!.id], { id: "functional", ancestorLevel: 1 });
         expect(actual).toEqual(expect.arrayContaining([parentKey!]));
@@ -458,25 +490,27 @@ describe("SelectionScope", () => {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          physicalElement = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-          });
-          functionalElementKey = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: physicalElement.id,
-            relationshipName: "PhysicalElementFulfillsFunction",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            physicalElement = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+            });
+            functionalElementKey = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: physicalElement.id,
+              relationshipName: "PhysicalElementFulfillsFunction",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([physicalElement!.id], { id: "functional", ancestorLevel: 1 });
         expect(actual).toEqual(expect.arrayContaining([functionalElementKey!]));
@@ -485,18 +519,20 @@ describe("SelectionScope", () => {
       it("returns parentless `GeometricElement3d` when functional element does not exist", async () => {
         let physicalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          physicalElement = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            physicalElement = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([physicalElement!.id], { id: "functional", ancestorLevel: 1 });
         expect(actual).toEqual(expect.arrayContaining([physicalElement!]));
@@ -506,34 +542,41 @@ describe("SelectionScope", () => {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const physicalElementGrandParent = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
-          const physicalElementParent = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElementGrandParent.id,
-          });
-          physicalElement = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElementParent.id,
-          });
-          functionalElementKey = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: physicalElementGrandParent.id,
-            relationshipName: "PhysicalElementFulfillsFunction",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            const physicalElementGrandParent = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+            });
+            const physicalElementParent = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElementGrandParent.id,
+            });
+            physicalElement = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElementParent.id,
+            });
+            functionalElementKey = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: physicalElementGrandParent.id,
+              relationshipName: "PhysicalElementFulfillsFunction",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([physicalElement!.id], { id: "functional", ancestorLevel: 2 });
         expect(actual).toEqual(expect.arrayContaining([functionalElementKey!]));
@@ -543,27 +586,29 @@ describe("SelectionScope", () => {
         let physicalElementGrandParent: SelectableInstanceKey;
         let physicalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          physicalElementGrandParent = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
-          const physicalElementParent = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElementGrandParent.id,
-          });
-          physicalElement = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElementParent.id,
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            physicalElementGrandParent = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
+            const physicalElementParent = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElementGrandParent.id,
+            });
+            physicalElement = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElementParent.id,
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([physicalElement!.id], { id: "functional", ancestorLevel: 2 });
         expect(actual).toEqual(expect.arrayContaining([physicalElementGrandParent!]));
@@ -573,27 +618,29 @@ describe("SelectionScope", () => {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const physicalElementParent = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
-          physicalElement = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElementParent.id,
-          });
-          functionalElementKey = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: physicalElementParent.id,
-            relationshipName: "PhysicalElementFulfillsFunction",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            const physicalElementParent = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
+            physicalElement = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElementParent.id,
+            });
+            functionalElementKey = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: physicalElementParent.id,
+              relationshipName: "PhysicalElementFulfillsFunction",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([physicalElement!.id], { id: "functional", ancestorLevel: 2 });
         expect(actual).toEqual(expect.arrayContaining([functionalElementKey!]));
@@ -603,20 +650,22 @@ describe("SelectionScope", () => {
         let physicalElementParent: SelectableInstanceKey;
         let physicalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          physicalElementParent = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
-          physicalElement = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElementParent.id,
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            physicalElementParent = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
+            physicalElement = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElementParent.id,
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([physicalElement!.id], { id: "functional", ancestorLevel: 2 });
         expect(actual).toEqual(expect.arrayContaining([physicalElementParent!]));
@@ -626,39 +675,41 @@ describe("SelectionScope", () => {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const physicalElementGrandparent = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-          });
-          const physicalElementParent = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElementGrandparent.id,
-          });
-          physicalElement = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElementParent.id,
-          });
-          functionalElementKey = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: physicalElementGrandparent.id,
-            relationshipName: "PhysicalElementFulfillsFunction",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            const physicalElementGrandparent = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+            });
+            const physicalElementParent = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElementGrandparent.id,
+            });
+            physicalElement = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElementParent.id,
+            });
+            functionalElementKey = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: physicalElementGrandparent.id,
+              relationshipName: "PhysicalElementFulfillsFunction",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([physicalElement!.id], { id: "functional", ancestorLevel: -1 });
         expect(actual).toEqual(expect.arrayContaining([functionalElementKey!]));
@@ -670,27 +721,29 @@ describe("SelectionScope", () => {
         let graphicsElement: SelectableInstanceKey;
         let functionalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-          const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-          const graphicsElementParent = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: graphicsElementGrandParent.id,
-          });
-          graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
-          functionalElement = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: graphicsElement.id,
-            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+            const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            const graphicsElementParent = insertDrawingGraphic({
+              builder,
+              modelId: drawingModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: graphicsElementGrandParent.id,
+            });
+            graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
+            functionalElement = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: graphicsElement.id,
+              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([graphicsElement!.id], { id: "functional" });
         expect(actual).toEqual(expect.arrayContaining([functionalElement!]));
@@ -699,20 +752,22 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement2d` when no related functional element exists", async () => {
         let graphicsElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-          const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-          const graphicsElementParent = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: graphicsElementGrandParent.id,
-          });
-          graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+            const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            const graphicsElementParent = insertDrawingGraphic({
+              builder,
+              modelId: drawingModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: graphicsElementGrandParent.id,
+            });
+            graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
+          })
+        ).imodel;
 
         const actual = await getSelection([graphicsElement!.id], { id: "functional" });
         expect(actual).toEqual(expect.arrayContaining([graphicsElement!]));
@@ -724,34 +779,36 @@ describe("SelectionScope", () => {
         let functionalElement1: SelectableInstanceKey;
         let functionalElement2: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-          const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-          const graphicsElementParent = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: graphicsElementGrandParent.id,
-          });
-          graphicsElement1 = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
-          graphicsElement2 = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
-          functionalElement1 = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: graphicsElement2.id,
-            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-          });
-          functionalElement2 = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: graphicsElementGrandParent.id,
-            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+            const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            const graphicsElementParent = insertDrawingGraphic({
+              builder,
+              modelId: drawingModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: graphicsElementGrandParent.id,
+            });
+            graphicsElement1 = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
+            graphicsElement2 = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
+            functionalElement1 = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: graphicsElement2.id,
+              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            });
+            functionalElement2 = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: graphicsElementGrandParent.id,
+              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([graphicsElement1!.id, graphicsElement2!.id], { id: "functional" });
         expect(actual).toEqual(expect.arrayContaining([functionalElement1!, functionalElement2!]));
@@ -763,40 +820,42 @@ describe("SelectionScope", () => {
         let functionalElement1: SelectableInstanceKey;
         let functionalElement2: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-          const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-          const graphicsElementParent = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: graphicsElementGrandParent.id,
-          });
-          graphicsElement1 = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
-          graphicsElement2 = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
-          functionalElement1 = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: graphicsElement2.id,
-            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-          });
-          functionalElement2 = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: graphicsElementParent.id,
-            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-          });
-          insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: graphicsElementGrandParent.id,
-            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+            const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            const graphicsElementParent = insertDrawingGraphic({
+              builder,
+              modelId: drawingModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: graphicsElementGrandParent.id,
+            });
+            graphicsElement1 = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
+            graphicsElement2 = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
+            functionalElement1 = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: graphicsElement2.id,
+              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            });
+            functionalElement2 = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: graphicsElementParent.id,
+              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            });
+            insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: graphicsElementGrandParent.id,
+              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([graphicsElement1!.id, graphicsElement2!.id], { id: "functional" });
         expect(actual).toEqual(expect.arrayContaining([functionalElement1!, functionalElement2!]));
@@ -806,27 +865,29 @@ describe("SelectionScope", () => {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-          const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-          const graphicsElementParent = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: graphicsElementGrandParent.id,
-          });
-          graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
-          functionalElementKey = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: graphicsElement.id,
-            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+            const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            const graphicsElementParent = insertDrawingGraphic({
+              builder,
+              modelId: drawingModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: graphicsElementGrandParent.id,
+            });
+            graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
+            functionalElementKey = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: graphicsElement.id,
+              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([graphicsElement!.id], { id: "functional", ancestorLevel: 1 });
         expect(actual).toEqual(expect.arrayContaining([functionalElementKey!]));
@@ -836,27 +897,29 @@ describe("SelectionScope", () => {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-          const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-          const graphicsElementParent = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: graphicsElementGrandParent.id,
-          });
-          graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
-          functionalElementKey = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: graphicsElementParent.id,
-            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+            const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            const graphicsElementParent = insertDrawingGraphic({
+              builder,
+              modelId: drawingModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: graphicsElementGrandParent.id,
+            });
+            graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
+            functionalElementKey = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: graphicsElementParent.id,
+              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([graphicsElement!.id], { id: "functional", ancestorLevel: 1 });
         expect(actual).toEqual(expect.arrayContaining([functionalElementKey!]));
@@ -866,27 +929,29 @@ describe("SelectionScope", () => {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-          const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-          const graphicsElementParent = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: graphicsElementGrandParent.id,
-          });
-          graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
-          functionalElementKey = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: graphicsElementGrandParent.id,
-            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+            const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            const graphicsElementParent = insertDrawingGraphic({
+              builder,
+              modelId: drawingModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: graphicsElementGrandParent.id,
+            });
+            graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
+            functionalElementKey = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: graphicsElementGrandParent.id,
+              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([graphicsElement!.id], { id: "functional", ancestorLevel: 1 });
         expect(actual).toEqual(expect.arrayContaining([functionalElementKey!]));
@@ -897,36 +962,38 @@ describe("SelectionScope", () => {
         let graphicsElement2: SelectableInstanceKey;
         let functionalElementKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-          const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-          const graphicsElementParent = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: graphicsElementGrandParent.id,
-          });
-          graphicsElement1 = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
-          graphicsElement2 = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
-          functionalElementKeys = [
-            insertFunctionalElement({
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+            const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            const graphicsElementParent = insertDrawingGraphic({
               builder,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElementGrandParent.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-            }),
-            insertFunctionalElement({
-              builder,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElement1.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-            }),
-          ];
-        });
+              modelId: drawingModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: graphicsElementGrandParent.id,
+            });
+            graphicsElement1 = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
+            graphicsElement2 = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
+            functionalElementKeys = [
+              insertFunctionalElement({
+                builder,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElementGrandParent.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              }),
+              insertFunctionalElement({
+                builder,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElement1.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              }),
+            ];
+          })
+        ).imodel;
 
         const actual = await getSelection([graphicsElement1!.id, graphicsElement2!.id], { id: "functional", ancestorLevel: 1 });
         expect(actual).toEqual(expect.arrayContaining(functionalElementKeys!));
@@ -936,20 +1003,22 @@ describe("SelectionScope", () => {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-          graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-          functionalElementKey = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: graphicsElement.id,
-            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+            graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            functionalElementKey = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: graphicsElement.id,
+              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([graphicsElement!.id], { id: "functional", ancestorLevel: 1 });
         expect(actual).toEqual(expect.arrayContaining([functionalElementKey!]));
@@ -958,13 +1027,15 @@ describe("SelectionScope", () => {
       it("returns parentless `GeometricElement2d` without related functional element", async () => {
         let graphicsElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-          graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+            graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+          })
+        ).imodel;
 
         const actual = await getSelection([graphicsElement!.id], { id: "functional", ancestorLevel: 1 });
         expect(actual).toEqual(expect.arrayContaining([graphicsElement!]));
@@ -974,20 +1045,22 @@ describe("SelectionScope", () => {
         let graphicsElementGrandParent: SelectableInstanceKey;
         let graphicsElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-          graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-          const graphicsElementParent = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: graphicsElementGrandParent.id,
-          });
-          graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+            graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            const graphicsElementParent = insertDrawingGraphic({
+              builder,
+              modelId: drawingModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: graphicsElementGrandParent.id,
+            });
+            graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
+          })
+        ).imodel;
 
         const actual = await getSelection([graphicsElement!.id], { id: "functional", ancestorLevel: 2 });
         expect(actual).toEqual(expect.arrayContaining([graphicsElementGrandParent!]));
@@ -997,14 +1070,16 @@ describe("SelectionScope", () => {
         let graphicsElementParent: SelectableInstanceKey;
         let graphicsElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-          graphicsElementParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-          graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+            graphicsElementParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
+          })
+        ).imodel;
 
         const actual = await getSelection([graphicsElement!.id], { id: "functional", ancestorLevel: 2 });
         expect(actual).toEqual(expect.arrayContaining([graphicsElementParent!]));
@@ -1014,27 +1089,29 @@ describe("SelectionScope", () => {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-          const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-          const graphicsElementParent = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: graphicsElementGrandParent.id,
-          });
-          graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
-          functionalElementKey = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: graphicsElementGrandParent.id,
-            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-          });
-        });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+            const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            const graphicsElementParent = insertDrawingGraphic({
+              builder,
+              modelId: drawingModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: graphicsElementGrandParent.id,
+            });
+            graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElementParent.id });
+            functionalElementKey = insertFunctionalElement({
+              builder,
+              modelId: functionalModelKey.id,
+              representedElementId: graphicsElementGrandParent.id,
+              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            });
+          })
+        ).imodel;
 
         const actual = await getSelection([graphicsElement!.id], { id: "functional", ancestorLevel: -1 });
         expect(actual).toEqual(expect.arrayContaining([functionalElementKey!]));
@@ -1047,64 +1124,66 @@ describe("SelectionScope", () => {
         let physicalElement2: SelectableInstanceKey;
         let functionalElementKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const spatialCategoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const drawingCategoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const spatialCategoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            const drawingCategoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
 
-          const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: drawingCategoryKey.id });
-          const graphicsElementParent = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: drawingCategoryKey.id,
-            parentId: graphicsElementGrandParent.id,
-          });
-          const graphicsElement1 = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: drawingCategoryKey.id,
-            parentId: graphicsElementParent.id,
-          });
-          const graphicsElement2 = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: drawingCategoryKey.id,
-            parentId: graphicsElementParent.id,
-          });
-          const physicalElement1 = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: spatialCategoryKey.id });
-          physicalElement2 = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: spatialCategoryKey.id,
-            parentId: physicalElement1.id,
-          });
-          elementIds = [graphicsElement1.id, graphicsElement2.id, physicalElement1.id, physicalElement2.id];
-          functionalElementKeys = [
-            insertFunctionalElement({
+            const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: drawingCategoryKey.id });
+            const graphicsElementParent = insertDrawingGraphic({
               builder,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElement2.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-            }),
-            insertFunctionalElement({
+              modelId: drawingModelKey.id,
+              categoryId: drawingCategoryKey.id,
+              parentId: graphicsElementGrandParent.id,
+            });
+            const graphicsElement1 = insertDrawingGraphic({
               builder,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElementGrandParent.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-            }),
-            insertFunctionalElement({
+              modelId: drawingModelKey.id,
+              categoryId: drawingCategoryKey.id,
+              parentId: graphicsElementParent.id,
+            });
+            const graphicsElement2 = insertDrawingGraphic({
               builder,
-              modelId: functionalModelKey.id,
-              representedElementId: physicalElement1.id,
-              relationshipName: "PhysicalElementFulfillsFunction",
-            }),
-          ];
-        });
+              modelId: drawingModelKey.id,
+              categoryId: drawingCategoryKey.id,
+              parentId: graphicsElementParent.id,
+            });
+            const physicalElement1 = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: spatialCategoryKey.id });
+            physicalElement2 = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: spatialCategoryKey.id,
+              parentId: physicalElement1.id,
+            });
+            elementIds = [graphicsElement1.id, graphicsElement2.id, physicalElement1.id, physicalElement2.id];
+            functionalElementKeys = [
+              insertFunctionalElement({
+                builder,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElement2.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              }),
+              insertFunctionalElement({
+                builder,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElementGrandParent.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              }),
+              insertFunctionalElement({
+                builder,
+                modelId: functionalModelKey.id,
+                representedElementId: physicalElement1.id,
+                relationshipName: "PhysicalElementFulfillsFunction",
+              }),
+            ];
+          })
+        ).imodel;
 
         const actual = await getSelection(elementIds!, { id: "functional" });
         expect(actual).toEqual(expect.arrayContaining([...functionalElementKeys!, physicalElement2!]));
@@ -1114,64 +1193,66 @@ describe("SelectionScope", () => {
         let elementIds: string[];
         let functionalElementKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const spatialCategoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const drawingCategoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const spatialCategoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            const drawingCategoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
 
-          const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: drawingCategoryKey.id });
-          const graphicsElementParent = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: drawingCategoryKey.id,
-            parentId: graphicsElementGrandParent.id,
-          });
-          const graphicsElement1 = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: drawingCategoryKey.id,
-            parentId: graphicsElementParent.id,
-          });
-          const graphicsElement2 = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: drawingCategoryKey.id,
-            parentId: graphicsElementParent.id,
-          });
-          const physicalElement1 = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: spatialCategoryKey.id });
-          const physicalElement2 = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: spatialCategoryKey.id,
-            parentId: physicalElement1.id,
-          });
-          elementIds = [graphicsElement1.id, graphicsElement2.id, physicalElement1.id, physicalElement2.id];
-          functionalElementKeys = [
-            insertFunctionalElement({
+            const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: drawingCategoryKey.id });
+            const graphicsElementParent = insertDrawingGraphic({
               builder,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElement2.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-            }),
-            insertFunctionalElement({
+              modelId: drawingModelKey.id,
+              categoryId: drawingCategoryKey.id,
+              parentId: graphicsElementGrandParent.id,
+            });
+            const graphicsElement1 = insertDrawingGraphic({
               builder,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElementParent.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-            }),
-            insertFunctionalElement({
+              modelId: drawingModelKey.id,
+              categoryId: drawingCategoryKey.id,
+              parentId: graphicsElementParent.id,
+            });
+            const graphicsElement2 = insertDrawingGraphic({
               builder,
-              modelId: functionalModelKey.id,
-              representedElementId: physicalElement1.id,
-              relationshipName: "PhysicalElementFulfillsFunction",
-            }),
-          ];
-        });
+              modelId: drawingModelKey.id,
+              categoryId: drawingCategoryKey.id,
+              parentId: graphicsElementParent.id,
+            });
+            const physicalElement1 = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: spatialCategoryKey.id });
+            const physicalElement2 = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: spatialCategoryKey.id,
+              parentId: physicalElement1.id,
+            });
+            elementIds = [graphicsElement1.id, graphicsElement2.id, physicalElement1.id, physicalElement2.id];
+            functionalElementKeys = [
+              insertFunctionalElement({
+                builder,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElement2.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              }),
+              insertFunctionalElement({
+                builder,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElementParent.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              }),
+              insertFunctionalElement({
+                builder,
+                modelId: functionalModelKey.id,
+                representedElementId: physicalElement1.id,
+                relationshipName: "PhysicalElementFulfillsFunction",
+              }),
+            ];
+          })
+        ).imodel;
 
         const actual = await getSelection(elementIds!, { id: "functional", ancestorLevel: 1 });
         expect(actual).toEqual(expect.arrayContaining(functionalElementKeys!));
@@ -1181,64 +1262,66 @@ describe("SelectionScope", () => {
         let elementIds: string[];
         let functionalElementKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
-          const spatialCategoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const drawingCategoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+        iModel = (
+          await buildTestIModel(async (builder) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await builder.importSchema(schema);
+            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const spatialCategoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            const drawingCategoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
 
-          const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: drawingCategoryKey.id });
-          const graphicsElementParent = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: drawingCategoryKey.id,
-            parentId: graphicsElementGrandParent.id,
-          });
-          const graphicsElement1 = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: drawingCategoryKey.id,
-            parentId: graphicsElementParent.id,
-          });
-          const graphicsElement2 = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: drawingCategoryKey.id,
-            parentId: graphicsElementParent.id,
-          });
-          const physicalElement1 = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: spatialCategoryKey.id });
-          const physicalElement2 = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: spatialCategoryKey.id,
-            parentId: physicalElement1.id,
-          });
-          elementIds = [graphicsElement1.id, graphicsElement2.id, physicalElement1.id, physicalElement2.id];
-          functionalElementKeys = [
-            insertFunctionalElement({
+            const graphicsElementGrandParent = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: drawingCategoryKey.id });
+            const graphicsElementParent = insertDrawingGraphic({
               builder,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElement2.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-            }),
-            insertFunctionalElement({
+              modelId: drawingModelKey.id,
+              categoryId: drawingCategoryKey.id,
+              parentId: graphicsElementGrandParent.id,
+            });
+            const graphicsElement1 = insertDrawingGraphic({
               builder,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElementGrandParent.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-            }),
-            insertFunctionalElement({
+              modelId: drawingModelKey.id,
+              categoryId: drawingCategoryKey.id,
+              parentId: graphicsElementParent.id,
+            });
+            const graphicsElement2 = insertDrawingGraphic({
               builder,
-              modelId: functionalModelKey.id,
-              representedElementId: physicalElement1.id,
-              relationshipName: "PhysicalElementFulfillsFunction",
-            }),
-          ];
-        });
+              modelId: drawingModelKey.id,
+              categoryId: drawingCategoryKey.id,
+              parentId: graphicsElementParent.id,
+            });
+            const physicalElement1 = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: spatialCategoryKey.id });
+            const physicalElement2 = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: spatialCategoryKey.id,
+              parentId: physicalElement1.id,
+            });
+            elementIds = [graphicsElement1.id, graphicsElement2.id, physicalElement1.id, physicalElement2.id];
+            functionalElementKeys = [
+              insertFunctionalElement({
+                builder,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElement2.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              }),
+              insertFunctionalElement({
+                builder,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElementGrandParent.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              }),
+              insertFunctionalElement({
+                builder,
+                modelId: functionalModelKey.id,
+                representedElementId: physicalElement1.id,
+                relationshipName: "PhysicalElementFulfillsFunction",
+              }),
+            ];
+          })
+        ).imodel;
 
         const actual = await getSelection(elementIds!, { id: "functional", ancestorLevel: -1 });
         expect(actual).toEqual(expect.arrayContaining(functionalElementKeys!));

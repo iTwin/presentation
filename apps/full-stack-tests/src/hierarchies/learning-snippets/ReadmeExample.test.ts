@@ -30,8 +30,8 @@ import {
 import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccess
 // Not really part of the package, but we need SchemaContext to create a hierarchy provider. It's
@@ -146,7 +146,7 @@ async function main() {
 // __PUBLISH_EXTRACT_END__
 
 async function getIModelConnection(): Promise<IModelConnection> {
-  const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+  const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
     const category = insertSpatialCategory({ builder, codeValue: "Test category" });
     const model = insertPhysicalModelWithPartition({ builder, codeValue: "Test model" });
     insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "Test element 1" });

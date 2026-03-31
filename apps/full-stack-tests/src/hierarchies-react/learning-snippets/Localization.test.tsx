@@ -24,10 +24,10 @@ import { Tree } from "@itwin/itwinui-react";
 import { LocalizationContextProvider } from "@itwin/presentation-hierarchies-react";
 import { createRenderedTreeNodeData, RenderedTreeNode, TreeNodeRenderer, TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils.js";
 import { render, waitFor } from "../../RenderUtils.js";
 import { stubVirtualization } from "../../Utils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies React", () => {
   describe("Learning snippets", () => {
@@ -60,7 +60,7 @@ describe("Hierarchies React", () => {
       beforeEach(async function () {
         await initialize();
         imodel = (
-          await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
             insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
           })

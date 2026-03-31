@@ -10,9 +10,10 @@ import { IModelApp } from "@itwin/core-frontend";
 import { ClassInfo, DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
 import { PresentationFilterBuilderValueRenderer } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { buildIModel, importSchema } from "../../IModelUtils.js";
+import { importSchema } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { queryByText, render } from "../../RenderUtils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 import { stubVirtualization } from "../../Utils.js";
 
 describe("Presentation filter builder value renderer", () => {
@@ -30,7 +31,7 @@ describe("Presentation filter builder value renderer", () => {
 
   it("renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided", async () => {
     let schemaAlias = "";
-    const imodel = await buildIModel(
+    const imodel = await buildTestIModel(
       "renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided",
       async (builder, testName) => {
         const schema = await importSchema(
@@ -149,7 +150,7 @@ describe("Presentation filter builder value renderer", () => {
 
   it("renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided without keys", async () => {
     let schemaAlias = "";
-    const imodel = await buildIModel(
+    const imodel = await buildTestIModel(
       "renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided without keys",
       async (builder, testName) => {
         const schema = await importSchema(

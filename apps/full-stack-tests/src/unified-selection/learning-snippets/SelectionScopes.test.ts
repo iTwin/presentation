@@ -9,8 +9,8 @@ import { collect, insertPhysicalElement, insertPhysicalModelWithPartition, inser
 import { computeSelection } from "@itwin/unified-selection";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Unified selection", () => {
   describe("Learning snippets", () => {
@@ -24,7 +24,7 @@ describe("Unified selection", () => {
       });
 
       it("Basic selection scope", async () => {
-        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           const elementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -43,7 +43,7 @@ describe("Unified selection", () => {
       });
 
       it("Selection scope with ancestor level", async () => {
-        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           const parentElementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });

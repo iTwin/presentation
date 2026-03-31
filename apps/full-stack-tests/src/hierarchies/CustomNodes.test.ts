@@ -17,7 +17,7 @@ describe("Hierarchies", () => {
 
     beforeAll(async () => {
       await initialize();
-      emptyIModel = await buildTestIModel("Hierarchies Generic nodes", async () => {});
+      emptyIModel = (await buildTestIModel("Hierarchies Generic nodes")).imodel;
     });
 
     afterAll(async () => {

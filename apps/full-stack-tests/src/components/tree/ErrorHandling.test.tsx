@@ -60,7 +60,7 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      const imodel = await buildTestIModel(expect.getState().currentTestName!, (builder) => {
+      const { imodel } = await buildTestIModel((builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKeyA = insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
         const modelKeyB = insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });

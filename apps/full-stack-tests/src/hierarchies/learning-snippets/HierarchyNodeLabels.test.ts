@@ -9,10 +9,11 @@ import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialC
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel, importSchema } from "../../IModelUtils.js";
+import { importSchema } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -26,7 +27,7 @@ describe("Hierarchies", () => {
       });
 
       it("formats generic node's concatenated value label", async () => {
-        const { imodel } = await buildIModel(expect.getState().currentTestName!);
+        const { imodel } = await buildTestIModel(expect.getState().currentTestName!);
         const imodelAccess = createIModelAccess(imodel);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.GenericHierarchyNodeDefinitionLabelFormattingExample
@@ -70,7 +71,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates a hierarchy using labels from `createBisInstanceLabelSelectClauseFactory`", async () => {
-        const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, codeValue: "A" });
@@ -139,7 +140,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates a hierarchy using labels from custom selector", async () => {
-        const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, codeValue: "A" });
@@ -211,7 +212,7 @@ describe("Hierarchies", () => {
       });
 
       it("formats property grouping node's label", async () => {
-        const { imodel, myPhysicalObjectClassName } = await buildIModel(expect.getState().currentTestName!, async (builder, testName) => {
+        const { imodel, myPhysicalObjectClassName } = await buildTestIModel(expect.getState().currentTestName!, async (builder, testName) => {
           const schema = await importSchema(
             testName,
             builder,

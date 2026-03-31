@@ -17,7 +17,7 @@ import { assert } from "@itwin/core-bentley";
 import { ArrayPropertiesField, combineFieldNames, InstanceKey, KeySet, PropertiesField, RuleTypes, StructPropertiesField } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider, PresentationPropertyDataProviderProps } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { buildIModel, importSchema } from "../../IModelUtils.js";
+import { importSchema } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { buildTestIModel } from "../../TestIModelSetup.js";
 
@@ -43,7 +43,7 @@ describe("PropertyDataProvider", async () => {
       });
 
       it("creates empty result when properties requested for 0 instances", async () => {
-        const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel } = await buildTestIModel(async (builder) => {
           insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
         using provider = createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
@@ -57,7 +57,7 @@ describe("PropertyDataProvider", async () => {
         let modelKey: InstanceKey;
         let elementKey: InstanceKey;
 
-        const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel } = await buildTestIModel(async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
           modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
           elementKey = insertPhysicalElement({
@@ -113,7 +113,7 @@ describe("PropertyDataProvider", async () => {
         let modelKey: InstanceKey;
         let elementKey: InstanceKey;
 
-        const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel } = await buildTestIModel(async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
           modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
           elementKey = insertPhysicalElement({
@@ -167,7 +167,7 @@ describe("PropertyDataProvider", async () => {
       it("favorites properties", async () => {
         let categoryKey: InstanceKey;
 
-        const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel } = await buildTestIModel(async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
         using provider = createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
@@ -202,7 +202,7 @@ describe("PropertyDataProvider", async () => {
       it("overrides default property category", async () => {
         let categoryKey: InstanceKey;
 
-        const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel } = await buildTestIModel(async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
         using provider = createProvider({
@@ -242,7 +242,7 @@ describe("PropertyDataProvider", async () => {
       it("finds root property record keys", async () => {
         let categoryKey: InstanceKey;
 
-        const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel } = await buildTestIModel(async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
 
@@ -264,7 +264,7 @@ describe("PropertyDataProvider", async () => {
         let elementKey: InstanceKey;
         let externalsSourceAspectKey: InstanceKey;
 
-        const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel } = await buildTestIModel(async (builder) => {
           const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
           const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
           elementKey = insertPhysicalElement({
@@ -322,7 +322,7 @@ describe("PropertyDataProvider", async () => {
   runTests("with nested property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = true));
 
   it("finds array item & struct member fields", async () => {
-    const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder, testName) => {
+    const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder, testName) => {
       const schema = await importSchema(
         testName,
         builder,
@@ -502,7 +502,7 @@ describe("PropertyDataProvider", async () => {
   it("gets property data after re-initializing Presentation", async () => {
     let categoryKey: InstanceKey;
 
-    const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+    const { imodel } = await buildTestIModel(async (builder) => {
       categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
     });
     const checkDataProvider = async () => {

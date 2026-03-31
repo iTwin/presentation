@@ -10,8 +10,9 @@ import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
-import { buildIModel, importSchema, withECDb } from "../../IModelUtils.js";
+import { importSchema, withECDb } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "../Utils.js";
 
@@ -24,7 +25,7 @@ describe("Hierarchies", () => {
     beforeAll(async () => {
       await initialize();
       subjectClassName = Subject.classFullName.replace(":", ".");
-      emptyIModel = (await buildIModel("Hierarchies Properties grouping")).imodel;
+      emptyIModel = (await buildTestIModel("Hierarchies Properties grouping")).imodel;
     });
 
     afterAll(async () => {
@@ -66,7 +67,7 @@ describe("Hierarchies", () => {
     }
 
     it("doesn't group if provided properties class isn't base of nodes class", async () => {
-      const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+      const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, description: "TestDescription" });
         return { childSubject1 };
       });
@@ -89,7 +90,7 @@ describe("Hierarchies", () => {
 
     describe("unspecified values grouping", () => {
       it("doesn't create grouping nodes if provided property values are not defined and `createGroupForUnspecifiedValues` isn't set", async () => {
-        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           return { childSubject1 };
         });
@@ -111,7 +112,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates property value grouping node if provided property values are not defined and `createGroupForOutOfRangeValues` is `true`", async () => {
-        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           return { childSubject1 };
         });
@@ -207,7 +208,7 @@ describe("Hierarchies", () => {
 
     describe("value grouping", () => {
       it("creates property value grouping nodes", async () => {
-        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, description: "TestDescription" });
           return { childSubject1 };
         });
@@ -237,7 +238,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates multiple grouping nodes if nodes have different property values", async () => {
-        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: "Test1" });
           const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: "Test2" });
           return { childSubject1, childSubject2 };
@@ -310,7 +311,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates multiple levels of grouping if node has multiple property groupings", async () => {
-        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const childSubject1 = insertSubject({
             builder,
             codeValue: "A1",
@@ -357,7 +358,7 @@ describe("Hierarchies", () => {
 
       describe("navigation property", () => {
         it("groups by navigation property with forward direction", async () => {
-          const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
             const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
             const physicalElement = insertPhysicalElement({
@@ -423,7 +424,7 @@ describe("Hierarchies", () => {
         });
 
         it("groups by navigation property with backward direction", async () => {
-          const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: "custom label" });
             const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: childSubject1.id });
             return { childSubject1, childSubject2 };
@@ -484,7 +485,7 @@ describe("Hierarchies", () => {
         });
 
         it("creates one grouping node when navigation properties point to different nodes with same labels", async () => {
-          const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             const childSubject1 = insertSubject({
               builder,
               codeValue: "A1",
@@ -562,7 +563,7 @@ describe("Hierarchies", () => {
         });
 
         it("creates different grouping nodes when navigation properties point to different nodes with different labels", async () => {
-          const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             const childSubject1 = insertSubject({
               builder,
               codeValue: "A1",
@@ -652,7 +653,6 @@ describe("Hierarchies", () => {
     describe("range grouping", () => {
       it("creates property value range grouping nodes", async () => {
         await withECDb(
-          "creates property value range grouping nodes",
           async (db) => {
             const schema = await importSchema(
               "creates property value range grouping nodes",
@@ -722,7 +722,6 @@ describe("Hierarchies", () => {
 
       it("creates property value range grouping nodes with custom range label", async () => {
         await withECDb(
-          "creates property value range grouping nodes with custom range label",
           async (db) => {
             const schema = await importSchema(
               "creates property value range grouping nodes with custom range label",
@@ -793,7 +792,6 @@ describe("Hierarchies", () => {
 
       it("creates multiple grouping nodes when nodes' property values fit in different ranges", async () => {
         await withECDb(
-          "creates multiple grouping nodes when nodes' property values fit in different ranges",
           async (db) => {
             const schema = await importSchema(
               "creates multiple grouping nodes when nodes' property values fit in different ranges",
@@ -881,7 +879,6 @@ describe("Hierarchies", () => {
 
       it("doesn't create grouping nodes if provided properties don't fit in the range and `createGroupForOutOfRangeValues` isn't set", async () => {
         await withECDb(
-          "doesn't create grouping nodes if provided properties don't fit in the range and `createGroupForOutOfRangeValues` isn't set",
           async (db) => {
             const schema = await importSchema(
               "doesn't create grouping nodes if provided properties don't fit in the range and `createGroupForOutOfRangeValues` isn't set",
@@ -943,7 +940,6 @@ describe("Hierarchies", () => {
 
       it("creates 'other' property value grouping node if provided properties don't fit in the range and `createGroupForOutOfRangeValues` is `true`", async () => {
         await withECDb(
-          "creates 'other' property value grouping node if provided properties don't fit in the range and `createGroupForOutOfRangeValues` is `true`",
           async (db) => {
             const schema = await importSchema(
               "creates 'other' property value grouping node if provided properties don't fit in the range and `createGroupForOutOfRangeValues` is `true`",
@@ -1012,7 +1008,6 @@ describe("Hierarchies", () => {
 
       it("creates a single 'other' property value grouping node for different properties", async () => {
         await withECDb(
-          "creates a single 'other' property value grouping node for different properties",
           async (db) => {
             const schema = await importSchema(
               "creates a single 'other' property value grouping node for different properties",

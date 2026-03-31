@@ -16,11 +16,11 @@ import {
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -35,7 +35,7 @@ describe("Hierarchies", () => {
 
       describe("By label", () => {
         it("groups by label", async () => {
-          const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             const category = insertSpatialCategory({ builder, codeValue: "Category" });
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Model" });
             insertPhysicalElement({
@@ -110,7 +110,7 @@ describe("Hierarchies", () => {
         });
 
         it("merges by label", async () => {
-          const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             const category = insertSpatialCategory({ builder, codeValue: "Category" });
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Model" });
             const element1 = insertPhysicalElement({
@@ -180,7 +180,7 @@ describe("Hierarchies", () => {
 
       describe("By class", () => {
         it("groups by node's class", async () => {
-          const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             const drawingCategory = insertDrawingCategory({ builder, codeValue: "Example drawing category" });
             const spatialCategory = insertSpatialCategory({ builder, codeValue: "Example spatial category" });
             return { spatialCategory, drawingCategory };
@@ -250,7 +250,7 @@ describe("Hierarchies", () => {
         });
 
         it("groups by base classes", async () => {
-          const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             const drawingCategory = insertDrawingCategory({ builder, codeValue: "Example drawing category" });
             const spatialCategory = insertSpatialCategory({ builder, codeValue: "Example spatial category" });
             return { spatialCategory, drawingCategory };
@@ -323,7 +323,7 @@ describe("Hierarchies", () => {
 
       describe("By properties", () => {
         it("groups by property value", async () => {
-          const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             insertRepositoryLink({ builder, repositoryLabel: "Example iModel link 1", format: "iModel" });
             insertRepositoryLink({ builder, repositoryLabel: "Example iModel link 2", format: "iModel" });
             insertRepositoryLink({ builder, repositoryLabel: "Example DGN link", format: "DGN" });
@@ -414,7 +414,7 @@ describe("Hierarchies", () => {
         });
 
         it("groups by property value ranges", async () => {
-          const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             insertPhysicalMaterial({ builder, userLabel: "Material 1", density: 4 });
             insertPhysicalMaterial({ builder, userLabel: "Material 2", density: 7 });
             insertPhysicalMaterial({ builder, userLabel: "Material 3", density: 11 });
@@ -504,7 +504,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates multi-level grouping hierarchy", async () => {
-        const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           insertRepositoryLink({ builder, repositoryLabel: "Example iModel link", format: "iModel" });
           insertRepositoryLink({ builder, repositoryLabel: "Example iModel link", format: "iModel" });
           insertRepositoryLink({ builder, repositoryLabel: "Example DGN link 1", format: "DGN" });
@@ -636,7 +636,7 @@ describe("Hierarchies", () => {
 
       describe("Customization options", () => {
         it("doesn't return grouping node if there's only one grouped instance and `hideIfOneGroupedNode = true`", async () => {
-          const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             insertRepositoryLink({ builder, repositoryLabel: "Example link 1" });
             insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
             insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
@@ -701,7 +701,7 @@ describe("Hierarchies", () => {
         });
 
         it("doesn't return grouping node if it has no siblings and `hideIfNoSiblings = true`", async () => {
-          const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             insertRepositoryLink({ builder, repositoryLabel: "Example link 1" });
             insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
           });
@@ -762,7 +762,7 @@ describe("Hierarchies", () => {
         });
 
         it("sets auto-expand flag on grouping nodes when `autoExpand = true`", async () => {
-          const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
             insertRepositoryLink({ builder, repositoryLabel: "Example link 1" });
             insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
           });
