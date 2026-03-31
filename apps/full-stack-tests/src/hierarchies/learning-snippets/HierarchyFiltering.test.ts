@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, test } from "vitest";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { expand, filter, first, firstValueFrom, from } from "rxjs";
 import { assert, Id64String } from "@itwin/core-bentley";
@@ -38,10 +38,10 @@ describe("Hierarchies", () => {
       let elementIds: { [name: string]: Id64String };
       let elementKeys: { [name: string]: InstanceKey };
 
-      beforeAll(async () => {
+      test.beforeAll(async (_context, suite) => {
         await initialize();
 
-        const res = await buildTestIModel("Hierarchies Learning snippets Hierarchy filtering", async (builder) => {
+        const res = await buildTestIModel(suite.fullTestName!, async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "A" });

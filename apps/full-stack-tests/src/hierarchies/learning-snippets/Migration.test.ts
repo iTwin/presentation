@@ -18,7 +18,7 @@ import {
 } from "presentation-test-utilities";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, describe, it, test } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.HierarchyProviderImports
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
@@ -46,9 +46,9 @@ describe("Hierarchies", () => {
     describe("Migration from Presentation Rules", () => {
       let emptyIModel: IModelConnection;
 
-      beforeAll(async () => {
+      test.beforeAll(async (_, suite) => {
         await initialize();
-        emptyIModel = (await buildTestIModel("Hierarchies Learning snippets Migration from Presentation Rules")).imodel;
+        emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodel;
       });
 
       afterAll(async () => {

@@ -10,7 +10,7 @@ import {
   insertSpatialCategory,
   insertSubject,
 } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, test } from "vitest";
 import { Subject } from "@itwin/core-backend";
 import { BeEvent, Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
@@ -1261,33 +1261,30 @@ describe("Hierarchies", () => {
         let elementKey: InstanceKey;
         let circleClassName: string;
 
-        beforeAll(async () => {
-          const result = await buildTestIModel(
-            "Hierarchies - Filtering when targeting grouped instance nodes nested grouping nodes of different types",
-            async (builder, testName) => {
-              const schema = await importSchema(
-                testName,
-                builder,
-                `
+        test.beforeAll(async (_, suite) => {
+          const result = await buildTestIModel(suite.fullTestName!, async (builder, testName) => {
+            const schema = await importSchema(
+              testName,
+              builder,
+              `
                 <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
                 <ECEntityClass typeName="Circle">
                   <BaseClass>bis:PhysicalElement</BaseClass>
                   <ECProperty propertyName="Color" typeName="string" />
                 </ECEntityClass>
               `,
-              );
-              const category = insertSpatialCategory({ builder, codeValue: "category" });
-              const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
-              circleClassName = schema.items.Circle.fullName;
-              elementKey = insertPhysicalElement({
-                builder,
-                modelId: model.id,
-                categoryId: category.id,
-                classFullName: circleClassName,
-                ["Color"]: "Red",
-              });
-            },
-          );
+            );
+            const category = insertSpatialCategory({ builder, codeValue: "category" });
+            const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
+            circleClassName = schema.items.Circle.fullName;
+            elementKey = insertPhysicalElement({
+              builder,
+              modelId: model.id,
+              categoryId: category.id,
+              classFullName: circleClassName,
+              ["Color"]: "Red",
+            });
+          });
           imodel = result.imodel;
 
           const imodelAccess = createIModelAccess(imodel);

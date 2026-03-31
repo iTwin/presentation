@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertSubject } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { afterAll, describe, it, test } from "vitest";
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -21,9 +21,9 @@ describe("Hierarchies", () => {
     let subjectClassName: string;
     let emptyIModel: IModelConnection;
 
-    beforeAll(async () => {
+    test.beforeAll(async (_, suite) => {
       await initialize();
-      emptyIModel = (await buildTestIModel("Hierarchies Grouping nodes' autoExpand setting")).imodel;
+      emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodel;
       subjectClassName = Subject.classFullName.replace(":", ".");
     });
 

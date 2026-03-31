@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collect } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, test } from "vitest";
 import { DictionaryModel, InformationPartitionElement, LinkModel, Model, Subject } from "@itwin/core-backend";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
@@ -17,10 +17,10 @@ describe("Hierarchies", () => {
   describe("Hierarchy level instance keys", () => {
     let imodel: IModelConnection;
 
-    beforeAll(async () => {
+    test.beforeAll(async (_, suite) => {
       await initialize();
 
-      imodel = (await buildTestIModel("hierarchy-level-instance-keys")).imodel;
+      imodel = (await buildTestIModel(suite.fullTestName!)).imodel;
     });
 
     afterAll(async () => {

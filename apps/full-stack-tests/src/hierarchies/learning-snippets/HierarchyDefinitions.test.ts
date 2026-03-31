@@ -6,7 +6,7 @@
 
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { IModelConnection } from "@itwin/core-frontend";
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { afterAll, describe, it, test } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Imports
 import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
@@ -22,10 +22,10 @@ describe("Hierarchies", () => {
     describe("Hierarchy definitions", () => {
       let imodel: IModelConnection;
 
-      beforeAll(async () => {
+      test.beforeAll(async (_, suite) => {
         await initialize();
 
-        const res = await buildTestIModel("Hierarchies Learning snippets Hierarchy definitions", async (builder) => {
+        const res = await buildTestIModel(suite.fullTestName!, async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "A" });

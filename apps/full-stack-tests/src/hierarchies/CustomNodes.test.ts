@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { afterAll, describe, it, test } from "vitest";
 import { IModelConnection } from "@itwin/core-frontend";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { initialize, terminate } from "../IntegrationTests.js";
@@ -15,9 +15,9 @@ describe("Hierarchies", () => {
   describe("Generic nodes", () => {
     let emptyIModel!: IModelConnection;
 
-    beforeAll(async () => {
+    test.beforeAll(async (_, suite) => {
       await initialize();
-      emptyIModel = (await buildTestIModel("Hierarchies Generic nodes")).imodel;
+      emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodel;
     });
 
     afterAll(async () => {

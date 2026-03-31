@@ -14,7 +14,7 @@ import {
   insertSheetIndexFolder,
   insertSpatialCategory,
 } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, describe, expect, it, test, vi } from "vitest";
 import { Subject } from "@itwin/core-backend";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
@@ -32,9 +32,9 @@ describe("Hierarchies", () => {
   let emptyIModel: IModelConnection;
   let subjectClassName: string;
 
-  beforeAll(async () => {
+  test.beforeAll(async (_, suite) => {
     await initialize();
-    emptyIModel = (await buildTestIModel("Hierarchies")).imodel;
+    emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodel;
     subjectClassName = Subject.classFullName.replace(":", ".");
   });
 
