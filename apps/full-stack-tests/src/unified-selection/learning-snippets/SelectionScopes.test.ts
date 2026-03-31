@@ -24,7 +24,7 @@ describe("Unified selection", () => {
       });
 
       it("Basic selection scope", async () => {
-        const { imodel, ...keys } = await buildIModel("Basic selection scope", async (builder) => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           const elementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -43,7 +43,7 @@ describe("Unified selection", () => {
       });
 
       it("Selection scope with ancestor level", async () => {
-        const { imodel, ...keys } = await buildIModel("Selection scope with ancestor level", async (builder) => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           const parentElementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });

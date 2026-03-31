@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -23,7 +23,7 @@ describe("Hierarchies", () => {
 
     beforeAll(async () => {
       await initialize();
-      emptyIModel = (await buildIModel("Base class grouping")).imodel;
+      emptyIModel = (await buildIModel("Hierarchies Base class grouping")).imodel;
       subjectClassName = Subject.classFullName.replace(":", ".");
       physicalPartitionClassName = PhysicalPartition.classFullName.replace(":", ".");
     });
@@ -187,13 +187,10 @@ describe("Hierarchies", () => {
       const baseClassName2 = "InformationContentElement";
       const baseClassName3 = "InformationPartitionElement";
       const baseSchemaName = "BisCore";
-      const { imodel, ...keys } = await buildIModel(
-        "creates multiple grouping nodes if provided base classes are base for node and for provided other base class",
-        async (builder) => {
-          const childPartition1 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
-          return { childPartition1 };
-        },
-      );
+      const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const childPartition1 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
+        return { childPartition1 };
+      });
 
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
@@ -270,14 +267,11 @@ describe("Hierarchies", () => {
       const baseClassName2 = "InformationContentElement";
       const baseClassName3 = "InformationPartitionElement";
       const baseSchemaName = "BisCore";
-      const { imodel, ...keys } = await buildIModel(
-        "creates different grouping nodes if nodes of the same class have different base classes provided",
-        async (builder) => {
-          const childPartition1 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
-          const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B2", parentId: IModel.rootSubjectId });
-          return { childPartition1, childPartition2 };
-        },
-      );
+      const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+        const childPartition1 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
+        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B2", parentId: IModel.rootSubjectId });
+        return { childPartition1, childPartition2 };
+      });
 
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
@@ -387,7 +381,7 @@ describe("Hierarchies", () => {
     });
 
     it("groups nodes of different classes if they share the same base class", async () => {
-      const { imodel, ...keys } = await buildIModel("groups nodes of different classes if they share the same base class", async (builder) => {
+      const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
         const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
         const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B2", parentId: IModel.rootSubjectId });
         return { childSubject1, childPartition2 };

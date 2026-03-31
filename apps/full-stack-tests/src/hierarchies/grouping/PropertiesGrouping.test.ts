@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory, insertSubject } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -24,7 +24,7 @@ describe("Hierarchies", () => {
     beforeAll(async () => {
       await initialize();
       subjectClassName = Subject.classFullName.replace(":", ".");
-      emptyIModel = (await buildIModel("Properties grouping")).imodel;
+      emptyIModel = (await buildIModel("Hierarchies Properties grouping")).imodel;
     });
 
     afterAll(async () => {
@@ -66,7 +66,7 @@ describe("Hierarchies", () => {
     }
 
     it("doesn't group if provided properties class isn't base of nodes class", async () => {
-      const { imodel, ...keys } = await buildIModel("doesn't group if provided properties class isn't base of nodes class", async (builder) => {
+      const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
         const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, description: "TestDescription" });
         return { childSubject1 };
       });
@@ -89,13 +89,10 @@ describe("Hierarchies", () => {
 
     describe("unspecified values grouping", () => {
       it("doesn't create grouping nodes if provided property values are not defined and `createGroupForUnspecifiedValues` isn't set", async () => {
-        const { imodel, ...keys } = await buildIModel(
-          "doesn't create grouping nodes if provided property values are not defined and `createGroupForUnspecifiedValues` isn't set",
-          async (builder) => {
-            const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-            return { childSubject1 };
-          },
-        );
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
+          return { childSubject1 };
+        });
 
         const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
           propertiesClassName: "BisCore.Subject",
@@ -114,13 +111,10 @@ describe("Hierarchies", () => {
       });
 
       it("creates property value grouping node if provided property values are not defined and `createGroupForOutOfRangeValues` is `true`", async () => {
-        const { imodel, ...keys } = await buildIModel(
-          "creates property value grouping node if provided property values are not defined and `createGroupForOutOfRangeValues` is `true`",
-          async (builder) => {
-            const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-            return { childSubject1 };
-          },
-        );
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
+          return { childSubject1 };
+        });
 
         const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
           propertiesClassName: "BisCore.Subject",
@@ -213,7 +207,7 @@ describe("Hierarchies", () => {
 
     describe("value grouping", () => {
       it("creates property value grouping nodes", async () => {
-        const { imodel, ...keys } = await buildIModel("creates property value grouping nodes", async (builder) => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, description: "TestDescription" });
           return { childSubject1 };
         });
@@ -243,7 +237,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates multiple grouping nodes if nodes have different property values", async () => {
-        const { imodel, ...keys } = await buildIModel("creates multiple grouping nodes if nodes have different property values", async (builder) => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: "Test1" });
           const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: "Test2" });
           return { childSubject1, childSubject2 };
@@ -316,7 +310,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates multiple levels of grouping if node has multiple property groupings", async () => {
-        const { imodel, ...keys } = await buildIModel("creates multiple levels of grouping if node has multiple property groupings", async (builder) => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const childSubject1 = insertSubject({
             builder,
             codeValue: "A1",
@@ -363,7 +357,7 @@ describe("Hierarchies", () => {
 
       describe("navigation property", () => {
         it("groups by navigation property with forward direction", async () => {
-          const { imodel, ...keys } = await buildIModel("groups by navigation property with forward direction", async (builder) => {
+          const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
             const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
             const physicalElement = insertPhysicalElement({
@@ -429,7 +423,7 @@ describe("Hierarchies", () => {
         });
 
         it("groups by navigation property with backward direction", async () => {
-          const { imodel, ...keys } = await buildIModel("groups by navigation property with backward direction", async (builder) => {
+          const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
             const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: "custom label" });
             const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: childSubject1.id });
             return { childSubject1, childSubject2 };
@@ -490,28 +484,25 @@ describe("Hierarchies", () => {
         });
 
         it("creates one grouping node when navigation properties point to different nodes with same labels", async () => {
-          const { imodel, ...keys } = await buildIModel(
-            "creates one grouping node when navigation properties point to different nodes with same labels",
-            async (builder) => {
-              const childSubject1 = insertSubject({
-                builder,
-                codeValue: "A1",
-                parentId: IModel.rootSubjectId,
-                description: "TestDescription",
-                userLabel: "sameLabel",
-              });
-              const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: childSubject1.id, description: "TestDescription" });
-              const childSubject3 = insertSubject({
-                builder,
-                codeValue: "A3",
-                parentId: IModel.rootSubjectId,
-                description: "TestDescription",
-                userLabel: "sameLabel",
-              });
-              const childSubject4 = insertSubject({ builder, codeValue: "A4", parentId: childSubject3.id, description: "TestDescription" });
-              return { childSubject1, childSubject2, childSubject3, childSubject4 };
-            },
-          );
+          const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+            const childSubject1 = insertSubject({
+              builder,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              description: "TestDescription",
+              userLabel: "sameLabel",
+            });
+            const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: childSubject1.id, description: "TestDescription" });
+            const childSubject3 = insertSubject({
+              builder,
+              codeValue: "A3",
+              parentId: IModel.rootSubjectId,
+              description: "TestDescription",
+              userLabel: "sameLabel",
+            });
+            const childSubject4 = insertSubject({ builder, codeValue: "A4", parentId: childSubject3.id, description: "TestDescription" });
+            return { childSubject1, childSubject2, childSubject3, childSubject4 };
+          });
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
@@ -571,28 +562,25 @@ describe("Hierarchies", () => {
         });
 
         it("creates different grouping nodes when navigation properties point to different nodes with different labels", async () => {
-          const { imodel, ...keys } = await buildIModel(
-            "creates different grouping nodes when navigation properties point to different nodes with different labels",
-            async (builder) => {
-              const childSubject1 = insertSubject({
-                builder,
-                codeValue: "A1",
-                parentId: IModel.rootSubjectId,
-                description: "TestDescription",
-                userLabel: "differentLabel1",
-              });
-              const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: childSubject1.id, description: "TestDescription" });
-              const childSubject3 = insertSubject({
-                builder,
-                codeValue: "A3",
-                parentId: IModel.rootSubjectId,
-                description: "TestDescription",
-                userLabel: "differentLabel2",
-              });
-              const childSubject4 = insertSubject({ builder, codeValue: "A4", parentId: childSubject3.id, description: "TestDescription" });
-              return { childSubject1, childSubject2, childSubject3, childSubject4 };
-            },
-          );
+          const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
+            const childSubject1 = insertSubject({
+              builder,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              description: "TestDescription",
+              userLabel: "differentLabel1",
+            });
+            const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: childSubject1.id, description: "TestDescription" });
+            const childSubject3 = insertSubject({
+              builder,
+              codeValue: "A3",
+              parentId: IModel.rootSubjectId,
+              description: "TestDescription",
+              userLabel: "differentLabel2",
+            });
+            const childSubject4 = insertSubject({ builder, codeValue: "A4", parentId: childSubject3.id, description: "TestDescription" });
+            return { childSubject1, childSubject2, childSubject3, childSubject4 };
+          });
 
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({

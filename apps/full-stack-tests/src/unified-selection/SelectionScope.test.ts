@@ -45,7 +45,7 @@ describe("SelectionScope", () => {
     it("returns element", async () => {
       let elementKey1: SelectableInstanceKey;
 
-      iModel = await buildTestIModel("returns element", async (builder) => {
+      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id }).id;
@@ -65,7 +65,7 @@ describe("SelectionScope", () => {
     it("skips invalid ID's", async () => {
       let elementKey1: SelectableInstanceKey;
 
-      iModel = await buildTestIModel("skips invalid ID's", async (builder) => {
+      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id }).id;
@@ -87,7 +87,7 @@ describe("SelectionScope", () => {
       let elementKey1: SelectableInstanceKey;
       let elementKey2: SelectableInstanceKey;
 
-      iModel = await buildTestIModel("returns element parent", async (builder) => {
+      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         parentKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -113,7 +113,7 @@ describe("SelectionScope", () => {
     it("returns element when it has no parent", async () => {
       let elementKey: SelectableInstanceKey;
 
-      iModel = await buildTestIModel("returns element when it has no parent", async (builder) => {
+      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -127,7 +127,7 @@ describe("SelectionScope", () => {
       let grandParentKey: SelectableInstanceKey;
       let elementKey: SelectableInstanceKey;
 
-      iModel = await buildTestIModel("returns grandparent of element", async (builder) => {
+      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         grandParentKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -155,7 +155,7 @@ describe("SelectionScope", () => {
       let parentKey: SelectableInstanceKey;
       let elementKey: SelectableInstanceKey;
 
-      iModel = await buildTestIModel("returns last existing ancestor", async (builder) => {
+      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         parentKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -175,7 +175,7 @@ describe("SelectionScope", () => {
     it("returns all selected elements", async () => {
       let elementKeys: SelectableInstanceKey[];
 
-      iModel = await buildTestIModel("returns all selected elements", async (builder) => {
+      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         elementKeys = [
@@ -196,7 +196,7 @@ describe("SelectionScope", () => {
       let rootElementKey: SelectableInstanceKey;
       let elementKey3: SelectableInstanceKey;
 
-      iModel = await buildTestIModel("returns root element", async (builder) => {
+      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         rootElementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -234,7 +234,7 @@ describe("SelectionScope", () => {
       let categoryKey2: SelectableInstanceKey;
       let elementIds: string[];
 
-      iModel = await buildTestIModel("returns element category", async (builder) => {
+      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         categoryKey1 = insertSpatialCategory({ builder, codeValue: "test category 1" });
         categoryKey2 = insertSpatialCategory({ builder, codeValue: "test category 2" });
@@ -274,7 +274,7 @@ describe("SelectionScope", () => {
       let modelKey: SelectableInstanceKey;
       let elementIds: string[];
 
-      iModel = await buildTestIModel("returns element model", async (builder) => {
+      iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -307,7 +307,7 @@ describe("SelectionScope", () => {
         let physicalElement: SelectableInstanceKey;
         let functionalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement3d` related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -329,7 +329,7 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement3d` when no related functional element exists", async () => {
         let physicalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement3d` when no related functional element exists", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -344,7 +344,7 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement3d` when parent has related functional element", async () => {
         let physicalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement3d` when parent has related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -375,7 +375,7 @@ describe("SelectionScope", () => {
         let physicalElement2: SelectableInstanceKey;
         let functionalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement3d` and related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -405,7 +405,7 @@ describe("SelectionScope", () => {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement3d` parent related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -435,7 +435,7 @@ describe("SelectionScope", () => {
         let parentKey: SelectableInstanceKey;
         let physicalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns parent without functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -458,7 +458,7 @@ describe("SelectionScope", () => {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns parentless `GeometricElement3d` related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -485,7 +485,7 @@ describe("SelectionScope", () => {
       it("returns parentless `GeometricElement3d` when functional element does not exist", async () => {
         let physicalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns parentless `GeometricElement3d` when functional element does not exist", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -506,7 +506,7 @@ describe("SelectionScope", () => {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement3d` grandparent related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -543,7 +543,7 @@ describe("SelectionScope", () => {
         let physicalElementGrandParent: SelectableInstanceKey;
         let physicalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement3d` grandparent without related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -573,7 +573,7 @@ describe("SelectionScope", () => {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns last existing `GeometricElement3d` ancestor related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -603,7 +603,7 @@ describe("SelectionScope", () => {
         let physicalElementParent: SelectableInstanceKey;
         let physicalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns last existing `GeometricElement3d` ancestor without related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -626,7 +626,7 @@ describe("SelectionScope", () => {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement3d` top assembly related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -670,7 +670,7 @@ describe("SelectionScope", () => {
         let graphicsElement: SelectableInstanceKey;
         let functionalElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement2d` related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -699,7 +699,7 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement2d` when no related functional element exists", async () => {
         let graphicsElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement2d` when no related functional element exists", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -724,7 +724,7 @@ describe("SelectionScope", () => {
         let functionalElement1: SelectableInstanceKey;
         let functionalElement2: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement2d` and related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -763,7 +763,7 @@ describe("SelectionScope", () => {
         let functionalElement1: SelectableInstanceKey;
         let functionalElement2: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement2d` related functional elements of different depth", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -806,7 +806,7 @@ describe("SelectionScope", () => {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement2d` nearest related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -836,7 +836,7 @@ describe("SelectionScope", () => {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement2d` parent related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -866,7 +866,7 @@ describe("SelectionScope", () => {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement2d` ancestor related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -897,7 +897,7 @@ describe("SelectionScope", () => {
         let graphicsElement2: SelectableInstanceKey;
         let functionalElementKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel("returns all `GeometricElement2d` nearest related functional elements", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -936,7 +936,7 @@ describe("SelectionScope", () => {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns parentless `GeometricElement2d` related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -958,7 +958,7 @@ describe("SelectionScope", () => {
       it("returns parentless `GeometricElement2d` without related functional element", async () => {
         let graphicsElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns parentless `GeometricElement2d` without related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -974,7 +974,7 @@ describe("SelectionScope", () => {
         let graphicsElementGrandParent: SelectableInstanceKey;
         let graphicsElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement2d` grandparent", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -997,7 +997,7 @@ describe("SelectionScope", () => {
         let graphicsElementParent: SelectableInstanceKey;
         let graphicsElement: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns last existing `GeometricElement2d` ancestor", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -1014,7 +1014,7 @@ describe("SelectionScope", () => {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("returns `GeometricElement2d` grandparent related functional element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -1047,7 +1047,7 @@ describe("SelectionScope", () => {
         let physicalElement2: SelectableInstanceKey;
         let functionalElementKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel("returns element related functional elements", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -1114,7 +1114,7 @@ describe("SelectionScope", () => {
         let elementIds: string[];
         let functionalElementKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel("returns parent related functional elements", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -1181,7 +1181,7 @@ describe("SelectionScope", () => {
         let elementIds: string[];
         let functionalElementKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel("returns top assembly related functional elements", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });

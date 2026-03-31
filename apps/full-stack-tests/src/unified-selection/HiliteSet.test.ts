@@ -64,7 +64,7 @@ describe("HiliteSet", () => {
         let subjectKey: SelectableInstanceKey;
         let modelKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel("hilites models directly under subject", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           subjectKey = insertSubject({ builder, codeValue: "test subject" });
           modelKeys = [
             insertPhysicalModelWithPartition({ builder, codeValue: "model 1", partitionParentId: subjectKey.id }),
@@ -85,7 +85,7 @@ describe("HiliteSet", () => {
         let subjectKey: SelectableInstanceKey;
         let modelKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel("hilites models nested deeply under subject", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           subjectKey = insertSubject({ builder, codeValue: "test subject" });
           const subject2 = insertSubject({ builder, codeValue: "subject 2", parentId: subjectKey.id });
           const subject3 = insertSubject({ builder, codeValue: "subject 3", parentId: subjectKey.id });
@@ -108,7 +108,7 @@ describe("HiliteSet", () => {
       it("hilites model", async () => {
         let modelKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("hilites model", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         });
 
@@ -127,7 +127,7 @@ describe("HiliteSet", () => {
         let categoryKey: SelectableInstanceKey;
         let subCategoryKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel("hilites category's subcategories", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           subCategoryKeys = [
             getDefaultSubcategoryKey(categoryKey.id),
@@ -147,7 +147,7 @@ describe("HiliteSet", () => {
       it("hilites subcategory", async () => {
         let categoryKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("hilites subcategory", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         });
 
@@ -164,7 +164,7 @@ describe("HiliteSet", () => {
         let categoryKey: SelectableInstanceKey;
         let subCategoryKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel("hilites when category and subcategory selected", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           subCategoryKeys = [
             getDefaultSubcategoryKey(categoryKey.id),
@@ -187,7 +187,7 @@ describe("HiliteSet", () => {
         let assemblyKey: SelectableInstanceKey;
         let expectedHighlightedElementKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel("hilites assembly element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -223,7 +223,7 @@ describe("HiliteSet", () => {
       it("hilites leaf element", async () => {
         let elementKey: SelectableInstanceKey;
 
-        iModel = await buildTestIModel("hilites leaf element", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -242,7 +242,7 @@ describe("HiliteSet", () => {
       it("hilites all selected elements", async () => {
         let elementKeys: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel("hilites all selected elements", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -269,7 +269,7 @@ describe("HiliteSet", () => {
         let physicalElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel("hilites functional element related physical elements", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -319,7 +319,7 @@ describe("HiliteSet", () => {
         let graphicsElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel("hilites functional element related graphic elements", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -362,7 +362,7 @@ describe("HiliteSet", () => {
         let groupInformationElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
 
-        iModel = await buildTestIModel("hilites group information element related physical elements", async (builder) => {
+        iModel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const groupModel = insertGroupInformationModelWithPartition({ builder, codeValue: "group information model" });
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);

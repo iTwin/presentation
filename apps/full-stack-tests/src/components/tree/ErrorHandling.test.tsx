@@ -13,6 +13,7 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
+import { createFileNameFromString } from "../../FilenameUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getByRole, render, waitFor } from "../../RenderUtils.js";
 import { buildTestIModel } from "../../TestIModelSetup.js";
@@ -60,7 +61,7 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      const imodel = await buildTestIModel("handles errors", (builder) => {
+      const imodel = await buildTestIModel(createFileNameFromString(expect.getState().currentTestName!), (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKeyA = insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
         const modelKeyB = insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });

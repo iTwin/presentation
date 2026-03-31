@@ -137,7 +137,7 @@ describe("Property editors", () => {
   });
 
   it("edits merged values", async () => {
-    const { imodel, schema, ...imodelKeys } = await buildIModel("edits merged values", async (builder, testName) => {
+    const { imodel, schema, ...imodelKeys } = await buildIModel(expect.getState().currentTestName!, async (builder, testName) => {
       const mySchema = await importSchema(
         testName,
         builder,

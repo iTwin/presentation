@@ -31,7 +31,7 @@ describe("Unified selection", () => {
       });
 
       it("Basic hilite set provider", async () => {
-        const { imodel, ...keys } = await buildIModel("Basic hilite set provider", async (builder) => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           const elementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -64,7 +64,7 @@ describe("Unified selection", () => {
       });
 
       it("iModel hilite set provider", async () => {
-        const { imodel, ...keys } = await buildIModel("iModel hilite set provider", async (builder) => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           const elementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });

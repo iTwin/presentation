@@ -5,13 +5,14 @@
 
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useCallback, useState } from "react";
-import { afterAll, beforeAll, describe, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey, KeySet, PresentationRpcInterface } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
+import { createFileNameFromString } from "../../FilenameUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render } from "../../RenderUtils.js";
 import { buildTestIModel } from "../../TestIModelSetup.js";
@@ -69,7 +70,7 @@ describe("Learning snippets", () => {
       // set up imodel for the test
       let elementKey: InstanceKey | undefined;
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      const imodel = await buildTestIModel(".", async (builder) => {
+      const imodel = await buildTestIModel(createFileNameFromString(expect.getState().currentTestName!), async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
         elementKey = insertPhysicalElement({ builder, userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });

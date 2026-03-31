@@ -92,7 +92,7 @@ describe("Unified selection sync with iModel", () => {
       let subjectKey: SelectableInstanceKey;
       let modelKeys: SelectableInstanceKey[];
 
-      imodel = await buildTestIModel("syncs subjects selection", async (builder) => {
+      imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         subjectKey = insertSubject({ builder, codeValue: "test subject" });
         const subject2 = insertSubject({ builder, codeValue: "subject 2", parentId: subjectKey.id });
         const subject3 = insertSubject({ builder, codeValue: "subject 3", parentId: subjectKey.id });
@@ -139,7 +139,7 @@ describe("Unified selection sync with iModel", () => {
     it("syncs model selection", async () => {
       let modelKey: SelectableInstanceKey;
 
-      imodel = await buildTestIModel("syncs model selection", async (builder) => {
+      imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
       });
       using _ = enableSync();
@@ -180,7 +180,7 @@ describe("Unified selection sync with iModel", () => {
       let categoryKey: SelectableInstanceKey;
       let subCategoryKeys: SelectableInstanceKey[];
 
-      imodel = await buildTestIModel("syncs category selection", async (builder) => {
+      imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         subCategoryKeys = [
           getDefaultSubcategoryKey(categoryKey.id),
@@ -223,7 +223,7 @@ describe("Unified selection sync with iModel", () => {
     it("syncs subcategory selection", async () => {
       let categoryKey: SelectableInstanceKey;
 
-      imodel = await buildTestIModel("syncs subcategory selection", async (builder) => {
+      imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
       });
       const subCategoryKey = getDefaultSubcategoryKey(categoryKey!.id);
@@ -264,7 +264,7 @@ describe("Unified selection sync with iModel", () => {
       let categoryKey: SelectableInstanceKey;
       let subCategoryKeys: SelectableInstanceKey[];
 
-      imodel = await buildTestIModel("syncs category and subcategory selection", async (builder) => {
+      imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         subCategoryKeys = [
           getDefaultSubcategoryKey(categoryKey.id),
@@ -310,7 +310,7 @@ describe("Unified selection sync with iModel", () => {
       let assemblyKey: SelectableInstanceKey;
       let childElementKeys: SelectableInstanceKey[];
 
-      imodel = await buildTestIModel("syncs assembly element selection", async (builder) => {
+      imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         assemblyKey = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -365,7 +365,7 @@ describe("Unified selection sync with iModel", () => {
     it("multiple elements selection", async () => {
       let elementKeys: SelectableInstanceKey[];
 
-      imodel = await buildTestIModel("multiple elements selection", async (builder) => {
+      imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
         await builder.importSchema(schema);
@@ -410,7 +410,7 @@ describe("Unified selection sync with iModel", () => {
       let assemblyKey: SelectableInstanceKey;
       let childElementKeys: SelectableInstanceKey[];
 
-      imodel = await buildTestIModel("syncs selection after selection set changes to different assembly elements", async (builder) => {
+      imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         assemblyKey = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -484,7 +484,7 @@ describe("Unified selection sync with iModel", () => {
       let physicalElement: SelectableInstanceKey;
       let expectedElements: SelectableInstanceKey[];
 
-      imodel = await buildTestIModel("syncs functional element with related physical elements selection", async (builder) => {
+      imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
         await builder.importSchema(schema);
         const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -555,7 +555,7 @@ describe("Unified selection sync with iModel", () => {
       let graphicsElement: SelectableInstanceKey;
       let expectedElements: SelectableInstanceKey[];
 
-      imodel = await buildTestIModel("syncs functional element with related graphic elements selection", async (builder) => {
+      imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
         await builder.importSchema(schema);
         const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -619,7 +619,7 @@ describe("Unified selection sync with iModel", () => {
       let groupInformationElement: SelectableInstanceKey;
       let expectedElements: SelectableInstanceKey[];
 
-      imodel = await buildTestIModel("syncs group information element selection", async (builder) => {
+      imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const groupModel = insertGroupInformationModelWithPartition({ builder, codeValue: "group information model" });
         const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
         await builder.importSchema(schema);

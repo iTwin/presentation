@@ -52,7 +52,8 @@ class TestIModelBuilderImpl implements TestIModelBuilder {
 }
 
 export async function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => void | Promise<void>): Promise<IModelConnection> {
-  const outputFile = setupOutputFileLocation(`${name}.bim`);
+  const fileName = createFileNameFromString(`${name}.bim`);
+  const outputFile = setupOutputFileLocation(fileName);
   const db = SnapshotDb.createEmpty(outputFile, { rootSubject: { name } });
   const builder = new TestIModelBuilderImpl(db);
   try {

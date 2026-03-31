@@ -26,7 +26,7 @@ describe("Hierarchies", () => {
       });
 
       it("formats generic node's concatenated value label", async () => {
-        const { imodel } = await buildIModel("formats generic node's concatenated value label");
+        const { imodel } = await buildIModel(expect.getState().currentTestName!);
         const imodelAccess = createIModelAccess(imodel);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.GenericHierarchyNodeDefinitionLabelFormattingExample
@@ -70,7 +70,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates a hierarchy using labels from `createBisInstanceLabelSelectClauseFactory`", async () => {
-        const { imodel } = await buildIModel("creates a hierarchy using labels from `createBisInstanceLabelSelectClauseFactory`", async (builder) => {
+        const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, codeValue: "A" });
@@ -139,7 +139,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates a hierarchy using labels from custom selector", async () => {
-        const { imodel } = await buildIModel("creates a hierarchy using labels from custom selector", async (builder) => {
+        const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, codeValue: "A" });
@@ -211,7 +211,7 @@ describe("Hierarchies", () => {
       });
 
       it("formats property grouping node's label", async () => {
-        const { imodel, myPhysicalObjectClassName } = await buildIModel("formats property grouping node's label", async (builder, testName) => {
+        const { imodel, myPhysicalObjectClassName } = await buildIModel(expect.getState().currentTestName!, async (builder, testName) => {
           const schema = await importSchema(
             testName,
             builder,

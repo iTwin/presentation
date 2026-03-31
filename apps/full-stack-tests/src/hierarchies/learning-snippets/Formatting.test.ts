@@ -39,7 +39,7 @@ describe("Hierarchies", () => {
       });
 
       it("formats values with units", async () => {
-        const { imodel, schema } = await buildIModel("formats values with units", async (builder, testName) => {
+        const { imodel, schema } = await buildIModel(expect.getState().currentTestName!, async (builder, testName) => {
           return {
             schema: await importSchema(
               testName,

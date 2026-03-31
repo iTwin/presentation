@@ -146,7 +146,7 @@ async function main() {
 // __PUBLISH_EXTRACT_END__
 
 async function getIModelConnection(): Promise<IModelConnection> {
-  const { imodel } = await buildIModel("Hierarchies Learning snippets Readme example Creates expected hierarchy", async (builder) => {
+  const { imodel } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
     const category = insertSpatialCategory({ builder, codeValue: "Test category" });
     const model = insertPhysicalModelWithPartition({ builder, codeValue: "Test model" });
     insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "Test element 1" });

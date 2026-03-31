@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager, UiComponents } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
@@ -103,7 +103,7 @@ describe("Learning snippets", async () => {
       let modelKey: InstanceKey;
       const elementKeys: InstanceKey[] = [];
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      const imodel = await buildTestIModel("renders unified selection table", (builder) => {
+      const imodel = await buildTestIModel(expect.getState().currentTestName!, (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
         elementKeys.push(

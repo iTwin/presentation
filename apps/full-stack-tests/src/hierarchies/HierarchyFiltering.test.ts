@@ -51,7 +51,7 @@ describe("Hierarchies", () => {
 
     describe("generic nodes", () => {
       it("filters through generic nodes", async () => {
-        const { imodel, ...keys } = await buildIModel("filters through generic nodes", async (builder) => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
           const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
@@ -150,7 +150,7 @@ describe("Hierarchies", () => {
       });
 
       it("filters generic nodes", async () => {
-        const { imodel, ...keys } = await buildIModel("filters generic nodes", async () => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async () => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           return { rootSubject };
         });
@@ -225,7 +225,7 @@ describe("Hierarchies", () => {
       });
 
       it("filters generic nodes when targeting child and ancestor", async () => {
-        const { imodel } = await buildIModel("filters generic nodes when targeting child and ancestor", async () => {});
+        const { imodel } = await buildIModel(expect.getState().currentTestName!, async () => {});
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -333,7 +333,7 @@ describe("Hierarchies", () => {
 
     describe("instance nodes", () => {
       it("filters through instance nodes that are in multiple paths", async () => {
-        const { imodel, ...keys } = await buildIModel("filters through instance nodes that are in multiple paths", async (builder) => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
           const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
@@ -428,7 +428,7 @@ describe("Hierarchies", () => {
       });
 
       it("filters instance nodes when targeting child and ancestor", async () => {
-        const { imodel, ...keys } = await buildIModel("filters instance nodes when targeting child and ancestor", async (builder) => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
           const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
@@ -525,7 +525,7 @@ describe("Hierarchies", () => {
 
     describe("when filtering through hidden nodes", () => {
       it("filters through hidden generic nodes", async () => {
-        const { imodel, ...keys } = await buildIModel("filters through hidden generic nodes", async (builder) => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
           const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
@@ -623,7 +623,7 @@ describe("Hierarchies", () => {
 
     describe("when targeting hidden nodes", () => {
       it("doesn't return matching hidden generic nodes or their children", async () => {
-        const { imodel, ...keys } = await buildIModel("doesn't return matching hidden generic nodes or their children", async (builder) => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
           const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
@@ -707,7 +707,7 @@ describe("Hierarchies", () => {
       });
 
       it("doesn't return matching hidden instance nodes", async () => {
-        const { imodel, ...keys } = await buildIModel("doesn't return matching hidden instance nodes", async (builder) => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
           const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: childSubject1.id });
@@ -999,7 +999,7 @@ describe("Hierarchies", () => {
 
     describe("when targeting grouped instance nodes", () => {
       it("sets auto-expand flag for parent nodes before the target grouping node", async () => {
-        const { imodel, ...keys } = await buildIModel("sets auto-expand flag for parent nodes before the target grouping node", async (builder) => {
+        const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
@@ -1270,7 +1270,7 @@ describe("Hierarchies", () => {
         let circleClassName: string;
 
         beforeAll(async () => {
-          const result = await buildIModel("nested grouping nodes of different types", async (builder) => {
+          const result = await buildIModel(expect.getState().currentTestName!, async (builder) => {
             const schema = await importSchema(
               "sets auto-expand flag for target grouping node if another target is a child element",
               builder,
@@ -1537,11 +1537,11 @@ describe("Hierarchies", () => {
 
     describe("when filtering merged hierarchy provider", () => {
       it("filters root nodes of individual provider", async () => {
-        const { imodel: imodel1, ...keys1 } = await buildIModel(createFileNameFromString("filters root nodes of individual provider-1"), async (builder) => {
+        const { imodel: imodel1, ...keys1 } = await buildIModel(expect.getState().currentTestName! + " 1", async (builder) => {
           const testSubject = insertSubject({ builder, codeValue: "A subject", parentId: IModel.rootSubjectId });
           return { testSubject };
         });
-        const { imodel: imodel2, ...keys2 } = await buildIModel(createFileNameFromString("filters root nodes of individual provider-2"), async (builder) => {
+        const { imodel: imodel2, ...keys2 } = await buildIModel(expect.getState().currentTestName! + " 2", async (builder) => {
           const testSubject = insertSubject({ builder, codeValue: "B subject", parentId: IModel.rootSubjectId });
           return { testSubject };
         });
@@ -1739,12 +1739,12 @@ describe("Hierarchies", () => {
 
       it("filters through multiple providers", async () => {
         const rootSubjectKey = { className: subjectClassName, id: IModel.rootSubjectId };
-        const { imodel: imodel1, ...keys1 } = await buildIModel(createFileNameFromString("filters through multiple providers-1"), async (builder) => {
+        const { imodel: imodel1, ...keys1 } = await buildIModel(expect.getState().currentTestName! + " 1", async (builder) => {
           const subject1 = insertSubject({ builder, codeValue: "A subject 1", parentId: rootSubjectKey.id });
           const subject11 = insertSubject({ builder, codeValue: "A subject 1.1", parentId: subject1.id });
           return { subject1, subject11 };
         });
-        const { imodel: imodel2, ...keys2 } = await buildIModel(createFileNameFromString("filters through multiple providers-2"), async (builder) => {
+        const { imodel: imodel2, ...keys2 } = await buildIModel(expect.getState().currentTestName! + " 2", async (builder) => {
           const subject2 = insertSubject({ builder, codeValue: "B subject 2", parentId: rootSubjectKey.id });
           const subject21 = insertSubject({ builder, codeValue: "B subject 2.1", parentId: subject2.id });
           return { subject2, subject21 };

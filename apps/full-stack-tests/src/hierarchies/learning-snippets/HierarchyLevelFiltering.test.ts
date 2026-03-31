@@ -25,7 +25,7 @@ describe("Hierarchies", () => {
       beforeAll(async () => {
         await initialize();
 
-        const res = await buildIModel("Hierarchy level filtering", async (builder) => {
+        const res = await buildIModel("Hierarchies Learning snippets Hierarchy level filtering", async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "A" });

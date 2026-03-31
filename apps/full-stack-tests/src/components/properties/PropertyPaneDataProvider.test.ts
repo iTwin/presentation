@@ -44,7 +44,7 @@ describe("PropertyDataProvider", async () => {
 
       it("creates empty result when properties requested for 0 instances", async () => {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const imodel = await buildTestIModel("creates empty result when properties requested for 0 instances", async (builder) => {
+        const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
         using provider = createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
@@ -58,7 +58,7 @@ describe("PropertyDataProvider", async () => {
         let modelKey: InstanceKey;
         let elementKey: InstanceKey;
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const imodel = await buildTestIModel("creates property data when given key with concrete class", async (builder) => {
+        const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
           modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
           elementKey = insertPhysicalElement({
@@ -114,7 +114,7 @@ describe("PropertyDataProvider", async () => {
         let modelKey: InstanceKey;
         let elementKey: InstanceKey;
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const imodel = await buildTestIModel("creates property data when given key with base class", async (builder) => {
+        const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
           modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
           elementKey = insertPhysicalElement({
@@ -168,7 +168,7 @@ describe("PropertyDataProvider", async () => {
       it("favorites properties", async () => {
         let categoryKey: InstanceKey;
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const imodel = await buildTestIModel("favorites properties", async (builder) => {
+        const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
         using provider = createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
@@ -203,7 +203,7 @@ describe("PropertyDataProvider", async () => {
       it("overrides default property category", async () => {
         let categoryKey: InstanceKey;
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const imodel = await buildTestIModel("overrides default property category", async (builder) => {
+        const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
         using provider = createProvider({
@@ -243,7 +243,7 @@ describe("PropertyDataProvider", async () => {
       it("finds root property record keys", async () => {
         let categoryKey: InstanceKey;
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const imodel = await buildTestIModel("finds root property record keys", async (builder) => {
+        const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
 
@@ -265,7 +265,7 @@ describe("PropertyDataProvider", async () => {
         let elementKey: InstanceKey;
         let externalsSourceAspectKey: InstanceKey;
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const imodel = await buildTestIModel("finds nested property record keys", async (builder) => {
+        const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
           const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
           const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
           elementKey = insertPhysicalElement({
@@ -323,7 +323,7 @@ describe("PropertyDataProvider", async () => {
   runTests("with nested property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = true));
 
   it("finds array item & struct member fields", async () => {
-    const { imodel, ...keys } = await buildIModel("finds array item & struct member fields", async (builder, testName) => {
+    const { imodel, ...keys } = await buildIModel(expect.getState().currentTestName!, async (builder, testName) => {
       const schema = await importSchema(
         testName,
         builder,
@@ -503,7 +503,7 @@ describe("PropertyDataProvider", async () => {
   it("gets property data after re-initializing Presentation", async () => {
     let categoryKey: InstanceKey;
     // eslint-disable-next-line @typescript-eslint/no-deprecated
-    const imodel = await buildTestIModel("gets property data after re-initializing Presentation", async (builder) => {
+    const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
       categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
     });
     const checkDataProvider = async () => {

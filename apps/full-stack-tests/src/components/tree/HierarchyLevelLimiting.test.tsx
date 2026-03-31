@@ -10,6 +10,7 @@ import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/component
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
+import { createFileNameFromString } from "../../FilenameUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getByRole, render, waitFor } from "../../RenderUtils.js";
 import { buildTestIModel } from "../../TestIModelSetup.js";
@@ -63,7 +64,7 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      const imodel = await buildTestIModel(".", async (builder) => {
+      const imodel = await buildTestIModel(createFileNameFromString(expect.getState().currentTestName!), async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKeyA = insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
         for (let i = 0; i < 10; ++i) {

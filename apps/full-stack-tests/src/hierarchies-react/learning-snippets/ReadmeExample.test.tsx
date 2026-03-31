@@ -70,7 +70,7 @@ describe("Hierarchies React", () => {
       beforeEach(async function () {
         await initialize();
         iModel = (
-          await buildIModel("Readme example", async (builder) => {
+          await buildIModel(expect.getState().currentTestName!, async (builder) => {
             insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
             insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
           })
