@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";

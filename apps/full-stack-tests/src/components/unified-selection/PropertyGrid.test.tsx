@@ -5,7 +5,7 @@
 
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useCallback, useState } from "react";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey } from "@itwin/presentation-common";
