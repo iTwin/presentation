@@ -56,6 +56,11 @@ function getTestName() {
   return expect.getState().currentTestName!;
 }
 
+/**
+ * Create test iModel and returns a connection to it.
+ *
+ * **Note:** do not call this function outside `it` block without name. It uses `expect.getState().currentTestName` to determine the test name.
+ */
 export async function buildTestIModel<TResult extends {} | void>(
   cb: (builder: TestIModelBuilder, testName: string) => TResult | Promise<TResult>,
 ): Promise<TResult & { imodel: IModelConnection }>;
