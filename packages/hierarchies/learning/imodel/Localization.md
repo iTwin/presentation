@@ -35,13 +35,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
                   grouping: {
                     byProperties: {
                       propertiesClassName: myPhysicalObjectClassName,
-                      propertyGroups: [
-                        {
-                          propertyClassAlias: "this",
-                          propertyName: "IntProperty",
-                          ranges: [{ fromValue: 1, toValue: 5 }],
-                        },
-                      ],
+                      propertyGroups: [{ propertyClassAlias: "this", propertyName: "IntProperty", ranges: [{ fromValue: 1, toValue: 5 }] }],
                       createGroupForOutOfRangeValues: true,
                       createGroupForUnspecifiedValues: true,
                     },
@@ -56,10 +50,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
       return [];
     },
   },
-  localizedStrings: {
-    other: "Kita",
-    unspecified: "Nenurodyta",
-  },
+  localizedStrings: { other: "Kita", unspecified: "Nenurodyta" },
 });
 
 // The iModel has four elements of `myPhysicalObjectClassName` type:

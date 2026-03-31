@@ -42,10 +42,7 @@ async function createInstanceNodesQueryDefinition({
   whereClauseFactory?: (props: { alias: string }) => Promise<string>;
 }) {
   const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-  const queryClauseFactory = createNodesQueryClauseFactory({
-    imodelAccess,
-    instanceLabelSelectClauseFactory: labelsFactory,
-  });
+  const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsFactory });
   const whereClause = whereClauseFactory ? await whereClauseFactory({ alias: "this" }) : undefined;
   return {
     fullClassName,
@@ -96,12 +93,7 @@ The above hierarchy definition creates the following hierarchy for each of the i
 
 ```ts
 // The first iModel version has 3 elements in "Model 1". The resulting hierarchy:
-[
-  {
-    label: "Model 1",
-    children: [{ label: "Element 1" }, { label: "Element 2" }, { label: "Element 3" }],
-  },
-],
+[{ label: "Model 1", children: [{ label: "Element 1" }, { label: "Element 2" }, { label: "Element 3" }] }],
 
 // The second iModel version has the following changes:
 // - "Element 2" was deleted
@@ -111,14 +103,8 @@ The above hierarchy definition creates the following hierarchy for each of the i
 //
 // The resulting hierarchy:
 [
-  {
-    label: "Model 1",
-    children: [{ label: "Element 1" }, { label: "Element 4" }, { label: "Updated element 3" }],
-  },
-  {
-    label: "Model 2",
-    children: [{ label: "Element 5" }],
-  },
+  { label: "Model 1", children: [{ label: "Element 1" }, { label: "Element 4" }, { label: "Updated element 3" }] },
+  { label: "Model 2", children: [{ label: "Element 5" }] },
 ],
 ```
 
@@ -130,10 +116,7 @@ To merge the hierarchies, we create a hierarchy provider using `createMergedIMod
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-const mergedHierarchyProvider = createMergedIModelHierarchyProvider({
-  imodels,
-  hierarchyDefinition,
-});
+const mergedHierarchyProvider = createMergedIModelHierarchyProvider({ imodels, hierarchyDefinition });
 ```
 
 <!-- END EXTRACTION -->
@@ -161,10 +144,7 @@ The resulting merged hierarchy looks like this:
     ],
   },
   // "Model 2" and its "Element 5" come from the 2nd iModel version
-  {
-    label: "Model 2",
-    children: [{ label: "Element 5" }],
-  },
+  { label: "Model 2", children: [{ label: "Element 5" }] },
 ],
 ```
 

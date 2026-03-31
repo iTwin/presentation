@@ -134,16 +134,7 @@ Let's consider two cases - searching by label and by target element ID:
   const searchPaths = await createHierarchySearchTree(["C", "E"]);
   expect(searchPaths).to.deep.eq([
     // We expect to find two paths A -> B -> C and A -> E
-    {
-      identifier: elementKeys.a,
-      children: [
-        {
-          identifier: elementKeys.b,
-          children: [{ identifier: elementKeys.c }],
-        },
-        { identifier: elementKeys.e },
-      ],
-    },
+    { identifier: elementKeys.a, children: [{ identifier: elementKeys.b, children: [{ identifier: elementKeys.c }] }, { identifier: elementKeys.e }] },
   ]);
   ```
 
@@ -227,14 +218,8 @@ expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
   {
     label: "A",
     children: [
-      {
-        label: "B",
-        children: [{ label: "C" }],
-      },
-      {
-        label: "E",
-        children: [{ label: "F" }],
-      },
+      { label: "B", children: [{ label: "C" }] },
+      { label: "E", children: [{ label: "F" }] },
     ],
   },
 ]);

@@ -38,12 +38,7 @@ export const LOGGER: ILogger = {
 
 function createLogMessage(severity: LogLevel, category: string, message: string) {
   const now = new Date();
-  const timeStr = now.toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    fractionalSecondDigits: 3,
-  });
+  const timeStr = now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", fractionalSecondDigits: 3 });
   return `[${timeStr}] ${severity.toUpperCase().padEnd(7)} | ${category} | ${message}`;
 }
 ```
