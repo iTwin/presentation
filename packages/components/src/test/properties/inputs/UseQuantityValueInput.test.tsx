@@ -31,22 +31,11 @@ function TestInput({ onChange, ...restProps }: UseQuantityValueInputProps & { on
 describe("UseQuantityValueInput", () => {
   const schemaContext = {} as SchemaContext;
   const format = new Format("test format");
-  const formatterSpec = {
-    applyFormatting: sinon.stub<[number], string>(),
-    unitConversions: [{ name: "test unit", label: "unit" }],
-    format,
-  };
-  const parserSpec = {
-    parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(),
-    format,
-  };
-  const quantityFormatter = {
-    onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-  };
+  const formatterSpec = { applyFormatting: sinon.stub<[number], string>(), unitConversions: [{ name: "test unit", label: "unit" }], format };
+  const parserSpec = { parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(), format };
+  const quantityFormatter = { onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() };
 
-  const formatProvider = {
-    onFormatsChanged: new BeUiEvent<void>(),
-  };
+  const formatProvider = { onFormatsChanged: new BeUiEvent<void>() };
 
   let getFormatterSpecStub: sinon.SinonStub<
     Parameters<KoqPropertyValueFormatter["getFormatterSpec"]>,
@@ -129,11 +118,7 @@ describe("UseQuantityValueInput", () => {
     const { queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
     await waitFor(() => expect(queryByPlaceholderText("unit")).to.not.be.null);
 
-    const newFormatterSpec = {
-      applyFormatting: (num: number) => `${num} new unit`,
-      unitConversions: [{ name: "test unit", label: "new unit" }],
-      format,
-    };
+    const newFormatterSpec = { applyFormatting: (num: number) => `${num} new unit`, unitConversions: [{ name: "test unit", label: "new unit" }], format };
     const newParserSpec = {
       parseToQuantityValue: (str: string) => {
         if (!str.endsWith("new unit")) {
@@ -153,10 +138,7 @@ describe("UseQuantityValueInput", () => {
   });
 
   it("sets precision to 12 for Decimal format types", async () => {
-    const decimalFormat = {
-      type: FormatType.Decimal,
-      precision: 6,
-    };
+    const decimalFormat = { type: FormatType.Decimal, precision: 6 };
     const decimalFormatterSpec = {
       applyFormatting: sinon.stub<[number], string>(),
       unitConversions: [{ name: "test unit", label: "unit" }],
@@ -174,10 +156,7 @@ describe("UseQuantityValueInput", () => {
   });
 
   it("does not set precision to 12 for Fractional format types", async () => {
-    const fractionalFormat = {
-      type: FormatType.Fractional,
-      precision: 6,
-    };
+    const fractionalFormat = { type: FormatType.Fractional, precision: 6 };
     const fractionalFormatterSpec = {
       applyFormatting: sinon.stub<[number], string>(),
       unitConversions: [{ name: "test unit", label: "unit" }],

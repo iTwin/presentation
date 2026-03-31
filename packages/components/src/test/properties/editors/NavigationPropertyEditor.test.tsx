@@ -54,9 +54,7 @@ describe("<NavigationPropertyTargetEditor />", () => {
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
     sinon.stub(Presentation, "localization").get(() => localization);
-    sinon.stub(Presentation, "presentation").get(() => ({
-      getContent: getContentStub,
-    }));
+    sinon.stub(Presentation, "presentation").get(() => ({ getContent: getContentStub }));
   });
 
   after(() => {

@@ -41,50 +41,22 @@ describe("PropertyRecordsBuilder", () => {
   });
 
   it("sets enum props", () => {
-    const enumerationInfo: EnumerationInfo = {
-      choices: [{ value: 1, label: "One" }],
-      isStrict: true,
-    };
+    const enumerationInfo: EnumerationInfo = { choices: [{ value: 1, label: "One" }], isStrict: true };
     const descriptor = createTestContentDescriptor({
-      fields: [
-        createTestPropertiesContentField({
-          properties: [
-            {
-              property: createTestPropertyInfo({ enumerationInfo }),
-            },
-          ],
-        }),
-      ],
+      fields: [createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ enumerationInfo }) }] })],
     });
-    const item = createTestContentItem({
-      values: {},
-      displayValues: {},
-    });
+    const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].property.enum).to.deep.eq(enumerationInfo);
   });
 
   it("sets constraints props for `string` type", () => {
-    const constraints: PropertyValueConstraints = {
-      minimumLength: 1,
-      maximumLength: 15,
-    };
+    const constraints: PropertyValueConstraints = { minimumLength: 1, maximumLength: 15 };
     const descriptor = createTestContentDescriptor({
-      fields: [
-        createTestPropertiesContentField({
-          properties: [
-            {
-              property: createTestPropertyInfo({ constraints }),
-            },
-          ],
-        }),
-      ],
+      fields: [createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ constraints }) }] })],
     });
-    const item = createTestContentItem({
-      values: {},
-      displayValues: {},
-    });
+    const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
@@ -92,25 +64,11 @@ describe("PropertyRecordsBuilder", () => {
   });
 
   it("sets constraints props for numeric type", () => {
-    const constraints: PropertyValueConstraints = {
-      minimumValue: 1,
-      maximumValue: 15,
-    };
+    const constraints: PropertyValueConstraints = { minimumValue: 1, maximumValue: 15 };
     const descriptor = createTestContentDescriptor({
-      fields: [
-        createTestPropertiesContentField({
-          properties: [
-            {
-              property: createTestPropertyInfo({ constraints }),
-            },
-          ],
-        }),
-      ],
+      fields: [createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ constraints }) }] })],
     });
-    const item = createTestContentItem({
-      values: {},
-      displayValues: {},
-    });
+    const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
@@ -118,25 +76,11 @@ describe("PropertyRecordsBuilder", () => {
   });
 
   it("sets constraints props for `array` type", () => {
-    const constraints: PropertyValueConstraints = {
-      minOccurs: 1,
-      maxOccurs: 15,
-    };
+    const constraints: PropertyValueConstraints = { minOccurs: 1, maxOccurs: 15 };
     const descriptor = createTestContentDescriptor({
-      fields: [
-        createTestPropertiesContentField({
-          properties: [
-            {
-              property: createTestPropertyInfo({ constraints }),
-            },
-          ],
-        }),
-      ],
+      fields: [createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ constraints }) }] })],
     });
-    const item = createTestContentItem({
-      values: {},
-      displayValues: {},
-    });
+    const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
@@ -144,17 +88,9 @@ describe("PropertyRecordsBuilder", () => {
   });
 
   it("sets extended data", () => {
-    const descriptor = createTestContentDescriptor({
-      fields: [createTestSimpleContentField()],
-    });
-    const extendedData = {
-      test: 123,
-    };
-    const item = createTestContentItem({
-      values: {},
-      displayValues: {},
-      extendedData,
-    });
+    const descriptor = createTestContentDescriptor({ fields: [createTestSimpleContentField()] });
+    const extendedData = { test: 123 };
+    const item = createTestContentItem({ values: {}, displayValues: {}, extendedData });
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].extendedData).to.deep.eq(extendedData);
@@ -164,28 +100,12 @@ describe("PropertyRecordsBuilder", () => {
     const category = createTestCategoryDescription();
     const descriptor = createTestContentDescriptor({
       fields: [
-        createTestNestedContentField({
-          name: "parent",
-          category,
-          autoExpand: true,
-          nestedFields: [createTestSimpleContentField({ name: "child", category })],
-        }),
+        createTestNestedContentField({ name: "parent", category, autoExpand: true, nestedFields: [createTestSimpleContentField({ name: "child", category })] }),
       ],
     });
     const item = createTestContentItem({
       values: {
-        parent: [
-          {
-            primaryKeys: [createTestECInstanceKey()],
-            values: {
-              child: "value",
-            },
-            displayValues: {
-              child: "display value",
-            },
-            mergedFieldNames: [],
-          },
-        ],
+        parent: [{ primaryKeys: [createTestECInstanceKey()], values: { child: "value" }, displayValues: { child: "display value" }, mergedFieldNames: [] }],
       },
       displayValues: {},
     });
@@ -198,27 +118,19 @@ describe("PropertyRecordsBuilder", () => {
   });
 
   it("sets custom `renderer`", () => {
-    const descriptor = createTestContentDescriptor({
-      fields: [createTestSimpleContentField({ renderer: { name: "custom-renderer" } })],
-    });
+    const descriptor = createTestContentDescriptor({ fields: [createTestSimpleContentField({ renderer: { name: "custom-renderer" } })] });
     const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.renderer).to.deep.eq({
-      name: "custom-renderer",
-    });
+    expect(builder.entries[0].property.renderer).to.deep.eq({ name: "custom-renderer" });
   });
 
   it("sets custom `editor`", () => {
-    const descriptor = createTestContentDescriptor({
-      fields: [createTestSimpleContentField({ editor: { name: "custom-editor" } })],
-    });
+    const descriptor = createTestContentDescriptor({ fields: [createTestSimpleContentField({ editor: { name: "custom-editor" } })] });
     const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.editor).to.deep.eq({
-      name: "custom-editor",
-    });
+    expect(builder.entries[0].property.editor).to.deep.eq({ name: "custom-editor" });
   });
 
   it("sets editor name when field typeName is Number", () => {
@@ -228,9 +140,7 @@ describe("PropertyRecordsBuilder", () => {
     const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.editor).to.deep.eq({
-      name: NumericEditorName,
-    });
+    expect(builder.entries[0].property.editor).to.deep.eq({ name: NumericEditorName });
   });
 
   it("does not override custom editor when field typeName is Number", () => {
@@ -245,9 +155,7 @@ describe("PropertyRecordsBuilder", () => {
     const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.editor).to.deep.eq({
-      name: "custom-editor",
-    });
+    expect(builder.entries[0].property.editor).to.deep.eq({ name: "custom-editor" });
   });
 
   it("sets quantity type", () => {
@@ -260,11 +168,7 @@ describe("PropertyRecordsBuilder", () => {
                 classInfo: createTestECClassInfo(),
                 name: "test-props",
                 type: "string",
-                kindOfQuantity: {
-                  label: "KOQ Label",
-                  name: "testKOQ",
-                  persistenceUnit: "testUnit",
-                },
+                kindOfQuantity: { label: "KOQ Label", name: "testKOQ", persistenceUnit: "testUnit" },
               },
             },
           ],
@@ -287,11 +191,7 @@ describe("PropertyRecordsBuilder", () => {
                 classInfo: createTestECClassInfo(),
                 name: "test-props",
                 type: "string",
-                kindOfQuantity: {
-                  label: "KOQ Label",
-                  name: "testKOQ",
-                  persistenceUnit: "testUnit",
-                },
+                kindOfQuantity: { label: "KOQ Label", name: "testKOQ", persistenceUnit: "testUnit" },
               },
             },
           ],
@@ -315,11 +215,7 @@ describe("PropertyRecordsBuilder", () => {
                 classInfo: createTestECClassInfo(),
                 name: "test-props",
                 type: "string",
-                kindOfQuantity: {
-                  label: "KOQ Label",
-                  name: "testKOQ",
-                  persistenceUnit: "testUnit",
-                },
+                kindOfQuantity: { label: "KOQ Label", name: "testKOQ", persistenceUnit: "testUnit" },
               },
             },
           ],
@@ -340,15 +236,7 @@ describe("PropertyRecordsBuilder", () => {
       fields: [
         createTestPropertiesContentField({
           name: fieldName,
-          properties: [
-            {
-              property: {
-                classInfo: createTestECClassInfo(),
-                name: "test-props",
-                type: "string",
-              },
-            },
-          ],
+          properties: [{ property: { classInfo: createTestECClassInfo(), name: "test-props", type: "string" } }],
         }),
       ],
     });
@@ -357,9 +245,7 @@ describe("PropertyRecordsBuilder", () => {
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].property.name).to.eq(fieldName);
     expect(builder.entries[0].isMerged).to.be.true;
-    expect(builder.entries[0].value).to.deep.eq({
-      valueFormat: UiPropertyValueFormat.Primitive,
-    });
+    expect(builder.entries[0].value).to.deep.eq({ valueFormat: UiPropertyValueFormat.Primitive });
   });
 
   it("sorts struct properties", () => {
@@ -381,20 +267,8 @@ describe("PropertyRecordsBuilder", () => {
       ],
     });
     const item = createTestContentItem({
-      values: {
-        members: {
-          member3: "value 3",
-          member1: "value 1",
-          member2: "value 2",
-        },
-      },
-      displayValues: {
-        members: {
-          member3: "display value 3",
-          member1: "display value 1",
-          member2: "display value 2",
-        },
-      },
+      values: { members: { member3: "value 3", member1: "value 1", member2: "value 2" } },
+      displayValues: { members: { member3: "display value 3", member1: "display value 1", member2: "display value 2" } },
     });
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
@@ -406,12 +280,7 @@ describe("PropertyRecordsBuilder", () => {
     const category = createTestCategoryDescription();
     const descriptor = createTestContentDescriptor({
       fields: [
-        createTestNestedContentField({
-          name: "parent",
-          category,
-          autoExpand: true,
-          nestedFields: [createTestSimpleContentField({ name: "child", category })],
-        }),
+        createTestNestedContentField({ name: "parent", category, autoExpand: true, nestedFields: [createTestSimpleContentField({ name: "child", category })] }),
       ],
     });
     const item = createTestContentItem({
@@ -419,12 +288,8 @@ describe("PropertyRecordsBuilder", () => {
         parent: [
           {
             primaryKeys: [createTestECInstanceKey()],
-            values: {
-              child: "value",
-            },
-            displayValues: {
-              child: "display value",
-            },
+            values: { child: "value" },
+            displayValues: { child: "display value" },
             mergedFieldNames: [],
             labelDefinition,
           },
@@ -443,12 +308,7 @@ describe("PropertyRecordsBuilder", () => {
     const category = createTestCategoryDescription();
     const descriptor = createTestContentDescriptor({
       fields: [
-        createTestNestedContentField({
-          name: "parent",
-          category,
-          autoExpand: true,
-          nestedFields: [createTestSimpleContentField({ name: "child", category })],
-        }),
+        createTestNestedContentField({ name: "parent", category, autoExpand: true, nestedFields: [createTestSimpleContentField({ name: "child", category })] }),
       ],
     });
     const item = createTestContentItem({
@@ -456,12 +316,8 @@ describe("PropertyRecordsBuilder", () => {
         parent: [
           {
             primaryKeys: [createTestECInstanceKey()],
-            values: {
-              child: "value",
-            },
-            displayValues: {
-              child: "display value",
-            },
+            values: { child: "value" },
+            displayValues: { child: "display value" },
             mergedFieldNames: [],
             labelDefinition,
           },

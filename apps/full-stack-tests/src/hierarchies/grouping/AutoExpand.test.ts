@@ -70,17 +70,11 @@ describe("Hierarchies", () => {
 
     describe("Base class grouping", () => {
       const baseClassAutoExpandAlways: ECSqlSelectClauseGroupingParams = {
-        byBaseClasses: {
-          fullClassNames: ["BisCore.InformationReferenceElement"],
-          autoExpand: "always",
-        },
+        byBaseClasses: { fullClassNames: ["BisCore.InformationReferenceElement"], autoExpand: "always" },
       };
 
       const baseClassAutoExpandSingleChild: ECSqlSelectClauseGroupingParams = {
-        byBaseClasses: {
-          fullClassNames: ["BisCore.InformationReferenceElement"],
-          autoExpand: "single-child",
-        },
+        byBaseClasses: { fullClassNames: ["BisCore.InformationReferenceElement"], autoExpand: "single-child" },
       };
 
       it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async function () {
@@ -91,12 +85,7 @@ describe("Hierarchies", () => {
               label: "Information Reference",
               className: "BisCore.InformationReferenceElement",
               autoExpand: true,
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false })],
             }),
           ],
         });
@@ -110,12 +99,7 @@ describe("Hierarchies", () => {
               label: "Information Reference",
               className: "BisCore.InformationReferenceElement",
               autoExpand: true,
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false })],
             }),
           ],
         });
@@ -136,18 +120,9 @@ describe("Hierarchies", () => {
               className: "BisCore.InformationReferenceElement",
               autoExpand: false,
               children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
               ],
             }),
           ],
@@ -156,17 +131,9 @@ describe("Hierarchies", () => {
     });
 
     describe("Class grouping", () => {
-      const classAutoExpandAlways: ECSqlSelectClauseGroupingParams = {
-        byClass: {
-          autoExpand: "always",
-        },
-      };
+      const classAutoExpandAlways: ECSqlSelectClauseGroupingParams = { byClass: { autoExpand: "always" } };
 
-      const classAutoExpandSingleChild: ECSqlSelectClauseGroupingParams = {
-        byClass: {
-          autoExpand: "single-child",
-        },
-      };
+      const classAutoExpandSingleChild: ECSqlSelectClauseGroupingParams = { byClass: { autoExpand: "single-child" } };
 
       it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async function () {
         await validateHierarchy({
@@ -175,12 +142,7 @@ describe("Hierarchies", () => {
             NodeValidators.createForClassGroupingNode({
               className: "BisCore.Subject",
               autoExpand: true,
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false })],
             }),
           ],
         });
@@ -193,12 +155,7 @@ describe("Hierarchies", () => {
             NodeValidators.createForClassGroupingNode({
               className: "BisCore.Subject",
               autoExpand: true,
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false })],
             }),
           ],
         });
@@ -218,18 +175,9 @@ describe("Hierarchies", () => {
               className: "BisCore.Subject",
               autoExpand: false,
               children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
               ],
             }),
           ],
@@ -238,17 +186,9 @@ describe("Hierarchies", () => {
     });
 
     describe("Label grouping", () => {
-      const labelAutoExpandAlways: ECSqlSelectClauseGroupingParams = {
-        byLabel: {
-          autoExpand: "always",
-        },
-      };
+      const labelAutoExpandAlways: ECSqlSelectClauseGroupingParams = { byLabel: { autoExpand: "always" } };
 
-      const labelAutoExpandSingleChild: ECSqlSelectClauseGroupingParams = {
-        byLabel: {
-          autoExpand: "single-child",
-        },
-      };
+      const labelAutoExpandSingleChild: ECSqlSelectClauseGroupingParams = { byLabel: { autoExpand: "single-child" } };
 
       it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async function () {
         await validateHierarchy({
@@ -256,12 +196,7 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForLabelGroupingNode({
               autoExpand: true,
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false })],
             }),
           ],
         });
@@ -273,12 +208,7 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForLabelGroupingNode({
               autoExpand: true,
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false })],
             }),
           ],
         });
@@ -297,25 +227,14 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForLabelGroupingNode({
               autoExpand: true,
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false })],
             }),
             NodeValidators.createForLabelGroupingNode({
               label: groupName,
               autoExpand: false,
               children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
               ],
             }),
           ],
@@ -348,12 +267,7 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               autoExpand: true,
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false })],
             }),
           ],
         });
@@ -365,12 +279,7 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               autoExpand: true,
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false })],
             }),
           ],
         });
@@ -389,18 +298,9 @@ describe("Hierarchies", () => {
             NodeValidators.createForPropertyValueGroupingNode({
               autoExpand: false,
               children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
               ],
             }),
           ],

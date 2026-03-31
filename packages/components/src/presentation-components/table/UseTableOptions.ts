@@ -19,10 +19,7 @@ export interface UseTableOptionsProps {
 
 /** @internal */
 export interface TableOptions {
-  sorting?: {
-    field: FieldDescriptor;
-    direction: SortDirection;
-  };
+  sorting?: { field: FieldDescriptor; direction: SortDirection };
   fieldsFilterExpression?: string;
 }
 
@@ -52,10 +49,7 @@ export function useTableOptions(props: UseTableOptionsProps): UseTableOptionsRes
 
       setOptions((prev) => ({
         ...prev,
-        sorting: {
-          field: field.getFieldDescriptor(),
-          direction: descending ? SortDirection.Descending : SortDirection.Ascending,
-        },
+        sorting: { field: field.getFieldDescriptor(), direction: descending ? SortDirection.Descending : SortDirection.Ascending },
       }));
     },
     [columns],

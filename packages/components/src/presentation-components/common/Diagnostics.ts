@@ -71,9 +71,5 @@ export function createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnos
     handler = props.ruleDiagnostics.handler;
   }
 
-  return {
-    ...options,
-    ...(props.devDiagnostics?.backendVersion ? { backendVersion: props.devDiagnostics.backendVersion } : undefined),
-    handler: handler!,
-  };
+  return { ...options, ...(props.devDiagnostics?.backendVersion ? { backendVersion: props.devDiagnostics.backendVersion } : undefined), handler: handler! };
 }

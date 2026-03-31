@@ -74,10 +74,7 @@ export function createHierarchyDefinitionFactory({
     });
     const [filterY, filterZ] = await Promise.all(
       [classes.Y.fullName, classes.Z.fullName].map(async (contentClassName) =>
-        queryClauseFactory.createFilterClauses({
-          contentClass: { fullName: contentClassName, alias: "this" },
-          filter: instanceFilter,
-        }),
+        queryClauseFactory.createFilterClauses({ contentClass: { fullName: contentClassName, alias: "this" }, filter: instanceFilter }),
       ),
     );
     return [
@@ -131,17 +128,7 @@ export function createHierarchyDefinitionFactory({
             parentInstancesNodePredicate: classes.X.fullName,
             definitions: async (props: DefineInstanceNodeChildHierarchyLevelProps) =>
               createGenericNodeForY
-                ? [
-                    {
-                      node: {
-                        label: "Y elements",
-                        key: "y-elements",
-                        extendedData: {
-                          parentNodeInstanceIds: props.parentNodeInstanceIds,
-                        },
-                      },
-                    },
-                  ]
+                ? [{ node: { label: "Y elements", key: "y-elements", extendedData: { parentNodeInstanceIds: props.parentNodeInstanceIds } } }]
                 : childNodesForX(props),
           },
           {
@@ -256,10 +243,7 @@ export function createMergedHierarchyProvider(props: {
 }) {
   const imodels = props.imodels.map(({ ecdb, key }) => ({ imodelAccess: { ...createIModelAccess(ecdb), imodelKey: key } }));
   const primaryIModelAccess = imodels[imodels.length - 1].imodelAccess;
-  return createMergedIModelHierarchyProvider({
-    imodels,
-    hierarchyDefinition: props.createHierarchyDefinition({ primaryIModelAccess }),
-  });
+  return createMergedIModelHierarchyProvider({ imodels, hierarchyDefinition: props.createHierarchyDefinition({ primaryIModelAccess }) });
 }
 
 export function pickAndTransform<TObj extends {}, TKey extends keyof TObj>(

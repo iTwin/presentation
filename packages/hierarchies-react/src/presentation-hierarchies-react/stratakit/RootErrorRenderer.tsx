@@ -36,13 +36,7 @@ export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, re
     return (
       <RootErrorContainer
         message={translate("rootResultLimitExceeded").replace("{{limit}}", error.resultSetSizeLimit.toString())}
-        actions={[
-          {
-            action: onOverrideLimit,
-            label: translate("increaseHierarchyLimitToUnlimited"),
-            condition: () => true,
-          },
-        ]}
+        actions={[{ action: onOverrideLimit, label: translate("increaseHierarchyLimitToUnlimited"), condition: () => true }]}
       />
     );
   }
@@ -50,13 +44,7 @@ export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, re
   return (
     <RootErrorContainer
       message={translate("failedToCreateRootHierarchy")}
-      actions={[
-        {
-          action: () => reloadTree({ parentNodeId: undefined, state: "reset" }),
-          label: translate("retry"),
-          condition: () => true,
-        },
-      ]}
+      actions={[{ action: () => reloadTree({ parentNodeId: undefined, state: "reset" }), label: translate("retry"), condition: () => true }]}
     />
   );
 }

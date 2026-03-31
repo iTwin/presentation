@@ -35,11 +35,7 @@ describe("HiliteSet", () => {
   let iModel: IModelConnection;
 
   before(async () => {
-    await initialize({
-      backendHostProps: {
-        cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`),
-      },
-    });
+    await initialize({ backendHostProps: { cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`) } });
     RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);
     RpcConfiguration.developmentMode = true;
     RpcManager.initializeInterface(ECSchemaRpcInterface);
@@ -63,11 +59,7 @@ describe("HiliteSet", () => {
       elements.push(...set.elements);
     }
 
-    return {
-      models,
-      subCategories,
-      elements,
-    };
+    return { models, subCategories, elements };
   }
 
   describe("Hiliting selection", () => {
@@ -385,10 +377,7 @@ describe("HiliteSet", () => {
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          groupInformationElement = insertGroupInformationElement({
-            builder,
-            modelId: groupModel.id,
-          });
+          groupInformationElement = insertGroupInformationElement({ builder, modelId: groupModel.id });
           const physicalElementGroupMember = insertPhysicalElement({
             builder,
             userLabel: "child element 1",

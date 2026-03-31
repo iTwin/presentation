@@ -69,13 +69,7 @@ describe("ConcatenatedValue", () => {
     });
 
     it("joins parts with given separator", async () => {
-      expect(
-        await ConcatenatedValue.serialize({
-          parts: ["x", "y", ["z"]],
-          partFormatter: async (part) => part as string,
-          separator: "-",
-        }),
-      ).to.eq("x-y-z");
+      expect(await ConcatenatedValue.serialize({ parts: ["x", "y", ["z"]], partFormatter: async (part) => part as string, separator: "-" })).to.eq("x-y-z");
     });
   });
 });

@@ -44,15 +44,7 @@ describe("Hierarchies", () => {
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  node: {
-                    key: "custom node",
-                    label: "Custom Node",
-                    supportsFiltering: true,
-                  },
-                },
-              ];
+              return [{ node: { key: "custom node", label: "Custom Node", supportsFiltering: true } }];
             }
             return [];
           },
@@ -60,13 +52,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
           provider: createIModelHierarchyProvider({ imodelAccess: createIModelAccess(imodel), hierarchyDefinition }),
-          expect: [
-            NodeValidators.createForGenericNode({
-              key: "custom node",
-              label: "Custom Node",
-              supportsFiltering: true,
-            }),
-          ],
+          expect: [NodeValidators.createForGenericNode({ key: "custom node", label: "Custom Node", supportsFiltering: true })],
         });
       });
 
@@ -104,12 +90,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
           provider: createIModelHierarchyProvider({ imodelAccess: createIModelAccess(imodel), hierarchyDefinition }),
-          expect: [
-            NodeValidators.createForInstanceNode({
-              label: "A",
-              supportsFiltering: true,
-            }),
-          ],
+          expect: [NodeValidators.createForInstanceNode({ label: "A", supportsFiltering: true })],
         });
       });
 
@@ -127,10 +108,7 @@ describe("Hierarchies", () => {
             const { from, joins, where } = await queryClauseFactory.createFilterClauses({
               // specify the content class whose instances are used to build nodes - this should
               // generally match the instance whose ECClassId and ECInstanceId are used in the SELECT clause
-              contentClass: {
-                fullName: "BisCore.PhysicalElement",
-                alias: "this",
-              },
+              contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
               // specify the filter that we get from props for this hierarchy level
               filter: props.instanceFilter,
             });
@@ -161,20 +139,8 @@ describe("Hierarchies", () => {
           rules: {
             operator: "or",
             rules: [
-              {
-                operator: "is-equal",
-                sourceAlias: "this",
-                propertyName: "UserLabel",
-                propertyTypeName: "string",
-                value: { displayValue: "B", rawValue: "B" },
-              },
-              {
-                operator: "is-equal",
-                sourceAlias: "this",
-                propertyName: "UserLabel",
-                propertyTypeName: "string",
-                value: { displayValue: "C", rawValue: "C" },
-              },
+              { operator: "is-equal", sourceAlias: "this", propertyName: "UserLabel", propertyTypeName: "string", value: { displayValue: "B", rawValue: "B" } },
+              { operator: "is-equal", sourceAlias: "this", propertyName: "UserLabel", propertyTypeName: "string", value: { displayValue: "C", rawValue: "C" } },
             ],
           },
         };

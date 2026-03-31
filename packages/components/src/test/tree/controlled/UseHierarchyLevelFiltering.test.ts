@@ -40,19 +40,11 @@ function createTreeModelInput(input?: Partial<TreeModelNodeInput>, treeItem?: Pa
 }
 
 describe("useHierarchyLevelFiltering", () => {
-  const nodeLoader = {
-    loadNode: createStub<ITreeNodeLoader["loadNode"]>(),
-  };
+  const nodeLoader = { loadNode: createStub<ITreeNodeLoader["loadNode"]>() };
   const modelSource = new TreeModelSource();
   const property = createTestPropertyInfo();
   const field = createTestPropertiesContentField({ properties: [{ property }] });
-  const filterInfo: PresentationInstanceFilterInfo = {
-    filter: {
-      field,
-      operator: "is-null",
-    },
-    usedClasses: [],
-  };
+  const filterInfo: PresentationInstanceFilterInfo = { filter: { field, operator: "is-null" }, usedClasses: [] };
 
   before(async () => {
     await UiComponents.initialize(new EmptyLocalization());
@@ -139,11 +131,7 @@ describe("useHierarchyLevelFiltering", () => {
 
   it("clears filter", () => {
     const node = createTreeModelInput(undefined, {
-      filtering: {
-        descriptor: createTestContentDescriptor({ fields: [] }),
-        ancestorFilters: [],
-        active: filterInfo,
-      },
+      filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [], active: filterInfo },
     });
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);
@@ -160,13 +148,7 @@ describe("useHierarchyLevelFiltering", () => {
   it("reloads children after filter cleared on expanded node", () => {
     const node = createTreeModelInput(
       { isExpanded: true },
-      {
-        filtering: {
-          descriptor: createTestContentDescriptor({ fields: [] }),
-          ancestorFilters: [],
-          active: filterInfo,
-        },
-      },
+      { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [], active: filterInfo } },
     );
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);
@@ -183,13 +165,7 @@ describe("useHierarchyLevelFiltering", () => {
   it("clears children from tree model when filter cleared", () => {
     const parentNode = createTreeModelInput(
       { id: "parent_id" },
-      {
-        filtering: {
-          descriptor: createTestContentDescriptor({ fields: [] }),
-          ancestorFilters: [],
-          active: filterInfo,
-        },
-      },
+      { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [], active: filterInfo } },
     );
     const childNode = createTreeModelInput({ id: "child_id" });
     modelSource.modifyModel((model) => {

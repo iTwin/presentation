@@ -29,18 +29,9 @@ describe("HierarchyNodesDefinition", () => {
 });
 
 function createGenericNodeDefinition(props?: Partial<GenericHierarchyNodeDefinition>): GenericHierarchyNodeDefinition {
-  return {
-    node: createTestSourceGenericNode(),
-    ...props,
-  };
+  return { node: createTestSourceGenericNode(), ...props };
 }
 
 function createInstanceNodesQueryDefinition(props?: Partial<InstanceNodesQueryDefinition>): InstanceNodesQueryDefinition {
-  return {
-    fullClassName: "full.class_name",
-    query: {
-      ecsql: "test ecsql",
-    },
-    ...props,
-  };
+  return { fullClassName: "full.class_name", query: { ecsql: "test ecsql" }, ...props };
 }

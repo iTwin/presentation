@@ -42,11 +42,7 @@ describe("Learning snippets", () => {
       const consoleStub = sinon.stub(console, "error").callsFake(() => {});
       // __PUBLISH_EXTRACT_START__ Presentation.Components.Tree.ErrorHandling
       function MyTree(props: { imodel: IModelConnection }) {
-        const state = usePresentationTreeState({
-          imodel: props.imodel,
-          ruleset,
-          pagingSize: 100,
-        });
+        const state = usePresentationTreeState({ imodel: props.imodel, ruleset, pagingSize: 100 });
 
         // width and height should generally we computed using ResizeObserver API or one of its derivatives
         const [width] = useState(400);
@@ -136,12 +132,7 @@ const ruleset: Ruleset = {
       specifications: [
         {
           specType: "RelatedInstanceNodes",
-          relationshipPaths: [
-            {
-              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-              direction: "Forward",
-            },
-          ],
+          relationshipPaths: [{ relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" }],
           groupByClass: false,
           groupByLabel: false,
         },

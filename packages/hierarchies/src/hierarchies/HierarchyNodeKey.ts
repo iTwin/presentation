@@ -91,10 +91,7 @@ export interface PropertyOtherValuesGroupingNodeKey {
   /** Type of the node */
   type: "property-grouping:other";
   /** Identifiers of properties whose values are grouped under this node. */
-  properties: Array<{
-    className: EC.FullClassName;
-    propertyName: string;
-  }>;
+  properties: Array<{ className: EC.FullClassName; propertyName: string }>;
 }
 
 /**

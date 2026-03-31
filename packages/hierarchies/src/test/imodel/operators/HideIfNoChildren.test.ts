@@ -23,62 +23,34 @@ describe("HideIfNoChildrenOperator", () => {
   });
 
   it("doesn't return nodes that need hiding and have children determined as `false`", async () => {
-    const nodes = [
-      createTestProcessedGenericNode({
-        processingParams: { hideIfNoChildren: true },
-        children: false,
-      }),
-    ];
+    const nodes = [createTestProcessedGenericNode({ processingParams: { hideIfNoChildren: true }, children: false })];
     const result = await collect(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy())));
     expect(result).to.deep.eq([]);
   });
 
   it("returns nodes that need hiding and have children determined as `true`", async () => {
-    const nodes = [
-      createTestProcessedGenericNode({
-        processingParams: { hideIfNoChildren: true },
-        children: true,
-      }),
-    ];
+    const nodes = [createTestProcessedGenericNode({ processingParams: { hideIfNoChildren: true }, children: true })];
     const result = await collect(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy())));
     expect(result).to.deep.eq(nodes);
   });
 
   it("doesn't return nodes that need hiding, need children determined and don't have children", async () => {
-    const nodes = [
-      createTestProcessedGenericNode({
-        processingParams: { hideIfNoChildren: true },
-        children: undefined,
-      }),
-    ];
+    const nodes = [createTestProcessedGenericNode({ processingParams: { hideIfNoChildren: true }, children: undefined })];
     const hasNodes = sinon.fake(() => of(false));
     const result = await collect(from(nodes).pipe(createHideIfNoChildrenOperator(hasNodes)));
     expect(result).to.deep.eq([]);
   });
 
   it("returns nodes that need hiding, need children determined and do have children", async () => {
-    const nodes = [
-      createTestProcessedGenericNode({
-        processingParams: { hideIfNoChildren: true },
-        children: undefined,
-      }),
-    ];
+    const nodes = [createTestProcessedGenericNode({ processingParams: { hideIfNoChildren: true }, children: undefined })];
     const hasNodes = sinon.fake(() => of(true));
     const result = await collect(from(nodes).pipe(createHideIfNoChildrenOperator(hasNodes)));
     expect(result).to.deep.eq([{ ...nodes[0], children: true }]);
   });
 
   it("checks children of all siblings at once when `stopOnFirstChild = false`", async () => {
-    const nodeA = createTestProcessedGenericNode({
-      processingParams: { hideIfNoChildren: true },
-      label: "a",
-      children: undefined,
-    });
-    const nodeB = createTestProcessedGenericNode({
-      processingParams: { hideIfNoChildren: true },
-      label: "b",
-      children: undefined,
-    });
+    const nodeA = createTestProcessedGenericNode({ processingParams: { hideIfNoChildren: true }, label: "a", children: undefined });
+    const nodeB = createTestProcessedGenericNode({ processingParams: { hideIfNoChildren: true }, label: "b", children: undefined });
     const aHasNodesSubject = new Subject<boolean>();
     const bHasNodesSubject = new Subject<boolean>();
     const hasNodes = sinon.fake((node) => {

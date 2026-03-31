@@ -33,10 +33,7 @@ describe("exportDiagnostics", () => {
 
   before(() => {
     sinon.stub(context, "active").callsFake(() => currentSpanContext as any);
-    sinon.stub(trace, "getTracer").returns({
-      startActiveSpan: startActiveSpanStub,
-      startSpan: sinon.stub(),
-    });
+    sinon.stub(trace, "getTracer").returns({ startActiveSpan: startActiveSpanStub, startSpan: sinon.stub() });
     startActiveSpanStub.callsFake((spanName: string, _spanAttributes: object, _ctx: TestSpanContext, cb: (span: Span) => Span) => {
       currentSpanContext = { parentSpanName: spanName };
       return cb(spanStub);
@@ -60,42 +57,19 @@ describe("exportDiagnostics", () => {
   });
 
   it("does nothing when `duration` not set", () => {
-    exportDiagnostics(
-      {
-        logs: [{ scope: "test scope 1", scopeCreateTimestamp: 12345 }],
-      },
-      context.active(),
-    );
+    exportDiagnostics({ logs: [{ scope: "test scope 1", scopeCreateTimestamp: 12345 }] }, context.active());
     expect(startActiveSpanStub).to.not.be.called;
   });
 
   it("does nothing when `scopeCreateTimestamp` not set", () => {
-    exportDiagnostics(
-      {
-        logs: [{ scope: "test scope 1", duration: 100 }],
-      },
-      context.active(),
-    );
+    exportDiagnostics({ logs: [{ scope: "test scope 1", duration: 100 }] }, context.active());
     expect(startActiveSpanStub).to.not.be.called;
   });
 
   it("exports logs as spans", () => {
     const ctx = context.active();
-    exportDiagnostics(
-      {
-        logs: [{ scope: "test scope", scopeCreateTimestamp: 12345, duration: 1111 }],
-      },
-      ctx,
-    );
-    expect(startActiveSpanStub).to.be.calledOnceWith(
-      "test scope",
-      {
-        kind: SpanKind.INTERNAL,
-        attributes: {},
-        startTime: [12, 345000000],
-      },
-      ctx,
-    );
+    exportDiagnostics({ logs: [{ scope: "test scope", scopeCreateTimestamp: 12345, duration: 1111 }] }, ctx);
+    expect(startActiveSpanStub).to.be.calledOnceWith("test scope", { kind: SpanKind.INTERNAL, attributes: {}, startTime: [12, 345000000] }, ctx);
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(spanStub.end).to.be.calledOnceWith([13, 456000000]);
   });
@@ -109,10 +83,7 @@ describe("exportDiagnostics", () => {
             scope: "test scope",
             scopeCreateTimestamp: 12345,
             duration: 2222,
-            attributes: {
-              stringAttribute: "stringAttributeValue",
-              stringArrayAttribute: ["value1", "value2"],
-            },
+            attributes: { stringAttribute: "stringAttributeValue", stringArrayAttribute: ["value1", "value2"] },
           },
         ],
       },
@@ -122,10 +93,7 @@ describe("exportDiagnostics", () => {
       "test scope",
       {
         kind: SpanKind.INTERNAL,
-        attributes: {
-          stringAttribute: "stringAttributeValue",
-          stringArrayAttribute: ["value1", "value2"],
-        },
+        attributes: { stringAttribute: "stringAttributeValue", stringArrayAttribute: ["value1", "value2"] },
         startTime: [12, 345000000],
       },
       ctx,
@@ -147,23 +115,11 @@ describe("exportDiagnostics", () => {
       },
       ctx,
     );
-    expect(startActiveSpanStub).to.be.calledOnceWith(
-      "test scope",
-      {
-        kind: SpanKind.INTERNAL,
-        attributes: {},
-        startTime: [12, 345000000],
-      },
-      ctx,
-    );
+    expect(startActiveSpanStub).to.be.calledOnceWith("test scope", { kind: SpanKind.INTERNAL, attributes: {}, startTime: [12, 345000000] }, ctx);
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(spanStub.addEvent).to.be.calledOnceWith(
       "test message",
-      {
-        devSeverity: "error",
-        editorSeverity: "info",
-        category: "test category",
-      },
+      { devSeverity: "error", editorSeverity: "info", category: "test category" },
       [12, 350000000],
     );
   });
@@ -177,14 +133,7 @@ describe("exportDiagnostics", () => {
             scope: "test scope",
             scopeCreateTimestamp: 12345,
             duration: 1111,
-            logs: [
-              {
-                severity: { dev: "info", editor: "error" },
-                message: "editor error",
-                category: "test category 1",
-                timestamp: 12350,
-              },
-            ],
+            logs: [{ severity: { dev: "info", editor: "error" }, message: "editor error", category: "test category 1", timestamp: 12350 }],
           },
         ],
       },
@@ -204,18 +153,8 @@ describe("exportDiagnostics", () => {
             scopeCreateTimestamp: 12345,
             duration: 1111,
             logs: [
-              {
-                severity: { dev: "info", editor: "error" },
-                message: "editor error",
-                category: "test category",
-                timestamp: 12350,
-              },
-              {
-                severity: { dev: "error", editor: "info" },
-                message: "dev error",
-                category: "test category",
-                timestamp: 12360,
-              },
+              { severity: { dev: "info", editor: "error" }, message: "editor error", category: "test category", timestamp: 12350 },
+              { severity: { dev: "error", editor: "info" }, message: "dev error", category: "test category", timestamp: 12360 },
             ],
           },
         ],
@@ -223,10 +162,7 @@ describe("exportDiagnostics", () => {
       ctx,
     );
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(spanStub.setStatus).to.be.calledOnceWith({
-      code: SpanStatusCode.ERROR,
-      message: "dev error",
-    });
+    expect(spanStub.setStatus).to.be.calledOnceWith({ code: SpanStatusCode.ERROR, message: "dev error" });
   });
 
   it("sets span status to 'error' when nested logs contain errors", () => {
@@ -244,18 +180,8 @@ describe("exportDiagnostics", () => {
                 scopeCreateTimestamp: 12346,
                 duration: 2222,
                 logs: [
-                  {
-                    severity: { dev: "info", editor: "error" },
-                    message: "editor error",
-                    category: "test category",
-                    timestamp: 12350,
-                  },
-                  {
-                    severity: { dev: "error", editor: "info" },
-                    message: "dev error",
-                    category: "test category",
-                    timestamp: 12360,
-                  },
+                  { severity: { dev: "info", editor: "error" }, message: "editor error", category: "test category", timestamp: 12350 },
+                  { severity: { dev: "error", editor: "info" }, message: "dev error", category: "test category", timestamp: 12360 },
                 ],
               },
             ],
@@ -265,10 +191,7 @@ describe("exportDiagnostics", () => {
       ctx,
     );
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(spanStub.setStatus).to.be.calledOnceWith({
-      code: SpanStatusCode.ERROR,
-      message: "dev error",
-    });
+    expect(spanStub.setStatus).to.be.calledOnceWith({ code: SpanStatusCode.ERROR, message: "dev error" });
   });
 
   it("exports nested logs", () => {
@@ -276,12 +199,7 @@ describe("exportDiagnostics", () => {
     exportDiagnostics(
       {
         logs: [
-          {
-            scope: "parent scope",
-            scopeCreateTimestamp: 12345,
-            duration: 1111,
-            logs: [{ scope: "child scope", scopeCreateTimestamp: 12350, duration: 40 }],
-          },
+          { scope: "parent scope", scopeCreateTimestamp: 12345, duration: 1111, logs: [{ scope: "child scope", scopeCreateTimestamp: 12350, duration: 40 }] },
         ],
       },
       ctx,
@@ -289,20 +207,12 @@ describe("exportDiagnostics", () => {
     expect(startActiveSpanStub).to.be.calledTwice;
     expect(startActiveSpanStub.firstCall).to.be.calledWith(
       "parent scope",
-      {
-        kind: SpanKind.INTERNAL,
-        attributes: {},
-        startTime: [12, 345000000],
-      },
+      { kind: SpanKind.INTERNAL, attributes: {}, startTime: [12, 345000000] },
       { parentSpanName: undefined },
     );
     expect(startActiveSpanStub.secondCall).to.be.calledWith(
       "child scope",
-      {
-        kind: SpanKind.INTERNAL,
-        attributes: {},
-        startTime: [12, 350000000],
-      },
+      { kind: SpanKind.INTERNAL, attributes: {}, startTime: [12, 350000000] },
       { parentSpanName: "parent scope" },
     );
   });
@@ -323,12 +233,6 @@ describe("exportDiagnostics", () => {
       ctx,
     );
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(spanStub.addEvent).to.be.calledOnceWith(
-      "test message",
-      {
-        category: "test category",
-      },
-      [12, 350000000],
-    );
+    expect(spanStub.addEvent).to.be.calledOnceWith("test message", { category: "test category" }, [12, 350000000]);
   });
 });

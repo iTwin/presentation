@@ -105,11 +105,7 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
       return propertyData;
     }
 
-    const iter = computeSelection({
-      queryExecutor: createECSqlQueryExecutor(imodel),
-      scope: this._getActiveScope(),
-      elementIds,
-    });
+    const iter = computeSelection({ queryExecutor: createECSqlQueryExecutor(imodel), scope: this._getActiveScope(), elementIds });
     const keys = new KeySet();
     for await (const key of iter) {
       keys.add(key);

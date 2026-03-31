@@ -63,17 +63,7 @@ const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).com
  */
 export const DEFAULT_PROPERTY_GRID_RULESET: Ruleset = {
   id: "presentation-components/DefaultPropertyGridContent",
-  rules: [
-    {
-      ruleType: "Content",
-      onlyIfNotHandled: true,
-      specifications: [
-        {
-          specType: "SelectedNodeInstances",
-        },
-      ],
-    },
-  ],
+  rules: [{ ruleType: "Content", onlyIfNotHandled: true, specifications: [{ specType: "SelectedNodeInstances" }] }],
 };
 
 /**
@@ -166,10 +156,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    * Provides content configuration for the property grid
    */
   protected override async getDescriptorOverrides(): Promise<DescriptorOverrides> {
-    return {
-      ...(await super.getDescriptorOverrides()),
-      contentFlags: ContentFlags.ShowLabels | ContentFlags.MergeResults,
-    };
+    return { ...(await super.getDescriptorOverrides()), contentFlags: ContentFlags.ShowLabels | ContentFlags.MergeResults };
   }
 
   /**
@@ -360,10 +347,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
         nc.push(...currItemValue);
         return nc;
       }, new Array<NestedContentValue>());
-      contentItems = nestedContent.map((nc) => ({
-        primaryKeys: nc.primaryKeys,
-        values: nc.values,
-      }));
+      contentItems = nestedContent.map((nc) => ({ primaryKeys: nc.primaryKeys, values: nc.values }));
     });
 
     return contentItems.reduce((keys, curr) => {
@@ -402,11 +386,7 @@ async function sortFavoriteFields(fields: Field[], imodel: IModelConnection) {
   Presentation.favoriteProperties.sortFields(imodel, fields);
 }
 
-const createDefaultPropertyData = (): PropertyData => ({
-  label: PropertyRecord.fromString("", "label"),
-  categories: [],
-  records: {},
-});
+const createDefaultPropertyData = (): PropertyData => ({ label: PropertyRecord.fromString("", "label"), categories: [], records: {} });
 
 interface PropertyPaneCallbacks {
   isFavorite(field: Field): Promise<boolean>;
@@ -555,19 +535,11 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
     nestedSortCategory(undefined);
 
     // create a hierarchy of PropertyCategory
-    const propertyCategories = new Array<{
-      category: PropertyCategory;
-      source: CategoryDescription;
-      categoryHasParent: boolean;
-    }>();
+    const propertyCategories = new Array<{ category: PropertyCategory; source: CategoryDescription; categoryHasParent: boolean }>();
     const pushPropertyCategories = (parentDescription?: CategoryDescription) => {
       const childCategoryDescriptions = categoriesHierarchy.get(parentDescription);
       const childPropertyCategories = (childCategoryDescriptions ?? []).map((categoryDescription) => {
-        const category: PropertyCategory = {
-          name: categoryDescription.name,
-          label: categoryDescription.label,
-          expand: categoryDescription.expand,
-        };
+        const category: PropertyCategory = { name: categoryDescription.name, label: categoryDescription.label, expand: categoryDescription.expand };
         if (categoryDescription.renderer) {
           category.renderer = categoryDescription.renderer;
         }
@@ -601,10 +573,7 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
     const favoriteField = hierarchy.field.clone();
     favoriteField.category = this._categoriesCache.getFavoriteCategory(hierarchy.field.category);
     this.buildFavoriteFieldAncestors(favoriteField);
-    return {
-      field: favoriteField,
-      childFields: hierarchy.childFields.map((c) => this.createFavoriteFieldsHierarchy(c)),
-    };
+    return { field: favoriteField, childFields: hierarchy.childFields.map((c) => this.createFavoriteFieldsHierarchy(c)) };
   }
   private async createFavoriteFieldsList(fieldHierarchies: FieldHierarchy[]): Promise<FieldHierarchy[]> {
     const favorites: FieldHierarchy[] = [];

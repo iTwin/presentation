@@ -68,10 +68,7 @@ export function createHideNodesInHierarchyOperator(
 
     return merge(
       withoutFlag.pipe(
-        log({
-          category: LOGGING_NAMESPACE,
-          message: /* c8 ignore next */ (n) => `${createNodeIdentifierForLogging(n)} doesn't need hide, return the node`,
-        }),
+        log({ category: LOGGING_NAMESPACE, message: /* c8 ignore next */ (n) => `${createNodeIdentifierForLogging(n)} doesn't need hide, return the node` }),
       ),
       stopOnFirstChild
         ? concat(

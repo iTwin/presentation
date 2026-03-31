@@ -18,10 +18,7 @@ import type { IPresentationPropertyDataProvider } from "../../presentation-compo
 
 describe("FavoritePropertiesDataFilterer", () => {
   const imodel = {} as IModelConnection;
-  const dataProvider = {
-    getFieldByPropertyDescription: createStub<IPresentationPropertyDataProvider["getFieldByPropertyDescription"]>(),
-    imodel,
-  };
+  const dataProvider = { getFieldByPropertyDescription: createStub<IPresentationPropertyDataProvider["getFieldByPropertyDescription"]>(), imodel };
 
   function getProvider() {
     return dataProvider as unknown as IPresentationPropertyDataProvider;
@@ -46,11 +43,7 @@ describe("FavoritePropertiesDataFilterer", () => {
 
     sinon.stub(Presentation, "favoriteProperties").get(() => manager);
 
-    const filterer = new FavoritePropertiesDataFilterer({
-      source: getProvider(),
-      favoritesScope: FavoritePropertiesScope.Global,
-      isActive: true,
-    });
+    const filterer = new FavoritePropertiesDataFilterer({ source: getProvider(), favoritesScope: FavoritePropertiesScope.Global, isActive: true });
     const matchResult = await filterer.recordMatchesFilter(record, []);
     expect(manager.hasAsync).to.be.called;
     expect(matchResult).to.deep.eq({ matchesFilter: true, shouldExpandNodeParents: true });
@@ -69,11 +62,7 @@ describe("FavoritePropertiesDataFilterer", () => {
 
     sinon.stub(Presentation, "favoriteProperties").get(() => manager);
 
-    const filterer = new FavoritePropertiesDataFilterer({
-      source: getProvider(),
-      favoritesScope: FavoritePropertiesScope.Global,
-      isActive: true,
-    });
+    const filterer = new FavoritePropertiesDataFilterer({ source: getProvider(), favoritesScope: FavoritePropertiesScope.Global, isActive: true });
     const matchResult = await filterer.recordMatchesFilter(record, []);
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     expect(manager.has).to.be.called;
@@ -81,10 +70,7 @@ describe("FavoritePropertiesDataFilterer", () => {
   });
 
   it("raises `onFilterChanged` event when filterer is enabled / disabled", () => {
-    const filterer = new FavoritePropertiesDataFilterer({
-      source: getProvider(),
-      favoritesScope: FavoritePropertiesScope.Global,
-    });
+    const filterer = new FavoritePropertiesDataFilterer({ source: getProvider(), favoritesScope: FavoritePropertiesScope.Global });
     const spy = sinon.spy();
     filterer.onFilterChanged.addListener(spy);
 
@@ -112,11 +98,7 @@ describe("FavoritePropertiesDataFilterer", () => {
 
     let filterer: FavoritePropertiesDataFilterer;
     beforeEach(() => {
-      filterer = new FavoritePropertiesDataFilterer({
-        source: getProvider(),
-        favoritesScope: FavoritePropertiesScope.IModel,
-        isFavorite: () => false,
-      });
+      filterer = new FavoritePropertiesDataFilterer({ source: getProvider(), favoritesScope: FavoritePropertiesScope.IModel, isFavorite: () => false });
       expect(filterer.isActive).to.be.false;
     });
 

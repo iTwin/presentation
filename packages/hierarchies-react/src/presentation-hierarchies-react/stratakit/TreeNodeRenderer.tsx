@@ -154,13 +154,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
                 return;
               }
 
-              setContextMenuProps({
-                position: {
-                  x: e.clientX,
-                  y: e.clientY,
-                },
-                actions,
-              });
+              setContextMenuProps({ position: { x: e.clientX, y: e.clientY }, actions });
             }}
           />
         </Popover>

@@ -72,14 +72,8 @@ describe("Hierarchies", () => {
         beforeEach(() => {
           provider = createMergedHierarchyProvider({
             imodels: [
-              {
-                ecdb: dbs.base.ecdb,
-                key: "base",
-              },
-              {
-                ecdb: dbs.changeset1.ecdb,
-                key: "changeset1",
-              },
+              { ecdb: dbs.base.ecdb, key: "base" },
+              { ecdb: dbs.changeset1.ecdb, key: "changeset1" },
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               xyzSchema: dbs.base.xyzSchema,
@@ -104,12 +98,7 @@ describe("Hierarchies", () => {
                   NodeValidators.createForPropertyValueGroupingNode({
                     label: "123",
                     groupedInstanceKeys: [keys.changeset1.q2],
-                    children: [
-                      NodeValidators.createForInstanceNode({
-                        label: "q2",
-                        instanceKeys: [keys.changeset1.q2],
-                      }),
-                    ],
+                    children: [NodeValidators.createForInstanceNode({ label: "q2", instanceKeys: [keys.changeset1.q2] })],
                   }),
                 ],
               }),
@@ -119,42 +108,22 @@ describe("Hierarchies", () => {
                   NodeValidators.createForPropertyValueGroupingNode({
                     label: "123",
                     groupedInstanceKeys: [keys.base.y1, keys.changeset1.y1],
-                    children: [
-                      NodeValidators.createForInstanceNode({
-                        label: "y1",
-                        instanceKeys: [keys.changeset1.y1, keys.base.y1],
-                      }),
-                    ],
+                    children: [NodeValidators.createForInstanceNode({ label: "y1", instanceKeys: [keys.changeset1.y1, keys.base.y1] })],
                   }),
                   NodeValidators.createForPropertyValueGroupingNode({
                     label: "456",
                     groupedInstanceKeys: [keys.base.y2],
-                    children: [
-                      NodeValidators.createForInstanceNode({
-                        label: "y2",
-                        instanceKeys: [keys.base.y2],
-                      }),
-                    ],
+                    children: [NodeValidators.createForInstanceNode({ label: "y2", instanceKeys: [keys.base.y2] })],
                   }),
                   NodeValidators.createForPropertyValueGroupingNode({
                     label: "888",
                     groupedInstanceKeys: [keys.base.y3, keys.changeset1.y3],
-                    children: [
-                      NodeValidators.createForInstanceNode({
-                        label: "y3",
-                        instanceKeys: [keys.base.y3, keys.changeset1.y3],
-                      }),
-                    ],
+                    children: [NodeValidators.createForInstanceNode({ label: "y3", instanceKeys: [keys.base.y3, keys.changeset1.y3] })],
                   }),
                   NodeValidators.createForPropertyValueGroupingNode({
                     label: "Not specified",
                     groupedInstanceKeys: [keys.changeset1.q1],
-                    children: [
-                      NodeValidators.createForInstanceNode({
-                        label: "q1",
-                        instanceKeys: [keys.changeset1.q1],
-                      }),
-                    ],
+                    children: [NodeValidators.createForInstanceNode({ label: "q1", instanceKeys: [keys.changeset1.q1] })],
                   }),
                 ],
               }),
@@ -176,11 +145,7 @@ describe("Hierarchies", () => {
                   isTarget: true,
                   children: [{ identifier: keys.changeset1.y1 }, { identifier: keys.changeset1.y3 }, { identifier: keys.changeset1.q1 }],
                 },
-                {
-                  identifier: keys.changeset1.w,
-                  isTarget: true,
-                  children: [{ identifier: keys.changeset1.q2 }],
-                },
+                { identifier: keys.changeset1.w, isTarget: true, children: [{ identifier: keys.changeset1.q2 }] },
               ],
             });
             await validateHierarchy({
@@ -193,13 +158,7 @@ describe("Hierarchies", () => {
                     NodeValidators.createForPropertyValueGroupingNode({
                       label: "123",
                       groupedInstanceKeys: [keys.changeset1.q2],
-                      children: [
-                        NodeValidators.createForInstanceNode({
-                          label: "q2",
-                          instanceKeys: [keys.changeset1.q2],
-                          isSearchTarget: true,
-                        }),
-                      ],
+                      children: [NodeValidators.createForInstanceNode({ label: "q2", instanceKeys: [keys.changeset1.q2], isSearchTarget: true })],
                     }),
                   ],
                 }),
@@ -210,46 +169,22 @@ describe("Hierarchies", () => {
                     NodeValidators.createForPropertyValueGroupingNode({
                       label: "123",
                       groupedInstanceKeys: [keys.base.y1, keys.changeset1.y1],
-                      children: [
-                        NodeValidators.createForInstanceNode({
-                          label: "y1",
-                          instanceKeys: [keys.changeset1.y1, keys.base.y1],
-                          isSearchTarget: true,
-                        }),
-                      ],
+                      children: [NodeValidators.createForInstanceNode({ label: "y1", instanceKeys: [keys.changeset1.y1, keys.base.y1], isSearchTarget: true })],
                     }),
                     NodeValidators.createForPropertyValueGroupingNode({
                       label: "456",
                       groupedInstanceKeys: [keys.base.y2],
-                      children: [
-                        NodeValidators.createForInstanceNode({
-                          label: "y2",
-                          instanceKeys: [keys.base.y2],
-                          isSearchTarget: true,
-                        }),
-                      ],
+                      children: [NodeValidators.createForInstanceNode({ label: "y2", instanceKeys: [keys.base.y2], isSearchTarget: true })],
                     }),
                     NodeValidators.createForPropertyValueGroupingNode({
                       label: "888",
                       groupedInstanceKeys: [keys.base.y3, keys.changeset1.y3],
-                      children: [
-                        NodeValidators.createForInstanceNode({
-                          label: "y3",
-                          instanceKeys: [keys.base.y3, keys.changeset1.y3],
-                          isSearchTarget: true,
-                        }),
-                      ],
+                      children: [NodeValidators.createForInstanceNode({ label: "y3", instanceKeys: [keys.base.y3, keys.changeset1.y3], isSearchTarget: true })],
                     }),
                     NodeValidators.createForPropertyValueGroupingNode({
                       label: "Not specified",
                       groupedInstanceKeys: [keys.changeset1.q1],
-                      children: [
-                        NodeValidators.createForInstanceNode({
-                          label: "q1",
-                          instanceKeys: [keys.changeset1.q1],
-                          isSearchTarget: true,
-                        }),
-                      ],
+                      children: [NodeValidators.createForInstanceNode({ label: "q1", instanceKeys: [keys.changeset1.q1], isSearchTarget: true })],
                     }),
                   ],
                 }),
@@ -260,18 +195,9 @@ describe("Hierarchies", () => {
           it("creates hierarchy when targeting instances from different imodels", async () => {
             provider.setHierarchySearch({
               paths: [
-                {
-                  identifier: keys.base.x,
-                  children: [{ identifier: keys.base.y2 }],
-                },
-                {
-                  identifier: keys.changeset1.x,
-                  children: [{ identifier: keys.changeset1.q1 }],
-                },
-                {
-                  identifier: keys.changeset1.w,
-                  children: [{ identifier: keys.changeset1.q2 }],
-                },
+                { identifier: keys.base.x, children: [{ identifier: keys.base.y2 }] },
+                { identifier: keys.changeset1.x, children: [{ identifier: keys.changeset1.q1 }] },
+                { identifier: keys.changeset1.w, children: [{ identifier: keys.changeset1.q2 }] },
               ],
             });
             await validateHierarchy({
@@ -283,13 +209,7 @@ describe("Hierarchies", () => {
                     NodeValidators.createForPropertyValueGroupingNode({
                       label: "123",
                       groupedInstanceKeys: [keys.changeset1.q2],
-                      children: [
-                        NodeValidators.createForInstanceNode({
-                          label: "q2",
-                          instanceKeys: [keys.changeset1.q2],
-                          isSearchTarget: true,
-                        }),
-                      ],
+                      children: [NodeValidators.createForInstanceNode({ label: "q2", instanceKeys: [keys.changeset1.q2], isSearchTarget: true })],
                     }),
                   ],
                 }),
@@ -299,24 +219,12 @@ describe("Hierarchies", () => {
                     NodeValidators.createForPropertyValueGroupingNode({
                       label: "456",
                       groupedInstanceKeys: [keys.base.y2],
-                      children: [
-                        NodeValidators.createForInstanceNode({
-                          label: "y2",
-                          instanceKeys: [keys.base.y2],
-                          isSearchTarget: true,
-                        }),
-                      ],
+                      children: [NodeValidators.createForInstanceNode({ label: "y2", instanceKeys: [keys.base.y2], isSearchTarget: true })],
                     }),
                     NodeValidators.createForPropertyValueGroupingNode({
                       label: "Not specified",
                       groupedInstanceKeys: [keys.changeset1.q1],
-                      children: [
-                        NodeValidators.createForInstanceNode({
-                          label: "q1",
-                          instanceKeys: [keys.changeset1.q1],
-                          isSearchTarget: true,
-                        }),
-                      ],
+                      children: [NodeValidators.createForInstanceNode({ label: "q1", instanceKeys: [keys.changeset1.q1], isSearchTarget: true })],
                     }),
                   ],
                 }),
@@ -382,14 +290,8 @@ describe("Hierarchies", () => {
                   label: "111",
                   groupedInstanceKeys: [keys.base.y1, keys.changeset1.y2],
                   children: [
-                    NodeValidators.createForInstanceNode({
-                      label: "y1",
-                      instanceKeys: [keys.base.y1],
-                    }),
-                    NodeValidators.createForInstanceNode({
-                      label: "y2",
-                      instanceKeys: [keys.changeset1.y2],
-                    }),
+                    NodeValidators.createForInstanceNode({ label: "y1", instanceKeys: [keys.base.y1] }),
+                    NodeValidators.createForInstanceNode({ label: "y2", instanceKeys: [keys.changeset1.y2] }),
                   ],
                 }),
               ],
@@ -453,17 +355,9 @@ describe("Hierarchies", () => {
                 NodeValidators.createForPropertyValueGroupingNode({
                   label: "111",
                   groupedInstanceKeys: [keys.base.y1],
-                  children: [
-                    NodeValidators.createForInstanceNode({
-                      label: "y1",
-                      instanceKeys: [keys.base.y1],
-                    }),
-                  ],
+                  children: [NodeValidators.createForInstanceNode({ label: "y1", instanceKeys: [keys.base.y1] })],
                 }),
-                NodeValidators.createForInstanceNode({
-                  label: "z",
-                  instanceKeys: [keys.changeset1.z],
-                }),
+                NodeValidators.createForInstanceNode({ label: "z", instanceKeys: [keys.changeset1.z] }),
               ],
             }),
           ],

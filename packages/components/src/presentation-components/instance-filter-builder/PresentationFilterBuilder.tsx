@@ -109,10 +109,7 @@ export function useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilter
     [propertyInfos],
   );
 
-  return {
-    propertyInfos,
-    propertyRenderer,
-  };
+  return { propertyInfos, propertyRenderer };
 }
 
 /**
@@ -234,10 +231,7 @@ export async function createInstanceFilterDefinition(info: PresentationInstanceF
     return instanceFilter;
   }
 
-  return {
-    ...instanceFilter,
-    expression: `${wrap(instanceFilter.expression)} AND ${createFilterClassExpression(info.usedClasses)}`,
-  };
+  return { ...instanceFilter, expression: `${wrap(instanceFilter.expression)} AND ${createFilterClassExpression(info.usedClasses)}` };
 }
 
 function wrap(expression: string) {

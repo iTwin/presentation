@@ -24,26 +24,14 @@ const RULESET: Ruleset = {
     {
       ruleType: RuleTypes.RootNodes,
       specifications: [
-        {
-          specType: ChildNodeSpecificationTypes.CustomNode,
-          type: "root",
-          label: "root label",
-          description: "root description",
-          imageId: "root image id",
-        },
+        { specType: ChildNodeSpecificationTypes.CustomNode, type: "root", label: "root label", description: "root description", imageId: "root image id" },
       ],
     },
     {
       ruleType: RuleTypes.ChildNodes,
       condition: `ParentNode.Type = "root"`,
       specifications: [
-        {
-          specType: ChildNodeSpecificationTypes.CustomNode,
-          type: "child",
-          label: "child label",
-          description: "child description",
-          imageId: "child image id",
-        },
+        { specType: ChildNodeSpecificationTypes.CustomNode, type: "child", label: "child label", description: "child description", imageId: "child image id" },
       ],
     },
   ],

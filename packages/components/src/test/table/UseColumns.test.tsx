@@ -17,11 +17,7 @@ import type { UseColumnsProps } from "../../presentation-components/table/UseCol
 
 describe("useColumns", () => {
   const imodel = {} as IModelConnection;
-  const initialProps: UseColumnsProps = {
-    imodel,
-    keys: new KeySet([createTestECInstanceKey()]),
-    ruleset: "ruleset_id",
-  };
+  const initialProps: UseColumnsProps = { imodel, keys: new KeySet([createTestECInstanceKey()]), ruleset: "ruleset_id" };
 
   let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
 
@@ -43,13 +39,7 @@ describe("useColumns", () => {
     await waitFor(() =>
       expect(result.current)
         .to.have.lengthOf(1)
-        .and.containSubset([
-          {
-            name: contentField.name,
-            label: contentField.label,
-            field: contentField,
-          },
-        ]),
+        .and.containSubset([{ name: contentField.name, label: contentField.label, field: contentField }]),
     );
   });
 
@@ -64,13 +54,7 @@ describe("useColumns", () => {
     await waitFor(() =>
       expect(result.current)
         .to.have.lengthOf(1)
-        .and.containSubset([
-          {
-            name: propertyField.name,
-            label: propertyField.label,
-            field: propertyField,
-          },
-        ]),
+        .and.containSubset([{ name: propertyField.name, label: propertyField.label, field: propertyField }]),
     );
   });
 

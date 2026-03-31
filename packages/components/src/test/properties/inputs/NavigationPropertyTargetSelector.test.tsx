@@ -25,11 +25,7 @@ import type { PropertyEditorAttributes } from "../../../presentation-components/
 import type { NavigationPropertyTargetSelectorProps } from "../../../presentation-components/properties/inputs/NavigationPropertyTargetSelector.js";
 
 function createNavigationPropertyDescription(): PropertyDescription {
-  return {
-    displayLabel: "TestProp",
-    name: "test_prop",
-    typename: "navigation",
-  };
+  return { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
 }
 
 function createRecord() {
@@ -60,9 +56,7 @@ describe("NavigationPropertyTargetSelector", () => {
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
     sinon.stub(Presentation, "localization").get(() => localization);
-    sinon.stub(Presentation, "presentation").get(() => ({
-      getContent: getContentStub,
-    }));
+    sinon.stub(Presentation, "presentation").get(() => ({ getContent: getContentStub }));
   });
 
   after(() => {
@@ -103,11 +97,7 @@ describe("NavigationPropertyTargetSelector", () => {
     await user.click(target);
     expect(spy).to.be.calledOnceWith({
       propertyRecord: testRecord,
-      newValue: {
-        valueFormat: PropertyValueFormat.Primitive,
-        value: contentItem.primaryKeys[0],
-        displayValue: contentItem.label.displayValue,
-      },
+      newValue: { valueFormat: PropertyValueFormat.Primitive, value: contentItem.primaryKeys[0], displayValue: contentItem.label.displayValue },
     });
   });
 
@@ -208,11 +198,7 @@ describe("NavigationPropertyTargetSelector", () => {
 
   it("does not load options on filter change when there is enough options", async () => {
     const propertyDescription = createNavigationPropertyDescription();
-    const value = {
-      valueFormat: PropertyValueFormat.Primitive,
-      value: { id: "1", className: "TestSchema:TargetClass" },
-      displayValue: "1",
-    };
+    const value = { valueFormat: PropertyValueFormat.Primitive, value: { id: "1", className: "TestSchema:TargetClass" }, displayValue: "1" };
     const propertyRecord = new PropertyRecord(value as PropertyValue, propertyDescription);
     const initialProps: NavigationPropertyTargetSelectorProps = {
       imodel: testImodel,

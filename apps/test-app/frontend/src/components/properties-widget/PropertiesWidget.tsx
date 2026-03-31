@@ -75,10 +75,7 @@ export function PropertiesWidget(props: Props) {
   const [filteringResult, setFilteringResult] = useState<FilteredPropertyData>();
   const resultSelectorProps = useMemo(() => {
     return filteringResult?.matchesCount !== undefined
-      ? {
-          onSelectedChanged: (index: React.SetStateAction<number>) => setActiveMatchIndex(index),
-          resultCount: filteringResult.matchesCount,
-        }
+      ? { onSelectedChanged: (index: React.SetStateAction<number>) => setActiveMatchIndex(index), resultCount: filteringResult.matchesCount }
       : undefined;
   }, [filteringResult]);
 

@@ -68,9 +68,7 @@ interface NodeSelectClauseProps {
   ecClassId: ECSqlValueSelector;
   ecInstanceId: ECSqlValueSelector;
   nodeLabel: string | ECSqlValueSelector;
-  extendedData?: {
-    [key: string]: Id64String | string | number | boolean | ECSqlValueSelector;
-  };
+  extendedData?: { [key: string]: Id64String | string | number | boolean | ECSqlValueSelector };
   autoExpand?: boolean | ECSqlValueSelector;
   supportsFiltering?: boolean | ECSqlValueSelector;
   hasChildren?: boolean | ECSqlValueSelector;
@@ -312,11 +310,7 @@ class NodeSelectQueryFactory {
     const { contentClass, filter } = props;
     const { from, joins, where } = filter
       ? await createInstanceFilterClauses({ imodelAccess: this._imodelAccess, contentClass, filter })
-      : {
-          from: contentClass.fullName,
-          joins: [],
-          where: [],
-        };
+      : { from: contentClass.fullName, joins: [], where: [] };
 
     const fromClass = await getClass(this._imodelAccess, normalizeFullClassName(from));
     const hiddenClasses = await getHiddenClassesTree(fromClass);
@@ -324,11 +318,7 @@ class NodeSelectQueryFactory {
     hiddenClassesWhereClause.hideClause && where.push(hiddenClassesWhereClause.hideClause);
     assert(!hiddenClassesWhereClause.showClause, "`showClause` is expected to always be empty here");
 
-    return {
-      from,
-      joins: joins.join("\n"),
-      where: where.join(" AND "),
-    };
+    return { from, joins: joins.join("\n"), where: where.join(" AND ") };
   }
 }
 
@@ -382,10 +372,9 @@ async function createInstanceFilterClauses(props: {
   if (filter.filteredClassNames && filter.filteredClassNames.length > 0) {
     filteredClassNamesInThisIModel = (
       await Promise.all(
-        filter.filteredClassNames.map(normalizeFullClassName).map(async (fullClassName) => ({
-          fullClassName,
-          filteredClass: await tryGetClass(imodelAccess, fullClassName),
-        })),
+        filter.filteredClassNames
+          .map(normalizeFullClassName)
+          .map(async (fullClassName) => ({ fullClassName, filteredClass: await tryGetClass(imodelAccess, fullClassName) })),
       )
     )
       .filter(({ filteredClass }) => !!filteredClass)
@@ -515,10 +504,7 @@ async function createGroupingSelector(
     groupingSelectors.push({
       key: "byProperties",
       selector: serializeJsonObject([
-        {
-          key: "propertiesClassName",
-          selector: `${createECSqlValueSelector(grouping.byProperties.propertiesClassName)}`,
-        },
+        { key: "propertiesClassName", selector: `${createECSqlValueSelector(grouping.byProperties.propertiesClassName)}` },
         {
           key: "propertyGroups",
           selector: `json_array(${(
@@ -556,16 +542,10 @@ async function createGroupingSelector(
 function createLabelGroupingBaseParamsSelectors(byLabel: ECSqlSelectClauseLabelGroupingMergeParams | ECSqlSelectClauseLabelGroupingGroupParams) {
   const selectors = new Array<{ key: string; selector: string }>();
   if (byLabel.action !== undefined) {
-    selectors.push({
-      key: "action",
-      selector: `${createECSqlValueSelector(byLabel.action)}`,
-    });
+    selectors.push({ key: "action", selector: `${createECSqlValueSelector(byLabel.action)}` });
   }
   if (byLabel.groupId !== undefined) {
-    selectors.push({
-      key: "groupId",
-      selector: createECSqlValueSelector(byLabel.groupId),
-    });
+    selectors.push({ key: "groupId", selector: createECSqlValueSelector(byLabel.groupId) });
   }
   if (byLabel.action !== "merge") {
     selectors.push(...createBaseGroupingParamSelectors(byLabel));
@@ -580,10 +560,7 @@ async function createPropertyGroupSelectors(
   instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory,
 ) {
   const selectors = new Array<{ key: string; selector: string }>();
-  selectors.push({
-    key: "propertyName",
-    selector: `${createECSqlValueSelector(propertyGroup.propertyName)}`,
-  });
+  selectors.push({ key: "propertyName", selector: `${createECSqlValueSelector(propertyGroup.propertyName)}` });
 
   const property = await propertyClass.getProperty(propertyGroup.propertyName);
   if (!property) {
@@ -609,10 +586,7 @@ async function createPropertyGroupSelectors(
         )`,
     });
   } else {
-    selectors.push({
-      key: "propertyValue",
-      selector: `[${propertyGroup.propertyClassAlias}].[${propertyGroup.propertyName}]`,
-    });
+    selectors.push({ key: "propertyValue", selector: `[${propertyGroup.propertyClassAlias}].[${propertyGroup.propertyName}]` });
   }
 
   if (propertyGroup.ranges) {
@@ -628,22 +602,9 @@ function createRangeParamSelectors(ranges: ECSqlSelectClausePropertyValueRange[]
     selector: `json_array(${ranges
       .map((range) =>
         serializeJsonObject([
-          {
-            key: "fromValue",
-            selector: createECSqlValueSelector(range.fromValue),
-          },
-          {
-            key: "toValue",
-            selector: createECSqlValueSelector(range.toValue),
-          },
-          ...(range.rangeLabel
-            ? [
-                {
-                  key: "rangeLabel",
-                  selector: `${createECSqlValueSelector(range.rangeLabel)}`,
-                },
-              ]
-            : []),
+          { key: "fromValue", selector: createECSqlValueSelector(range.fromValue) },
+          { key: "toValue", selector: createECSqlValueSelector(range.toValue) },
+          ...(range.rangeLabel ? [{ key: "rangeLabel", selector: `${createECSqlValueSelector(range.rangeLabel)}` }] : []),
         ]),
       )
       .join(", ")})`,
@@ -653,22 +614,13 @@ function createRangeParamSelectors(ranges: ECSqlSelectClausePropertyValueRange[]
 function createBaseGroupingParamSelectors(params: ECSqlSelectClauseGroupingParamsBase) {
   const selectors = new Array<{ key: string; selector: string }>();
   if (params.hideIfNoSiblings !== undefined) {
-    selectors.push({
-      key: "hideIfNoSiblings",
-      selector: createECSqlValueSelector(params.hideIfNoSiblings),
-    });
+    selectors.push({ key: "hideIfNoSiblings", selector: createECSqlValueSelector(params.hideIfNoSiblings) });
   }
   if (params.hideIfOneGroupedNode !== undefined) {
-    selectors.push({
-      key: "hideIfOneGroupedNode",
-      selector: createECSqlValueSelector(params.hideIfOneGroupedNode),
-    });
+    selectors.push({ key: "hideIfOneGroupedNode", selector: createECSqlValueSelector(params.hideIfOneGroupedNode) });
   }
   if (params.autoExpand !== undefined) {
-    selectors.push({
-      key: "autoExpand",
-      selector: createECSqlValueSelector(params.autoExpand),
-    });
+    selectors.push({ key: "autoExpand", selector: createECSqlValueSelector(params.autoExpand) });
   }
   return selectors;
 }
@@ -911,13 +863,7 @@ async function getHiddenClassesTree(selectClass: EC.Class, selectClassAttribute:
         if (!attr || attr === selectClassAttribute) {
           return getHiddenClassesTree(ecClass, selectClassAttribute);
         }
-        return [
-          {
-            fullName: ecClass.fullName,
-            state: attr,
-            children: await getHiddenClassesTree(ecClass, attr),
-          },
-        ];
+        return [{ fullName: ecClass.fullName, state: attr, children: await getHiddenClassesTree(ecClass, attr) }];
       }),
     )
   ).flat();

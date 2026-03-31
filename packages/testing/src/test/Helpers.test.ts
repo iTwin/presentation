@@ -82,11 +82,7 @@ describe("Helpers", () => {
 
     before(async () => {
       rimrafSyncStub = sinon.stub();
-      mock.module("rimraf", {
-        namedExports: {
-          sync: rimrafSyncStub,
-        },
-      });
+      mock.module("rimraf", { namedExports: { sync: rimrafSyncStub } });
       const helpers = await import("../presentation-testing/Helpers.js");
       initialize = helpers.initialize;
       terminate = helpers.terminate;

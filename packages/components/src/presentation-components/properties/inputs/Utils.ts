@@ -90,14 +90,7 @@ function getDecimalPrecision(numStr: string): string | undefined {
   return `${0.5 * Math.pow(10, -digitsAfterSeparator.value.length)}`;
 }
 
-type ParseResult =
-  | {
-      result: "noNumber" | "noSymbol";
-    }
-  | {
-      result: "success";
-      value: string;
-    };
+type ParseResult = { result: "noNumber" | "noSymbol" } | { result: "success"; value: string };
 
 function parseDigitsAfterSymbol(numStr: string, symbol: string): ParseResult {
   let lastDigitIndex = -1;

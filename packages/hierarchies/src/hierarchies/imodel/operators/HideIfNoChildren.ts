@@ -47,10 +47,7 @@ export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarc
           mergeMap(
             (n) =>
               defer(() => {
-                doLog({
-                  category: LOGGING_NAMESPACE,
-                  message: /* c8 ignore next */ () => `${createNodeIdentifierForLogging(n)}: requesting children flag`,
-                });
+                doLog({ category: LOGGING_NAMESPACE, message: /* c8 ignore next */ () => `${createNodeIdentifierForLogging(n)}: requesting children flag` });
                 return hasNodes(n).pipe(
                   log({
                     category: LOGGING_NAMESPACE,

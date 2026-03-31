@@ -13,12 +13,6 @@ export default defineConfig({
   format: ["esm"],
   fixedExtension: false,
   unbundle: true,
-  deps: {
-    neverBundle: [/\.css$/],
-  },
-  plugins: [
-    babel({
-      presets: [reactCompilerPreset({ target: "18" })],
-    }),
-  ],
+  deps: { neverBundle: [/\.css$/] },
+  plugins: [babel({ presets: [reactCompilerPreset({ target: "18" })] })],
 });

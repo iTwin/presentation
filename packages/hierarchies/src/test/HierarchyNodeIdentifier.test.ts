@@ -10,15 +10,8 @@ import { createTestGenericNodeKey, createTestInstanceKey } from "./Utils.js";
 import type { GenericNodeKey, IModelInstanceKey } from "../hierarchies/HierarchyNodeKey.js";
 
 describe("HierarchyNodeIdentifier", () => {
-  const instanceNodeIdentifier: IModelInstanceKey = {
-    className: "s.a",
-    id: "0x1",
-  };
-  const genericNodeIdentifier: GenericNodeKey = {
-    type: "generic",
-    id: "x",
-    source: "s",
-  };
+  const instanceNodeIdentifier: IModelInstanceKey = { className: "s.a", id: "0x1" };
+  const genericNodeIdentifier: GenericNodeKey = { type: "generic", id: "x", source: "s" };
 
   describe("isInstanceNodeIdentifier", () => {
     it("returns correct result for different types of identifiers", () => {

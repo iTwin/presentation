@@ -84,11 +84,7 @@ describe("Presentation filter builder value renderer", () => {
       return { parentElement, element1, element2, category };
     });
 
-    const testProperty = {
-      name: `#pc_${schemaAlias}_MyPhysicalObjectParent_PropertyName`,
-      displayLabel: "PropertyName",
-      typename: "string",
-    };
+    const testProperty = { name: `#pc_${schemaAlias}_MyPhysicalObjectParent_PropertyName`, displayLabel: "PropertyName", typename: "string" };
 
     const keys = new KeySet([
       { id: imodel.element1.id, className: imodel.element1.className },
@@ -97,19 +93,7 @@ describe("Presentation filter builder value renderer", () => {
 
     const testDescriptor = await Presentation.presentation.getContentDescriptor({
       imodel: imodel.imodel,
-      rulesetOrId: {
-        id: `Test descriptor ruleset`,
-        rules: [
-          {
-            ruleType: "Content",
-            specifications: [
-              {
-                specType: "SelectedNodeInstances",
-              },
-            ],
-          },
-        ],
-      },
+      rulesetOrId: { id: `Test descriptor ruleset`, rules: [{ ruleType: "Content", specifications: [{ specType: "SelectedNodeInstances" }] }] },
       displayType: DefaultContentDisplayTypes.PropertyPane,
       keys,
     });
@@ -119,13 +103,7 @@ describe("Presentation filter builder value renderer", () => {
       return;
     }
 
-    const selectedClasses: ClassInfo[] = [
-      {
-        id: imodel.element1.id,
-        name: imodel.element1.className,
-        label: "Test Class",
-      },
-    ];
+    const selectedClasses: ClassInfo[] = [{ id: imodel.element1.id, name: imodel.element1.className, label: "Test Class" }];
 
     const { baseElement, findByRole, user } = render(
       <PresentationFilterBuilderValueRenderer
@@ -200,11 +178,7 @@ describe("Presentation filter builder value renderer", () => {
       return { parentElement, element1, element2, category };
     });
 
-    const testProperty = {
-      name: `#pc_${schemaAlias}_MyPhysicalObjectParent_PropertyName`,
-      displayLabel: "PropertyName",
-      typename: "string",
-    };
+    const testProperty = { name: `#pc_${schemaAlias}_MyPhysicalObjectParent_PropertyName`, displayLabel: "PropertyName", typename: "string" };
 
     const keys = new KeySet([
       { id: imodel.element1.id, className: imodel.element1.className },
@@ -213,19 +187,7 @@ describe("Presentation filter builder value renderer", () => {
 
     const testDescriptor = await Presentation.presentation.getContentDescriptor({
       imodel: imodel.imodel,
-      rulesetOrId: {
-        id: `Test descriptor ruleset`,
-        rules: [
-          {
-            ruleType: "Content",
-            specifications: [
-              {
-                specType: "SelectedNodeInstances",
-              },
-            ],
-          },
-        ],
-      },
+      rulesetOrId: { id: `Test descriptor ruleset`, rules: [{ ruleType: "Content", specifications: [{ specType: "SelectedNodeInstances" }] }] },
       displayType: DefaultContentDisplayTypes.PropertyPane,
       keys,
     });
@@ -235,13 +197,7 @@ describe("Presentation filter builder value renderer", () => {
       return;
     }
 
-    const selectedClasses: ClassInfo[] = [
-      {
-        id: imodel.element1.id,
-        name: imodel.element1.className,
-        label: "Test Class",
-      },
-    ];
+    const selectedClasses: ClassInfo[] = [{ id: imodel.element1.id, name: imodel.element1.className, label: "Test Class" }];
 
     const { baseElement, findByRole, user } = render(
       <PresentationFilterBuilderValueRenderer

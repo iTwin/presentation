@@ -92,10 +92,7 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
             return result;
           }, new Array<string>(keys.length)),
         )
-        .subscribe({
-          next: resolve,
-          error: reject,
-        });
+        .subscribe({ next: resolve, error: reject });
     });
   }
 

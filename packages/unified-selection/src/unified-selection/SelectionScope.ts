@@ -174,11 +174,7 @@ async function* computeModelSelection(
     JOIN BisCore.Element e ON e.Model.Id = m.ECInstanceId
     WHERE ${formIdBindings("e.ECInstanceId", ids, bindings)}
   `;
-  yield* executeQuery({
-    queryExecutor,
-    query: { ecsql, bindings },
-    config: { restartToken: `${componentName}/${componentId}/model/${Guid.createValue()}` },
-  });
+  yield* executeQuery({ queryExecutor, query: { ecsql, bindings }, config: { restartToken: `${componentName}/${componentId}/model/${Guid.createValue()}` } });
 }
 
 async function* computeFunctionalElementSelection(
@@ -295,11 +291,5 @@ async function* executeQuery(props: {
   query: ECSqlQueryDef;
   config?: ECSqlQueryReaderOptions;
 }): AsyncIterableIterator<SelectableInstanceKey> {
-  yield* genericExecuteQuery({
-    ...props,
-    parseQueryRow: (row: ECSqlQueryRow) => ({
-      className: row.ClassName,
-      id: row.ECInstanceId,
-    }),
-  });
+  yield* genericExecuteQuery({ ...props, parseQueryRow: (row: ECSqlQueryRow) => ({ className: row.ClassName, id: row.ECInstanceId }) });
 }

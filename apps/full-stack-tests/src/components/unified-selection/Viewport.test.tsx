@@ -122,10 +122,7 @@ describe("Learning snippets", async () => {
 
 function setupViewportStubs() {
   // `ViewportComponent` calls some of the `ViewManager` functions (gets it through `IModelApp.viewManager`)
-  const viewManager = sinon.createStubInstance(ViewManager, {
-    addViewport: sinon.stub(),
-    dropViewport: sinon.stub(),
-  });
+  const viewManager = sinon.createStubInstance(ViewManager, { addViewport: sinon.stub(), dropViewport: sinon.stub() });
   (viewManager as any).onSelectedViewportChanged = new BeUiEvent<SelectedViewportChangedArgs>();
   sinon.stub(IModelApp, "viewManager").get(() => viewManager as unknown as ViewManager);
 

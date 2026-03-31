@@ -87,10 +87,7 @@ describe("Learning snippets", async () => {
       }
 
       // a function that maps presentation type of column definition to something that table renderer knows how to render
-      const mapTableColumns = (columnDefinitions: TableColumnDefinition) => ({
-        id: columnDefinitions.name,
-        label: columnDefinitions.label,
-      });
+      const mapTableColumns = (columnDefinitions: TableColumnDefinition) => ({ id: columnDefinitions.name, label: columnDefinitions.label });
 
       // a function that maps presentation type of row definition to something that table renderer knows how to render
       function mapTableRow(rowDefinition: TableRowDefinition) {
@@ -152,27 +149,14 @@ describe("Learning snippets", async () => {
 const ruleset: Ruleset = {
   id: "my-table-rules",
   rules: [
-    {
-      ruleType: "Content",
-      condition: `SelectedNode.IsOfClass("Element", "BisCore")`,
-      specifications: [
-        {
-          specType: "SelectedNodeInstances",
-        },
-      ],
-    },
+    { ruleType: "Content", condition: `SelectedNode.IsOfClass("Element", "BisCore")`, specifications: [{ specType: "SelectedNodeInstances" }] },
     {
       ruleType: "Content",
       condition: `SelectedNode.IsOfClass("Model", "BisCore")`,
       specifications: [
         {
           specType: "ContentRelatedInstances",
-          relationshipPaths: [
-            {
-              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-              direction: "Forward",
-            },
-          ],
+          relationshipPaths: [{ relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" }],
         },
       ],
     },

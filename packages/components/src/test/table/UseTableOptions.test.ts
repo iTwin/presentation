@@ -14,15 +14,7 @@ import type { UseTableOptionsProps } from "../../presentation-components/table/U
 
 describe("useTableOptions", () => {
   const propertiesField = createTestPropertiesContentField({ name: "prop_field", label: "Prop Field", properties: [{ property: createTestPropertyInfo() }] });
-  const initialProps: UseTableOptionsProps = {
-    columns: [
-      {
-        name: propertiesField.name,
-        label: propertiesField.label,
-        field: propertiesField,
-      },
-    ],
-  };
+  const initialProps: UseTableOptionsProps = { columns: [{ name: propertiesField.name, label: propertiesField.label, field: propertiesField }] };
 
   it("applies sorting ascending", async () => {
     const { result } = renderHook((props: UseTableOptionsProps) => useTableOptions(props), { initialProps });

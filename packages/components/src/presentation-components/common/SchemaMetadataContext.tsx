@@ -39,14 +39,10 @@ export interface SchemaMetadataContextProviderProps {
  * @public
  */
 export function SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren<SchemaMetadataContextProviderProps>) {
-  const [state, setState] = useState<SchemaMetadataContext>(() => ({
-    schemaContext: schemaContextProvider(imodel),
-  }));
+  const [state, setState] = useState<SchemaMetadataContext>(() => ({ schemaContext: schemaContextProvider(imodel) }));
 
   useEffect(() => {
-    setState({
-      schemaContext: schemaContextProvider(imodel),
-    });
+    setState({ schemaContext: schemaContextProvider(imodel) });
   }, [imodel, schemaContextProvider]);
 
   return <schemaMetadataContext.Provider value={state}>{children}</schemaMetadataContext.Provider>;

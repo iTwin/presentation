@@ -20,11 +20,7 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: true } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: undefined,
-    };
+    const expectedGroupingNodeKey: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: undefined };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
       grouped: [
@@ -49,11 +45,7 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: { action: "group" } } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: undefined,
-    };
+    const expectedGroupingNodeKey: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: undefined };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
       grouped: [
@@ -78,11 +70,7 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: {} } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: undefined,
-    };
+    const expectedGroupingNodeKey: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: undefined };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
       grouped: [
@@ -113,16 +101,8 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: { groupId: "groupId2" } } },
       }),
     ];
-    const expectedGroupingNodeKey1: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: "groupId1",
-    };
-    const expectedGroupingNodeKey2: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: "groupId2",
-    };
+    const expectedGroupingNodeKey1: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: "groupId1" };
+    const expectedGroupingNodeKey2: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: "groupId2" };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
       grouped: [
@@ -160,11 +140,7 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: { groupId: "groupId1" } } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: "groupId1",
-    };
+    const expectedGroupingNodeKey: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: "groupId1" };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
       grouped: [
@@ -195,11 +171,7 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: true } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: undefined,
-    };
+    const expectedGroupingNodeKey: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: undefined };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
       grouped: [
@@ -230,16 +202,8 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: true } },
       }),
     ];
-    const expectedGroupingNodeKey1: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: undefined,
-    };
-    const expectedGroupingNodeKey2: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "2",
-      groupId: undefined,
-    };
+    const expectedGroupingNodeKey1: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: undefined };
+    const expectedGroupingNodeKey2: GroupingNodeKey = { type: "label-grouping", label: "2", groupId: undefined };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
       grouped: [
@@ -263,12 +227,7 @@ describe("LabelGrouping", () => {
   });
 
   it("doesn't group nodes with byLabel set to false", async () => {
-    const nodes = [
-      createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-        label: "1",
-      }),
-    ];
+    const nodes = [createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] }, label: "1" })];
     const result = await createLabelGroups(nodes);
     expect(result.ungrouped).to.deep.eq(nodes);
     expect(result.grouped).to.deep.eq([]);
@@ -350,24 +309,14 @@ describe("LabelGrouping", () => {
     const result = await createLabelGroups(nodes);
     expect(result.ungrouped).to.deep.eq([
       createTestProcessedInstanceNode({
-        key: {
-          type: "instances",
-          instanceKeys: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x3" })],
-        },
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x3" })] },
         label: "a",
-        processingParams: {
-          grouping: { byLabel: { action: "merge", groupId: "x" } },
-        },
+        processingParams: { grouping: { byLabel: { action: "merge", groupId: "x" } } },
       }),
       createTestProcessedInstanceNode({
-        key: {
-          type: "instances",
-          instanceKeys: [createTestInstanceKey({ id: "0x2" }), createTestInstanceKey({ id: "0x4" })],
-        },
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" }), createTestInstanceKey({ id: "0x4" })] },
         label: "b",
-        processingParams: {
-          grouping: { byLabel: { action: "merge", groupId: "y" } },
-        },
+        processingParams: { grouping: { byLabel: { action: "merge", groupId: "y" } } },
       }),
     ]);
     expect(result.grouped).to.deep.eq([]);

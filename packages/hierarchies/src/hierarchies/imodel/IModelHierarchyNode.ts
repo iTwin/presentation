@@ -259,7 +259,5 @@ export type SourceGenericHierarchyNode = SourceHierarchyNode<Omit<ProcessedGener
  * @public
  */
 export type SourceInstanceHierarchyNode = SourceHierarchyNode<
-  Omit<ProcessedInstanceHierarchyNode, "key"> & {
-    key: Omit<InstancesNodeKey, "instanceKeys"> & { instanceKeys: InstanceKey[] };
-  }
+  Omit<ProcessedInstanceHierarchyNode, "key"> & { key: Omit<InstancesNodeKey, "instanceKeys"> & { instanceKeys: InstanceKey[] } }
 >;

@@ -59,10 +59,7 @@ interface ItemValues {
 }
 
 function createItemValues(rawValuesArr: ValuesMap[]): ItemValues[] {
-  return rawValuesArr.map((rawValues) => ({
-    rawValues,
-    displayValues: {},
-  }));
+  return rawValuesArr.map((rawValues) => ({ rawValues, displayValues: {} }));
 }
 
 function createItem({ rawValues, displayValues }: ItemValues) {
@@ -84,18 +81,9 @@ async function getContent(items: ItemValues[], descriptor: Descriptor) {
   return new Content(descriptor, items.map(createItem));
 }
 
-const createCategoryDescription = (): CategoryDescription => ({
-  name: "test",
-  label: "test",
-  priority: 1,
-  description: "",
-  expand: false,
-});
+const createCategoryDescription = (): CategoryDescription => ({ name: "test", label: "test", priority: 1, description: "", expand: false });
 
-const createPrimitiveTypeDescription = (typeName: string): PrimitiveTypeDescription => ({
-  valueFormat: PropertyValueFormat.Primitive,
-  typeName,
-});
+const createPrimitiveTypeDescription = (typeName: string): PrimitiveTypeDescription => ({ valueFormat: PropertyValueFormat.Primitive, typeName });
 const createStringTypeDescription = () => createPrimitiveTypeDescription("string");
 const createIntTypeDescription = () => createPrimitiveTypeDescription("int");
 const createDoubleTypeDescription = () => createPrimitiveTypeDescription("double");
@@ -121,30 +109,9 @@ const createContentDescriptor = () => {
     selectClasses: [],
     categories: [category],
     fields: [
-      new Field({
-        category,
-        name: "width",
-        label: "Width",
-        type: createIntTypeDescription(),
-        isReadonly: false,
-        priority: 1,
-      }),
-      new Field({
-        category,
-        name: "title",
-        label: "title",
-        type: createStringTypeDescription(),
-        isReadonly: false,
-        priority: 1,
-      }),
-      new Field({
-        category,
-        name: "radius",
-        label: "radius",
-        type: createStringTypeDescription(),
-        isReadonly: false,
-        priority: 1,
-      }),
+      new Field({ category, name: "width", label: "Width", type: createIntTypeDescription(), isReadonly: false, priority: 1 }),
+      new Field({ category, name: "title", label: "title", type: createStringTypeDescription(), isReadonly: false, priority: 1 }),
+      new Field({ category, name: "radius", label: "radius", type: createStringTypeDescription(), isReadonly: false, priority: 1 }),
     ],
     contentFlags: 1,
   });
@@ -198,48 +165,34 @@ function createThrowingQueryReader(): IModelConnection["createQueryReader"] {
         },
       } as unknown as ECSqlReader;
     }
-    return {
-      toArray: async () => [],
-    } as unknown as ECSqlReader;
+    return { toArray: async () => [] } as unknown as ECSqlReader;
   };
 }
 
 function createFakeQueryReaders(instances: TestInstance[]): IModelConnection["createQueryReader"] {
   return (query) => {
     if (query.includes("SELECT s.Name")) {
-      return {
-        toArray: async () => instances,
-      } as ECSqlReader;
+      return { toArray: async () => instances } as ECSqlReader;
     }
 
     for (const entry of instances) {
       if (query.includes(`"${entry.schemaName}"."${entry.className}"`)) {
-        return {
-          toArray: async () => entry.ids.map((e) => e.id),
-        } as ECSqlReader;
+        return { toArray: async () => entry.ids.map((e) => e.id) } as ECSqlReader;
       }
     }
 
-    return {
-      toArray: async () => [],
-    } as unknown as ECSqlReader;
+    return { toArray: async () => [] } as unknown as ECSqlReader;
   };
 }
 
 describe("ContentBuilder", () => {
-  const imodel = {
-    createQueryReader: createStub<IModelConnection["createQueryReader"]>(),
-  };
+  const imodel = { createQueryReader: createStub<IModelConnection["createQueryReader"]>() };
 
-  const initialProps = {
-    imodel: imodel as unknown as IModelConnection,
-  };
+  const initialProps = { imodel: imodel as unknown as IModelConnection };
 
   describe("createContent", () => {
     let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
-    const rulesetManager = {
-      add: createStub<RulesetManager["add"]>(),
-    };
+    const rulesetManager = { add: createStub<RulesetManager["add"]>() };
 
     beforeEach(() => {
       rulesetManager.add.callsFake(async (ruleset) => new RegisteredRuleset(ruleset, Guid.createValue(), () => {}));
@@ -256,10 +209,7 @@ describe("ContentBuilder", () => {
     });
 
     it("registers ruleset when creating content", async () => {
-      const ruleset: Ruleset = {
-        id: "test-ruleset",
-        rules: [],
-      };
+      const ruleset: Ruleset = { id: "test-ruleset", rules: [] };
       const builder = new ContentBuilder({ ...initialProps, dataProvider: new EmptyDataProvider() });
       const content = await builder.createContent(ruleset, []);
       expect(content).to.be.empty;
@@ -267,9 +217,7 @@ describe("ContentBuilder", () => {
     });
 
     it("uses `ContentDataProvider` if data provider was not supplied", async () => {
-      sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-        onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-      }));
+      sinon.stub(IModelApp, "quantityFormatter").get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
       const getContentStub = sinon.stub(ContentDataProvider.prototype, "getContent").resolves(new Content(createContentDescriptor(), []));
       const builder = new ContentBuilder({ ...initialProps });
 
@@ -313,17 +261,7 @@ describe("ContentBuilder", () => {
         displayType: "",
         selectClasses: [],
         categories: [category],
-        fields: testValues.map(
-          (v) =>
-            new Field({
-              category,
-              name: v.name,
-              label: v.name,
-              type: v.type,
-              isReadonly: false,
-              priority: 1,
-            }),
-        ),
+        fields: testValues.map((v) => new Field({ category, name: v.name, label: v.name, type: v.type, isReadonly: false, priority: 1 })),
         contentFlags: 1,
       });
       class TestDataProvider extends EmptyDataProvider {
@@ -359,16 +297,8 @@ describe("ContentBuilder", () => {
 
   describe("[deprecated] createContentForAllClasses", () => {
     const testInstances: TestInstance[] = [
-      {
-        className: "Class1",
-        schemaName: "Schema1",
-        ids: [{ id: "0x2" }, { id: "0x3" }],
-      },
-      {
-        className: "Class2",
-        schemaName: "Schema2",
-        ids: [{ id: "0x5" }, { id: "0x6" }],
-      },
+      { className: "Class1", schemaName: "Schema1", ids: [{ id: "0x2" }, { id: "0x3" }] },
+      { className: "Class2", schemaName: "Schema2", ids: [{ id: "0x5" }, { id: "0x6" }] },
     ];
 
     before(() => {
@@ -402,16 +332,8 @@ describe("ContentBuilder", () => {
   describe("[deprecated] createContentForInstancePerClass", () => {
     context("test instances have ids", () => {
       const testInstances: TestInstance[] = [
-        {
-          className: "Class1",
-          schemaName: "Schema1",
-          ids: [{ id: "0x1" }],
-        },
-        {
-          className: "Class2",
-          schemaName: "Schema2",
-          ids: [{ id: "0x9" }],
-        },
+        { className: "Class1", schemaName: "Schema1", ids: [{ id: "0x1" }] },
+        { className: "Class2", schemaName: "Schema2", ids: [{ id: "0x9" }] },
       ];
 
       it("returns all required instances with empty records", async () => {

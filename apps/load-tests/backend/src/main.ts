@@ -46,9 +46,7 @@ async function initBackend() {
   RpcConfiguration.developmentMode = true;
 
   // initialize IModelHost
-  await IModelHost.startup({
-    profileName: `presentation-load-tests-backend-${process.pid}`,
-  });
+  await IModelHost.startup({ profileName: `presentation-load-tests-backend-${process.pid}` });
 
   // initialize Presentation backend
   let hierarchyCacheDir = path.join(process.cwd(), "temp", "hierarchy-caches");

@@ -24,13 +24,7 @@ import type { PresentationInfoTreeNodeItem } from "../../../presentation-compone
 function createFilterInfo(propName: string = "prop"): PresentationInstanceFilterInfo {
   const property = createTestPropertyInfo({ name: propName });
   const field = createTestPropertiesContentField({ properties: [{ property }] });
-  return {
-    filter: {
-      field,
-      operator: "is-null",
-    },
-    usedClasses: [],
-  };
+  return { filter: { field, operator: "is-null" }, usedClasses: [] };
 }
 
 describe("PresentationTreeNodeRenderer", () => {
@@ -113,11 +107,7 @@ describe("PresentationTreeNodeRenderer", () => {
 
   it("renders filtered node with filter and clear filter buttons", async () => {
     const nodeItem = createTreeNodeItem({
-      filtering: {
-        descriptor: createTestContentDescriptor({ fields: [] }),
-        ancestorFilters: [],
-        active: createFilterInfo(),
-      },
+      filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [], active: createFilterInfo() },
     });
     const node = createTreeModelNode(undefined, nodeItem);
 
@@ -196,11 +186,7 @@ describe("PresentationTreeNodeRenderer", () => {
   it("invokes 'onClearFilterClick' when clear button is clicked", async () => {
     const spy = sinon.spy();
     const nodeItem = createTreeNodeItem({
-      filtering: {
-        descriptor: createTestContentDescriptor({ fields: [] }),
-        ancestorFilters: [],
-        active: createFilterInfo(),
-      },
+      filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [], active: createFilterInfo() },
     });
     const node = createTreeModelNode(undefined, nodeItem);
 

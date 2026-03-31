@@ -20,9 +20,7 @@ import type { ErrorInfo } from "../../presentation-hierarchies-react/TreeNode.js
 describe("TreeLoader", () => {
   const onHierarchyLimitExceededStub = sinon.stub();
   const onHierarchyLoadErrorStub = sinon.stub();
-  const hierarchyProvider = {
-    getNodes: sinon.stub<Parameters<HierarchyProvider["getNodes"]>, ReturnType<HierarchyProvider["getNodes"]>>(),
-  };
+  const hierarchyProvider = { getNodes: sinon.stub<Parameters<HierarchyProvider["getNodes"]>, ReturnType<HierarchyProvider["getNodes"]>>() };
 
   function createLoader() {
     return new TreeLoader(hierarchyProvider as unknown as HierarchyProvider, onHierarchyLimitExceededStub, onHierarchyLoadErrorStub, (n) =>
@@ -187,11 +185,7 @@ describe("TreeLoader", () => {
         return createAsyncIterator(props.parentNode === undefined && props.instanceFilter !== undefined ? rootHierarchyNodes : []);
       });
 
-      const filter: GenericInstanceFilter = {
-        propertyClassNames: [],
-        relatedInstances: [],
-        rules: { operator: "and", rules: [] },
-      };
+      const filter: GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
 
       const nodes = await collectNodes(
         loader.loadNodes({
@@ -211,11 +205,7 @@ describe("TreeLoader", () => {
     });
 
     it("loads info node if all children are filtered out", async () => {
-      const filter: GenericInstanceFilter = {
-        propertyClassNames: [],
-        relatedInstances: [],
-        rules: { operator: "and", rules: [] },
-      };
+      const filter: GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
       const loader = createLoader();
       const rootHierarchyNode = createTestHierarchyNode({ id: "root-1" });
       const modelNode = createTreeModelNode({ id: "root-1", nodeData: rootHierarchyNode, instanceFilter: filter });

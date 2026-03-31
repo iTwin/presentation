@@ -61,10 +61,7 @@ interface FlatTreeState {
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult {
   const { rootNodes, selectionMode, selectNodes } = props;
   const previousSelectionRef = useRef<string | undefined>(undefined);
-  const state = useRef<FlatTreeState>({
-    flatNodeList: [],
-    nodeIdToIndexMap: new Map(),
-  });
+  const state = useRef<FlatTreeState>({ flatNodeList: [], nodeIdToIndexMap: new Map() });
 
   useEffect(() => {
     state.current = computeFlatNodeList(rootNodes);

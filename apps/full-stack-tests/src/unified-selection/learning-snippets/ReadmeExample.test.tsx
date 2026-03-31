@@ -192,11 +192,7 @@ describe("Unified selection", () => {
 
           // Initialize Presentation with our selection storage, to make sure that any components, using `Presentation.selection`,
           // use the same underlying selection store.
-          await Presentation.initialize({
-            selection: {
-              selectionStorage,
-            },
-          });
+          await Presentation.initialize({ selection: { selectionStorage } });
           // __PUBLISH_EXTRACT_END__
 
           expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key }))).to.be.true;

@@ -273,11 +273,7 @@ export class IModelSelectionHandler {
     using _dispose = this.suspendIModelToolSelectionSync();
     if (is5xSelectionSet(this._imodelAccess.selectionSet)) {
       // with 5.x core we can simply add the set as a whole
-      this._imodelAccess.selectionSet.add({
-        models: set.models,
-        subcategories: set.subCategories,
-        elements: set.elements,
-      });
+      this._imodelAccess.selectionSet.add({ models: set.models, subcategories: set.subCategories, elements: set.elements });
     } else {
       // pre-5.0 core requires adding models and subcategories to hilite set separately
       if (set.models.length) {
@@ -297,11 +293,7 @@ export class IModelSelectionHandler {
     using _dispose = this.suspendIModelToolSelectionSync();
     if (is5xSelectionSet(this._imodelAccess.selectionSet)) {
       // with 5.x core we can simply remove the set as a whole
-      this._imodelAccess.selectionSet.remove({
-        models: set.models,
-        subcategories: set.subCategories,
-        elements: set.elements,
-      });
+      this._imodelAccess.selectionSet.remove({ models: set.models, subcategories: set.subCategories, elements: set.elements });
     } else {
       if (set.models.length) {
         this._imodelAccess.hiliteSet.models.deleteIds(set.models);
@@ -401,7 +393,9 @@ function getUnifiedSelectionChangeType(coreChangeType: CoreSelectionSetEventType
   }
 }
 
-function is5xSelectionSet(selectionSet: CoreIModelSelectionSet): selectionSet is Omit<CoreIModelSelectionSet, "add" | "remove"> & {
+function is5xSelectionSet(
+  selectionSet: CoreIModelSelectionSet,
+): selectionSet is Omit<CoreIModelSelectionSet, "add" | "remove"> & {
   readonly active: { [P in keyof CoreSelectableIds]-?: Id64Set };
   add: (ids: Id64Arg | CoreSelectableIds) => boolean;
   remove: (ids: Id64Arg | CoreSelectableIds) => boolean;

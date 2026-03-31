@@ -71,10 +71,7 @@ export async function createPropertyGroups(
     }
     otherValuesGrouping ??= {
       node: {
-        key: {
-          type: "property-grouping:other" as const,
-          properties: [],
-        },
+        key: { type: "property-grouping:other" as const, properties: [] },
         parentKeys: [],
         groupedInstanceKeys: [],
         label: localizedStrings.other,
@@ -108,10 +105,7 @@ export async function createPropertyGroups(
       continue;
     }
 
-    const propertyIdentifier = {
-      propertyName: property.name,
-      propertyClassName: property.class.fullName,
-    };
+    const propertyIdentifier = { propertyName: property.name, propertyClassName: property.class.fullName };
     const extendedTypeName = "extendedTypeName" in property ? property.extendedTypeName : undefined;
     const primitiveType = "primitiveType" in property ? property.primitiveType : "String";
     assert(primitiveType !== "Binary" && primitiveType !== "IGeometry");
@@ -123,11 +117,7 @@ export async function createPropertyGroups(
           `${currentProperty.propertyName.toLocaleLowerCase()}:Unspecified`,
           {
             label: localizedStrings.unspecified,
-            propertyGroupingNodeKey: {
-              type: "property-grouping:value",
-              ...propertyIdentifier,
-              formattedPropertyValue: "",
-            },
+            propertyGroupingNodeKey: { type: "property-grouping:value", ...propertyIdentifier, formattedPropertyValue: "" },
           },
           node,
         );
@@ -178,10 +168,7 @@ export async function createPropertyGroups(
       if (byProperties.createGroupForOutOfRangeValues) {
         const groupingNode = getOtherValuesGroupingNode();
         assert(HierarchyNodeKey.isPropertyOtherValuesGrouping(groupingNode.key));
-        const thisPropertyIdentifier = {
-          className: propertyIdentifier.propertyClassName,
-          propertyName: propertyIdentifier.propertyName,
-        };
+        const thisPropertyIdentifier = { className: propertyIdentifier.propertyClassName, propertyName: propertyIdentifier.propertyName };
         const hasPropertyIdentifier = groupingNode.key.properties.find(
           (x) =>
             compareFullClassNames(x.className, thisPropertyIdentifier.className) === 0 &&
@@ -207,14 +194,7 @@ export async function createPropertyGroups(
     addGroupingToMap(
       groupings.grouped,
       `${currentProperty.propertyName.toLocaleLowerCase()}:${formattedValue}`,
-      {
-        label: formattedValue,
-        propertyGroupingNodeKey: {
-          ...propertyIdentifier,
-          type: "property-grouping:value",
-          formattedPropertyValue: formattedValue,
-        },
-      },
+      { label: formattedValue, propertyGroupingNodeKey: { ...propertyIdentifier, type: "property-grouping:value", formattedPropertyValue: formattedValue } },
       node,
     );
   }
@@ -229,10 +209,7 @@ function addGroupingToMap(
 ): void {
   let groupingInfo = groupingMap.get(mapKey);
   if (!groupingInfo) {
-    groupingInfo = {
-      displayablePropertyGroupingInfo: propertyToAdd,
-      groupedNodes: [node],
-    };
+    groupingInfo = { displayablePropertyGroupingInfo: propertyToAdd, groupedNodes: [node] };
     groupingMap.set(mapKey, groupingInfo);
     return;
   }
@@ -339,10 +316,7 @@ export async function getUniquePropertiesGroupInfo(
       if (!isAlreadyGrouped && !uniqueProperties.get(mapKey)) {
         uniqueProperties.set(mapKey, {
           ecClass: await getClass(schemaProvider, byProperties.propertiesClassName),
-          propertyGroup: {
-            propertyName: propertyGroup.propertyName,
-            ranges: propertyGroup.ranges,
-          },
+          propertyGroup: { propertyName: propertyGroup.propertyName, ranges: propertyGroup.ranges },
           previousPropertiesGroupingInfo: previousPropertiesInfo.map((groupingInfo) => ({
             propertiesClassName: byProperties.propertiesClassName,
             propertyName: groupingInfo.propertyGroup.propertyName,
@@ -351,10 +325,7 @@ export async function getUniquePropertiesGroupInfo(
         });
       }
 
-      previousPropertiesInfo.push({
-        propertyGroup,
-        propertyGroupKey,
-      });
+      previousPropertiesInfo.push({ propertyGroup, propertyGroupKey });
       ++propertyGroupIndex;
     }
   }

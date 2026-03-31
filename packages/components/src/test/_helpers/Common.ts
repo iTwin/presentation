@@ -13,18 +13,10 @@ import type { WithConstraints } from "../../presentation-components/common/Conte
 import type { PresentationInstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 
 export function createTestECInstanceKey(key?: Partial<InstanceKey>): InstanceKey {
-  return {
-    className: key?.className ?? "TestSchema:TestClass",
-    id: key?.id ?? "0x1",
-  };
+  return { className: key?.className ?? "TestSchema:TestClass", id: key?.id ?? "0x1" };
 }
 
-export const createTestECClassInfo = (props?: Partial<ClassInfo>) => ({
-  id: "0x1",
-  name: "SchemaName:ClassName",
-  label: "Class Label",
-  ...props,
-});
+export const createTestECClassInfo = (props?: Partial<ClassInfo>) => ({ id: "0x1", name: "SchemaName:ClassName", label: "Class Label", ...props });
 
 export const createTestPropertyInfo = (props?: Partial<WithConstraints<PropertyInfo>>) => ({
   classInfo: createTestECClassInfo(),
@@ -59,10 +51,7 @@ export const createTestRelationshipPath = (length: number = 2) => {
 };
 
 export function createTestRuleset(ruleset?: Partial<Ruleset>): Ruleset {
-  return {
-    id: ruleset?.id ?? "Test",
-    rules: ruleset?.rules ?? [],
-  };
+  return { id: ruleset?.id ?? "Test", rules: ruleset?.rules ?? [] };
 }
 
 const recursiveWait = async (pred: () => boolean, repeater: () => Promise<void>) => {
@@ -108,14 +97,8 @@ export function stubRaf() {
   });
 
   after(() => {
-    Object.defineProperty(global, "requestAnimationFrame", {
-      writable: true,
-      value: raf,
-    });
-    Object.defineProperty(global, "cancelAnimationFrame", {
-      writable: true,
-      value: caf,
-    });
+    Object.defineProperty(global, "requestAnimationFrame", { writable: true, value: raf });
+    Object.defineProperty(global, "cancelAnimationFrame", { writable: true, value: caf });
   });
 }
 
@@ -123,11 +106,7 @@ export const createTestPresentationInstanceFilterPropertyInfo = (props?: Partial
   sourceClassId: "0x1",
   sourceClassIds: ["0x1"],
   field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo() }], category: createTestCategoryDescription() }),
-  propertyDescription: {
-    name: "TestName",
-    displayLabel: "TestDisplayLabel",
-    typename: "string",
-  },
+  propertyDescription: { name: "TestName", displayLabel: "TestDisplayLabel", typename: "string" },
   className: "testSchema:testClass",
   ...props,
 });
@@ -140,17 +119,11 @@ export function stubDOMMatrix() {
   const domMatrix = global.DOMMatrix;
 
   before(() => {
-    Object.defineProperty(global, "DOMMatrix", {
-      writable: true,
-      value: sinon.fake(() => ({ m41: 0, m42: 0 })),
-    });
+    Object.defineProperty(global, "DOMMatrix", { writable: true, value: sinon.fake(() => ({ m41: 0, m42: 0 })) });
   });
 
   after(() => {
-    Object.defineProperty(global, "DOMGlobal", {
-      writable: true,
-      value: domMatrix,
-    });
+    Object.defineProperty(global, "DOMGlobal", { writable: true, value: domMatrix });
   });
 }
 
@@ -162,17 +135,9 @@ export function stubVirtualization() {
     stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetWidth").get(() => 800));
 
     stubs.push(
-      sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
-        height: 20,
-        width: 20,
-        x: 0,
-        y: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-        top: 0,
-        toJSON: () => {},
-      }),
+      sinon
+        .stub(window.Element.prototype, "getBoundingClientRect")
+        .returns({ height: 20, width: 20, x: 0, y: 0, bottom: 0, left: 0, right: 0, top: 0, toJSON: () => {} }),
     );
   });
 

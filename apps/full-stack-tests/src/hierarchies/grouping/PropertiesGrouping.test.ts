@@ -53,9 +53,7 @@ describe("Hierarchies", () => {
                     ecClassId: { selector: `this.ECClassId` },
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.UserLabel` },
-                    grouping: {
-                      byProperties: specifiedGrouping,
-                    },
+                    grouping: { byProperties: specifiedGrouping },
                   })}
                   FROM ${subjectClassName} AS this
                   WHERE this.Parent.Id = (${IModel.rootSubjectId})
@@ -82,12 +80,7 @@ describe("Hierarchies", () => {
       };
       await validateHierarchy({
         provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, groupingParams) }),
-        expect: [
-          NodeValidators.createForInstanceNode({
-            instanceKeys: [keys.childSubject1],
-            children: false,
-          }),
-        ],
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
       });
     });
 
@@ -105,12 +98,7 @@ describe("Hierarchies", () => {
 
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, groupingParams) }),
-          expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject1],
-              children: false,
-            }),
-          ],
+          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
         });
       });
 
@@ -138,12 +126,7 @@ describe("Hierarchies", () => {
               propertyName: "Description",
               formattedPropertyValue: "",
               label: "NOT SPECIFIED",
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
             }),
           ],
         });
@@ -174,12 +157,7 @@ describe("Hierarchies", () => {
                               byProperties: {
                                 createGroupForUnspecifiedValues: true,
                                 propertiesClassName: "BisCore.Subject",
-                                propertyGroups: [
-                                  {
-                                    propertyClassAlias: "this",
-                                    propertyName: "Parent",
-                                  },
-                                ],
+                                propertyGroups: [{ propertyClassAlias: "this", propertyName: "Parent" }],
                               },
                             },
                           })}
@@ -198,11 +176,7 @@ describe("Hierarchies", () => {
             NodeValidators.createForPropertyValueGroupingNode({
               label: "NOT SPECIFIED",
               propertyName: "Parent",
-              children: [
-                NodeValidators.createForInstanceNode({
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ children: false })],
             }),
           ],
         });
@@ -229,12 +203,7 @@ describe("Hierarchies", () => {
               propertyClassName: "BisCore.Subject",
               propertyName: "Description",
               formattedPropertyValue: "TestDescription",
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
             }),
           ],
         });
@@ -265,10 +234,7 @@ describe("Hierarchies", () => {
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
-                          byProperties: {
-                            propertiesClassName: "BisCore.Subject",
-                            propertyGroups: [{ propertyName: "UserLabel", propertyClassAlias: "this" }],
-                          },
+                          byProperties: { propertiesClassName: "BisCore.Subject", propertyGroups: [{ propertyName: "UserLabel", propertyClassAlias: "this" }] },
                         },
                       })}
                       FROM ${subjectClassName} AS this
@@ -290,24 +256,14 @@ describe("Hierarchies", () => {
               propertyClassName: "BisCore.Subject",
               propertyName: "UserLabel",
               formattedPropertyValue: "Test1",
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
             }),
             NodeValidators.createForPropertyValueGroupingNode({
               label: "Test2",
               propertyClassName: "BisCore.Subject",
               propertyName: "UserLabel",
               formattedPropertyValue: "Test2",
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false })],
             }),
           ],
         });
@@ -346,12 +302,7 @@ describe("Hierarchies", () => {
                   propertyClassName: "BisCore.Subject",
                   propertyName: "Description",
                   formattedPropertyValue: "TestDescription",
-                  children: [
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [keys.childSubject1],
-                      children: false,
-                    }),
-                  ],
+                  children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
                 }),
               ],
             }),
@@ -364,12 +315,7 @@ describe("Hierarchies", () => {
           const { imodel, ...keys } = await buildIModel(this, async (builder) => {
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
             const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
-            const physicalElement = insertPhysicalElement({
-              builder,
-              modelId: model.id,
-              categoryId: category.id,
-              codeValue: "Physical element",
-            });
+            const physicalElement = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, codeValue: "Physical element" });
             return { physicalElement };
           });
 
@@ -415,12 +361,7 @@ describe("Hierarchies", () => {
                 propertyClassName: "BisCore.GeometricElement3d",
                 propertyName: "Category",
                 label: "Spatial category",
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.physicalElement],
-                    children: false,
-                  }),
-                ],
+                children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.physicalElement], children: false })],
               }),
             ],
           });
@@ -476,12 +417,7 @@ describe("Hierarchies", () => {
                 propertyClassName: "BisCore.Subject",
                 propertyName: "Parent",
                 label: "custom label",
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject2],
-                    children: false,
-                  }),
-                ],
+                children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false })],
               }),
             ],
           });
@@ -551,14 +487,8 @@ describe("Hierarchies", () => {
                 propertyName: "Parent",
                 label: "sameLabel",
                 children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject2],
-                    children: false,
-                  }),
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject4],
-                    children: false,
-                  }),
+                  NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
+                  NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject4], children: false }),
                 ],
               }),
             ],
@@ -629,23 +559,13 @@ describe("Hierarchies", () => {
                 propertyClassName: "BisCore.Subject",
                 propertyName: "Parent",
                 label: "differentLabel1",
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject2],
-                    children: false,
-                  }),
-                ],
+                children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false })],
               }),
               NodeValidators.createForPropertyValueGroupingNode({
                 propertyClassName: "BisCore.Subject",
                 propertyName: "Parent",
                 label: "differentLabel2",
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject4],
-                    children: false,
-                  }),
-                ],
+                children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject4], children: false })],
               }),
             ],
           });
@@ -937,10 +857,7 @@ describe("Hierarchies", () => {
               },
             };
             const provider = createProvider({ imodel, hierarchy });
-            await validateHierarchy({
-              provider,
-              expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] })],
-            });
+            await validateHierarchy({ provider, expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] })] });
           },
         );
       });

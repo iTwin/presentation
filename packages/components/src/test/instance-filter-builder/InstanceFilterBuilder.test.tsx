@@ -45,16 +45,8 @@ describe("InstanceFilterBuilder", () => {
 
   const testImodel = {} as IModelConnection;
   const testDescriptor = {} as Descriptor;
-  const testActions = {
-    setRuleProperty: () => {},
-    setRuleOperator: () => {},
-    setRuleValue: () => {},
-  } as unknown as PropertyFilterBuilderActions;
-  const testRootGroup = {
-    operator: PropertyFilterRuleGroupOperator.Or,
-    id: "0",
-    items: [],
-  } as PropertyFilterBuilderRuleGroup;
+  const testActions = { setRuleProperty: () => {}, setRuleOperator: () => {}, setRuleValue: () => {} } as unknown as PropertyFilterBuilderActions;
+  const testRootGroup = { operator: PropertyFilterRuleGroupOperator.Or, id: "0", items: [] } as PropertyFilterBuilderRuleGroup;
 
   it("invokes 'onSelectedClassesChanged' when class is selected", async () => {
     const spy = sinon.spy();
@@ -139,24 +131,13 @@ describe("InstanceFilterBuilder", () => {
   });
 
   describe("UniqueValuesRenderer", () => {
-    const property: PropertyDescription = {
-      displayLabel: "Test Prop",
-      name: "testProp",
-      typename: "double",
-    };
+    const property: PropertyDescription = { displayLabel: "Test Prop", name: "testProp", typename: "double" };
 
     it("renders <UniquePropertyValuesSelector /> when operator is `IsEqual`", async () => {
       const rootGroup: PropertyFilterBuilderRuleGroup = {
         id: "root-id",
         operator: PropertyFilterRuleGroupOperator.And,
-        items: [
-          {
-            id: "item-id",
-            groupId: "root-id",
-            property,
-            operator: "is-equal",
-          },
-        ],
+        items: [{ id: "item-id", groupId: "root-id", property, operator: "is-equal" }],
       };
 
       const { getByPlaceholderText } = render(
@@ -178,14 +159,7 @@ describe("InstanceFilterBuilder", () => {
       const rootGroup: PropertyFilterBuilderRuleGroup = {
         id: "root-id",
         operator: PropertyFilterRuleGroupOperator.And,
-        items: [
-          {
-            id: "item-id",
-            groupId: "root-id",
-            property,
-            operator: "is-not-equal",
-          },
-        ],
+        items: [{ id: "item-id", groupId: "root-id", property, operator: "is-not-equal" }],
       };
 
       const { getByPlaceholderText } = render(
@@ -259,19 +233,13 @@ describe("usePresentationInstanceFilteringProps", () => {
   });
 
   const onCloseEvent = new BeEvent<() => void>();
-  const imodelStub = {
-    key: "test_imodel",
-    onClose: onCloseEvent,
-  };
+  const imodelStub = { key: "test_imodel", onClose: onCloseEvent };
   let initialProps: HookProps;
 
   beforeEach(() => {
     const imodel = imodelStub as unknown as IModelConnection;
 
-    initialProps = {
-      descriptor,
-      imodel,
-    };
+    initialProps = { descriptor, imodel };
 
     // stub metadataProvider for test imodel
     const metadataProvider = getIModelMetadataProvider(imodel);

@@ -42,18 +42,9 @@ import type { WithIModelKey } from "./Utils.js";
  * @public
  */
 export type PropertyValueConstraints =
-  | {
-      minimumLength?: number;
-      maximumLength?: number;
-    }
-  | {
-      minimumValue?: number;
-      maximumValue?: number;
-    }
-  | {
-      minOccurs?: number;
-      maxOccurs?: number;
-    };
+  | { minimumLength?: number; maximumLength?: number }
+  | { minimumValue?: number; maximumValue?: number }
+  | { minOccurs?: number; maxOccurs?: number };
 
 /**
  * Expands specified type with additional constraints property.
@@ -92,11 +83,7 @@ export function createFieldInfo(field: Field, parentFieldName?: string): FieldIn
 
 /** @internal */
 export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
-  const description: WithConstraints<PropertyDescription> = {
-    typename: info.type.typeName,
-    name: info.name,
-    displayLabel: info.label,
-  };
+  const description: WithConstraints<PropertyDescription> = { typename: info.type.typeName, name: info.name, displayLabel: info.label };
 
   if (info.renderer) {
     description.renderer = { name: info.renderer.name };
@@ -127,10 +114,7 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
   }
 
   if (info.type.valueFormat === PresentationPropertyValueFormat.Primitive && info.enum) {
-    description.enum = {
-      choices: info.enum.choices,
-      isStrict: info.enum.isStrict,
-    };
+    description.enum = { choices: info.enum.choices, isStrict: info.enum.isStrict };
   }
   return description;
 }
@@ -179,10 +163,7 @@ class StructMembersAppender implements INestedPropertiesAppender {
   public finish(): void {
     const properties = Object.entries(this._members);
     inPlaceSort(properties).by([{ asc: (p) => p[1].property.displayLabel, comparer: this._labelsComparer }]);
-    const value: StructValue = {
-      valueFormat: UiPropertyValueFormat.Struct,
-      members: Object.fromEntries(properties),
-    };
+    const value: StructValue = { valueFormat: UiPropertyValueFormat.Struct, members: Object.fromEntries(properties) };
     const record = new PropertyRecord(value, createPropertyDescriptionFromFieldInfo(this._fieldInfo));
     const displayLabel = this._label?.displayValue;
     applyPropertyRecordAttributes(
@@ -266,10 +247,7 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
   public finishField(): void {}
 
   public startStruct(props: StartStructProps): boolean {
-    const fieldInfo = {
-      ...createFieldInfo(props.hierarchy.field, props.parentFieldName),
-      type: props.valueType,
-    };
+    const fieldInfo = { ...createFieldInfo(props.hierarchy.field, props.parentFieldName), type: props.valueType };
     this._appendersStack.push(
       new StructMembersAppender(this.currentPropertiesAppender, props.hierarchy, fieldInfo, props.label, this._propertyRecordsProcessor),
     );
@@ -286,10 +264,7 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
       new ArrayItemsAppender(
         this.currentPropertiesAppender,
         props.hierarchy,
-        {
-          ...createFieldInfo(props.hierarchy.field, props.parentFieldName),
-          type: props.valueType,
-        },
+        { ...createFieldInfo(props.hierarchy.field, props.parentFieldName), type: props.valueType },
         this._propertyRecordsProcessor,
       ),
     );
@@ -303,9 +278,7 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
 
   public processMergedValue(props: ProcessMergedValueProps): void {
     const propertyField = props.requestedField;
-    const value: PrimitiveValue = {
-      valueFormat: UiPropertyValueFormat.Primitive,
-    };
+    const value: PrimitiveValue = { valueFormat: UiPropertyValueFormat.Primitive };
     const record = new PropertyRecord(value, createPropertyDescriptionFromFieldInfo(createFieldInfo(propertyField, props.parentFieldName)));
     record.isMerged = true;
     record.autoExpand = propertyField.isNestedContentField() && propertyField.autoExpand;

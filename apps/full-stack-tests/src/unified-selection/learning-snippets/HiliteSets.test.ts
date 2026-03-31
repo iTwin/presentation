@@ -44,23 +44,13 @@ describe("Unified selection", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.BasicProvider
         const schemaProvider = createECSchemaProvider(getIModelConnection().schemaContext);
         const hiliteProvider = createHiliteSetProvider({
-          imodelAccess: {
-            ...schemaProvider,
-            ...createCachingECClassHierarchyInspector({ schemaProvider }),
-            ...createECSqlQueryExecutor(imodel),
-          },
+          imodelAccess: { ...schemaProvider, ...createCachingECClassHierarchyInspector({ schemaProvider }), ...createECSqlQueryExecutor(imodel) },
         });
         const hiliteSetIterator = hiliteProvider.getHiliteSet({ selectables });
         // __PUBLISH_EXTRACT_END__
 
         const hiliteSet = await collect(hiliteSetIterator);
-        expect(hiliteSet).to.deep.eq([
-          {
-            elements: [keys.elementKey.id],
-            models: [],
-            subCategories: [],
-          },
-        ]);
+        expect(hiliteSet).to.deep.eq([{ elements: [keys.elementKey.id], models: [], subCategories: [] }]);
       });
 
       it("iModel hilite set provider", async function () {
@@ -98,13 +88,7 @@ describe("Unified selection", () => {
         // __PUBLISH_EXTRACT_END__
 
         const hiliteSet = await collect(hiliteSetIterator);
-        expect(hiliteSet).to.deep.eq([
-          {
-            elements: [keys.elementKey.id],
-            models: [],
-            subCategories: [],
-          },
-        ]);
+        expect(hiliteSet).to.deep.eq([{ elements: [keys.elementKey.id], models: [], subCategories: [] }]);
       });
     });
   });

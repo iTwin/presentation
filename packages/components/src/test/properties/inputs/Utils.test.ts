@@ -21,10 +21,7 @@ describe("getDecimalRoundingError", () => {
 
 describe("getPersistenceUnitRoundingError", () => {
   const format = new Format("test format");
-  const parserSpec = {
-    parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(),
-    format,
-  };
+  const parserSpec = { parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(), format };
 
   beforeEach(() => {
     sinon.restore();

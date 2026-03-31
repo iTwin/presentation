@@ -170,10 +170,6 @@ function useModelSourceUpdateOnUnitSystemChange(params: TreeReloadParams): void 
 function startTreeReload({ dataProviderProps, ruleset, modelSource, pageSize, renderedItems, onReload }: Required<TreeReloadParams>): Subscription {
   const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset });
   return reloadTree(modelSource.getModel(), dataProvider, pageSize, renderedItems.current).subscribe({
-    next: (newModelSource) =>
-      onReload({
-        modelSource: newModelSource,
-        dataProvider,
-      }),
+    next: (newModelSource) => onReload({ modelSource: newModelSource, dataProvider }),
   });
 }

@@ -24,13 +24,8 @@ import type {
 
 describe("useFilteredNodeLoader", () => {
   const imodel = {} as IModelConnection;
-  const dataProvider = {
-    imodel,
-    getFilteredNodePaths: createStub<IPresentationTreeDataProvider["getFilteredNodePaths"]>(),
-  };
-  const initialProps = {
-    dataProvider: dataProvider as unknown as IPresentationTreeDataProvider,
-  };
+  const dataProvider = { imodel, getFilteredNodePaths: createStub<IPresentationTreeDataProvider["getFilteredNodePaths"]>() };
+  const initialProps = { dataProvider: dataProvider as unknown as IPresentationTreeDataProvider };
 
   before(async () => {
     await UiComponents.initialize(new EmptyLocalization());
@@ -53,9 +48,7 @@ describe("useFilteredNodeLoader", () => {
     const pathsResult1 = new ResolvablePromise<NodePathElement[]>();
     dataProvider.getFilteredNodePaths.returns(pathsResult1);
 
-    const { result } = renderHook(useFilteredNodeLoader, {
-      initialProps: { ...initialProps, filter: "test", activeMatchIndex: 0 },
-    });
+    const { result } = renderHook(useFilteredNodeLoader, { initialProps: { ...initialProps, filter: "test", activeMatchIndex: 0 } });
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
 
@@ -185,9 +178,7 @@ describe("useFilteredNodeLoader", () => {
     expect(result.current.filteredNodeLoader).to.not.be.undefined;
     expect(dataProvider.getFilteredNodePaths).to.be.calledOnce;
 
-    const newProvider = {
-      getFilteredNodePaths: createStub<IPresentationTreeDataProvider["getFilteredNodePaths"]>(),
-    };
+    const newProvider = { getFilteredNodePaths: createStub<IPresentationTreeDataProvider["getFilteredNodePaths"]>() };
     const newPathsResult = new ResolvablePromise<NodePathElement[]>();
     newProvider.getFilteredNodePaths.returns(newPathsResult);
 
@@ -202,11 +193,7 @@ describe("useFilteredNodeLoader", () => {
   it("returns `filteredNodeLoader` with model whose root node's `numRootNodes` is undefined and `loadNode` method returns result with an empty `loadedNodes` array when filtering", async () => {
     const testModelNode: TreeModelNode = {
       id: "test",
-      checkbox: {
-        isDisabled: false,
-        isVisible: true,
-        state: 0,
-      },
+      checkbox: { isDisabled: false, isVisible: true, state: 0 },
       depth: 0,
       description: "",
       isExpanded: false,
@@ -286,9 +273,7 @@ describe("useNodeHighlightingProps", () => {
     Parameters<IFilteredPresentationTreeDataProvider["getActiveMatch"]>,
     ReturnType<IFilteredPresentationTreeDataProvider["getActiveMatch"]>
   >();
-  const provider = {
-    getActiveMatch: getActiveMatchStub,
-  } as unknown as IFilteredPresentationTreeDataProvider;
+  const provider = { getActiveMatch: getActiveMatchStub } as unknown as IFilteredPresentationTreeDataProvider;
 
   beforeEach(() => {
     getActiveMatchStub.reset();
@@ -318,19 +303,13 @@ describe("useNodeHighlightingProps", () => {
   });
 
   it("returns highlighting props", () => {
-    getActiveMatchStub.returns({
-      matchIndex: 2,
-      nodeId: "test-node",
-    });
+    getActiveMatchStub.returns({ matchIndex: 2, nodeId: "test-node" });
 
     const { result } = renderHook((props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex), {
       initialProps: { filter: "test", dataProvider: provider, activeMatchIndex: 1 },
     });
     expect(result.current).to.not.be.undefined;
-    expect(result.current!.activeMatch).to.be.deep.eq({
-      matchIndex: 2,
-      nodeId: "test-node",
-    });
+    expect(result.current!.activeMatch).to.be.deep.eq({ matchIndex: 2, nodeId: "test-node" });
     expect(result.current!.searchText).to.be.eq("test");
   });
 });

@@ -14,11 +14,7 @@ import type { CodeScopeProps, CodeSpec, ElementAspectProps, ElementProps, ModelP
 
 describe("TestIModelBuilderImpl", () => {
   it("insertModel calls iModel.models.insertModel", async () => {
-    const imodel = {
-      models: {
-        insertModel: createStub<IModelDb.Models["insertModel"]>(),
-      },
-    };
+    const imodel = { models: { insertModel: createStub<IModelDb.Models["insertModel"]>() } };
 
     const builder = new TestIModelBuilderImpl(imodel as unknown as IModelDb);
     builder.insertModel({} as ModelProps);
@@ -27,11 +23,7 @@ describe("TestIModelBuilderImpl", () => {
   });
 
   it("insertElement calls iModel.elements.insertElement", async () => {
-    const imodel = {
-      elements: {
-        insertElement: createStub<IModelDb.Elements["insertElement"]>(),
-      },
-    };
+    const imodel = { elements: { insertElement: createStub<IModelDb.Elements["insertElement"]>() } };
 
     const builder = new TestIModelBuilderImpl(imodel as unknown as IModelDb);
     builder.insertElement({} as ElementProps);
@@ -40,11 +32,7 @@ describe("TestIModelBuilderImpl", () => {
   });
 
   it("insertAspect calls iModel.elements.insertAspect", async () => {
-    const imodel = {
-      elements: {
-        insertAspect: createStub<IModelDb.Elements["insertAspect"]>(),
-      },
-    };
+    const imodel = { elements: { insertAspect: createStub<IModelDb.Elements["insertAspect"]>() } };
 
     const builder = new TestIModelBuilderImpl(imodel as unknown as IModelDb);
     builder.insertAspect({} as ElementAspectProps);
@@ -53,11 +41,7 @@ describe("TestIModelBuilderImpl", () => {
   });
 
   it("insertRelationship calls iModel.relationships.insertInstance", async () => {
-    const imodel = {
-      relationships: {
-        insertInstance: createStub<Relationships["insertInstance"]>(),
-      },
-    };
+    const imodel = { relationships: { insertInstance: createStub<Relationships["insertInstance"]>() } };
 
     const builder = new TestIModelBuilderImpl(imodel as unknown as IModelDb);
     builder.insertRelationship({} as RelationshipProps);
@@ -66,17 +50,7 @@ describe("TestIModelBuilderImpl", () => {
   });
 
   it("createCode calls iModel.codeSpecs.getByName", () => {
-    const imodel = {
-      codeSpecs: {
-        getByName: createStub<CodeSpecs["getByName"]>().callsFake(
-          (name) =>
-            ({
-              id: "code_spec_id",
-              name,
-            }) as CodeSpec,
-        ),
-      },
-    };
+    const imodel = { codeSpecs: { getByName: createStub<CodeSpecs["getByName"]>().callsFake((name) => ({ id: "code_spec_id", name }) as CodeSpec) } };
 
     const builder = new TestIModelBuilderImpl(imodel as unknown as IModelDb);
     const result = builder.createCode({} as CodeScopeProps, BisCodeSpec.drawing, "codeValue");
@@ -87,9 +61,7 @@ describe("TestIModelBuilderImpl", () => {
 
   it("importSchema calls iModel.importSchemaStrings", async () => {
     const importSchemaStringsStub = sinon.stub().resolves();
-    const imodel = {
-      importSchemaStrings: importSchemaStringsStub,
-    } as unknown as IModelDb;
+    const imodel = { importSchemaStrings: importSchemaStringsStub } as unknown as IModelDb;
 
     const builder = new TestIModelBuilderImpl(imodel);
     await builder.importSchema("test xml");

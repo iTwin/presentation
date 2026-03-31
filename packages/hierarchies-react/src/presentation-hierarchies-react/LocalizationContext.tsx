@@ -19,9 +19,7 @@ const localizationContext = createContext<TranslateFunc>((key) => key);
  */
 interface LocalizationContextProviderProps {
   /** Localization object compatible with `@itwin/core-common` */
-  localization: {
-    getLocalizedString: (key: string) => string;
-  };
+  localization: { getLocalizedString: (key: string) => string };
 }
 
 /**

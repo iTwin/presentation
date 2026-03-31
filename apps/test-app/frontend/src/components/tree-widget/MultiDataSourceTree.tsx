@@ -96,24 +96,14 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
   const { isReloading, ...treeProps } = useUnifiedSelectionTree({
     selectionStorage: unifiedSelectionContext.storage,
     createSelectableForGenericNode: useCallback<NonNullable<Props<typeof useUnifiedSelectionTree>["createSelectableForGenericNode"]>>(
-      (node, uniqueId) => ({
-        identifier: node.key.source === "rss" ? node.key.id : uniqueId,
-        data: node,
-        async *loadInstanceKeys() {},
-      }),
+      (node, uniqueId) => ({ identifier: node.key.source === "rss" ? node.key.id : uniqueId, data: node, async *loadInstanceKeys() {} }),
       [],
     ),
     sourceName: "MultiIModelTree",
     getHierarchyProvider: useCallback(
       () =>
         mergeProviders({
-          providers: [
-            createIModelHierarchyProvider({
-              imodelAccess,
-              hierarchyDefinition: createModelsHierarchyDefinition({ imodelAccess }),
-            }),
-            RSS_PROVIDER,
-          ],
+          providers: [createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: createModelsHierarchyDefinition({ imodelAccess }) }), RSS_PROVIDER],
         }),
       [imodelAccess],
     ),
@@ -150,9 +140,7 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
           {...treeProps.treeRendererProps}
           selectionMode={"extended"}
           treeLabel={treeLabel}
-          getTreeItemProps={(node) => ({
-            decorations: getIcon(node),
-          })}
+          getTreeItemProps={(node) => ({ decorations: getIcon(node) })}
         />
       </Flex.Item>
     );
@@ -213,9 +201,7 @@ function DebouncedSearchBox({ onChange, ...props }: Omit<SearchBoxProps, "onChan
 
 function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
   const subject = new Subject<() => void>();
-  subject.pipe(debounceTime(delay)).subscribe({
-    next: (invoke) => invoke(),
-  });
+  subject.pipe(debounceTime(delay)).subscribe({ next: (invoke) => invoke() });
 
   return (args: TArgs) => {
     subject.next(() => {
@@ -240,9 +226,7 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: { selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Subject" }) },
                 hasChildren: true,
-                extendedData: {
-                  nodeType: "root-subject",
-                },
+                extendedData: { nodeType: "root-subject" },
               })}
               FROM BisCore.Subject this
               WHERE this.ECInstanceId = 0x1
@@ -262,12 +246,8 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
                     nodeLabel: { selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Model" }) },
-                    grouping: {
-                      byClass: true,
-                    },
-                    extendedData: {
-                      nodeType: "model",
-                    },
+                    grouping: { byClass: true },
+                    extendedData: { nodeType: "model" },
                   })}
                   FROM BisCore.Model this
                 `,
@@ -286,12 +266,8 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
                     nodeLabel: { selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Model" }) },
-                    grouping: {
-                      byClass: true,
-                    },
-                    extendedData: {
-                      nodeType: "model",
-                    },
+                    grouping: { byClass: true },
+                    extendedData: { nodeType: "model" },
                   })}
                   FROM BisCore.Model this
                   WHERE this.ParentModel.Id IN (${parentNode.key.instanceKeys.map((key) => key.id).join(",")})
@@ -390,9 +366,7 @@ async function* getModelsSearchPaths({
         { className: "BisCore.Subject", id: "0x1", imodelKey: imodelAccess.imodelKey },
         ...path.reverse().map((k) => ({ ...k, imodelKey: imodelAccess.imodelKey })),
       ],
-      options: {
-        reveal: true,
-      },
+      options: { reveal: true },
     };
   }
 }
@@ -485,9 +459,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (fi
             label: feed.title ?? "<no title>",
             parentKeys: [],
             children: feed.items.length > 0,
-            extendedData: {
-              nodeType: "rss-root",
-            },
+            extendedData: { nodeType: "rss-root" },
           } satisfies HierarchyNode;
           return;
         }
@@ -499,9 +471,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (fi
               label: item.title ?? "<no title>",
               parentKeys: [parentNode.key],
               children: false,
-              extendedData: {
-                nodeType: "rss-item",
-              },
+              extendedData: { nodeType: "rss-item" },
             } satisfies HierarchyNode;
             if (++count > 10) {
               return;
@@ -519,21 +489,12 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (fi
       const targetNodeKeys = searchHelper.getChildNodeSearchIdentifiers()!;
       for await (const node of generateNodes()) {
         if (targetNodeKeys.some((target) => HierarchyNodeIdentifier.equal(target, node.key))) {
-          yield {
-            ...node,
-            ...searchHelper.createChildNodeProps({ nodeKey: node.key }),
-          };
+          yield { ...node, ...searchHelper.createChildNodeProps({ nodeKey: node.key }) };
         }
       }
     },
 
-    setHierarchySearch(
-      props:
-        | {
-            paths: HierarchySearchTree[];
-          }
-        | undefined,
-    ): void {
+    setHierarchySearch(props: { paths: HierarchySearchTree[] } | undefined): void {
       search = props?.paths;
       hierarchyChanged.raiseEvent({ searchChange: { newSearch: props } });
     },

@@ -60,10 +60,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
-            hierarchy: {
-              rootNodes: async () => [{ node: { key: "test", label: "Root node" } }],
-              childNodes: [],
-            },
+            hierarchy: { rootNodes: async () => [{ node: { key: "test", label: "Root node" } }], childNodes: [] },
           });
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.HierarchyProviderUsage
           const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
@@ -71,10 +68,7 @@ describe("Hierarchies", () => {
             // do something with the node
           }
           // __PUBLISH_EXTRACT_END__
-          await validateHierarchy({
-            provider,
-            expect: [NodeValidators.createForGenericNode({ key: "test", label: "Root node" })],
-          });
+          await validateHierarchy({ provider, expect: [NodeValidators.createForGenericNode({ key: "test", label: "Root node" })] });
         });
       });
 
@@ -148,31 +142,17 @@ describe("Hierarchies", () => {
         it("creates custom node definition", async () => {
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.CustomNodeDefinition
           const definition: HierarchyNodesDefinition = {
-            node: {
-              key: "MyCustomNode",
-              label: "My custom node",
-              extendedData: {
-                description: "This is a custom node",
-              },
-            },
+            node: { key: "MyCustomNode", label: "My custom node", extendedData: { description: "This is a custom node" } },
           };
           // __PUBLISH_EXTRACT_END__
           const provider = createIModelHierarchyProvider({
             imodelAccess: createIModelAccess(emptyIModel),
-            hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
-            },
+            hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]) },
           });
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
-              NodeValidators.createForGenericNode({
-                key: "MyCustomNode",
-                label: "My custom node",
-                extendedData: {
-                  description: "This is a custom node",
-                },
-              }),
+              NodeValidators.createForGenericNode({ key: "MyCustomNode", label: "My custom node", extendedData: { description: "This is a custom node" } }),
             ],
           });
         });
@@ -190,10 +170,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.InstanceNodesOfSpecificClassesDefinition
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
+          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsFactory });
           const definition: HierarchyNodesDefinition = {
             fullClassName: "BisCore.GeometricModel",
             query: {
@@ -203,14 +180,7 @@ describe("Hierarchies", () => {
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: await labelsFactory.createSelectClause({ className: "BisCore.GeometricModel", classAlias: "this" }) },
                   hasChildren: true,
-                  grouping: {
-                    byClass: true,
-                    byLabel: {
-                      action: "group",
-                      hideIfNoSiblings: true,
-                      hideIfOneGroupedNode: true,
-                    },
-                  },
+                  grouping: { byClass: true, byLabel: { action: "group", hideIfNoSiblings: true, hideIfOneGroupedNode: true } },
                 })}
                 FROM BisCore.GeometricModel [this]
                 INNER JOIN BisCore.InformationPartitionElement [partition] ON [partition].[ECInstanceId] = [this].[ModeledElement].[Id]
@@ -221,20 +191,14 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_END__
           const provider = createIModelHierarchyProvider({
             imodelAccess,
-            hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
-            },
+            hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]) },
           });
           await validateHierarchy({
             provider,
             expect: [
               NodeValidators.createForClassGroupingNode({
                 className: "BisCore.PhysicalModel",
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    label: "Non-private physical model",
-                  }),
-                ],
+                children: [NodeValidators.createForInstanceNode({ label: "Non-private physical model" })],
               }),
             ],
           });
@@ -250,10 +214,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.RelatedInstanceNodesDefinition
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
+          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsFactory });
           const createDefinition = async ({ parentNode }: { parentNode: HierarchyNode & { key: InstancesNodeKey } }): Promise<HierarchyNodesDefinition> => ({
             fullClassName: "BisCore.GeometricElement3d",
             query: {
@@ -299,11 +260,7 @@ describe("Hierarchies", () => {
             expect: [
               NodeValidators.createForInstanceNode({
                 label: "Physical model",
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    label: "Physical element",
-                  }),
-                ],
+                children: [NodeValidators.createForInstanceNode({ label: "Physical element" })],
               }),
             ],
           });
@@ -347,10 +304,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.CustomQueryInstanceNodesDefinition
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
+          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsFactory });
           const createDefinition = async ({ parentNode }: { parentNode: HierarchyNode & { key: InstancesNodeKey } }): Promise<HierarchyLevelDefinition> => {
             if (await imodelAccess.classDerivesFrom(parentNode.key.instanceKeys[0].className, `${schema.schemaName}.MyParentElement`)) {
               // load the query from the MyParentElement instance
@@ -418,11 +372,7 @@ describe("Hierarchies", () => {
             expect: [
               NodeValidators.createForInstanceNode({
                 label: "Parent physical element",
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    label: "Child physical element",
-                  }),
-                ],
+                children: [NodeValidators.createForInstanceNode({ label: "Child physical element" })],
               }),
             ],
           });
@@ -439,10 +389,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.BaseClassGrouping
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
+          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsFactory });
           const definition: HierarchyNodesDefinition = {
             fullClassName: "BisCore.GeometricElement",
             query: {
@@ -451,11 +398,7 @@ describe("Hierarchies", () => {
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: await labelsFactory.createSelectClause({ className: "BisCore.GeometricElement", classAlias: "this" }) },
-                  grouping: {
-                    byBaseClasses: {
-                      fullClassNames: ["BisCore.GeometricElement3d", "BisCore.PhysicalElement"],
-                    },
-                  },
+                  grouping: { byBaseClasses: { fullClassNames: ["BisCore.GeometricElement3d", "BisCore.PhysicalElement"] } },
                 })}
                 FROM BisCore.GeometricElement [this]
               `,
@@ -464,9 +407,7 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_END__
           const provider = createIModelHierarchyProvider({
             imodelAccess,
-            hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
-            },
+            hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]) },
           });
           await validateHierarchy({
             provider,
@@ -476,11 +417,7 @@ describe("Hierarchies", () => {
                 children: [
                   NodeValidators.createForClassGroupingNode({
                     className: "BisCore.PhysicalElement",
-                    children: [
-                      NodeValidators.createForInstanceNode({
-                        label: "Physical element",
-                      }),
-                    ],
+                    children: [NodeValidators.createForInstanceNode({ label: "Physical element" })],
                   }),
                 ],
               }),
@@ -492,10 +429,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(emptyIModel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.ClassGrouping
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
+          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsFactory });
           const definition: HierarchyNodesDefinition = {
             fullClassName: "BisCore.Element",
             query: {
@@ -504,9 +438,7 @@ describe("Hierarchies", () => {
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: await labelsFactory.createSelectClause({ className: "BisCore.Element", classAlias: "this" }) },
-                  grouping: {
-                    byClass: true,
-                  },
+                  grouping: { byClass: true },
                 })}
                 FROM BisCore.Element [this]
               `,
@@ -515,36 +447,22 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_END__
           const provider = createIModelHierarchyProvider({
             imodelAccess,
-            hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
-            },
+            hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]) },
           });
           await validateHierarchy({
             provider,
             expect: [
               NodeValidators.createForClassGroupingNode({
                 className: "BisCore.DefinitionPartition",
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    label: "BisCore.DictionaryModel",
-                  }),
-                ],
+                children: [NodeValidators.createForInstanceNode({ label: "BisCore.DictionaryModel" })],
               }),
               NodeValidators.createForClassGroupingNode({
                 className: "BisCore.LinkPartition",
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    label: "BisCore.RealityDataSources",
-                  }),
-                ],
+                children: [NodeValidators.createForInstanceNode({ label: "BisCore.RealityDataSources" })],
               }),
               NodeValidators.createForClassGroupingNode({
                 className: "BisCore.Subject",
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                  }),
-                ],
+                children: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }] })],
               }),
             ],
           });
@@ -559,19 +477,13 @@ describe("Hierarchies", () => {
               modelId: model.id,
               categoryId: category.id,
               codeValue: "Physical element",
-              placement: {
-                origin: { x: 0, y: 0, z: 0 },
-                angles: { yaw: 180 },
-              },
+              placement: { origin: { x: 0, y: 0, z: 0 }, angles: { yaw: 180 } },
             });
           });
           const imodelAccess = createIModelAccess(imodel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.PropertyGrouping
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
+          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsFactory });
           const definition: HierarchyNodesDefinition = {
             fullClassName: "BisCore.GeometricElement3d",
             query: {
@@ -606,9 +518,7 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_END__
           const provider = createIModelHierarchyProvider({
             imodelAccess,
-            hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
-            },
+            hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]) },
           });
           await validateHierarchy({
             provider,
@@ -618,11 +528,7 @@ describe("Hierarchies", () => {
                 propertyName: "Yaw",
                 fromValue: 0,
                 toValue: 360,
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    label: "Physical element",
-                  }),
-                ],
+                children: [NodeValidators.createForInstanceNode({ label: "Physical element" })],
               }),
             ],
           });
@@ -636,10 +542,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.LabelGrouping
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
+          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsFactory });
           const definition: HierarchyNodesDefinition = {
             fullClassName: "BisCore.Element",
             query: {
@@ -648,9 +551,7 @@ describe("Hierarchies", () => {
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: await labelsFactory.createSelectClause({ className: "BisCore.Element", classAlias: "this" }) },
-                  grouping: {
-                    byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true },
-                  },
+                  grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } },
                 })}
                 FROM BisCore.Element [this]
               `,
@@ -659,32 +560,19 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_END__
           const provider = createIModelHierarchyProvider({
             imodelAccess,
-            hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
-            },
+            hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]) },
           });
           await validateHierarchy({
             provider,
             expect: [
-              NodeValidators.createForInstanceNode({
-                label: "BisCore.DictionaryModel",
-              }),
-              NodeValidators.createForInstanceNode({
-                label: "BisCore.RealityDataSources",
-              }),
-              NodeValidators.createForInstanceNode({
-                label: imodel.name,
-                instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-              }),
+              NodeValidators.createForInstanceNode({ label: "BisCore.DictionaryModel" }),
+              NodeValidators.createForInstanceNode({ label: "BisCore.RealityDataSources" }),
+              NodeValidators.createForInstanceNode({ label: imodel.name, instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }] }),
               NodeValidators.createForLabelGroupingNode({
                 label: "Test repository link",
                 children: [
-                  NodeValidators.createForInstanceNode({
-                    label: "Test repository link",
-                  }),
-                  NodeValidators.createForInstanceNode({
-                    label: "Test repository link",
-                  }),
+                  NodeValidators.createForInstanceNode({ label: "Test repository link" }),
+                  NodeValidators.createForInstanceNode({ label: "Test repository link" }),
                 ],
               }),
             ],
@@ -703,10 +591,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.SameLabelGrouping
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
+          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsFactory });
           const definition: HierarchyNodesDefinition = {
             fullClassName: "BisCore.Element",
             query: {
@@ -715,9 +600,7 @@ describe("Hierarchies", () => {
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: await labelsFactory.createSelectClause({ className: "BisCore.Element", classAlias: "this" }) },
-                  grouping: {
-                    byLabel: { action: "merge" },
-                  },
+                  grouping: { byLabel: { action: "merge" } },
                 })}
                 FROM BisCore.Element [this]
               `,
@@ -726,27 +609,15 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_END__
           const provider = createIModelHierarchyProvider({
             imodelAccess,
-            hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
-            },
+            hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]) },
           });
           await validateHierarchy({
             provider,
             expect: [
-              NodeValidators.createForInstanceNode({
-                label: "BisCore.DictionaryModel",
-              }),
-              NodeValidators.createForInstanceNode({
-                label: "BisCore.RealityDataSources",
-              }),
-              NodeValidators.createForInstanceNode({
-                label: imodel.name,
-                instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-              }),
-              NodeValidators.createForInstanceNode({
-                label: "Test repository link",
-                instanceKeys: repoLinkKeys,
-              }),
+              NodeValidators.createForInstanceNode({ label: "BisCore.DictionaryModel" }),
+              NodeValidators.createForInstanceNode({ label: "BisCore.RealityDataSources" }),
+              NodeValidators.createForInstanceNode({ label: imodel.name, instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }] }),
+              NodeValidators.createForInstanceNode({ label: "Test repository link", instanceKeys: repoLinkKeys }),
             ],
           });
         });

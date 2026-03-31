@@ -31,11 +31,7 @@ describe("SelectionScope", () => {
   let iModel: IModelConnection;
 
   before(async () => {
-    await initialize({
-      backendHostProps: {
-        cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`),
-      },
-    });
+    await initialize({ backendHostProps: { cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`) } });
     RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);
     RpcConfiguration.developmentMode = true;
     RpcManager.initializeInterface(ECSchemaRpcInterface);
@@ -61,13 +57,7 @@ describe("SelectionScope", () => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id }).id;
-        elementKey1 = insertPhysicalElement({
-          builder,
-          userLabel: "element 1",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: assemblyKey,
-        });
+        elementKey1 = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id, parentId: assemblyKey });
       });
 
       const actual = await getSelection([elementKey1!.id], { id: "element" });
@@ -81,13 +71,7 @@ describe("SelectionScope", () => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id }).id;
-        elementKey1 = insertPhysicalElement({
-          builder,
-          userLabel: "element 1",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: assemblyKey,
-        });
+        elementKey1 = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id, parentId: assemblyKey });
       });
 
       const actual = await getSelection([elementKey1!.id, "invalid"], { id: "element" });
@@ -103,20 +87,8 @@ describe("SelectionScope", () => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         parentKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
-        elementKey1 = insertPhysicalElement({
-          builder,
-          userLabel: "element 1",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: parentKey.id,
-        });
-        elementKey2 = insertPhysicalElement({
-          builder,
-          userLabel: "element 2",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: parentKey.id,
-        });
+        elementKey1 = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id, parentId: parentKey.id });
+        elementKey2 = insertPhysicalElement({ builder, userLabel: "element 2", modelId: modelKey.id, categoryId: categoryKey.id, parentId: parentKey.id });
       });
       const actual = await getSelection([elementKey1!.id, elementKey2!.id], { id: "element", ancestorLevel: 1 });
       expect(actual).to.have.deep.members([parentKey!]);
@@ -150,13 +122,7 @@ describe("SelectionScope", () => {
           categoryId: categoryKey.id,
           parentId: grandParentKey.id,
         });
-        elementKey = insertPhysicalElement({
-          builder,
-          userLabel: "element 2",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: parentKey.id,
-        });
+        elementKey = insertPhysicalElement({ builder, userLabel: "element 2", modelId: modelKey.id, categoryId: categoryKey.id, parentId: parentKey.id });
       });
 
       const actual = await getSelection([elementKey!.id], { id: "element", ancestorLevel: 2 });
@@ -171,13 +137,7 @@ describe("SelectionScope", () => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         parentKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
-        elementKey = insertPhysicalElement({
-          builder,
-          userLabel: "element 1",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: parentKey.id,
-        });
+        elementKey = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id, parentId: parentKey.id });
       });
 
       const actual = await getSelection([elementKey!.id], { id: "element", ancestorLevel: 2 });
@@ -226,13 +186,7 @@ describe("SelectionScope", () => {
           categoryId: categoryKey.id,
           parentId: elementKey1.id,
         });
-        elementKey3 = insertPhysicalElement({
-          builder,
-          userLabel: "element 3",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          parentId: elementKey2.id,
-        });
+        elementKey3 = insertPhysicalElement({ builder, userLabel: "element 3", modelId: modelKey.id, categoryId: categoryKey.id, parentId: elementKey2.id });
       });
 
       const actual = await getSelection([elementKey3!.id], { id: "element", ancestorLevel: -1 });
@@ -252,27 +206,9 @@ describe("SelectionScope", () => {
         categoryKey2 = insertSpatialCategory({ builder, codeValue: "test category 2" });
         const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey1.id });
         elementIds = [
-          insertPhysicalElement({
-            builder,
-            userLabel: "element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey1.id,
-            parentId: assemblyKey.id,
-          }).id,
-          insertPhysicalElement({
-            builder,
-            userLabel: "element 2",
-            modelId: modelKey.id,
-            categoryId: categoryKey1.id,
-            parentId: assemblyKey.id,
-          }).id,
-          insertPhysicalElement({
-            builder,
-            userLabel: "element 2",
-            modelId: modelKey.id,
-            categoryId: categoryKey2.id,
-            parentId: assemblyKey.id,
-          }).id,
+          insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey1.id, parentId: assemblyKey.id }).id,
+          insertPhysicalElement({ builder, userLabel: "element 2", modelId: modelKey.id, categoryId: categoryKey1.id, parentId: assemblyKey.id }).id,
+          insertPhysicalElement({ builder, userLabel: "element 2", modelId: modelKey.id, categoryId: categoryKey2.id, parentId: assemblyKey.id }).id,
         ];
       });
 
@@ -291,20 +227,8 @@ describe("SelectionScope", () => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         const assemblyKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
         elementIds = [
-          insertPhysicalElement({
-            builder,
-            userLabel: "element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: assemblyKey.id,
-          }).id,
-          insertPhysicalElement({
-            builder,
-            userLabel: "element 2",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: assemblyKey.id,
-          }).id,
+          insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id, parentId: assemblyKey.id }).id,
+          insertPhysicalElement({ builder, userLabel: "element 2", modelId: modelKey.id, categoryId: categoryKey.id, parentId: assemblyKey.id }).id,
         ];
       });
 
@@ -476,12 +400,7 @@ describe("SelectionScope", () => {
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
           const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          physicalElement = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-          });
+          physicalElement = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
           functionalElementKey = insertFunctionalElement({
             builder,
             modelId: functionalModelKey.id,
@@ -502,12 +421,7 @@ describe("SelectionScope", () => {
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          physicalElement = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-          });
+          physicalElement = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
         });
 
         const actual = await getSelection([physicalElement!.id], { id: "functional", ancestorLevel: 1 });
@@ -644,12 +558,7 @@ describe("SelectionScope", () => {
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
           const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const physicalElementGrandparent = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-          });
+          const physicalElementGrandparent = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
           const physicalElementParent = insertPhysicalElement({
             builder,
             userLabel: "element",

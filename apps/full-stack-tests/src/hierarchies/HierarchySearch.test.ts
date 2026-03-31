@@ -96,9 +96,7 @@ describe("Hierarchies", () => {
                     key: "custom",
                     label: "custom",
                     children: undefined,
-                    extendedData: {
-                      parentSubjectIds: parentNode.key.instanceKeys.map((key) => key.id),
-                    },
+                    extendedData: { parentSubjectIds: parentNode.key.instanceKeys.map((key) => key.id) },
                   },
                 },
               ];
@@ -149,12 +147,7 @@ describe("Hierarchies", () => {
                   autoExpand: true,
                   isSearchTarget: false,
                   children: [
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [keys.childSubject2],
-                      isSearchTarget: true,
-                      children: false,
-                      autoExpand: false,
-                    }),
+                    NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], isSearchTarget: true, children: false, autoExpand: false }),
                   ],
                 }),
               ],
@@ -194,22 +187,7 @@ describe("Hierarchies", () => {
               ];
             }
             if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "root subject") {
-              return [
-                {
-                  node: {
-                    key: "custom1",
-                    label: "custom1",
-                    children: undefined,
-                  },
-                },
-                {
-                  node: {
-                    key: "custom2",
-                    label: "custom2",
-                    children: undefined,
-                  },
-                },
-              ];
+              return [{ node: { key: "custom1", label: "custom1", children: undefined } }, { node: { key: "custom2", label: "custom2", children: undefined } }];
             }
             return [];
           },
@@ -226,13 +204,7 @@ describe("Hierarchies", () => {
               instanceKeys: [keys.rootSubject],
               autoExpand: true,
               isSearchTarget: false,
-              children: [
-                NodeValidators.createForGenericNode({
-                  key: "custom2",
-                  autoExpand: false,
-                  isSearchTarget: true,
-                }),
-              ],
+              children: [NodeValidators.createForGenericNode({ key: "custom2", autoExpand: false, isSearchTarget: true })],
             }),
           ],
         });
@@ -243,52 +215,13 @@ describe("Hierarchies", () => {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  node: {
-                    key: "custom1",
-                    label: "custom1",
-                  },
-                },
-                {
-                  node: {
-                    key: "custom2",
-                    label: "custom2",
-                  },
-                },
-              ];
+              return [{ node: { key: "custom1", label: "custom1" } }, { node: { key: "custom2", label: "custom2" } }];
             }
             if (HierarchyNode.isGeneric(parentNode) && parentNode.label === "custom2") {
-              return [
-                {
-                  node: {
-                    key: "custom21",
-                    label: "custom21",
-                  },
-                },
-                {
-                  node: {
-                    key: "custom22",
-                    label: "custom22",
-                  },
-                },
-              ];
+              return [{ node: { key: "custom21", label: "custom21" } }, { node: { key: "custom22", label: "custom22" } }];
             }
             if (HierarchyNode.isGeneric(parentNode) && parentNode.label === "custom22") {
-              return [
-                {
-                  node: {
-                    key: "custom221",
-                    label: "custom221",
-                  },
-                },
-                {
-                  node: {
-                    key: "custom222",
-                    label: "custom222",
-                  },
-                },
-              ];
+              return [{ node: { key: "custom221", label: "custom221" } }, { node: { key: "custom222", label: "custom222" } }];
             }
             return [];
           },
@@ -318,27 +251,14 @@ describe("Hierarchies", () => {
               autoExpand: true,
               isSearchTarget: true,
               children: [
-                NodeValidators.createForGenericNode({
-                  key: "custom21",
-                  autoExpand: false,
-                  isSearchTarget: false,
-                  children: false,
-                }),
+                NodeValidators.createForGenericNode({ key: "custom21", autoExpand: false, isSearchTarget: false, children: false }),
                 NodeValidators.createForGenericNode({
                   key: "custom22",
                   autoExpand: true,
                   isSearchTarget: false,
                   children: [
-                    NodeValidators.createForGenericNode({
-                      key: "custom221",
-                      autoExpand: false,
-                      isSearchTarget: false,
-                    }),
-                    NodeValidators.createForGenericNode({
-                      key: "custom222",
-                      autoExpand: false,
-                      isSearchTarget: true,
-                    }),
+                    NodeValidators.createForGenericNode({ key: "custom221", autoExpand: false, isSearchTarget: false }),
+                    NodeValidators.createForGenericNode({ key: "custom222", autoExpand: false, isSearchTarget: true }),
                   ],
                 }),
               ],
@@ -531,21 +451,11 @@ describe("Hierarchies", () => {
             imodel,
             hierarchy,
             search: [
-              {
-                identifier: keys.childSubject1,
-                options: { autoExpand: true },
-                children: [{ identifier: keys.childSubject3 }],
-              },
+              { identifier: keys.childSubject1, options: { autoExpand: true }, children: [{ identifier: keys.childSubject3 }] },
               {
                 identifier: keys.childSubject4,
                 options: { autoExpand: true },
-                children: [
-                  {
-                    identifier: keys.childSubject1,
-                    options: { autoExpand: true },
-                    children: [{ identifier: keys.childSubject2 }],
-                  },
-                ],
+                children: [{ identifier: keys.childSubject1, options: { autoExpand: true }, children: [{ identifier: keys.childSubject2 }] }],
               },
             ],
           }),
@@ -554,12 +464,7 @@ describe("Hierarchies", () => {
               instanceKeys: [keys.childSubject1],
               autoExpand: true,
               children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject3],
-                  isSearchTarget: true,
-                  children: false,
-                  autoExpand: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject3], isSearchTarget: true, children: false, autoExpand: false }),
               ],
             }),
             NodeValidators.createForInstanceNode({
@@ -570,12 +475,7 @@ describe("Hierarchies", () => {
                   instanceKeys: [keys.childSubject1],
                   autoExpand: true,
                   children: [
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [keys.childSubject2],
-                      isSearchTarget: true,
-                      children: false,
-                      autoExpand: false,
-                    }),
+                    NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], isSearchTarget: true, children: false, autoExpand: false }),
                   ],
                 }),
               ],
@@ -642,13 +542,7 @@ describe("Hierarchies", () => {
                 identifier: keys.childSubject2,
                 isTarget: true,
                 options: { autoExpand: true },
-                children: [
-                  {
-                    identifier: keys.childSubject22,
-                    options: { autoExpand: true },
-                    children: [{ identifier: keys.childSubject222 }],
-                  },
-                ],
+                children: [{ identifier: keys.childSubject22, options: { autoExpand: true }, children: [{ identifier: keys.childSubject222 }] }],
               },
             ],
           }),
@@ -658,29 +552,14 @@ describe("Hierarchies", () => {
               isSearchTarget: true,
               autoExpand: true,
               children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject21],
-                  isSearchTarget: false,
-                  children: false,
-                  autoExpand: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject21], isSearchTarget: false, children: false, autoExpand: false }),
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [keys.childSubject22],
                   autoExpand: true,
                   isSearchTarget: false,
                   children: [
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [keys.childSubject221],
-                      isSearchTarget: false,
-                      children: false,
-                      autoExpand: false,
-                    }),
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [keys.childSubject222],
-                      isSearchTarget: true,
-                      children: false,
-                      autoExpand: false,
-                    }),
+                    NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject221], isSearchTarget: false, children: false, autoExpand: false }),
+                    NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject222], isSearchTarget: true, children: false, autoExpand: false }),
                   ],
                 }),
               ],
@@ -730,12 +609,8 @@ describe("Hierarchies", () => {
                     key: "custom",
                     label: "custom",
                     children: undefined,
-                    processingParams: {
-                      hideInHierarchy: true,
-                    },
-                    extendedData: {
-                      parentSubjectIds: parentNode.key.instanceKeys.map((key) => key.id),
-                    },
+                    processingParams: { hideInHierarchy: true },
+                    extendedData: { parentSubjectIds: parentNode.key.instanceKeys.map((key) => key.id) },
                   },
                 },
               ];
@@ -781,12 +656,7 @@ describe("Hierarchies", () => {
               autoExpand: true,
               isSearchTarget: false,
               children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  isSearchTarget: true,
-                  children: false,
-                  autoExpand: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], isSearchTarget: true, children: false, autoExpand: false }),
               ],
             }),
           ],
@@ -834,12 +704,8 @@ describe("Hierarchies", () => {
                     key: "custom",
                     label: "custom",
                     children: undefined,
-                    processingParams: {
-                      hideInHierarchy: true,
-                    },
-                    extendedData: {
-                      parentSubjectIds: parentNode.key.instanceKeys.map((key) => key.id),
-                    },
+                    processingParams: { hideInHierarchy: true },
+                    extendedData: { parentSubjectIds: parentNode.key.instanceKeys.map((key) => key.id) },
                   },
                 },
               ];
@@ -873,13 +739,7 @@ describe("Hierarchies", () => {
             hierarchy,
             search: [{ identifier: keys.rootSubject, children: [{ identifier: { type: "generic", id: "custom" } }] }],
           }),
-          expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.rootSubject],
-              isSearchTarget: false,
-              children: false,
-            }),
-          ],
+          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.rootSubject], isSearchTarget: false, children: false })],
         });
       });
 
@@ -961,13 +821,7 @@ describe("Hierarchies", () => {
 
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy, search: [{ identifier: keys.rootSubject, children: [{ identifier: keys.childSubject1 }] }] }),
-          expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.rootSubject],
-              isSearchTarget: false,
-              children: false,
-            }),
-          ],
+          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.rootSubject], isSearchTarget: false, children: false })],
         });
       });
 
@@ -1053,28 +907,14 @@ describe("Hierarchies", () => {
               provider: createProvider({
                 imodel,
                 hierarchy,
-                search: [
-                  {
-                    identifier: x,
-                    isTarget: true,
-                    options: { autoExpand: true },
-                    children: [{ identifier: y }],
-                  },
-                ],
+                search: [{ identifier: x, isTarget: true, options: { autoExpand: true }, children: [{ identifier: y }] }],
               }),
               expect: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [x],
                   autoExpand: true,
                   isSearchTarget: true,
-                  children: [
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [z],
-                      autoExpand: false,
-                      isSearchTarget: false,
-                      children: false,
-                    }),
-                  ],
+                  children: [NodeValidators.createForInstanceNode({ instanceKeys: [z], autoExpand: false, isSearchTarget: false, children: false })],
                 }),
               ],
             });
@@ -1159,14 +999,7 @@ describe("Hierarchies", () => {
                   instanceKeys: [x],
                   autoExpand: true,
                   isSearchTarget: true,
-                  children: [
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [y2],
-                      autoExpand: false,
-                      isSearchTarget: false,
-                      children: false,
-                    }),
-                  ],
+                  children: [NodeValidators.createForInstanceNode({ instanceKeys: [y2], autoExpand: false, isSearchTarget: false, children: false })],
                 }),
               ],
             });
@@ -1223,13 +1056,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            search: [
-              {
-                identifier: rootNodeKey,
-                options: { autoExpand: true },
-                children: keys.elements.map((key) => ({ identifier: key })),
-              },
-            ],
+            search: [{ identifier: rootNodeKey, options: { autoExpand: true }, children: keys.elements.map((key) => ({ identifier: key })) }],
           }),
           expect: [
             NodeValidators.createForGenericNode({
@@ -1329,11 +1156,7 @@ describe("Hierarchies", () => {
                               children: [
                                 NodeValidators.createForClassGroupingNode({
                                   autoExpand: false,
-                                  children: [
-                                    NodeValidators.createForInstanceNode({
-                                      instanceKeys: [keys.childElement],
-                                    }),
-                                  ],
+                                  children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childElement] })],
                                 }),
                               ],
                             }),
@@ -1372,13 +1195,7 @@ describe("Hierarchies", () => {
             const category = insertSpatialCategory({ builder, codeValue: "category" });
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
             circleClassName = schema.items.Circle.fullName;
-            elementKey = insertPhysicalElement({
-              builder,
-              modelId: model.id,
-              categoryId: category.id,
-              classFullName: circleClassName,
-              ["Color"]: "Red",
-            });
+            elementKey = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, classFullName: circleClassName, ["Color"]: "Red" });
           });
           imodel = result.imodel;
 
@@ -1404,15 +1221,7 @@ describe("Hierarchies", () => {
                         nodeLabel: "Circle",
                         grouping: {
                           byClass: true,
-                          byProperties: {
-                            propertiesClassName: circleClassName,
-                            propertyGroups: [
-                              {
-                                propertyName: "Color",
-                                propertyClassAlias: "this",
-                              },
-                            ],
-                          },
+                          byProperties: { propertiesClassName: circleClassName, propertyGroups: [{ propertyName: "Color", propertyClassAlias: "this" }] },
                           byLabel: true,
                         },
                       })}
@@ -1430,13 +1239,7 @@ describe("Hierarchies", () => {
             provider: createProvider({
               imodel,
               hierarchy,
-              search: [
-                {
-                  identifier: rootNodeKey,
-                  options: { autoExpand: true },
-                  children: [{ identifier: elementKey }],
-                },
-              ],
+              search: [{ identifier: rootNodeKey, options: { autoExpand: true }, children: [{ identifier: elementKey }] }],
             }),
             expect: [
               NodeValidators.createForGenericNode({
@@ -1454,12 +1257,7 @@ describe("Hierarchies", () => {
                           NodeValidators.createForLabelGroupingNode({
                             label: "Circle",
                             autoExpand: false,
-                            children: [
-                              NodeValidators.createForInstanceNode({
-                                instanceKeys: [elementKey],
-                                isSearchTarget: true,
-                              }),
-                            ],
+                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [elementKey], isSearchTarget: true })],
                           }),
                         ],
                       }),
@@ -1570,13 +1368,7 @@ describe("Hierarchies", () => {
             provider: createProvider({
               imodel,
               hierarchy,
-              search: [
-                {
-                  identifier: rootNodeKey,
-                  options: { autoExpand: true },
-                  children: [{ identifier: elementKey, options: { autoExpand: true } }],
-                },
-              ],
+              search: [{ identifier: rootNodeKey, options: { autoExpand: true }, children: [{ identifier: elementKey, options: { autoExpand: true } }] }],
             }),
             expect: [
               NodeValidators.createForGenericNode({
@@ -1595,11 +1387,7 @@ describe("Hierarchies", () => {
                             label: "Circle",
                             autoExpand: true,
                             children: [
-                              NodeValidators.createForInstanceNode({
-                                instanceKeys: [elementKey],
-                                isSearchTarget: true,
-                                searchOptions: { autoExpand: true },
-                              }),
+                              NodeValidators.createForInstanceNode({ instanceKeys: [elementKey], isSearchTarget: true, searchOptions: { autoExpand: true } }),
                             ],
                           }),
                         ],
@@ -1695,14 +1483,7 @@ describe("Hierarchies", () => {
           hierarchy: {
             async defineHierarchyLevel({ parentNode }) {
               if (!parentNode) {
-                return [
-                  {
-                    node: {
-                      key: "gen",
-                      label: "Generic node 3",
-                    },
-                  },
-                ];
+                return [{ node: { key: "gen", label: "Generic node 3" } }];
               }
               return [];
             },
@@ -1777,36 +1558,28 @@ describe("Hierarchies", () => {
         await validateHierarchy({
           provider: mergeAndSearchProviders({
             providers: [provider1, provider2, provider3, provider4],
-            searchProps: {
-              paths: [{ identifier: testSubjectKey1 }],
-            },
+            searchProps: { paths: [{ identifier: testSubjectKey1 }] },
           }),
           expect: [NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey1] })],
         });
         await validateHierarchy({
           provider: mergeAndSearchProviders({
             providers: [provider1, provider2, provider3, provider4],
-            searchProps: {
-              paths: [{ identifier: testSubjectKey2 }],
-            },
+            searchProps: { paths: [{ identifier: testSubjectKey2 }] },
           }),
           expect: [NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey2] })],
         });
         await validateHierarchy({
           provider: mergeAndSearchProviders({
             providers: [provider1, provider2, provider3, provider4],
-            searchProps: {
-              paths: [{ identifier: { type: "generic", id: "gen", source: "provider3" } }],
-            },
+            searchProps: { paths: [{ identifier: { type: "generic", id: "gen", source: "provider3" } }] },
           }),
           expect: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "provider3" } })],
         });
         await validateHierarchy({
           provider: mergeAndSearchProviders({
             providers: [provider1, provider2, provider3, provider4],
-            searchProps: {
-              paths: [{ identifier: { type: "generic", id: "gen", source: "custom-provider" } }],
-            },
+            searchProps: { paths: [{ identifier: { type: "generic", id: "gen", source: "custom-provider" } }] },
           }),
           expect: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
         });
@@ -1960,10 +1733,7 @@ describe("Hierarchies", () => {
                       identifier: keys1.subject1,
                       children: [{ identifier: keys1.subject2, children: [{ identifier: { type: "generic", id: "gen", source: "custom-provider" } }] }],
                     },
-                    {
-                      identifier: keys2.subject1,
-                      children: [{ identifier: { type: "generic", id: "gen", source: "custom-provider" } }],
-                    },
+                    { identifier: keys2.subject1, children: [{ identifier: { type: "generic", id: "gen", source: "custom-provider" } }] },
                   ],
                 },
               ],
@@ -1973,16 +1743,10 @@ describe("Hierarchies", () => {
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys1.subject1],
               children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys1.subject2],
-                  children: [NodeValidators.createForGenericNode({ key: "gen" })],
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys1.subject2], children: [NodeValidators.createForGenericNode({ key: "gen" })] }),
               ],
             }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys2.subject1],
-              children: [NodeValidators.createForGenericNode({ key: "gen" })],
-            }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys2.subject1], children: [NodeValidators.createForGenericNode({ key: "gen" })] }),
           ],
         });
       });

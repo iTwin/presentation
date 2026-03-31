@@ -63,122 +63,109 @@ describe("Tree update", () => {
     });
 
     beforeEach(() => {
-      defaultProps = {
-        imodel,
-        pagingSize: 100,
-      };
+      defaultProps = { imodel, pagingSize: 100 };
     });
 
     describe("on ruleset modification", () => {
       it("detects custom node change", async () => {
-        const initialRuleset = await Presentation.presentation.rulesets().add({
-          id: "test_ruleset_id",
-          rules: [
-            {
-              ruleType: RuleTypes.RootNodes,
-              specifications: [
-                {
-                  specType: ChildNodeSpecificationTypes.CustomNode,
-                  type: "T_NODE",
-                  label: "test-1",
-                },
-              ],
-            },
-          ],
-        });
+        const initialRuleset = await Presentation.presentation
+          .rulesets()
+          .add({
+            id: "test_ruleset_id",
+            rules: [{ ruleType: RuleTypes.RootNodes, specifications: [{ specType: ChildNodeSpecificationTypes.CustomNode, type: "T_NODE", label: "test-1" }] }],
+          });
         const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset: initialRuleset.id }, ["test-1"]);
 
-        await Presentation.presentation.rulesets().modify(initialRuleset, {
-          rules: [
-            {
-              ruleType: RuleTypes.RootNodes,
-              specifications: [
-                {
-                  specType: ChildNodeSpecificationTypes.CustomNode,
-                  type: "T_NODE",
-                  label: "test-2",
-                },
-              ],
-            },
-          ],
-        });
+        await Presentation.presentation
+          .rulesets()
+          .modify(initialRuleset, {
+            rules: [{ ruleType: RuleTypes.RootNodes, specifications: [{ specType: ChildNodeSpecificationTypes.CustomNode, type: "T_NODE", label: "test-2" }] }],
+          });
         await hierarchy.verifyChange(["test-2"]);
       });
 
       it("detects ECInstance node change", async () => {
-        const initialRuleset = await Presentation.presentation.rulesets().add({
-          id: "test_ruleset_id",
-          rules: [
-            {
-              ruleType: RuleTypes.RootNodes,
-              specifications: [
-                {
-                  specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
-                  classes: { schemaName: "Generic", classNames: ["PhysicalObject"] },
-                  groupByClass: false,
-                  groupByLabel: false,
-                },
-              ],
-            },
-          ],
-        });
+        const initialRuleset = await Presentation.presentation
+          .rulesets()
+          .add({
+            id: "test_ruleset_id",
+            rules: [
+              {
+                ruleType: RuleTypes.RootNodes,
+                specifications: [
+                  {
+                    specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
+                    classes: { schemaName: "Generic", classNames: ["PhysicalObject"] },
+                    groupByClass: false,
+                    groupByLabel: false,
+                  },
+                ],
+              },
+            ],
+          });
         const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset: initialRuleset.id }, ["Physical Object [0-38]", "Physical Object [0-39]"]);
 
-        await Presentation.presentation.rulesets().modify(initialRuleset, {
-          rules: [
-            {
-              ruleType: RuleTypes.RootNodes,
-              specifications: [
-                {
-                  specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
-                  classes: { schemaName: "Generic", classNames: ["PhysicalObject"] },
-                  instanceFilter: `this.ECInstanceId = ${parseInt("0x75", 16)}`,
-                  groupByClass: false,
-                  groupByLabel: false,
-                },
-              ],
-            },
-          ],
-        });
+        await Presentation.presentation
+          .rulesets()
+          .modify(initialRuleset, {
+            rules: [
+              {
+                ruleType: RuleTypes.RootNodes,
+                specifications: [
+                  {
+                    specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
+                    classes: { schemaName: "Generic", classNames: ["PhysicalObject"] },
+                    instanceFilter: `this.ECInstanceId = ${parseInt("0x75", 16)}`,
+                    groupByClass: false,
+                    groupByLabel: false,
+                  },
+                ],
+              },
+            ],
+          });
         await hierarchy.verifyChange(["Physical Object [0-39]"]);
       });
 
       it("detects ECClass grouping node change", async () => {
-        const initialRuleset = await Presentation.presentation.rulesets().add({
-          id: "test_ruleset_id",
-          rules: [
-            {
-              ruleType: RuleTypes.RootNodes,
-              specifications: [
-                {
-                  specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
-                  classes: { schemaName: "Generic", classNames: ["PhysicalObject"] },
-                  instanceFilter: `this.ECInstanceId = ${parseInt("0x74", 16)}`,
-                  groupByClass: true,
-                  groupByLabel: false,
-                },
-              ],
-            },
-          ],
-        });
+        const initialRuleset = await Presentation.presentation
+          .rulesets()
+          .add({
+            id: "test_ruleset_id",
+            rules: [
+              {
+                ruleType: RuleTypes.RootNodes,
+                specifications: [
+                  {
+                    specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
+                    classes: { schemaName: "Generic", classNames: ["PhysicalObject"] },
+                    instanceFilter: `this.ECInstanceId = ${parseInt("0x74", 16)}`,
+                    groupByClass: true,
+                    groupByLabel: false,
+                  },
+                ],
+              },
+            ],
+          });
         const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset: initialRuleset.id }, [{ ["Physical Object"]: ["Physical Object [0-38]"] }]);
 
-        await Presentation.presentation.rulesets().modify(initialRuleset, {
-          rules: [
-            {
-              ruleType: RuleTypes.RootNodes,
-              specifications: [
-                {
-                  specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
-                  classes: { schemaName: "Generic", classNames: ["PhysicalObject"] },
-                  instanceFilter: `this.ECInstanceId = ${parseInt("0x75", 16)}`,
-                  groupByClass: true,
-                  groupByLabel: false,
-                },
-              ],
-            },
-          ],
-        });
+        await Presentation.presentation
+          .rulesets()
+          .modify(initialRuleset, {
+            rules: [
+              {
+                ruleType: RuleTypes.RootNodes,
+                specifications: [
+                  {
+                    specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
+                    classes: { schemaName: "Generic", classNames: ["PhysicalObject"] },
+                    instanceFilter: `this.ECInstanceId = ${parseInt("0x75", 16)}`,
+                    groupByClass: true,
+                    groupByLabel: false,
+                  },
+                ],
+              },
+            ],
+          });
         await hierarchy.verifyChange([{ ["Physical Object"]: ["Physical Object [0-39]"] }]);
       });
     });
@@ -193,23 +180,11 @@ describe("Tree update", () => {
               subConditions: [
                 {
                   condition: `GetVariableBoolValue("use_first")`,
-                  specifications: [
-                    {
-                      specType: ChildNodeSpecificationTypes.CustomNode,
-                      type: "T_NODE_1",
-                      label: "test-1",
-                    },
-                  ],
+                  specifications: [{ specType: ChildNodeSpecificationTypes.CustomNode, type: "T_NODE_1", label: "test-1" }],
                 },
                 {
                   condition: `GetVariableBoolValue("use_second")`,
-                  specifications: [
-                    {
-                      specType: ChildNodeSpecificationTypes.CustomNode,
-                      type: "T_NODE_2",
-                      label: "test-2",
-                    },
-                  ],
+                  specifications: [{ specType: ChildNodeSpecificationTypes.CustomNode, type: "T_NODE_2", label: "test-2" }],
                 },
               ],
             },
@@ -272,13 +247,7 @@ describe("Tree update", () => {
                 },
               ],
             },
-            {
-              ruleType: RuleTypes.ExtendedData,
-              condition: `GetVariableBoolValue("should_customize")`,
-              items: {
-                color: `"Red"`,
-              },
-            },
+            { ruleType: RuleTypes.ExtendedData, condition: `GetVariableBoolValue("should_customize")`, items: { color: `"Red"` } },
           ],
         };
         const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset }, ["Physical Object [0-38]", "Physical Object [0-39]"]);
@@ -308,9 +277,7 @@ describe("Tree update", () => {
             {
               ruleType: RuleTypes.ExtendedData,
               condition: `ThisNode.IsOfClass("PhysicalObject", "Generic")`,
-              items: {
-                color: `GetVariableStringValue("custom_color")`,
-              },
+              items: { color: `GetVariableStringValue("custom_color")` },
             },
           ],
         };
@@ -340,41 +307,19 @@ describe("Tree update", () => {
             {
               ruleType: RuleTypes.RootNodes,
               specifications: [
-                {
-                  specType: ChildNodeSpecificationTypes.CustomNode,
-                  type: "T_ROOT_1",
-                  label: "root-1",
-                  hasChildren: "Unknown",
-                },
-                {
-                  specType: ChildNodeSpecificationTypes.CustomNode,
-                  type: "T_ROOT_2",
-                  label: "root-2",
-                  hasChildren: "Unknown",
-                },
+                { specType: ChildNodeSpecificationTypes.CustomNode, type: "T_ROOT_1", label: "root-1", hasChildren: "Unknown" },
+                { specType: ChildNodeSpecificationTypes.CustomNode, type: "T_ROOT_2", label: "root-2", hasChildren: "Unknown" },
               ],
             },
             {
               ruleType: RuleTypes.ChildNodes,
               condition: `ParentNode.Type = "T_ROOT_1" ANDALSO GetVariableBoolValue("show_children")`,
-              specifications: [
-                {
-                  specType: ChildNodeSpecificationTypes.CustomNode,
-                  type: "T_CHILD_1",
-                  label: "child-1",
-                },
-              ],
+              specifications: [{ specType: ChildNodeSpecificationTypes.CustomNode, type: "T_CHILD_1", label: "child-1" }],
             },
             {
               ruleType: RuleTypes.ChildNodes,
               condition: `ParentNode.Type = "T_ROOT_2" ANDALSO GetVariableBoolValue("show_children")`,
-              specifications: [
-                {
-                  specType: ChildNodeSpecificationTypes.CustomNode,
-                  type: "T_CHILD_2",
-                  label: "child-2",
-                },
-              ],
+              specifications: [{ specType: ChildNodeSpecificationTypes.CustomNode, type: "T_CHILD_2", label: "child-2" }],
             },
           ],
         };
@@ -392,15 +337,12 @@ describe("Tree update", () => {
 
     describe("partial update", () => {
       it("handles node insertion", async () => {
-        const ruleset = await Presentation.presentation.rulesets().add({
-          id: "test_ruleset_id",
-          rules: [
-            {
-              ruleType: RuleTypes.RootNodes,
-              specifications: [{ specType: ChildNodeSpecificationTypes.CustomNode, type: "T_NODE", label: "test-1" }],
-            },
-          ],
-        });
+        const ruleset = await Presentation.presentation
+          .rulesets()
+          .add({
+            id: "test_ruleset_id",
+            rules: [{ ruleType: RuleTypes.RootNodes, specifications: [{ specType: ChildNodeSpecificationTypes.CustomNode, type: "T_NODE", label: "test-1" }] }],
+          });
         const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset: ruleset.id }, ["test-1"]);
 
         await Presentation.presentation.rulesets().modify(ruleset, {
@@ -418,48 +360,34 @@ describe("Tree update", () => {
       });
 
       it("handles node update", async () => {
-        const ruleset = await Presentation.presentation.rulesets().add({
-          id: "test_ruleset_id",
-          rules: [
-            {
-              ruleType: RuleTypes.RootNodes,
-              specifications: [{ specType: ChildNodeSpecificationTypes.CustomNode, type: "T_NODE", label: "test-1" }],
-            },
-          ],
-        });
+        const ruleset = await Presentation.presentation
+          .rulesets()
+          .add({
+            id: "test_ruleset_id",
+            rules: [{ ruleType: RuleTypes.RootNodes, specifications: [{ specType: ChildNodeSpecificationTypes.CustomNode, type: "T_NODE", label: "test-1" }] }],
+          });
         const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset: ruleset.id }, ["test-1"]);
 
-        await Presentation.presentation.rulesets().modify(ruleset, {
-          rules: [
-            {
-              ruleType: RuleTypes.RootNodes,
-              specifications: [{ specType: ChildNodeSpecificationTypes.CustomNode, type: "T_NODE", label: "test-updated" }],
-            },
-          ],
-        });
+        await Presentation.presentation
+          .rulesets()
+          .modify(ruleset, {
+            rules: [
+              { ruleType: RuleTypes.RootNodes, specifications: [{ specType: ChildNodeSpecificationTypes.CustomNode, type: "T_NODE", label: "test-updated" }] },
+            ],
+          });
         await hierarchy.verifyChange(["test-updated"]);
       });
 
       it("handles node removal", async () => {
-        const ruleset = await Presentation.presentation.rulesets().add({
-          id: "test_ruleset_id",
-          rules: [
-            {
-              ruleType: RuleTypes.RootNodes,
-              specifications: [{ specType: ChildNodeSpecificationTypes.CustomNode, type: "T_NODE", label: "test-1" }],
-            },
-          ],
-        });
+        const ruleset = await Presentation.presentation
+          .rulesets()
+          .add({
+            id: "test_ruleset_id",
+            rules: [{ ruleType: RuleTypes.RootNodes, specifications: [{ specType: ChildNodeSpecificationTypes.CustomNode, type: "T_NODE", label: "test-1" }] }],
+          });
         const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset: ruleset.id }, ["test-1"]);
 
-        await Presentation.presentation.rulesets().modify(ruleset, {
-          rules: [
-            {
-              ruleType: RuleTypes.RootNodes,
-              specifications: [],
-            },
-          ],
-        });
+        await Presentation.presentation.rulesets().modify(ruleset, { rules: [{ ruleType: RuleTypes.RootNodes, specifications: [] }] });
         await hierarchy.verifyChange([]);
       });
     });
@@ -472,21 +400,11 @@ describe("Tree update", () => {
 
     type TreeHierarchy =
       | string
-      | {
-          [label: string]: TreeHierarchy[];
-        }
-      | {
-          label: string;
-          children?: TreeHierarchy[];
-          expanded?: true;
-          color?: number;
-          extendedData?: { [key: string]: any };
-        };
+      | { [label: string]: TreeHierarchy[] }
+      | { label: string; children?: TreeHierarchy[]; expanded?: true; color?: number; extendedData?: { [key: string]: any } };
 
     async function verifyHierarchy(props: UsePresentationTreeStateProps, expectedTree: TreeHierarchy[]): Promise<VerifiedHierarchy> {
-      const { result } = renderHook((hookProps: UsePresentationTreeStateProps) => usePresentationTreeState(hookProps), {
-        initialProps: props,
-      });
+      const { result } = renderHook((hookProps: UsePresentationTreeStateProps) => usePresentationTreeState(hookProps), { initialProps: props });
 
       await waitFor(() => {
         expect(result.current).to.not.be.undefined;

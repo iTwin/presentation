@@ -80,37 +80,18 @@ describe("PropertyDataProvider", async () => {
         const properties = await provider.getData();
         expect((properties.label.value as PrimitiveValue).displayValue).to.contain("My Element");
         validateRecords(properties.records["/selected-item/"], [
-          {
-            propName: "CodeValue",
-            valueComparer: (value) =>
-              expect(value).to.containSubset({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: undefined,
-              }),
-          },
+          { propName: "CodeValue", valueComparer: (value) => expect(value).to.containSubset({ valueFormat: PropertyValueFormat.Primitive, value: undefined }) },
           {
             propName: "UserLabel",
-            valueComparer: (value) =>
-              expect(value).to.containSubset({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: "My Element",
-              }),
+            valueComparer: (value) => expect(value).to.containSubset({ valueFormat: PropertyValueFormat.Primitive, value: "My Element" }),
           },
           {
             propName: "Model",
-            valueComparer: (value) =>
-              expect(value).to.containSubset({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: { id: modelKey.id },
-              }),
+            valueComparer: (value) => expect(value).to.containSubset({ valueFormat: PropertyValueFormat.Primitive, value: { id: modelKey.id } }),
           },
           {
             propName: "Category",
-            valueComparer: (value) =>
-              expect(value).to.containSubset({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: { id: categoryKey.id },
-              }),
+            valueComparer: (value) => expect(value).to.containSubset({ valueFormat: PropertyValueFormat.Primitive, value: { id: categoryKey.id } }),
           },
         ]);
       });
@@ -136,37 +117,18 @@ describe("PropertyDataProvider", async () => {
         const properties = await provider.getData();
         expect((properties.label.value as PrimitiveValue).displayValue).to.contain("My Element");
         validateRecords(properties.records["/selected-item/"], [
-          {
-            propName: "CodeValue",
-            valueComparer: (value) =>
-              expect(value).to.containSubset({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: undefined,
-              }),
-          },
+          { propName: "CodeValue", valueComparer: (value) => expect(value).to.containSubset({ valueFormat: PropertyValueFormat.Primitive, value: undefined }) },
           {
             propName: "UserLabel",
-            valueComparer: (value) =>
-              expect(value).to.containSubset({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: "My Element",
-              }),
+            valueComparer: (value) => expect(value).to.containSubset({ valueFormat: PropertyValueFormat.Primitive, value: "My Element" }),
           },
           {
             propName: "Model",
-            valueComparer: (value) =>
-              expect(value).to.containSubset({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: { id: modelKey.id },
-              }),
+            valueComparer: (value) => expect(value).to.containSubset({ valueFormat: PropertyValueFormat.Primitive, value: { id: modelKey.id } }),
           },
           {
             propName: "Category",
-            valueComparer: (value) =>
-              expect(value).to.containSubset({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: { id: categoryKey.id },
-              }),
+            valueComparer: (value) => expect(value).to.containSubset({ valueFormat: PropertyValueFormat.Primitive, value: { id: categoryKey.id } }),
           },
         ]);
       });
@@ -182,28 +144,8 @@ describe("PropertyDataProvider", async () => {
         provider.keys = new KeySet([categoryKey!]);
         const properties = await provider.getData();
         const favoriteCategoryName = provider.isNestedPropertyCategoryGroupingEnabled ? "Favorite-/selected-item/" : "Favorite";
-        validateRecords(properties.records["/selected-item/"], [
-          {
-            propName: "CodeValue",
-          },
-          {
-            propName: "UserLabel",
-          },
-          {
-            propName: "Model",
-          },
-        ]);
-        validateRecords(properties.records[favoriteCategoryName], [
-          {
-            propName: "CodeValue",
-          },
-          {
-            propName: "UserLabel",
-          },
-          {
-            propName: "Model",
-          },
-        ]);
+        validateRecords(properties.records["/selected-item/"], [{ propName: "CodeValue" }, { propName: "UserLabel" }, { propName: "Model" }]);
+        validateRecords(properties.records[favoriteCategoryName], [{ propName: "CodeValue" }, { propName: "UserLabel" }, { propName: "Model" }]);
       });
 
       it("overrides default property category", async function () {
@@ -220,12 +162,7 @@ describe("PropertyDataProvider", async () => {
               ...DEFAULT_PROPERTY_GRID_RULESET.rules,
               {
                 ruleType: RuleTypes.DefaultPropertyCategoryOverride,
-                specification: {
-                  id: "default",
-                  label: "Custom Category",
-                  description: "Custom description",
-                  autoExpand: true,
-                },
+                specification: { id: "default", label: "Custom Category", description: "Custom description", autoExpand: true },
               },
             ],
           },
@@ -233,17 +170,7 @@ describe("PropertyDataProvider", async () => {
         provider.keys = new KeySet([categoryKey!]);
         const properties = await provider.getData();
         expect(properties.categories.find((category) => category.name === "default")?.label).to.be.eq("Custom Category");
-        validateRecords(properties.records.default, [
-          {
-            propName: "CodeValue",
-          },
-          {
-            propName: "UserLabel",
-          },
-          {
-            propName: "Model",
-          },
-        ]);
+        validateRecords(properties.records.default, [{ propName: "CodeValue" }, { propName: "UserLabel" }, { propName: "Model" }]);
       });
 
       it("finds root property record keys", async function () {
@@ -389,14 +316,8 @@ describe("PropertyDataProvider", async () => {
         valueComparer: (value, property) => {
           assert(value.valueFormat === PropertyValueFormat.Struct);
           expect(value.members).and.to.containSubset({
-            StringMember: {
-              property: { name: combineFieldNames("StringMember", property.name), typename: "string" },
-              value: { value: "Test string" },
-            },
-            NumericMember: {
-              property: { name: combineFieldNames("NumericMember", property.name), typename: "int" },
-              value: { value: 123 },
-            },
+            StringMember: { property: { name: combineFieldNames("StringMember", property.name), typename: "string" }, value: { value: "Test string" } },
+            NumericMember: { property: { name: combineFieldNames("NumericMember", property.name), typename: "int" }, value: { value: 123 } },
           });
         },
       },
@@ -450,37 +371,20 @@ describe("PropertyDataProvider", async () => {
     assert(arrayRecord?.value.valueFormat === PropertyValueFormat.Array);
     const arrayItemRecord = arrayRecord.value.items[0];
     const arrayItemField = (await provider.getFieldByPropertyDescription(arrayItemRecord.property)) as PropertiesField;
-    expect(arrayItemField).to.containSubset({
-      name: "[*]",
-      label: "ArrayProperty",
-    });
+    expect(arrayItemField).to.containSubset({ name: "[*]", label: "ArrayProperty" });
     expect(arrayItemField.parentArrayField)
       .to.be.instanceOf(ArrayPropertiesField)
-      .and.to.containSubset({
-        label: "ArrayProperty",
-        type: {
-          valueFormat: "Array",
-          typeName: "string[]",
-        },
-      });
+      .and.to.containSubset({ label: "ArrayProperty", type: { valueFormat: "Array", typeName: "string[]" } });
 
     // test retrieving struct member field
     const structRecord = properties.records["/selected-item/"].find((r) => r.property.name.endsWith("StructProperty"));
     assert(structRecord?.value.valueFormat === PropertyValueFormat.Struct);
     const structMemberRecord = structRecord.value.members.StringMember;
     const structMemberField = (await provider.getFieldByPropertyDescription(structMemberRecord.property)) as PropertiesField;
-    expect(structMemberField).to.containSubset({
-      name: "StringMember",
-    });
+    expect(structMemberField).to.containSubset({ name: "StringMember" });
     expect(structMemberField.parentStructField)
       .to.be.instanceOf(StructPropertiesField)
-      .and.to.containSubset({
-        label: "StructProperty",
-        type: {
-          valueFormat: "Struct",
-          typeName: "TestStruct",
-        },
-      });
+      .and.to.containSubset({ label: "StructProperty", type: { valueFormat: "Struct", typeName: "TestStruct" } });
 
     // test retrieving struct array member field
     const structArrayRecord = properties.records["/selected-item/"].find((r) => r.property.name.endsWith("StructArrayProperty"));
@@ -489,27 +393,13 @@ describe("PropertyDataProvider", async () => {
     assert(structArrayItemRecord.value.valueFormat === PropertyValueFormat.Struct);
     const structArrayItemMemberRecord = structArrayItemRecord.value.members.StringMember;
     const structArrayMemberField = (await provider.getFieldByPropertyDescription(structArrayItemMemberRecord.property)) as PropertiesField;
-    expect(structArrayMemberField).to.containSubset({
-      name: "StringMember",
-    });
+    expect(structArrayMemberField).to.containSubset({ name: "StringMember" });
     expect(structArrayMemberField.parentStructField)
       .to.be.instanceOf(StructPropertiesField)
-      .and.to.containSubset({
-        label: "StructArrayProperty",
-        type: {
-          valueFormat: "Struct",
-          typeName: "TestStruct",
-        },
-      });
+      .and.to.containSubset({ label: "StructArrayProperty", type: { valueFormat: "Struct", typeName: "TestStruct" } });
     expect((structArrayMemberField.parentStructField as StructPropertiesField).parentArrayField)
       .to.be.instanceOf(ArrayPropertiesField)
-      .and.to.containSubset({
-        label: "StructArrayProperty",
-        type: {
-          valueFormat: "Array",
-          typeName: "TestStruct[]",
-        },
-      });
+      .and.to.containSubset({ label: "StructArrayProperty", type: { valueFormat: "Array", typeName: "TestStruct[]" } });
   });
 
   it("gets property data after re-initializing Presentation", async function () {
@@ -530,11 +420,7 @@ describe("PropertyDataProvider", async () => {
 
     // re-initialize
     Presentation.terminate();
-    await Presentation.initialize({
-      presentation: {
-        activeLocale: "en-pseudo",
-      },
-    });
+    await Presentation.initialize({ presentation: { activeLocale: "en-pseudo" } });
 
     // repeat request
     await checkDataProvider();

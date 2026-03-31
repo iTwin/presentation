@@ -45,10 +45,7 @@ function createDefaultWrappers(addThemeProvider?: boolean) {
 function customRender(ui: ReactElement, options?: RenderOptions & { addThemeProvider?: boolean }): RenderResult & { user: UserEvent } {
   const wrappers = createDefaultWrappers(options?.addThemeProvider);
   const wrapper = combineWrappers(wrappers, options?.wrapper);
-  return {
-    ...renderRTL(ui, { ...options, wrapper }),
-    user: userEvent.setup(),
-  };
+  return { ...renderRTL(ui, { ...options, wrapper }), user: userEvent.setup() };
 }
 
 export async function waitForElement<T extends HTMLElement>(container: HTMLElement, selector: string, condition?: (e: T | null) => void): Promise<T> {

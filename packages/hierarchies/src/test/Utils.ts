@@ -35,73 +35,35 @@ export function setupLogging(levels: Array<{ namespace: string; level: LogLevel 
 }
 
 export function createTestGenericNodeKey(src?: Partial<GenericNodeKey>): GenericNodeKey {
-  return {
-    type: "generic",
-    id: "test",
-    ...src,
-  };
+  return { type: "generic", id: "test", ...src };
 }
 
 export function createTestGenericNode(src?: Partial<NonGroupingHierarchyNode>): NonGroupingHierarchyNode {
-  return {
-    label: "test",
-    key: createTestGenericNodeKey(),
-    children: false,
-    parentKeys: [],
-    ...src,
-  };
+  return { label: "test", key: createTestGenericNodeKey(), children: false, parentKeys: [], ...src };
 }
 
 export function createTestSourceGenericNode(src?: Partial<SourceGenericHierarchyNode>): SourceGenericHierarchyNode {
-  return {
-    label: "test",
-    key: "test",
-    ...src,
-  };
+  return { label: "test", key: "test", ...src };
 }
 
 export function createTestProcessedGenericNode(src?: Partial<ProcessedGenericHierarchyNode>): ProcessedGenericHierarchyNode {
-  return {
-    label: "test",
-    key: createTestGenericNodeKey(),
-    parentKeys: [],
-    ...src,
-  };
+  return { label: "test", key: createTestGenericNodeKey(), parentKeys: [], ...src };
 }
 
 export function createTestInstanceNodeKey(src?: Partial<InstancesNodeKey>): InstancesNodeKey {
-  return {
-    type: "instances",
-    instanceKeys: [],
-    ...src,
-  };
+  return { type: "instances", instanceKeys: [], ...src };
 }
 
 export function createTestInstanceNode(src?: Partial<NonGroupingHierarchyNode>): NonGroupingHierarchyNode {
-  return {
-    label: "test",
-    key: createTestInstanceNodeKey(),
-    children: false,
-    parentKeys: [],
-    ...src,
-  };
+  return { label: "test", key: createTestInstanceNodeKey(), children: false, parentKeys: [], ...src };
 }
 
 export function createTestSourceInstanceNode(src?: Partial<SourceInstanceHierarchyNode>): SourceInstanceHierarchyNode {
-  return {
-    label: "test",
-    key: createTestInstanceNodeKey(),
-    ...src,
-  };
+  return { label: "test", key: createTestInstanceNodeKey(), ...src };
 }
 
 export function createTestProcessedInstanceNode(src?: Partial<ProcessedInstanceHierarchyNode>): ProcessedInstanceHierarchyNode {
-  return {
-    label: "test",
-    key: createTestInstanceNodeKey(),
-    parentKeys: [],
-    ...src,
-  };
+  return { label: "test", key: createTestInstanceNodeKey(), parentKeys: [], ...src };
 }
 
 export function createTestGroupingNode(src?: Partial<GroupingHierarchyNode>): GroupingHierarchyNode {
@@ -120,10 +82,7 @@ export function createTestProcessedGroupingNode<TChild = ProcessedGroupingHierar
 ): Omit<ProcessedGroupingHierarchyNode, "children"> & { children: TChild[] } {
   return {
     label: "test",
-    key: {
-      type: "class-grouping",
-      className: normalizeFullClassName("TestSchema.TestClass"),
-    },
+    key: { type: "class-grouping", className: normalizeFullClassName("TestSchema.TestClass") },
     parentKeys: [],
     groupedInstanceKeys: [],
     children: new Array<TChild>(),
@@ -132,48 +91,23 @@ export function createTestProcessedGroupingNode<TChild = ProcessedGroupingHierar
 }
 
 export function createTestClassGroupingNodeKey(src?: Partial<ClassGroupingNodeKey>): ClassGroupingNodeKey {
-  return {
-    type: "class-grouping",
-    className: "TestSchema.TestClass",
-    ...src,
-  };
+  return { type: "class-grouping", className: "TestSchema.TestClass", ...src };
 }
 
 export function createTestPropertyValueGroupingNodeKey(src?: Partial<PropertyValueGroupingNodeKey>): PropertyValueGroupingNodeKey {
-  return {
-    type: "property-grouping:value",
-    propertyClassName: "TestSchema.TestClass",
-    propertyName: "TestProperty",
-    formattedPropertyValue: "test",
-    ...src,
-  };
+  return { type: "property-grouping:value", propertyClassName: "TestSchema.TestClass", propertyName: "TestProperty", formattedPropertyValue: "test", ...src };
 }
 
 export function createTestPropertyValueRangeGroupingNodeKey(src?: Partial<PropertyValueRangeGroupingNodeKey>): PropertyValueRangeGroupingNodeKey {
-  return {
-    type: "property-grouping:range",
-    propertyClassName: "TestSchema.TestClass",
-    propertyName: "TestProperty",
-    fromValue: 1.23,
-    toValue: 4.56,
-    ...src,
-  };
+  return { type: "property-grouping:range", propertyClassName: "TestSchema.TestClass", propertyName: "TestProperty", fromValue: 1.23, toValue: 4.56, ...src };
 }
 
 export function createTestPropertyOtherValueGroupingNodeKey(src?: Partial<PropertyOtherValuesGroupingNodeKey>): PropertyOtherValuesGroupingNodeKey {
-  return {
-    type: "property-grouping:other",
-    properties: [{ className: "TestSchema.TestClass", propertyName: "TestProperty" }],
-    ...src,
-  };
+  return { type: "property-grouping:other", properties: [{ className: "TestSchema.TestClass", propertyName: "TestProperty" }], ...src };
 }
 
 export function createTestInstanceKey(src?: Partial<IModelInstanceKey>): IModelInstanceKey {
-  return {
-    className: "TestSchema.TestClass",
-    id: "0x1",
-    ...src,
-  };
+  return { className: "TestSchema.TestClass", id: "0x1", ...src };
 }
 
 export function createTestNodeKey(): HierarchyNodeKey {
@@ -274,10 +208,7 @@ export function createECSchemaProviderStub() {
     isRelationshipClass: () => false,
   });
   const stubEntityClass: TStubEntityClassFunc = (props) => {
-    const res = {
-      ...createBaseClassProps(props),
-      isEntityClass: () => true,
-    } as unknown as ReturnType<TStubEntityClassFunc>;
+    const res = { ...createBaseClassProps(props), isEntityClass: () => true } as unknown as ReturnType<TStubEntityClassFunc>;
     classes.set(res.fullName, res);
     props.baseClass && props.baseClass.addDerivedClass(res);
     return res;
@@ -295,9 +226,7 @@ export function createECSchemaProviderStub() {
     return res;
   };
   const stubOtherClass: TStubClassFunc = (props) => {
-    const res = {
-      ...createBaseClassProps(props),
-    } as unknown as ReturnType<TStubClassFunc>;
+    const res = { ...createBaseClassProps(props) } as unknown as ReturnType<TStubClassFunc>;
     classes.set(res.fullName, res);
     props.baseClass && props.baseClass.addDerivedClass(res);
     return res;
@@ -326,10 +255,7 @@ export function createClassHierarchyInspectorStub(schemaProvider = createECSchem
 
 export function createIModelAccessStub() {
   const schemaProvider = createECSchemaProviderStub();
-  return {
-    ...schemaProvider,
-    ...createClassHierarchyInspectorStub(schemaProvider),
-  };
+  return { ...schemaProvider, ...createClassHierarchyInspectorStub(schemaProvider) };
 }
 
 export function createInstanceLabelSelectClauseFactoryStub() {
@@ -340,7 +266,4 @@ export function createInstanceLabelSelectClauseFactoryStub() {
   };
 }
 
-export const testLocalizedStrings = {
-  other: "_Other_",
-  unspecified: "_Unspecified_",
-};
+export const testLocalizedStrings = { other: "_Other_", unspecified: "_Unspecified_" };

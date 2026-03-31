@@ -16,11 +16,7 @@ import type { ElectronHostOptions } from "@itwin/core-electron/lib/cjs/ElectronB
 export async function initialize(rpcInterfaces: RpcInterfaceDefinition[]) {
   // __PUBLISH_EXTRACT_START__ Presentation.Backend.Electron.RpcInterface
 
-  const electronHost: ElectronHostOptions = {
-    rpcInterfaces,
-    developmentServer: process.env.NODE_ENV === "development",
-    ipcHandlers: [SampleIpcHandler],
-  };
+  const electronHost: ElectronHostOptions = { rpcInterfaces, developmentServer: process.env.NODE_ENV === "development", ipcHandlers: [SampleIpcHandler] };
   const iModelHost: IModelHostOptions = {};
 
   await ElectronHost.startup({ electronHost, iModelHost });

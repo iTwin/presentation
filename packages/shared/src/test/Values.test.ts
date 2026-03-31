@@ -38,40 +38,8 @@ describe("TypedPrimitiveValue", () => {
       expect(TypedPrimitiveValue.create(1, "DateTime")).to.deep.eq({ value: 1, type: "DateTime", extendedType: undefined });
       const date = new Date();
       expect(TypedPrimitiveValue.create(date, "DateTime")).to.deep.eq({ value: date, type: "DateTime", extendedType: undefined });
-      expect(
-        TypedPrimitiveValue.create(
-          {
-            x: 1,
-            y: 2,
-          },
-          "Point2d",
-        ),
-      ).to.deep.eq({
-        value: {
-          x: 1,
-          y: 2,
-        },
-        type: "Point2d",
-        extendedType: undefined,
-      });
-      expect(
-        TypedPrimitiveValue.create(
-          {
-            x: 1,
-            y: 2,
-            z: 3,
-          },
-          "Point3d",
-        ),
-      ).to.deep.eq({
-        value: {
-          x: 1,
-          y: 2,
-          z: 3,
-        },
-        type: "Point3d",
-        extendedType: undefined,
-      });
+      expect(TypedPrimitiveValue.create({ x: 1, y: 2 }, "Point2d")).to.deep.eq({ value: { x: 1, y: 2 }, type: "Point2d", extendedType: undefined });
+      expect(TypedPrimitiveValue.create({ x: 1, y: 2, z: 3 }, "Point3d")).to.deep.eq({ value: { x: 1, y: 2, z: 3 }, type: "Point3d", extendedType: undefined });
     });
 
     it("throws an error when primitiveType isn't compatible with primitiveValue", () => {

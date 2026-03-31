@@ -91,16 +91,7 @@ interface ModelsTreeDefinitionProps {
 
 /** @beta */
 export interface ElementsGroupInfo {
-  parent:
-    | {
-        ids: Id64String[];
-        type: "element";
-      }
-    | {
-        ids: Id64String[];
-        modelIds: Id64String[];
-        type: "category";
-      };
+  parent: { ids: Id64String[]; type: "element" } | { ids: Id64String[]; modelIds: Id64String[]; type: "category" };
   groupingNode: ClassGroupingHierarchyNode;
 }
 
@@ -111,13 +102,9 @@ interface ModelsTreeInstanceKeyPathsBaseProps {
   limit?: number | "unbounded";
   abortSignal: AbortSignal;
 }
-type ModelsTreeInstanceKeyPathsFromTargetItemsProps = {
-  targetItems: Array<InstanceKey | ElementsGroupInfo>;
-} & ModelsTreeInstanceKeyPathsBaseProps;
+type ModelsTreeInstanceKeyPathsFromTargetItemsProps = { targetItems: Array<InstanceKey | ElementsGroupInfo> } & ModelsTreeInstanceKeyPathsBaseProps;
 
-type ModelsTreeInstanceKeyPathsFromInstanceLabelProps = {
-  label: string;
-} & ModelsTreeInstanceKeyPathsBaseProps;
+type ModelsTreeInstanceKeyPathsFromInstanceLabelProps = { label: string } & ModelsTreeInstanceKeyPathsBaseProps;
 
 export type ModelsTreeInstanceKeyPathsProps = ModelsTreeInstanceKeyPathsFromTargetItemsProps | ModelsTreeInstanceKeyPathsFromInstanceLabelProps;
 
@@ -220,16 +207,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
               ${await this._selectQueryFactory.createSelectClause({
                 ecClassId: { selector: ECSql.createRawPropertyValueSelector("this", "ECClassId") },
                 ecInstanceId: { selector: "this.ECInstanceId" },
-                nodeLabel: {
-                  selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
-                    classAlias: "this",
-                    className: "BisCore.Subject",
-                  }),
-                },
-                extendedData: {
-                  imageId: "icon-imodel-hollow-2",
-                  isSubject: true,
-                },
+                nodeLabel: { selector: await this._nodeLabelSelectClauseFactory.createSelectClause({ classAlias: "this", className: "BisCore.Subject" }) },
+                extendedData: { imageId: "icon-imodel-hollow-2", isSubject: true },
                 autoExpand: true,
                 supportsFiltering: true,
               })}
@@ -249,14 +228,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     instanceFilter,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const [subjectFilterClauses, modelFilterClauses] = await Promise.all([
-      this._selectQueryFactory.createFilterClauses({
-        filter: instanceFilter,
-        contentClass: { fullName: "BisCore.Subject", alias: "this" },
-      }),
-      this._selectQueryFactory.createFilterClauses({
-        filter: instanceFilter,
-        contentClass: { fullName: "BisCore.GeometricModel3d", alias: "this" },
-      }),
+      this._selectQueryFactory.createFilterClauses({ filter: instanceFilter, contentClass: { fullName: "BisCore.Subject", alias: "this" } }),
+      this._selectQueryFactory.createFilterClauses({ filter: instanceFilter, contentClass: { fullName: "BisCore.GeometricModel3d", alias: "this" } }),
     ]);
     const [childSubjectIds, childModelIds] = await Promise.all([
       this._idsCache.getChildSubjectIds(subjectIds),
@@ -272,19 +245,11 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
               ${await this._selectQueryFactory.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
-                nodeLabel: {
-                  selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
-                    classAlias: "this",
-                    className: "BisCore.Subject",
-                  }),
-                },
+                nodeLabel: { selector: await this._nodeLabelSelectClauseFactory.createSelectClause({ classAlias: "this", className: "BisCore.Subject" }) },
                 hideIfNoChildren: true,
                 hasChildren: { selector: `InVirtualSet(?, this.ECInstanceId)` },
                 grouping: { byLabel: { action: "merge", groupId: "subject" } },
-                extendedData: {
-                  imageId: "icon-folder",
-                  isSubject: true,
-                },
+                extendedData: { imageId: "icon-folder", isSubject: true },
                 supportsFiltering: true,
               })}
             FROM ${subjectFilterClauses.from} this
@@ -339,10 +304,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                         `,
                       }
                     : true,
-                  extendedData: {
-                    imageId: "icon-model",
-                    isModel: true,
-                  },
+                  extendedData: { imageId: "icon-model", isModel: true },
                   supportsFiltering: true,
                 })}
               FROM Bis.GeometricModel3d m
@@ -407,18 +369,11 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
-                  selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
-                    classAlias: "this",
-                    className: "BisCore.SpatialCategory",
-                  }),
+                  selector: await this._nodeLabelSelectClauseFactory.createSelectClause({ classAlias: "this", className: "BisCore.SpatialCategory" }),
                 },
                 grouping: { byLabel: { action: "merge", groupId: "category" } },
                 hasChildren: true,
-                extendedData: {
-                  imageId: "icon-layers",
-                  isCategory: true,
-                  modelIds: { selector: createIdsSelector(modelIds) },
-                },
+                extendedData: { imageId: "icon-layers", isCategory: true, modelIds: { selector: createIdsSelector(modelIds) } },
                 supportsFiltering: true,
               })}
             FROM ${instanceFilterClauses.from} this
@@ -468,9 +423,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                     className: this._hierarchyConfig.elementClassSpecification,
                   }),
                 },
-                grouping: {
-                  byClass: this._hierarchyConfig.elementClassGrouping !== "disable",
-                },
+                grouping: { byClass: this._hierarchyConfig.elementClassGrouping !== "disable" },
                 hasChildren: {
                   selector: `
                     IFNULL((
@@ -485,11 +438,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                     ), 0)
                   `,
                 },
-                extendedData: {
-                  modelId: { selector: "IdToHex(this.Model.Id)" },
-                  categoryId: { selector: "IdToHex(this.Category.Id)" },
-                  imageId: "icon-item",
-                },
+                extendedData: { modelId: { selector: "IdToHex(this.Model.Id)" }, categoryId: { selector: "IdToHex(this.Category.Id)" }, imageId: "icon-item" },
                 supportsFiltering: true,
               })}
             FROM ${instanceFilterClauses.from} this
@@ -529,9 +478,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                     className: this._hierarchyConfig.elementClassSpecification,
                   }),
                 },
-                grouping: {
-                  byClass: this._hierarchyConfig.elementClassGrouping !== "disable",
-                },
+                grouping: { byClass: this._hierarchyConfig.elementClassGrouping !== "disable" },
                 hasChildren: {
                   selector: `
                     IFNULL((
@@ -546,11 +493,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                     ), 0)
                   `,
                 },
-                extendedData: {
-                  modelId: { selector: "IdToHex(this.Model.Id)" },
-                  categoryId: { selector: "IdToHex(this.Category.Id)" },
-                  imageId: "icon-item",
-                },
+                extendedData: { modelId: { selector: "IdToHex(this.Model.Id)" }, categoryId: { selector: "IdToHex(this.Category.Id)" }, imageId: "icon-item" },
                 supportsFiltering: true,
               })}
             FROM ${instanceFilterClauses.from} this
@@ -594,9 +537,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
       ],
     };
 
-    for await (const _row of this._queryExecutor.createQueryReader(query, {
-      restartToken: `ModelsTreeDefinition/${Guid.createValue()}/is-class-supported`,
-    })) {
+    for await (const _row of this._queryExecutor.createQueryReader(query, { restartToken: `ModelsTreeDefinition/${Guid.createValue()}/is-class-supported` })) {
       return true;
     }
     return false;
@@ -693,10 +634,7 @@ function createGeometricElementInstanceKeyPaths(
           if (!groupingNode) {
             return path;
           }
-          return {
-            path,
-            options: { reveal: { groupingLevel: HierarchyNode.getGroupingNodeLevel(groupingNode) } },
-          };
+          return { path, options: { reveal: { groupingLevel: HierarchyNode.getGroupingNodeLevel(groupingNode) } } };
         }),
       ),
     ),
@@ -735,11 +673,7 @@ function parseQueryRow(row: ECSqlQueryRow, groupInfos: ElementsGroupInfo[], sepa
         break;
     }
   }
-  return {
-    modelId: row[0],
-    elementHierarchyPath: path,
-    groupingNode: row[2] === -1 ? undefined : groupInfos[row[2]].groupingNode,
-  };
+  return { modelId: row[0], elementHierarchyPath: path, groupingNode: row[2] === -1 ? undefined : groupInfos[row[2]].groupingNode };
 }
 
 async function createInstanceKeyPathsFromTargetItems({

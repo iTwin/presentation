@@ -29,11 +29,7 @@ Logger.initializeToConsole();
 Logger.setLevelDefault(LogLevel.Warning);
 
 async function initializeApp() {
-  const iModelAppOpts: IModelAppOptions = {
-    localization: new ITwinLocalization({
-      initOptions: { lng: "en" },
-    }),
-  };
+  const iModelAppOpts: IModelAppOptions = { localization: new ITwinLocalization({ initOptions: { lng: "en" } }) };
 
   if (ProcessDetector.isElectronAppFrontend) {
     await ElectronApp.startup({
@@ -67,9 +63,7 @@ async function initializePresentation() {
       // specify locale for localizing presentation data, it can be changed afterwards
       activeLocale: IModelApp.localization.getLanguageList()[0],
     },
-    favorites: {
-      storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),
-    },
+    favorites: { storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage) },
     selection: {
       // tell @itwin/presentation-frontend to use our selection storage - this enables interop with
       // unified selection storage used in this app

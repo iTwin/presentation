@@ -142,17 +142,11 @@ function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
       const descriptorGetter = filteringInfo.descriptor;
       return async () => {
         const descriptor = await descriptorGetter();
-        return {
-          descriptor,
-          inputKeys: [filterNode.key],
-        };
+        return { descriptor, inputKeys: [filterNode.key] };
       };
     }
 
-    return {
-      descriptor: filteringInfo.descriptor,
-      inputKeys: [filterNode.key],
-    };
+    return { descriptor: filteringInfo.descriptor, inputKeys: [filterNode.key] };
   }, [filteringInfo.descriptor, filterNode.key]);
 
   return (

@@ -71,9 +71,7 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
                 ${await nodesQueryFactory.createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: {
-                    selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.GeometricModel3d" }),
-                  },
+                  nodeLabel: { selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.GeometricModel3d" }) },
                 })}
               FROM BisCore.GeometricModel3d this
             `,
@@ -93,12 +91,8 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
                     ${await nodesQueryFactory.createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
-                      nodeLabel: {
-                        selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.Element" }),
-                      },
-                      grouping: {
-                        byClass: true,
-                      },
+                      nodeLabel: { selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.Element" }) },
+                      grouping: { byClass: true },
                     })}
                   FROM BisCore.Element this
                   WHERE this.Model.Id IN (${parentNodeInstanceIds.map(() => "?").join(",")})

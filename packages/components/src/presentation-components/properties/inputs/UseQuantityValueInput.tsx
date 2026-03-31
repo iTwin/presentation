@@ -51,12 +51,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
   const initialRawValueRef = useRef(initialRawValue);
 
   const [{ quantityValue, placeholder }, setState] = useState<State>(() => ({
-    quantityValue: {
-      rawValue: initialRawValueRef.current,
-      highPrecisionFormattedValue: "",
-      defaultFormattedValue: "",
-      roundingError: undefined,
-    },
+    quantityValue: { rawValue: initialRawValueRef.current, highPrecisionFormattedValue: "", defaultFormattedValue: "", roundingError: undefined },
     placeholder: "",
   }));
 
@@ -79,12 +74,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
 
       return {
         ...prev,
-        quantityValue: {
-          ...prev.quantityValue,
-          highPrecisionFormattedValue: newFormattedValue,
-          defaultFormattedValue: defaultValue,
-          roundingError,
-        },
+        quantityValue: { ...prev.quantityValue, highPrecisionFormattedValue: newFormattedValue, defaultFormattedValue: defaultValue, roundingError },
         placeholder: placeholderUnit,
       };
     });
@@ -110,14 +100,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     );
   };
 
-  return {
-    quantityValue,
-    inputProps: {
-      onChange,
-      placeholder,
-      disabled: !highPrecisionFormatter || !parser,
-    },
-  };
+  return { quantityValue, inputProps: { onChange, placeholder, disabled: !highPrecisionFormatter || !parser } };
 }
 
 function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
@@ -132,15 +115,9 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
     const findFormatterAndParser = async () => {
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       const koqFormatter = new KoqPropertyValueFormatter(schemaContext, undefined, IModelApp.formatsProvider);
-      const highPrecisionFormatter = await koqFormatter.getFormatterSpec({
-        koqName,
-        unitSystem: IModelApp.quantityFormatter.activeUnitSystem,
-      });
+      const highPrecisionFormatter = await koqFormatter.getFormatterSpec({ koqName, unitSystem: IModelApp.quantityFormatter.activeUnitSystem });
       // formatter for default value should not have precision override
-      const defaultFormatter = await koqFormatter.getFormatterSpec({
-        koqName,
-        unitSystem: IModelApp.quantityFormatter.activeUnitSystem,
-      });
+      const defaultFormatter = await koqFormatter.getFormatterSpec({ koqName, unitSystem: IModelApp.quantityFormatter.activeUnitSystem });
       const parserSpec = await koqFormatter.getParserSpec({ koqName, unitSystem: IModelApp.quantityFormatter.activeUnitSystem });
       if (highPrecisionFormatter && parserSpec && defaultFormatter) {
         if (highPrecisionFormatter.format.type === FormatType.Decimal) {
@@ -166,9 +143,5 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
     };
   }, [koqName, schemaContext]);
 
-  return {
-    highPrecisionFormatter: state?.highPrecisionFormatter,
-    parser: state?.parserSpec,
-    defaultFormatter: state?.defaultFormatter,
-  };
+  return { highPrecisionFormatter: state?.highPrecisionFormatter, parser: state?.parserSpec, defaultFormatter: state?.defaultFormatter };
 }

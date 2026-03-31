@@ -127,22 +127,7 @@ describe("Hierarchies", () => {
           search: undefined,
         });
         expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
-          {
-            label: "A",
-            children: [
-              {
-                label: "B",
-                children: [{ label: "C" }, { label: "D" }],
-              },
-              {
-                label: "E",
-                children: [{ label: "F" }],
-              },
-              {
-                label: "G",
-              },
-            ],
-          },
+          { label: "A", children: [{ label: "B", children: [{ label: "C" }, { label: "D" }] }, { label: "E", children: [{ label: "F" }] }, { label: "G" }] },
         ]);
       });
 
@@ -187,16 +172,7 @@ describe("Hierarchies", () => {
         const searchPaths = await createHierarchySearchTree(["C", "E"]);
         expect(searchPaths).to.deep.eq([
           // We expect to find two paths A -> B -> C and A -> E
-          {
-            identifier: elementKeys.a,
-            children: [
-              {
-                identifier: elementKeys.b,
-                children: [{ identifier: elementKeys.c }],
-              },
-              { identifier: elementKeys.e },
-            ],
-          },
+          { identifier: elementKeys.a, children: [{ identifier: elementKeys.b, children: [{ identifier: elementKeys.c }] }, { identifier: elementKeys.e }] },
         ]);
         // __PUBLISH_EXTRACT_END__
 
@@ -214,14 +190,8 @@ describe("Hierarchies", () => {
           {
             label: "A",
             children: [
-              {
-                label: "B",
-                children: [{ label: "C" }],
-              },
-              {
-                label: "E",
-                children: [{ label: "F" }],
-              },
+              { label: "B", children: [{ label: "C" }] },
+              { label: "E", children: [{ label: "F" }] },
             ],
           },
         ]);
@@ -285,14 +255,8 @@ describe("Hierarchies", () => {
           {
             label: "A",
             children: [
-              {
-                label: "B",
-                children: [{ label: "C" }],
-              },
-              {
-                label: "E",
-                children: [{ label: "F" }],
-              },
+              { label: "B", children: [{ label: "C" }] },
+              { label: "E", children: [{ label: "F" }] },
             ],
           },
         ]);
@@ -317,30 +281,13 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-          search: {
-            paths: await HierarchySearchTree.createFromPathsList([searchPath]),
-          },
+          search: { paths: await HierarchySearchTree.createFromPathsList([searchPath]) },
         });
 
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
         // Note that all nodes except C have `autoExpand` flag.
         expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
-          {
-            label: "A",
-            autoExpand: true,
-            children: [
-              {
-                label: "B",
-                autoExpand: true,
-                children: [
-                  {
-                    label: "C",
-                    autoExpand: undefined,
-                  },
-                ],
-              },
-            ],
-          },
+          { label: "A", autoExpand: true, children: [{ label: "B", autoExpand: true, children: [{ label: "C", autoExpand: undefined }] }] },
         ]);
       });
 
@@ -412,9 +359,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition,
-          search: {
-            paths: await HierarchySearchTree.createFromPathsList([searchPath]),
-          },
+          search: { paths: await HierarchySearchTree.createFromPathsList([searchPath]) },
         });
 
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
@@ -455,12 +400,7 @@ describe("Hierarchies", () => {
                                 nodeType: "label-grouping",
                                 label: "C",
                                 // Child is the search target
-                                children: [
-                                  {
-                                    nodeType: "instances",
-                                    label: "C",
-                                  },
-                                ],
+                                children: [{ nodeType: "instances", label: "C" }],
                               },
                             ],
                           },
@@ -541,9 +481,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition,
-          search: {
-            paths: await HierarchySearchTree.createFromPathsList([searchPath]),
-          },
+          search: { paths: await HierarchySearchTree.createFromPathsList([searchPath]) },
         });
 
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
@@ -571,12 +509,7 @@ describe("Hierarchies", () => {
                         nodeType: "label-grouping",
                         label: "C",
                         // Child is the search target
-                        children: [
-                          {
-                            nodeType: "instances",
-                            label: "C",
-                          },
-                        ],
+                        children: [{ nodeType: "instances", label: "C" }],
                       },
                     ],
                   },
@@ -654,9 +587,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition,
-          search: {
-            paths: await HierarchySearchTree.createFromPathsList([searchPath]),
-          },
+          search: { paths: await HierarchySearchTree.createFromPathsList([searchPath]) },
         });
 
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
@@ -686,13 +617,7 @@ describe("Hierarchies", () => {
                         label: "C",
                         autoExpand: true,
                         // Child is the search target. Has auto-expand flag.
-                        children: [
-                          {
-                            nodeType: "instances",
-                            label: "C",
-                            autoExpand: true,
-                          },
-                        ],
+                        children: [{ nodeType: "instances", label: "C", autoExpand: true }],
                       },
                     ],
                   },

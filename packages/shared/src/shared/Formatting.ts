@@ -32,10 +32,7 @@ export async function formatConcatenatedValue(props: { value: ConcatenatedValue 
     partFormatter: async (part) => {
       // strings are converted to typed strings
       if (ConcatenatedValuePart.isString(part)) {
-        part = {
-          value: part,
-          type: "String",
-        };
+        part = { value: part, type: "String" };
       }
       // finally, use provided value formatter to create a string from `TypedPrimitiveValue`
       return valueFormatter(part);

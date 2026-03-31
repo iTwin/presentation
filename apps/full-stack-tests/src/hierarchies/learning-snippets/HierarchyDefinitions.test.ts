@@ -51,14 +51,7 @@ describe("Hierarchies", () => {
           async defineHierarchyLevel({ parentNode }) {
             // For root nodes, simply return one generic node
             if (!parentNode) {
-              return [
-                {
-                  node: {
-                    key: "physical-elements",
-                    label: "Physical elements",
-                  },
-                },
-              ];
+              return [{ node: { key: "physical-elements", label: "Physical elements" } }];
             }
             // For the root node, return a query that selects all physical elements
             if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "physical-elements") {
@@ -129,13 +122,7 @@ describe("Hierarchies", () => {
           },
           parseNode({ row }) {
             // Parse the row into an instance node
-            return {
-              key: {
-                type: "instances",
-                instanceKeys: [{ className: row.ClassName, id: row.Id }],
-              },
-              label: row.Label,
-            };
+            return { key: { type: "instances", instanceKeys: [{ className: row.ClassName, id: row.Id }] }, label: row.Label };
           },
         };
         // __PUBLISH_EXTRACT_END__
@@ -197,12 +184,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
           provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
-          expect: [
-            NodeValidators.createForInstanceNode({
-              label: "A",
-              extendedData: { externalId: "test-external-id" },
-            }),
-          ],
+          expect: [NodeValidators.createForInstanceNode({ label: "A", extendedData: { externalId: "test-external-id" } })],
         });
       });
 
@@ -226,9 +208,7 @@ describe("Hierarchies", () => {
                         ecClassId: { selector: "x.ECClassId" },
                         ecInstanceId: { selector: "x.ECInstanceId" },
                         nodeLabel: { selector: "x.UserLabel" },
-                        grouping: {
-                          byClass: true,
-                        },
+                        grouping: { byClass: true },
                         extendedData: {
                           // assign an iconId to all instance nodes
                           iconId: "icon-physical-element",
@@ -278,14 +258,7 @@ describe("Hierarchies", () => {
           classHierarchyInspector: imodelAccess,
           hierarchy: {
             // For root nodes, simply return one generic node
-            rootNodes: async () => [
-              {
-                node: {
-                  key: "physical-elements",
-                  label: "Physical elements",
-                },
-              },
-            ],
+            rootNodes: async () => [{ node: { key: "physical-elements", label: "Physical elements" } }],
             childNodes: [
               {
                 // For the root node, return a query that selects all physical elements

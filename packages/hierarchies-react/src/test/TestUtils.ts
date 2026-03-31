@@ -32,10 +32,7 @@ configure({ reactStrictMode: true });
  * setup `userEvent` from `@testing-library/user-event`.
  */
 function customRender(ui: ReactElement, options?: RenderOptions): RenderResult & { user: UserEvent } {
-  return {
-    ...renderRTL(ui, options),
-    user: userEvent.setup(),
-  };
+  return { ...renderRTL(ui, options), user: userEvent.setup() };
 }
 
 export * from "@testing-library/react";
@@ -54,11 +51,7 @@ type ModelInputNode = Partial<Omit<TreeModelHierarchyNode, "children" | "id">> &
 type ModelInput = Array<ModelInputNode>;
 
 export function createTreeModel(seed: ModelInput) {
-  const model: TreeModel = {
-    idToNode: new Map(),
-    parentChildMap: new Map(),
-    rootNode: { id: undefined, nodeData: undefined },
-  };
+  const model: TreeModel = { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } };
 
   for (const input of seed) {
     if (input.children) {
@@ -87,47 +80,23 @@ export function createTreeModel(seed: ModelInput) {
 }
 
 export function createTreeModelNode(props: Partial<TreeModelHierarchyNode> & { id: string }): TreeModelHierarchyNode {
-  return {
-    ...props,
-    label: props.label ?? props.id,
-    children: props.children ?? false,
-    nodeData: props.nodeData ?? createTestHierarchyNode({ id: props.id }),
-  };
+  return { ...props, label: props.label ?? props.id, children: props.children ?? false, nodeData: props.nodeData ?? createTestHierarchyNode({ id: props.id }) };
 }
 
 export function createTestGenericErrorInfo({ id, ...props }: Partial<GenericErrorInfo> & { id: string }): GenericErrorInfo {
-  return {
-    ...props,
-    id,
-    message: props.message ?? "test-message",
-    type: props.type ?? "Unknown",
-  };
+  return { ...props, id, message: props.message ?? "test-message", type: props.type ?? "Unknown" };
 }
 
 export function createTestChildrenLoadErrorInfo({ id, ...props }: Partial<ChildrenLoadErrorInfo> & { id: string }): ChildrenLoadErrorInfo {
-  return {
-    ...props,
-    id,
-    message: props.message ?? "test-message",
-    type: "ChildrenLoad",
-  };
+  return { ...props, id, message: props.message ?? "test-message", type: "ChildrenLoad" };
 }
 
 export function createTestNoFilterMatchesErrorInfo({ id, ...props }: Partial<NoFilterMatchesErrorInfo> & { id: string }): NoFilterMatchesErrorInfo {
-  return {
-    ...props,
-    id,
-    type: "NoFilterMatches",
-  };
+  return { ...props, id, type: "NoFilterMatches" };
 }
 
 export function createTestResultSetTooLargeErrorInfo({ id, ...props }: Partial<ResultSetTooLargeErrorInfo> & { id: string }): ResultSetTooLargeErrorInfo {
-  return {
-    ...props,
-    id,
-    type: "ResultSetTooLarge",
-    resultSetSizeLimit: props.resultSetSizeLimit ?? 10,
-  };
+  return { ...props, id, type: "ResultSetTooLarge", resultSetSizeLimit: props.resultSetSizeLimit ?? 10 };
 }
 
 export function createTestHierarchyNode({ id, ...props }: Partial<NonGroupingHierarchyNode> & { id: string }): NonGroupingHierarchyNode {
@@ -159,17 +128,9 @@ export function stubVirtualization() {
     stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetWidth").get(() => 800));
 
     stubs.push(
-      sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
-        height: 20,
-        width: 20,
-        x: 0,
-        y: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-        top: 0,
-        toJSON: () => {},
-      }),
+      sinon
+        .stub(window.Element.prototype, "getBoundingClientRect")
+        .returns({ height: 20, width: 20, x: 0, y: 0, bottom: 0, left: 0, right: 0, top: 0, toJSON: () => {} }),
     );
   });
 
@@ -181,10 +142,7 @@ export function stubVirtualization() {
 
 export type StubbedHierarchyProvider = {
   [P in keyof Omit<HierarchyProvider, "hierarchyChanged">]: ReturnType<typeof createStub<HierarchyProvider[P]>>;
-} & {
-  hierarchyChanged: RaisableEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>;
-  [Symbol.dispose]: sinon.SinonStub<[], void>;
-};
+} & { hierarchyChanged: RaisableEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>; [Symbol.dispose]: sinon.SinonStub<[], void> };
 export function createHierarchyProviderStub(customizations?: Partial<StubbedHierarchyProvider>): StubbedHierarchyProvider {
   const provider = createHierarchyProvider(() => ({
     getNodes: createStub<HierarchyProvider["getNodes"]>(),

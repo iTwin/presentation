@@ -29,26 +29,16 @@ import type { UseRowsProps } from "../../presentation-components/table/UseRows.j
 describe("useRows", () => {
   let onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"];
   const imodel = { key: "test-imodel" } as IModelConnection;
-  const initialProps: UseRowsProps = {
-    imodel,
-    keys: new KeySet([createTestECInstanceKey()]),
-    ruleset: "ruleset_id",
-    pageSize: 10,
-    options: {},
-  };
+  const initialProps: UseRowsProps = { imodel, keys: new KeySet([createTestECInstanceKey()]), ruleset: "ruleset_id", pageSize: 10, options: {} };
 
   let presentationManagerStub: sinon.SinonStub;
   const getContentIteratorStub = sinon.stub<Parameters<PresentationManager["getContentIterator"]>, ReturnType<PresentationManager["getContentIterator"]>>();
 
   beforeEach(() => {
     presentationManagerStub = sinon.stub(Presentation, "presentation");
-    presentationManagerStub.get(() => ({
-      getContentIterator: getContentIteratorStub,
-    }));
+    presentationManagerStub.get(() => ({ getContentIterator: getContentIteratorStub }));
     onActiveFormattingUnitSystemChanged = new BeUiEvent<FormattingUnitSystemChangedArgs>();
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-      onActiveFormattingUnitSystemChanged,
-    }));
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({ onActiveFormattingUnitSystemChanged }));
   });
 
   afterEach(() => {
@@ -64,9 +54,7 @@ describe("useRows", () => {
 
     beforeEach(() => {
       presentationManagerStub.resetBehavior();
-      presentationManagerStub.get(() => ({
-        getContentAndSize: getContentAndSizeStub,
-      }));
+      presentationManagerStub.get(() => ({ getContentAndSize: getContentAndSizeStub }));
     });
 
     it("loads rows", async () => {
@@ -76,19 +64,14 @@ describe("useRows", () => {
         properties: [{ property: createTestPropertyInfo() }],
       });
       const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-      const item = createTestContentItem({
-        values: { [propertiesField.name]: "test_value" },
-        displayValues: { [propertiesField.name]: "Test value" },
-      });
+      const item = createTestContentItem({ values: { [propertiesField.name]: "test_value" }, displayValues: { [propertiesField.name]: "Test value" } });
       getContentAndSizeStub.resolves({ content: new Content(descriptor, [item]), size: 1 });
 
       const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
 
       await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
       const cell = result.current.rows[0].cells[0];
-      expect(cell).to.containSubset({
-        key: propertiesField.name,
-      });
+      expect(cell).to.containSubset({ key: propertiesField.name });
     });
 
     it("returns empty rows list if there are no content", async () => {
@@ -106,19 +89,14 @@ describe("useRows", () => {
       properties: [{ property: createTestPropertyInfo() }],
     });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-    const item = createTestContentItem({
-      values: { [propertiesField.name]: "test_value" },
-      displayValues: { [propertiesField.name]: "Test value" },
-    });
+    const item = createTestContentItem({ values: { [propertiesField.name]: "test_value" }, displayValues: { [propertiesField.name]: "Test value" } });
     getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
     const cell = result.current.rows[0].cells[0];
-    expect(cell).to.containSubset({
-      key: propertiesField.name,
-    });
+    expect(cell).to.containSubset({ key: propertiesField.name });
   });
 
   it("does not create cells for nested content fields", async () => {
@@ -140,20 +118,10 @@ describe("useRows", () => {
       values: {
         [propertiesField.name]: "test_value",
         [nestingField.name]: [
-          {
-            primaryKeys: [],
-            values: { [nestedField.name]: "nested_value" },
-            displayValues: { [nestedField.name]: "Nested Value" },
-            mergedFieldNames: [],
-          },
+          { primaryKeys: [], values: { [nestedField.name]: "nested_value" }, displayValues: { [nestedField.name]: "Nested Value" }, mergedFieldNames: [] },
         ],
       },
-      displayValues: {
-        [propertiesField.name]: "Test value",
-        [nestingField.name]: {
-          [nestedField.name]: "Nested Value",
-        },
-      },
+      displayValues: { [propertiesField.name]: "Test value", [nestingField.name]: { [nestedField.name]: "Nested Value" } },
     });
     getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
 
@@ -162,9 +130,7 @@ describe("useRows", () => {
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
     expect(result.current.rows[0].cells).to.have.lengthOf(1);
     const cell = result.current.rows[0].cells[0];
-    expect(cell).to.containSubset({
-      key: propertiesField.name,
-    });
+    expect(cell).to.containSubset({ key: propertiesField.name });
   });
 
   it("loads next page of rows when 'loadMoreRows' is called", async () => {
@@ -174,14 +140,8 @@ describe("useRows", () => {
       properties: [{ property: createTestPropertyInfo() }],
     });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-    const item1 = createTestContentItem({
-      values: { [propertiesField.name]: "test_value_1" },
-      displayValues: { [propertiesField.name]: "Test value 1" },
-    });
-    const item2 = createTestContentItem({
-      values: { [propertiesField.name]: "test_value_2" },
-      displayValues: { [propertiesField.name]: "Test value 2" },
-    });
+    const item1 = createTestContentItem({ values: { [propertiesField.name]: "test_value_1" }, displayValues: { [propertiesField.name]: "Test value 1" } });
+    const item2 = createTestContentItem({ values: { [propertiesField.name]: "test_value_2" }, displayValues: { [propertiesField.name]: "Test value 2" } });
     getContentIteratorStub.callsFake(async (options) => {
       if (options.paging?.start === 0) {
         return { descriptor, items: createAsyncIterator([item1]), total: 2 };
@@ -210,10 +170,7 @@ describe("useRows", () => {
       properties: [{ property: createTestPropertyInfo() }],
     });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-    const item = createTestContentItem({
-      values: { [propertiesField.name]: "test_value_1" },
-      displayValues: { [propertiesField.name]: "Test value 1" },
-    });
+    const item = createTestContentItem({ values: { [propertiesField.name]: "test_value_1" }, displayValues: { [propertiesField.name]: "Test value 1" } });
     getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 1 } });
@@ -288,10 +245,7 @@ describe("useRows", () => {
       properties: [{ property: createTestPropertyInfo() }],
     });
     const fieldDescriptor = propertiesField.getFieldDescriptor();
-    const sorting = {
-      field: fieldDescriptor,
-      direction: SortDirection.Descending,
-    };
+    const sorting = { field: fieldDescriptor, direction: SortDirection.Descending };
     getContentIteratorStub.callsFake(async () => ({ descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([]), total: 0 }));
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, options: { sorting } } });
@@ -311,14 +265,8 @@ describe("useRows", () => {
       properties: [{ property: createTestPropertyInfo() }],
     });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-    const item1 = createTestContentItem({
-      values: { [propertiesField.name]: "test_value_1" },
-      displayValues: { [propertiesField.name]: "Test value 1" },
-    });
-    const item2 = createTestContentItem({
-      values: { [propertiesField.name]: "test_value_2" },
-      displayValues: { [propertiesField.name]: "Test value 2" },
-    });
+    const item1 = createTestContentItem({ values: { [propertiesField.name]: "test_value_1" }, displayValues: { [propertiesField.name]: "Test value 1" } });
+    const item2 = createTestContentItem({ values: { [propertiesField.name]: "test_value_2" }, displayValues: { [propertiesField.name]: "Test value 2" } });
 
     getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator([item1, item2]), total: 2 }));
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 10 } });
@@ -383,10 +331,7 @@ describe("useRows", () => {
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
     const itemsCount = ROWS_RELOAD_PAGE_SIZE + 1;
     const items = Array.from(Array(itemsCount).keys()).map((i) =>
-      createTestContentItem({
-        values: { [propertiesField.name]: `test_value_${i}` },
-        displayValues: { [propertiesField.name]: `Test value ${i}` },
-      }),
+      createTestContentItem({ values: { [propertiesField.name]: `test_value_${i}` }, displayValues: { [propertiesField.name]: `Test value ${i}` } }),
     );
 
     getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator(items), total: itemsCount }));

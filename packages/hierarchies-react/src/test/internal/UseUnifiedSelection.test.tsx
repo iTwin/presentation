@@ -38,14 +38,8 @@ describe("useUnifiedSelection", () => {
   describe("isNodeSelected", () => {
     it("returns true if instance node is selected", () => {
       const selectedInstanceKey = { id: "0x1", className: "Schema:Name" };
-      const selectedInstancesNodesKey: InstancesNodeKey = {
-        type: "instances",
-        instanceKeys: [{ ...selectedInstanceKey, imodelKey }],
-      };
-      const noIModelInstancesNodesKey: InstancesNodeKey = {
-        type: "instances",
-        instanceKeys: [{ id: "0x2", className: "Schema:Name" }],
-      };
+      const selectedInstancesNodesKey: InstancesNodeKey = { type: "instances", instanceKeys: [{ ...selectedInstanceKey, imodelKey }] };
+      const noIModelInstancesNodesKey: InstancesNodeKey = { type: "instances", instanceKeys: [{ id: "0x2", className: "Schema:Name" }] };
       const differentIModelInstancesNodesKey: InstancesNodeKey = {
         type: "instances",
         instanceKeys: [{ id: "0x3", className: "Schema:Name", imodelKey: "unknown-imodel" }],
@@ -65,11 +59,7 @@ describe("useUnifiedSelection", () => {
         createTreeModelNode({ id: "node-4", nodeData: createTestHierarchyNode({ id: "node-4", key: mergedInstancesNodesKey }) }),
       ];
 
-      storage.addToSelection({
-        imodelKey,
-        source,
-        selectables: [selectedInstanceKey],
-      });
+      storage.addToSelection({ imodelKey, source, selectables: [selectedInstanceKey] });
 
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
@@ -82,10 +72,7 @@ describe("useUnifiedSelection", () => {
     });
 
     it("returns true if grouping node is selected", () => {
-      const instancesNodesKey: InstancesNodeKey = {
-        type: "instances",
-        instanceKeys: [{ id: "0x1", className: "Schema:Name" }],
-      };
+      const instancesNodesKey: InstancesNodeKey = { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Name" }] };
       const selectedInstanceKey = { id: "0x2", className: "Schema:Name" };
       const nodes = [
         createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) }),
@@ -110,14 +97,8 @@ describe("useUnifiedSelection", () => {
     });
 
     it("returns true if generic node is selected with default `createSelectableForGenericNode` handler", () => {
-      const instancesNodesKey: InstancesNodeKey = {
-        type: "instances",
-        instanceKeys: [{ id: "0x1", className: "Schema:Name" }],
-      };
-      const genericNodeKey: GenericNodeKey = {
-        type: "generic",
-        id: "generic-node",
-      };
+      const instancesNodesKey: InstancesNodeKey = { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Name" }] };
+      const genericNodeKey: GenericNodeKey = { type: "generic", id: "generic-node" };
       const instancesNode = createTestHierarchyNode({ id: "instances-node", key: instancesNodesKey });
       const genericNode = createTestHierarchyNode({ id: genericNodeKey.id, key: genericNodeKey });
 
@@ -142,14 +123,8 @@ describe("useUnifiedSelection", () => {
     });
 
     it("returns true if generic node is selected with custom `createSelectableForGenericNode` handler", () => {
-      const instancesNodesKey: InstancesNodeKey = {
-        type: "instances",
-        instanceKeys: [{ id: "0x1", className: "Schema:Name" }],
-      };
-      const genericNodeKey: GenericNodeKey = {
-        type: "generic",
-        id: "generic-node",
-      };
+      const instancesNodesKey: InstancesNodeKey = { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Name" }] };
+      const genericNodeKey: GenericNodeKey = { type: "generic", id: "generic-node" };
       const instancesNode = createTestHierarchyNode({ id: "instances-node", key: instancesNodesKey });
       const genericNode = createTestHierarchyNode({ id: genericNodeKey.id, key: genericNodeKey }) as NonGroupingHierarchyNode & { key: GenericNodeKey };
 
@@ -166,11 +141,7 @@ describe("useUnifiedSelection", () => {
         data: node,
       });
 
-      storage.addToSelection({
-        imodelKey: "",
-        source,
-        selectables: [createSelectableForGenericNode(genericNode, "node-2")],
-      });
+      storage.addToSelection({ imodelKey: "", source, selectables: [createSelectableForGenericNode(genericNode, "node-2")] });
 
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps: { ...initialProps, createSelectableForGenericNode } });
       expect(result.current.isNodeSelected("node-1")).to.be.false;
@@ -466,11 +437,7 @@ describe("useUnifiedSelection", () => {
         data: node,
       });
 
-      storage.addToSelection({
-        imodelKey: "",
-        source,
-        selectables: [createSelectableForGenericNode(hierarchyNode, "node-2")],
-      });
+      storage.addToSelection({ imodelKey: "", source, selectables: [createSelectableForGenericNode(hierarchyNode, "node-2")] });
       changeListener.reset();
 
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps: { ...initialProps, createSelectableForGenericNode } });
@@ -492,10 +459,7 @@ describe("useUnifiedSelection", () => {
 
     it("replaces selection with node", () => {
       const instanceKey = { id: "0x1", className: "Schema:Name" };
-      const instancesNodesKey: InstancesNodeKey = {
-        type: "instances",
-        instanceKeys: [{ ...instanceKey, imodelKey }],
-      };
+      const instancesNodesKey: InstancesNodeKey = { type: "instances", instanceKeys: [{ ...instanceKey, imodelKey }] };
       const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
 
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));

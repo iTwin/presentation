@@ -40,10 +40,7 @@ describe("useIModelTree hooks", () => {
   describe("useIModelTree", () => {
     type UseIModelTreeProps = Props<typeof originalUseIModelTree>;
     const hierarchyDefinition = {} as presentationHierarchiesModule.HierarchyDefinition;
-    const initialProps: UseIModelTreeProps = {
-      imodelAccess: {} as UseIModelTreeProps["imodelAccess"],
-      getHierarchyDefinition: () => hierarchyDefinition,
-    };
+    const initialProps: UseIModelTreeProps = { imodelAccess: {} as UseIModelTreeProps["imodelAccess"], getHierarchyDefinition: () => hierarchyDefinition };
 
     it("creates imodel hierarchy provider using given imodel and hierarchy definition", async () => {
       stubs.hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
@@ -123,10 +120,7 @@ describe("useIModelTree hooks", () => {
     });
 
     const presentationHierarchiesMock = mock.module("@itwin/presentation-hierarchies", {
-      namedExports: {
-        ...presentationHierarchiesModule,
-        createIModelHierarchyProvider: factory,
-      },
+      namedExports: { ...presentationHierarchiesModule, createIModelHierarchyProvider: factory },
     });
 
     return {

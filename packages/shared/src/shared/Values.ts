@@ -106,42 +106,18 @@ export namespace PrimitiveValue {
  * @public
  */
 export type TypedPrimitiveValue = (
-  | {
-      value: number;
-      type: "Integer" | "Long";
-    }
-  | {
-      value: number;
-      type: "Double";
-      koqName?: string;
-    }
-  | {
-      value: boolean;
-      type: "Boolean";
-    }
-  | {
-      value: Id64String;
-      type: "Id";
-    }
-  | {
-      value: string;
-      type: "String";
-    }
+  | { value: number; type: "Integer" | "Long" }
+  | { value: number; type: "Double"; koqName?: string }
+  | { value: boolean; type: "Boolean" }
+  | { value: Id64String; type: "Id" }
+  | { value: string; type: "String" }
   | {
       value: number | string | Date; // julian day format, ISO format or `Date`
       type: "DateTime";
     }
-  | {
-      value: Point2d;
-      type: "Point2d";
-    }
-  | {
-      value: Point3d;
-      type: "Point3d";
-    }
-) & {
-  extendedType?: string;
-};
+  | { value: Point2d; type: "Point2d" }
+  | { value: Point3d; type: "Point3d" }
+) & { extendedType?: string };
 
 /** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -156,75 +132,42 @@ export namespace TypedPrimitiveValue {
       case "Integer":
       case "Long":
         if (typeof value === "number") {
-          return {
-            type,
-            extendedType,
-            value,
-          };
+          return { type, extendedType, value };
         }
         break;
       case "Double":
         if (typeof value === "number") {
-          return {
-            type,
-            koqName,
-            extendedType,
-            value,
-          };
+          return { type, koqName, extendedType, value };
         }
         break;
       case "Boolean":
         if (typeof value === "boolean") {
-          return {
-            type,
-            extendedType,
-            value,
-          };
+          return { type, extendedType, value };
         }
         break;
       case "Id":
         if (typeof value === "string" && Id64.isId64(value)) {
-          return {
-            type,
-            extendedType,
-            value,
-          };
+          return { type, extendedType, value };
         }
         break;
       case "String":
         if (typeof value === "string") {
-          return {
-            type,
-            extendedType,
-            value,
-          };
+          return { type, extendedType, value };
         }
         break;
       case "DateTime":
         if (typeof value === "string" || typeof value === "number" || value instanceof Date) {
-          return {
-            type,
-            extendedType,
-            value,
-          };
+          return { type, extendedType, value };
         }
         break;
       case "Point3d":
         if (PrimitiveValue.isPoint3d(value)) {
-          return {
-            type,
-            extendedType,
-            value,
-          };
+          return { type, extendedType, value };
         }
         break;
       case "Point2d":
         if (PrimitiveValue.isPoint2d(value)) {
-          return {
-            type,
-            extendedType,
-            value,
-          };
+          return { type, extendedType, value };
         }
         break;
     }

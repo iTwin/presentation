@@ -34,14 +34,7 @@ export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttr
       if (node.label.includes("[0-1M]") || node.label.includes("[0-1U]") || node.label.includes("[0-29]")) {
         return {
           ...node,
-          error: {
-            id: `${node.id}-object-error`,
-            type: "Unknown",
-            message: "Object {{node}} is not available",
-            additionalData: {
-              code: "404",
-            },
-          },
+          error: { id: `${node.id}-object-error`, type: "Unknown", message: "Object {{node}} is not available", additionalData: { code: "404" } },
         };
       }
       return node;
@@ -112,10 +105,7 @@ export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttr
 
 function mapNodesHierarchy(nodes: TreeNode[], callback: (node: TreeNode) => TreeNode): TreeNode[] {
   return nodes.map((node) => {
-    return {
-      ...callback(node),
-      children: node.children === true ? true : mapNodesHierarchy(node.children, callback),
-    };
+    return { ...callback(node), children: node.children === true ? true : mapNodesHierarchy(node.children, callback) };
   });
 }
 

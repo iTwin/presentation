@@ -197,12 +197,7 @@ function collectExpandedNodes(rootNodeId: string | undefined, treeModel: TreeMod
     if (isTreeModelNode(node) && node.isExpanded) {
       const index = treeModel.getChildOffset(node.parentId, node.id);
       assert(index !== undefined);
-      expandedNodes.push({
-        id: node.id,
-        parentId: node.parentId,
-        index,
-        expandedChildren: collectExpandedNodes(node.id, treeModel),
-      });
+      expandedNodes.push({ id: node.id, parentId: node.parentId, index, expandedChildren: collectExpandedNodes(node.id, treeModel) });
     }
   }
 
@@ -221,8 +216,5 @@ function getVisibleRange(itemsRange: RenderedItemsRange, visibleNodes: VisibleTr
   const visibleNodesCount = itemsRange.visibleStopIndex - itemsRange.visibleStartIndex;
   const endPosition = visibleNodes.getNumNodes() - 1;
   const startPosition = endPosition - visibleNodesCount;
-  return {
-    start: startPosition < 0 ? 0 : startPosition,
-    end: endPosition < 0 ? 0 : endPosition,
-  };
+  return { start: startPosition < 0 ? 0 : startPosition, end: endPosition < 0 ? 0 : endPosition };
 }

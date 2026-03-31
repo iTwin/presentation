@@ -108,10 +108,7 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     let i = 1;
     for (const node of this._filteredResultMatches) {
       if (index < i + node.matchesCount) {
-        activeMatch = {
-          nodeId: node.id,
-          matchIndex: index - i,
-        };
+        activeMatch = { nodeId: node.id, matchIndex: index - i };
         break;
       }
 

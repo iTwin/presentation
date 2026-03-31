@@ -20,11 +20,7 @@ import type { RulesetManager, RulesetVariablesManager } from "@itwin/presentatio
 import type { NodeMappingFunc } from "../presentation-testing/HierarchyBuilder.js";
 
 async function getRootNodes() {
-  const root: Node = {
-    label: LabelDefinition.fromLabelString("Root Node"),
-    hasChildren: true,
-    key: { type: "", version: 0, pathFromRoot: ["root"] },
-  };
+  const root: Node = { label: LabelDefinition.fromLabelString("Root Node"), hasChildren: true, key: { type: "", version: 0, pathFromRoot: ["root"] } };
   return { items: createAsyncIterator([root]), total: 1 };
 }
 
@@ -33,22 +29,14 @@ async function getChildrenNodes(opts: HierarchyRequestOptions<IModelConnection, 
     return { items: createAsyncIterator([]), total: 0 };
   }
 
-  const child1: Node = {
-    label: LabelDefinition.fromLabelString("Child 1"),
-    key: { type: "", version: 0, pathFromRoot: ["root", "child1"] },
-  };
-  const child2: Node = {
-    label: LabelDefinition.fromLabelString("Child 2"),
-    key: { type: "", version: 0, pathFromRoot: ["root", "child2"] },
-  };
+  const child1: Node = { label: LabelDefinition.fromLabelString("Child 1"), key: { type: "", version: 0, pathFromRoot: ["root", "child1"] } };
+  const child2: Node = { label: LabelDefinition.fromLabelString("Child 2"), key: { type: "", version: 0, pathFromRoot: ["root", "child2"] } };
   return { items: createAsyncIterator([child1, child2]), total: 2 };
 }
 
 describe("HierarchyBuilder", () => {
   let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
-  const rulesetManager = {
-    add: createStub<RulesetManager["add"]>(),
-  };
+  const rulesetManager = { add: createStub<RulesetManager["add"]>() };
 
   const ruleset = { id: "1" } as Ruleset;
   const imodel = {} as IModelConnection;
@@ -58,9 +46,7 @@ describe("HierarchyBuilder", () => {
 
     presentationManager = sinon.createStubInstance(PresentationManager);
     presentationManager.rulesets.returns(rulesetManager as unknown as RulesetManager);
-    presentationManager.vars.returns({
-      onVariableChanged: new BeEvent(),
-    } as RulesetVariablesManager);
+    presentationManager.vars.returns({ onVariableChanged: new BeEvent() } as RulesetVariablesManager);
   });
 
   afterEach(() => {

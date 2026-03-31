@@ -71,10 +71,7 @@ describe("Hierarchies", () => {
           whereClauseFactory?: (props: { alias: string }) => Promise<string>;
         }) {
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-          const queryClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
+          const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsFactory });
           const whereClause = whereClauseFactory ? await whereClauseFactory({ alias: "this" }) : undefined;
           return {
             fullClassName,
@@ -119,12 +116,7 @@ describe("Hierarchies", () => {
         expect(await collectHierarchy(createIModelHierarchyProvider({ hierarchyDefinition, imodelAccess: imodels[0].imodelAccess }))).to.containSubset(
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedIModelHierarchies.Example.Version1Hierarchy
           // The first iModel version has 3 elements in "Model 1". The resulting hierarchy:
-          [
-            {
-              label: "Model 1",
-              children: [{ label: "Element 1" }, { label: "Element 2" }, { label: "Element 3" }],
-            },
-          ],
+          [{ label: "Model 1", children: [{ label: "Element 1" }, { label: "Element 2" }, { label: "Element 3" }] }],
           // __PUBLISH_EXTRACT_END__
         );
 
@@ -138,23 +130,14 @@ describe("Hierarchies", () => {
           //
           // The resulting hierarchy:
           [
-            {
-              label: "Model 1",
-              children: [{ label: "Element 1" }, { label: "Element 4" }, { label: "Updated element 3" }],
-            },
-            {
-              label: "Model 2",
-              children: [{ label: "Element 5" }],
-            },
+            { label: "Model 1", children: [{ label: "Element 1" }, { label: "Element 4" }, { label: "Updated element 3" }] },
+            { label: "Model 2", children: [{ label: "Element 5" }] },
           ],
           // __PUBLISH_EXTRACT_END__
         );
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedIModelHierarchies.Example.MergedHierarchyProvider
-        const mergedHierarchyProvider = createMergedIModelHierarchyProvider({
-          imodels,
-          hierarchyDefinition,
-        });
+        const mergedHierarchyProvider = createMergedIModelHierarchyProvider({ imodels, hierarchyDefinition });
         // __PUBLISH_EXTRACT_END__
         expect(await collectHierarchy(mergedHierarchyProvider)).to.containSubset(
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedIModelHierarchies.Example.MergedHierarchy
@@ -175,10 +158,7 @@ describe("Hierarchies", () => {
               ],
             },
             // "Model 2" and its "Element 5" come from the 2nd iModel version
-            {
-              label: "Model 2",
-              children: [{ label: "Element 5" }],
-            },
+            { label: "Model 2", children: [{ label: "Element 5" }] },
           ],
           // __PUBLISH_EXTRACT_END__
         );

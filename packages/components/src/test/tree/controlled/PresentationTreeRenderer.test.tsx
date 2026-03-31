@@ -44,11 +44,7 @@ describe("PresentationTreeRenderer", () => {
     nodeHeight: () => 20,
   };
 
-  const dataProviderStub = {
-    imodel: {} as IModelConnection,
-    rulesetId: "test-ruleset",
-    createRequestOptions: () => ({}),
-  };
+  const dataProviderStub = { imodel: {} as IModelConnection, rulesetId: "test-ruleset", createRequestOptions: () => ({}) };
 
   const nodeLoaderStub = {
     loadNode: sinon.stub<Parameters<ITreeNodeLoader["loadNode"]>, ReturnType<ITreeNodeLoader["loadNode"]>>(),
@@ -94,10 +90,7 @@ describe("PresentationTreeRenderer", () => {
     label: property.name,
     type: { typeName: StandardTypeNames.Bool, valueFormat: PropertyValueFormat.Primitive },
   });
-  const initialFilter: PresentationInstanceFilterInfo = {
-    filter: { field: propertyField, operator: "is-false" },
-    usedClasses: [],
-  };
+  const initialFilter: PresentationInstanceFilterInfo = { filter: { field: propertyField, operator: "is-false" }, usedClasses: [] };
 
   function setupTreeModel(setup: (model: MutableTreeModel) => void) {
     const model = new MutableTreeModel();
@@ -379,9 +372,7 @@ describe("PresentationTreeRenderer", () => {
     const limit = 5;
 
     dataProviderStub.createRequestOptions = () => {
-      return {
-        sizeLimit: limit,
-      };
+      return { sizeLimit: limit };
     };
 
     const { visibleNodes, nodeLoader } = setupTreeModel((model) => {

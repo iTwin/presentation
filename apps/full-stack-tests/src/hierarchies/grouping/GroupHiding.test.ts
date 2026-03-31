@@ -78,17 +78,11 @@ describe("Hierarchies", () => {
 
     describe("Base class grouping", () => {
       const baseClassHideIfNoSiblingsGrouping: ECSqlSelectClauseGroupingParams = {
-        byBaseClasses: {
-          fullClassNames: ["BisCore.InformationReferenceElement"],
-          hideIfNoSiblings: true,
-        },
+        byBaseClasses: { fullClassNames: ["BisCore.InformationReferenceElement"], hideIfNoSiblings: true },
       };
 
       const baseClassHideIfOneGroupedNodeGrouping: ECSqlSelectClauseGroupingParams = {
-        byBaseClasses: {
-          fullClassNames: ["BisCore.InformationReferenceElement"],
-          hideIfOneGroupedNode: true,
-        },
+        byBaseClasses: { fullClassNames: ["BisCore.InformationReferenceElement"], hideIfOneGroupedNode: true },
       };
 
       it("hides base class groups when there're no siblings", async function () {
@@ -101,14 +95,8 @@ describe("Hierarchies", () => {
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfNoSiblingsGrouping) }),
           expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject1],
-              children: false,
-            }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject2],
-              children: false,
-            }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
           ],
         });
       });
@@ -121,12 +109,7 @@ describe("Hierarchies", () => {
 
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfOneGroupedNodeGrouping) }),
-          expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject1],
-              children: false,
-            }),
-          ],
+          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
         });
       });
 
@@ -140,19 +123,11 @@ describe("Hierarchies", () => {
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfNoSiblingsGrouping) }),
           expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childPartition2],
-              children: false,
-            }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2], children: false }),
             NodeValidators.createForClassGroupingNode({
               label: "Information Reference",
               className: "BisCore.InformationReferenceElement",
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
             }),
           ],
         });
@@ -172,14 +147,8 @@ describe("Hierarchies", () => {
               label: "Information Reference",
               className: "BisCore.InformationReferenceElement",
               children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
               ],
             }),
           ],
@@ -188,17 +157,9 @@ describe("Hierarchies", () => {
     });
 
     describe("Class grouping", () => {
-      const classHideIfNoSiblingsGrouping: ECSqlSelectClauseGroupingParams = {
-        byClass: {
-          hideIfNoSiblings: true,
-        },
-      };
+      const classHideIfNoSiblingsGrouping: ECSqlSelectClauseGroupingParams = { byClass: { hideIfNoSiblings: true } };
 
-      const classHideIfOneGroupedNodeGrouping: ECSqlSelectClauseGroupingParams = {
-        byClass: {
-          hideIfOneGroupedNode: true,
-        },
-      };
+      const classHideIfOneGroupedNodeGrouping: ECSqlSelectClauseGroupingParams = { byClass: { hideIfOneGroupedNode: true } };
 
       it("hides class groups when there're no siblings", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
@@ -210,14 +171,8 @@ describe("Hierarchies", () => {
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classHideIfNoSiblingsGrouping) }),
           expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject1],
-              children: false,
-            }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject2],
-              children: false,
-            }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
           ],
         });
       });
@@ -230,12 +185,7 @@ describe("Hierarchies", () => {
 
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classHideIfOneGroupedNodeGrouping) }),
-          expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject1],
-              children: false,
-            }),
-          ],
+          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
         });
       });
 
@@ -251,21 +201,11 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForClassGroupingNode({
               className: "BisCore.PhysicalPartition",
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childPartition2],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2], children: false })],
             }),
             NodeValidators.createForClassGroupingNode({
               className: "BisCore.Subject",
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
             }),
           ],
         });
@@ -284,14 +224,8 @@ describe("Hierarchies", () => {
             NodeValidators.createForClassGroupingNode({
               className: "BisCore.Subject",
               children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
               ],
             }),
           ],
@@ -300,17 +234,9 @@ describe("Hierarchies", () => {
     });
 
     describe("Label grouping", () => {
-      const labelHideIfOneGroupedNodeGrouping: ECSqlSelectClauseGroupingParams = {
-        byLabel: {
-          hideIfOneGroupedNode: true,
-        },
-      };
+      const labelHideIfOneGroupedNodeGrouping: ECSqlSelectClauseGroupingParams = { byLabel: { hideIfOneGroupedNode: true } };
 
-      const labelHideIfNoSiblingsGrouping: ECSqlSelectClauseGroupingParams = {
-        byLabel: {
-          hideIfNoSiblings: true,
-        },
-      };
+      const labelHideIfNoSiblingsGrouping: ECSqlSelectClauseGroupingParams = { byLabel: { hideIfNoSiblings: true } };
 
       it("hides label groups when there're no siblings", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
@@ -322,14 +248,8 @@ describe("Hierarchies", () => {
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfNoSiblingsGrouping, "UserLabel") }),
           expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject2],
-              children: false,
-            }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject1],
-              children: false,
-            }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
           ],
         });
       });
@@ -342,12 +262,7 @@ describe("Hierarchies", () => {
 
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfOneGroupedNodeGrouping, "UserLabel") }),
-          expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject1],
-              children: false,
-            }),
-          ],
+          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
         });
       });
 
@@ -363,21 +278,11 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForLabelGroupingNode({
               label: groupName,
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
             }),
             NodeValidators.createForLabelGroupingNode({
               label: "test2",
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false })],
             }),
           ],
         });
@@ -396,14 +301,8 @@ describe("Hierarchies", () => {
             NodeValidators.createForLabelGroupingNode({
               label: groupName,
               children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
               ],
             }),
           ],
@@ -438,14 +337,8 @@ describe("Hierarchies", () => {
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfNoSiblingsGrouping) }),
           expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject1],
-              children: false,
-            }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject2],
-              children: false,
-            }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
           ],
         });
       });
@@ -458,12 +351,7 @@ describe("Hierarchies", () => {
 
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfOneGroupedNodeGrouping) }),
-          expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject1],
-              children: false,
-            }),
-          ],
+          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
         });
       });
 
@@ -481,23 +369,13 @@ describe("Hierarchies", () => {
               label: groupName,
               propertyClassName: "BisCore.Element",
               formattedPropertyValue: groupName,
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
             }),
             NodeValidators.createForPropertyValueGroupingNode({
               label: `${groupName}2`,
               propertyClassName: "BisCore.Element",
               formattedPropertyValue: `${groupName}2`,
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false })],
             }),
           ],
         });
@@ -518,14 +396,8 @@ describe("Hierarchies", () => {
               propertyClassName: "BisCore.Element",
               formattedPropertyValue: groupName,
               children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
               ],
             }),
           ],

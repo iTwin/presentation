@@ -152,10 +152,7 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
 }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined {
   const firstRenderRef = useRef(true);
   const treeStateProps = useMemo(
-    (): TreeStateProps => ({
-      ...dataProviderProps,
-      treeModel: firstRenderRef.current ? seedTreeModel : undefined,
-    }),
+    (): TreeStateProps => ({ ...dataProviderProps, treeModel: firstRenderRef.current ? seedTreeModel : undefined }),
     Object.values(dataProviderProps), // eslint-disable-line react-hooks/exhaustive-deps
   );
 
@@ -222,11 +219,7 @@ function useTreeState(props: UseTreeStateProps) {
     const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, providerProps.pagingSize);
     const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, (nodeLoadedProps) => onNodeLoadedRef.current?.(nodeLoadedProps));
 
-    const newState = {
-      modelSource,
-      nodeLoader,
-      dataProvider,
-    };
+    const newState = { modelSource, nodeLoader, dataProvider };
     setState(newState);
 
     return () => {
@@ -275,15 +268,7 @@ function useEventHandler<TEventHandler extends TreeEventHandler>(
 function usePresentationTreeFiltering({ activeMatchIndex, ...rest }: PresentationTreeFilteringProps) {
   const { filteredNodeLoader, filteredProvider, isFiltering, matchesCount } = useFilteredNodeLoader(rest);
   const highlightProps = useNodeHighlightingProps(rest.filter, filteredProvider, activeMatchIndex);
-  return rest.filter && rest.dataProvider
-    ? {
-        highlightProps,
-        filteredNodeLoader,
-        filteredProvider,
-        isFiltering,
-        matchesCount,
-      }
-    : undefined;
+  return rest.filter && rest.dataProvider ? { highlightProps, filteredNodeLoader, filteredProvider, isFiltering, matchesCount } : undefined;
 }
 
 function useLatest<T>(value: T) {

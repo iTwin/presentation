@@ -88,16 +88,8 @@ export const findField = (descriptor: Descriptor, recordPropertyName: string): F
  * @internal
  */
 export const createLabelRecord = (label: LabelDefinition, name: string): PropertyRecord => {
-  const value: PrimitiveValue = {
-    displayValue: label.displayValue,
-    value: createPrimitiveLabelValue(label),
-    valueFormat: PropertyValueFormat.Primitive,
-  };
-  const property: PropertyDescription = {
-    displayLabel: "Label",
-    typename: label.typeName,
-    name,
-  };
+  const value: PrimitiveValue = { displayValue: label.displayValue, value: createPrimitiveLabelValue(label), valueFormat: PropertyValueFormat.Primitive };
+  const property: PropertyDescription = { displayLabel: "Label", typename: label.typeName, name };
 
   return new PropertyRecord(value, property);
 };
@@ -109,11 +101,7 @@ const createPrimitiveLabelValue = (label: LabelDefinition) => {
 const createPrimitiveCompositeValue = (compositeValue: LabelCompositeValue): Primitives.Composite => {
   return {
     separator: compositeValue.separator,
-    parts: compositeValue.values.map((part) => ({
-      displayValue: part.displayValue,
-      typeName: part.typeName,
-      rawValue: createPrimitiveLabelValue(part),
-    })),
+    parts: compositeValue.values.map((part) => ({ displayValue: part.displayValue, typeName: part.typeName, rawValue: createPrimitiveLabelValue(part) })),
   };
 };
 
@@ -150,9 +138,7 @@ export class AsyncTasksTracker {
   public trackAsyncTask(): Disposable {
     const id = Guid.createValue();
     this._asyncsInProgress.add(id);
-    return {
-      [Symbol.dispose]: () => this._asyncsInProgress.delete(id),
-    };
+    return { [Symbol.dispose]: () => this._asyncsInProgress.delete(id) };
   }
 }
 
@@ -223,9 +209,7 @@ export interface UniqueValue {
  */
 export function serializeUniqueValues(values: UniqueValue[]): { displayValues: string; groupedRawValues: string } {
   const displayValues: string[] = [];
-  const groupedRawValues: {
-    [key: string]: Value[];
-  } = {};
+  const groupedRawValues: { [key: string]: Value[] } = {};
   values.forEach((item) => {
     displayValues.push(item.displayValue);
     groupedRawValues[item.displayValue] = [...item.groupedRawValues];

@@ -97,10 +97,7 @@ function getParentNames(field: Field, name: string): string {
 export function createPropertyInfoFromPropertiesField(field: PropertiesField): PresentationInstanceFilterPropertyInfo {
   const categoryInfo = getCategoryInfo(field.category, { name: undefined, label: undefined });
   const name = field.parent ? getParentNames(field.parent, field.name) : field.name;
-  const propertyDescription = createPropertyDescriptionFromFieldInfo({
-    ...createFieldInfo(field),
-    name: getCategorizedFieldName(name, categoryInfo.name),
-  });
+  const propertyDescription = createPropertyDescriptionFromFieldInfo({ ...createFieldInfo(field), name: getCategorizedFieldName(name, categoryInfo.name) });
   const sourceClassIds = getPropertySourceClassInfos(field).map((classInfo) => classInfo.id);
   return {
     field,
@@ -153,11 +150,7 @@ export function filterRuleValidator(item: PropertyFilterBuilderRule) {
     return undefined;
   }
 
-  const error = numericPropertyValidator({
-    property: item.property,
-    operator: item.operator,
-    value: item.value,
-  });
+  const error = numericPropertyValidator({ property: item.property, operator: item.operator, value: item.value });
 
   if (error) {
     return error;

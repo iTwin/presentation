@@ -142,11 +142,7 @@ export class ECDbBuilder {
     targetId: Id64String,
     props?: { [propertyName: string]: PrimitiveValue | undefined },
   ) {
-    const query = this.createInsertQuery(fullClassName, {
-      ...props,
-      sourceECInstanceId: sourceId,
-      targetECInstanceId: targetId,
-    });
+    const query = this.createInsertQuery(fullClassName, { ...props, sourceECInstanceId: sourceId, targetECInstanceId: targetId });
     return this._ecdb.withWriteStatement(query.clause, (stmt) => {
       query.binder(stmt);
       const res = stmt.stepForInsert();

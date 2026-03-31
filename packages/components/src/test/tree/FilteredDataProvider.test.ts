@@ -25,12 +25,7 @@ import type { IPresentationTreeDataProvider } from "../../presentation-component
 describe("FilteredTreeDataProvider", () => {
   function createTestNodePathElementWithId(id: string) {
     return createTestNodePathElement({
-      node: createTestECInstancesNode({
-        key: createTestECInstancesNodeKey({
-          instanceKeys: [createTestECInstanceKey({ id })],
-          pathFromRoot: [id],
-        }),
-      }),
+      node: createTestECInstancesNode({ key: createTestECInstancesNodeKey({ instanceKeys: [createTestECInstanceKey({ id })], pathFromRoot: [id] }) }),
     });
   }
 
@@ -84,18 +79,12 @@ describe("FilteredTreeDataProvider", () => {
   beforeEach(() => {
     const onVariableChanged = new BeEvent();
     const presentationManager = sinon.createStubInstance(PresentationManager);
-    presentationManager.vars.returns({
-      onVariableChanged,
-    } as RulesetVariablesManager);
+    presentationManager.vars.returns({ onVariableChanged } as RulesetVariablesManager);
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
 
     filter = "test_filter";
     paths = createPaths();
-    provider = new FilteredPresentationTreeDataProvider({
-      parentDataProvider: parentProvider as unknown as IPresentationTreeDataProvider,
-      filter,
-      paths,
-    });
+    provider = new FilteredPresentationTreeDataProvider({ parentDataProvider: parentProvider as unknown as IPresentationTreeDataProvider, filter, paths });
   });
 
   afterEach(() => {
@@ -143,17 +132,9 @@ describe("FilteredTreeDataProvider", () => {
 
     it("applies same node customizations as parent data provider", async () => {
       const customizeStub = sinon.stub();
-      const newParentProvider = new PresentationTreeDataProvider({
-        imodel,
-        ruleset: "test-rules",
-        customizeTreeNodeItem: customizeStub,
-      });
+      const newParentProvider = new PresentationTreeDataProvider({ imodel, ruleset: "test-rules", customizeTreeNodeItem: customizeStub });
       const testPaths = [createTestNodePathElement()];
-      const filteredProvider = new FilteredPresentationTreeDataProvider({
-        parentDataProvider: newParentProvider,
-        filter: "Test",
-        paths: testPaths,
-      });
+      const filteredProvider = new FilteredPresentationTreeDataProvider({ parentDataProvider: newParentProvider, filter: "Test", paths: testPaths });
       await filteredProvider.getNodes(undefined, pageOptions);
       expect(customizeStub).to.be.calledOnce;
     });

@@ -22,15 +22,8 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
   const [devSeverity, setDevSeverity] = useState("error");
   const result = useMemo(
     (): DiagnosticsProps => ({
-      ruleDiagnostics: {
-        severity: editorSeverity as DiagnosticsLoggerSeverity,
-        handler: consoleDiagnosticsHandler,
-      },
-      devDiagnostics: {
-        perf: shouldMeasurePerformance,
-        severity: devSeverity as DiagnosticsLoggerSeverity,
-        handler: consoleDiagnosticsHandler,
-      },
+      ruleDiagnostics: { severity: editorSeverity as DiagnosticsLoggerSeverity, handler: consoleDiagnosticsHandler },
+      devDiagnostics: { perf: shouldMeasurePerformance, severity: devSeverity as DiagnosticsLoggerSeverity, handler: consoleDiagnosticsHandler },
     }),
     [shouldMeasurePerformance, editorSeverity, devSeverity],
   );

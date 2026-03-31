@@ -35,11 +35,7 @@ describe("SelectionScope", () => {
 
     async function getSelection(keys: SelectableInstanceKey[], scope: SelectionScope): Promise<SelectableInstanceKey[]> {
       const selectables: SelectableInstanceKey[] = [];
-      for await (const selectable of computeSelection({
-        queryExecutor,
-        elementIds: keys.map((k) => k.id),
-        scope,
-      })) {
+      for await (const selectable of computeSelection({ queryExecutor, elementIds: keys.map((k) => k.id), scope })) {
         selectables.push(selectable);
       }
       return selectables;

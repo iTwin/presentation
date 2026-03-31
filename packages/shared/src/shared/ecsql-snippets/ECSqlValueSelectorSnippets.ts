@@ -22,15 +22,8 @@ type TypedPrimitiveValueSelectorProps = {
       /** Type of the value. Defaults to `String`. */
       type?: undefined;
     }
-  | {
-      type: Exclude<PrimitiveValueType, "Double">;
-      extendedType?: string;
-    }
-  | {
-      type: Extract<PrimitiveValueType, "Double">;
-      extendedType?: string;
-      koqName?: string;
-    }
+  | { type: Exclude<PrimitiveValueType, "Double">; extendedType?: string }
+  | { type: Extract<PrimitiveValueType, "Double">; extendedType?: string; koqName?: string }
 );
 
 /**
@@ -118,11 +111,7 @@ export async function createPrimitivePropertyValueSelectorProps({
         ...(koqName ? { koqName } : /* c8 ignore next */ {}),
       };
   }
-  return {
-    selector: propertySelector,
-    type: propertyValueType,
-    ...(extendedType ? { extendedType } : /* c8 ignore next */ {}),
-  };
+  return { selector: propertySelector, type: propertyValueType, ...(extendedType ? { extendedType } : /* c8 ignore next */ {}) };
 }
 
 /**

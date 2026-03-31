@@ -49,11 +49,7 @@ export class TreeActions {
   ) {
     this._loader = new NoopTreeLoader();
     this._nodeIdFactory = nodeIdFactory ?? createNodeId;
-    this._currentModel = seed ?? /* c8 ignore next */ {
-      idToNode: new Map(),
-      parentChildMap: new Map(),
-      rootNode: { id: undefined, nodeData: undefined },
-    };
+    this._currentModel = seed ?? /* c8 ignore next */ { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } };
 
     this._nodeLoader = this.createNodeLoader();
   }
@@ -298,11 +294,7 @@ function collectTreePartsUntil(untilNotifier: Observable<void>, rootNode?: TreeM
           addTreePartToModel(treeModel, loadedPart);
           return treeModel;
         },
-        {
-          idToNode: new Map(),
-          parentChildMap: new Map(),
-          rootNode: rootNode ?? { id: undefined, nodeData: undefined },
-        },
+        { idToNode: new Map(), parentChildMap: new Map(), rootNode: rootNode ?? { id: undefined, nodeData: undefined } },
       ),
       takeUntil(untilNotifier),
     );

@@ -94,13 +94,7 @@ export function ErrorItemRenderer({
     return (
       <ErrorItemContainer
         errorNode={errorNode}
-        actions={[
-          {
-            action: () => reloadTree({ parentNodeId: errorNode.id }),
-            label: translate("retry"),
-            condition: () => true,
-          },
-        ]}
+        actions={[{ action: () => reloadTree({ parentNodeId: errorNode.id }), label: translate("retry"), condition: () => true }]}
         message={translate("failedToCreateHierarchy")}
         scrollToElement={() => scrollToNode(errorNode)}
       />
@@ -110,11 +104,10 @@ export function ErrorItemRenderer({
   return <ErrorItemContainer errorNode={errorNode} message={errorNode.error.message} scrollToElement={() => scrollToNode(errorNode)} />;
 }
 
-type ErrorItemContainerProps = {
-  errorNode: TreeNode;
-  message: string;
-  actions?: { action: () => void; label: string; condition: () => boolean }[];
-} & Pick<MessageWithLinkProps, "scrollToElement">;
+type ErrorItemContainerProps = { errorNode: TreeNode; message: string; actions?: { action: () => void; label: string; condition: () => boolean }[] } & Pick<
+  MessageWithLinkProps,
+  "scrollToElement"
+>;
 
 function ErrorItemContainer({ errorNode, message, actions, scrollToElement }: ErrorItemContainerProps) {
   return (

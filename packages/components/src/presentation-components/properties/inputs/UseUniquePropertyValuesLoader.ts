@@ -45,10 +45,7 @@ export function useUniquePropertyValuesLoader({
   const [itemsLoader, setItemsLoader] = useState<ItemsLoader<UniqueValue> | undefined>();
   const [initialSelectedValues] = useState(selectedValues);
 
-  const [state, setLoadedOptions] = useState<UniquePropertyValuesLoaderState>({
-    options: [],
-    isLoading: false,
-  });
+  const [state, setLoadedOptions] = useState<UniquePropertyValuesLoaderState>({ options: [], isLoading: false });
 
   // Get initial loader and values
   useEffect(() => {
@@ -62,10 +59,7 @@ export function useUniquePropertyValuesLoader({
         setLoadedOptions((prev) => ({ ...prev, isLoading: true }));
       },
       (newItems) => {
-        setLoadedOptions((prev) => ({
-          options: [...prev.options, ...newItems],
-          isLoading: false,
-        }));
+        setLoadedOptions((prev) => ({ options: [...prev.options, ...newItems], isLoading: false }));
       },
       async (offset: number) => getItems({ imodel, offset, field: field.getFieldDescriptor(), ruleset, keys: new KeySet(descriptorInputKeys) }),
       (option) => option.displayValue,
@@ -95,10 +89,7 @@ export function useUniquePropertyValuesLoader({
   return {
     selectOptions: useMemo<SelectOption<string>[]>(() => {
       const options: SelectOption<string>[] = state.options.map((option) => {
-        return {
-          label: formatOptionLabel(option.displayValue, typeName),
-          value: option.displayValue,
-        };
+        return { label: formatOptionLabel(option.displayValue, typeName), value: option.displayValue };
       });
 
       if (options.length >= VALUE_BATCH_SIZE) {
@@ -148,14 +139,7 @@ async function getItems({
   ruleset: Ruleset;
   keys: KeySet;
 }) {
-  const requestProps = {
-    imodel,
-    descriptor: {},
-    fieldDescriptor: field,
-    rulesetOrId: ruleset,
-    paging: { start: offset, size: VALUE_BATCH_SIZE },
-    keys,
-  };
+  const requestProps = { imodel, descriptor: {}, fieldDescriptor: field, rulesetOrId: ruleset, paging: { start: offset, size: VALUE_BATCH_SIZE }, keys };
   const items = await new Promise<DisplayValueGroup[]>((resolve) => {
     // note: `getDistinctValuesIterator` may not be available in older versions of core
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -166,10 +150,7 @@ async function getItems({
         )
       : // eslint-disable-next-line @typescript-eslint/no-deprecated
         from(Presentation.presentation.getPagedDistinctValues(requestProps)).pipe(map((result) => result.items))
-    ).subscribe({
-      next: resolve,
-      error: () => resolve([]),
-    });
+    ).subscribe({ next: resolve, error: () => resolve([]) });
   });
 
   const hasMore = items.length === VALUE_BATCH_SIZE;
@@ -184,9 +165,5 @@ async function getItems({
     }
   }
 
-  return {
-    options,
-    length: items.length,
-    hasMore,
-  };
+  return { options, length: items.length, hasMore };
 }

@@ -52,11 +52,7 @@ describe("readNodes", () => {
     await collect(readNodes({ queryExecutor, query, limit: 123, parser: (row) => of(parser(row)) }));
     expect(queryExecutor.createQueryReader).to.be.calledOnceWith(
       query,
-      sinon.match({
-        rowFormat: "ECSqlPropertyNames",
-        limit: 123,
-        restartToken: sinon.match.string,
-      }),
+      sinon.match({ rowFormat: "ECSqlPropertyNames", limit: 123, restartToken: sinon.match.string }),
     );
   });
 });
@@ -71,45 +67,26 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.HideIfNoChildren]: true,
       [NodeSelectClauseColumnNames.HideNodeInHierarchy]: true,
       [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
-        byBaseClasses: {
-          fullClassNames: [],
-          hideIfNoSiblings: true,
-          hideIfOneGroupedNode: true,
-        },
+        byBaseClasses: { fullClassNames: [], hideIfNoSiblings: true, hideIfOneGroupedNode: true },
         byClass: true,
         byLabel: true,
       }),
-      [NodeSelectClauseColumnNames.ExtendedData]: JSON.stringify({
-        test: 123,
-      }),
+      [NodeSelectClauseColumnNames.ExtendedData]: JSON.stringify({ test: 123 }),
       [NodeSelectClauseColumnNames.AutoExpand]: true,
       [NodeSelectClauseColumnNames.SupportsFiltering]: true,
     };
     const node = defaultNodesParser({ row });
     expect(node).to.deep.eq({
-      key: {
-        type: "instances",
-        instanceKeys: [{ className: "schema.class", id: "0x1" }],
-      },
+      key: { type: "instances", instanceKeys: [{ className: "schema.class", id: "0x1" }] },
       label: "test label",
-      extendedData: {
-        test: 123,
-      },
+      extendedData: { test: 123 },
       children: true,
       autoExpand: true,
       supportsFiltering: true,
       processingParams: {
         hideIfNoChildren: true,
         hideInHierarchy: true,
-        grouping: {
-          byBaseClasses: {
-            fullClassNames: [],
-            hideIfNoSiblings: true,
-            hideIfOneGroupedNode: true,
-          },
-          byClass: true,
-          byLabel: true,
-        },
+        grouping: { byBaseClasses: { fullClassNames: [], hideIfNoSiblings: true, hideIfOneGroupedNode: true }, byClass: true, byLabel: true },
       },
     } satisfies SourceHierarchyNode);
   });
@@ -137,20 +114,7 @@ describe("defaultNodesParser", () => {
   });
 
   it("parses complex label of multiple parts", () => {
-    const labelParts: ConcatenatedValue = [
-      {
-        type: "Integer",
-        value: 123,
-      },
-      "test",
-      [
-        {
-          type: "Boolean",
-          value: true,
-        },
-        "xxx",
-      ],
-    ];
+    const labelParts: ConcatenatedValue = [{ type: "Integer", value: 123 }, "test", [{ type: "Boolean", value: true }, "xxx"]];
     const row: RowDef = {
       [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
       [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",

@@ -41,10 +41,7 @@ export type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemR
 export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): JSX.Element {
   const translate = useTranslation();
   const errorItems = errorNodes.map((errorNode) => {
-    const errorRendererProps: ErrorItemRendererProps = {
-      errorNode,
-      ...errorItemRendererProps,
-    };
+    const errorRendererProps: ErrorItemRendererProps = { errorNode, ...errorItemRendererProps };
 
     if (renderError) {
       return cloneElement(renderError(errorRendererProps), { key: errorNode.id });

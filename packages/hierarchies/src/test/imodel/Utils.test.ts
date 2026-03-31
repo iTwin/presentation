@@ -11,12 +11,8 @@ import type { InstanceHierarchyNodeProcessingParams } from "../../hierarchies/im
 
 describe("mergeInstanceNodes", () => {
   it("takes lhs label", () => {
-    const lhs = createTestProcessedInstanceNode({
-      label: "custom1",
-    });
-    const rhs = createTestProcessedInstanceNode({
-      label: "custom2",
-    });
+    const lhs = createTestProcessedInstanceNode({ label: "custom1" });
+    const rhs = createTestProcessedInstanceNode({ label: "custom2" });
     expect(mergeInstanceNodes(lhs, rhs).label).to.eq("custom1");
   });
 

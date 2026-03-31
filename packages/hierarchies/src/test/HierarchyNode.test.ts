@@ -10,18 +10,8 @@ import { createTestGenericNodeKey } from "./Utils.js";
 import type { GroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
 
 describe("HierarchyNode", () => {
-  const genericNode: HierarchyNode = {
-    key: createTestGenericNodeKey({ id: "x" }),
-    label: "custom node",
-    parentKeys: [],
-    children: false,
-  };
-  const instancesNode: HierarchyNode = {
-    key: { type: "instances", instanceKeys: [] },
-    label: "instances node",
-    parentKeys: [],
-    children: false,
-  };
+  const genericNode: HierarchyNode = { key: createTestGenericNodeKey({ id: "x" }), label: "custom node", parentKeys: [], children: false };
+  const instancesNode: HierarchyNode = { key: { type: "instances", instanceKeys: [] }, label: "instances node", parentKeys: [], children: false };
   const classGroupingNode: GroupingHierarchyNode = {
     key: { type: "class-grouping", className: "s.c" },
     groupedInstanceKeys: [],
@@ -44,25 +34,14 @@ describe("HierarchyNode", () => {
     children: false,
   };
   const propertyValueGroupingNode: GroupingHierarchyNode = {
-    key: {
-      type: "property-grouping:value",
-      propertyClassName: "Schema.ClassName",
-      propertyName: "property name",
-      formattedPropertyValue: "value",
-    },
+    key: { type: "property-grouping:value", propertyClassName: "Schema.ClassName", propertyName: "property name", formattedPropertyValue: "value" },
     groupedInstanceKeys: [],
     label: "formatted property grouping node",
     parentKeys: [],
     children: false,
   };
   const propertyValueRangeGroupingNode: GroupingHierarchyNode = {
-    key: {
-      type: "property-grouping:range",
-      propertyClassName: "Schema.ClassName",
-      propertyName: "property name",
-      fromValue: 1,
-      toValue: 2,
-    },
+    key: { type: "property-grouping:range", propertyClassName: "Schema.ClassName", propertyName: "property name", fromValue: 1, toValue: 2 },
     groupedInstanceKeys: [],
     label: "ranged property grouping node",
     parentKeys: [],
@@ -195,12 +174,7 @@ describe("HierarchyNode", () => {
     });
 
     it("returns 1 when the last parent key is a non-grouping key", () => {
-      expect(
-        HierarchyNode.getGroupingNodeLevel({
-          key: classGroupingNode.key,
-          parentKeys: [{ type: "instances", instanceKeys: [] }],
-        }),
-      ).to.eq(1);
+      expect(HierarchyNode.getGroupingNodeLevel({ key: classGroupingNode.key, parentKeys: [{ type: "instances", instanceKeys: [] }] })).to.eq(1);
     });
 
     it("returns 2 when the last parent key is a grouping key", () => {
@@ -242,12 +216,7 @@ describe("HierarchyNode", () => {
     });
 
     it("counts generic parent keys as non-grouping", () => {
-      expect(
-        HierarchyNode.getGroupingNodeLevel({
-          key: classGroupingNode.key,
-          parentKeys: [{ type: "generic", id: "x" }],
-        }),
-      ).to.eq(1);
+      expect(HierarchyNode.getGroupingNodeLevel({ key: classGroupingNode.key, parentKeys: [{ type: "generic", id: "x" }] })).to.eq(1);
     });
 
     it("counts all parent keys when all are grouping keys", () => {

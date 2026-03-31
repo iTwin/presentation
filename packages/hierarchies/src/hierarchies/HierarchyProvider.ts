@@ -40,14 +40,10 @@ export interface GetHierarchyNodesProps {
  */
 interface HierarchyChangedEventArgs {
   /** Set when the hierarchy change was caused by a formatter change. */
-  formatterChange?: {
-    newFormatter: IPrimitiveValueFormatter | undefined;
-  };
+  formatterChange?: { newFormatter: IPrimitiveValueFormatter | undefined };
 
   /** Set when the hierarchy change was caused by a hierarchy search change. */
-  searchChange?: {
-    newSearch: Props<HierarchyProvider["setHierarchySearch"]>;
-  };
+  searchChange?: { newSearch: Props<HierarchyProvider["setHierarchySearch"]> };
 }
 
 /**

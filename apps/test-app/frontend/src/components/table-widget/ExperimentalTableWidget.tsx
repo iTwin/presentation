@@ -66,9 +66,7 @@ function PresentationTable(props: PresentationTableProps) {
   const table = useReactTable({
     data: rows,
     columns: visibleColumns ?? [],
-    state: {
-      rowSelection,
-    },
+    state: { rowSelection },
     enableRowSelection: true,
     onRowSelectionChange: (updater) => {
       const newRowSelection = typeof updater === "function" ? updater(rowSelection) : updater;
@@ -149,12 +147,7 @@ function PresentationTable(props: PresentationTableProps) {
 }
 
 function mapTableColumns(columnDefinitions: TableColumnDefinition) {
-  return {
-    id: columnDefinitions.name,
-    accessorKey: columnDefinitions.name,
-    header: columnDefinitions.label,
-    cell: cellRenderer,
-  };
+  return { id: columnDefinitions.name, accessorKey: columnDefinitions.name, header: columnDefinitions.label, cell: cellRenderer };
 }
 
 function mapTableRow(rowDefinition: TableRowDefinition) {

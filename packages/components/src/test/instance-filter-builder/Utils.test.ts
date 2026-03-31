@@ -146,11 +146,7 @@ describe("createInstanceFilterPropertyInfos", () => {
 });
 
 describe("filterRuleValidator", () => {
-  const numericProperty: PropertyDescription = {
-    displayLabel: "Numeric Prop",
-    name: "numeric-prop",
-    typename: StandardTypeNames.Double,
-  };
+  const numericProperty: PropertyDescription = { displayLabel: "Numeric Prop", name: "numeric-prop", typename: StandardTypeNames.Double };
   const quantityProperty: PropertyDescription = {
     displayLabel: "Quantity Prop",
     name: "quantity-prop",
@@ -174,11 +170,7 @@ describe("filterRuleValidator", () => {
         groupId: "test-group-id",
         property: numericProperty,
         operator: "less",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: undefined,
-          displayValue: "Invalid",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: undefined, displayValue: "Invalid" },
       }),
     ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
   });
@@ -190,11 +182,7 @@ describe("filterRuleValidator", () => {
         groupId: "test-group-id",
         property: numericProperty,
         operator: "is-equal",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: "[Invalid]",
-          displayValue: "[Invalid]",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: "[Invalid]", displayValue: "[Invalid]" },
       }),
     ).to.be.undefined;
   });
@@ -206,11 +194,7 @@ describe("filterRuleValidator", () => {
         groupId: "test-group-id",
         property: quantityProperty,
         operator: "less",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: undefined,
-          displayValue: "Invalid",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: undefined, displayValue: "Invalid" },
       }),
     ).to.be.eq("instance-filter-builder.error-messages.invalid");
   });
@@ -223,16 +207,8 @@ describe("filterRuleValidator", () => {
         property: quantityProperty,
         operator: "between",
         value: PropertyFilterBuilderRuleRangeValue.serialize({
-          from: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: undefined,
-            displayValue: "Invalid",
-          },
-          to: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: 123,
-            displayValue: "123 unit",
-          },
+          from: { valueFormat: PropertyValueFormat.Primitive, value: undefined, displayValue: "Invalid" },
+          to: { valueFormat: PropertyValueFormat.Primitive, value: 123, displayValue: "123 unit" },
         }),
       }),
     ).to.be.eq("instance-filter-builder.error-messages.invalid");
@@ -246,16 +222,8 @@ describe("filterRuleValidator", () => {
         property: quantityProperty,
         operator: "between",
         value: PropertyFilterBuilderRuleRangeValue.serialize({
-          from: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: 123,
-            displayValue: "123 unit",
-          },
-          to: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: undefined,
-            displayValue: "Invalid",
-          },
+          from: { valueFormat: PropertyValueFormat.Primitive, value: 123, displayValue: "123 unit" },
+          to: { valueFormat: PropertyValueFormat.Primitive, value: undefined, displayValue: "Invalid" },
         }),
       }),
     ).to.be.eq("instance-filter-builder.error-messages.invalid");
@@ -268,11 +236,7 @@ describe("filterRuleValidator", () => {
         groupId: "test-group-id",
         property: numericProperty,
         operator: "greater",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: 10,
-          displayValue: "10",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: 10, displayValue: "10" },
       }),
     ).to.be.undefined;
   });
@@ -284,11 +248,7 @@ describe("filterRuleValidator", () => {
         groupId: "test-group-id",
         property: quantityProperty,
         operator: "less",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: 10,
-          displayValue: "10 unit",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: 10, displayValue: "10 unit" },
       }),
     ).to.be.undefined;
   });
@@ -301,16 +261,8 @@ describe("filterRuleValidator", () => {
         property: quantityProperty,
         operator: "between",
         value: PropertyFilterBuilderRuleRangeValue.serialize({
-          from: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: 123,
-            displayValue: "123 unit",
-          },
-          to: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: 456,
-            displayValue: "456 unit",
-          },
+          from: { valueFormat: PropertyValueFormat.Primitive, value: 123, displayValue: "123 unit" },
+          to: { valueFormat: PropertyValueFormat.Primitive, value: 456, displayValue: "456 unit" },
         }),
       }),
     ).to.be.undefined;
@@ -365,9 +317,7 @@ describe("useFilterBuilderNavigationPropertyEditorContextProviderProps", () => {
 
   it("returns `undefined` for non properties field", async () => {
     const fieldName = "field_name";
-    const testDescriptor = createTestContentDescriptor({
-      fields: [createTestSimpleContentField({ name: fieldName })],
-    });
+    const testDescriptor = createTestContentDescriptor({ fields: [createTestSimpleContentField({ name: fieldName })] });
     const propertyDescription: PropertyDescription = {
       displayLabel: "TestProp",
       name: `test_category${INSTANCE_FILTER_FIELD_SEPARATOR}${fieldName}`,

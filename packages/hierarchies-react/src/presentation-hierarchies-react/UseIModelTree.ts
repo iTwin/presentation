@@ -60,10 +60,7 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearch
  */
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult {
   const { imodelAccess, imodelChanged, getHierarchyDefinition, getSearchPaths, ...rest } = props;
-  return useTree({
-    ...rest,
-    ...useIModelTreeProps({ imodelAccess, imodelChanged, getHierarchyDefinition, getSearchPaths }),
-  });
+  return useTree({ ...rest, ...useIModelTreeProps({ imodelAccess, imodelChanged, getHierarchyDefinition, getSearchPaths }) });
 }
 
 /**
@@ -83,10 +80,7 @@ export function useIModelTree(props: UseIModelTreeProps): UseTreeResult {
  */
 export function useIModelUnifiedSelectionTree(props: UseIModelTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
   const { imodelAccess, imodelChanged, getHierarchyDefinition, getSearchPaths, ...rest } = props;
-  return useUnifiedSelectionTree({
-    ...rest,
-    ...useIModelTreeProps({ imodelAccess, imodelChanged, getHierarchyDefinition, getSearchPaths }),
-  });
+  return useUnifiedSelectionTree({ ...rest, ...useIModelTreeProps({ imodelAccess, imodelChanged, getHierarchyDefinition, getSearchPaths }) });
 }
 
 function useIModelTreeProps(
@@ -101,10 +95,7 @@ function useIModelTreeProps(
           imodelAccess,
           imodelChanged,
           hierarchyDefinition: getHierarchyDefinition({ imodelAccess }),
-          localizedStrings: {
-            other: translate("other"),
-            unspecified: translate("unspecified"),
-          },
+          localizedStrings: { other: translate("other"), unspecified: translate("unspecified") },
         }),
       [imodelAccess, imodelChanged, translate, getHierarchyDefinition],
     ),

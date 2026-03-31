@@ -76,31 +76,21 @@ describe("ContentDataProvider", () => {
   const onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"] = new BeUiEvent<FormattingUnitSystemChangedArgs>();
   const onFormatsChanged: FormatsProvider["onFormatsChanged"] = new BeUiEvent<FormatsChangedArgs>();
 
-  const rulesetManager = {
-    onRulesetModified,
-  };
+  const rulesetManager = { onRulesetModified };
 
   const imodelKey = "test-imodel-Key";
-  const imodel = {
-    key: imodelKey,
-  } as IModelConnection;
+  const imodel = { key: imodelKey } as IModelConnection;
 
   beforeEach(() => {
     presentationManager = sinon.createStubInstance(PresentationManager);
     Object.assign(presentationManager, { onIModelContentChanged });
 
     presentationManager.rulesets.returns(rulesetManager as RulesetManager);
-    presentationManager.vars.returns({
-      onVariableChanged,
-    } as RulesetVariablesManager);
+    presentationManager.vars.returns({ onVariableChanged } as RulesetVariablesManager);
 
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-      onActiveFormattingUnitSystemChanged,
-    }));
-    sinon.stub(IModelApp, "formatsProvider").get(() => ({
-      onFormatsChanged,
-    }));
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({ onActiveFormattingUnitSystemChanged }));
+    sinon.stub(IModelApp, "formatsProvider").get(() => ({ onFormatsChanged }));
 
     provider = new Provider({ imodel, ruleset: rulesetId, displayType });
     invalidateCacheSpy = sinon.spy(provider, "invalidateCache");
@@ -406,11 +396,7 @@ describe("ContentDataProvider", () => {
 
       it("requests presentation manager for content", async () => {
         const descriptor = createTestContentDescriptor({ fields: [] });
-        const result: { total: number; descriptor: Descriptor; items: AsyncIterableIterator<Item> } = {
-          descriptor,
-          items: createAsyncIterator([]),
-          total: 1,
-        };
+        const result: { total: number; descriptor: Descriptor; items: AsyncIterableIterator<Item> } = { descriptor, items: createAsyncIterator([]), total: 1 };
 
         presentationManager.getContentIterator.resolves(result);
         const c = await provider.getContent({ start: 0, size: 10 });
@@ -499,10 +485,7 @@ describe("ContentDataProvider", () => {
 
       it("requests presentation manager for content", async () => {
         const descriptor = createTestContentDescriptor({ fields: [] });
-        const result: { content: Content; size: number } = {
-          content: new Content(descriptor, []),
-          size: 1,
-        };
+        const result: { content: Content; size: number } = { content: new Content(descriptor, []), size: 1 };
 
         presentationManager.getContentAndSize.resolves(result);
         const c = await provider.getContent({ start: 0, size: 10 });
@@ -583,27 +566,11 @@ describe("ContentDataProvider", () => {
 
   describe("[deprecated] getFieldByPropertyRecord", () => {
     it("passes record's description to `getFieldByPropertyDescription`", async () => {
-      const value: PrimitiveValue = {
-        displayValue: "displayValue",
-        value: "rawValue",
-        valueFormat: 0,
-      };
-      const description: PropertyDescription = {
-        name: "propertyName",
-        displayLabel: "labelString",
-        typename: "number",
-        editor: undefined,
-      };
+      const value: PrimitiveValue = { displayValue: "displayValue", value: "rawValue", valueFormat: 0 };
+      const description: PropertyDescription = { name: "propertyName", displayLabel: "labelString", typename: "number", editor: undefined };
       const record = new PropertyRecord(value, description);
 
-      const field = createTestPropertiesContentField({
-        name: "test-field",
-        properties: [
-          {
-            property: createTestPropertyInfo({ name: "test-property" }),
-          },
-        ],
-      });
+      const field = createTestPropertiesContentField({ name: "test-field", properties: [{ property: createTestPropertyInfo({ name: "test-property" }) }] });
       provider.getFieldByPropertyDescription = sinon.fake(async () => field);
 
       // eslint-disable-next-line @typescript-eslint/no-deprecated
@@ -618,12 +585,7 @@ describe("ContentDataProvider", () => {
     let propertyDescription: PropertyDescription;
 
     beforeEach(() => {
-      propertyDescription = {
-        name: "propertyName",
-        displayLabel: "labelString",
-        typename: "number",
-        editor: undefined,
-      };
+      propertyDescription = { name: "propertyName", displayLabel: "labelString", typename: "number", editor: undefined };
     });
 
     beforeEach(() => {
@@ -648,14 +610,7 @@ describe("ContentDataProvider", () => {
     });
 
     it("return a field", async () => {
-      const field = createTestPropertiesContentField({
-        name: "test-field",
-        properties: [
-          {
-            property: createTestPropertyInfo({ name: "test-property" }),
-          },
-        ],
-      });
+      const field = createTestPropertiesContentField({ name: "test-field", properties: [{ property: createTestPropertyInfo({ name: "test-property" }) }] });
       const descriptor = createTestContentDescriptor({ fields: [field] });
       propertyDescription.name = "test-field";
 
@@ -668,10 +623,7 @@ describe("ContentDataProvider", () => {
 
     it("return a nested field", async () => {
       const nestedField = createTestSimpleContentField({ name: "nested-field" });
-      const nestingField = createTestNestedContentField({
-        name: "nesting-field",
-        nestedFields: [nestedField],
-      });
+      const nestingField = createTestNestedContentField({ name: "nesting-field", nestedFields: [nestedField] });
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
       propertyDescription.name = combineFieldNames(nestedField.name, nestingField.name);
 
@@ -683,38 +635,21 @@ describe("ContentDataProvider", () => {
     });
 
     it("return a struct member field", async () => {
-      const memberFieldType: TypeDescription = {
-        valueFormat: PropertyValueFormat.Primitive,
-        typeName: "string",
-      };
+      const memberFieldType: TypeDescription = { valueFormat: PropertyValueFormat.Primitive, typeName: "string" };
       const memberField = createTestPropertiesContentField({
         name: "member-field",
         type: memberFieldType,
-        properties: [
-          {
-            property: createTestPropertyInfo({ name: "test-member-property" }),
-          },
-        ],
+        properties: [{ property: createTestPropertyInfo({ name: "test-member-property" }) }],
       });
       const structFieldType: TypeDescription = {
         valueFormat: PropertyValueFormat.Struct,
         typeName: "TestStruct",
-        members: [
-          {
-            name: "member",
-            label: "Struct Member",
-            type: memberFieldType,
-          },
-        ],
+        members: [{ name: "member", label: "Struct Member", type: memberFieldType }],
       };
       const structField = createTestPropertiesContentField({
         name: "struct-field",
         type: structFieldType,
-        properties: [
-          {
-            property: createTestPropertyInfo({ name: "test-struct-property", type: structFieldType.typeName }),
-          },
-        ],
+        properties: [{ property: createTestPropertyInfo({ name: "test-struct-property", type: structFieldType.typeName }) }],
         memberFields: [memberField],
       });
       const descriptor = createTestContentDescriptor({ fields: [structField] });
@@ -728,32 +663,17 @@ describe("ContentDataProvider", () => {
     });
 
     it("return an array item field", async () => {
-      const itemsFieldType: TypeDescription = {
-        valueFormat: PropertyValueFormat.Primitive,
-        typeName: "string",
-      };
+      const itemsFieldType: TypeDescription = { valueFormat: PropertyValueFormat.Primitive, typeName: "string" };
       const itemsField = createTestPropertiesContentField({
         name: "items-field",
         type: itemsFieldType,
-        properties: [
-          {
-            property: createTestPropertyInfo({ name: "test-items-property" }),
-          },
-        ],
+        properties: [{ property: createTestPropertyInfo({ name: "test-items-property" }) }],
       });
-      const arrayFieldType: TypeDescription = {
-        valueFormat: PropertyValueFormat.Array,
-        typeName: "TestArray",
-        memberType: itemsFieldType,
-      };
+      const arrayFieldType: TypeDescription = { valueFormat: PropertyValueFormat.Array, typeName: "TestArray", memberType: itemsFieldType };
       const arrayField = createTestPropertiesContentField({
         name: "array-field",
         type: arrayFieldType,
-        properties: [
-          {
-            property: createTestPropertyInfo({ name: "test-array-property", type: arrayFieldType.typeName }),
-          },
-        ],
+        properties: [{ property: createTestPropertyInfo({ name: "test-array-property", type: arrayFieldType.typeName }) }],
         itemsField,
       });
       const descriptor = createTestContentDescriptor({ fields: [arrayField] });
@@ -824,12 +744,7 @@ describe("ContentDataProvider", () => {
       const diagnosticsHandler = sinon.stub();
 
       provider[Symbol.dispose]();
-      provider = new Provider({
-        imodel,
-        ruleset: rulesetId,
-        displayType,
-        ruleDiagnostics: { severity: "error", handler: diagnosticsHandler },
-      });
+      provider = new Provider({ imodel, ruleset: rulesetId, displayType, ruleDiagnostics: { severity: "error", handler: diagnosticsHandler } });
       sinon.stub(provider, "shouldRequestContentForEmptyKeyset").returns(true);
 
       const descriptor = createTestContentDescriptor({ fields: [] });
@@ -853,12 +768,7 @@ describe("ContentDataProvider", () => {
         imodel,
         ruleset: rulesetId,
         displayType,
-        devDiagnostics: {
-          backendVersion: true,
-          perf: true,
-          severity: "error",
-          handler: diagnosticsHandler,
-        },
+        devDiagnostics: { backendVersion: true, perf: true, severity: "error", handler: diagnosticsHandler },
       });
       sinon.stub(provider, "shouldRequestContentForEmptyKeyset").returns(true);
 

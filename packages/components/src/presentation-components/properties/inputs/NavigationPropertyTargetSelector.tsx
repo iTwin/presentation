@@ -56,14 +56,7 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
     [loadedOptions, onCommit, propertyRecord],
   );
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      getValue: () => getPropertyValue(selectedTarget),
-      htmlElement: divRef.current,
-    }),
-    [selectedTarget],
-  );
+  useImperativeHandle(ref, () => ({ getValue: () => getPropertyValue(selectedTarget), htmlElement: divRef.current }), [selectedTarget]);
 
   useEffect(() => {
     setSelectedTarget(getNavigationTargetFromPropertyRecord(propertyRecord));

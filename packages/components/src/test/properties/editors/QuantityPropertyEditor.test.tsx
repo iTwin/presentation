@@ -29,22 +29,13 @@ const createRecord = ({ initialValue, kindOfQuantityName, quantityType }: { init
 describe("<QuantityPropertyEditor />", () => {
   before(() => {
     const format = new Format("test format");
-    const formatterSpec = {
-      applyFormatting: (raw: number) => `${raw} unit`,
-      unitConversions: [{ name: "test unit", label: "unit" }],
-      format,
-    };
-    const parserSpec = {
-      parseToQuantityValue: (value: string) => ({ ok: true, value: Number(value.substring(0, value.length - 4)) }),
-      format,
-    };
+    const formatterSpec = { applyFormatting: (raw: number) => `${raw} unit`, unitConversions: [{ name: "test unit", label: "unit" }], format };
+    const parserSpec = { parseToQuantityValue: (value: string) => ({ ok: true, value: Number(value.substring(0, value.length - 4)) }), format };
 
     sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec").resolves(formatterSpec as unknown as FormatterSpec);
     sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec").resolves(parserSpec as unknown as ParserSpec);
 
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    }));
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
   });
 
   after(() => {

@@ -104,10 +104,7 @@ describe("Learning snippets", () => {
       }
 
       /** A function that maps presentation type of column definition to something that table renderer knows how to render */
-      const mapTableColumns = (columnDefinitions: TableColumnDefinition) => ({
-        id: columnDefinitions.name,
-        label: columnDefinitions.label,
-      });
+      const mapTableColumns = (columnDefinitions: TableColumnDefinition) => ({ id: columnDefinitions.name, label: columnDefinitions.label });
 
       /** A function that maps presentation type of row definition to something that table renderer knows how to render */
       function mapTableRow(rowDefinition: TableRowDefinition) {
@@ -159,12 +156,7 @@ const ruleset: Ruleset = {
       specifications: [
         {
           specType: "ContentRelatedInstances",
-          relationshipPaths: [
-            {
-              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-              direction: "Forward",
-            },
-          ],
+          relationshipPaths: [{ relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" }],
         },
       ],
     },

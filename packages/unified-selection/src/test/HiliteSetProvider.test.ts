@@ -75,11 +75,7 @@ describe("HiliteSetProvider", () => {
         elements.push(...set.elements);
       }
 
-      return {
-        models,
-        subCategories,
-        elements,
-      };
+      return { models, subCategories, elements };
     }
 
     beforeEach(() => {
@@ -338,14 +334,7 @@ describe("HiliteSetProvider", () => {
 
         await timers.tickAsync(15);
         elementPromises[1].resolveSync(elementKeys[1].id);
-        await expect(nextValuePromise).to.eventually.deep.eq({
-          done: false,
-          value: {
-            models: [],
-            subCategories: [],
-            elements: elementKeys.map((x) => x.id),
-          },
-        });
+        await expect(nextValuePromise).to.eventually.deep.eq({ done: false, value: { models: [], subCategories: [], elements: elementKeys.map((x) => x.id) } });
         expect((await iter.next()).done).to.be.true;
       });
 

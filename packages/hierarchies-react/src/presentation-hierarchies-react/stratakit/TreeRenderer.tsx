@@ -103,11 +103,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
     getMenuActions,
     getTreeItemProps,
   } = props;
-  const { handleNodeSelect } = useSelectionHandler({
-    rootNodes,
-    selectNodes,
-    selectionMode: selectionMode ?? "single",
-  });
+  const { handleNodeSelect } = useSelectionHandler({ rootNodes, selectNodes, selectionMode: selectionMode ?? "single" });
   const flatItems = useFlatTreeItems(rootNodes);
   const errorNodes = useErrorNodes(rootNodes);
 
@@ -124,9 +120,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
   const items = virtualizer.getVirtualItems();
   const expandAndScrollToNode = useExpandAndScrollToNode({ rootNodes, flatItems, expandNode, virtualizer });
 
-  const renameContext = useTreeNodeRenameContextValue({
-    getEditingProps,
-  });
+  const renameContext = useTreeNodeRenameContextValue({ getEditingProps });
   useImperativeHandle(forwardedRef, () => ({
     renameNode: (nodePredicate) =>
       expandAndScrollToNode({
@@ -249,10 +243,7 @@ function useExpandAndScrollToNode({
 
     const { targetNode, didExpand } = expandResult;
     if (didExpand) {
-      scrollToNode.current = {
-        id: targetNode.id,
-        onScrollComplete: onComplete ? () => onComplete(targetNode) : undefined,
-      };
+      scrollToNode.current = { id: targetNode.id, onScrollComplete: onComplete ? () => onComplete(targetNode) : undefined };
     } else {
       const index = flatItems.findIndex((flatItem) => flatItem.id === targetNode.id);
       virtualizer.scrollToIndex(index, { align: "auto" });
@@ -277,23 +268,12 @@ function findPathToNode(rootNodes: TreeNode[], nodePredicate: (node: TreeNode) =
   return undefined;
 }
 
-type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item"> & {
-  start: number;
-  "data-index": number;
-  item: FlatTreeItem;
-};
+type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item"> & { start: number; "data-index": number; item: FlatTreeItem };
 
 const VirtualTreeItem = memo(
   forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem({ start, item, ...props }, forwardedRef) {
     const style: CSSProperties = useMemo(
-      () => ({
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        transform: `translateY(${start}px)`,
-        willChange: "transform",
-      }),
+      () => ({ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${start}px)`, willChange: "transform" }),
       [start],
     );
 
@@ -305,11 +285,10 @@ const VirtualTreeItem = memo(
   }),
 );
 
-type HierarchyNodeItemProps = {
-  item: FlatTreeNodeItem;
-  style?: CSSProperties;
-  getSelectedNodes: () => TreeNode[];
-} & Pick<TreeNodeRendererProps, "expandNode" | "reloadTree" | "selected"> &
+type HierarchyNodeItemProps = { item: FlatTreeNodeItem; style?: CSSProperties; getSelectedNodes: () => TreeNode[] } & Pick<
+  TreeNodeRendererProps,
+  "expandNode" | "reloadTree" | "selected"
+> &
   Pick<TreeRendererOwnProps, "getContextMenuActions" | "getInlineActions" | "getMenuActions" | "getTreeItemProps"> &
   Pick<ReturnType<typeof useSelectionHandler>, "handleNodeSelect">;
 

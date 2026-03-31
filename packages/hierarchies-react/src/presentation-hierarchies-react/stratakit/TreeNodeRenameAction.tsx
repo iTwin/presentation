@@ -112,13 +112,5 @@ export function useTreeNodeRenameContextValue({ getEditingProps }: { getEditingP
     [getEditingProps],
   );
 
-  return useMemo(
-    () => ({
-      renameParameters,
-      cancelRename,
-      startRename,
-      canRename,
-    }),
-    [renameParameters, canRename, startRename, cancelRename],
-  );
+  return useMemo(() => ({ renameParameters, cancelRename, startRename, canRename }), [renameParameters, canRename, startRename, cancelRename]);
 }

@@ -56,11 +56,7 @@ describe("Hierarchies", () => {
         },
       };
       const provider = createProvider({ imodel, hierarchy });
-      const keys = await collect(
-        provider.getNodeInstanceKeys({
-          parentNode: undefined,
-        }),
-      );
+      const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
       expect(keys)
         .to.have.lengthOf(1)
         .and.to.containSubset([{ className: "BisCore.Subject", id: "0x1" }]);
@@ -98,21 +94,9 @@ describe("Hierarchies", () => {
           return [];
         },
       };
-      const rootSubjectNode = {
-        key: {
-          type: "instances" as const,
-          instanceKeys: [rootSubjectKey],
-        },
-        parentKeys: [],
-        label: "root subject",
-        children: true,
-      };
+      const rootSubjectNode = { key: { type: "instances" as const, instanceKeys: [rootSubjectKey] }, parentKeys: [], label: "root subject", children: true };
       const provider = createProvider({ imodel, hierarchy });
-      const keys = await collect(
-        provider.getNodeInstanceKeys({
-          parentNode: rootSubjectNode,
-        }),
-      );
+      const keys = await collect(provider.getNodeInstanceKeys({ parentNode: rootSubjectNode }));
       expect(keys)
         .to.have.lengthOf(2)
         .and.to.containSubset([
@@ -149,18 +133,9 @@ describe("Hierarchies", () => {
           return [];
         },
       };
-      const testCustomNode: HierarchyNode = {
-        key: { type: "generic", id: "test" },
-        parentKeys: [],
-        label: "custom parent node",
-        children: true,
-      };
+      const testCustomNode: HierarchyNode = { key: { type: "generic", id: "test" }, parentKeys: [], label: "custom parent node", children: true };
       const provider = createProvider({ imodel, hierarchy });
-      const keys = await collect(
-        provider.getNodeInstanceKeys({
-          parentNode: testCustomNode,
-        }),
-      );
+      const keys = await collect(provider.getNodeInstanceKeys({ parentNode: testCustomNode }));
       expect(keys)
         .to.have.lengthOf(1)
         .and.to.containSubset([{ className: "BisCore.Subject", id: "0x1" }]);
@@ -217,11 +192,7 @@ describe("Hierarchies", () => {
         },
       };
       const provider = createProvider({ imodel, hierarchy });
-      const keys = await collect(
-        provider.getNodeInstanceKeys({
-          parentNode: undefined,
-        }),
-      );
+      const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
       expect(keys)
         .to.have.lengthOf(2)
         .and.to.containSubset([
@@ -239,17 +210,7 @@ describe("Hierarchies", () => {
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
-            return [
-              {
-                node: {
-                  key: "test",
-                  label: "hidden custom node",
-                  processingParams: {
-                    hideInHierarchy: true,
-                  },
-                },
-              },
-            ];
+            return [{ node: { key: "test", label: "hidden custom node", processingParams: { hideInHierarchy: true } } }];
           }
           if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "test") {
             return [
@@ -272,11 +233,7 @@ describe("Hierarchies", () => {
         },
       };
       const provider = createProvider({ imodel, hierarchy });
-      const keys = await collect(
-        provider.getNodeInstanceKeys({
-          parentNode: undefined,
-        }),
-      );
+      const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
       expect(keys)
         .to.have.lengthOf(1)
         .and.to.containSubset([{ className: "BisCore.Subject", id: "0x1" }]);

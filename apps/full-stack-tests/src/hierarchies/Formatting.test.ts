@@ -161,11 +161,7 @@ describe("Hierarchies", () => {
             hierarchy,
             formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "metric" }),
           }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`[123.5 m]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).to.eq(`[123.5 m]`) }],
         });
         await validateHierarchy({
           provider: createProvider({
@@ -173,11 +169,7 @@ describe("Hierarchies", () => {
             hierarchy,
             formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "imperial" }),
           }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`[405.0 ft]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).to.eq(`[405.0 ft]`) }],
         });
         await validateHierarchy({
           provider: createProvider({
@@ -185,11 +177,7 @@ describe("Hierarchies", () => {
             hierarchy,
             formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "usCustomary" }),
           }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`[405.0 ft]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).to.eq(`[405.0 ft]`) }],
         });
         await validateHierarchy({
           provider: createProvider({
@@ -197,11 +185,7 @@ describe("Hierarchies", () => {
             hierarchy,
             formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "usSurvey" }),
           }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`[405.04 ft (US Survey)]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).to.eq(`[405.04 ft (US Survey)]`) }],
         });
       });
     });
@@ -274,9 +258,7 @@ describe("Hierarchies", () => {
                           { type: "String", value: "]" },
                         ]),
                       },
-                      extendedData: {
-                        lastMod: { selector: ECSql.createRawPropertyValueSelector("this", "LastMod") },
-                      },
+                      extendedData: { lastMod: { selector: ECSql.createRawPropertyValueSelector("this", "LastMod") } },
                     })}
                     FROM ${subjectClassName} AS this
                   `,
@@ -425,14 +407,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`[false]`),
-            },
-            {
-              node: (node) => expect(node.label).to.eq(`[true]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).to.eq(`[false]`) }, { node: (node) => expect(node.label).to.eq(`[true]`) }],
         });
       });
 
@@ -459,11 +434,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`true-false`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).to.eq(`true-false`) }],
         });
       });
     });
@@ -512,14 +483,7 @@ describe("Hierarchies", () => {
             return [];
           },
         };
-        await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`[2]`),
-            },
-          ],
-        });
+        await validateHierarchy({ provider: createProvider({ imodel, hierarchy }), expect: [{ node: (node) => expect(node.label).to.eq(`[2]`) }] });
       });
       it("formats generic node labels", async function () {
         const hierarchy: HierarchyDefinition = {
@@ -544,11 +508,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`[124]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).to.eq(`[124]`) }],
         });
       });
     });
@@ -563,12 +523,7 @@ describe("Hierarchies", () => {
             builder,
             modelId: model.id,
             categoryId: category.id,
-            placement: {
-              origin: { x: 1.23, y: 4.56, z: 7.89 },
-              angles: {
-                yaw: 90.789,
-              },
-            },
+            placement: { origin: { x: 1.23, y: 4.56, z: 7.89 }, angles: { yaw: 90.789 } },
           });
           return { model, category, element };
         });
@@ -611,14 +566,7 @@ describe("Hierarchies", () => {
             return [];
           },
         };
-        await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`[90.79]`),
-            },
-          ],
-        });
+        await validateHierarchy({ provider: createProvider({ imodel, hierarchy }), expect: [{ node: (node) => expect(node.label).to.eq(`[90.79]`) }] });
       });
 
       it("formats generic node labels", async function () {
@@ -644,11 +592,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`[123.79]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).to.eq(`[123.79]`) }],
         });
       });
     });
@@ -663,10 +607,7 @@ describe("Hierarchies", () => {
             builder,
             modelId: model.id,
             categoryId: category.id,
-            placement: {
-              origin: { x: 1.477, y: 2.588 },
-              angle: 0,
-            },
+            placement: { origin: { x: 1.477, y: 2.588 }, angle: 0 },
           });
           return { model, category, element };
         });
@@ -709,14 +650,7 @@ describe("Hierarchies", () => {
             return [];
           },
         };
-        await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`[(1.48, 2.59)]`),
-            },
-          ],
-        });
+        await validateHierarchy({ provider: createProvider({ imodel, hierarchy }), expect: [{ node: (node) => expect(node.label).to.eq(`[(1.48, 2.59)]`) }] });
       });
 
       it("formats generic node labels", async function () {
@@ -742,11 +676,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`[(1.48, 2.59)]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).to.eq(`[(1.48, 2.59)]`) }],
         });
       });
     });
@@ -761,10 +691,7 @@ describe("Hierarchies", () => {
             builder,
             modelId: model.id,
             categoryId: category.id,
-            placement: {
-              origin: { x: 1.234, y: 4.567, z: 7.89 },
-              angles: {},
-            },
+            placement: { origin: { x: 1.234, y: 4.567, z: 7.89 }, angles: {} },
           });
           return { model, category, element };
         });
@@ -809,11 +736,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`[(1.23, 4.57, 7.89)]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).to.eq(`[(1.23, 4.57, 7.89)]`) }],
         });
       });
 
@@ -840,11 +763,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`[(1.48, 2.59, 3.70)]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).to.eq(`[(1.48, 2.59, 3.70)]`) }],
         });
       });
     });
@@ -856,12 +775,7 @@ describe("Hierarchies", () => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           // eslint-disable-next-line @typescript-eslint/no-shadow
-          const element = insertPhysicalElement({
-            builder,
-            modelId: model.id,
-            categoryId: category.id,
-            federationGuid: guid,
-          });
+          const element = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, federationGuid: guid });
           return { model, category, element };
         });
         const imodelAccess = createIModelAccess(imodel);
@@ -903,14 +817,7 @@ describe("Hierarchies", () => {
             return [];
           },
         };
-        await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).to.eq(`[${guid}]`),
-            },
-          ],
-        });
+        await validateHierarchy({ provider: createProvider({ imodel, hierarchy }), expect: [{ node: (node) => expect(node.label).to.eq(`[${guid}]`) }] });
       });
     });
   });
@@ -951,25 +858,11 @@ describe("Hierarchies", () => {
 
       const provider = createProvider({ imodel: emptyIModel, hierarchy, queryCacheSize: 10 });
       const queryReaderSpy = sinon.spy(emptyIModel, "createQueryReader");
-      await validateHierarchy({
-        provider,
-        expect: [
-          {
-            node: (node) => expect(node.label).to.eq(""),
-          },
-        ],
-      });
+      await validateHierarchy({ provider, expect: [{ node: (node) => expect(node.label).to.eq("") }] });
       expect(queryReaderSpy).to.be.calledOnce;
       queryReaderSpy.resetHistory();
       provider.setFormatter(async () => "formatted");
-      await validateHierarchy({
-        provider,
-        expect: [
-          {
-            node: (node) => expect(node.label).to.eq("formatted"),
-          },
-        ],
-      });
+      await validateHierarchy({ provider, expect: [{ node: (node) => expect(node.label).to.eq("formatted") }] });
       expect(queryReaderSpy).to.not.be.called;
     });
   });

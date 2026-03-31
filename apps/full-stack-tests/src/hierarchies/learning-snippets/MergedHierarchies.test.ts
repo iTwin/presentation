@@ -62,24 +62,8 @@ describe("Hierarchies", () => {
         // - Root nodes are sorted by label
         // - "Child node" is placed under both "Node A" and "Node X"
         expect(await collectHierarchy(mergingProvider)).to.containSubset([
-          {
-            label: "Node A",
-            children: [
-              {
-                label: "Child node",
-                children: undefined,
-              },
-            ],
-          },
-          {
-            label: "Node X",
-            children: [
-              {
-                label: "Child node",
-                children: undefined,
-              },
-            ],
-          },
+          { label: "Node A", children: [{ label: "Child node", children: undefined }] },
+          { label: "Node X", children: [{ label: "Child node", children: undefined }] },
         ]);
         // __PUBLISH_EXTRACT_END__
       });

@@ -49,11 +49,7 @@ describe("createIModelHierarchyProvider", () => {
     });
 
   beforeEach(() => {
-    imodelAccess = {
-      ...createIModelAccessStub(),
-      createQueryReader: sinon.stub(),
-      imodelKey: "test-imodel",
-    };
+    imodelAccess = { ...createIModelAccessStub(), createQueryReader: sinon.stub(), imodelKey: "test-imodel" };
   });
 
   afterEach(() => {
@@ -67,11 +63,7 @@ describe("createIModelHierarchyProvider", () => {
       hierarchyDefinition: {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
-            return [
-              {
-                node,
-              },
-            ];
+            return [{ node }];
           }
           return [];
         },
@@ -91,22 +83,13 @@ describe("createIModelHierarchyProvider", () => {
         },
       ]),
     );
-    const query: ECSqlQueryDef = {
-      ecsql: "QUERY",
-      bindings: [{ type: "string", value: "test binding" }],
-      ctes: ["CTE"],
-    };
+    const query: ECSqlQueryDef = { ecsql: "QUERY", bindings: [{ type: "string", value: "test binding" }], ctes: ["CTE"] };
     using provider = createIModelHierarchyProvider({
       imodelAccess,
       hierarchyDefinition: {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
-            return [
-              {
-                fullClassName: "x.y",
-                query,
-              },
-            ];
+            return [{ fullClassName: "x.y", query }];
           }
           return [];
         },
@@ -116,10 +99,7 @@ describe("createIModelHierarchyProvider", () => {
     expect(imodelAccess.createQueryReader).to.be.calledOnceWith(query, sinon.match({ rowFormat: "ECSqlPropertyNames", restartToken: sinon.match.string }));
     expect(nodes).to.deep.eq([
       {
-        key: {
-          type: "instances",
-          instanceKeys: [{ className: "a.b", id: "0x123", imodelKey: "test-imodel" }],
-        },
+        key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x123", imodelKey: "test-imodel" }] },
         parentKeys: [],
         label: "test label",
         children: false,
@@ -143,19 +123,12 @@ describe("createIModelHierarchyProvider", () => {
     });
 
     const nodes = await collect(provider.getNodes({ parentNode: rootNode }));
-    const expectedChild = {
-      ...childNode,
-      key: createTestGenericNodeKey({ id: "child", source: sourceName }),
-      parentKeys: [rootNode.key],
-      children: false,
-    };
+    const expectedChild = { ...childNode, key: createTestGenericNodeKey({ id: "child", source: sourceName }), parentKeys: [rootNode.key], children: false };
     expect(nodes).to.deep.eq([expectedChild]);
   });
 
   [
-    {
-      parentNode: createTestGenericNode({ key: createTestGenericNodeKey({ id: "generic node", source: "unknown source" }) }) satisfies ParentHierarchyNode,
-    },
+    { parentNode: createTestGenericNode({ key: createTestGenericNodeKey({ id: "generic node", source: "unknown source" }) }) satisfies ParentHierarchyNode },
     {
       parentNode: {
         key: { type: "instances" as const, instanceKeys: [createTestInstanceKey({ imodelKey: "unknown imodel" })] },
@@ -170,10 +143,7 @@ describe("createIModelHierarchyProvider", () => {
           return [];
         },
       };
-      using provider = createIModelHierarchyProvider({
-        imodelAccess,
-        hierarchyDefinition,
-      });
+      using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
       const spy = sinon.spy(hierarchyDefinition, "defineHierarchyLevel");
 
       const nodes = await collect(provider.getNodes({ parentNode }));
@@ -238,12 +208,7 @@ describe("createIModelHierarchyProvider", () => {
           parseNode: parser,
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  fullClassName: "x.y",
-                  query: { ecsql: "QUERY" },
-                },
-              ];
+              return [{ fullClassName: "x.y", query: { ecsql: "QUERY" } }];
             }
             return [];
           },
@@ -275,12 +240,7 @@ describe("createIModelHierarchyProvider", () => {
           parseNode: parser,
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  fullClassName: "x.y",
-                  query: { ecsql: "QUERY" },
-                },
-              ];
+              return [{ fullClassName: "x.y", query: { ecsql: "QUERY" } }];
             }
             return [];
           },
@@ -346,11 +306,7 @@ describe("createIModelHierarchyProvider", () => {
             preProcessNode: preprocess,
             async defineHierarchyLevel({ parentNode }) {
               if (!parentNode) {
-                return [
-                  {
-                    node,
-                  },
-                ];
+                return [{ node }];
               }
               return [];
             },
@@ -367,10 +323,7 @@ describe("createIModelHierarchyProvider", () => {
       it("keeps `this` context", async () => {
         const definition = new TestHierarchyDefinition();
         const preprocessSpy = sinon.spy(definition, "preProcessNode");
-        using provider = createIModelHierarchyProvider({
-          imodelAccess,
-          hierarchyDefinition: definition,
-        });
+        using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: definition });
         await collect(provider.getNodes({ parentNode: undefined }));
         expect(preprocessSpy).to.be.calledOnce.and.calledOn(definition);
       });
@@ -395,12 +348,7 @@ describe("createIModelHierarchyProvider", () => {
         });
         const nodes = await collect(provider.getNodes({ parentNode }));
         expect(postProcessNode).to.be.calledOnceWith({
-          node: {
-            ...node,
-            key: createTestGenericNodeKey({ source: sourceName }),
-            parentKeys: [parentNode.key],
-            children: false,
-          },
+          node: { ...node, key: createTestGenericNodeKey({ source: sourceName }), parentKeys: [parentNode.key], children: false },
           parentNode,
         });
         expect(nodes)
@@ -411,10 +359,7 @@ describe("createIModelHierarchyProvider", () => {
       it("keeps `this` context", async () => {
         const definition = new TestHierarchyDefinition();
         const postprocessSpy = sinon.spy(definition, "postProcessNode");
-        using provider = createIModelHierarchyProvider({
-          imodelAccess,
-          hierarchyDefinition: definition,
-        });
+        using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: definition });
         await collect(provider.getNodes({ parentNode: undefined }));
         expect(postprocessSpy).to.be.calledOnce.and.calledOn(definition);
       });
@@ -435,10 +380,7 @@ describe("createIModelHierarchyProvider", () => {
             [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
             [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
             [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
-              byProperties: {
-                propertiesClassName: propertyClass.fullName,
-                propertyGroups: [{ propertyName: "MyProperty", propertyValue: 123 }],
-              },
+              byProperties: { propertiesClassName: propertyClass.fullName, propertyGroups: [{ propertyName: "MyProperty", propertyValue: 123 }] },
             } satisfies InstanceHierarchyNodeProcessingParams["grouping"]),
           },
         ]),
@@ -448,12 +390,7 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  fullClassName: "a.b",
-                  query: { ecsql: "QUERY" },
-                },
-              ];
+              return [{ fullClassName: "a.b", query: { ecsql: "QUERY" } }];
             }
             return [];
           },
@@ -480,10 +417,7 @@ describe("createIModelHierarchyProvider", () => {
       const childNodes = await collect(provider.getNodes({ parentNode: rootNodes[0] }));
       expect(childNodes).to.deep.eq([
         {
-          key: {
-            type: "instances",
-            instanceKeys: [{ className: "a.b", id: "0x123", imodelKey: "test-imodel" }],
-          },
+          key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x123", imodelKey: "test-imodel" }] },
           parentKeys: [expectedKey],
           label: "test label",
           children: false,
@@ -523,10 +457,7 @@ describe("createIModelHierarchyProvider", () => {
 
     it("determines children when immediate child node is hidden", async () => {
       const rootNode = createTestSourceGenericNode({ key: "root" });
-      const hiddenChildNode = createTestSourceGenericNode({
-        key: "hidden child",
-        processingParams: { hideInHierarchy: true },
-      });
+      const hiddenChildNode = createTestSourceGenericNode({ key: "hidden child", processingParams: { hideInHierarchy: true } });
       const visibleChildNode = createTestSourceGenericNode({ key: "visible child" });
       using provider = createIModelHierarchyProvider({
         imodelAccess,
@@ -562,11 +493,7 @@ describe("createIModelHierarchyProvider", () => {
     // should not be removed
     it("doesn't load children of hidden child node when determining parent's children if the hidden child says it always has children", async () => {
       const rootNode = createTestSourceGenericNode({ key: "root" });
-      const hiddenChildNode = createTestSourceGenericNode({
-        key: "hidden child",
-        processingParams: { hideInHierarchy: true },
-        children: true,
-      });
+      const hiddenChildNode = createTestSourceGenericNode({ key: "hidden child", processingParams: { hideInHierarchy: true }, children: true });
       const visibleChildNode = createTestSourceGenericNode({ key: "visible child" });
       const hierarchyDefinition = {
         defineHierarchyLevel: sinon.fake(async ({ parentNode }) => {
@@ -582,10 +509,7 @@ describe("createIModelHierarchyProvider", () => {
           return [];
         }),
       };
-      using provider = createIModelHierarchyProvider({
-        imodelAccess,
-        hierarchyDefinition,
-      });
+      using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
       const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
       expect(rootNodes).to.deep.eq([{ ...rootNode, key: createTestGenericNodeKey({ id: "root", source: sourceName }), parentKeys: [], children: true }]);
       expect(hierarchyDefinition.defineHierarchyLevel).to.be.calledTwice;
@@ -597,10 +521,7 @@ describe("createIModelHierarchyProvider", () => {
   describe("Hiding nodes without children", () => {
     it("hides node without children", async () => {
       const rootNode = createTestSourceGenericNode({ key: "root" });
-      const hiddenChildNode = createTestSourceGenericNode({
-        key: "hidden child",
-        processingParams: { hideIfNoChildren: true },
-      });
+      const hiddenChildNode = createTestSourceGenericNode({ key: "hidden child", processingParams: { hideIfNoChildren: true } });
       using provider = createIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
@@ -623,10 +544,7 @@ describe("createIModelHierarchyProvider", () => {
 
     it("doesn't hide node with children", async () => {
       const rootNode = createTestSourceGenericNode({ key: "root" });
-      const hiddenChildNode = createTestSourceGenericNode({
-        key: "hidden child",
-        processingParams: { hideIfNoChildren: true },
-      });
+      const hiddenChildNode = createTestSourceGenericNode({ key: "hidden child", processingParams: { hideIfNoChildren: true } });
       const grandChildNode = createTestSourceGenericNode({ key: "grand child", children: false });
       using provider = createIModelHierarchyProvider({
         imodelAccess,
@@ -721,18 +639,10 @@ describe("createIModelHierarchyProvider", () => {
     });
 
     it("applies search on query definitions", async () => {
-      imodelAccess.stubEntityClass({
-        schemaName: "a",
-        className: "b",
-      });
+      imodelAccess.stubEntityClass({ schemaName: "a", className: "b" });
 
       imodelAccess.createQueryReader.callsFake(() =>
-        createAsyncIterator<
-          RowDef & {
-            [ECSQL_COLUMN_NAME_SearchECInstanceId]: string;
-            [ECSQL_COLUMN_NAME_SearchClassName]: string;
-          }
-        >([
+        createAsyncIterator<RowDef & { [ECSQL_COLUMN_NAME_SearchECInstanceId]: string; [ECSQL_COLUMN_NAME_SearchClassName]: string }>([
           {
             [NodeSelectClauseColumnNames.FullClassName]: "a.b",
             [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
@@ -747,24 +657,12 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  fullClassName: "a.b",
-                  query: { ecsql: "QUERY" },
-                },
-              ];
+              return [{ fullClassName: "a.b", query: { ecsql: "QUERY" } }];
             }
             return [];
           },
         },
-        search: {
-          paths: [
-            {
-              identifier: { className: "a.b", id: "0x123" },
-              children: [{ identifier: { className: "c.d", id: "0x456" } }],
-            },
-          ],
-        },
+        search: { paths: [{ identifier: { className: "a.b", id: "0x123" }, children: [{ identifier: { className: "c.d", id: "0x456" } }] }] },
       });
       let nodes = await collect(provider.getNodes({ parentNode: undefined }));
       expect(imodelAccess.createQueryReader).to.be.calledOnceWith(
@@ -799,16 +697,11 @@ describe("createIModelHierarchyProvider", () => {
       );
       expect(nodes).to.deep.eq([
         {
-          key: {
-            type: "instances",
-            instanceKeys: [{ className: "a.b", id: "0x123", imodelKey: "test-imodel" }],
-          },
+          key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x123", imodelKey: "test-imodel" }] },
           parentKeys: [],
           label: "test label",
           children: false,
-          search: {
-            childrenTargetPaths: [{ identifier: { className: "c.d", id: "0x456" } }],
-          },
+          search: { childrenTargetPaths: [{ identifier: { className: "c.d", id: "0x456" } }] },
         },
       ]);
 
@@ -822,10 +715,7 @@ describe("createIModelHierarchyProvider", () => {
       );
       expect(nodes).to.deep.eq([
         {
-          key: {
-            type: "instances",
-            instanceKeys: [{ className: "a.b", id: "0x123", imodelKey: "test-imodel" }],
-          },
+          key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x123", imodelKey: "test-imodel" }] },
           parentKeys: [],
           label: "test label",
           children: false,
@@ -834,26 +724,12 @@ describe("createIModelHierarchyProvider", () => {
     });
 
     it("applies child nodes search when hierarchy search is set in-between requests", async () => {
-      imodelAccess.stubEntityClass({
-        schemaName: "a",
-        className: "b",
-      });
-      imodelAccess.stubEntityClass({
-        schemaName: "c",
-        className: "d",
-      });
+      imodelAccess.stubEntityClass({ schemaName: "a", className: "b" });
+      imodelAccess.stubEntityClass({ schemaName: "c", className: "d" });
 
-      const rootNodePromise = new ResolvablePromise<
-        RowDef & {
-          [ECSQL_COLUMN_NAME_SearchECInstanceId]: string;
-          [ECSQL_COLUMN_NAME_SearchClassName]: string;
-        }
-      >();
+      const rootNodePromise = new ResolvablePromise<RowDef & { [ECSQL_COLUMN_NAME_SearchECInstanceId]: string; [ECSQL_COLUMN_NAME_SearchClassName]: string }>();
       const childNodePromise = new ResolvablePromise<
-        RowDef & {
-          [ECSQL_COLUMN_NAME_SearchECInstanceId]: string;
-          [ECSQL_COLUMN_NAME_SearchClassName]: string;
-        }
+        RowDef & { [ECSQL_COLUMN_NAME_SearchECInstanceId]: string; [ECSQL_COLUMN_NAME_SearchClassName]: string }
       >();
       imodelAccess.createQueryReader.callsFake(async function* ({ ecsql, ctes }) {
         if (ecsql.includes("ROOT QUERY")) {
@@ -873,19 +749,9 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  fullClassName: "a.b",
-                  query: { ecsql: "ROOT QUERY" },
-                },
-              ];
+              return [{ fullClassName: "a.b", query: { ecsql: "ROOT QUERY" } }];
             }
-            return [
-              {
-                fullClassName: "a.b",
-                query: { ecsql: "CHILDREN QUERY" },
-              },
-            ];
+            return [{ fullClassName: "a.b", query: { ecsql: "CHILDREN QUERY" } }];
           },
         },
       });
@@ -923,14 +789,9 @@ describe("createIModelHierarchyProvider", () => {
       // ensure the searched node resolves with `children: false` and has searching props
       const searchedRootNode = (await searchedRootNodeIter).value;
       expect(searchedRootNode).to.containSubset({
-        key: {
-          type: "instances",
-          instanceKeys: [{ className: "a.b", id: "0x123" }],
-        },
+        key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x123" }] },
         children: false,
-        search: {
-          childrenTargetPaths: [{ identifier: { className: "c.d", id: "0x456" } }],
-        },
+        search: { childrenTargetPaths: [{ identifier: { className: "c.d", id: "0x456" } }] },
       });
 
       // ensure requesting children for the searched node returns empty list
@@ -939,10 +800,7 @@ describe("createIModelHierarchyProvider", () => {
     });
 
     it("applies grouped nodes search when hierarchy search is set in-between requests", async () => {
-      imodelAccess.stubEntityClass({
-        schemaName: "a",
-        className: "b",
-      });
+      imodelAccess.stubEntityClass({ schemaName: "a", className: "b" });
 
       const rootNodePromise = new ResolvablePromise<RowDef>();
       imodelAccess.createQueryReader.callsFake(async function* ({ ecsql, ctes }) {
@@ -951,9 +809,7 @@ describe("createIModelHierarchyProvider", () => {
             [NodeSelectClauseColumnNames.FullClassName]: "a.b",
             [NodeSelectClauseColumnNames.ECInstanceId]: "0x456",
             [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
-            [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
-              byLabel: true,
-            } satisfies InstanceHierarchyNodeProcessingParams["grouping"]),
+            [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({ byLabel: true } satisfies InstanceHierarchyNodeProcessingParams["grouping"]),
           };
 
           // ctes is empty for non-searched case and has one item for searched case
@@ -968,12 +824,7 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  fullClassName: "a.b",
-                  query: { ecsql: "ROOT QUERY" },
-                },
-              ];
+              return [{ fullClassName: "a.b", query: { ecsql: "ROOT QUERY" } }];
             }
             return [];
           },
@@ -985,9 +836,7 @@ describe("createIModelHierarchyProvider", () => {
       await waitFor(() => expect(imodelAccess.createQueryReader).to.be.calledOnce);
 
       // set the search and request searched nodes AFTER the root node query has been executed
-      provider.setHierarchySearch({
-        paths: [{ identifier: { className: "a.b", id: "0x456" } }],
-      });
+      provider.setHierarchySearch({ paths: [{ identifier: { className: "a.b", id: "0x456" } }] });
       const searchedRootNodeIter = provider.getNodes({ parentNode: undefined }).next();
 
       // all requests are made in correct order, now resolve the responses
@@ -995,9 +844,7 @@ describe("createIModelHierarchyProvider", () => {
         [NodeSelectClauseColumnNames.FullClassName]: "a.b",
         [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
         [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
-        [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
-          byLabel: true,
-        } satisfies InstanceHierarchyNodeProcessingParams["grouping"]),
+        [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({ byLabel: true } satisfies InstanceHierarchyNodeProcessingParams["grouping"]),
       });
 
       // setting instance search while a nodes request is in progress cancels the request - ensure we get undefined
@@ -1006,12 +853,7 @@ describe("createIModelHierarchyProvider", () => {
 
       // ensure we do get the searched grouping node
       const searchedRootNode = (await searchedRootNodeIter).value;
-      expect(searchedRootNode).to.containSubset({
-        key: {
-          type: "label-grouping",
-          label: "ab",
-        },
-      } satisfies Partial<HierarchyNode>);
+      expect(searchedRootNode).to.containSubset({ key: { type: "label-grouping", label: "ab" } } satisfies Partial<HierarchyNode>);
 
       // ensure requesting children for the searched node returns one grouped node
       expect(await collect(provider.getNodes({ parentNode: searchedRootNode }))).to.have.lengthOf(1);
@@ -1104,11 +946,7 @@ describe("createIModelHierarchyProvider", () => {
     });
 
     it("returns empty list for parent generic node", async () => {
-      const genericNode = createTestSourceGenericNode({
-        key: "custom",
-        label: "test",
-        children: false,
-      });
+      const genericNode = createTestSourceGenericNode({ key: "custom", label: "test", children: false });
       using provider = createIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
@@ -1127,16 +965,8 @@ describe("createIModelHierarchyProvider", () => {
     it("returns instance nodes' keys", async () => {
       imodelAccess.createQueryReader.returns(
         createAsyncIterator([
-          {
-            [0]: "a.b",
-            [1]: "0x123",
-            [2]: false,
-          },
-          {
-            [0]: "c:d",
-            [1]: "0x456",
-            [2]: false,
-          },
+          { [0]: "a.b", [1]: "0x123", [2]: false },
+          { [0]: "c:d", [1]: "0x456", [2]: false },
         ]),
       );
       using provider = createIModelHierarchyProvider({
@@ -1144,12 +974,7 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  fullClassName: "x.y",
-                  query: { ecsql: "query" },
-                },
-              ];
+              return [{ fullClassName: "x.y", query: { ecsql: "query" } }];
             }
             return [];
           },
@@ -1165,24 +990,8 @@ describe("createIModelHierarchyProvider", () => {
     });
 
     it("returns child instance nodes' keys of hidden custom node", async () => {
-      const customNode = {
-        key: "custom",
-        parentKeys: [],
-        label: "test",
-        children: false,
-        processingParams: {
-          hideInHierarchy: true,
-        },
-      };
-      imodelAccess.createQueryReader.returns(
-        createAsyncIterator([
-          {
-            [0]: "a.b",
-            [1]: "0x123",
-            [2]: false,
-          },
-        ]),
-      );
+      const customNode = { key: "custom", parentKeys: [], label: "test", children: false, processingParams: { hideInHierarchy: true } };
+      imodelAccess.createQueryReader.returns(createAsyncIterator([{ [0]: "a.b", [1]: "0x123", [2]: false }]));
       using provider = createIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
@@ -1191,12 +1000,7 @@ describe("createIModelHierarchyProvider", () => {
               return [{ node: customNode }];
             }
             if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "custom") {
-              return [
-                {
-                  fullClassName: "x.y",
-                  query: { ecsql: "query" },
-                },
-              ];
+              return [{ fullClassName: "x.y", query: { ecsql: "query" } }];
             }
             return [];
           },
@@ -1209,43 +1013,17 @@ describe("createIModelHierarchyProvider", () => {
     });
 
     it("returns child instance nodes' keys of hidden instance node", async () => {
-      imodelAccess.createQueryReader.onFirstCall().returns(
-        createAsyncIterator([
-          {
-            [0]: "a.b",
-            [1]: "0x123",
-            [2]: true,
-          },
-        ]),
-      );
-      imodelAccess.createQueryReader.onSecondCall().returns(
-        createAsyncIterator([
-          {
-            [0]: "c.d",
-            [1]: "0x456",
-            [2]: false,
-          },
-        ]),
-      );
+      imodelAccess.createQueryReader.onFirstCall().returns(createAsyncIterator([{ [0]: "a.b", [1]: "0x123", [2]: true }]));
+      imodelAccess.createQueryReader.onSecondCall().returns(createAsyncIterator([{ [0]: "c.d", [1]: "0x456", [2]: false }]));
       using provider = createIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  fullClassName: "x.y",
-                  query: { ecsql: "root" },
-                },
-              ];
+              return [{ fullClassName: "x.y", query: { ecsql: "root" } }];
             }
             if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((k) => k.className === "a.b")) {
-              return [
-                {
-                  fullClassName: "x.y",
-                  query: { ecsql: "child" },
-                },
-              ];
+              return [{ fullClassName: "x.y", query: { ecsql: "child" } }];
             }
             return [];
           },
@@ -1260,52 +1038,23 @@ describe("createIModelHierarchyProvider", () => {
     it("merges same-class instance keys under a single parent node when requesting child node keys for hidden parent instance nodes", async () => {
       imodelAccess.createQueryReader.onFirstCall().returns(
         createAsyncIterator([
-          {
-            [0]: "a.b",
-            [1]: "0x123",
-            [2]: true,
-          },
-          {
-            [0]: "a.b",
-            [1]: "0x456",
-            [2]: true,
-          },
+          { [0]: "a.b", [1]: "0x123", [2]: true },
+          { [0]: "a.b", [1]: "0x456", [2]: true },
         ]),
       );
-      imodelAccess.createQueryReader.onSecondCall().returns(
-        createAsyncIterator([
-          {
-            [0]: "c.d",
-            [1]: "0x789",
-            [2]: false,
-          },
-        ]),
-      );
+      imodelAccess.createQueryReader.onSecondCall().returns(createAsyncIterator([{ [0]: "c.d", [1]: "0x789", [2]: false }]));
       const hierarchyDefinition = {
         defineHierarchyLevel: sinon.fake(async ({ parentNode }: DefineHierarchyLevelProps) => {
           if (!parentNode) {
-            return [
-              {
-                fullClassName: "x.y" as const,
-                query: { ecsql: "root" },
-              },
-            ];
+            return [{ fullClassName: "x.y" as const, query: { ecsql: "root" } }];
           }
           if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((k) => k.className === "a.b")) {
-            return [
-              {
-                fullClassName: "x.y" as const,
-                query: { ecsql: "child" },
-              },
-            ];
+            return [{ fullClassName: "x.y" as const, query: { ecsql: "child" } }];
           }
           return [];
         }),
       };
-      using provider = createIModelHierarchyProvider({
-        imodelAccess,
-        hierarchyDefinition,
-      });
+      using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
       expect(keys)
         .to.have.lengthOf(1)
@@ -1324,35 +1073,19 @@ describe("createIModelHierarchyProvider", () => {
     it("applies instance filter", async () => {
       imodelAccess.createQueryReader.returns(
         createAsyncIterator([
-          {
-            [0]: "a.b",
-            [1]: "0x123",
-            [2]: false,
-          },
-          {
-            [0]: "a.b",
-            [1]: "0x456",
-            [2]: false,
-          },
+          { [0]: "a.b", [1]: "0x123", [2]: false },
+          { [0]: "a.b", [1]: "0x456", [2]: false },
         ]),
       );
       const hierarchyDefinition = {
         defineHierarchyLevel: sinon.fake(async ({ parentNode, instanceFilter: requestedInstanceFilter }: DefineHierarchyLevelProps) => {
           if (parentNode === undefined && requestedInstanceFilter) {
-            return [
-              {
-                fullClassName: "x.y" as const,
-                query: { ecsql: "root" },
-              },
-            ];
+            return [{ fullClassName: "x.y" as const, query: { ecsql: "root" } }];
           }
           return [];
         }),
       };
-      using provider = createIModelHierarchyProvider({
-        imodelAccess,
-        hierarchyDefinition,
-      });
+      using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined, instanceFilter }));
       expect(keys)
         .to.have.lengthOf(2)
@@ -1367,32 +1100,16 @@ describe("createIModelHierarchyProvider", () => {
     });
 
     it("applies hierarchy level size limit", async () => {
-      imodelAccess.createQueryReader.returns(
-        createAsyncIterator([
-          {
-            [0]: "a.b",
-            [1]: "0x123",
-            [2]: false,
-          },
-        ]),
-      );
+      imodelAccess.createQueryReader.returns(createAsyncIterator([{ [0]: "a.b", [1]: "0x123", [2]: false }]));
       const hierarchyDefinition = {
         defineHierarchyLevel: sinon.fake(async ({ parentNode }: DefineHierarchyLevelProps) => {
           if (parentNode === undefined) {
-            return [
-              {
-                fullClassName: "x.y" as const,
-                query: { ecsql: "root" },
-              },
-            ];
+            return [{ fullClassName: "x.y" as const, query: { ecsql: "root" } }];
           }
           return [];
         }),
       };
-      using provider = createIModelHierarchyProvider({
-        imodelAccess,
-        hierarchyDefinition,
-      });
+      using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined, hierarchyLevelSizeLimit: 1 }));
       expect(keys)
         .to.have.lengthOf(1)
@@ -1430,12 +1147,7 @@ describe("createIModelHierarchyProvider", () => {
         imodelAccess,
         hierarchyDefinition: {
           async defineHierarchyLevel() {
-            return [
-              {
-                fullClassName: "x.y",
-                query: { ecsql: "QUERY" },
-              },
-            ];
+            return [{ fullClassName: "x.y", query: { ecsql: "QUERY" } }];
           },
         },
       });
@@ -1456,12 +1168,7 @@ describe("createIModelHierarchyProvider", () => {
             if (!parentNode) {
               return [{ node: createTestSourceGenericNode({ key: "root" }) }];
             }
-            return [
-              {
-                fullClassName: "x.y",
-                query: { ecsql: "QUERY" },
-              },
-            ];
+            return [{ fullClassName: "x.y", query: { ecsql: "QUERY" } }];
           },
         },
       });
@@ -1481,12 +1188,7 @@ describe("createIModelHierarchyProvider", () => {
             if (!parentNode) {
               return [{ node: createTestSourceGenericNode({ key: "root" }) }];
             }
-            return [
-              {
-                fullClassName: "x.y",
-                query: { ecsql: "QUERY" },
-              },
-            ];
+            return [{ fullClassName: "x.y", query: { ecsql: "QUERY" } }];
           },
         },
       });
@@ -1506,12 +1208,7 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  fullClassName: "x.y",
-                  query: { ecsql: "QUERY" },
-                },
-              ];
+              return [{ fullClassName: "x.y", query: { ecsql: "QUERY" } }];
             }
             return [];
           },
@@ -1533,12 +1230,7 @@ describe("createIModelHierarchyProvider", () => {
               return [{ node: createTestSourceGenericNode({ key: "root" }) }];
             }
             if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "root") {
-              return [
-                {
-                  fullClassName: "x.y",
-                  query: { ecsql: "QUERY" },
-                },
-              ];
+              return [{ fullClassName: "x.y", query: { ecsql: "QUERY" } }];
             }
             return [];
           },
@@ -1559,12 +1251,7 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  fullClassName: "x.y",
-                  query: { ecsql: "QUERY" },
-                },
-              ];
+              return [{ fullClassName: "x.y", query: { ecsql: "QUERY" } }];
             }
             return [];
           },
@@ -1583,12 +1270,7 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  fullClassName: "x.y",
-                  query: { ecsql: "QUERY" },
-                },
-              ];
+              return [{ fullClassName: "x.y", query: { ecsql: "QUERY" } }];
             }
             return [];
           },
@@ -1607,12 +1289,7 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode, instanceFilter }) {
             if (!parentNode) {
-              return [
-                {
-                  fullClassName: "x.y",
-                  query: { ecsql: `QUERY WHERE ${JSON.stringify(instanceFilter)}` },
-                },
-              ];
+              return [{ fullClassName: "x.y", query: { ecsql: `QUERY WHERE ${JSON.stringify(instanceFilter)}` } }];
             }
             return [];
           },
@@ -1635,9 +1312,7 @@ describe("createIModelHierarchyProvider", () => {
               [NodeSelectClauseColumnNames.ECInstanceId]: `0x1`,
               [NodeSelectClauseColumnNames.DisplayLabel]: `one`,
               [NodeSelectClauseColumnNames.HasChildren]: true,
-              [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
-                byClass: true,
-              } satisfies InstanceHierarchyNodeProcessingParams["grouping"]),
+              [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({ byClass: true } satisfies InstanceHierarchyNodeProcessingParams["grouping"]),
             },
           ]);
         } else if (query.ecsql.includes("CHILD")) {
@@ -1657,20 +1332,10 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  fullClassName: "x.y",
-                  query: { ecsql: "ROOT" },
-                },
-              ];
+              return [{ fullClassName: "x.y", query: { ecsql: "ROOT" } }];
             }
             if (parentNode.label === "one") {
-              return [
-                {
-                  fullClassName: "x.y",
-                  query: { ecsql: "CHILD" },
-                },
-              ];
+              return [{ fullClassName: "x.y", query: { ecsql: "CHILD" } }];
             }
             return [];
           },
@@ -1683,10 +1348,7 @@ describe("createIModelHierarchyProvider", () => {
       expect(imodelAccess.createQueryReader).to.be.calledOnceWith(sinon.match((query) => query.ecsql === "ROOT"));
       expect(groupingNodes).to.deep.eq([
         {
-          key: {
-            type: "class-grouping",
-            className: "x.y",
-          },
+          key: { type: "class-grouping", className: "x.y" },
           groupedInstanceKeys: [{ className: "x.y", id: "0x1", imodelKey: "test-imodel" }],
           parentKeys: [],
           label: "Class Y",
@@ -1699,16 +1361,8 @@ describe("createIModelHierarchyProvider", () => {
       expect(imodelAccess.createQueryReader).to.be.calledOnce;
       expect(rootInstanceNodes).to.deep.eq([
         {
-          key: {
-            type: "instances",
-            instanceKeys: [{ className: "x.y", id: "0x1", imodelKey: "test-imodel" }],
-          },
-          parentKeys: [
-            {
-              type: "class-grouping",
-              className: "x.y",
-            },
-          ],
+          key: { type: "instances", instanceKeys: [{ className: "x.y", id: "0x1", imodelKey: "test-imodel" }] },
+          parentKeys: [{ type: "class-grouping", className: "x.y" }],
           label: "one",
           children: true,
         } as HierarchyNode,
@@ -1720,19 +1374,10 @@ describe("createIModelHierarchyProvider", () => {
       expect(imodelAccess.createQueryReader).to.be.calledOnceWith(sinon.match((query) => query.ecsql === "CHILD"));
       expect(childInstanceNodes).to.deep.eq([
         {
-          key: {
-            type: "instances",
-            instanceKeys: [{ className: "x.y", id: "0x2", imodelKey: "test-imodel" }],
-          },
+          key: { type: "instances", instanceKeys: [{ className: "x.y", id: "0x2", imodelKey: "test-imodel" }] },
           parentKeys: [
-            {
-              type: "class-grouping",
-              className: "x.y",
-            },
-            {
-              type: "instances",
-              instanceKeys: [{ className: "x.y", id: "0x1", imodelKey: "test-imodel" }],
-            },
+            { type: "class-grouping", className: "x.y" },
+            { type: "instances", instanceKeys: [{ className: "x.y", id: "0x1", imodelKey: "test-imodel" }] },
           ],
           label: "two",
           children: false,
@@ -1764,12 +1409,7 @@ describe("createIModelHierarchyProvider", () => {
         imodelChanged,
         hierarchyDefinition: {
           async defineHierarchyLevel() {
-            return [
-              {
-                fullClassName: "x.y",
-                query: { ecsql: "QUERY" },
-              },
-            ];
+            return [{ fullClassName: "x.y", query: { ecsql: "QUERY" } }];
           },
         },
       });
@@ -1833,12 +1473,7 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  fullClassName: "x.y",
-                  query: { ecsql: "QUERY" },
-                },
-              ];
+              return [{ fullClassName: "x.y", query: { ecsql: "QUERY" } }];
             }
             return [];
           },
@@ -1860,11 +1495,7 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  node,
-                },
-              ];
+              return [{ node }];
             }
             return [];
           },
@@ -1884,11 +1515,7 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  node,
-                },
-              ];
+              return [{ node }];
             }
             return [];
           },
@@ -1906,74 +1533,56 @@ describe("createIModelHierarchyProvider", () => {
 
 describe("createMergedIModelHierarchyProvider", () => {
   it("throws when given empty iModels list", () => {
-    expect(() =>
-      createMergedIModelHierarchyProvider({
-        imodels: [],
-        hierarchyDefinition: {
-          defineHierarchyLevel: async () => [],
-        },
-      }),
-    ).to.throw("requires at least one iModel");
+    expect(() => createMergedIModelHierarchyProvider({ imodels: [], hierarchyDefinition: { defineHierarchyLevel: async () => [] } })).to.throw(
+      "requires at least one iModel",
+    );
   });
 
   it("merges instance nodes from different providers", async () => {
     const imodelAccess1 = {
       ...createIModelAccessStub(),
-      createQueryReader: sinon.stub().returns(
-        createAsyncIterator([
-          {
-            [NodeSelectClauseColumnNames.FullClassName]: "a.b",
-            [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
-            [NodeSelectClauseColumnNames.DisplayLabel]: "test label 1",
-            [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x123",
-            [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
-          },
-        ]),
-      ),
+      createQueryReader: sinon
+        .stub()
+        .returns(
+          createAsyncIterator([
+            {
+              [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+              [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
+              [NodeSelectClauseColumnNames.DisplayLabel]: "test label 1",
+              [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x123",
+              [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
+            },
+          ]),
+        ),
       imodelKey: "imodel 1",
     };
     const imodelAccess2 = {
       ...createIModelAccessStub(),
-      createQueryReader: sinon.stub().returns(
-        createAsyncIterator([
-          {
-            [NodeSelectClauseColumnNames.FullClassName]: "a.b",
-            [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
-            [NodeSelectClauseColumnNames.DisplayLabel]: "test label 2",
-            [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x123",
-            [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
-          },
-        ]),
-      ),
+      createQueryReader: sinon
+        .stub()
+        .returns(
+          createAsyncIterator([
+            {
+              [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+              [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
+              [NodeSelectClauseColumnNames.DisplayLabel]: "test label 2",
+              [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x123",
+              [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
+            },
+          ]),
+        ),
       imodelKey: "imodel 2",
     };
 
     using provider = createMergedIModelHierarchyProvider({
       imodels: [{ imodelAccess: imodelAccess1 }, { imodelAccess: imodelAccess2 }],
-      hierarchyDefinition: {
-        defineHierarchyLevel: async ({ parentNode }) =>
-          parentNode
-            ? []
-            : [
-                {
-                  fullClassName: "a.b",
-                  query: { ecsql: "" },
-                },
-              ],
-      },
+      hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [{ fullClassName: "a.b", query: { ecsql: "" } }]) },
       search: {
         paths: [
-          {
-            identifier: { className: "a.b", id: "0x123", imodelKey: "imodel 1" },
-            options: { autoExpand: true },
-          },
+          { identifier: { className: "a.b", id: "0x123", imodelKey: "imodel 1" }, options: { autoExpand: true } },
           {
             identifier: { className: "a.b", id: "0x123", imodelKey: "imodel 2" },
-            children: [
-              {
-                identifier: { className: "c.d", id: "0x456", imodelKey: "imodel 2" },
-              },
-            ],
+            children: [{ identifier: { className: "c.d", id: "0x456", imodelKey: "imodel 2" } }],
           },
         ],
       },
@@ -1994,9 +1603,7 @@ describe("createMergedIModelHierarchyProvider", () => {
         children: false,
         search: {
           isSearchTarget: true,
-          options: {
-            autoExpand: true,
-          },
+          options: { autoExpand: true },
           childrenTargetPaths: [{ identifier: { className: "c.d", id: "0x456", imodelKey: "imodel 2" } }],
         },
         autoExpand: true,

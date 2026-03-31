@@ -139,11 +139,7 @@ function runSelectionScopeTest(
         elementIds.push(row.ECInstanceId);
       }
 
-      return {
-        iModel,
-        elementIds,
-        queryExecutor,
-      };
+      return { iModel, elementIds, queryExecutor };
     },
     test: async (props) => {
       const iterator = computeSelection({ elementIds: props.elementIds, scope: testProps.scope, queryExecutor: props.queryExecutor });

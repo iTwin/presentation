@@ -283,20 +283,16 @@ describe("Favorite properties", () => {
   describe("re-initialization", () => {
     const storage = new Map<string, any>();
     before(async () => {
-      sinon.stub(IModelApp, "userPreferences").get(() => ({
-        get: async (arg: PreferenceKeyArg & ITwinIdArg & TokenArg) => storage.get(arg.key),
-        save: async (arg: PreferenceArg & ITwinIdArg & TokenArg) => storage.set(arg.key, arg.content),
-        delete: async (arg: PreferenceKeyArg & ITwinIdArg & TokenArg) => storage.delete(arg.key),
-      }));
-      sinon.stub(IModelApp, "authorizationClient").get(() => ({
-        getAccessToken: async () => "accessToken",
-      }));
+      sinon
+        .stub(IModelApp, "userPreferences")
+        .get(() => ({
+          get: async (arg: PreferenceKeyArg & ITwinIdArg & TokenArg) => storage.get(arg.key),
+          save: async (arg: PreferenceArg & ITwinIdArg & TokenArg) => storage.set(arg.key, arg.content),
+          delete: async (arg: PreferenceKeyArg & ITwinIdArg & TokenArg) => storage.delete(arg.key),
+        }));
+      sinon.stub(IModelApp, "authorizationClient").get(() => ({ getAccessToken: async () => "accessToken" }));
       Presentation.terminate();
-      await Presentation.initialize({
-        favorites: {
-          storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),
-        },
-      });
+      await Presentation.initialize({ favorites: { storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage) } });
     });
 
     after(() => {
@@ -323,11 +319,7 @@ describe("Favorite properties", () => {
 
       // refresh Presentation
       Presentation.terminate();
-      await Presentation.initialize({
-        favorites: {
-          storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),
-        },
-      });
+      await Presentation.initialize({ favorites: { storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage) } });
 
       propertiesDataProvider = new PresentationPropertyDataProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
       propertiesDataProvider.isNestedPropertyCategoryGroupingEnabled = false;

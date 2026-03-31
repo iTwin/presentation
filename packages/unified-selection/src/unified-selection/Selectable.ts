@@ -96,10 +96,7 @@ export namespace Selectables {
    * @public
    */
   export function create(source: Selectable[]): Selectables {
-    const newSelectables = {
-      instanceKeys: new Map<string, Set<string>>(),
-      custom: new Map<string, CustomSelectable>(),
-    };
+    const newSelectables = { instanceKeys: new Map<string, Set<string>>(), custom: new Map<string, CustomSelectable>() };
     Selectables.add(newSelectables, source);
     return newSelectables;
   }

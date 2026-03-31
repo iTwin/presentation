@@ -95,12 +95,7 @@ export function usePropertyDataProviderWithUnifiedSelection(
     if (selectionStorage) {
       return initUnifiedSelectionFromStorage({ imodel, selectionStorage, onSelectionChanged });
     }
-    return initUnifiedSelectionFromPresentationFrontend({
-      imodel,
-      rulesetId,
-      suppliedSelectionHandler,
-      onSelectionChanged,
-    });
+    return initUnifiedSelectionFromPresentationFrontend({ imodel, rulesetId, suppliedSelectionHandler, onSelectionChanged });
   }, [dataProvider, imodel, rulesetId, requestedContentInstancesLimit, suppliedSelectionHandler, selectionStorage]);
 
   return { isOverLimit: isOverLimit(numSelectedElements, requestedContentInstancesLimit), numSelectedElements };
@@ -122,9 +117,7 @@ function initUnifiedSelectionFromStorage({
       map((level) => selectionStorage.getSelection({ imodelKey, level })),
       switchMap(async (selectables) => createKeySetFromSelectables(selectables)),
     )
-    .subscribe({
-      next: onSelectionChanged,
-    });
+    .subscribe({ next: onSelectionChanged });
   const removeSelectionChangesListener = selectionStorage.selectionChangeEvent.addListener((args) => {
     const isMyIModel = args.imodelKey === imodelKey;
     isMyIModel && update.next(args.level);
@@ -132,9 +125,7 @@ function initUnifiedSelectionFromStorage({
 
   from(selectionStorage.getSelectionLevels({ imodelKey }))
     .pipe(takeLast(1))
-    .subscribe({
-      next: (level) => update.next(level),
-    });
+    .subscribe({ next: (level) => update.next(level) });
 
   return () => {
     removeSelectionChangesListener();

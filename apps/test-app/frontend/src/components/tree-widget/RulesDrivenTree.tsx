@@ -76,11 +76,7 @@ interface Props {
   imodel: IModelConnection;
   rulesetId: string;
   diagnostics: DiagnosticsProps;
-  filtering: {
-    filter: string;
-    activeMatchIndex: number;
-    onFilteringStateChange: (isFiltering: boolean, matchesCount: number | undefined) => void;
-  };
+  filtering: { filter: string; activeMatchIndex: number; onFilteringStateChange: (isFiltering: boolean, matchesCount: number | undefined) => void };
   width: number;
   height: number;
 }
@@ -96,10 +92,7 @@ function Tree(props: Props) {
         new UnifiedSelectionTreeEventHandler({ nodeLoader: handlerProps.nodeLoader, collapsedChildrenDisposalEnabled: false, name: "TestAppTree" }),
       [],
     ),
-    filteringParams: {
-      filter,
-      activeMatchIndex,
-    },
+    filteringParams: { filter, activeMatchIndex },
     ...props.diagnostics,
   });
 

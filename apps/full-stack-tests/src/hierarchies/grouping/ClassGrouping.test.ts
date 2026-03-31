@@ -56,9 +56,7 @@ describe("Hierarchies", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.CodeValue` },
-                      grouping: {
-                        byClass: true,
-                      },
+                      grouping: { byClass: true },
                     })}
                     FROM (
                       SELECT ECClassId, ECInstanceId, CodeValue, Parent
@@ -82,26 +80,14 @@ describe("Hierarchies", () => {
         expect: [
           NodeValidators.createForClassGroupingNode({
             children: [
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childPartition2],
-                children: false,
-              }),
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childPartition4],
-                children: false,
-              }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition4], children: false }),
             ],
           }),
           NodeValidators.createForClassGroupingNode({
             children: [
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject1],
-                children: false,
-              }),
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject3],
-                children: false,
-              }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject3], children: false }),
             ],
           }),
         ],

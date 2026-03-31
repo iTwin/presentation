@@ -92,10 +92,7 @@ const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.Queries`;
 const LOGGING_NAMESPACE_PERFORMANCE = `${BASE_LOGGING_NAMESPACE_PERFORMANCE}.Queries`;
 function createQueryLogger(query: ECSqlQueryDef, firstStepWarningThreshold = 3000, allRowsWarningThreshold = 5000) {
   const queryId = Guid.createValue();
-  doLog({
-    category: LOGGING_NAMESPACE,
-    message: /* c8 ignore next */ () => `Executing query [${queryId}]: ${createQueryLogMessage(query)}`,
-  });
+  doLog({ category: LOGGING_NAMESPACE, message: /* c8 ignore next */ () => `Executing query [${queryId}]: ${createQueryLogMessage(query)}` });
 
   let firstStep = true;
   let rowsCount = 0;

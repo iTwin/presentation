@@ -221,9 +221,7 @@ export function createMergedIModelHierarchyProvider(props: MergedIModelHierarchy
 }
 
 interface RequestContextProp {
-  requestContext: {
-    requestId: string;
-  };
+  requestContext: { requestId: string };
 }
 
 type WithSourceNameOverride<T> = T & { sourceName?: string };
@@ -385,10 +383,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
         if (parentNode && HierarchyNode.isInstancesNode(parentNode)) {
           parentNode = {
             ...parentNode,
-            key: {
-              ...parentNode.key,
-              instanceKeys: parentNode.key.instanceKeys.filter((ik) => !ik.imodelKey || ik.imodelKey === imodelAccess.imodelKey),
-            },
+            key: { ...parentNode.key, instanceKeys: parentNode.key.instanceKeys.filter((ik) => !ik.imodelKey || ik.imodelKey === imodelAccess.imodelKey) },
           };
           assert(HierarchyNodeKey.isInstances(parentNode.key));
           if (parentNode.key.instanceKeys.length === 0) {
@@ -427,10 +422,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       mergeMap(({ imodelAccess, imodelAccessIndex, hierarchyNodesDefinition: def }) =>
         defer((): Observable<SourceHierarchyNode> => {
           if (HierarchyNodesDefinition.isGenericNode(def)) {
-            return of({
-              ...def.node,
-              key: { type: "generic" as const, id: def.node.key, source: this.#sourceName },
-            });
+            return of({ ...def.node, key: { type: "generic" as const, id: def.node.key, source: this.#sourceName } });
           }
           return this.getQueryScheduler(imodelAccess.imodelKey).scheduleSubscription(
             of(def.query).pipe(
@@ -708,11 +700,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
               );
               return from(reader).pipe(
                 map((row) => ({
-                  key: {
-                    className: normalizeFullClassName(row[0]),
-                    id: row[1],
-                    imodelKey: imodelAccess.imodelKey,
-                  } satisfies IModelInstanceKey,
+                  key: { className: normalizeFullClassName(row[0]), id: row[1], imodelKey: imodelAccess.imodelKey } satisfies IModelInstanceKey,
                   hide: !!row[2],
                 })),
               );
@@ -731,13 +719,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     const hiddenParentNodes = merge(
       genericDefs.pipe(
         filter(({ hierarchyNodesDefinition }) => !!hierarchyNodesDefinition.node.processingParams?.hideInHierarchy),
-        map(
-          ({ hierarchyNodesDefinition }): GenericNodeKey => ({
-            type: "generic",
-            id: hierarchyNodesDefinition.node.key,
-            source: this.#sourceName,
-          }),
-        ),
+        map(({ hierarchyNodesDefinition }): GenericNodeKey => ({ type: "generic", id: hierarchyNodesDefinition.node.key, source: this.#sourceName })),
       ),
       hiddenNodeInstanceKeys.pipe(
         // first merge all keys by class
@@ -753,13 +735,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
           })),
         ),
       ),
-    ).pipe(
-      map((key) => ({
-        key,
-        parentKeys: [],
-        label: "",
-      })),
-    );
+    ).pipe(map((key) => ({ key, parentKeys: [], label: "" })));
 
     // merge visible instance keys from this level & the ones we get recursively requesting from deeper levels
     return merge(
@@ -829,17 +805,7 @@ function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue
   node: TNode,
   valueFormatter: IPrimitiveValueFormatter,
 ): Observable<TNode & { label: string }> {
-  return from(
-    formatConcatenatedValue({
-      value: node.label,
-      valueFormatter,
-    }),
-  ).pipe(
-    map((label) => ({
-      ...node,
-      label,
-    })),
-  );
+  return from(formatConcatenatedValue({ value: node.label, valueFormatter })).pipe(map((label) => ({ ...node, label })));
 }
 
 function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
@@ -954,10 +920,7 @@ function tryMergeInstanceNodes(primary: SourceHierarchyNode, secondary: SourceHi
   ) {
     return {
       ...primary,
-      key: {
-        type: "instances",
-        instanceKeys: primary.key.instanceKeys.concat(secondary.key.instanceKeys),
-      },
+      key: { type: "instances", instanceKeys: primary.key.instanceKeys.concat(secondary.key.instanceKeys) },
       ...mergeBaseNodeAttributes(primary, secondary),
     };
   }
@@ -965,10 +928,7 @@ function tryMergeInstanceNodes(primary: SourceHierarchyNode, secondary: SourceHi
 }
 function tryMergeGenericNodes(primary: SourceHierarchyNode, secondary: SourceHierarchyNode): SourceHierarchyNode | undefined {
   if (HierarchyNode.isGeneric(primary) && HierarchyNode.isGeneric(secondary) && primary.key.id === secondary.key.id) {
-    return {
-      ...primary,
-      ...mergeBaseNodeAttributes(primary, secondary),
-    };
+    return { ...primary, ...mergeBaseNodeAttributes(primary, secondary) };
   }
   return undefined;
 }

@@ -74,11 +74,7 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await collect(
-              provider.getNodes({
-                parentNode: undefined,
-              }),
-            ),
+            nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
           });
           validateHierarchyLevel({
@@ -156,25 +152,13 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await collect(
-              provider.getNodes({
-                parentNode: {
-                  key: { type: "instances", instanceKeys: [x] },
-                  parentKeys: [],
-                  label: "",
-                },
-              }),
-            ),
+            nodes: await collect(provider.getNodes({ parentNode: { key: { type: "instances", instanceKeys: [x] }, parentKeys: [], label: "" } })),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y1] }), NodeValidators.createForInstanceNode({ instanceKeys: [y2] })],
           });
           validateHierarchyLevel({
             nodes: await collect(
               provider.getNodes({
-                parentNode: {
-                  key: { type: "instances", instanceKeys: [x] },
-                  parentKeys: [],
-                  label: "",
-                },
+                parentNode: { key: { type: "instances", instanceKeys: [x] }, parentKeys: [], label: "" },
                 instanceFilter: {
                   propertyClassNames: [schema.items.Y.fullName],
                   relatedInstances: [],
@@ -234,9 +218,7 @@ describe("Hierarchies", () => {
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `CAST(this.ECInstanceId AS TEXT)` },
-                        grouping: {
-                          byClass: true,
-                        },
+                        grouping: { byClass: true },
                       })}
                       FROM ${filterClauses.from} AS this
                       ${filterClauses.joins}
@@ -251,20 +233,12 @@ describe("Hierarchies", () => {
           const groupingNode = {
             key: { type: "class-grouping" as const, className: schema.items.Y.fullName },
             parentKeys: [{ type: "instances" as const, instanceKeys: [x] }],
-            nonGroupingAncestor: {
-              key: { type: "instances" as const, instanceKeys: [x] },
-              parentKeys: [],
-              label: "X",
-            },
+            nonGroupingAncestor: { key: { type: "instances" as const, instanceKeys: [x] }, parentKeys: [], label: "X" },
             label: "Y",
             groupedInstanceKeys: [y1, y2],
           };
           validateHierarchyLevel({
-            nodes: await collect(
-              provider.getNodes({
-                parentNode: groupingNode,
-              }),
-            ),
+            nodes: await collect(provider.getNodes({ parentNode: groupingNode })),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y1] }), NodeValidators.createForInstanceNode({ instanceKeys: [y2] })],
           });
           validateHierarchyLevel({
@@ -341,25 +315,14 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await collect(
-              provider.getNodes({
-                parentNode: undefined,
-              }),
-            ),
+            nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x] }), NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
           });
           validateHierarchyLevel({
             nodes: await collect(
               provider.getNodes({
                 parentNode: undefined,
-                instanceFilter: {
-                  propertyClassNames: [schema.items.Y.fullName],
-                  relatedInstances: [],
-                  rules: {
-                    operator: "and",
-                    rules: [],
-                  },
-                },
+                instanceFilter: { propertyClassNames: [schema.items.Y.fullName], relatedInstances: [], rules: { operator: "and", rules: [] } },
               }),
             ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
@@ -419,11 +382,7 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await collect(
-              provider.getNodes({
-                parentNode: undefined,
-              }),
-            ),
+            nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x] }), NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
           });
           validateHierarchyLevel({
@@ -434,10 +393,7 @@ describe("Hierarchies", () => {
                   propertyClassNames: [schema.items.X.fullName],
                   filteredClassNames: [schema.items.Y.fullName],
                   relatedInstances: [],
-                  rules: {
-                    operator: "and",
-                    rules: [],
-                  },
+                  rules: { operator: "and", rules: [] },
                 },
               }),
             ),
@@ -497,11 +453,7 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await collect(
-              provider.getNodes({
-                parentNode: undefined,
-              }),
-            ),
+            nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
           });
           validateHierarchyLevel({
@@ -590,11 +542,7 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await collect(
-              provider.getNodes({
-                parentNode: undefined,
-              }),
-            ),
+            nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
           });
           validateHierarchyLevel({

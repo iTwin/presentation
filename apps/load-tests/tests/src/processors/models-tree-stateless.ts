@@ -142,10 +142,7 @@ function createModelsTreeProvider(context: VUContext, events: VUEvents) {
   };
   const provider = createIModelHierarchyProvider({
     imodelAccess,
-    hierarchyDefinition: new ModelsTreeDefinition({
-      imodelAccess,
-      hierarchyConfig: defaultHierarchyConfiguration,
-    }),
+    hierarchyDefinition: new ModelsTreeDefinition({ imodelAccess, hierarchyConfig: defaultHierarchyConfiguration }),
   });
 
   return async (parent: HierarchyNode | undefined) => {

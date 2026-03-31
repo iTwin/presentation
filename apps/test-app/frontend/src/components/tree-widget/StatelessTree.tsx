@@ -78,11 +78,7 @@ function Tree({
         return undefined;
       }
       return HierarchySearchTree.createFromPathsList(
-        await ModelsTreeDefinition.createInstanceKeyPaths({
-          imodelAccess: searchIModelAccess,
-          label: searchText,
-          abortSignal,
-        }),
+        await ModelsTreeDefinition.createInstanceKeyPaths({ imodelAccess: searchIModelAccess, label: searchText, abortSignal }),
       );
     };
   }, [searchText]);
@@ -143,19 +139,7 @@ function Tree({
 
       const descriptor = await Presentation.presentation.getContentDescriptor({
         imodel,
-        rulesetOrId: {
-          id: `Hierarchy level descriptor ruleset`,
-          rules: [
-            {
-              ruleType: "Content",
-              specifications: [
-                {
-                  specType: "SelectedNodeInstances",
-                },
-              ],
-            },
-          ],
-        },
+        rulesetOrId: { id: `Hierarchy level descriptor ruleset`, rules: [{ ruleType: "Content", specifications: [{ specType: "SelectedNodeInstances" }] }] },
         displayType: DefaultContentDisplayTypes.PropertyPane,
         keys: new KeySet(inputKeys),
       });
@@ -204,9 +188,7 @@ function Tree({
         filterHierarchyLevel={setFilteringOptions}
         selectionMode={"extended"}
         treeLabel={treeLabel}
-        getTreeItemProps={(node) => ({
-          decorations: <Icon href={getIcon(node)} />,
-        })}
+        getTreeItemProps={(node) => ({ decorations: <Icon href={getIcon(node)} /> })}
       />
     );
   };
@@ -297,9 +279,7 @@ function DebouncedSearchBox({ onChange, ...props }: Omit<SearchBoxProps, "onChan
 
 function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
   const subject = new Subject<() => void>();
-  subject.pipe(debounceTime(delay)).subscribe({
-    next: (invoke) => invoke(),
-  });
+  subject.pipe(debounceTime(delay)).subscribe({ next: (invoke) => invoke() });
 
   return (args: TArgs) => {
     subject.next(() => {

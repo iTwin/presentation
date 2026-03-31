@@ -57,24 +57,12 @@ describe("PresentationInstanceFilterDialog", () => {
     fields: [stringField],
   });
 
-  const propertiesSource = {
-    descriptor,
-  };
+  const propertiesSource = { descriptor };
 
-  const initialFilter: PresentationInstanceFilterInfo = {
-    filter: {
-      field: stringField,
-      operator: "is-null",
-      value: undefined,
-    },
-    usedClasses: [classInfo],
-  };
+  const initialFilter: PresentationInstanceFilterInfo = { filter: { field: stringField, operator: "is-null", value: undefined }, usedClasses: [classInfo] };
 
   const onCloseEvent = new BeEvent<() => void>();
-  const imodel = {
-    key: "test_imodel",
-    onClose: onCloseEvent,
-  } as IModelConnection;
+  const imodel = { key: "test_imodel", onClose: onCloseEvent } as IModelConnection;
 
   before(() => {
     HTMLElement.prototype.scrollIntoView = () => {};
@@ -106,9 +94,7 @@ describe("PresentationInstanceFilterDialog", () => {
         isOpen={true}
         initialFilter={() => initialFilter}
       />,
-      {
-        addThemeProvider: true,
-      },
+      { addThemeProvider: true },
     );
 
     // verify class is selected
@@ -121,9 +107,7 @@ describe("PresentationInstanceFilterDialog", () => {
   it("displays warning message on class selector opening if filtering rules are set ", async () => {
     const { baseElement, user } = render(
       <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={() => {}} isOpen={true} />,
-      {
-        addThemeProvider: true,
-      },
+      { addThemeProvider: true },
     );
 
     // open property selector
@@ -147,9 +131,7 @@ describe("PresentationInstanceFilterDialog", () => {
   it("hides warning message when class selection dropdown is hidden ", async () => {
     const { baseElement, user } = render(
       <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={() => {}} isOpen={true} />,
-      {
-        addThemeProvider: true,
-      },
+      { addThemeProvider: true },
     );
 
     // open property selector
@@ -181,9 +163,7 @@ describe("PresentationInstanceFilterDialog", () => {
   it("clears all filtering options on class list changing ", async () => {
     const { baseElement, user } = render(
       <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={() => {}} isOpen={true} />,
-      {
-        addThemeProvider: true,
-      },
+      { addThemeProvider: true },
     );
 
     // open property selector
@@ -235,11 +215,7 @@ describe("PresentationInstanceFilterDialog", () => {
         filter: {
           field: stringField,
           operator: "like",
-          value: {
-            valueFormat: AbstractPropertyValueFormat.Primitive,
-            value: "test value",
-            displayValue: "test value",
-          } as PrimitiveValue,
+          value: { valueFormat: AbstractPropertyValueFormat.Primitive, value: "test value", displayValue: "test value" } as PrimitiveValue,
         },
         usedClasses: [classInfo],
       });
@@ -315,9 +291,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const spy = sinon.spy();
     const { baseElement, user } = render(
       <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onReset={spy} onApply={() => {}} isOpen={true} />,
-      {
-        addThemeProvider: true,
-      },
+      { addThemeProvider: true },
     );
 
     const resetButton = await getResetButton(baseElement);
@@ -437,9 +411,7 @@ describe("PresentationInstanceFilterDialog", () => {
 
     const { baseElement } = render(
       <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSourceGetter} onApply={() => {}} isOpen={true} />,
-      {
-        addThemeProvider: true,
-      },
+      { addThemeProvider: true },
     );
 
     await waitFor(() => {

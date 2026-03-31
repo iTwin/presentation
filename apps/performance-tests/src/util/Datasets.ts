@@ -230,12 +230,7 @@ export class Datasets {
         let parentId: string | undefined;
 
         for (let j = 0; j < elementsPerGroup; ++j) {
-          parentId = insertSubject({
-            parentId,
-            builder,
-            codeValue: `subject_${i}_${j}`,
-            userLabel: "test_subject",
-          }).id;
+          parentId = insertSubject({ parentId, builder, codeValue: `subject_${i}_${j}`, userLabel: "test_subject" }).id;
         }
 
         insertPhysicalModelWithPartition({ builder, codeValue: `model_${i}`, partitionParentId: parentId });
@@ -255,11 +250,7 @@ export class Datasets {
 
       // Insert `numElements` - 1 subcategories as `insertSpatialCategory` provides one additional subcategory
       for (let i = 0; i < numElements - 1; ++i) {
-        insertSubCategory({
-          parentCategoryId: categoryId,
-          builder,
-          codeValue: `${i}`,
-        });
+        insertSubCategory({ parentCategoryId: categoryId, builder, codeValue: `${i}` });
       }
     });
 

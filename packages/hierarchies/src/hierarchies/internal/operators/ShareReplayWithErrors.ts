@@ -14,10 +14,5 @@ import type { MonoTypeOperatorFunction } from "rxjs";
  * @internal
  */
 export function shareReplayWithErrors<T>(): MonoTypeOperatorFunction<T> {
-  return share<T>({
-    connector: () => new ReplaySubject(),
-    resetOnError: false,
-    resetOnComplete: false,
-    resetOnRefCountZero: false,
-  });
+  return share<T>({ connector: () => new ReplaySubject(), resetOnError: false, resetOnComplete: false, resetOnRefCountZero: false });
 }

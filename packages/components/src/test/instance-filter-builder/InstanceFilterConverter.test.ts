@@ -33,138 +33,68 @@ describe("createInstanceFilterDefinition", () => {
 
     describe("operator", () => {
       it("'IsNull'", async () => {
-        const info: PresentationInstanceFilterInfo = {
-          filter: {
-            field,
-            operator: "is-null",
-          },
-          usedClasses: [],
-        };
+        const info: PresentationInstanceFilterInfo = { filter: { field, operator: "is-null" }, usedClasses: [] };
         const { expression } = await createInstanceFilterDefinition(info, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} = NULL`);
       });
 
       it("'IsNotNull'", async () => {
-        const info: PresentationInstanceFilterInfo = {
-          filter: {
-            field,
-            operator: "is-not-null",
-          },
-          usedClasses: [],
-        };
+        const info: PresentationInstanceFilterInfo = { filter: { field, operator: "is-not-null" }, usedClasses: [] };
         const { expression } = await createInstanceFilterDefinition(info, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} <> NULL`);
       });
 
       it("'IsTrue'", async () => {
-        const info: PresentationInstanceFilterInfo = {
-          filter: {
-            field,
-            operator: "is-true",
-          },
-          usedClasses: [],
-        };
+        const info: PresentationInstanceFilterInfo = { filter: { field, operator: "is-true" }, usedClasses: [] };
         const { expression } = await createInstanceFilterDefinition(info, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} = TRUE`);
       });
 
       it("'IsFalse'", async () => {
-        const info: PresentationInstanceFilterInfo = {
-          filter: {
-            field,
-            operator: "is-false",
-          },
-          usedClasses: [],
-        };
+        const info: PresentationInstanceFilterInfo = { filter: { field, operator: "is-false" }, usedClasses: [] };
         const { expression } = await createInstanceFilterDefinition(info, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} = FALSE`);
       });
 
       it("'='", async () => {
-        const info: PresentationInstanceFilterInfo = {
-          filter: {
-            field,
-            operator: "is-equal",
-            value,
-          },
-          usedClasses: [],
-        };
+        const info: PresentationInstanceFilterInfo = { filter: { field, operator: "is-equal", value }, usedClasses: [] };
         const { expression } = await createInstanceFilterDefinition(info, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} = 1`);
       });
 
       it("'!='", async () => {
-        const info: PresentationInstanceFilterInfo = {
-          filter: {
-            field,
-            operator: "is-not-equal",
-            value,
-          },
-          usedClasses: [],
-        };
+        const info: PresentationInstanceFilterInfo = { filter: { field, operator: "is-not-equal", value }, usedClasses: [] };
         const { expression } = await createInstanceFilterDefinition(info, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} <> 1`);
       });
 
       it("'>'", async () => {
-        const info: PresentationInstanceFilterInfo = {
-          filter: {
-            field,
-            operator: "greater",
-            value,
-          },
-          usedClasses: [],
-        };
+        const info: PresentationInstanceFilterInfo = { filter: { field, operator: "greater", value }, usedClasses: [] };
         const { expression } = await createInstanceFilterDefinition(info, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} > 1`);
       });
 
       it("'>='", async () => {
-        const info: PresentationInstanceFilterInfo = {
-          filter: {
-            field,
-            operator: "greater-or-equal",
-            value,
-          },
-          usedClasses: [],
-        };
+        const info: PresentationInstanceFilterInfo = { filter: { field, operator: "greater-or-equal", value }, usedClasses: [] };
         const { expression } = await createInstanceFilterDefinition(info, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} >= 1`);
       });
 
       it("'<'", async () => {
-        const info: PresentationInstanceFilterInfo = {
-          filter: {
-            field,
-            operator: "less",
-            value,
-          },
-          usedClasses: [],
-        };
+        const info: PresentationInstanceFilterInfo = { filter: { field, operator: "less", value }, usedClasses: [] };
         const { expression } = await createInstanceFilterDefinition(info, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} < 1`);
       });
 
       it("'<='", async () => {
-        const info: PresentationInstanceFilterInfo = {
-          filter: {
-            field,
-            operator: "less-or-equal",
-            value,
-          },
-          usedClasses: [],
-        };
+        const info: PresentationInstanceFilterInfo = { filter: { field, operator: "less-or-equal", value }, usedClasses: [] };
         const { expression } = await createInstanceFilterDefinition(info, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} <= 1`);
       });
 
       it("'Like'", async () => {
         const info: PresentationInstanceFilterInfo = {
-          filter: {
-            field,
-            operator: "like",
-            value: { valueFormat: PropertyValueFormat.Primitive, value: `someString`, displayValue: "someString" },
-          },
+          filter: { field, operator: "like", value: { valueFormat: PropertyValueFormat.Primitive, value: `someString`, displayValue: "someString" } },
           usedClasses: [],
         };
         const { expression } = await createInstanceFilterDefinition(info, testImodel);
@@ -174,11 +104,7 @@ describe("createInstanceFilterDefinition", () => {
 
     it("quoted string value", async () => {
       const info: PresentationInstanceFilterInfo = {
-        filter: {
-          field,
-          operator: "is-equal",
-          value: { ...value, value: `string "with" quotation marks` },
-        },
+        filter: { field, operator: "is-equal", value: { ...value, value: `string "with" quotation marks` } },
         usedClasses: [],
       };
       const { expression } = await createInstanceFilterDefinition(info, testImodel);
@@ -303,14 +229,8 @@ describe("createInstanceFilterDefinition", () => {
         filter: {
           operator: PropertyFilterRuleGroupOperator.And,
           conditions: [
-            {
-              field,
-              operator: "is-null",
-            },
-            {
-              field,
-              operator: "is-not-null",
-            },
+            { field, operator: "is-null" },
+            { field, operator: "is-not-null" },
           ],
         },
         usedClasses: [],
@@ -324,14 +244,8 @@ describe("createInstanceFilterDefinition", () => {
         filter: {
           operator: PropertyFilterRuleGroupOperator.Or,
           conditions: [
-            {
-              field,
-              operator: "is-null",
-            },
-            {
-              field,
-              operator: "is-not-null",
-            },
+            { field, operator: "is-null" },
+            { field, operator: "is-not-null" },
           ],
         },
         usedClasses: [],
@@ -345,21 +259,12 @@ describe("createInstanceFilterDefinition", () => {
         filter: {
           operator: PropertyFilterRuleGroupOperator.Or,
           conditions: [
-            {
-              field,
-              operator: "is-null",
-            },
+            { field, operator: "is-null" },
             {
               operator: PropertyFilterRuleGroupOperator.And,
               conditions: [
-                {
-                  field,
-                  operator: "is-null",
-                },
-                {
-                  field,
-                  operator: "is-not-null",
-                },
+                { field, operator: "is-null" },
+                { field, operator: "is-not-null" },
               ],
             },
           ],
@@ -424,13 +329,7 @@ describe("createInstanceFilterDefinition", () => {
     createTestNestedContentField({ nestedFields: [classC2PropertiesField], pathToPrimaryClass: pathCToA });
 
     it("in single condition", async () => {
-      const info: PresentationInstanceFilterInfo = {
-        filter: {
-          field: classC1PropertiesField,
-          operator: "is-null",
-        },
-        usedClasses: [],
-      };
+      const info: PresentationInstanceFilterInfo = { filter: { field: classC1PropertiesField, operator: "is-null" }, usedClasses: [] };
       const { expression, relatedInstances } = await createInstanceFilterDefinition(info, testImodel);
       expect(expression).to.be.eq(`${createAlias("C")}.${propertyInfo.name} = NULL`);
       expect(relatedInstances)
@@ -438,18 +337,8 @@ describe("createInstanceFilterDefinition", () => {
         .and.containSubset([
           {
             pathFromSelectToPropertyClass: [
-              {
-                sourceClassName: classAInfo.name,
-                targetClassName: classBInfo.name,
-                relationshipName: classAToBInfo.name,
-                isForwardRelationship: true,
-              },
-              {
-                sourceClassName: classBInfo.name,
-                targetClassName: classCInfo.name,
-                relationshipName: classBToCInfo.name,
-                isForwardRelationship: true,
-              },
+              { sourceClassName: classAInfo.name, targetClassName: classBInfo.name, relationshipName: classAToBInfo.name, isForwardRelationship: true },
+              { sourceClassName: classBInfo.name, targetClassName: classCInfo.name, relationshipName: classBToCInfo.name, isForwardRelationship: true },
             ],
             alias: createAlias("C"),
           },
@@ -461,14 +350,8 @@ describe("createInstanceFilterDefinition", () => {
         filter: {
           operator: PropertyFilterRuleGroupOperator.And,
           conditions: [
-            {
-              field: classC1PropertiesField,
-              operator: "is-null",
-            },
-            {
-              field: classC1PropertiesField,
-              operator: "is-not-null",
-            },
+            { field: classC1PropertiesField, operator: "is-null" },
+            { field: classC1PropertiesField, operator: "is-not-null" },
           ],
         },
         usedClasses: [],
@@ -480,18 +363,8 @@ describe("createInstanceFilterDefinition", () => {
         .and.containSubset([
           {
             pathFromSelectToPropertyClass: [
-              {
-                sourceClassName: classAInfo.name,
-                targetClassName: classBInfo.name,
-                relationshipName: classAToBInfo.name,
-                isForwardRelationship: true,
-              },
-              {
-                sourceClassName: classBInfo.name,
-                targetClassName: classCInfo.name,
-                relationshipName: classBToCInfo.name,
-                isForwardRelationship: true,
-              },
+              { sourceClassName: classAInfo.name, targetClassName: classBInfo.name, relationshipName: classAToBInfo.name, isForwardRelationship: true },
+              { sourceClassName: classBInfo.name, targetClassName: classCInfo.name, relationshipName: classBToCInfo.name, isForwardRelationship: true },
             ],
             alias: createAlias("C"),
           },
@@ -499,13 +372,7 @@ describe("createInstanceFilterDefinition", () => {
     });
 
     it("in deeply nested condition field", async () => {
-      const info: PresentationInstanceFilterInfo = {
-        filter: {
-          field: classC1PropertiesField,
-          operator: "is-null",
-        },
-        usedClasses: [],
-      };
+      const info: PresentationInstanceFilterInfo = { filter: { field: classC1PropertiesField, operator: "is-null" }, usedClasses: [] };
       const { expression, relatedInstances } = await createInstanceFilterDefinition(info, testImodel);
       expect(expression).to.be.eq(`${createAlias("C")}.${propertyInfo.name} = NULL`);
       expect(relatedInstances)
@@ -513,18 +380,8 @@ describe("createInstanceFilterDefinition", () => {
         .and.containSubset([
           {
             pathFromSelectToPropertyClass: [
-              {
-                sourceClassName: classAInfo.name,
-                targetClassName: classBInfo.name,
-                relationshipName: classAToBInfo.name,
-                isForwardRelationship: true,
-              },
-              {
-                sourceClassName: classBInfo.name,
-                targetClassName: classCInfo.name,
-                relationshipName: classBToCInfo.name,
-                isForwardRelationship: true,
-              },
+              { sourceClassName: classAInfo.name, targetClassName: classBInfo.name, relationshipName: classAToBInfo.name, isForwardRelationship: true },
+              { sourceClassName: classBInfo.name, targetClassName: classCInfo.name, relationshipName: classBToCInfo.name, isForwardRelationship: true },
             ],
             alias: createAlias("C"),
           },
@@ -536,14 +393,8 @@ describe("createInstanceFilterDefinition", () => {
         filter: {
           operator: PropertyFilterRuleGroupOperator.And,
           conditions: [
-            {
-              field: classC1PropertiesField,
-              operator: "is-null",
-            },
-            {
-              field: classC2PropertiesField,
-              operator: "is-not-null",
-            },
+            { field: classC1PropertiesField, operator: "is-null" },
+            { field: classC2PropertiesField, operator: "is-not-null" },
           ],
         },
         usedClasses: [],
@@ -555,29 +406,14 @@ describe("createInstanceFilterDefinition", () => {
         .and.containSubset([
           {
             pathFromSelectToPropertyClass: [
-              {
-                sourceClassName: classAInfo.name,
-                targetClassName: classBInfo.name,
-                relationshipName: classAToBInfo.name,
-                isForwardRelationship: true,
-              },
-              {
-                sourceClassName: classBInfo.name,
-                targetClassName: classCInfo.name,
-                relationshipName: classBToCInfo.name,
-                isForwardRelationship: true,
-              },
+              { sourceClassName: classAInfo.name, targetClassName: classBInfo.name, relationshipName: classAToBInfo.name, isForwardRelationship: true },
+              { sourceClassName: classBInfo.name, targetClassName: classCInfo.name, relationshipName: classBToCInfo.name, isForwardRelationship: true },
             ],
             alias: createAlias("C", 0),
           },
           {
             pathFromSelectToPropertyClass: [
-              {
-                sourceClassName: classAInfo.name,
-                targetClassName: classCInfo.name,
-                relationshipName: classAToCInfo.name,
-                isForwardRelationship: true,
-              },
+              { sourceClassName: classAInfo.name, targetClassName: classCInfo.name, relationshipName: classAToCInfo.name, isForwardRelationship: true },
             ],
             alias: createAlias("C", 1),
           },
@@ -587,10 +423,7 @@ describe("createInstanceFilterDefinition", () => {
 
   describe("returns base properties class", () => {
     const onClose = new BeEvent<() => void>();
-    const imodel = {
-      key: "test_imodel",
-      onClose,
-    } as IModelConnection;
+    const imodel = { key: "test_imodel", onClose } as IModelConnection;
 
     const classAInfo: ClassInfo = { id: "0x1", name: "TestSchema:A", label: "A Class" };
     const classBInfo: ClassInfo = { id: "0x2", name: "TestSchema:B", label: "B Class" };
@@ -729,14 +562,8 @@ describe("createInstanceFilterDefinition", () => {
     const field = createTestPropertiesContentField({ properties: [{ property }] });
     const propertyAccessor = `this.${property.name}`;
     const uniqueValues: UniqueValue[] = [
-      {
-        displayValue: "0.001",
-        groupedRawValues: [0.001, 0.00099],
-      },
-      {
-        displayValue: "0.002",
-        groupedRawValues: [0.002, 0.00199],
-      },
+      { displayValue: "0.001", groupedRawValues: [0.001, 0.00099] },
+      { displayValue: "0.002", groupedRawValues: [0.002, 0.00199] },
     ];
 
     const createFilter = (operator: `${PropertyFilterRuleOperator}`, customValue?: Value, customDisplayValue?: string): PresentationInstanceFilterCondition => {
@@ -754,10 +581,7 @@ describe("createInstanceFilterDefinition", () => {
     };
 
     it("converts values when operator is `IsEqual`", async () => {
-      const info: PresentationInstanceFilterInfo = {
-        filter: createFilter("is-equal"),
-        usedClasses: [],
-      };
+      const info: PresentationInstanceFilterInfo = { filter: createFilter("is-equal"), usedClasses: [] };
 
       const { expression } = await createInstanceFilterDefinition(info, testImodel);
       expect(expression).to.be.eq(
@@ -766,10 +590,7 @@ describe("createInstanceFilterDefinition", () => {
     });
 
     it("converts values when operator is `IsNotEqual`", async () => {
-      const info: PresentationInstanceFilterInfo = {
-        filter: createFilter("is-not-equal"),
-        usedClasses: [],
-      };
+      const info: PresentationInstanceFilterInfo = { filter: createFilter("is-not-equal"), usedClasses: [] };
 
       const { expression } = await createInstanceFilterDefinition(info, testImodel);
       expect(expression).to.be.eq(
@@ -778,10 +599,7 @@ describe("createInstanceFilterDefinition", () => {
     });
 
     it("converts values when `deserializeUniqueValues` returns `undefined`", async () => {
-      const info: PresentationInstanceFilterInfo = {
-        filter: createFilter("is-equal", "a", "a"),
-        usedClasses: [],
-      };
+      const info: PresentationInstanceFilterInfo = { filter: createFilter("is-equal", "a", "a"), usedClasses: [] };
 
       const { expression } = await createInstanceFilterDefinition(info, testImodel);
       expect(expression).to.be.eq(`${propertyAccessor} = "a"`);
@@ -799,30 +617,21 @@ describe("createInstanceFilterDefinition", () => {
     };
 
     it("returns empty expression if there are node filter and classes", async () => {
-      const info: PresentationInstanceFilterInfo = {
-        filter: undefined,
-        usedClasses: [],
-      };
+      const info: PresentationInstanceFilterInfo = { filter: undefined, usedClasses: [] };
       const { expression } = await createInstanceFilterDefinition(info, testImodel);
 
       expect(expression).to.be.eq("");
     });
 
     it("returns expression with no classes in it when filteredClasses is an empty array", async () => {
-      const info: PresentationInstanceFilterInfo = {
-        filter,
-        usedClasses: [],
-      };
+      const info: PresentationInstanceFilterInfo = { filter, usedClasses: [] };
       const { expression } = await createInstanceFilterDefinition(info, testImodel);
 
       expect(expression).to.be.eq("this.PropertyName = NULL");
     });
 
     it("returns expression appended with additional check for classes when one classInfo is passed in", async () => {
-      const info: PresentationInstanceFilterInfo = {
-        filter,
-        usedClasses: [classInfo1],
-      };
+      const info: PresentationInstanceFilterInfo = { filter, usedClasses: [classInfo1] };
 
       const { expression } = await createInstanceFilterDefinition(info, testImodel);
 
@@ -830,10 +639,7 @@ describe("createInstanceFilterDefinition", () => {
     });
 
     it("returns expression with classes check only", async () => {
-      const info: PresentationInstanceFilterInfo = {
-        filter: undefined,
-        usedClasses: [classInfo1],
-      };
+      const info: PresentationInstanceFilterInfo = { filter: undefined, usedClasses: [classInfo1] };
 
       const { expression } = await createInstanceFilterDefinition(info, testImodel);
 
@@ -841,10 +647,7 @@ describe("createInstanceFilterDefinition", () => {
     });
 
     it("returns expression appended with additional check for classes when array of multiple classInfo's is passed in", async () => {
-      const info: PresentationInstanceFilterInfo = {
-        filter,
-        usedClasses: [classInfo1, classInfo2],
-      };
+      const info: PresentationInstanceFilterInfo = { filter, usedClasses: [classInfo1, classInfo2] };
 
       const { expression } = await createInstanceFilterDefinition(info, testImodel);
 
@@ -856,14 +659,8 @@ describe("createInstanceFilterDefinition", () => {
         filter: {
           operator: PropertyFilterRuleGroupOperator.Or,
           conditions: [
-            {
-              field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ name: "Prop1" }) }] }),
-              operator: "is-null",
-            },
-            {
-              field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ name: "Prop2" }) }] }),
-              operator: "is-null",
-            },
+            { field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ name: "Prop1" }) }] }), operator: "is-null" },
+            { field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ name: "Prop2" }) }] }), operator: "is-null" },
           ],
         },
         usedClasses: [classInfo1, classInfo2],

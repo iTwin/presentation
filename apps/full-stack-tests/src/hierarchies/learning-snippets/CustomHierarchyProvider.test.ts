@@ -49,12 +49,7 @@ describe("Hierarchies", () => {
         const provider = createHierarchyProvider(() => ({
           async *getNodes({ parentNode }) {
             yield !parentNode
-              ? {
-                  key: { type: "generic", id: `root` },
-                  label: `Root node`,
-                  children: true,
-                  parentKeys: [],
-                }
+              ? { key: { type: "generic", id: `root` }, label: `Root node`, children: true, parentKeys: [] }
               : {
                   key: { type: "generic", id: `child-${parentNode.parentKeys.length + 1}` },
                   label: `Child ${parentNode.parentKeys.length + 1}`,
@@ -68,30 +63,15 @@ describe("Hierarchies", () => {
         const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
         expect(rootNodes)
           .to.have.lengthOf(1)
-          .and.to.containSubset([
-            {
-              label: "Root node",
-              children: true,
-            },
-          ]);
+          .and.to.containSubset([{ label: "Root node", children: true }]);
         const childNodes1 = await collect(provider.getNodes({ parentNode: rootNodes[0] }));
         expect(childNodes1)
           .to.have.lengthOf(1)
-          .and.to.containSubset([
-            {
-              label: "Child 1",
-              children: true,
-            },
-          ]);
+          .and.to.containSubset([{ label: "Child 1", children: true }]);
         const childNodes2 = await collect(provider.getNodes({ parentNode: childNodes1[0] }));
         expect(childNodes2)
           .to.have.lengthOf(1)
-          .and.to.containSubset([
-            {
-              label: "Child 2",
-              children: true,
-            },
-          ]);
+          .and.to.containSubset([{ label: "Child 2", children: true }]);
       });
 
       it("creates iModel provider", async function () {
@@ -216,12 +196,7 @@ describe("Hierarchies", () => {
             if (!parentNode) {
               // For root nodes, query authors and return nodes based on them
               for (const author of await booksService.getAuthors()) {
-                yield {
-                  key: { type: "generic", id: `author:${author.key}` },
-                  label: author.name,
-                  children: author.hasBooks,
-                  parentKeys: [],
-                };
+                yield { key: { type: "generic", id: `author:${author.key}` }, label: author.name, children: author.hasBooks, parentKeys: [] };
               }
             } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
               // For author parent node, query books and return nodes based on them
@@ -405,13 +380,7 @@ describe("Hierarchies", () => {
               );
               for (const author of authors) {
                 const nodeKey: GenericNodeKey = { type: "generic", id: `author:${author.key}` };
-                yield {
-                  key: nodeKey,
-                  label: author.name,
-                  children: author.hasBooks,
-                  parentKeys: [],
-                  ...searchHelper?.createChildNodeProps({ nodeKey }),
-                };
+                yield { key: nodeKey, label: author.name, children: author.hasBooks, parentKeys: [], ...searchHelper?.createChildNodeProps({ nodeKey }) };
               }
             } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
               // For author parent node, query books and return nodes based on them
@@ -509,10 +478,7 @@ describe("Hierarchies", () => {
             return { [rule.propertyName]: rule.value?.rawValue ?? "" };
           }
           function createGroupFilter(group: GenericInstanceFilterRuleGroup): BooksServiceFilter<Record<string, unknown>> {
-            return {
-              operator: group.operator,
-              rules: group.rules.map(createRuleOrGroupFilter),
-            };
+            return { operator: group.operator, rules: group.rules.map(createRuleOrGroupFilter) };
           }
           function createRuleOrGroupFilter(ruleOrGroup: GenericInstanceFilter["rules"]): BooksServiceFilter<Record<string, unknown>> {
             return GenericInstanceFilter.isFilterRuleGroup(ruleOrGroup) ? createGroupFilter(ruleOrGroup) : createRuleFilter(ruleOrGroup);
@@ -547,12 +513,7 @@ describe("Hierarchies", () => {
               const books = await booksService.getBooks(createBooksServiceFilter({ authorKey: parentNode.key.id.slice(7) }, instanceFilter));
               for (const book of books) {
                 const nodeKey: GenericNodeKey = { type: "generic", id: `book:${book.key}` };
-                yield {
-                  key: nodeKey,
-                  label: book.title,
-                  children: false,
-                  parentKeys: [...parentNode.parentKeys, parentNode.key],
-                };
+                yield { key: nodeKey, label: book.title, children: false, parentKeys: [...parentNode.parentKeys, parentNode.key] };
               }
             }
           },
@@ -567,25 +528,13 @@ describe("Hierarchies", () => {
           rules: {
             operator: "or",
             rules: [
-              {
-                propertyName: "name",
-                operator: "like",
-                propertyTypeName: "string",
-                sourceAlias: "",
-                value: {
-                  displayValue: "Mark",
-                  rawValue: "Mark",
-                },
-              },
+              { propertyName: "name", operator: "like", propertyTypeName: "string", sourceAlias: "", value: { displayValue: "Mark", rawValue: "Mark" } },
               {
                 propertyName: "hasBooks",
                 operator: "is-equal",
                 propertyTypeName: "boolean",
                 sourceAlias: "",
-                value: {
-                  displayValue: "False",
-                  rawValue: false,
-                },
+                value: { displayValue: "False", rawValue: false },
               },
             ],
           },
@@ -608,37 +557,15 @@ describe("Hierarchies", () => {
           rules: {
             operator: "and",
             rules: [
-              {
-                propertyName: "key",
-                operator: "like",
-                propertyTypeName: "string",
-                sourceAlias: "",
-                value: {
-                  displayValue: "OL274",
-                  rawValue: "OL274",
-                },
-              },
-              {
-                propertyName: "title",
-                operator: "like",
-                propertyTypeName: "string",
-                sourceAlias: "",
-                value: {
-                  displayValue: "Hobbit",
-                  rawValue: "Hobbit",
-                },
-              },
+              { propertyName: "key", operator: "like", propertyTypeName: "string", sourceAlias: "", value: { displayValue: "OL274", rawValue: "OL274" } },
+              { propertyName: "title", operator: "like", propertyTypeName: "string", sourceAlias: "", value: { displayValue: "Hobbit", rawValue: "Hobbit" } },
             ],
           },
         });
         // Print child hierarchy level for "J.R.R. Tolkien" author parent node. Output:
         // - The Hobbit
         for await (const node of provider.getNodes({
-          parentNode: {
-            key: { type: "generic" as const, id: "author:OL26320A" },
-            label: "J.R.R. Tolkien",
-            parentKeys: [],
-          },
+          parentNode: { key: { type: "generic" as const, id: "author:OL26320A" }, label: "J.R.R. Tolkien", parentKeys: [] },
           instanceFilter: createBooksFilter(),
         })) {
           console.log(`- ${node.label}`);

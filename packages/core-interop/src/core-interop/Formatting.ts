@@ -160,14 +160,7 @@ function getPersistenceUnitFormatProps(persistenceUnit: Unit | InvertedUnit): Fo
     type: "Decimal",
     uomSeparator: " ",
     decimalSeparator: ".",
-    composite: {
-      units: [
-        {
-          name: persistenceUnit.fullName,
-          label: persistenceUnit.label,
-        },
-      ],
-    },
+    composite: { units: [{ name: persistenceUnit.fullName, label: persistenceUnit.label }] },
   };
 }
 

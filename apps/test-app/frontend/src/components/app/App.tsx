@@ -59,26 +59,15 @@ export function App() {
   const [state, setState] = useAppState();
 
   const onIModelSelected = (imodel: IModelConnection | undefined, path?: string) => {
-    setState((prev) => ({
-      ...prev,
-      imodel,
-      imodelPath: path,
-    }));
+    setState((prev) => ({ ...prev, imodel, imodelPath: path }));
   };
 
   const onRulesetSelected = (rulesetId: string | undefined) => {
     if (state.imodel) {
-      MyAppFrontend.selectionStorage.clearSelection({
-        imodelKey: createIModelKey(state.imodel),
-        source: "onRulesetChanged",
-        level: 0,
-      });
+      MyAppFrontend.selectionStorage.clearSelection({ imodelKey: createIModelKey(state.imodel), source: "onRulesetChanged", level: 0 });
     }
 
-    setState((prev) => ({
-      ...prev,
-      rulesetId,
-    }));
+    setState((prev) => ({ ...prev, rulesetId }));
   };
 
   const onUnitSystemSelected = async (unitSystem: UnitSystemKey) => {
@@ -86,10 +75,7 @@ export function App() {
   };
 
   const onPersistSettingsValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setState((prev) => ({
-      ...prev,
-      persistSettings: e.target.checked,
-    }));
+    setState((prev) => ({ ...prev, persistSettings: e.target.checked }));
   };
 
   useEffect(() => {
@@ -184,9 +170,7 @@ export function App() {
 }
 
 function updateAppSettings(state: State) {
-  const settings: MyAppSettings = {
-    persistSettings: state.persistSettings,
-  };
+  const settings: MyAppSettings = { persistSettings: state.persistSettings };
   if (state.persistSettings) {
     settings.imodelPath = state.imodelPath;
     settings.rulesetId = state.rulesetId;
@@ -198,10 +182,7 @@ function updateAppSettings(state: State) {
 function useAppState(): [State, (produceState: (prev: State) => State) => void] {
   const [state, setState] = useState<State>(() => {
     const settings = MyAppFrontend.settings;
-    const update: Partial<State> = {
-      persistSettings: settings.persistSettings,
-      activeUnitSystem: IModelApp.quantityFormatter.activeUnitSystem,
-    };
+    const update: Partial<State> = { persistSettings: settings.persistSettings, activeUnitSystem: IModelApp.quantityFormatter.activeUnitSystem };
     if (!settings.persistSettings) {
       return update as State;
     }
@@ -226,10 +207,7 @@ function useAppState(): [State, (produceState: (prev: State) => State) => void] 
 
   useEffect(() => {
     return IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(({ system }) => {
-      updateState((prev) => ({
-        ...prev,
-        activeUnitSystem: system,
-      }));
+      updateState((prev) => ({ ...prev, activeUnitSystem: system }));
     });
   }, []);
 

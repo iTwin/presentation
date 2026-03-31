@@ -31,10 +31,7 @@ describe("createNodeId", () => {
   it("creates id for `class-grouping` node", () => {
     const node = createTestGroupingNode({
       id: "custom",
-      key: {
-        type: "class-grouping",
-        className: "Schema:Class",
-      },
+      key: { type: "class-grouping", className: "Schema:Class" },
       groupedInstanceKeys: [{ id: "0x1", className: "Schema:Class" }],
     });
     expect(createNodeId(node)).to.be.eq("class-grouping,Schema:Class");
@@ -43,10 +40,7 @@ describe("createNodeId", () => {
   it("creates id for `label-grouping` node", () => {
     const node = createTestGroupingNode({
       id: "custom",
-      key: {
-        type: "label-grouping",
-        label: "TestLabel",
-      },
+      key: { type: "label-grouping", label: "TestLabel" },
       groupedInstanceKeys: [{ id: "0x1", className: "Schema:Class" }],
     });
     expect(createNodeId(node)).to.be.eq("label-grouping,TestLabel");
@@ -55,12 +49,7 @@ describe("createNodeId", () => {
   it("creates id for `property-grouping:value` node", () => {
     const node = createTestGroupingNode({
       id: "custom",
-      key: {
-        type: "property-grouping:value",
-        formattedPropertyValue: "test-value",
-        propertyClassName: "TestClass",
-        propertyName: "TestProp",
-      },
+      key: { type: "property-grouping:value", formattedPropertyValue: "test-value", propertyClassName: "TestClass", propertyName: "TestProp" },
       groupedInstanceKeys: [{ id: "0x1", className: "Schema:Class" }],
     });
     expect(createNodeId(node)).to.be.eq("property-grouping:value,test-value,TestClass,TestProp");
@@ -69,10 +58,7 @@ describe("createNodeId", () => {
   it("creates id for `instances` node child node", () => {
     const node = createTestHierarchyNode({
       id: "custom",
-      key: {
-        type: "instances",
-        instanceKeys: [{ id: "0x3", className: "Schema:Class" }],
-      },
+      key: { type: "instances", instanceKeys: [{ id: "0x3", className: "Schema:Class" }] },
       parentKeys: [
         { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
         { type: "class-grouping", className: "Schema:OtherClass" },

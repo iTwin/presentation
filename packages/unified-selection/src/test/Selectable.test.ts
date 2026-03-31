@@ -36,10 +36,7 @@ describe("Selectable", () => {
 describe("Selectables", () => {
   describe("size", () => {
     it("returns zero when selectables empty", () => {
-      const selectables = {
-        instanceKeys: new Map<string, Set<string>>(),
-        custom: new Map<string, CustomSelectable>(),
-      };
+      const selectables = { instanceKeys: new Map<string, Set<string>>(), custom: new Map<string, CustomSelectable>() };
       expect(Selectables.size(selectables)).to.eq(0);
     });
 
@@ -57,18 +54,12 @@ describe("Selectables", () => {
 
   describe("isEmpty", () => {
     it("returns true when selectables empty", () => {
-      const selectables = {
-        instanceKeys: new Map<string, Set<string>>(),
-        custom: new Map<string, CustomSelectable>(),
-      };
+      const selectables = { instanceKeys: new Map<string, Set<string>>(), custom: new Map<string, CustomSelectable>() };
       expect(Selectables.isEmpty(selectables)).to.be.true;
     });
 
     it("returns false when non empty", () => {
-      const selectables = {
-        instanceKeys: new Map<string, Set<string>>(),
-        custom: new Map<string, CustomSelectable>([["id", createCustomSelectable()]]),
-      };
+      const selectables = { instanceKeys: new Map<string, Set<string>>(), custom: new Map<string, CustomSelectable>([["id", createCustomSelectable()]]) };
       expect(Selectables.isEmpty(selectables)).to.be.false;
     });
   });
@@ -322,20 +313,14 @@ describe("Selectables", () => {
 
     it("returns false when instance selectable classes are different", () => {
       const instanceKey1 = createSelectableInstanceKey();
-      const instanceKey2: SelectableInstanceKey = {
-        className: `${instanceKey1.className}_different`,
-        id: instanceKey1.id,
-      };
+      const instanceKey2: SelectableInstanceKey = { className: `${instanceKey1.className}_different`, id: instanceKey1.id };
       const selectables = Selectables.create([instanceKey1]);
       expect(Selectables.hasAll(selectables, [instanceKey2])).to.be.false;
     });
 
     it("returns false when instance selectable has different id", () => {
       const instanceKey1 = createSelectableInstanceKey(1);
-      const instanceKey2: SelectableInstanceKey = {
-        className: instanceKey1.className,
-        id: createECInstanceId(2),
-      };
+      const instanceKey2: SelectableInstanceKey = { className: instanceKey1.className, id: createECInstanceId(2) };
       const selectables = Selectables.create([instanceKey1]);
       expect(Selectables.hasAll(selectables, [instanceKey2])).to.be.false;
     });

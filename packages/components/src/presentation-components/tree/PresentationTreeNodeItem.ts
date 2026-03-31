@@ -93,9 +93,7 @@ export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeI
  * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
  * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
-export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
-  filtering: PresentationTreeNodeItemFilteringInfo;
-};
+export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & { filtering: PresentationTreeNodeItemFilteringInfo };
 
 /**
  * Function that checks if supplied [TreeNodeItem]($components-react) is [[PresentationTreeNodeItem]].

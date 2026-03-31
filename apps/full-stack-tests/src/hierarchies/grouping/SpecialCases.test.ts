@@ -82,9 +82,7 @@ describe("Hierarchies", () => {
                           ecClassId: { selector: `this.ECClassId` },
                           ecInstanceId: { selector: `this.ECInstanceId` },
                           nodeLabel: { selector: `'y: ' || CAST(this.ECInstanceId AS TEXT)` },
-                          grouping: {
-                            byClass: true,
-                          },
+                          grouping: { byClass: true },
                         })}
                         FROM ${schema.items.Y.fullName} AS this
                       `,

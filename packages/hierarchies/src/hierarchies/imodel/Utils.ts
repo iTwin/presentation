@@ -28,9 +28,7 @@ function mergeByLabelParams(
   rhs: HierarchyNodeLabelGroupingParams | undefined,
 ): InstanceHierarchyNodeProcessingParams | undefined {
   if (lhs && typeof lhs === "object" && lhs.action === "merge" && rhs && typeof rhs === "object" && rhs.action === "merge" && lhs.groupId === rhs.groupId) {
-    return {
-      grouping: { byLabel: lhs },
-    };
+    return { grouping: { byLabel: lhs } };
   }
   return undefined;
 }

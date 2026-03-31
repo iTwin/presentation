@@ -22,11 +22,7 @@ class FilteringInProgressNodeLoader extends AbstractTreeNodeLoaderWithProvider<I
   }
 
   protected load(): Observable<LoadedNodeHierarchy> {
-    const loadedNodeHierarchy: LoadedNodeHierarchy = {
-      hierarchyItems: [],
-      offset: 0,
-      parentId: "",
-    };
+    const loadedNodeHierarchy: LoadedNodeHierarchy = { hierarchyItems: [], offset: 0, parentId: "" };
     return of(loadedNodeHierarchy);
   }
 }
@@ -54,11 +50,7 @@ export function useFilteredNodeLoader({ dataProvider, filter }: UseFilteredNodeL
     return new PagedTreeNodeLoader(value.filteredProvider, new TreeModelSource(), FILTERED_DATA_PAGE_SIZE);
   }, [dataProvider, inProgress, value]);
 
-  return {
-    isFiltering: inProgress,
-    filteredNodeLoader,
-    ...value,
-  };
+  return { isFiltering: inProgress, filteredNodeLoader, ...value };
 }
 
 /** @internal */
@@ -73,10 +65,7 @@ export function useNodeHighlightingProps(
     }
 
     const activeMatch = undefined !== activeMatchIndex ? dataProvider.getActiveMatch(activeMatchIndex) : undefined;
-    return {
-      searchText: filter,
-      activeMatch,
-    };
+    return { searchText: filter, activeMatch };
   }, [filter, dataProvider, activeMatchIndex]);
 }
 
@@ -85,11 +74,7 @@ function useFilteredProvider(dataProvider?: IPresentationTreeDataProvider, filte
     assert(dataProvider !== undefined);
     assert(filter !== undefined);
     const filteredPaths = await dataProvider.getFilteredNodePaths(filter);
-    const provider = new FilteredPresentationTreeDataProvider({
-      parentDataProvider: dataProvider,
-      filter,
-      paths: filteredPaths,
-    });
+    const provider = new FilteredPresentationTreeDataProvider({ parentDataProvider: dataProvider, filter, paths: filteredPaths });
     return { filteredProvider: provider, matchesCount: provider.countFilteringResults(filteredPaths) };
   }, [dataProvider, filter]);
   return useDebouncedAsyncValue(filter && dataProvider ? getFilteredProvider : undefined);

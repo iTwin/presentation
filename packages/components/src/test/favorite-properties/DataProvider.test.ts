@@ -25,18 +25,12 @@ describe("FavoritePropertiesDataProvider", () => {
     },
   } as unknown as IModelConnection;
   let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
-  let presentationPropertyDataProvider: {
-    getData: sinon.SinonStub<[], PropertyData>;
-    [Symbol.dispose]: sinon.SinonStub<[], void>;
-  };
+  let presentationPropertyDataProvider: { getData: sinon.SinonStub<[], PropertyData>; [Symbol.dispose]: sinon.SinonStub<[], void> };
   let favoritePropertiesManager: sinon.SinonStubbedInstance<FavoritePropertiesManager>;
 
   beforeEach(() => {
     presentationManager = sinon.createStubInstance(PresentationManager);
-    presentationPropertyDataProvider = {
-      getData: sinon.stub(),
-      [Symbol.dispose]: sinon.stub(),
-    };
+    presentationPropertyDataProvider = { getData: sinon.stub(), [Symbol.dispose]: sinon.stub() };
     favoritePropertiesManager = sinon.createStubInstance(FavoritePropertiesManager);
 
     const localization = new EmptyLocalization();
@@ -64,11 +58,7 @@ describe("FavoritePropertiesDataProvider", () => {
 
   describe("getData", () => {
     it("passes `customRulesetId` to PropertyDataProvider if set", async () => {
-      presentationPropertyDataProvider.getData.resolves({
-        label: PropertyRecord.fromString("Test Item"),
-        categories: [],
-        records: {},
-      });
+      presentationPropertyDataProvider.getData.resolves({ label: PropertyRecord.fromString("Test Item"), categories: [], records: {} });
       const factorySpy = sinon
         .stub<[IModelConnection, Ruleset | string | undefined], PresentationPropertyDataProvider>()
         .returns(presentationPropertyDataProvider as unknown as PresentationPropertyDataProvider);

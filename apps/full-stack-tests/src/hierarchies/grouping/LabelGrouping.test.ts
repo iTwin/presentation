@@ -57,9 +57,7 @@ describe("Hierarchies", () => {
                     ecClassId: { selector: `this.ECClassId` },
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.UserLabel` },
-                    grouping: {
-                      byLabel: true,
-                    },
+                    grouping: { byLabel: true },
                   })}
                   FROM ${subjectClassName} AS this
                   WHERE this.Parent.Id = (${IModel.rootSubjectId})
@@ -78,27 +76,15 @@ describe("Hierarchies", () => {
           NodeValidators.createForLabelGroupingNode({
             label: labelGroupName1,
             children: [
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject3],
-                children: false,
-              }),
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject1],
-                children: false,
-              }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject3], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
             ],
           }),
           NodeValidators.createForLabelGroupingNode({
             label: labelGroupName2,
             children: [
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject4],
-                children: false,
-              }),
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject2],
-                children: false,
-              }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject4], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
             ],
           }),
         ],
@@ -133,9 +119,7 @@ describe("Hierarchies", () => {
                     ecClassId: { selector: `this.ECClassId` },
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.UserLabel` },
-                    grouping: {
-                      byLabel: { groupId: { selector: `this.Description` } },
-                    },
+                    grouping: { byLabel: { groupId: { selector: `this.Description` } } },
                   })}
                   FROM ${subjectClassName} AS this
                   WHERE this.Parent.Id = (${IModel.rootSubjectId})
@@ -155,28 +139,16 @@ describe("Hierarchies", () => {
             label: "test",
             groupId: descriptionGroupName2,
             children: [
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject4],
-                children: false,
-              }),
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject2],
-                children: false,
-              }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject4], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
             ],
           }),
           NodeValidators.createForLabelGroupingNode({
             label: "test",
             groupId: descriptionGroupName1,
             children: [
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject3],
-                children: false,
-              }),
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject1],
-                children: false,
-              }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject3], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
             ],
           }),
         ],
@@ -227,18 +199,9 @@ describe("Hierarchies", () => {
       await validateHierarchy({
         provider: createProvider({ imodel, hierarchy }),
         expect: [
-          NodeValidators.createForInstanceNode({
-            instanceKeys: [keys.childSubject2],
-            children: false,
-          }),
-          NodeValidators.createForInstanceNode({
-            instanceKeys: [keys.childSubject1],
-            children: false,
-          }),
-          NodeValidators.createForInstanceNode({
-            instanceKeys: [keys.childSubject3],
-            children: false,
-          }),
+          NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
+          NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+          NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject3], children: false }),
         ],
       });
     });
@@ -283,13 +246,7 @@ describe("Hierarchies", () => {
 
       await validateHierarchy({
         provider: createProvider({ imodel, hierarchy }),
-        expect: [
-          NodeValidators.createForInstanceNode({
-            instanceKeys: [keys.childSubject1, keys.childSubject2],
-            label: "merge this",
-            children: false,
-          }),
-        ],
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1, keys.childSubject2], label: "merge this", children: false })],
       });
     });
 
@@ -355,13 +312,7 @@ describe("Hierarchies", () => {
 
       await validateHierarchy({
         provider: createProvider({ imodel, hierarchy }),
-        expect: [
-          NodeValidators.createForInstanceNode({
-            instanceKeys: [keys.visibleSubject1, keys.visibleSubject2],
-            label: "merged",
-            children: false,
-          }),
-        ],
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.visibleSubject1, keys.visibleSubject2], label: "merged", children: false })],
       });
     });
   });

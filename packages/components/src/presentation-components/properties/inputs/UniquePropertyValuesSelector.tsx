@@ -56,18 +56,10 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
     (newValues: string[]) => {
       const newSelectedValues = loadedOptions.filter((opt) => newValues.includes(opt.displayValue));
       if (newSelectedValues.length === 0) {
-        onChange({
-          valueFormat: PropertyValueFormat.Primitive,
-          displayValue: undefined,
-          value: undefined,
-        });
+        onChange({ valueFormat: PropertyValueFormat.Primitive, displayValue: undefined, value: undefined });
       } else {
         const { displayValues, groupedRawValues } = serializeUniqueValues(newSelectedValues);
-        onChange({
-          valueFormat: PropertyValueFormat.Primitive,
-          displayValue: displayValues,
-          value: groupedRawValues,
-        });
+        onChange({ valueFormat: PropertyValueFormat.Primitive, displayValue: displayValues, value: groupedRawValues });
       }
     },
     [loadedOptions, onChange],
@@ -154,17 +146,7 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
 
     setRuleset({
       id: "unique-class-property-values",
-      rules: [
-        {
-          ruleType: "Content",
-          specifications: [
-            {
-              specType: "ContentInstancesOfSpecificClasses",
-              classes: createSchemaClasses(classInfos),
-            },
-          ],
-        },
-      ],
+      rules: [{ ruleType: "Content", specifications: [{ specType: "ContentInstancesOfSpecificClasses", classes: createSchemaClasses(classInfos) }] }],
     });
   }, [field, descriptorRuleset, descriptorInputKeys, selectedClasses]);
 

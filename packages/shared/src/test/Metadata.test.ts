@@ -8,9 +8,7 @@ import sinon from "sinon";
 import { createCachingECClassHierarchyInspector, getClass } from "../shared/Metadata.js";
 
 describe("createCachingECClassHierarchyInspector", () => {
-  const schemaProvider = {
-    getSchema: sinon.stub(),
-  };
+  const schemaProvider = { getSchema: sinon.stub() };
 
   beforeEach(() => {
     schemaProvider.getSchema.reset();
@@ -58,9 +56,7 @@ describe("createCachingECClassHierarchyInspector", () => {
       }
       return undefined;
     });
-    schemaProvider.getSchema.resolves({
-      getClass: getClassStub,
-    });
+    schemaProvider.getSchema.resolves({ getClass: getClassStub });
     const inspector = createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1 });
     const [p1, p2] = [inspector.classDerivesFrom("a.b", "c.d"), inspector.classDerivesFrom("a.b", "c.d")];
     expect(p1).to.be.instanceOf(Promise);
@@ -82,9 +78,7 @@ describe("createCachingECClassHierarchyInspector", () => {
       }
       return undefined;
     });
-    schemaProvider.getSchema.resolves({
-      getClass: getClassStub,
-    });
+    schemaProvider.getSchema.resolves({ getClass: getClassStub });
     const inspector = createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1 });
     const p1 = await inspector.classDerivesFrom("a.b", "c.d");
     const p2 = inspector.classDerivesFrom("a.b", "c.d");
@@ -97,9 +91,7 @@ describe("createCachingECClassHierarchyInspector", () => {
 });
 
 describe("getClass", () => {
-  const schemaProvider = {
-    getSchema: sinon.stub(),
-  };
+  const schemaProvider = { getSchema: sinon.stub() };
 
   beforeEach(() => {
     schemaProvider.getSchema.reset();
@@ -116,9 +108,7 @@ describe("getClass", () => {
   });
 
   it("throws when class does not exist", async () => {
-    schemaProvider.getSchema.resolves({
-      getClass: async () => undefined,
-    });
+    schemaProvider.getSchema.resolves({ getClass: async () => undefined });
     await expect(getClass(schemaProvider, "x.y")).to.eventually.be.rejected;
   });
 
@@ -133,9 +123,7 @@ describe("getClass", () => {
 
   it("returns class", async () => {
     const getClassStub = sinon.stub().resolves({ fullName: "result class" });
-    schemaProvider.getSchema.resolves({
-      getClass: getClassStub,
-    });
+    schemaProvider.getSchema.resolves({ getClass: getClassStub });
     const result = await getClass(schemaProvider, "x.y");
     expect(schemaProvider.getSchema).to.be.calledOnceWithExactly("x");
     expect(getClassStub).to.be.calledOnceWithExactly("y");

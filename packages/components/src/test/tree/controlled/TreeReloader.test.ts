@@ -194,10 +194,7 @@ describe("reloadTree", () => {
 
   it("does not search for expanded nodes if parent no longer has any children", async () => {
     const getNodesFake = sinon.fake(async () => [
-      {
-        ...createTreeModelNodeInput("root-0"),
-        item: { ...createDelayLoadedTreeNodeItem("root-0"), hasChildren: false },
-      },
+      { ...createTreeModelNodeInput("root-0"), item: { ...createDelayLoadedTreeNodeItem("root-0"), hasChildren: false } },
     ]);
     dataProvider.getNodes = getNodesFake;
     dataProvider.getNodesCount = async () => 1;
@@ -309,14 +306,7 @@ describe("reloadTree", () => {
   });
 
   function createTreeModelNodeInput(id: string): TreeModelNodeInput {
-    return {
-      id,
-      isExpanded: false,
-      isLoading: false,
-      isSelected: false,
-      item: createDelayLoadedTreeNodeItem(id),
-      label: createPropertyRecord(id),
-    };
+    return { id, isExpanded: false, isLoading: false, isSelected: false, item: createDelayLoadedTreeNodeItem(id), label: createPropertyRecord(id) };
   }
 
   function createDelayLoadedTreeNodeItem(id: string): DelayLoadedTreeNodeItem {

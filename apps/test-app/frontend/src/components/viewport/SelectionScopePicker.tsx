@@ -32,36 +32,12 @@ export function SelectionScopePicker(props: SelectionScopePickerProps) {
 }
 
 const SELECTION_SCOPES: { [id: string]: { scope: SelectionScope; label: string } } = {
-  element: {
-    scope: { id: "element" },
-    label: "Element",
-  },
-  assembly: {
-    scope: { id: "element", ancestorLevel: 1 },
-    label: "Assembly",
-  },
-  "top-assembly": {
-    scope: { id: "element", ancestorLevel: -1 },
-    label: "Top assembly",
-  },
-  "functional-element": {
-    scope: { id: "functional" },
-    label: "Functional element",
-  },
-  "functional-assembly": {
-    scope: { id: "functional", ancestorLevel: 1 },
-    label: "Functional assembly",
-  },
-  "functional-top-assembly": {
-    scope: { id: "functional", ancestorLevel: -1 },
-    label: "Functional top assembly",
-  },
-  model: {
-    scope: { id: "model" },
-    label: "Model",
-  },
-  category: {
-    scope: { id: "category" },
-    label: "Category",
-  },
+  element: { scope: { id: "element" }, label: "Element" },
+  assembly: { scope: { id: "element", ancestorLevel: 1 }, label: "Assembly" },
+  "top-assembly": { scope: { id: "element", ancestorLevel: -1 }, label: "Top assembly" },
+  "functional-element": { scope: { id: "functional" }, label: "Functional element" },
+  "functional-assembly": { scope: { id: "functional", ancestorLevel: 1 }, label: "Functional assembly" },
+  "functional-top-assembly": { scope: { id: "functional", ancestorLevel: -1 }, label: "Functional top assembly" },
+  model: { scope: { id: "model" }, label: "Model" },
+  category: { scope: { id: "category" }, label: "Category" },
 };

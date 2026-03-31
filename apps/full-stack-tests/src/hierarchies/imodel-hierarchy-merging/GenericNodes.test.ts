@@ -61,19 +61,10 @@ describe("Hierarchies", () => {
       beforeEach(() => {
         provider = createMergedHierarchyProvider({
           imodels: [
-            {
-              ecdb: dbs.base.ecdb,
-              key: "base",
-            },
-            {
-              ecdb: dbs.changeset1.ecdb,
-              key: "changeset1",
-            },
+            { ecdb: dbs.base.ecdb, key: "base" },
+            { ecdb: dbs.changeset1.ecdb, key: "changeset1" },
           ],
-          createHierarchyDefinition: createHierarchyDefinitionFactory({
-            xyzSchema: dbs.base.xyzSchema,
-            createGenericNodeForY: true,
-          }),
+          createHierarchyDefinition: createHierarchyDefinitionFactory({ xyzSchema: dbs.base.xyzSchema, createGenericNodeForY: true }),
         });
       });
 
@@ -90,15 +81,9 @@ describe("Hierarchies", () => {
                   key: "y-elements",
                   children: [
                     // exists in both imodels
-                    NodeValidators.createForInstanceNode({
-                      label: "y1",
-                      instanceKeys: [keys.base.y1, keys.changeset1.y1],
-                    }),
+                    NodeValidators.createForInstanceNode({ label: "y1", instanceKeys: [keys.base.y1, keys.changeset1.y1] }),
                     // exists only in the second imodel
-                    NodeValidators.createForInstanceNode({
-                      label: "y2",
-                      instanceKeys: [keys.changeset1.y2],
-                    }),
+                    NodeValidators.createForInstanceNode({ label: "y2", instanceKeys: [keys.changeset1.y2] }),
                   ],
                 }),
               ],
@@ -111,10 +96,7 @@ describe("Hierarchies", () => {
         it("creates hierarchy when targeting instances from both imodels", async () => {
           provider.setHierarchySearch({
             paths: [
-              {
-                identifier: keys.base.x,
-                children: [{ identifier: { type: "generic", id: "y-elements" }, children: [{ identifier: keys.base.y1 }] }],
-              },
+              { identifier: keys.base.x, children: [{ identifier: { type: "generic", id: "y-elements" }, children: [{ identifier: keys.base.y1 }] }] },
               {
                 identifier: keys.changeset1.x,
                 children: [{ identifier: { type: "generic", id: "y-elements" }, children: [{ identifier: keys.changeset1.y2 }] }],
@@ -133,17 +115,9 @@ describe("Hierarchies", () => {
                     key: "y-elements",
                     children: [
                       // exists in both imodels
-                      NodeValidators.createForInstanceNode({
-                        label: "y1",
-                        instanceKeys: [keys.base.y1],
-                        isSearchTarget: true,
-                      }),
+                      NodeValidators.createForInstanceNode({ label: "y1", instanceKeys: [keys.base.y1], isSearchTarget: true }),
                       // exists only in the second imodel
-                      NodeValidators.createForInstanceNode({
-                        label: "y2",
-                        instanceKeys: [keys.changeset1.y2],
-                        isSearchTarget: true,
-                      }),
+                      NodeValidators.createForInstanceNode({ label: "y2", instanceKeys: [keys.changeset1.y2], isSearchTarget: true }),
                     ],
                   }),
                 ],
@@ -166,13 +140,7 @@ describe("Hierarchies", () => {
                   NodeValidators.createForGenericNode({
                     label: "Y elements",
                     key: "y-elements",
-                    children: [
-                      NodeValidators.createForInstanceNode({
-                        label: "y1",
-                        instanceKeys: [keys.base.y1],
-                        isSearchTarget: true,
-                      }),
-                    ],
+                    children: [NodeValidators.createForInstanceNode({ label: "y1", instanceKeys: [keys.base.y1], isSearchTarget: true })],
                   }),
                 ],
               }),
@@ -202,16 +170,8 @@ describe("Hierarchies", () => {
                     label: "Y elements",
                     key: "y-elements",
                     children: [
-                      NodeValidators.createForInstanceNode({
-                        label: "y1",
-                        instanceKeys: [keys.changeset1.y1],
-                        isSearchTarget: true,
-                      }),
-                      NodeValidators.createForInstanceNode({
-                        label: "y2",
-                        instanceKeys: [keys.changeset1.y2],
-                        isSearchTarget: true,
-                      }),
+                      NodeValidators.createForInstanceNode({ label: "y1", instanceKeys: [keys.changeset1.y1], isSearchTarget: true }),
+                      NodeValidators.createForInstanceNode({ label: "y2", instanceKeys: [keys.changeset1.y2], isSearchTarget: true }),
                     ],
                   }),
                 ],

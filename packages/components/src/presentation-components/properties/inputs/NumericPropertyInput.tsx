@@ -33,11 +33,7 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
   const commitInput = () => {
     const formattedInputValue = applyConstraints(inputValue, min, max);
     setInputValue(formattedInputValue);
-    onCommit &&
-      onCommit({
-        propertyRecord,
-        newValue: parsePrimitiveValue(formattedInputValue),
-      });
+    onCommit && onCommit({ propertyRecord, newValue: parsePrimitiveValue(formattedInputValue) });
   };
 
   return (
@@ -90,14 +86,7 @@ export interface NumericInputProps extends PropertyEditorProps {
 export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputProps>(
   ({ value, onChange, onBlur, isDisabled, setFocus, min, max, onCancel }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
-    useImperativeHandle(
-      ref,
-      () => ({
-        getValue: () => parsePrimitiveValue(value),
-        htmlElement: inputRef.current,
-      }),
-      [value],
-    );
+    useImperativeHandle(ref, () => ({ getValue: () => parsePrimitiveValue(value), htmlElement: inputRef.current }), [value]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.currentTarget.value;

@@ -50,14 +50,7 @@ export async function importSchema(
     ...schemaProps,
     items: schemaItems.reduce<{ [className: string]: { name: string; fullName: EC.FullClassNameDotNotation; label: string } }>((classesObj, schemaItemDef) => {
       const name = schemaItemDef.typeName;
-      return {
-        ...classesObj,
-        [name]: {
-          fullName: `${schemaProps.schemaName}.${name}`,
-          name,
-          label: schemaItemDef.displayLabel,
-        },
-      };
+      return { ...classesObj, [name]: { fullName: `${schemaProps.schemaName}.${name}`, name, label: schemaItemDef.displayLabel } };
     }, {}),
   };
 }

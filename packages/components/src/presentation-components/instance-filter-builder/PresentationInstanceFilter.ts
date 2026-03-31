@@ -129,24 +129,14 @@ export namespace PresentationInstanceFilter {
     value: PrimitiveValue,
   ): PresentationInstanceFilterCondition {
     if (!isValidPrimitiveValue(value)) {
-      return {
-        field,
-        operator: operator === "is-equal" ? "is-null" : "is-not-null",
-      };
+      return { field, operator: operator === "is-equal" ? "is-null" : "is-not-null" };
     }
-    return {
-      field,
-      operator,
-      value: createUniqueValue(value),
-    };
+    return { field, operator, value: createUniqueValue(value) };
   }
 }
 
 function createPresentationInstanceFilterConditionGroup(descriptor: Descriptor, group: PropertyFilterRuleGroup): PresentationInstanceFilterConditionGroup {
-  return {
-    operator: group.operator,
-    conditions: group.rules.map((rule) => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, rule)),
-  };
+  return { operator: group.operator, conditions: group.rules.map((rule) => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, rule)) };
 }
 
 function createPresentationInstanceFilterCondition(descriptor: Descriptor, condition: PropertyFilterRule): PresentationInstanceFilterCondition {
@@ -157,11 +147,7 @@ function createPresentationInstanceFilterCondition(descriptor: Descriptor, condi
   if (condition.value && condition.value.valueFormat !== PropertyValueFormat.Primitive) {
     throw new PresentationError(PresentationStatus.Error, `Property '${condition.property.name}' cannot be compared with non primitive value.`);
   }
-  return {
-    operator: condition.operator,
-    field,
-    value: condition.value,
-  };
+  return { operator: condition.operator, field, value: condition.value };
 }
 
 function createPropertyFilterRule(condition: PresentationInstanceFilterCondition, descriptor: Descriptor): PropertyFilterRule {
@@ -169,18 +155,11 @@ function createPropertyFilterRule(condition: PresentationInstanceFilterCondition
   if (!field || !field.isPropertiesField()) {
     throw new PresentationError(PresentationStatus.Error, `Failed to find properties field - ${condition.field.name} in descriptor`);
   }
-  return {
-    property: createPropertyInfoFromPropertiesField(field).propertyDescription,
-    operator: condition.operator,
-    value: condition.value,
-  };
+  return { property: createPropertyInfoFromPropertiesField(field).propertyDescription, operator: condition.operator, value: condition.value };
 }
 
 function createPropertyFilterRuleGroup(group: PresentationInstanceFilterConditionGroup, descriptor: Descriptor): PropertyFilterRuleGroup {
-  return {
-    operator: group.operator,
-    rules: group.conditions.map((condition) => PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, condition)),
-  };
+  return { operator: group.operator, rules: group.conditions.map((condition) => PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, condition)) };
 }
 
 interface ConvertContext {
@@ -222,10 +201,7 @@ function createGenericInstanceFilterUniqueValueRules(filter: PresentationInstanc
 
 function createGenericInstanceFilterRuleGroup(group: PresentationInstanceFilterConditionGroup, ctx: ConvertContext): GenericInstanceFilterRuleGroup {
   const convertedConditions = group.conditions.map((condition) => createGenericInstanceFilter(condition, ctx));
-  return {
-    operator: group.operator,
-    rules: convertedConditions,
-  };
+  return { operator: group.operator, rules: convertedConditions };
 }
 
 function createGenericInstanceFilterRule(condition: PresentationInstanceFilterCondition, ctx: ConvertContext): GenericInstanceFilterRule {
@@ -253,17 +229,10 @@ function createUniqueValueConditions(filter: PresentationInstanceFilterCondition
     return undefined;
   }
 
-  const conditionGroup: PresentationInstanceFilterConditionGroup = {
-    operator: operator === "is-equal" ? "or" : "and",
-    conditions: [],
-  };
+  const conditionGroup: PresentationInstanceFilterConditionGroup = { operator: operator === "is-equal" ? "or" : "and", conditions: [] };
   for (const { displayValue, groupedRawValues } of uniqueValues) {
     for (const value of groupedRawValues) {
-      conditionGroup.conditions.push({
-        field,
-        operator,
-        value: { valueFormat: PropertyValueFormat.Primitive, displayValue, value },
-      });
+      conditionGroup.conditions.push({ field, operator, value: { valueFormat: PropertyValueFormat.Primitive, displayValue, value } });
     }
   }
   return conditionGroup;
@@ -282,10 +251,7 @@ function getRelatedInstanceDescription(field: PropertiesField, propClassName: st
 
   const baseAlias = `rel_${propClassName.split(":")[1]}`;
   const index = getAliasIndex(baseAlias, ctx.usedRelatedAliases);
-  const newRelated = {
-    path: pathToProperty,
-    alias: `${baseAlias}_${index}`,
-  };
+  const newRelated = { path: pathToProperty, alias: `${baseAlias}_${index}` };
 
   ctx.relatedInstances.push(newRelated);
   return newRelated;
@@ -356,10 +322,7 @@ function parseGenericFilterRuleGroup(
     }
   }
 
-  return {
-    operator: group.operator,
-    conditions: group.rules.map((rule) => parseGenericFilterRules(rule, ctx)),
-  };
+  return { operator: group.operator, conditions: group.rules.map((rule) => parseGenericFilterRules(rule, ctx)) };
 }
 
 function parseGenericFilterRule(rule: GenericInstanceFilterRule, ctx: GenericFilterParsingContext): PresentationInstanceFilterCondition {
@@ -402,19 +365,12 @@ function parseUniqueValuesRule(rules: GenericInstanceFilterRule[], ctx: GenericF
     if (currentValue) {
       currentValue.groupedRawValues.push(value);
     } else {
-      uniqueValues.push({
-        displayValue,
-        groupedRawValues: [value],
-      });
+      uniqueValues.push({ displayValue, groupedRawValues: [value] });
     }
   }
 
   const { displayValues, groupedRawValues } = serializeUniqueValues(uniqueValues);
-  return {
-    operator: rules[0].operator,
-    field,
-    value: { valueFormat: PropertyValueFormat.Primitive, displayValue: displayValues, value: groupedRawValues },
-  };
+  return { operator: rules[0].operator, field, value: { valueFormat: PropertyValueFormat.Primitive, displayValue: displayValues, value: groupedRawValues } };
 }
 
 function findDirectField(fields: Field[], propName: string): PropertiesField | undefined {
@@ -473,14 +429,7 @@ function findFieldByPath(fields: Field[], pathToField: GenericInstanceFilterRela
 function pathStartsWith(
   prefix: GenericInstanceFilterRelationshipStep[],
   path: RelationshipPath,
-):
-  | {
-      matches: false;
-    }
-  | {
-      matches: true;
-      leftOver: GenericInstanceFilterRelationshipStep[];
-    } {
+): { matches: false } | { matches: true; leftOver: GenericInstanceFilterRelationshipStep[] } {
   if (prefix.length < path.length) {
     return { matches: false };
   }
@@ -500,10 +449,7 @@ function pathStartsWith(
   }
 
   const leftOver = prefix.slice(path.length);
-  return {
-    matches: true,
-    leftOver,
-  };
+  return { matches: true, leftOver };
 }
 
 function toRelationshipStep(path: RelationshipPath): GenericInstanceFilterRelationshipStep[] {
@@ -528,10 +474,7 @@ function toGenericInstanceFilterRuleValue(primitiveValue?: PrimitiveValue): Gene
     } satisfies GenericInstanceFilterRuleValue;
   }
 
-  return {
-    displayValue: primitiveValue.displayValue ?? "",
-    rawValue: primitiveValue.value,
-  } satisfies GenericInstanceFilterRuleValue;
+  return { displayValue: primitiveValue.displayValue ?? "", rawValue: primitiveValue.value } satisfies GenericInstanceFilterRuleValue;
 }
 
 function isGenericPrimitiveValueLike(value: Primitives.Value): value is GenericInstanceFilterRuleValue.Values {
@@ -562,15 +505,6 @@ function isValidPrimitiveValue(val: PrimitiveValue): val is Required<PrimitiveVa
 }
 
 function createUniqueValue(value: Required<PrimitiveValue>): PrimitiveValue | undefined {
-  const { displayValues, groupedRawValues } = serializeUniqueValues([
-    {
-      displayValue: value.displayValue,
-      groupedRawValues: [value.value as Value],
-    },
-  ]);
-  return {
-    displayValue: displayValues,
-    value: groupedRawValues,
-    valueFormat: PropertyValueFormat.Primitive,
-  };
+  const { displayValues, groupedRawValues } = serializeUniqueValues([{ displayValue: value.displayValue, groupedRawValues: [value.value as Value] }]);
+  return { displayValue: displayValues, value: groupedRawValues, valueFormat: PropertyValueFormat.Primitive };
 }

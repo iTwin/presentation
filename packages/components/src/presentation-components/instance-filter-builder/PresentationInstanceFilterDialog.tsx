@@ -133,20 +133,9 @@ function FilterDialogContent({ propertiesSource, ...restProps }: FilterDialogCon
 
 function useDelayLoadedPropertiesSource(
   sourceOrGetter: PresentationInstanceFilterPropertiesSource | (() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined,
-): {
-  propertiesSource: PresentationInstanceFilterPropertiesSource | undefined;
-  isLoading: boolean;
-} {
+): { propertiesSource: PresentationInstanceFilterPropertiesSource | undefined; isLoading: boolean } {
   const [{ source, isLoading }, setState] = useState(() =>
-    typeof sourceOrGetter === "function"
-      ? {
-          source: undefined,
-          isLoading: false,
-        }
-      : {
-          source: sourceOrGetter,
-          isLoading: false,
-        },
+    typeof sourceOrGetter === "function" ? { source: undefined, isLoading: false } : { source: sourceOrGetter, isLoading: false },
   );
 
   useEffect(() => {
@@ -168,10 +157,7 @@ function useDelayLoadedPropertiesSource(
     void (async () => {
       try {
         const newDescriptor = await sourceOrGetter();
-        updateState({
-          source: newDescriptor,
-          isLoading: false,
-        });
+        updateState({ source: newDescriptor, isLoading: false });
       } catch (error) {
         updateState(() => {
           // throw error in setSate callback for it to be caught by ErrorBoundary
@@ -204,10 +190,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     return PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, initialFilterInfo.filter);
   });
 
-  const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
-    initialFilter: initialPropertyFilter,
-    ruleValidator: filterRuleValidator,
-  });
+  const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({ initialFilter: initialPropertyFilter, ruleValidator: filterRuleValidator });
 
   const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilterInfo?.usedClasses);
   const getFilterInfo = useCallback(

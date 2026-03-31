@@ -76,10 +76,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
   #cancelled = new Subject<void>();
 
   constructor(params: UnifiedSelectionTreeEventHandlerParams) {
-    super({
-      ...params,
-      modelSource: params.nodeLoader.modelSource,
-    });
+    super({ ...params, modelSource: params.nodeLoader.modelSource });
     this.#dataProvider = params.nodeLoader.dataProvider;
     this.#selectionSourceName = params.name ?? `Tree_${this.#dataProvider.rulesetId}_${Guid.createValue()}`;
     this.#listeners.push(Presentation.selection.selectionChange.addListener((args) => this.onSelectionChanged(args)));

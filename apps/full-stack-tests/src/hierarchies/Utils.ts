@@ -40,10 +40,7 @@ export function createProvider(
         search?: HierarchySearchPaths;
         queryCacheSize?: number;
       }
-    | {
-        imodel: IModelConnection | IModelDb | ECDb;
-        formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter;
-      }
+    | { imodel: IModelConnection | IModelDb | ECDb; formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter }
   ) & {
     imodelChanged?: Event<() => void>;
     hierarchy: HierarchyDefinition;

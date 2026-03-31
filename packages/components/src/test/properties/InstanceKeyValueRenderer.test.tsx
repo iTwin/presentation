@@ -122,9 +122,7 @@ describe("InstanceKeyValueRenderer", () => {
       describe("with unified selection context", () => {
         let selectionStorage: SelectionStorage;
         beforeEach(() => {
-          selectionStorage = {
-            replaceSelection: sinon.stub(),
-          } as unknown as SelectionStorage;
+          selectionStorage = { replaceSelection: sinon.stub() } as unknown as SelectionStorage;
         });
 
         it("renders empty when there is no display value", async () => {

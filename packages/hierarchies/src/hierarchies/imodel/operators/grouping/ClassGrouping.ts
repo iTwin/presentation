@@ -43,10 +43,7 @@ export async function createClassGroups(
       let groupingInfo = groupings.grouped.get(nodeClassName);
       if (!groupingInfo) {
         const nodeClass = await getClass(schemaProvider, nodeClassName);
-        groupingInfo = {
-          class: nodeClass,
-          groupedNodes: [],
-        };
+        groupingInfo = { class: nodeClass, groupedNodes: [] };
         groupings.grouped.set(nodeClassName, groupingInfo);
       }
       groupingInfo.groupedNodes.push(node);
@@ -62,10 +59,7 @@ async function createGroupingNodes(groupings: ClassGroupingInformation): Promise
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   for (const { value: entry } of groupings.grouped) {
     await releaseMainThread();
-    const groupingNodeKey: ClassGroupingNodeKey = {
-      type: "class-grouping",
-      className: entry.class.fullName,
-    };
+    const groupingNodeKey: ClassGroupingNodeKey = { type: "class-grouping", className: entry.class.fullName };
     const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
     groupedNodes.push({
       label: entry.class.label ?? entry.class.name,

@@ -205,10 +205,7 @@ function usePropertiesFilteringByClass({ imodel, availableProperties, activeClas
     };
   }, [imodel, availableProperties]);
 
-  return {
-    properties,
-    isFilteringProperties,
-  };
+  return { properties, isFilteringProperties };
 }
 
 interface UseActiveClassesProps {
@@ -249,12 +246,7 @@ function useActiveClasses({ imodel, availableClasses, initialActiveClasses }: Us
     [availableClasses],
   );
 
-  return {
-    activeClasses,
-    isFilteringClasses,
-    changeActiveClasses,
-    filterClassesByProperty,
-  };
+  return { activeClasses, isFilteringClasses, changeActiveClasses, filterClassesByProperty };
 }
 
 async function computePropertiesByClasses(

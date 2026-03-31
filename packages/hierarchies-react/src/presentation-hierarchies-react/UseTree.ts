@@ -60,13 +60,7 @@ export function useUnifiedSelectionTree({
   const { getTreeModelNode, ...rest } = useTreeInternal(props);
   const selectionProps = useUnifiedTreeSelection({ sourceName, selectionStorage, getTreeModelNode, createSelectableForGenericNode });
   if (rest.rootErrorRendererProps === undefined && rest.treeRendererProps?.rootNodes) {
-    return {
-      ...rest,
-      treeRendererProps: {
-        ...rest.treeRendererProps,
-        ...selectionProps,
-      },
-    };
+    return { ...rest, treeRendererProps: { ...rest.treeRendererProps, ...selectionProps } };
   }
   return rest;
 }
@@ -145,9 +139,7 @@ function useTreeInternal({
   onHierarchyLimitExceeded,
   onHierarchyLoadError,
   getTreeNodeError,
-}: UseTreeProps): UseTreeResult & {
-  getTreeModelNode: (nodeId: string) => TreeModelRootNode | TreeModelHierarchyNode | undefined;
-} {
+}: UseTreeProps): UseTreeResult & { getTreeModelNode: (nodeId: string) => TreeModelRootNode | TreeModelHierarchyNode | undefined } {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
@@ -163,10 +155,7 @@ function useTreeInternal({
         (model) => {
           const rootNodes =
             model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model, getTreeNodeErrorRef.current) : undefined;
-          setState({
-            model,
-            rootNodes,
-          });
+          setState({ model, rootNodes });
         },
         (actionType, duration) => onPerformanceMeasuredRef.current?.(actionType, duration),
         (props) => onHierarchyLimitExceededRef.current?.(props),
@@ -311,36 +300,17 @@ function useTreeInternal({
 
   const renderProps: RendererProps = useMemo(() => {
     if (state.model.rootNode.error) {
-      return {
-        rootErrorRendererProps: {
-          error: state.model.rootNode.error,
-          reloadTree,
-          getHierarchyLevelDetails,
-        },
-      };
+      return { rootErrorRendererProps: { error: state.model.rootNode.error, reloadTree, getHierarchyLevelDetails } };
     }
     return {
       rootErrorRendererProps: undefined,
       treeRendererProps: state.rootNodes
-        ? {
-            rootNodes: state.rootNodes,
-            expandNode,
-            selectNodes,
-            isNodeSelected,
-            reloadTree,
-            getHierarchyLevelDetails,
-          }
+        ? { rootNodes: state.rootNodes, expandNode, selectNodes, isNodeSelected, reloadTree, getHierarchyLevelDetails }
         : undefined,
     };
   }, [expandNode, getHierarchyLevelDetails, isNodeSelected, reloadTree, selectNodes, state.model.rootNode.error, state.rootNodes]);
 
-  return {
-    ...renderProps,
-    isReloading: !!state.model.rootNode.isLoading || isSearching,
-    getTreeModelNode,
-    getNode,
-    setFormatter,
-  };
+  return { ...renderProps, isReloading: !!state.model.rootNode.isLoading || isSearching, getTreeModelNode, getNode, setFormatter };
 }
 
 function generateTreeStructure(

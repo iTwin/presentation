@@ -147,12 +147,7 @@ const ruleset: Ruleset = {
       specifications: [
         {
           specType: "RelatedInstanceNodes",
-          relationshipPaths: [
-            {
-              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-              direction: "Forward",
-            },
-          ],
+          relationshipPaths: [{ relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" }],
           groupByClass: false,
           groupByLabel: false,
         },
@@ -170,16 +165,10 @@ function stubGlobals() {
   const domMatrix = global.DOMMatrix;
 
   before(() => {
-    Object.defineProperty(global, "DOMMatrix", {
-      writable: true,
-      value: sinon.fake(() => ({ m41: 0, m42: 0 })),
-    });
+    Object.defineProperty(global, "DOMMatrix", { writable: true, value: sinon.fake(() => ({ m41: 0, m42: 0 })) });
   });
 
   after(() => {
-    Object.defineProperty(global, "DOMMatrix", {
-      writable: true,
-      value: domMatrix,
-    });
+    Object.defineProperty(global, "DOMMatrix", { writable: true, value: domMatrix });
   });
 }

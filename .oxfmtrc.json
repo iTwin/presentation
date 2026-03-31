@@ -21,6 +21,12 @@
   ],
   "overrides": [
     {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "options": {
+        "objectWrap": "collapse"
+      }
+    },
+    {
       "files": ["**/*"],
       "excludeFiles": [
         "**/learning-snippets/**/*.ts*",
@@ -51,29 +57,11 @@
             "unknown"
           ],
           "customGroups": [
-            {
-              "groupName": "side-effect-imports",
-              "modifiers": ["side_effect"],
-              "elementNamePattern": ["**/*.js", "@*/*"]
-            },
-            {
-              "groupName": "icons",
-              "elementNamePattern": ["**/*.svg"]
-            },
-            {
-              "groupName": "style-imports",
-              "elementNamePattern": ["**/*.css", "**/*.scss"]
-            },
-            {
-              "groupName": "scoped",
-              "modifiers": ["value"],
-              "elementNamePattern": ["@*/**"]
-            },
-            {
-              "groupName": "type-scoped",
-              "modifiers": ["type"],
-              "elementNamePattern": ["@*/**"]
-            }
+            { "groupName": "side-effect-imports", "modifiers": ["side_effect"], "elementNamePattern": ["**/*.js", "@*/*"] },
+            { "groupName": "icons", "elementNamePattern": ["**/*.svg"] },
+            { "groupName": "style-imports", "elementNamePattern": ["**/*.css", "**/*.scss"] },
+            { "groupName": "scoped", "modifiers": ["value"], "elementNamePattern": ["@*/**"] },
+            { "groupName": "type-scoped", "modifiers": ["type"], "elementNamePattern": ["@*/**"] }
           ]
         }
       }

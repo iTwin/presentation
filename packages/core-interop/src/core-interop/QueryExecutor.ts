@@ -76,10 +76,7 @@ class ECSqlQueryReaderImpl implements ReturnType<ECSqlQueryExecutor["createQuery
     if (res.done) {
       return { done: true, value: undefined };
     }
-    return {
-      done: false,
-      value: this._format === "array" ? res.value.toArray() : res.value.toRow(),
-    };
+    return { done: false, value: this._format === "array" ? res.value.toArray() : res.value.toRow() };
   }
 }
 

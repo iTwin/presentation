@@ -80,12 +80,7 @@ function PresentationTable(props: PresentationTableProps) {
 }
 
 function mapTableColumns(columnDefinitions: TableColumnDefinition) {
-  return {
-    id: columnDefinitions.name,
-    accessor: columnDefinitions.name,
-    Header: columnDefinitions.label,
-    Cell: cellRenderer,
-  };
+  return { id: columnDefinitions.name, accessor: columnDefinitions.name, Header: columnDefinitions.label, Cell: cellRenderer };
 }
 
 function mapTableRow(rowDefinition: TableRowDefinition) {

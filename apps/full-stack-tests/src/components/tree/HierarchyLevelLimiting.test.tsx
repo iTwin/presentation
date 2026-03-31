@@ -131,12 +131,7 @@ const ruleset: Ruleset = {
       specifications: [
         {
           specType: "RelatedInstanceNodes",
-          relationshipPaths: [
-            {
-              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-              direction: "Forward",
-            },
-          ],
+          relationshipPaths: [{ relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" }],
           groupByClass: false,
           groupByLabel: false,
         },

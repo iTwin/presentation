@@ -31,10 +31,7 @@ describe("ClassGrouping", () => {
       }),
     ];
     const classInfo = schemaProvider.stubEntityClass({ schemaName: "TestSchema", className: "TestClass" });
-    const expectedClassGroupingNodeKey: GroupingNodeKey = {
-      type: "class-grouping",
-      className: classInfo.fullName,
-    };
+    const expectedClassGroupingNodeKey: GroupingNodeKey = { type: "class-grouping", className: classInfo.fullName };
     expect(await createClassGroups(schemaProvider, undefined, nodes)).to.deep.eq({
       groupingType: "class",
       grouped: [
@@ -67,10 +64,7 @@ describe("ClassGrouping", () => {
       }),
     ];
     const classA = schemaProvider.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
-    const expectedClassGroupingNodeKey: GroupingNodeKey = {
-      type: "class-grouping",
-      className: classA.fullName,
-    };
+    const expectedClassGroupingNodeKey: GroupingNodeKey = { type: "class-grouping", className: classA.fullName };
     expect(await createClassGroups(schemaProvider, undefined, nodes)).to.deep.eq({
       groupingType: "class",
       grouped: [
@@ -102,15 +96,9 @@ describe("ClassGrouping", () => {
       }),
     ];
     const classA = schemaProvider.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
-    const expectedClassAGroupingNodeKey: GroupingNodeKey = {
-      type: "class-grouping",
-      className: classA.fullName,
-    };
+    const expectedClassAGroupingNodeKey: GroupingNodeKey = { type: "class-grouping", className: classA.fullName };
     const classB = schemaProvider.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B" });
-    const expectedClassBGroupingNodeKey: GroupingNodeKey = {
-      type: "class-grouping",
-      className: classB.fullName,
-    };
+    const expectedClassBGroupingNodeKey: GroupingNodeKey = { type: "class-grouping", className: classB.fullName };
     expect(await createClassGroups(schemaProvider, undefined, nodes)).to.deep.eq({
       groupingType: "class",
       grouped: [
@@ -134,12 +122,7 @@ describe("ClassGrouping", () => {
   });
 
   it("doesn't create duplicate class group", async () => {
-    const parentNode = createTestProcessedGroupingNode({
-      key: {
-        type: "class-grouping",
-        className: "TestSchema.TestClass",
-      },
-    });
+    const parentNode = createTestProcessedGroupingNode({ key: { type: "class-grouping", className: "TestSchema.TestClass" } });
     const nodes = [
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },

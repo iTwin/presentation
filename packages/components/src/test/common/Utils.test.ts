@@ -53,9 +53,7 @@ describe("Utils", () => {
     });
 
     it("returns undefined for invalid name when there are nested fields", () => {
-      const nestedField = createTestPropertiesContentField({
-        properties: [{ property: createTestPropertyInfo() }],
-      });
+      const nestedField = createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo() }] });
       const nestingField = createTestNestedContentField({ nestedFields: [nestedField] });
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
       const result = findField(descriptor, combineFieldNames(nestedField.name, "doesn't exist"));
@@ -70,18 +68,14 @@ describe("Utils", () => {
     });
 
     it("finds field in Descriptor.fields list", () => {
-      const descriptor = createTestContentDescriptor({
-        fields: [createTestSimpleContentField()],
-      });
+      const descriptor = createTestContentDescriptor({ fields: [createTestSimpleContentField()] });
       const field = descriptor.fields[0];
       const result = findField(descriptor, field.name);
       expect(result).to.eq(field);
     });
 
     it("finds nested field", () => {
-      const nestedField = createTestPropertiesContentField({
-        properties: [{ property: createTestPropertyInfo() }],
-      });
+      const nestedField = createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo() }] });
       const nestingField = createTestNestedContentField({ nestedFields: [nestedField] });
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
       const result = findField(descriptor, combineFieldNames(nestedField.name, nestingField.name));

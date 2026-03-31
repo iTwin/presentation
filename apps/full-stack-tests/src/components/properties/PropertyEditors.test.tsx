@@ -70,11 +70,7 @@ describe("Property editors", () => {
           return {
             name: "TestFormat",
             label: "Test format override",
-            composite: {
-              includeZero: true,
-              spacer: "",
-              units: [{ label: "in", name: "Units.IN" }],
-            },
+            composite: { includeZero: true, spacer: "", units: [{ label: "in", name: "Units.IN" }] },
             formatTraits: ["keepSingleZero", "showUnitLabel"],
             precision: 1,
             type: "Decimal",
@@ -93,12 +89,7 @@ describe("Property editors", () => {
       {
         type: FieldDescriptorType.Properties,
         pathFromSelectToPropertyClass: [],
-        properties: [
-          {
-            class: schema.items.MyPhysicalObject.fullName.replaceAll(".", ":"),
-            name: "MyProperty",
-          },
-        ],
+        properties: [{ class: schema.items.MyPhysicalObject.fullName.replaceAll(".", ":"), name: "MyProperty" }],
       },
       true,
     );
@@ -177,12 +168,7 @@ describe("Property editors", () => {
       {
         type: FieldDescriptorType.Properties,
         pathFromSelectToPropertyClass: [],
-        properties: [
-          {
-            class: schema.items.MyPhysicalObject.fullName.replaceAll(".", ":"),
-            name: "MyProperty",
-          },
-        ],
+        properties: [{ class: schema.items.MyPhysicalObject.fullName.replaceAll(".", ":"), name: "MyProperty" }],
       },
       true,
     );

@@ -86,9 +86,7 @@ describe("mergeProviders", () => {
           { className: "s.two", id: "two" },
         ],
       }),
-      createTestProvider({
-        instanceKeys: () => [{ className: "s.three", id: "three" }],
-      }),
+      createTestProvider({ instanceKeys: () => [{ className: "s.three", id: "three" }] }),
     ];
     const mergedProvider = mergeProviders({ providers });
     expect(await collect(mergedProvider.getNodeInstanceKeys({ parentNode: undefined })))
@@ -143,16 +141,9 @@ describe("mergeProviders", () => {
 
 function createTestProvider(
   props: (
-    | {
-        nodes: (props: Props<HierarchyProvider["getNodes"]>) => Partial<NonGroupingHierarchyNode>[];
-      }
-    | {
-        rootNodes?: (props: Omit<Props<HierarchyProvider["getNodes"]>, "parentNode">) => Partial<NonGroupingHierarchyNode>[];
-      }
-  ) & {
-    instanceKeys?: (props: Props<HierarchyProvider["getNodeInstanceKeys"]>) => InstanceKey[];
-    disposable?: "yes" | "deprecated" | "no";
-  } = {},
+    | { nodes: (props: Props<HierarchyProvider["getNodes"]>) => Partial<NonGroupingHierarchyNode>[] }
+    | { rootNodes?: (props: Omit<Props<HierarchyProvider["getNodes"]>, "parentNode">) => Partial<NonGroupingHierarchyNode>[] }
+  ) & { instanceKeys?: (props: Props<HierarchyProvider["getNodeInstanceKeys"]>) => InstanceKey[]; disposable?: "yes" | "deprecated" | "no" } = {},
 ) {
   return {
     hierarchyChanged: new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>(),

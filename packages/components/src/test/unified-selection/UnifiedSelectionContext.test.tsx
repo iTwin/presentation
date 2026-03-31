@@ -29,9 +29,7 @@ describe("UnifiedSelectionContext", () => {
       );
     };
 
-    return renderHook(() => useUnifiedSelectionContext()!, {
-      wrapper: Wrapper,
-    });
+    return renderHook(() => useUnifiedSelectionContext()!, { wrapper: Wrapper });
   }
 
   beforeEach(() => {

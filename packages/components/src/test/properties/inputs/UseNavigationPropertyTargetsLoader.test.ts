@@ -56,9 +56,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
 
     beforeEach(() => {
       getContentIteratorStub.reset();
-      presentationManagerStub.get(() => ({
-        getContentIterator: getContentIteratorStub,
-      }));
+      presentationManagerStub.get(() => ({ getContentIterator: getContentIteratorStub }));
     });
 
     it("returns empty targets array if there's no content", async () => {
@@ -138,9 +136,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
 
     beforeEach(() => {
       getContentStub.reset();
-      presentationManagerStub.get(() => ({
-        getContent: getContentStub,
-      }));
+      presentationManagerStub.get(() => ({ getContent: getContentStub }));
     });
 
     it("returns empty targets array if there's no content", async () => {
@@ -233,15 +229,7 @@ describe("useNavigationPropertyTargetsRuleset", () => {
     await waitFor(() => expect(result.current).to.not.be.undefined);
     const ruleset = result.current;
     expect(ruleset).to.containSubset({
-      rules: [
-        {
-          specifications: [
-            {
-              classes: { schemaName: "TestSchema", classNames: ["TargetClass"], arePolymorphic: true },
-            },
-          ],
-        },
-      ],
+      rules: [{ specifications: [{ classes: { schemaName: "TestSchema", classNames: ["TargetClass"], arePolymorphic: true } }] }],
     });
   });
 

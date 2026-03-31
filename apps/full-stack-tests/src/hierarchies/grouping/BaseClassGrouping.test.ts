@@ -51,11 +51,7 @@ describe("Hierarchies", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },
-                      grouping: {
-                        byBaseClasses: {
-                          fullClassNames: ["BisCore.GraphicalPartition3d", "BisCore.LinkElement"],
-                        },
-                      },
+                      grouping: { byBaseClasses: { fullClassNames: ["BisCore.GraphicalPartition3d", "BisCore.LinkElement"] } },
                     })}
                     FROM (
                       SELECT ECClassId, ECInstanceId, UserLabel, Parent
@@ -72,12 +68,7 @@ describe("Hierarchies", () => {
 
       await validateHierarchy({
         provider: createProvider({ imodel: emptyIModel, hierarchy: customHierarchy }),
-        expect: [
-          NodeValidators.createForInstanceNode({
-            instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-            children: false,
-          }),
-        ],
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false })],
       });
     });
 
@@ -99,11 +90,7 @@ describe("Hierarchies", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },
-                      grouping: {
-                        byBaseClasses: {
-                          fullClassNames: ["BisCore.IParentElement", "BisCore.ISubModeledElement"],
-                        },
-                      },
+                      grouping: { byBaseClasses: { fullClassNames: ["BisCore.IParentElement", "BisCore.ISubModeledElement"] } },
                     })}
                     FROM (
                       SELECT ECClassId, ECInstanceId, UserLabel, Parent
@@ -120,12 +107,7 @@ describe("Hierarchies", () => {
 
       await validateHierarchy({
         provider: createProvider({ imodel: emptyIModel, hierarchy: customHierarchy }),
-        expect: [
-          NodeValidators.createForInstanceNode({
-            instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-            children: false,
-          }),
-        ],
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false })],
       });
     });
 
@@ -148,11 +130,7 @@ describe("Hierarchies", () => {
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
-                        grouping: {
-                          byBaseClasses: {
-                            fullClassNames: [baseClassName],
-                          },
-                        },
+                        grouping: { byBaseClasses: { fullClassNames: [baseClassName] } },
                       })}
                       FROM (
                         SELECT ECClassId, ECInstanceId, UserLabel, Parent
@@ -173,12 +151,7 @@ describe("Hierarchies", () => {
           NodeValidators.createForClassGroupingNode({
             label: "Information Content Element",
             className: baseClassName,
-            children: [
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                children: false,
-              }),
-            ],
+            children: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }], children: false })],
           }),
         ],
       });
@@ -249,12 +222,7 @@ describe("Hierarchies", () => {
                   NodeValidators.createForClassGroupingNode({
                     label: "Information Partition",
                     className: `${baseSchemaName}.${baseClassName3}`,
-                    children: [
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childPartition1],
-                        children: false,
-                      }),
-                    ],
+                    children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition1], children: false })],
                   }),
                 ],
               }),
@@ -319,11 +287,7 @@ describe("Hierarchies", () => {
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
-                        grouping: {
-                          byBaseClasses: {
-                            fullClassNames: [`${baseSchemaName}.${baseClassName2}`, `${baseSchemaName}.${baseClassName3}`],
-                          },
-                        },
+                        grouping: { byBaseClasses: { fullClassNames: [`${baseSchemaName}.${baseClassName2}`, `${baseSchemaName}.${baseClassName3}`] } },
                       })}
                       FROM ${physicalPartitionClassName} AS this
                       WHERE this.Parent.Id = (${IModel.rootSubjectId})
@@ -351,12 +315,7 @@ describe("Hierarchies", () => {
                   NodeValidators.createForClassGroupingNode({
                     label: "Information Partition",
                     className: `${baseSchemaName}.${baseClassName3}`,
-                    children: [
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childPartition1],
-                        children: false,
-                      }),
-                    ],
+                    children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition1], children: false })],
                   }),
                 ],
               }),
@@ -369,12 +328,7 @@ describe("Hierarchies", () => {
               NodeValidators.createForClassGroupingNode({
                 label: "Information Partition",
                 className: `${baseSchemaName}.${baseClassName3}`,
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childPartition2],
-                    children: false,
-                  }),
-                ],
+                children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2], children: false })],
               }),
             ],
           }),
@@ -406,11 +360,7 @@ describe("Hierarchies", () => {
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.CodeValue` },
-                        grouping: {
-                          byBaseClasses: {
-                            fullClassNames: ["BisCore.Element"],
-                          },
-                        },
+                        grouping: { byBaseClasses: { fullClassNames: ["BisCore.Element"] } },
                       })}
                       FROM (
                         SELECT ECClassId, ECInstanceId, Parent, CodeValue
@@ -436,14 +386,8 @@ describe("Hierarchies", () => {
             label: "Element",
             className: "BisCore.Element",
             children: [
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject1],
-                children: false,
-              }),
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childPartition2],
-                children: false,
-              }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2], children: false }),
             ],
           }),
         ],

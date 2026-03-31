@@ -224,10 +224,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   /** Called to get options for node requests */
   private createPagedRequestOptions(parentKey: NodeKey | undefined, pageOptions?: PageOptions, instanceFilter?: InstanceFilterDefinition) {
     const isPaging = pageOptions && (pageOptions.start || pageOptions.size !== undefined);
-    return {
-      ...this.createRequestOptions(parentKey, instanceFilter),
-      ...(isPaging ? { paging: pageOptionsUiToPresentation(pageOptions) } : undefined),
-    };
+    return { ...this.createRequestOptions(parentKey, instanceFilter), ...(isPaging ? { paging: pageOptionsUiToPresentation(pageOptions) } : undefined) };
   }
 
   /** Creates options for nodes requests. */
@@ -304,10 +301,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
    * @param filter Filter.
    */
   public async getFilteredNodePaths(filter: string): Promise<NodePathElement[]> {
-    return this._dataSource.getFilteredNodePaths({
-      ...this.createBaseRequestOptions(),
-      filterText: filter,
-    });
+    return this._dataSource.getFilteredNodePaths({ ...this.createBaseRequestOptions(), filterText: filter });
   }
 
   private setupRulesetVariablesListener() {
@@ -343,13 +337,7 @@ async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem
   // if there are more than one filter applied, combine them using `AND` operator
   // otherwise apply filter directly
   const info: PresentationInstanceFilterInfo = {
-    filter:
-      appliedFilters.length > 0
-        ? {
-            operator: PropertyFilterRuleGroupOperator.And,
-            conditions: appliedFilters,
-          }
-        : undefined,
+    filter: appliedFilters.length > 0 ? { operator: PropertyFilterRuleGroupOperator.And, conditions: appliedFilters } : undefined,
     usedClasses,
   };
 
@@ -405,10 +393,7 @@ async function createNodesAndCountResult(
 }
 
 function createStatusNodeResult(parentNode: TreeNodeItem | undefined, labelKey: string, type?: InfoTreeNodeItemType) {
-  return {
-    nodes: [createInfoNode(parentNode, translate(labelKey), type)],
-    count: 1,
-  };
+  return { nodes: [createInfoNode(parentNode, translate(labelKey), type)], count: 1 };
 }
 
 async function createTreeItems(

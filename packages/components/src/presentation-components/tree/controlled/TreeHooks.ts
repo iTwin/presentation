@@ -83,10 +83,7 @@ export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderP
 
   useEffect(() => {
     const provider = new PresentationTreeDataProvider({ ...treeNodeLoaderStateProps });
-    setState({
-      modelSource: new TreeModelSource(new MutableTreeModel(treeNodeLoaderStateProps.seedTreeModel)),
-      dataProvider: provider,
-    });
+    setState({ modelSource: new TreeModelSource(new MutableTreeModel(treeNodeLoaderStateProps.seedTreeModel)), dataProvider: provider });
     return () => {
       provider[Symbol.dispose]();
     };
@@ -244,10 +241,6 @@ function useModelSourceUpdateOnUnitSystemChange(params: UpdateParams): void {
 function startTreeReload({ dataProviderProps, rulesetId, modelSource, pageSize, renderedItems, setTreeNodeLoaderState }: UpdateParams): Subscription {
   const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: rulesetId });
   return reloadTree(modelSource.getModel(), dataProvider, pageSize, renderedItems.current).subscribe({
-    next: (newModelSource) =>
-      setTreeNodeLoaderState({
-        modelSource: newModelSource,
-        dataProvider,
-      }),
+    next: (newModelSource) => setTreeNodeLoaderState({ modelSource: newModelSource, dataProvider }),
   });
 }

@@ -48,9 +48,7 @@ describe("models tree", () => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k functional 3D elements"));
       const imodelAccess = StatelessHierarchyProvider.createIModelAccess(iModel, "unbounded");
       const targetItems = new Array<InstanceKey>();
-      const query: ECSqlQueryDef = {
-        ecsql: `SELECT CAST(IdToHex(ECInstanceId) AS TEXT) AS ECInstanceId FROM bis.GeometricElement3d`,
-      };
+      const query: ECSqlQueryDef = { ecsql: `SELECT CAST(IdToHex(ECInstanceId) AS TEXT) AS ECInstanceId FROM bis.GeometricElement3d` };
       for await (const row of imodelAccess.createQueryReader(query, { limit: "unbounded" })) {
         targetItems.push({ id: row.ECInstanceId, className: "Generic:PhysicalObject" });
       }
@@ -60,15 +58,7 @@ describe("models tree", () => {
     test: async ({ imodelAccess, targetItems }) => {
       const idsCache = new ModelsTreeIdsCache(imodelAccess, defaultHierarchyConfiguration);
       const abortSignal = new AbortController().signal;
-      const search = {
-        paths: await ModelsTreeDefinition.createInstanceKeyPaths({
-          imodelAccess,
-          limit: "unbounded",
-          targetItems,
-          idsCache,
-          abortSignal,
-        }),
-      };
+      const search = { paths: await ModelsTreeDefinition.createInstanceKeyPaths({ imodelAccess, limit: "unbounded", targetItems, idsCache, abortSignal }) };
       expect(search.paths.length).to.eq(50000);
       const provider = new StatelessHierarchyProvider({
         imodelAccess,

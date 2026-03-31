@@ -74,9 +74,5 @@ function convertFieldToColumns(field: Field): TableColumnDefinition[] {
 }
 
 function createTableColumnDefinition(field: Field): TableColumnDefinition {
-  return {
-    name: field.name,
-    label: field.label,
-    field,
-  };
+  return { name: field.name, label: field.label, field };
 }

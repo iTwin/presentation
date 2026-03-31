@@ -27,26 +27,14 @@ describe("parseInstanceLabel", () => {
   });
 
   it("parses complex value of one part", () => {
-    const labelPart: ConcatenatedValue = [
-      {
-        type: "Boolean",
-        value: true,
-      },
-    ];
+    const labelPart: ConcatenatedValue = [{ type: "Boolean", value: true }];
     expect(parseInstanceLabel(JSON.stringify(labelPart))).to.deep.eq(labelPart);
   });
 
   it("parses complex value of multiple parts", () => {
     const labelParts: ConcatenatedValue = [
-      {
-        type: "Integer",
-        value: 123,
-      },
-      {
-        type: "String",
-        value: "http://bentley.com",
-        extendedType: "Url",
-      },
+      { type: "Integer", value: 123 },
+      { type: "String", value: "http://bentley.com", extendedType: "Url" },
     ];
     expect(parseInstanceLabel(JSON.stringify(labelParts))).to.deep.eq(labelParts);
   });
@@ -67,9 +55,7 @@ describe("createDefaultInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns valid clause", async () => {
-    const result = await factory.createSelectClause({
-      classAlias: "test",
-    });
+    const result = await factory.createSelectClause({ classAlias: "test" });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`(
         SELECT ${createConcatenatedValueJsonSelector([
@@ -98,22 +84,14 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
       return "default selector";
     },
   };
-  const classHierarchyInspector = {
-    classDerivesFrom: sinon.stub(),
-  };
+  const classHierarchyInspector = { classDerivesFrom: sinon.stub() };
   beforeEach(() => {
     classHierarchyInspector.classDerivesFrom.reset();
   });
 
   it("returns default clause when given an empty list of clauses", async () => {
-    const factory = createClassBasedInstanceLabelSelectClauseFactory({
-      classHierarchyInspector,
-      defaultClauseFactory,
-      clauses: [],
-    });
-    const result = await factory.createSelectClause({
-      classAlias: "class-alias",
-    });
+    const factory = createClassBasedInstanceLabelSelectClauseFactory({ classHierarchyInspector, defaultClauseFactory, clauses: [] });
+    const result = await factory.createSelectClause({ classAlias: "class-alias" });
     expect(result).to.eq("default selector");
   });
 
@@ -122,21 +100,12 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
       classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
-        {
-          className: "Schema.ClassA",
-          clause: async () => "a selector",
-        },
-        {
-          className: "Schema.ClassB",
-          clause: async () => "b selector",
-        },
+        { className: "Schema.ClassA", clause: async () => "a selector" },
+        { className: "Schema.ClassB", clause: async () => "b selector" },
       ],
     });
     classHierarchyInspector.classDerivesFrom.resolves(false);
-    const result = await factory.createSelectClause({
-      classAlias: "class-alias",
-      className: "Schema.QueryClass",
-    });
+    const result = await factory.createSelectClause({ classAlias: "class-alias", className: "Schema.QueryClass" });
     expect(result).to.eq("default selector");
   });
 
@@ -145,19 +114,11 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
       classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
-        {
-          className: "Schema.ClassA",
-          clause: async () => "a selector",
-        },
-        {
-          className: "Schema.ClassB",
-          clause: async () => "b selector",
-        },
+        { className: "Schema.ClassA", clause: async () => "a selector" },
+        { className: "Schema.ClassB", clause: async () => "b selector" },
       ],
     });
-    const result = await factory.createSelectClause({
-      classAlias: "class-alias",
-    });
+    const result = await factory.createSelectClause({ classAlias: "class-alias" });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`
       COALESCE(
@@ -182,21 +143,12 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
       classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
-        {
-          className: "Schema.ClassA",
-          clause: async () => "a selector",
-        },
-        {
-          className: "Schema.ClassB",
-          clause: async () => "b selector",
-        },
+        { className: "Schema.ClassA", clause: async () => "a selector" },
+        { className: "Schema.ClassB", clause: async () => "b selector" },
       ],
     });
     classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => derived === "Schema.ClassA" && base === "Schema.QueryClass");
-    const result = await factory.createSelectClause({
-      classAlias: "class-alias",
-      className: "Schema.QueryClass",
-    });
+    const result = await factory.createSelectClause({ classAlias: "class-alias", className: "Schema.QueryClass" });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`
       COALESCE(
@@ -216,21 +168,12 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
       classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
-        {
-          className: "Schema.ClassA",
-          clause: async () => "a selector",
-        },
-        {
-          className: "Schema.ClassB",
-          clause: async () => "b selector",
-        },
+        { className: "Schema.ClassA", clause: async () => "a selector" },
+        { className: "Schema.ClassB", clause: async () => "b selector" },
       ],
     });
     classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => derived === "Schema.QueryClass" && base === "Schema.ClassB");
-    const result = await factory.createSelectClause({
-      classAlias: "class-alias",
-      className: "Schema.QueryClass",
-    });
+    const result = await factory.createSelectClause({ classAlias: "class-alias", className: "Schema.QueryClass" });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`
       COALESCE(
@@ -247,9 +190,7 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
 });
 
 describe("BisInstanceLabelSelectClauseFactory", () => {
-  const classHierarchyInspector = {
-    classDerivesFrom: sinon.stub(),
-  };
+  const classHierarchyInspector = { classDerivesFrom: sinon.stub() };
   let factory: IInstanceLabelSelectClauseFactory;
   beforeEach(() => {
     factory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector });
@@ -273,10 +214,7 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns valid clause for geometric elements", async () => {
-    const result = await factory.createSelectClause({
-      classAlias: "test",
-      className: "BisCore.GeometricElement",
-    });
+    const result = await factory.createSelectClause({ classAlias: "test", className: "BisCore.GeometricElement" });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`
         COALESCE(
@@ -313,10 +251,7 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns valid clause for any element", async () => {
-    const result = await factory.createSelectClause({
-      classAlias: "test",
-      className: "BisCore.Element",
-    });
+    const result = await factory.createSelectClause({ classAlias: "test", className: "BisCore.Element" });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`
         COALESCE(
@@ -353,20 +288,14 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns valid clause for any model", async () => {
-    const result = await factory.createSelectClause({
-      classAlias: "test",
-      className: "BisCore.Model",
-    });
+    const result = await factory.createSelectClause({ classAlias: "test", className: "BisCore.Model" });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`
         COALESCE(
           IIF(
             [test].[ECClassId] IS (BisCore.Model),
             (
-              SELECT ${await factory.createSelectClause({
-                classAlias: "e",
-                className: "BisCore.Element",
-              })}
+              SELECT ${await factory.createSelectClause({ classAlias: "e", className: "BisCore.Element" })}
               FROM [bis].[Element] AS [e]
               WHERE [e].[ECInstanceId] = [test].[ModeledElement].[Id]
             ),

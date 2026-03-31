@@ -44,15 +44,11 @@ import type {
 } from "../../presentation-components/tree/PresentationTreeNodeItem.js";
 
 function createTestECInstancesNodeKeyWithId(id?: string) {
-  return createTestECInstancesNodeKey({
-    instanceKeys: [createTestECInstanceKey({ id })],
-  });
+  return createTestECInstancesNodeKey({ instanceKeys: [createTestECInstanceKey({ id })] });
 }
 
 function createTestECInstancesNodeWithId(id?: string) {
-  return createTestECInstancesNode({
-    key: createTestECInstancesNodeKeyWithId(id),
-  });
+  return createTestECInstancesNode({ key: createTestECInstancesNodeKeyWithId(id) });
 }
 
 type GetNodesOptions = Paged<HierarchyRequestOptions<IModelConnection, NodeKey, RulesetVariable>> & ClientDiagnosticsAttribute;
@@ -70,9 +66,7 @@ describe("TreeDataProvider", () => {
 
   beforeEach(() => {
     presentationManager = sinon.createStubInstance(PresentationManager);
-    presentationManager.vars.returns({
-      onVariableChanged,
-    } as RulesetVariablesManager);
+    presentationManager.vars.returns({ onVariableChanged } as RulesetVariablesManager);
 
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
     sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
@@ -107,11 +101,7 @@ describe("TreeDataProvider", () => {
 
     it("returns valid key for presentation tree node item", () => {
       const nodeKey = createTestECInstancesNodeKey();
-      const item: PresentationTreeNodeItem = {
-        id: "test_id",
-        label: PropertyRecord.fromString("Test Label"),
-        key: nodeKey,
-      };
+      const item: PresentationTreeNodeItem = { id: "test_id", label: PropertyRecord.fromString("Test Label"), key: nodeKey };
       expect(provider.getNodeKey(item)).to.be.eq(nodeKey);
     });
   });
@@ -409,16 +399,8 @@ describe("TreeDataProvider", () => {
       const nodeItem = createTestTreeNodeItem(nodeKey);
       nodeItem.filtering = {
         descriptor: createTestContentDescriptor({ fields: [] }),
-        ancestorFilters: [
-          {
-            filter: undefined,
-            usedClasses: [createTestECClassInfo({ id: "0x1" })],
-          },
-        ],
-        active: {
-          filter: undefined,
-          usedClasses: [createTestECClassInfo({ id: "0x2" })],
-        },
+        ancestorFilters: [{ filter: undefined, usedClasses: [createTestECClassInfo({ id: "0x1" })] }],
+        active: { filter: undefined, usedClasses: [createTestECClassInfo({ id: "0x2" })] },
       };
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
@@ -553,11 +535,7 @@ describe("TreeDataProvider", () => {
       const diagnosticsHandler = sinon.stub();
 
       provider[Symbol.dispose]();
-      provider = new PresentationTreeDataProvider({
-        imodel,
-        ruleset: rulesetId,
-        ruleDiagnostics: { severity: "error", handler: diagnosticsHandler },
-      });
+      provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId, ruleDiagnostics: { severity: "error", handler: diagnosticsHandler } });
 
       presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([]), total: 0 });
       await provider.getNodesCount();
@@ -636,11 +614,7 @@ describe("TreeDataProvider", () => {
     it("adds parent filter to grouping node filtering info", async () => {
       const { filterInfo: parentFilterInfo } = createFilterInfo("parentProp");
       const parentTreeNodeItem = createTestTreeNodeItem();
-      parentTreeNodeItem.filtering = {
-        ancestorFilters: [],
-        descriptor: createTestContentDescriptor({ fields: [] }),
-        active: parentFilterInfo,
-      };
+      parentTreeNodeItem.filtering = { ancestorFilters: [], descriptor: createTestContentDescriptor({ fields: [] }), active: parentFilterInfo };
       const groupingNode = createTestECInstancesNode({ key: createTestECClassGroupingNodeKey(), supportsFiltering: true });
 
       presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([groupingNode]), total: 1 });
@@ -653,10 +627,7 @@ describe("TreeDataProvider", () => {
     it("adds grandparent filter to grouping node filtering info", async () => {
       const { filterInfo: grandParentFilterInfo } = createFilterInfo("parentProp");
       const parentTreeNodeItem = createTestTreeNodeItem();
-      parentTreeNodeItem.filtering = {
-        ancestorFilters: [grandParentFilterInfo],
-        descriptor: createTestContentDescriptor({ fields: [] }),
-      };
+      parentTreeNodeItem.filtering = { ancestorFilters: [grandParentFilterInfo], descriptor: createTestContentDescriptor({ fields: [] }) };
       const groupingNode = createTestECInstancesNode({ key: createTestECClassGroupingNodeKey(), supportsFiltering: true });
 
       presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([groupingNode]), total: 1 });
@@ -669,20 +640,13 @@ describe("TreeDataProvider", () => {
 
   describe("documentation snippets", () => {
     function setupPresentationManager(extendedData: { [key: string]: any }) {
-      const node: Node = {
-        key: createTestECInstancesNodeKey(),
-        label: createTestLabelDefinition(),
-        extendedData,
-      };
+      const node: Node = { key: createTestECInstancesNodeKey(), label: createTestLabelDefinition(), extendedData };
 
       presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([node]), total: 1 });
     }
 
     it("uses ExtendedDataRule to set tree item icon", async () => {
-      const providerProps = {
-        imodel,
-        ruleset: rulesetId,
-      };
+      const providerProps = { imodel, ruleset: rulesetId };
 
       // __PUBLISH_EXTRACT_START__ Presentation.TreeDataProvider.Customization.Icon
       const dataProvider = new PresentationTreeDataProvider({
@@ -701,10 +665,7 @@ describe("TreeDataProvider", () => {
     });
 
     it("uses ExtendedDataRule to set tree item checkbox", async () => {
-      const providerProps = {
-        imodel,
-        ruleset: rulesetId,
-      };
+      const providerProps = { imodel, ruleset: rulesetId };
 
       // __PUBLISH_EXTRACT_START__ Presentation.TreeDataProvider.Customization.Checkbox
       const dataProvider = new PresentationTreeDataProvider({
@@ -717,28 +678,15 @@ describe("TreeDataProvider", () => {
       });
       // __PUBLISH_EXTRACT_END__
 
-      setupPresentationManager({
-        showCheckbox: true,
-        isChecked: true,
-        disableCheckbox: false,
-      });
+      setupPresentationManager({ showCheckbox: true, isChecked: true, disableCheckbox: false });
       const treeNodeItems = await dataProvider.getNodes();
       expect(treeNodeItems)
         .to.be.lengthOf(1)
-        .and.to.containSubset([
-          {
-            isCheckboxVisible: true,
-            checkBoxState: CheckBoxState.On,
-            isCheckboxDisabled: false,
-          },
-        ]);
+        .and.to.containSubset([{ isCheckboxVisible: true, checkBoxState: CheckBoxState.On, isCheckboxDisabled: false }]);
     });
 
     it("uses ExtendedDataRule to set tree item style", async () => {
-      const providerProps = {
-        imodel,
-        ruleset: rulesetId,
-      };
+      const providerProps = { imodel, ruleset: rulesetId };
 
       // __PUBLISH_EXTRACT_START__ Presentation.TreeDataProvider.Customization.Style
       const dataProvider = new PresentationTreeDataProvider({
@@ -747,56 +695,25 @@ describe("TreeDataProvider", () => {
           treeNodeItem.style = {
             isBold: node.extendedData?.isBold,
             isItalic: node.extendedData?.isItalic,
-            colorOverrides: {
-              color: node.extendedData?.color,
-            },
+            colorOverrides: { color: node.extendedData?.color },
           };
         },
       });
       // __PUBLISH_EXTRACT_END__
 
-      setupPresentationManager({
-        isBold: true,
-        isItalic: false,
-        color: 255,
-      });
+      setupPresentationManager({ isBold: true, isItalic: false, color: 255 });
       const treeNodeItems = await dataProvider.getNodes();
       expect(treeNodeItems)
         .to.be.lengthOf(1)
-        .and.to.containSubset([
-          {
-            style: {
-              isBold: true,
-              isItalic: false,
-              colorOverrides: {
-                color: 255,
-              },
-            },
-          },
-        ]);
+        .and.to.containSubset([{ style: { isBold: true, isItalic: false, colorOverrides: { color: 255 } } }]);
     });
   });
 });
 
-function createFilterInfo(
-  propName: string,
-  usedClasses?: ClassInfo[],
-): {
-  filterInfo: PresentationInstanceFilterInfo;
-  property: PropertyInfo;
-} {
+function createFilterInfo(propName: string, usedClasses?: ClassInfo[]): { filterInfo: PresentationInstanceFilterInfo; property: PropertyInfo } {
   const property = createTestPropertyInfo({ name: propName });
   const field = createTestPropertiesContentField({ properties: [{ property }], name: property.name });
-  return {
-    filterInfo: {
-      filter: {
-        field,
-        operator: "is-null",
-      },
-      usedClasses: usedClasses ?? [],
-    },
-    property,
-  };
+  return { filterInfo: { filter: { field, operator: "is-null" }, usedClasses: usedClasses ?? [] }, property };
 }
 
 function createInstanceFilteringInfo(currentFilterPropName: string | undefined, ancestorFilterPropNames: string[] = [], usedClasses?: ClassInfo[]) {
@@ -813,21 +730,12 @@ function createInstanceFilteringInfo(currentFilterPropName: string | undefined, 
   const filterExpressions = properties.map((prop) => `this.${prop.name} = NULL`);
 
   if (filterExpressions.length === 0) {
-    return {
-      filterDefinition: undefined,
-      filteringInfo,
-    };
+    return { filterDefinition: undefined, filteringInfo };
   }
 
   const expression = filterExpressions.length > 1 ? `(${filterExpressions.join(" AND ")})` : filterExpressions[0];
 
-  return {
-    filterDefinition: {
-      expression,
-      selectClassName: properties[0].classInfo.name,
-    },
-    filteringInfo,
-  };
+  return { filterDefinition: { expression, selectClassName: properties[0].classInfo.name }, filteringInfo };
 }
 
 function compareKeys(lhs: ECInstancesNodeKey, rhs: ECInstancesNodeKey) {

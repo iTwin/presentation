@@ -41,19 +41,13 @@ export function createECSchemaProviderStub() {
   const getSchemaStub = (schemaName: string) => {
     let schemaStub = schemaStubs.get(schemaName);
     if (!schemaStub) {
-      schemaStub = {
-        name: schemaName,
-        getClass: sinon.stub(),
-        getCustomAttributes: sinon.stub(),
-      };
+      schemaStub = { name: schemaName, getClass: sinon.stub(), getCustomAttributes: sinon.stub() };
       schemaStubs.set(schemaName, schemaStub);
     }
     return schemaStub;
   };
   const createBaseClassProps = (props: StubClassFuncProps) => ({
-    schema: {
-      name: props.schemaName,
-    },
+    schema: { name: props.schemaName },
     fullName: `${props.schemaName}.${props.className}`,
     name: props.className,
     label: props.classLabel,
@@ -79,10 +73,7 @@ export function createECSchemaProviderStub() {
     isRelationshipClass: () => false,
   });
   const stubEntityClass: TStubEntityClassFunc = (props) => {
-    const res = {
-      ...createBaseClassProps(props),
-      isEntityClass: () => true,
-    } as unknown as EC.EntityClass;
+    const res = { ...createBaseClassProps(props), isEntityClass: () => true } as unknown as EC.EntityClass;
     getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
     return res;
   };
@@ -98,9 +89,7 @@ export function createECSchemaProviderStub() {
     return res;
   };
   const stubOtherClass: TStubClassFunc = (props) => {
-    const res = {
-      ...createBaseClassProps(props),
-    } as unknown as EC.Class;
+    const res = { ...createBaseClassProps(props) } as unknown as EC.Class;
     getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
     return res;
   };

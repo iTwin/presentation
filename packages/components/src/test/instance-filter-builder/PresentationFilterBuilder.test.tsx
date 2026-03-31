@@ -55,10 +55,7 @@ describe("PresentationInstanceFilter", () => {
   });
 
   const onCloseEvent = new BeEvent<() => void>();
-  const imodel = {
-    key: "test_imodel",
-    onClose: onCloseEvent,
-  } as IModelConnection;
+  const imodel = { key: "test_imodel", onClose: onCloseEvent } as IModelConnection;
 
   before(() => {
     HTMLElement.prototype.scrollIntoView = () => {};
@@ -110,11 +107,7 @@ describe("PresentationInstanceFilter", () => {
 
     await waitFor(() =>
       expect(spy).to.be.calledWith({
-        filter: {
-          field: propertiesField,
-          operator: PropertyFilterRuleOperator.IsNotNull,
-          value: undefined,
-        },
+        filter: { field: propertiesField, operator: PropertyFilterRuleOperator.IsNotNull, value: undefined },
         usedClasses: [classInfo],
       }),
     );
@@ -125,16 +118,8 @@ describe("PresentationInstanceFilter", () => {
       filter: {
         operator: PropertyFilterRuleGroupOperator.And,
         conditions: [
-          {
-            field: propertiesField,
-            operator: PropertyFilterRuleOperator.IsNull,
-            value: undefined,
-          },
-          {
-            field: propertiesField2,
-            operator: PropertyFilterRuleOperator.IsNull,
-            value: undefined,
-          },
+          { field: propertiesField, operator: PropertyFilterRuleOperator.IsNull, value: undefined },
+          { field: propertiesField2, operator: PropertyFilterRuleOperator.IsNull, value: undefined },
         ],
       },
       usedClasses: [classInfo],
@@ -158,13 +143,7 @@ describe("PresentationInstanceFilter", () => {
     const initialFilter: PresentationInstanceFilterInfo = {
       filter: {
         operator: PropertyFilterRuleGroupOperator.And,
-        conditions: [
-          {
-            field: propertiesField,
-            operator: PropertyFilterRuleOperator.IsNull,
-            value: undefined,
-          },
-        ],
+        conditions: [{ field: propertiesField, operator: PropertyFilterRuleOperator.IsNull, value: undefined }],
       },
       usedClasses: [classInfo, classInfo2],
     };
@@ -172,9 +151,7 @@ describe("PresentationInstanceFilter", () => {
     const spy = sinon.spy();
     const { queryByDisplayValue, user, getByPlaceholderText, getByRole } = render(
       <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
-      {
-        addThemeProvider: true,
-      },
+      { addThemeProvider: true },
     );
 
     // ensure there's a property filter

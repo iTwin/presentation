@@ -200,12 +200,7 @@ export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBas
         return defaultClauseFactory.createSelectClause(clauseProps);
       }
 
-      const labelClauses = await Promise.all(
-        labelClausePromises.map(async ({ className, clause }) => ({
-          className,
-          clause: await clause(clauseProps),
-        })),
-      );
+      const labelClauses = await Promise.all(labelClausePromises.map(async ({ className, clause }) => ({ className, clause: await clause(clauseProps) })));
 
       return `COALESCE(
         ${labelClauses
@@ -240,10 +235,7 @@ interface BisInstanceLabelSelectClauseFactoryProps {
  */
 export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory {
   const clauses: ClassBasedLabelSelectClause[] = [];
-  const factory = createClassBasedInstanceLabelSelectClauseFactory({
-    classHierarchyInspector: props.classHierarchyInspector,
-    clauses,
-  });
+  const factory = createClassBasedInstanceLabelSelectClauseFactory({ classHierarchyInspector: props.classHierarchyInspector, clauses });
   clauses.push(
     {
       className: "BisCore.GeometricElement",

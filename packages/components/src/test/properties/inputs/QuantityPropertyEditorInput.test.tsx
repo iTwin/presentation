@@ -33,15 +33,8 @@ const createRecord = ({ initialValue, kindOfQuantityName }: { initialValue?: num
 describe("<QuantityPropertyEditorInput />", () => {
   const schemaContext = {} as SchemaContext;
   const format = new Format("test format");
-  const formatterSpec = {
-    applyFormatting: sinon.stub<[number], string>(),
-    unitConversions: [{ name: "test unit", label: "unit" }],
-    format,
-  };
-  const parserSpec = {
-    parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(),
-    format,
-  };
+  const formatterSpec = { applyFormatting: sinon.stub<[number], string>(), unitConversions: [{ name: "test unit", label: "unit" }], format };
+  const parserSpec = { parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(), format };
 
   let getFormatterSpecStub: sinon.SinonStub<
     Parameters<KoqPropertyValueFormatter["getFormatterSpec"]>,
@@ -54,9 +47,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     getParserSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec");
 
     sinon.stub(format, "type").get(() => FormatType.Decimal);
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    }));
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
   });
 
   beforeEach(() => {
@@ -128,12 +119,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     await waitFor(() => {
       expect(spy).to.be.calledWith({
         propertyRecord: record,
-        newValue: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: 123.4,
-          displayValue: "123.4",
-          roundingError: 0.05,
-        },
+        newValue: { valueFormat: PropertyValueFormat.Primitive, value: 123.4, displayValue: "123.4", roundingError: 0.05 },
       });
     });
   });
@@ -163,21 +149,11 @@ describe("<QuantityPropertyEditorInput />", () => {
     await waitFor(() => {
       expect(spy).to.be.calledWith({
         propertyRecord: record,
-        newValue: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: 123.4,
-          displayValue: "123.4 unit",
-          roundingError: 0.05,
-        },
+        newValue: { valueFormat: PropertyValueFormat.Primitive, value: 123.4, displayValue: "123.4 unit", roundingError: 0.05 },
       });
     });
 
-    expect(ref.current?.getValue()).to.deep.eq({
-      valueFormat: PropertyValueFormat.Primitive,
-      value: 123.4,
-      displayValue: "123.4 unit",
-      roundingError: 0.05,
-    });
+    expect(ref.current?.getValue()).to.deep.eq({ valueFormat: PropertyValueFormat.Primitive, value: 123.4, displayValue: "123.4 unit", roundingError: 0.05 });
   });
 
   it("should focus on input if setFocus is true", async () => {

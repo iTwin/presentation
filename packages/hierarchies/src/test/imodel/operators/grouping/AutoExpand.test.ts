@@ -17,13 +17,7 @@ describe("AutoExpand", () => {
     {
       testName: "Base class grouping",
       testParams: {
-        groupingNodeKey: {
-          type: "class-grouping",
-          class: {
-            name: "TestSchema:BaseClass",
-            label: "Base Class",
-          },
-        },
+        groupingNodeKey: { type: "class-grouping", class: { name: "TestSchema:BaseClass", label: "Base Class" } },
         groupingType: "base-class",
         createGroupedNodeProcessingParams: (autoExpand: HierarchyNodeAutoExpandProp | undefined): InstanceHierarchyNodeProcessingParams => {
           return { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand } } };
@@ -33,13 +27,7 @@ describe("AutoExpand", () => {
     {
       testName: "Class grouping",
       testParams: {
-        groupingNodeKey: {
-          type: "class-grouping",
-          class: {
-            name: "TestSchema:A",
-            label: "A",
-          },
-        },
+        groupingNodeKey: { type: "class-grouping", class: { name: "TestSchema:A", label: "A" } },
         groupingType: "class",
         createGroupedNodeProcessingParams: (autoExpand: HierarchyNodeAutoExpandProp | undefined): InstanceHierarchyNodeProcessingParams => {
           return { grouping: { byClass: autoExpand ? { autoExpand } : true } };
@@ -49,14 +37,7 @@ describe("AutoExpand", () => {
     {
       testName: "Properties grouping",
       testParams: {
-        groupingNodeKey: {
-          type: "property-grouping:other",
-          label: "1",
-          property: {
-            propertyName: "length",
-            propertiesClassName: "TestSchema:BaseClass",
-          },
-        },
+        groupingNodeKey: { type: "property-grouping:other", label: "1", property: { propertyName: "length", propertiesClassName: "TestSchema:BaseClass" } },
         groupingType: "property",
         createGroupedNodeProcessingParams: (autoExpand: HierarchyNodeAutoExpandProp | undefined): InstanceHierarchyNodeProcessingParams => {
           return {
@@ -70,10 +51,7 @@ describe("AutoExpand", () => {
     {
       testName: "Label grouping",
       testParams: {
-        groupingNodeKey: {
-          type: "label-grouping",
-          label: "1",
-        },
+        groupingNodeKey: { type: "label-grouping", label: "1" },
         groupingType: "label",
         createGroupedNodeProcessingParams: (autoExpand: HierarchyNodeAutoExpandProp | undefined): InstanceHierarchyNodeProcessingParams => {
           return { grouping: { byLabel: autoExpand ? { autoExpand } : true } };
@@ -140,10 +118,7 @@ describe("AutoExpand", () => {
             label: "Test label",
             key: testParams.groupingNodeKey as GroupingNodeKey,
             children: [
-              createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-                label: "1",
-              }),
+              createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] }, label: "1" }),
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
                 label: "1",

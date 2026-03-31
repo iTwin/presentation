@@ -47,15 +47,9 @@ export async function initialize(props?: { backendTimeout?: number }) {
       },
     },
   };
-  const frontendInitProps: PresentationFrontendProps = {
-    presentation: {
-      activeLocale: "en-PSEUDO",
-    },
-  };
+  const frontendInitProps: PresentationFrontendProps = { presentation: { activeLocale: "en-PSEUDO" } };
 
-  const frontendAppOptions: IModelAppOptions = {
-    localization: createTestLocalization(),
-  };
+  const frontendAppOptions: IModelAppOptions = { localization: createTestLocalization() };
 
   const presentationTestingInitProps: PresentationTestingInitProps = {
     rpcs: [IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
@@ -85,9 +79,7 @@ export async function resetBackend() {
 function createTestLocalization(): ITwinLocalization {
   return new ITwinLocalization({
     urlTemplate: `file://${path.join(path.resolve("lib/public/locales"), "{{lng}}/{{ns}}.json").replace(/\\/g, "/")}`,
-    initOptions: {
-      preload: ["test"],
-    },
+    initOptions: { preload: ["test"] },
     backendHttpOptions: {
       request: (options, url, payload, callback) => {
         /**

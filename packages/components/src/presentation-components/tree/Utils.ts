@@ -171,10 +171,7 @@ function createNodeLabelRecord(node: Node, appendChildrenCountForGroupingNodes: 
     };
     labelDefinition = {
       displayValue: `${labelDefinition.displayValue} ${countDefinition.displayValue}`,
-      rawValue: {
-        separator: " ",
-        values: [labelDefinition, countDefinition],
-      },
+      rawValue: { separator: " ", values: [labelDefinition, countDefinition] },
       typeName: "composite",
     };
   }

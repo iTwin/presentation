@@ -37,11 +37,7 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
   };
 
   return from(queryExecutor.createQueryReader(query, config)).pipe(
-    log({
-      category: LOGGING_NAMESPACE,
-      severity: "trace",
-      message: /* c8 ignore next */ (row) => JSON.stringify(row),
-    }),
+    log({ category: LOGGING_NAMESPACE, severity: "trace", message: /* c8 ignore next */ (row) => JSON.stringify(row) }),
     mergeMap((row) => parser({ row })),
   );
 }
@@ -74,10 +70,7 @@ export const defaultNodesParser: (props: Pick<Props<RxjsNodeParser>, "row">) => 
   return {
     // don't format the label here - we're going to do that at node pre-processing step to handle both - instance and generic nodes
     label: parseInstanceLabel(typedRow.DisplayLabel),
-    key: {
-      type: "instances",
-      instanceKeys: [{ className: normalizeFullClassName(typedRow.FullClassName), id: typedRow.ECInstanceId }],
-    },
+    key: { type: "instances", instanceKeys: [{ className: normalizeFullClassName(typedRow.FullClassName), id: typedRow.ECInstanceId }] },
     ...(typedRow.HasChildren !== undefined ? { children: !!typedRow.HasChildren } : undefined),
     ...(typedRow.AutoExpand ? { autoExpand: true } : undefined),
     ...(typedRow.SupportsFiltering ? { supportsFiltering: true } : undefined),

@@ -34,21 +34,14 @@ import type { PresentationPropertyDataProvider } from "../../presentation-compon
 describe("Category renderer customization", () => {
   describe("documentation snippets", () => {
     function setupDataProvider(): IPropertyDataProvider {
-      const rootCategory1: PropertyCategory = {
-        name: "test_category",
-        label: "test_category",
-        expand: true,
-        renderer: { name: "my_custom_renderer" },
-      };
+      const rootCategory1: PropertyCategory = { name: "test_category", label: "test_category", expand: true, renderer: { name: "my_custom_renderer" } };
       return {
         onDataChanged: new PropertyDataChangeEvent(),
         getData: async (): Promise<PropertyData> => ({
           label: PropertyRecord.fromString("test_label"),
           description: "test_description",
           categories: [rootCategory1],
-          records: {
-            [rootCategory1.name]: [createPrimitiveStringProperty("rootCategory1Property", "Test", "Test")],
-          },
+          records: { [rootCategory1.name]: [createPrimitiveStringProperty("rootCategory1Property", "Test", "Test")] },
           reusePropertyDataState: true,
         }),
       };
@@ -142,18 +135,14 @@ describe("Property renderer customization", () => {
         expand: true,
       });
       const property = createPrimitiveStringProperty("rootCategoryProperty", "TestValue");
-      property.property.renderer = {
-        name: "my-renderer",
-      };
+      property.property.renderer = { name: "my-renderer" };
       return {
         onDataChanged: new PropertyDataChangeEvent(),
         getData: async (): Promise<PropertyData> => ({
           label: PropertyRecord.fromString("test_label"),
           description: "test_description",
           categories: [rootCategory],
-          records: {
-            [rootCategory.name]: [property],
-          },
+          records: { [rootCategory.name]: [property] },
           reusePropertyDataState: true,
         }),
       };

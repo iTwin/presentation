@@ -31,17 +31,9 @@ export function stubVirtualization() {
     stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetWidth").get(() => 800));
 
     stubs.push(
-      sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
-        height: 20,
-        width: 20,
-        x: 0,
-        y: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-        top: 0,
-        toJSON: () => {},
-      }),
+      sinon
+        .stub(window.Element.prototype, "getBoundingClientRect")
+        .returns({ height: 20, width: 20, x: 0, y: 0, bottom: 0, left: 0, right: 0, top: 0, toJSON: () => {} }),
     );
   });
 
@@ -80,22 +72,13 @@ type MultipleValuesRequestOptions = Paged<{
 }>;
 
 type WithIterableMethods<T extends PresentationManager> = {
-  getNodesIterator(requestOptions: GetNodesRequestOptions & MultipleValuesRequestOptions): Promise<{
-    total: number;
-    items: AsyncIterableIterator<Node>;
-  }>;
-  getContentIterator(requestOptions: GetContentRequestOptions & MultipleValuesRequestOptions): Promise<
-    | {
-        descriptor: Descriptor;
-        total: number;
-        items: AsyncIterableIterator<Item>;
-      }
-    | undefined
-  >;
-  getDistinctValuesIterator(requestOptions: GetDistinctValuesRequestOptions & MultipleValuesRequestOptions): Promise<{
-    total: number;
-    items: AsyncIterableIterator<DisplayValueGroup>;
-  }>;
+  getNodesIterator(requestOptions: GetNodesRequestOptions & MultipleValuesRequestOptions): Promise<{ total: number; items: AsyncIterableIterator<Node> }>;
+  getContentIterator(
+    requestOptions: GetContentRequestOptions & MultipleValuesRequestOptions,
+  ): Promise<{ descriptor: Descriptor; total: number; items: AsyncIterableIterator<Item> } | undefined>;
+  getDistinctValuesIterator(
+    requestOptions: GetDistinctValuesRequestOptions & MultipleValuesRequestOptions,
+  ): Promise<{ total: number; items: AsyncIterableIterator<DisplayValueGroup> }>;
 } & T;
 
 export function isIterableManager(manager: PresentationManager): manager is WithIterableMethods<PresentationManager> {

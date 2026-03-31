@@ -247,12 +247,7 @@ function useSelectionHandler({ imodel, selectionStorage, tableName }: { imodel: 
   const replaceSelection = useCallback(
     (args: { source: string; level: number; selectables: SelectableInstanceKey[] }) => {
       return selectionStorage
-        ? selectionStorage.replaceSelection({
-            imodelKey: createIModelKey(imodel),
-            source: args.source,
-            level: args.level,
-            selectables: args.selectables,
-          })
+        ? selectionStorage.replaceSelection({ imodelKey: createIModelKey(imodel), source: args.source, level: args.level, selectables: args.selectables })
         : // eslint-disable-next-line @typescript-eslint/no-deprecated
           Presentation.selection.replaceSelection(args.source, imodel, args.selectables, args.level);
     },
@@ -261,12 +256,7 @@ function useSelectionHandler({ imodel, selectionStorage, tableName }: { imodel: 
 
   const keys = useUnifiedSelectionKeys({ getSelection: getSelectionKeySet, selectionChange });
 
-  return {
-    keys,
-    getSelection,
-    replaceSelection,
-    selectionChange,
-  };
+  return { keys, getSelection, replaceSelection, selectionChange };
 }
 
 async function loadInstanceKeysFromSelectables(selectables: Selectables) {

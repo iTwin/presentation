@@ -52,10 +52,7 @@ describe("Utils", () => {
 
     it("appends grouped nodes count if requested", () => {
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      const node: Node = {
-        key: createTestECClassGroupingNodeKey({ groupedInstancesCount: 999 }),
-        label: LabelDefinition.fromLabelString("test"),
-      };
+      const node: Node = { key: createTestECClassGroupingNodeKey({ groupedInstancesCount: 999 }), label: LabelDefinition.fromLabelString("test") };
       const treeNode = createTreeNodeItem(node, undefined, { appendChildrenCountForGroupingNodes: true });
       expect(treeNode).to.matchSnapshot();
     });
@@ -75,10 +72,7 @@ describe("Utils", () => {
   describe("createPartialTreeNodeItem", () => {
     it("assigns item id and label from loaded node", () => {
       const node = createPartialTreeNodeItem(
-        {
-          key: { type: "", version: 0, pathFromRoot: [] },
-          label: LabelDefinition.fromLabelString("test"),
-        },
+        { key: { type: "", version: 0, pathFromRoot: [] }, label: LabelDefinition.fromLabelString("test") },
         undefined,
         {},
       );
@@ -94,10 +88,7 @@ describe("Utils", () => {
 
     it("uses provided callback to customize tree node", () => {
       const treeNode = createPartialTreeNodeItem(
-        {
-          key: { type: "", version: 0, pathFromRoot: [] },
-          label: LabelDefinition.fromLabelString("test"),
-        },
+        { key: { type: "", version: 0, pathFromRoot: [] }, label: LabelDefinition.fromLabelString("test") },
         undefined,
         {
           customizeTreeNodeItem: (item) => {

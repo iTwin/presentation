@@ -18,9 +18,7 @@ chai.use(sinonChai);
 import globalJsdom from "global-jsdom";
 import * as jsdom from "jsdom";
 
-globalJsdom(undefined, {
-  virtualConsole: new jsdom.VirtualConsole().sendTo(console, { omitJSDOMErrors: true }),
-});
+globalJsdom(undefined, { virtualConsole: new jsdom.VirtualConsole().sendTo(console, { omitJSDOMErrors: true }) });
 
 // polyfill ResizeObserver
 global.ResizeObserver = class ResizeObserver {

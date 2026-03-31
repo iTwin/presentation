@@ -16,9 +16,7 @@ import type { EC, ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef, EC
 interface ProviderOptionsBase {
   rowLimit?: number | "unbounded";
   getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): HierarchyDefinition;
-  search?: {
-    paths: HierarchySearchTree[];
-  };
+  search?: { paths: HierarchySearchTree[] };
 }
 type ProviderOptionsWithIModel = { iModel: IModelDb } & ProviderOptionsBase;
 
@@ -39,9 +37,7 @@ const DEFAULT_ROW_LIMIT = 1000;
 export interface IModelAccess {
   createQueryReader(
     query: ECSqlQueryDef,
-    config?: ECSqlQueryReaderOptions & {
-      limit?: number | "unbounded";
-    },
+    config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" },
   ): ReturnType<ECSqlQueryExecutor["createQueryReader"]>;
   classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
   getSchema(schemaName: string): Promise<EC.Schema | undefined>;
@@ -74,10 +70,7 @@ export class StatelessHierarchyProvider {
           );
         }, 1),
       );
-      nodesObservable.subscribe({
-        complete: () => resolve(nodeCount),
-        error: reject,
-      });
+      nodesObservable.subscribe({ complete: () => resolve(nodeCount), error: reject });
     });
   }
 

@@ -99,10 +99,7 @@ export function UnifiedSelectionContextProvider(props: UnifiedSelectionContextPr
         return;
       }
 
-      contextRef.current = {
-        ...currentContext,
-        getSelection: createGetSelection(props.imodel, selectionLevel),
-      };
+      contextRef.current = { ...currentContext, getSelection: createGetSelection(props.imodel, selectionLevel) };
 
       setState({});
     });

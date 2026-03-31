@@ -308,11 +308,7 @@ export class ContentDataProvider implements IContentDataProvider {
   }
 
   private createRequestOptions(): RequestOptionsWithRuleset<IModelConnection, RulesetVariable> {
-    return {
-      imodel: this._imodel,
-      rulesetOrId: this._ruleset,
-      ...(this._diagnosticsOptions ? { diagnostics: this._diagnosticsOptions } : undefined),
-    };
+    return { imodel: this._imodel, rulesetOrId: this._ruleset, ...(this._diagnosticsOptions ? { diagnostics: this._diagnosticsOptions } : undefined) };
   }
 
   private setupListeners() {
@@ -437,12 +433,7 @@ export class ContentDataProvider implements IContentDataProvider {
         Logger.logWarning(PresentationComponentsLoggerCategory.Content, msg);
       }
 
-      const options = {
-        ...this.createRequestOptions(),
-        descriptor: descriptorOverrides,
-        keys: this.keys,
-        paging: pageOptions,
-      };
+      const options = { ...this.createRequestOptions(), descriptor: descriptorOverrides, keys: this.keys, paging: pageOptions };
 
       // we always get formatted content from presentation manager - ensure
       // we set `_isContentFormatted = true` when we finish getting content, to
@@ -740,15 +731,7 @@ function formatDouble(value: number) {
   return value.toFixed(2);
 }
 
-type FieldWithKoq = PropertiesField & {
-  properties: [
-    {
-      property: PropertyInfo & {
-        kindOfQuantity: KindOfQuantityInfo;
-      };
-    },
-  ];
-};
+type FieldWithKoq = PropertiesField & { properties: [{ property: PropertyInfo & { kindOfQuantity: KindOfQuantityInfo } }] };
 
 function isFieldWithKoq(field: Field): field is FieldWithKoq {
   return field.isPropertiesField() && field.properties.length > 0 && field.properties[0].property.kindOfQuantity !== undefined;

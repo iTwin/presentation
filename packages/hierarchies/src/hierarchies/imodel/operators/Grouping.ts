@@ -227,10 +227,7 @@ function createGroupingHandlers(
   ).pipe(
     tap({
       subscribe: () => {
-        doLog({
-          category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
-          message: /* c8 ignore next */ () => `Start creating grouping handlers`,
-        });
+        doLog({ category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL, message: /* c8 ignore next */ () => `Start creating grouping handlers` });
         timer.start();
       },
     }),

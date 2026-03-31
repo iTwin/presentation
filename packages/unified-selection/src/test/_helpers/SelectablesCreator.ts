@@ -20,10 +20,7 @@ export const createECInstanceId = (id: number = 1): string => {
  * @internal Used for testing only.
  */
 export const createSelectableInstanceKey = (id: number = 1, className: string = "TestSchema.TestClass"): SelectableInstanceKey => {
-  return {
-    className,
-    id: createECInstanceId(id),
-  };
+  return { className, id: createECInstanceId(id) };
 };
 
 /**
@@ -31,9 +28,5 @@ export const createSelectableInstanceKey = (id: number = 1, className: string = 
  * @internal Used for testing only.
  */
 export const createCustomSelectable = (id: number = 1, instanceKeys?: SelectableInstanceKey[]): CustomSelectable => {
-  return {
-    identifier: createECInstanceId(id),
-    loadInstanceKeys: () => createAsyncIterator(instanceKeys ?? []),
-    data: {},
-  };
+  return { identifier: createECInstanceId(id), loadInstanceKeys: () => createAsyncIterator(instanceKeys ?? []), data: {} };
 };

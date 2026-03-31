@@ -29,9 +29,7 @@ describe("search", () => {
     testName: `searches with ${totalNumberOfSearchPaths} paths`,
     setup: () => {
       const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
-      const search = {
-        paths: new Array<HierarchySearchPath>(),
-      };
+      const search = { paths: new Array<HierarchySearchPath>() };
       const parentIdsArr = new Array<number>();
       for (let i = 1; i <= totalNumberOfSearchPaths / numberOfPathsForASingleParent; ++i) {
         parentIdsArr.push(i + physicalElementsSmallestDecimalId);

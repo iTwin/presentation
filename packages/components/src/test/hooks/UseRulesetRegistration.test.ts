@@ -20,9 +20,7 @@ describe("[deprecated] useRulesetRegistration", () => {
   interface HookProps {
     ruleset: Ruleset;
   }
-  const initialProps: HookProps = {
-    ruleset: { id: "test-ruleset", rules: [] },
-  };
+  const initialProps: HookProps = { ruleset: { id: "test-ruleset", rules: [] } };
 
   const rulesetManagerStub = {
     add: sinon.stub<Parameters<RulesetManager["add"]>, ReturnType<RulesetManager["add"]>>(),
@@ -30,9 +28,7 @@ describe("[deprecated] useRulesetRegistration", () => {
   };
 
   before(() => {
-    sinon.stub(Presentation, "presentation").get(() => ({
-      rulesets: () => rulesetManagerStub,
-    }));
+    sinon.stub(Presentation, "presentation").get(() => ({ rulesets: () => rulesetManagerStub }));
   });
 
   after(() => {

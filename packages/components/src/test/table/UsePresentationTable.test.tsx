@@ -26,9 +26,7 @@ import type { UsePresentationTableProps, UsePresentationTableWithUnifiedSelectio
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 describe("usePresentationTable", () => {
-  const imodel = {
-    key: "imodel_key",
-  } as IModelConnection;
+  const imodel = { key: "imodel_key" } as IModelConnection;
   const initialProps: UsePresentationTableProps<TableColumnDefinition, TableRowDefinition> = {
     imodel,
     keys: new KeySet([createTestECInstanceKey()]),
@@ -43,9 +41,7 @@ describe("usePresentationTable", () => {
   beforeEach(() => {
     presentationManager = sinon.createStubInstance(PresentationManager);
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    }));
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
   });
 
   afterEach(() => {
@@ -59,10 +55,7 @@ describe("usePresentationTable", () => {
       properties: [{ property: createTestPropertyInfo() }],
     });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-    const item = createTestContentItem({
-      values: { [propertiesField.name]: "test_value" },
-      displayValues: { [propertiesField.name]: "Test value" },
-    });
+    const item = createTestContentItem({ values: { [propertiesField.name]: "test_value" }, displayValues: { [propertiesField.name]: "Test value" } });
 
     presentationManager.getContentDescriptor.resolves(descriptor);
     presentationManager.getContentIterator.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
@@ -74,28 +67,16 @@ describe("usePresentationTable", () => {
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(result.current.columns)
       .to.have.lengthOf(1)
-      .and.containSubset([
-        {
-          name: propertiesField.name,
-          label: propertiesField.label,
-          field: propertiesField,
-        },
-      ]);
+      .and.containSubset([{ name: propertiesField.name, label: propertiesField.label, field: propertiesField }]);
     expect(result.current.rows).to.have.lengthOf(1);
     expect(result.current.rows[0].cells)
       .to.have.lengthOf(1)
-      .and.containSubset([
-        {
-          key: propertiesField.name,
-        },
-      ]);
+      .and.containSubset([{ key: propertiesField.name }]);
   });
 });
 
 describe("usePresentationTableWithUnifiedSelection", () => {
-  const imodel = {
-    key: "imodel_key",
-  } as IModelConnection;
+  const imodel = { key: "imodel_key" } as IModelConnection;
   const initialProps: UsePresentationTableWithUnifiedSelectionProps<TableColumnDefinition, TableRowDefinition> = {
     imodel,
     ruleset: "ruleset_id",
@@ -110,9 +91,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
   beforeEach(() => {
     presentationManager = sinon.createStubInstance(PresentationManager);
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    }));
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
     IModelConnection.onOpen.raiseEvent(imodel);
   });
 
@@ -123,10 +102,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       properties: [{ property: createTestPropertyInfo() }],
     });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-    const item = createTestContentItem({
-      values: { [propertiesField.name]: "test_value" },
-      displayValues: { [propertiesField.name]: "Test value" },
-    });
+    const item = createTestContentItem({ values: { [propertiesField.name]: "test_value" }, displayValues: { [propertiesField.name]: "Test value" } });
 
     presentationManager.getContentDescriptor.resolves(descriptor);
     presentationManager.getContentIterator.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
@@ -140,21 +116,11 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(result.current.columns)
       .to.have.lengthOf(1)
-      .and.containSubset([
-        {
-          name: propertiesField.name,
-          label: propertiesField.label,
-          field: propertiesField,
-        },
-      ]);
+      .and.containSubset([{ name: propertiesField.name, label: propertiesField.label, field: propertiesField }]);
     expect(result.current.rows).to.have.lengthOf(1);
     expect(result.current.rows[0].cells)
       .to.have.lengthOf(1)
-      .and.containSubset([
-        {
-          key: propertiesField.name,
-        },
-      ]);
+      .and.containSubset([{ key: propertiesField.name }]);
 
     expect(presentationManager.getContentDescriptor).to.be.calledWith(
       sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.has(selectedKey)),

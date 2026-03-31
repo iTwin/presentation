@@ -105,10 +105,7 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
   if (!props.backendProps.id) {
     props.backendProps.id = `test-${Guid.createValue()}`;
   }
-  await IModelHost.startup({
-    cacheDir: join(getTestOutputDir(), ".cache", `${process.pid}`),
-    ...props.backendHostProps,
-  });
+  await IModelHost.startup({ cacheDir: join(getTestOutputDir(), ".cache", `${process.pid}`), ...props.backendHostProps });
   PresentationBackend.initialize(props.backendProps);
 
   // init frontend
@@ -116,11 +113,7 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
     props.frontendApp = NoRenderApp;
   }
   await props.frontendApp.startup(props.frontendAppOptions);
-  const defaultFrontendProps: PresentationFrontendProps = {
-    presentation: {
-      activeLocale: IModelApp.localization.getLanguageList()[0],
-    },
-  };
+  const defaultFrontendProps: PresentationFrontendProps = { presentation: { activeLocale: IModelApp.localization.getLanguageList()[0] } };
   await PresentationFrontend.initialize({ ...defaultFrontendProps, ...props.frontendProps });
   setTestOutputDir(props.testOutputDir);
 

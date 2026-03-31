@@ -78,11 +78,7 @@ export function useUnifiedTreeSelection({
 const defaultCreateSelectableForGenericNode: NonNullable<UseUnifiedTreeSelectionProps["createSelectableForGenericNode"]> = (
   node,
   treeModelNodeId,
-): Selectable => ({
-  identifier: treeModelNodeId,
-  data: node,
-  async *loadInstanceKeys() {},
-});
+): Selectable => ({ identifier: treeModelNodeId, data: node, async *loadInstanceKeys() {} });
 
 function createOptions(
   source: string,

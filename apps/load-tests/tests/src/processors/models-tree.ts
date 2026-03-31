@@ -49,12 +49,7 @@ function createProvider(context: VUContext, events: VUEvents) {
   return async function (parent: Node | undefined): Promise<Node[]> {
     const requestBody = JSON.stringify([
       (context.vars.imodelRpcProps as (context: VUContext) => any)(context),
-      {
-        clientId,
-        rulesetOrId: RULESET_ModelsTree,
-        sizeLimit: 1000,
-        parentKey: parent?.key,
-      } as HierarchyRpcRequestOptions,
+      { clientId, rulesetOrId: RULESET_ModelsTree, sizeLimit: 1000, parentKey: parent?.key } as HierarchyRpcRequestOptions,
     ]);
     async function requestRepeatedly(): Promise<Node[]> {
       return doRequest("PresentationRpcInterface-5.0.0-getPagedNodes", requestBody, events, "nodes").then(async (response) => {

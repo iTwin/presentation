@@ -51,9 +51,7 @@ void (async () => {
   // configure the OpenTelemetry data exporting to the console
   const telemetry = new opentelemetry.NodeSDK({
     traceExporter: new ConsoleSpanExporter(),
-    resource: new Resource({
-      [SEMRESATTRS_SERVICE_NAME]: "presentation-test-app",
-    }),
+    resource: new Resource({ [SEMRESATTRS_SERVICE_NAME]: "presentation-test-app" }),
   });
   telemetry.start();
   process.on("SIGTERM", () => {
@@ -63,9 +61,7 @@ void (async () => {
 
   // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.Props
   // set up props for the presentation backend
-  const presentationBackendProps: PresentationProps = {
-    rulesetDirectories: [path.join("assets", "presentation_rules")],
-  };
+  const presentationBackendProps: PresentationProps = { rulesetDirectories: [path.join("assets", "presentation_rules")] };
   // __PUBLISH_EXTRACT_END__
 
   // props that we don't want to show in documentation set up example

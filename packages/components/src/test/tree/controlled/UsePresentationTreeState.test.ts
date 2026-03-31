@@ -45,37 +45,24 @@ describe("usePresentationTreeState", () => {
   const imodel = {
     key: "test-imodel-key",
     isBriefcaseConnection: isBriefcaseConnectionStub,
-    txns: {
-      onChangesPulled: onChangesPulledEvent,
-      onChangesPushed: onChangesPushedEvent,
-    },
+    txns: { onChangesPulled: onChangesPulledEvent, onChangesPushed: onChangesPushedEvent },
   } as unknown as IModelConnection;
   const rulesetId = "test-ruleset-id";
-  const initialProps: UsePresentationTreeStateProps = {
-    imodel,
-    ruleset: rulesetId,
-    pagingSize: 5,
-  };
+  const initialProps: UsePresentationTreeStateProps = { imodel, ruleset: rulesetId, pagingSize: 5 };
 
   beforeEach(async () => {
     presentationManager = sinon.createStubInstance(PresentationManager);
     Object.assign(presentationManager, { onIModelHierarchyChanged });
 
-    presentationManager.rulesets.returns({
-      onRulesetModified,
-    } as RulesetManager);
+    presentationManager.rulesets.returns({ onRulesetModified } as RulesetManager);
 
-    presentationManager.vars.returns({
-      onVariableChanged: onRulesetVariableChanged,
-    } as RulesetVariablesManager);
+    presentationManager.vars.returns({ onVariableChanged: onRulesetVariableChanged } as RulesetVariablesManager);
 
     presentationManager.getNodesIterator.resolves({ total: 0, items: createAsyncIterator([]) });
 
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
     sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-      onActiveFormattingUnitSystemChanged,
-    }));
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({ onActiveFormattingUnitSystemChanged }));
 
     isBriefcaseConnectionStub.returns(false);
 
@@ -373,12 +360,7 @@ async function waitForState(result: { current: UsePresentationTreeStateResult<Tr
 
 function createNode(label: string): Node {
   return {
-    key: {
-      version: 2,
-      type: StandardNodeTypes.ECInstancesNode,
-      instanceKeys: [],
-      pathFromRoot: [label],
-    },
+    key: { version: 2, type: StandardNodeTypes.ECInstancesNode, instanceKeys: [], pathFromRoot: [label] },
     label: LabelDefinition.fromLabelString(label),
   };
 }
@@ -386,29 +368,13 @@ function createNode(label: string): Node {
 function createNodeInput(label: string): TreeModelNodeInput {
   const node = createNode(label);
   const item = createTreeNodeItem(node, undefined);
-  return {
-    id: label,
-    item,
-    label: item.label,
-    isExpanded: false,
-    isLoading: false,
-    isSelected: false,
-  };
+  return { id: label, item, label: item.label, isExpanded: false, isLoading: false, isSelected: false };
 }
 
 type TreeHierarchy =
   | string
-  | {
-      [label: string]: TreeHierarchy[];
-    }
-  | {
-      label: string;
-      selected?: true;
-      expanded?: true;
-      loading?: true;
-      editingInfo?: TreeModelNodeEditingInfo;
-      children?: TreeHierarchy[];
-    };
+  | { [label: string]: TreeHierarchy[] }
+  | { label: string; selected?: true; expanded?: true; loading?: true; editingInfo?: TreeModelNodeEditingInfo; children?: TreeHierarchy[] };
 
 function expectTree(model: TreeModel, expectedHierarchy: TreeHierarchy[]): void {
   const actualHierarchy = buildActualHierarchy(undefined);

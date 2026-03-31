@@ -213,10 +213,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
   }
 
   private getHilitedModels(instancesByType: InstancesByType): Observable<string> {
-    return forkJoin({
-      modelKeys: instancesByType.model.pipe(toArray()),
-      subjectKeys: instancesByType.subject.pipe(toArray()),
-    }).pipe(
+    return forkJoin({ modelKeys: instancesByType.model.pipe(toArray()), subjectKeys: instancesByType.subject.pipe(toArray()) }).pipe(
       mergeMap(({ modelKeys, subjectKeys }) => {
         if (!modelKeys.length && !subjectKeys.length) {
           return EMPTY;
@@ -265,10 +262,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
   }
 
   private getHilitedSubCategories(instancesByType: InstancesByType): Observable<string> {
-    return forkJoin({
-      subCategoryKeys: instancesByType.subCategory.pipe(toArray()),
-      categoryKeys: instancesByType.category.pipe(toArray()),
-    }).pipe(
+    return forkJoin({ subCategoryKeys: instancesByType.subCategory.pipe(toArray()), categoryKeys: instancesByType.category.pipe(toArray()) }).pipe(
       mergeMap(({ subCategoryKeys, categoryKeys }) => {
         if (!subCategoryKeys.length && !categoryKeys.length) {
           return EMPTY;
