@@ -268,7 +268,7 @@ index c29808da..7bdc4246 100644
 
    it("gets property data after re-initializing Presentation", async () => {
 diff --git a/apps/full-stack-tests/src/hierarchies/Formatting.test.ts b/apps/full-stack-tests/src/hierarchies/Formatting.test.ts
-index 5cf44be0..7d903d92 100644
+index a26d8a5a..eb92c06d 100644
 --- a/apps/full-stack-tests/src/hierarchies/Formatting.test.ts
 +++ b/apps/full-stack-tests/src/hierarchies/Formatting.test.ts
 @@ -11,13 +11,12 @@ import {
@@ -278,7 +278,7 @@ index 5cf44be0..7d903d92 100644
 -  insertSheetIndexFolder,
    insertSpatialCategory,
  } from "presentation-test-utilities";
- import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+ import { afterAll, describe, expect, it, test, vi } from "vitest";
  import { Subject } from "@itwin/core-backend";
  import { Guid, Id64 } from "@itwin/core-bentley";
 -import { IModel } from "@itwin/core-common";
@@ -325,6 +325,19 @@ index 5cf44be0..7d903d92 100644
                    `,
                    },
                  },
+diff --git a/apps/full-stack-tests/src/hierarchies/grouping/GroupHiding.test.ts b/apps/full-stack-tests/src/hierarchies/grouping/GroupHiding.test.ts
+index 017af0a7..7cb7699c 100644
+--- a/apps/full-stack-tests/src/hierarchies/grouping/GroupHiding.test.ts
++++ b/apps/full-stack-tests/src/hierarchies/grouping/GroupHiding.test.ts
+@@ -30,7 +30,7 @@ describe("Hierarchies", () => {
+
+     afterAll(async () => {
+       await terminate();
+-    });
++    }, 20000);
+
+     function createHierarchyWithSpecifiedGrouping(
+       imodel: IModelConnection,
 diff --git a/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts b/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts
 index 3862d3ab..1d3e2ff8 100644
 --- a/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts
@@ -346,7 +359,7 @@ index 3862d3ab..1d3e2ff8 100644
          })) {
            console.log(`- ${node.label}`);
 diff --git a/apps/full-stack-tests/src/unified-selection/SelectionScope.test.ts b/apps/full-stack-tests/src/unified-selection/SelectionScope.test.ts
-index 0d01c26d..6b20e4c7 100644
+index 0d01c26d..570f68da 100644
 --- a/apps/full-stack-tests/src/unified-selection/SelectionScope.test.ts
 +++ b/apps/full-stack-tests/src/unified-selection/SelectionScope.test.ts
 @@ -31,7 +31,7 @@ describe("SelectionScope", () => {
@@ -354,7 +367,7 @@ index 0d01c26d..6b20e4c7 100644
    afterAll(async () => {
      await terminate();
 -  });
-+  }, 20000);
++  }, 30000);
 
    async function getSelection(keys: string[], scope: Props<typeof computeSelection>["scope"]): Promise<SelectableInstanceKey[]> {
      const selectables: SelectableInstanceKey[] = [];
