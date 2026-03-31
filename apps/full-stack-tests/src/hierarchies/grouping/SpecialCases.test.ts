@@ -23,9 +23,9 @@ describe("Hierarchies", () => {
 
     it("groups children of hidden hierarchy levels", async () => {
       await withECDb(
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            "groups children of hidden hierarchy levels",
+            testName,
             db,
             `
             <ECEntityClass typeName="B" />

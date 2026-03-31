@@ -796,9 +796,9 @@ describe("Hierarchies", () => {
 
       it("doesn't return hidden instance node when targeting both the node and its parent, when parent has visible children from other hierarchy level definitions", async () => {
         await withECDb(
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              "doesn't return hidden instance node when targeting both the node and its parent, when parent has visible children from other hierarchy level definitions",
+              testName,
               db,
               `
                 <ECEntityClass typeName="X" />
@@ -902,9 +902,9 @@ describe("Hierarchies", () => {
 
       it("doesn't return hidden instance node when targeting both the node and its parent, when parent has visible children from the same hierarchy level definition", async () => {
         await withECDb(
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              "doesn't return hidden instance node when targeting both the node and its parent, when parent has visible children from the same hierarchy level definition",
+              testName,
               db,
               `
                 <ECEntityClass typeName="X" />
@@ -1262,29 +1262,32 @@ describe("Hierarchies", () => {
         let circleClassName: string;
 
         beforeAll(async () => {
-          const result = await buildTestIModel(async (builder) => {
-            const schema = await importSchema(
-              "sets auto-expand flag for target grouping node if another target is a child element",
-              builder,
-              `
+          const result = await buildTestIModel(
+            "Hierarchies - Filtering when targeting grouped instance nodes nested grouping nodes of different types",
+            async (builder, testName) => {
+              const schema = await importSchema(
+                testName,
+                builder,
+                `
                 <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
                 <ECEntityClass typeName="Circle">
                   <BaseClass>bis:PhysicalElement</BaseClass>
                   <ECProperty propertyName="Color" typeName="string" />
                 </ECEntityClass>
               `,
-            );
-            const category = insertSpatialCategory({ builder, codeValue: "category" });
-            const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
-            circleClassName = schema.items.Circle.fullName;
-            elementKey = insertPhysicalElement({
-              builder,
-              modelId: model.id,
-              categoryId: category.id,
-              classFullName: circleClassName,
-              ["Color"]: "Red",
-            });
-          });
+              );
+              const category = insertSpatialCategory({ builder, codeValue: "category" });
+              const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
+              circleClassName = schema.items.Circle.fullName;
+              elementKey = insertPhysicalElement({
+                builder,
+                modelId: model.id,
+                categoryId: category.id,
+                classFullName: circleClassName,
+                ["Color"]: "Red",
+              });
+            },
+          );
           imodel = result.imodel;
 
           const imodelAccess = createIModelAccess(imodel);

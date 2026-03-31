@@ -653,9 +653,9 @@ describe("Hierarchies", () => {
     describe("range grouping", () => {
       it("creates property value range grouping nodes", async () => {
         await withECDb(
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              "creates property value range grouping nodes",
+              testName,
               db,
               `
                 <ECEntityClass typeName="X">
@@ -722,9 +722,9 @@ describe("Hierarchies", () => {
 
       it("creates property value range grouping nodes with custom range label", async () => {
         await withECDb(
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              "creates property value range grouping nodes with custom range label",
+              testName,
               db,
               `
               <ECEntityClass typeName="X">
@@ -792,9 +792,9 @@ describe("Hierarchies", () => {
 
       it("creates multiple grouping nodes when nodes' property values fit in different ranges", async () => {
         await withECDb(
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              "creates multiple grouping nodes when nodes' property values fit in different ranges",
+              testName,
               db,
               `
               <ECEntityClass typeName="X">
@@ -879,9 +879,9 @@ describe("Hierarchies", () => {
 
       it("doesn't create grouping nodes if provided properties don't fit in the range and `createGroupForOutOfRangeValues` isn't set", async () => {
         await withECDb(
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              "doesn't create grouping nodes if provided properties don't fit in the range and `createGroupForOutOfRangeValues` isn't set",
+              testName,
               db,
               `
               <ECEntityClass typeName="X">
@@ -940,9 +940,9 @@ describe("Hierarchies", () => {
 
       it("creates 'other' property value grouping node if provided properties don't fit in the range and `createGroupForOutOfRangeValues` is `true`", async () => {
         await withECDb(
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              "creates 'other' property value grouping node if provided properties don't fit in the range and `createGroupForOutOfRangeValues` is `true`",
+              testName,
               db,
               `
               <ECEntityClass typeName="X">
@@ -1008,9 +1008,9 @@ describe("Hierarchies", () => {
 
       it("creates a single 'other' property value grouping node for different properties", async () => {
         await withECDb(
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              "creates a single 'other' property value grouping node for different properties",
+              testName,
               db,
               `
               <ECEntityClass typeName="X">

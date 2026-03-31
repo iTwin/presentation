@@ -24,9 +24,9 @@ describe("Hierarchies", () => {
 
     it("filters root hierarchy level", async () => {
       await withECDb(
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            "filters root hierarchy level",
+            testName,
             db,
             `
               <ECEntityClass typeName="X">
@@ -103,9 +103,9 @@ describe("Hierarchies", () => {
 
     it("filters child hierarchy level", async () => {
       await withECDb(
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            "filters child hierarchy level",
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />
@@ -192,9 +192,9 @@ describe("Hierarchies", () => {
 
     it("filters grouped hierarchy level", async () => {
       await withECDb(
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            "filters grouped hierarchy level",
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />
@@ -287,9 +287,9 @@ describe("Hierarchies", () => {
 
     it("filters by property class", async () => {
       await withECDb(
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            "filters by property class",
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />
@@ -364,9 +364,9 @@ describe("Hierarchies", () => {
 
     it("filters by filter class", async () => {
       await withECDb(
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            "filters by filter class",
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />
@@ -442,9 +442,9 @@ describe("Hierarchies", () => {
 
     it("filters by direct property", async () => {
       await withECDb(
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            "filters by direct property",
+            testName,
             db,
             `
               <ECEntityClass typeName="X">
@@ -521,9 +521,9 @@ describe("Hierarchies", () => {
 
     it("filters by related property", async () => {
       await withECDb(
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            "filters by related property",
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />

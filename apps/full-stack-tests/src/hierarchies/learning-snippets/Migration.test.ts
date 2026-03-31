@@ -311,9 +311,9 @@ describe("Hierarchies", () => {
         });
 
         it("creates custom query instance nodes definition", async () => {
-          const { imodel, schema } = await buildTestIModel(async (builder) => {
+          const { imodel, schema } = await buildTestIModel(async (builder, testName) => {
             const importedSchema = await importSchema(
-              "creates custom query instance nodes definition",
+              testName,
               builder,
               `
                 <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
