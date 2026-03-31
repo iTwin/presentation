@@ -240,11 +240,14 @@ describe("HierarchySearchTree", () => {
     // where we need to merge two search trees in a special way. These tests are here to confirm that kind of merging can be achieved using the `accept` method
     // and its options.
     describe("tree widget sub-tree and search-tree merging", () => {
-      type AcceptHandler = NonNullable<
-        Props<
-          ReturnType<typeof HierarchySearchTree.createBuilder<{ isSubTreeTarget?: boolean; isSubTreeNode?: boolean; isSearchTarget?: boolean }>>["accept"]
-        >["handler"]
-      >;
+      type BuilderType = typeof HierarchySearchTree.createBuilder<{
+        isSubTreeTarget?: boolean;
+        isSubTreeNode?: boolean;
+        isSearchTreeNode?: boolean;
+        isSearchTarget?: boolean;
+        isSearchTargetAncestor?: boolean;
+      }>;
+      type AcceptHandler = NonNullable<Props<ReturnType<BuilderType>["accept"]>["handler"]>;
       const subTreeAcceptHandler: AcceptHandler = {
         onEntryHandled: ({ treeEntry, inputEntry }) => {
           // Assign extra information to the entry
@@ -273,9 +276,18 @@ describe("HierarchySearchTree", () => {
           }
           return true;
         },
-        onEntryHandled: ({ treeEntry, inputEntry }) => {
+        onEntryHandled: ({ treeEntry, inputEntry, parentEntries }) => {
           // Assign extra information to the entry
           treeEntry.extras.isSearchTarget ||= inputEntry.isTarget || !inputEntry.hasChildren;
+          treeEntry.extras.isSearchTreeNode = true;
+
+          // Mark all ancestors of search-tree target as search-target-ancestors. This will allow us to keep them in the tree
+          // even if they are not sub-tree targets themselves.
+          if (treeEntry.extras.isSearchTarget) {
+            parentEntries.forEach((parentEntry) => {
+              parentEntry.extras.isSearchTargetAncestor = true;
+            });
+          }
 
           // If we merged a search-tree entry with sub-tree entry - ensure it doesn't have the `isTarget` flag. Any sub-tree
           // entry must also be a sub-tree target to have the `isTarget` flag.
@@ -291,8 +303,41 @@ describe("HierarchySearchTree", () => {
           }
         },
       };
+      const getTreeProps: Props<ReturnType<BuilderType>["getTree"]> = {
+        processEntry: ({ treeEntry, parentEntries }) =>
+          // Only include entries that are on the path to search-tree targets. This will allow us to exclude sub-tree branches that are not relevant to search results.
+          treeEntry.extras.isSearchTargetAncestor || treeEntry.extras.isSearchTarget || parentEntries.some((parentEntry) => parentEntry.extras.isSearchTarget)
+            ? treeEntry
+            : undefined,
+      };
 
-      it("omits search-tree path when it doesn't start with any sub-tree path", () => {
+      it("omits sub-tree branch when it's not above any search-tree target", () => {
+        const builder = HierarchySearchTree.createBuilder();
+        builder.accept({
+          tree: {
+            identifier: createTestGenericNodeKey({ id: "a" }),
+            children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }, { identifier: createTestGenericNodeKey({ id: "c" }) }],
+          },
+          handler: subTreeAcceptHandler,
+        });
+        builder.accept({
+          tree: {
+            identifier: createTestGenericNodeKey({ id: "a" }),
+            options: { autoExpand: true },
+            children: [{ identifier: createTestGenericNodeKey({ id: "c" }), options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } } }],
+          },
+          handler: searchTreeAcceptHandler,
+        });
+        expect(builder.getTree(getTreeProps)).to.deep.eq([
+          {
+            identifier: createTestGenericNodeKey({ id: "a" }),
+            options: { autoExpand: true },
+            children: [{ identifier: createTestGenericNodeKey({ id: "c" }), options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } } }],
+          },
+        ]);
+      });
+
+      it("omits both trees when they don't intersect", () => {
         const builder = HierarchySearchTree.createBuilder();
         builder.accept({
           tree: { identifier: createTestGenericNodeKey({ id: "a" }) },
@@ -302,14 +347,10 @@ describe("HierarchySearchTree", () => {
           tree: { identifier: createTestGenericNodeKey({ id: "b" }), options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } } },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree()).to.deep.eq([
-          {
-            identifier: createTestGenericNodeKey({ id: "a" }),
-          },
-        ]);
+        expect(builder.getTree(getTreeProps)).to.deep.eq([]);
       });
 
-      it("omits search-tree path when it's not under any sub-tree target", () => {
+      it("omits both trees when they only intersect above targets", () => {
         const builder = HierarchySearchTree.createBuilder();
         builder.accept({
           tree: { identifier: createTestGenericNodeKey({ id: "a" }), children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }] },
@@ -323,12 +364,7 @@ describe("HierarchySearchTree", () => {
           },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree()).to.deep.eq([
-          {
-            identifier: createTestGenericNodeKey({ id: "a" }),
-            children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }],
-          },
-        ]);
+        expect(builder.getTree(getTreeProps)).to.deep.eq([]);
       });
 
       it("doesn't set `isTarget` flag on search-tree path when it's within a sub-tree, but not under a sub-tree target", () => {
@@ -341,7 +377,7 @@ describe("HierarchySearchTree", () => {
           tree: { identifier: createTestGenericNodeKey({ id: "a" }), options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } } },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree()).to.deep.eq([
+        expect(builder.getTree(getTreeProps)).to.deep.eq([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
@@ -360,7 +396,7 @@ describe("HierarchySearchTree", () => {
           tree: { identifier: createTestGenericNodeKey({ id: "a" }), options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } } },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree()).to.deep.eq([
+        expect(builder.getTree(getTreeProps)).to.deep.eq([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
@@ -382,7 +418,7 @@ describe("HierarchySearchTree", () => {
           },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree()).to.deep.eq([
+        expect(builder.getTree(getTreeProps)).to.deep.eq([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: true },
@@ -411,7 +447,7 @@ describe("HierarchySearchTree", () => {
           },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree()).to.deep.eq([
+        expect(builder.getTree(getTreeProps)).to.deep.eq([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: true },
@@ -448,7 +484,7 @@ describe("HierarchySearchTree", () => {
           },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree()).to.deep.eq([
+        expect(builder.getTree(getTreeProps)).to.deep.eq([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             isTarget: true,

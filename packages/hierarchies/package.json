@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-hierarchies",
-  "version": "2.0.0-alpha.13",
+  "version": "2.0.0-alpha.14",
   "description": "A package for creating hierarchies based on data in iTwin.js iModels.",
   "license": "MIT",
   "author": {
@@ -41,7 +41,7 @@
     "lint": "eslint \"./src/**/*.ts\"",
     "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
     "test": "npm run test:dev",
-    "extract-api": "betools extract-api --entry=presentation-hierarchies --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "extract-api": "betools extract-api --entry=./lib/esm/presentation-hierarchies --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-hierarchies.api.md",
     "update-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md,./learning",
     "check-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md,./learning --check",

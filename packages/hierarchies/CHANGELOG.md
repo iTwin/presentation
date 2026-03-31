@@ -1,5 +1,38 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.14
+
+### Minor Changes
+
+- [#1264](https://github.com/iTwin/presentation/pull/1264): Enhance `HierarchySearchTree.createBuilder()` by allowing it to process resulting hierarchy.
+
+  Example:
+
+  ```ts
+  const builder = HierarchySearchTree.createBuilder<{ heat?: number }>();
+  builder.accept({
+    tree: subTree,
+    handler: {
+      onEntryHandled: ({ treeEntry, parentEntries }) => {
+        // Assign some extra information to the entry and its ancestors. This will allow us to test
+        // that we can use that information in `getTree` method to filter out entries.
+        [...parentEntries, treeEntry].forEach((entry) => {
+          entry.extras.heat ? entry.extras.heat++ : (entry.extras.heat = 1);
+        });
+      },
+    },
+  });
+  const tree = builder.getTree({
+    // Only include branches with heat > 5
+    processEntry: ({ treeEntry }) =>
+      (treeEntry.extras.heat ?? 0) > 5 ? treeEntry : undefined,
+  });
+  ```
+
+### Patch Changes
+
+- [#1256](https://github.com/iTwin/presentation/pull/1256): Fix `alpha` dependencies being specified with a range (`^`), allowing package manager to use higher versions, possibly with breaking changes.
+
 ## 2.0.0-alpha.13
 
 ### Major Changes
@@ -69,7 +102,8 @@
       for (const item of items) {
         searchPaths.push(createSearchPathForItem(item));
       }
-      const tree: HierarchySearchTree[] = await HierarchySearchTree.createFromPathsList(searchPaths);
+      const tree: HierarchySearchTree[] =
+        await HierarchySearchTree.createFromPathsList(searchPaths);
 
       // Do this:
       const builder = HierarchySearchTree.createBuilder();
