@@ -12,7 +12,6 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey, KeySet, Ruleset } from "@itwin/presentation-common";
 import { TableColumnDefinition, TableRowDefinition, usePresentationTable } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createFileNameFromString } from "../../FilenameUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render } from "../../RenderUtils.js";
 import { buildTestIModel } from "../../TestIModelSetup.js";
@@ -118,7 +117,7 @@ describe("Learning snippets", () => {
 
       // set up imodel for the test
       let modelKey: InstanceKey | undefined;
-      const imodel = await buildTestIModel(createFileNameFromString(expect.getState().currentTestName!), async (builder) => {
+      const imodel = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
         insertPhysicalElement({ builder, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
