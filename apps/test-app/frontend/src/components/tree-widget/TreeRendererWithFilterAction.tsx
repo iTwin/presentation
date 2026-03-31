@@ -12,39 +12,26 @@ import {
   TreeNodeFilterAction,
   TreeNodeRenameAction,
 } from "@itwin/presentation-hierarchies-react/stratakit";
-
-import addSvg from "@stratakit/icons/add.svg";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 
+import addSvg from "@stratakit/icons/add.svg";
+
 import type { ComponentProps } from "react";
-import type {
-  TreeNode,
-} from "@itwin/presentation-hierarchies-react";
-import type {
-  StrataKitTreeRendererAttributes,
-  TreeActionBaseAttributes,
-} from "@itwin/presentation-hierarchies-react/stratakit";
+import type { TreeNode } from "@itwin/presentation-hierarchies-react";
+import type { StrataKitTreeRendererAttributes, TreeActionBaseAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
 
 /* eslint-disable no-console */
 
 type TreeRendererProps = ComponentProps<typeof StrataKitTreeRenderer>;
 
-export const TreeRendererWithFilterAction = forwardRef<
-  StrataKitTreeRendererAttributes,
-  TreeRendererProps
->(function TreeRendererWithFilterAction(
+export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttributes, TreeRendererProps>(function TreeRendererWithFilterAction(
   props: TreeRendererProps,
   forwardedRef,
 ) {
-  const { getHierarchyLevelDetails, filterHierarchyLevel, ...treeProps } =
-    props;
+  const { getHierarchyLevelDetails, filterHierarchyLevel, ...treeProps } = props;
   const nodesWithError = useMemo(() => {
     return mapNodesHierarchy(treeProps.rootNodes, (node) => {
-      if (
-        node.label.includes("[0-1M]") ||
-        node.label.includes("[0-1U]") ||
-        node.label.includes("[0-29]")
-      ) {
+      if (node.label.includes("[0-1M]") || node.label.includes("[0-1U]") || node.label.includes("[0-29]")) {
         return {
           ...node,
           errors: [
@@ -53,9 +40,6 @@ export const TreeRendererWithFilterAction = forwardRef<
               id: `${node.id}-object-error`,
               type: "Unknown" as const,
               message: "Object {{node}} is not available",
-              additionalData: {
-                code: "404",
-              },
             },
           ],
         };
@@ -64,56 +48,28 @@ export const TreeRendererWithFilterAction = forwardRef<
     });
   }, [treeProps.rootNodes]);
 
-  const getInlineActions = useCallback<
-    Required<TreeRendererProps>["getInlineActions"]
-  >(
+  const getInlineActions = useCallback<Required<TreeRendererProps>["getInlineActions"]>(
     ({ targetNode, selectedNodes }) => [
-      <CustomAction
-        key="custom"
-        node={targetNode}
-        selectedNodes={selectedNodes}
-      />,
-      <TreeNodeFilterAction
-        key="filter"
-        node={targetNode}
-        onFilter={filterHierarchyLevel}
-        getHierarchyLevelDetails={getHierarchyLevelDetails}
-      />,
+      <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
+      <TreeNodeFilterAction key="filter" node={targetNode} onFilter={filterHierarchyLevel} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
       <TreeNodeRenameAction key="rename" node={targetNode} />,
     ],
     [filterHierarchyLevel, getHierarchyLevelDetails],
   );
-  const getMenuActions = useCallback<
-    Required<TreeRendererProps>["getMenuActions"]
-  >(
-    ({ targetNode }) => [
-      <TreeNodeRenameAction key="rename" node={targetNode} />,
-    ],
+  const getMenuActions = useCallback<Required<TreeRendererProps>["getMenuActions"]>(
+    ({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />],
     [],
   );
-  const getContextMenuActions = useCallback<
-    Required<TreeRendererProps>["getContextMenuActions"]
-  >(
+  const getContextMenuActions = useCallback<Required<TreeRendererProps>["getContextMenuActions"]>(
     ({ targetNode, selectedNodes }) => [
-      <CustomAction
-        key="custom"
-        node={targetNode}
-        selectedNodes={selectedNodes}
-      />,
-      <TreeNodeFilterAction
-        key="filter"
-        node={targetNode}
-        onFilter={filterHierarchyLevel}
-        getHierarchyLevelDetails={getHierarchyLevelDetails}
-      />,
+      <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
+      <TreeNodeFilterAction key="filter" node={targetNode} onFilter={filterHierarchyLevel} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
       <TreeNodeRenameAction key="rename" node={targetNode} />,
     ],
     [filterHierarchyLevel, getHierarchyLevelDetails],
   );
 
-  const getEditingProps = useCallback<
-    Required<TreeRendererProps>["getEditingProps"]
-  >((node) => {
+  const getEditingProps = useCallback<Required<TreeRendererProps>["getEditingProps"]>((node) => {
     return {
       onLabelChanged: (newLabel: string) => {
         // Handle label change
@@ -138,14 +94,7 @@ export const TreeRendererWithFilterAction = forwardRef<
       getHierarchyLevelDetails={getHierarchyLevelDetails}
       getEditingProps={getEditingProps}
       errorRenderer={(errorProps) => {
-        return (
-          <TreeErrorRenderer
-            {...errorProps}
-            renderError={(errorItemProps) => (
-              <CustomErrorItemRenderer {...errorItemProps} />
-            )}
-          />
-        );
+        return <TreeErrorRenderer {...errorProps} renderError={(errorItemProps) => <CustomErrorItemRenderer {...errorItemProps} />} />;
       }}
     />
   );
@@ -154,28 +103,16 @@ export const TreeRendererWithFilterAction = forwardRef<
 type ErrorItemProps = ComponentProps<typeof ErrorItemRenderer>;
 function CustomErrorItemRenderer({ error, treeNode, ...rest }: ErrorItemProps) {
   if (error.type === "Unknown") {
-    const data = error.additionalData as { code?: string } | undefined;
-    return (
-      <ErrorRegion.Item
-        message={`${error.message.replace("{{node}}", treeNode.label)}${data?.code !== undefined ? ` [${data.code}]` : ""}`}
-        messageId={error.id}
-      />
-    );
+    return <ErrorRegion.Item message={`${error.message.replace("{{node}}", treeNode.label)}}`} messageId={error.id} />;
   }
   return <ErrorItemRenderer error={error} treeNode={treeNode} {...rest} />;
 }
 
-function mapNodesHierarchy(
-  nodes: TreeNode[],
-  callback: (node: TreeNode) => TreeNode,
-): TreeNode[] {
+function mapNodesHierarchy(nodes: TreeNode[], callback: (node: TreeNode) => TreeNode): TreeNode[] {
   return nodes.map((node) => {
     return {
       ...callback(node),
-      children:
-        node.children === true
-          ? true
-          : mapNodesHierarchy(node.children, callback),
+      children: node.children === true ? true : mapNodesHierarchy(node.children, callback),
     };
   });
 }
@@ -190,12 +127,5 @@ const CustomAction = memo(function CustomAction({
     console.log("Currently selected nodes:", selectedNodes);
   }, [node, selectedNodes]);
 
-  return (
-    <TreeActionBase
-      {...actionAttributes}
-      label={"Custom action"}
-      onClick={handleClick}
-      icon={addSvg}
-    />
-  );
+  return <TreeActionBase {...actionAttributes} label={"Custom action"} onClick={handleClick} icon={addSvg} />;
 });

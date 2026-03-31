@@ -7,36 +7,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { debounceTime, Subject } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
-import {
-  Button,
-  Flex,
-  ProgressRadial,
-  SearchBox,
-  Text,
-  ToggleSwitch,
-} from "@itwin/itwinui-react";
+import { Button, Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
 import { DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
-import {
-  PresentationInstanceFilter,
-  PresentationInstanceFilterDialog,
-} from "@itwin/presentation-components";
-import {
-  createECSchemaProvider,
-  createECSqlQueryExecutor,
-  createIModelKey,
-  registerTxnListeners,
-} from "@itwin/presentation-core-interop";
+import { PresentationInstanceFilter, PresentationInstanceFilterDialog } from "@itwin/presentation-components";
+import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey, registerTxnListeners } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
-import {
-  createLimitingECSqlQueryExecutor,
-  GenericInstanceFilter,
-  HierarchyNodeKey,
-  HierarchySearchTree,
-} from "@itwin/presentation-hierarchies";
-import {
-  LocalizationContextProvider,
-  useIModelUnifiedSelectionTree,
-} from "@itwin/presentation-hierarchies-react";
+import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyNodeKey, HierarchySearchTree } from "@itwin/presentation-hierarchies";
+import { LocalizationContextProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { StrataKitRootErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
@@ -48,37 +25,16 @@ import { TreeRendererWithFilterAction } from "./TreeRendererWithFilterAction";
 
 import type { ComponentPropsWithoutRef } from "react";
 import type { IModelConnection } from "@itwin/core-frontend";
-import type {
-  ClassInfo,
-  Descriptor,
-  InstanceKey,
-} from "@itwin/presentation-common";
-import type {
-  PresentationInstanceFilterInfo,
-  PresentationInstanceFilterPropertiesSource,
-} from "@itwin/presentation-components";
-import type {
-  HierarchyLevelDetails,
-  TreeNode,
-} from "@itwin/presentation-hierarchies-react";
+import type { ClassInfo, Descriptor, InstanceKey } from "@itwin/presentation-common";
+import type { PresentationInstanceFilterInfo, PresentationInstanceFilterPropertiesSource } from "@itwin/presentation-components";
+import type { HierarchyLevelDetails, TreeNode } from "@itwin/presentation-hierarchies-react";
 import type { StrataKitTreeRendererAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
-import type {
-  IPrimitiveValueFormatter,
-  Props,
-} from "@itwin/presentation-shared";
+import type { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 
 type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;
 type IModelAccess = UseIModelTreeProps["imodelAccess"];
 
-export function StatelessTreeV2({
-  imodel,
-  ...props
-}: {
-  imodel: IModelConnection;
-  height: number;
-  width: number;
-  treeLabel: string;
-}) {
+export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number; treeLabel: string }) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
   useEffect(() => {
     const schemaProvider = createECSchemaProvider(imodel.schemaContext);
@@ -86,10 +42,7 @@ export function StatelessTreeV2({
       imodelKey: imodel.key,
       ...schemaProvider,
       ...createCachingECClassHierarchyInspector({ schemaProvider }),
-      ...createLimitingECSqlQueryExecutor(
-        createECSqlQueryExecutor(imodel),
-        1000,
-      ),
+      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
     });
   }, [imodel]);
 
@@ -139,9 +92,7 @@ function Tree({
   const [imodelChanged] = useState(new BeEvent<() => void>());
   useEffect(() => {
     if (imodel.isBriefcaseConnection()) {
-      return registerTxnListeners(imodel.txns, () =>
-        imodelChanged.raiseEvent(),
-      );
+      return registerTxnListeners(imodel.txns, () => imodelChanged.raiseEvent());
     }
     return undefined;
   }, [imodel, imodelChanged]);
@@ -151,49 +102,44 @@ function Tree({
     throw new Error("Unified selection context is not available");
   }
 
-  const { isReloading, setFormatter, ...treeProps } =
-    useIModelUnifiedSelectionTree({
-      selectionStorage: unifiedSelectionContext.storage,
-      sourceName: "StatelessTreeV2",
-      imodelAccess,
-      imodelChanged,
-      getSearchPaths,
-      getHierarchyDefinition,
-      getTreeNodeErrors: (node) => {
-        return [
-          {
-            type: "Unknown",
-            id: `${node.label}-error-1`,
-            message: `test error node `,
-            isNodeExpandable: true,
-          },
-          {
-            type: "Unknown",
-            id: `${node.label}-error-2`,
-            message: `test error node 2 `,
-            isNodeExpandable: true,
-          },
-        ];
-      },
-      onPerformanceMeasured: (action, duration) => {
-        // eslint-disable-next-line no-console
-        console.log(`Stateless-tree-${action}, Duration: ${duration}ms`);
-      },
-    });
+  const { isReloading, setFormatter, ...treeProps } = useIModelUnifiedSelectionTree({
+    selectionStorage: unifiedSelectionContext.storage,
+    sourceName: "StatelessTreeV2",
+    imodelAccess,
+    imodelChanged,
+    getSearchPaths,
+    getHierarchyDefinition,
+    getTreeNodeErrors: (node) => {
+      return [
+        {
+          type: "Unknown",
+          id: `${node.label}-error-1`,
+          message: `test error node `,
+          isNodeExpandable: true,
+        },
+        {
+          type: "Unknown",
+          id: `${node.label}-error-2`,
+          message: `test error node 2 `,
+          isNodeExpandable: true,
+        },
+      ];
+    },
+    onPerformanceMeasured: (action, duration) => {
+      // eslint-disable-next-line no-console
+      console.log(`Stateless-tree-${action}, Duration: ${duration}ms`);
+    },
+  });
 
-  const [shouldUseCustomFormatter, setShouldUseCustomFormatter] =
-    useState<boolean>(false);
+  const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);
   const toggleFormatter = useCallback(() => {
     const newValue = !shouldUseCustomFormatter;
     setShouldUseCustomFormatter(newValue);
     setFormatter(newValue ? customFormatter : undefined);
   }, [shouldUseCustomFormatter, setFormatter]);
 
-  const [filteringOptions, setFilteringOptions] =
-    useState<HierarchyLevelDetails>();
-  const propertiesSource = useMemo<
-    (() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined
-  >(() => {
+  const [filteringOptions, setFilteringOptions] = useState<HierarchyLevelDetails>();
+  const propertiesSource = useMemo<(() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined>(() => {
     if (!filteringOptions) {
       return undefined;
     }
@@ -205,9 +151,7 @@ function Tree({
         inputKeys.push(inputKey);
       }
       if (inputKeys.length === 0) {
-        throw new Error(
-          "Hierarchy level is empty - unable to create content descriptor.",
-        );
+        throw new Error("Hierarchy level is empty - unable to create content descriptor.");
       }
 
       const descriptor = await Presentation.presentation.getContentDescriptor({
@@ -242,25 +186,17 @@ function Tree({
       return undefined;
     }
 
-    return (descriptor: Descriptor) =>
-      fromGenericFilter(descriptor, currentFilter);
+    return (descriptor: Descriptor) => fromGenericFilter(descriptor, currentFilter);
   }, [filteringOptions]);
 
   const renderContent = () => {
     if (treeProps.rootErrorRendererProps) {
-      return (
-        <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />
-      );
+      return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
     }
 
     if (!treeProps.treeRendererProps) {
       return (
-        <Flex
-          alignItems="center"
-          justifyContent="center"
-          flexDirection="column"
-          style={{ height: "100%" }}
-        >
+        <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
           <Text isMuted> Loading </Text>
         </Flex>
       );
@@ -268,15 +204,8 @@ function Tree({
 
     if (treeProps.treeRendererProps.rootNodes.length === 0 && searchText) {
       return (
-        <Flex
-          alignItems="center"
-          justifyContent="center"
-          flexDirection="column"
-          style={{ height: "100%" }}
-        >
-          <Text isMuted>
-            There are no nodes matching search text {searchText}
-          </Text>
+        <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
+          <Text isMuted>There are no nodes matching search text {searchText}</Text>
         </Flex>
       );
     }
@@ -296,11 +225,7 @@ function Tree({
   };
 
   const renderLoadingOverlay = () => {
-    if (
-      treeProps.rootErrorRendererProps !== undefined ||
-      treeProps.treeRendererProps !== undefined ||
-      !isReloading
-    ) {
+    if (treeProps.rootErrorRendererProps !== undefined || treeProps.treeRendererProps !== undefined || !isReloading) {
       return <></>;
     }
     return (
@@ -335,15 +260,8 @@ function Tree({
     <Flex flexDirection="column" style={{ width, height }}>
       <Flex style={{ width: "100%", padding: "0.5rem" }}>
         <DebouncedSearchBox onChange={setSearchText} />
-        <ToggleSwitch
-          onChange={toggleFormatter}
-          checked={shouldUseCustomFormatter}
-        />
-        {imodel.isBriefcaseConnection() ? (
-          <Button onClick={() => void removeSelectedElements(imodel)}>
-            Delete
-          </Button>
-        ) : null}
+        <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
+        {imodel.isBriefcaseConnection() ? <Button onClick={() => void removeSelectedElements(imodel)}>Delete</Button> : null}
         <Button
           onClick={() => {
             if (!treeRef.current) {
@@ -351,9 +269,7 @@ function Tree({
             }
             const selectedElements = getSelectedElementIds(imodel);
             treeRef.current.renameNode(
-              (node) =>
-                HierarchyNodeKey.isInstances(node.nodeData.key) &&
-                selectedElements.includes(node.nodeData.key.instanceKeys[0].id),
+              (node) => HierarchyNodeKey.isInstances(node.nodeData.key) && selectedElements.includes(node.nodeData.key.instanceKeys[0].id),
             );
           }}
         >
@@ -384,10 +300,7 @@ function Tree({
 
 type SearchBoxProps = ComponentPropsWithoutRef<typeof SearchBox>;
 
-function DebouncedSearchBox({
-  onChange,
-  ...props
-}: Omit<SearchBoxProps, "onChange"> & { onChange: (text: string) => void }) {
+function DebouncedSearchBox({ onChange, ...props }: Omit<SearchBoxProps, "onChange"> & { onChange: (text: string) => void }) {
   const handleChange = useMemo(() => {
     return debounced(onChange, 500);
   }, [onChange]);
@@ -417,9 +330,7 @@ function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
   };
 }
 
-function getHierarchyDefinition(
-  props: Parameters<UseIModelTreeProps["getHierarchyDefinition"]>[0],
-) {
+function getHierarchyDefinition(props: Parameters<UseIModelTreeProps["getHierarchyDefinition"]>[0]) {
   return new ModelsTreeDefinition(props);
 }
 
@@ -427,34 +338,20 @@ const customFormatter: IPrimitiveValueFormatter = async ({ value }) => {
   return `THIS_IS_FORMATTED_${JSON.stringify(value)}_THIS_IS_FORMATTED`;
 };
 
-function fromGenericFilter(
-  descriptor: Descriptor,
-  filter: GenericInstanceFilter,
-): PresentationInstanceFilterInfo {
+function fromGenericFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilterInfo {
   const presentationFilter =
-    GenericInstanceFilter.isFilterRuleGroup(filter.rules) &&
-    filter.rules.rules.length === 0
+    GenericInstanceFilter.isFilterRuleGroup(filter.rules) && filter.rules.rules.length === 0
       ? undefined
-      : PresentationInstanceFilter.fromGenericInstanceFilter(
-          descriptor,
-          filter,
-        );
+      : PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter);
   return {
     filter: presentationFilter,
     usedClasses: (filter.filteredClassNames ?? [])
-      .map(
-        (name) =>
-          descriptor.selectClasses.find(
-            (selectClass) => selectClass.selectClassInfo.name === name,
-          )?.selectClassInfo,
-      )
+      .map((name) => descriptor.selectClasses.find((selectClass) => selectClass.selectClassInfo.name === name)?.selectClassInfo)
       .filter((classInfo): classInfo is ClassInfo => classInfo !== undefined),
   };
 }
 
-function toGenericFilter(
-  filterInfo?: PresentationInstanceFilterInfo,
-): GenericInstanceFilter | undefined {
+function toGenericFilter(filterInfo?: PresentationInstanceFilterInfo): GenericInstanceFilter | undefined {
   if (!filterInfo) {
     return undefined;
   }
@@ -470,24 +367,14 @@ function toGenericFilter(
       : undefined;
   }
 
-  return PresentationInstanceFilter.toGenericInstanceFilter(
-    filterInfo.filter,
-    filterInfo.usedClasses,
-  );
+  return PresentationInstanceFilter.toGenericInstanceFilter(filterInfo.filter, filterInfo.usedClasses);
 }
 
-const subjectSvg = new URL("@stratakit/icons/bis-subject.svg", import.meta.url)
-  .href;
-const classSvg = new URL("@stratakit/icons/bis-class.svg", import.meta.url)
-  .href;
-const modelSvg = new URL("@stratakit/icons/model-cube.svg", import.meta.url)
-  .href;
-const categorySvg = new URL(
-  "@stratakit/icons/bis-category-3d.svg",
-  import.meta.url,
-).href;
-const elementSvg = new URL("@stratakit/icons/bis-element.svg", import.meta.url)
-  .href;
+const subjectSvg = new URL("@stratakit/icons/bis-subject.svg", import.meta.url).href;
+const classSvg = new URL("@stratakit/icons/bis-class.svg", import.meta.url).href;
+const modelSvg = new URL("@stratakit/icons/model-cube.svg", import.meta.url).href;
+const categorySvg = new URL("@stratakit/icons/bis-category-3d.svg", import.meta.url).href;
+const elementSvg = new URL("@stratakit/icons/bis-element.svg", import.meta.url).href;
 const iModelSvg = new URL("@stratakit/icons/imodel.svg", import.meta.url).href;
 
 function getIcon(node: TreeNode): string | undefined {

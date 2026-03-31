@@ -30,8 +30,7 @@ interface TreeErrorRendererOwnProps {
 }
 
 /** @alpha */
-export type TreeErrorRendererProps = TreeErrorRendererOwnProps &
-  Omit<ErrorItemRendererProps, "treeNode" | "error">;
+export type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemRendererProps, "treeNode" | "error">;
 
 /**
  * A component that renders error display dropdown using the `unstable_ErrorRegion` component from `@stratakit/structures`.
@@ -39,12 +38,7 @@ export type TreeErrorRendererProps = TreeErrorRendererOwnProps &
  *
  * @alpha
  */
-export function TreeErrorRenderer({
-  treeLabel,
-  errorNodes,
-  renderError,
-  ...errorItemRendererProps
-}: TreeErrorRendererProps): JSX.Element {
+export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): JSX.Element {
   const translate = useTranslation();
   const errorItems = errorNodes.flatMap((errorNode) =>
     errorNode.errors.map((error) => {
@@ -58,37 +52,17 @@ export function TreeErrorRenderer({
           { key: error.id },
         );
       }
-      return (
-        <ErrorItemRenderer
-          key={error.id}
-          treeNode={errorNode}
-          error={error}
-          {...errorItemRendererProps}
-        />
-      );
+      return <ErrorItemRenderer key={error.id} treeNode={errorNode} error={error} {...errorItemRendererProps} />;
     }),
   );
 
-  const totalErrorCount = useMemo(
-    () => errorNodes.reduce((sum, n) => sum + n.errors.length, 0),
-    [errorNodes],
-  );
+  const totalErrorCount = useMemo(() => errorNodes.reduce((sum, n) => sum + n.errors.length, 0), [errorNodes]);
 
   return (
     <ErrorRegion.Root
       style={{ width: "100%" }}
-      aria-label={translate("issuesForTree").replace(
-        "{{tree_label}}",
-        treeLabel,
-      )}
-      label={
-        totalErrorCount === 0
-          ? translate("noIssuesFound")
-          : translate("issuesFound").replace(
-              "{{number_of_issues}}",
-              totalErrorCount.toString(),
-            )
-      }
+      aria-label={translate("issuesForTree").replace("{{tree_label}}", treeLabel)}
+      label={totalErrorCount === 0 ? translate("noIssuesFound") : translate("issuesFound").replace("{{number_of_issues}}", totalErrorCount.toString())}
       items={errorItems}
     />
   );
