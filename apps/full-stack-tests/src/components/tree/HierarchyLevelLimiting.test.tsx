@@ -8,7 +8,7 @@ import { useState } from "react";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Ruleset } from "@itwin/presentation-common";
+import { PresentationRpcInterface, Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { createFileNameFromString } from "../../FilenameUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -32,6 +32,8 @@ describe("Learning snippets", () => {
       await terminate();
     });
 
+    // TODO: unskip once core dependencies are bumped to >5.8.0
+    // it.skipIf(Number.parseInt(PresentationRpcInterface.interfaceVersion.split(".")[0], 10) < 4)("limits hierarchy level size", async () => {
     it.skip("limits hierarchy level size", async () => {
       // stub console log to avoid hierarchy limit warning in console
       const consoleStub = vi.spyOn(console, "log").mockImplementation(() => {});
