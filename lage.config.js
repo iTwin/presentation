@@ -13,7 +13,7 @@ module.exports = {
     cover: {
       dependsOn: ["build"],
       outputs: [],
-      inputs: ["lib/**", "vitest.config.ts", ".nycrc"],
+      inputs: ["lib/**", ".mocharc.json", "vitest.config.ts", ".nycrc"],
     },
     lint: {
       dependsOn: ["build"],
