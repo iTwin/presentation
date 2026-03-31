@@ -16,6 +16,8 @@ import { getByRole, render, waitFor } from "../../RenderUtils.js";
 import { buildTestIModel } from "../../TestIModelSetup.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
 
+/* eslint-disable @typescript-eslint/no-deprecated */
+
 describe("Learning snippets", () => {
   describe("Tree", () => {
     beforeAll(async () => {
@@ -38,7 +40,6 @@ describe("Learning snippets", () => {
 
       // __PUBLISH_EXTRACT_START__ Presentation.Components.HierarchyLevelLimiting
       function MyTree(props: { imodel: IModelConnection }) {
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const state = usePresentationTreeState({
           imodel: props.imodel,
           ruleset,

@@ -30,7 +30,6 @@ import {
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding, InstanceKey, Props } from "@itwin/presentation-shared";
-import { createFileNameFromString } from "../FilenameUtils.js";
 import { buildIModel, importSchema, withECDb } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation.js";
@@ -1537,11 +1536,11 @@ describe("Hierarchies", () => {
 
     describe("when filtering merged hierarchy provider", () => {
       it("filters root nodes of individual provider", async () => {
-        const { imodel: imodel1, ...keys1 } = await buildIModel(expect.getState().currentTestName! + " 1", async (builder) => {
+        const { imodel: imodel1, ...keys1 } = await buildIModel(`${expect.getState().currentTestName!} 1`, async (builder) => {
           const testSubject = insertSubject({ builder, codeValue: "A subject", parentId: IModel.rootSubjectId });
           return { testSubject };
         });
-        const { imodel: imodel2, ...keys2 } = await buildIModel(expect.getState().currentTestName! + " 2", async (builder) => {
+        const { imodel: imodel2, ...keys2 } = await buildIModel(`${expect.getState().currentTestName!} 2`, async (builder) => {
           const testSubject = insertSubject({ builder, codeValue: "B subject", parentId: IModel.rootSubjectId });
           return { testSubject };
         });
@@ -1739,12 +1738,12 @@ describe("Hierarchies", () => {
 
       it("filters through multiple providers", async () => {
         const rootSubjectKey = { className: subjectClassName, id: IModel.rootSubjectId };
-        const { imodel: imodel1, ...keys1 } = await buildIModel(expect.getState().currentTestName! + " 1", async (builder) => {
+        const { imodel: imodel1, ...keys1 } = await buildIModel(`${expect.getState().currentTestName!} 1`, async (builder) => {
           const subject1 = insertSubject({ builder, codeValue: "A subject 1", parentId: rootSubjectKey.id });
           const subject11 = insertSubject({ builder, codeValue: "A subject 1.1", parentId: subject1.id });
           return { subject1, subject11 };
         });
-        const { imodel: imodel2, ...keys2 } = await buildIModel(expect.getState().currentTestName! + " 2", async (builder) => {
+        const { imodel: imodel2, ...keys2 } = await buildIModel(`${expect.getState().currentTestName!} 2`, async (builder) => {
           const subject2 = insertSubject({ builder, codeValue: "B subject 2", parentId: rootSubjectKey.id });
           const subject21 = insertSubject({ builder, codeValue: "B subject 2.1", parentId: subject2.id });
           return { subject2, subject21 };

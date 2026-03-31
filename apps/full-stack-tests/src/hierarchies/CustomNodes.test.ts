@@ -17,8 +17,7 @@ describe("Hierarchies", () => {
 
     beforeAll(async () => {
       await initialize();
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      emptyIModel = await buildTestIModel("Generic nodes", async () => {});
+      emptyIModel = await buildTestIModel("Hierarchies Generic nodes", async () => {});
     });
 
     afterAll(async () => {

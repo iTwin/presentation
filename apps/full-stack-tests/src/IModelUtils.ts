@@ -197,7 +197,7 @@ export async function buildIModel<TResult extends {} | undefined>(
   setup?: (builder: TestIModelBuilder, testName: string) => Promise<TResult>,
 ) {
   let res!: TResult;
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
+   
   const imodel = await buildTestIModel(testName, async (builder) => {
     if (setup) {
       res = await setup(builder, testName);
