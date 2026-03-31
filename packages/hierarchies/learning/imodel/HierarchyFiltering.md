@@ -118,7 +118,7 @@ Let's consider two cases - filtering by label and by target element ID:
   }
   // Find paths to elements whose label contains "C" or "E"
   const filterPaths = await createFilteredNodeIdentifierPaths(["C", "E"]);
-  expect(filterPaths).to.deep.eq([
+  expect(filterPaths).toEqual([
     // We expect to find two paths A -> B -> C and A -> E
     [elementKeys.a, elementKeys.e],
     [elementKeys.a, elementKeys.b, elementKeys.c],
@@ -171,7 +171,7 @@ Let's consider two cases - filtering by label and by target element ID:
   }
   // Find paths to target elements "C" and "E"
   const filterPaths = await createFilteredNodeIdentifierPaths([elementIds.c, elementIds.e]);
-  expect(filterPaths).to.deep.eq([
+  expect(filterPaths).toEqual([
     // We expect to find two paths A -> B -> C and A -> E
     [elementKeys.a, elementKeys.e],
     [elementKeys.a, elementKeys.b, elementKeys.c],
@@ -201,7 +201,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
 // Note that "E" has a child "F", even though it's not a filter target. This is because subtrees under filter target nodes
 // (in this case - "E") are returned fully.
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     label: "A",
     children: [
