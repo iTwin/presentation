@@ -322,7 +322,7 @@ describe("PropertyDataProvider", async () => {
   runTests("with nested property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = true));
 
   it("finds array item & struct member fields", async () => {
-    const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder, testName) => {
+    const { imodel, ...keys } = await buildTestIModel(async (builder, testName) => {
       const schema = await importSchema(
         testName,
         builder,

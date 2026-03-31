@@ -34,13 +34,11 @@ describe("Property editors", () => {
   });
 
   it("renders property values with koq's overridden through `IModelApp.formatsProvider`", async () => {
-    const { imodel, schema, ...imodelKeys } = await buildTestIModel(
-      "renders property values with koq's overridden through `IModelApp.formatsProvider`",
-      async (builder, testName) => {
-        const mySchema = await importSchema(
-          testName,
-          builder,
-          `
+    const { imodel, schema, ...imodelKeys } = await buildTestIModel(async (builder, testName) => {
+      const mySchema = await importSchema(
+        testName,
+        builder,
+        `
           <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
           <ECSchemaReference name="Units" version="01.00.09" alias="u" />
           <ECSchemaReference name="Formats" version="01.00.00" alias="f" />
@@ -50,20 +48,19 @@ describe("Property editors", () => {
             <ECProperty propertyName="MyProperty" typeName="double" kindOfQuantity="TestKOQ" />
           </ECEntityClass>
         `,
-        );
-        const model = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
-        const category = insertSpatialCategory({ builder, codeValue: "TestSpatialCategory" });
-        const element = insertPhysicalElement({
-          builder,
-          modelId: model.id,
-          categoryId: category.id,
-          classFullName: mySchema.items.MyPhysicalObject.fullName,
-          userLabel: "My element",
-          ["MyProperty"]: 1.234,
-        });
-        return { element, schema: mySchema };
-      },
-    );
+      );
+      const model = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
+      const category = insertSpatialCategory({ builder, codeValue: "TestSpatialCategory" });
+      const element = insertPhysicalElement({
+        builder,
+        modelId: model.id,
+        categoryId: category.id,
+        classFullName: mySchema.items.MyPhysicalObject.fullName,
+        userLabel: "My element",
+        ["MyProperty"]: 1.234,
+      });
+      return { element, schema: mySchema };
+    });
 
     IModelApp.formatsProvider = {
       async getFormat(name: string): Promise<FormatDefinition | undefined> {
@@ -138,7 +135,7 @@ describe("Property editors", () => {
   });
 
   it("edits merged values", async () => {
-    const { imodel, schema, ...imodelKeys } = await buildTestIModel(expect.getState().currentTestName!, async (builder, testName) => {
+    const { imodel, schema, ...imodelKeys } = await buildTestIModel(async (builder, testName) => {
       const mySchema = await importSchema(
         testName,
         builder,

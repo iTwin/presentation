@@ -41,7 +41,7 @@ describe("Unified selection", () => {
       stubVirtualization();
 
       it("Basic usage example", async () => {
-        const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async () => {});
+        const { imodel } = await buildTestIModel();
 
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.CreateStorage
         // Create a global selection store (generally, somewhere in main.ts or similar). This store
@@ -96,7 +96,7 @@ describe("Unified selection", () => {
         const {
           imodel,
           elementKey: { id: geometricElementId },
-        } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+        } = await buildTestIModel(async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           const elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -180,7 +180,7 @@ describe("Unified selection", () => {
         it("Unified selection sync with legacy SelectionManager", async () => {
           Presentation.terminate();
 
-          const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel, ...keys } = await buildTestIModel(async (builder) => {
             const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
             const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
             const elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });

@@ -187,7 +187,7 @@ describe("Hierarchies", () => {
       const baseClassName2 = "InformationContentElement";
       const baseClassName3 = "InformationPartitionElement";
       const baseSchemaName = "BisCore";
-      const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
         const childPartition1 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
         return { childPartition1 };
       });
@@ -267,7 +267,7 @@ describe("Hierarchies", () => {
       const baseClassName2 = "InformationContentElement";
       const baseClassName3 = "InformationPartitionElement";
       const baseSchemaName = "BisCore";
-      const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
         const childPartition1 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
         const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B2", parentId: IModel.rootSubjectId });
         return { childPartition1, childPartition2 };
@@ -381,7 +381,7 @@ describe("Hierarchies", () => {
     });
 
     it("groups nodes of different classes if they share the same base class", async () => {
-      const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
         const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
         const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B2", parentId: IModel.rootSubjectId });
         return { childSubject1, childPartition2 };

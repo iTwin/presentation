@@ -27,7 +27,7 @@ describe("Hierarchies", () => {
       });
 
       it("formats generic node's concatenated value label", async () => {
-        const { imodel } = await buildTestIModel(expect.getState().currentTestName!);
+        const { imodel } = await buildTestIModel();
         const imodelAccess = createIModelAccess(imodel);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.GenericHierarchyNodeDefinitionLabelFormattingExample
@@ -71,7 +71,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates a hierarchy using labels from `createBisInstanceLabelSelectClauseFactory`", async () => {
-        const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel } = await buildTestIModel(async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, codeValue: "A" });
@@ -140,7 +140,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates a hierarchy using labels from custom selector", async () => {
-        const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+        const { imodel } = await buildTestIModel(async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, codeValue: "A" });
@@ -212,7 +212,7 @@ describe("Hierarchies", () => {
       });
 
       it("formats property grouping node's label", async () => {
-        const { imodel, myPhysicalObjectClassName } = await buildTestIModel(expect.getState().currentTestName!, async (builder, testName) => {
+        const { imodel, myPhysicalObjectClassName } = await buildTestIModel(async (builder, testName) => {
           const schema = await importSchema(
             testName,
             builder,

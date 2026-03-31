@@ -30,7 +30,7 @@ describe("Hierarchies", () => {
     });
 
     it("creates different groups for different classes", async () => {
-      const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
         const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: IModel.rootSubjectId });
         const childPartition2 = insertPhysicalPartition({ builder, codeValue: "2", parentId: IModel.rootSubjectId });
         const childSubject3 = insertSubject({ builder, codeValue: "3", parentId: IModel.rootSubjectId });

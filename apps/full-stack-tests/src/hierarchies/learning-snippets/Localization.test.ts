@@ -27,7 +27,7 @@ describe("Hierarchies", () => {
       });
 
       it("localizes property grouping node labels", async () => {
-        const { imodel, myPhysicalObjectClassName } = await buildTestIModel(expect.getState().currentTestName!, async (builder, testName) => {
+        const { imodel, myPhysicalObjectClassName } = await buildTestIModel(async (builder, testName) => {
           const schema = await importSchema(
             testName,
             builder,

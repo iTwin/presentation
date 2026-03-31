@@ -179,7 +179,7 @@ describe("Hierarchies", () => {
         });
 
         it("creates instance nodes of specific classes definition", async () => {
-          const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             insertPhysicalModelWithPartition({ builder, codeValue: "Non-private physical model" });
             insertPhysicalSubModel({
               builder,
@@ -242,7 +242,7 @@ describe("Hierarchies", () => {
         });
 
         it("creates related instance nodes definition", async () => {
-          const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
             const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
             const type = insertPhysicalType({ builder, codeValue: "Physical type" });
@@ -311,7 +311,7 @@ describe("Hierarchies", () => {
         });
 
         it("creates custom query instance nodes definition", async () => {
-          const { imodel, schema } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel, schema } = await buildTestIModel(async (builder) => {
             const importedSchema = await importSchema(
               "creates custom query instance nodes definition",
               builder,
@@ -432,7 +432,7 @@ describe("Hierarchies", () => {
 
       describe("Migrating grouping specifications", () => {
         it("groups by base class", async () => {
-          const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
             const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
             insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, codeValue: "Physical element" });
@@ -552,7 +552,7 @@ describe("Hierarchies", () => {
         });
 
         it("groups by properties", async () => {
-          const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
             const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
             insertPhysicalElement({
@@ -630,7 +630,7 @@ describe("Hierarchies", () => {
         });
 
         it("groups by label", async () => {
-          const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             insertRepositoryLink({ builder, repositoryLabel: "Test repository link" });
             insertRepositoryLink({ builder, repositoryLabel: "Test repository link" });
           });
@@ -693,7 +693,7 @@ describe("Hierarchies", () => {
         });
 
         it("merges by label", async () => {
-          const { imodel, repoLinkKeys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+          const { imodel, repoLinkKeys } = await buildTestIModel(async (builder) => {
             return {
               repoLinkKeys: [
                 insertRepositoryLink({ builder, repositoryLabel: "Test repository link" }),

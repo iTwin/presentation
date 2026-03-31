@@ -104,7 +104,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates iModel provider", async () => {
-        const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async () => {});
+        const { imodel } = await buildTestIModel();
         const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.CustomIModelProviderExample

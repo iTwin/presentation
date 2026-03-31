@@ -146,7 +146,7 @@ async function main() {
 // __PUBLISH_EXTRACT_END__
 
 async function getIModelConnection(): Promise<IModelConnection> {
-  const { imodel } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+  const { imodel } = await buildTestIModel(async (builder) => {
     const category = insertSpatialCategory({ builder, codeValue: "Test category" });
     const model = insertPhysicalModelWithPartition({ builder, codeValue: "Test model" });
     insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "Test element 1" });

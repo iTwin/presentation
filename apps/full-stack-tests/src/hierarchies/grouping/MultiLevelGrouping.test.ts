@@ -33,7 +33,7 @@ describe("Hierarchies", () => {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
       const description1 = "test description1";
-      const { imodel, ...keys } = await buildTestIModel(expect.getState().currentTestName!, async (builder) => {
+      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
         const childSubject1 = insertSubject({
           builder,
           codeValue: "A1",
