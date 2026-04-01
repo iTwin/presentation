@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import { ResolvablePromise } from "presentation-test-utilities";
 import { Subject } from "rxjs";
 import { from } from "rxjs/internal/observable/from";
@@ -65,11 +65,11 @@ describe("UnifiedSelectionEventHandler", () => {
   let selectionManager: sinon.SinonStubbedInstance<SelectionManager>;
   const selectionChangeEvent = new SelectionChangeEvent();
 
-  before(async () => {
+  beforeAll(async () => {
     await UiComponents.initialize(new EmptyLocalization());
   });
 
-  after(() => {
+  afterAll(() => {
     UiComponents.terminate();
   });
 
@@ -573,11 +573,11 @@ describe("useUnifiedSelectionTreeEventHandler", () => {
     dataProvider,
   } as AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
 
-  before(async () => {
+  beforeAll(async () => {
     await UiComponents.initialize(new EmptyLocalization());
   });
 
-  after(() => {
+  afterAll(() => {
     UiComponents.terminate();
   });
 

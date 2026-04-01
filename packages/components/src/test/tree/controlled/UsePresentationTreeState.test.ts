@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { PrimitiveValue } from "@itwin/appui-abstract";

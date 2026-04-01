@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
 import { PropertyValueFormat as AbstractPropertyValueFormat, PrimitiveValue } from "@itwin/appui-abstract";
@@ -75,7 +75,7 @@ describe("PresentationInstanceFilterDialog", () => {
     onClose: onCloseEvent,
   } as IModelConnection;
 
-  before(() => {
+  beforeAll(() => {
     HTMLElement.prototype.scrollIntoView = () => {};
 
     const localization = new EmptyLocalization();
@@ -90,7 +90,7 @@ describe("PresentationInstanceFilterDialog", () => {
     });
   });
 
-  after(() => {
+  afterAll(() => {
     onCloseEvent.raiseEvent();
     sinon.restore();
     delete (HTMLElement.prototype as any).scrollIntoView;

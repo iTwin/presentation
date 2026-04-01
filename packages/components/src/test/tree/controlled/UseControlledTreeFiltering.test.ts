@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
 import { TreeModelNode, TreeNodeItem, UiComponents } from "@itwin/components-react";
@@ -27,11 +27,11 @@ describe("useFilteredNodeLoader", () => {
     dataProvider: dataProvider as unknown as IPresentationTreeDataProvider,
   };
 
-  before(async () => {
+  beforeAll(async () => {
     await UiComponents.initialize(new EmptyLocalization());
   });
 
-  after(() => {
+  afterAll(() => {
     UiComponents.terminate();
   });
 

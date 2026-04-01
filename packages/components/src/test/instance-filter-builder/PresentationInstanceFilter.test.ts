@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect } from "vitest";
 import { PrimitiveValue, PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyFilter, PropertyFilterRule, PropertyFilterRuleGroup } from "@itwin/components-react";
 import { GenericInstanceFilter } from "@itwin/core-common";

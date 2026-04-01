@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { Observable } from "rxjs/internal/Observable";
 import * as sinon from "sinon";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
@@ -17,11 +17,11 @@ import { IPresentationTreeDataProvider } from "../../../presentation-components/
 describe("reloadTree", () => {
   let dataProvider: IPresentationTreeDataProvider;
 
-  before(async () => {
+  beforeAll(async () => {
     await UiComponents.initialize(new EmptyLocalization());
   });
 
-  after(() => {
+  afterAll(() => {
     UiComponents.terminate();
   });
 

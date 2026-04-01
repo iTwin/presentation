@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import { ResolvablePromise } from "presentation-test-utilities";
 import { EMPTY, Subject } from "rxjs";
 import sinon from "sinon";
@@ -64,7 +64,7 @@ describe("PresentationTreeRenderer", () => {
     getNodesCount: sinon.stub<Parameters<PresentationManager["getNodesCount"]>, ReturnType<PresentationManager["getNodesCount"]>>(),
   };
 
-  before(async () => {
+  beforeAll(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "localization").get(() => localization);
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
@@ -75,7 +75,7 @@ describe("PresentationTreeRenderer", () => {
     HTMLElement.prototype.scrollIntoView = () => {};
   });
 
-  after(() => {
+  afterAll(() => {
     sinon.restore();
     UiComponents.terminate();
     delete (HTMLElement.prototype as any).scrollIntoView;

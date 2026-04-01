@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import { createRef } from "react";
 import sinon from "sinon";
 import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
@@ -46,7 +46,7 @@ describe("<QuantityPropertyEditorInput />", () => {
   >;
   let getParserSpecStub: sinon.SinonStub<Parameters<KoqPropertyValueFormatter["getParserSpec"]>, ReturnType<KoqPropertyValueFormatter["getParserSpec"]>>;
 
-  before(() => {
+  beforeAll(() => {
     getFormatterSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec");
     getParserSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec");
 
@@ -77,7 +77,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     getParserSpecStub.reset();
   });
 
-  after(() => {
+  afterAll(() => {
     sinon.restore();
   });
 

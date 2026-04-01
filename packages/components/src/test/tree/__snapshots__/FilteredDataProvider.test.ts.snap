@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`FilteredTreeDataProvider getNodes returns child nodes 1`] = `
+exports[`FilteredTreeDataProvider > getNodes > returns child nodes 1`] = `
 Array [
   Object {
     "description": "testDescription",
@@ -81,7 +81,7 @@ Array [
 ]
 `;
 
-exports[`FilteredTreeDataProvider getNodes returns root nodes 1`] = `
+exports[`FilteredTreeDataProvider > getNodes > returns root nodes 1`] = `
 Array [
   Object {
     "autoExpand": true,

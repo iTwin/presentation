@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import sinon from "sinon";
 import { Primitives, PrimitiveValue, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { TypeConverter, TypeConverterManager } from "@itwin/components-react";
@@ -28,14 +28,14 @@ describe("InstanceKeyValueRenderer", () => {
     return new PropertyRecord(value, { name: "", displayLabel: "", typename: "navigation" });
   }
 
-  before(() => {
+  beforeAll(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
     sinon.stub(Presentation, "localization").get(() => localization);
   });
 
-  after(async () => {
+  afterAll(async () => {
     sinon.restore();
   });
 
@@ -160,7 +160,7 @@ describe("InstanceKeyValueRenderer", () => {
           record.property.converter = { name: "test_converter", options: { value } };
         }
 
-        before(() => {
+        beforeAll(() => {
           class TestTypeConverter extends TypeConverter {
             public override convertToStringWithOptions(_value?: Primitives.Value, options?: Record<string, any>) {
               return options?.value;
@@ -174,7 +174,7 @@ describe("InstanceKeyValueRenderer", () => {
           TypeConverterManager.registerConverter("navigation", TestTypeConverter, "test_converter");
         });
 
-        after(() => {
+        afterAll(() => {
           TypeConverterManager.unregisterConverter("navigation", "test_converter");
         });
 

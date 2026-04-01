@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect } from "vitest";
 import sinon from "sinon";
 import { PropertyValueRendererManager } from "@itwin/components-react";
 import { Localization } from "@itwin/core-common";

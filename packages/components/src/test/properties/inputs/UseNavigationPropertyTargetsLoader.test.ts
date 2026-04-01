@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { PropertyDescription } from "@itwin/appui-abstract";
@@ -24,14 +24,14 @@ describe("useNavigationPropertyTargetsLoader", () => {
   let presentationManagerStub: sinon.SinonStub;
   const testImodel = {} as IModelConnection;
 
-  before(() => {
+  beforeAll(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
     sinon.stub(Presentation, "localization").get(() => localization);
   });
 
-  after(() => {
+  afterAll(() => {
     sinon.restore();
   });
 

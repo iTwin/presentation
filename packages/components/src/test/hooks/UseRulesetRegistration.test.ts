@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
 import { RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
@@ -26,13 +26,13 @@ describe("[deprecated] useRulesetRegistration", () => {
     remove: sinon.stub<Parameters<RulesetManager["remove"]>, ReturnType<RulesetManager["remove"]>>(),
   };
 
-  before(() => {
+  beforeAll(() => {
     sinon.stub(Presentation, "presentation").get(() => ({
       rulesets: () => rulesetManagerStub,
     }));
   });
 
-  after(() => {
+  afterAll(() => {
     sinon.restore();
   });
 

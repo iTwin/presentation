@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import * as sinon from "sinon";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
@@ -60,7 +60,7 @@ describe("PresentationInstanceFilter", () => {
     onClose: onCloseEvent,
   } as IModelConnection;
 
-  before(() => {
+  beforeAll(() => {
     HTMLElement.prototype.scrollIntoView = () => {};
 
     const localization = new EmptyLocalization();
@@ -75,7 +75,7 @@ describe("PresentationInstanceFilter", () => {
     });
   });
 
-  after(() => {
+  afterAll(() => {
     onCloseEvent.raiseEvent();
     sinon.restore();
     delete (HTMLElement.prototype as any).scrollIntoView;

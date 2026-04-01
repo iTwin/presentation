@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import { useEffect } from "react";
 import sinon from "sinon";
 import { BeUiEvent } from "@itwin/core-bentley";
@@ -50,7 +50,7 @@ describe("UseQuantityValueInput", () => {
   >;
   let getParserSpecStub: sinon.SinonStub<Parameters<KoqPropertyValueFormatter["getParserSpec"]>, ReturnType<KoqPropertyValueFormatter["getParserSpec"]>>;
 
-  before(() => {
+  beforeAll(() => {
     getFormatterSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec");
     getParserSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec");
 
@@ -79,7 +79,7 @@ describe("UseQuantityValueInput", () => {
     getParserSpecStub.reset();
   });
 
-  after(() => {
+  afterAll(() => {
     sinon.restore();
   });
 

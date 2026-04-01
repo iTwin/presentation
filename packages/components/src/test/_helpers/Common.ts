@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
 
 import { Component } from "react";
 import sinon from "sinon";
@@ -91,7 +92,7 @@ export function stubRaf() {
   const raf = global.requestAnimationFrame;
   const caf = global.cancelAnimationFrame;
 
-  before(() => {
+  beforeAll(() => {
     Object.defineProperty(global, "requestAnimationFrame", {
       writable: true,
       value: (cb: FrameRequestCallback) => {
@@ -106,7 +107,7 @@ export function stubRaf() {
     });
   });
 
-  after(() => {
+  afterAll(() => {
     Object.defineProperty(global, "requestAnimationFrame", {
       writable: true,
       value: raf,
@@ -138,14 +139,14 @@ export const createTestPresentationInstanceFilterPropertyInfo = (props?: Partial
 export function stubDOMMatrix() {
   const domMatrix = global.DOMMatrix;
 
-  before(() => {
+  beforeAll(() => {
     Object.defineProperty(global, "DOMMatrix", {
       writable: true,
       value: sinon.fake(() => ({ m41: 0, m42: 0 })),
     });
   });
 
-  after(() => {
+  afterAll(() => {
     Object.defineProperty(global, "DOMGlobal", {
       writable: true,
       value: domMatrix,

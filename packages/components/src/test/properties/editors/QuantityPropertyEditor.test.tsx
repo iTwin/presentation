@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import sinon from "sinon";
 import { StandardTypeNames } from "@itwin/appui-abstract";
 import { BeUiEvent } from "@itwin/core-bentley";
@@ -24,7 +24,7 @@ const createRecord = ({ initialValue, kindOfQuantityName, quantityType }: { init
 };
 
 describe("<QuantityPropertyEditor />", () => {
-  before(() => {
+  beforeAll(() => {
     const format = new Format("test format");
     const formatterSpec = {
       applyFormatting: (raw: number) => `${raw} unit`,
@@ -44,7 +44,7 @@ describe("<QuantityPropertyEditor />", () => {
     }));
   });
 
-  after(() => {
+  afterAll(() => {
     sinon.restore();
   });
 

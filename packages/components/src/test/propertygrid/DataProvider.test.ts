@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as sinon from "sinon";
 import { PrimitiveValue, PropertyRecord, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyCategory } from "@itwin/components-react";
@@ -399,7 +399,7 @@ describe("PropertyDataProvider", () => {
           };
           const record = createTestContentItem({ values, displayValues });
           (provider as any).getContent = async () => new Content(descriptor, [record]);
-          expect(await provider.getData()).to.matchSnapshot();
+          expect(await provider.getData()).toMatchSnapshot();
         });
 
         it("handles records with no values", async () => {
@@ -408,7 +408,7 @@ describe("PropertyDataProvider", () => {
           const displayValues: ValuesDictionary<any> = {};
           const record = createTestContentItem({ values, displayValues });
           (provider as any).getContent = async () => new Content(descriptor, [record]);
-          expect(await provider.getData()).to.matchSnapshot();
+          expect(await provider.getData()).toMatchSnapshot();
         });
 
         it("returns primitive property data", async () => {
@@ -422,7 +422,7 @@ describe("PropertyDataProvider", () => {
           };
           const record = createTestContentItem({ values, displayValues });
           (provider as any).getContent = async () => new Content(descriptor, [record]);
-          expect(await provider.getData()).to.matchSnapshot();
+          expect(await provider.getData()).toMatchSnapshot();
         });
 
         it("re-formats primitive property data", async () => {
@@ -492,7 +492,7 @@ describe("PropertyDataProvider", () => {
           };
           const record = createTestContentItem({ values, displayValues });
           (provider as any).getContent = async () => new Content(descriptor, [record]);
-          expect(await provider.getData()).to.matchSnapshot();
+          expect(await provider.getData()).toMatchSnapshot();
         });
 
         it("returns struct property data", async () => {
@@ -510,7 +510,7 @@ describe("PropertyDataProvider", () => {
           };
           const record = createTestContentItem({ values, displayValues });
           (provider as any).getContent = async () => new Content(descriptor, [record]);
-          expect(await provider.getData()).to.matchSnapshot();
+          expect(await provider.getData()).toMatchSnapshot();
         });
 
         describe("nested content handling", () => {
@@ -612,7 +612,7 @@ describe("PropertyDataProvider", () => {
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("returns nothing for deeply nested content with no values", async () => {
@@ -658,7 +658,7 @@ describe("PropertyDataProvider", () => {
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("returns nested content with destructured deeply nested content", async () => {
@@ -727,7 +727,7 @@ describe("PropertyDataProvider", () => {
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("returns nested content with deeply nested content as structs array when there are multiple nested content items", async () => {
@@ -816,7 +816,7 @@ describe("PropertyDataProvider", () => {
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("returns nested content with single nested record as struct when there're sibling fields", async () => {
@@ -852,7 +852,7 @@ describe("PropertyDataProvider", () => {
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("returns nested content with single nested record as individual properties when are no sibling fields", async () => {
@@ -885,7 +885,7 @@ describe("PropertyDataProvider", () => {
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("moves nested field into separate category and keeps nested content field with remaining nested fields when there are more than 1 nested fields and sibling fields", async () => {
@@ -926,7 +926,7 @@ describe("PropertyDataProvider", () => {
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("moves nested field into separate category and keeps nested content field with remaining nested fields when there are more than 1 nested fields and no sibling fields", async () => {
@@ -964,7 +964,7 @@ describe("PropertyDataProvider", () => {
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("moves nested field into separate category and hides nested content field when there's only 1 nested field", async () => {
@@ -998,7 +998,7 @@ describe("PropertyDataProvider", () => {
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("merges parent field when child field's category is different and parent is merged", async () => {
@@ -1015,7 +1015,7 @@ describe("PropertyDataProvider", () => {
             };
             const record = createTestContentItem({ values, displayValues, mergedFieldNames: [field.name] });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("moves all nested fields into separate category and hides nested content field when all nested fields are categorized", async () => {
@@ -1053,7 +1053,7 @@ describe("PropertyDataProvider", () => {
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("moves field into separate category with its grandparent when both are categorized with the same category", async () => {
@@ -1121,7 +1121,7 @@ describe("PropertyDataProvider", () => {
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("moves fields into separate category under common ancestor when both are categorized with the same category", async () => {
@@ -1229,7 +1229,7 @@ describe("PropertyDataProvider", () => {
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            expect(await provider.getData()).toMatchSnapshot();
           });
         });
 

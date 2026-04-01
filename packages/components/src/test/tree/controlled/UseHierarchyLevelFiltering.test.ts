@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { Subject } from "rxjs";
 import { from } from "rxjs/internal/observable/from";
 import sinon from "sinon";
@@ -52,11 +52,11 @@ describe("useHierarchyLevelFiltering", () => {
     usedClasses: [],
   };
 
-  before(async () => {
+  beforeAll(async () => {
     await UiComponents.initialize(new EmptyLocalization());
   });
 
-  after(() => {
+  afterAll(() => {
     UiComponents.terminate();
   });
 

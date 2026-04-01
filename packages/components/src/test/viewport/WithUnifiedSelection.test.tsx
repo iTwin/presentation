@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
 import { Id64, Id64Arg, Id64String } from "@itwin/core-bentley";

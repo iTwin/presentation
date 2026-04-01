@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect } from "vitest";
 import * as sinon from "sinon";
 import { ClientDiagnostics } from "@itwin/presentation-common";
 import { createDiagnosticsOptions } from "../../presentation-components/common/Diagnostics.js";

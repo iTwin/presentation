@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import sinon from "sinon";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
@@ -17,7 +17,7 @@ describe("PresentationInstanceFilterProperty", () => {
   const className = "TestClassName";
   const schemaName = "TestSchema";
 
-  before(() => {
+  beforeAll(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
@@ -25,7 +25,7 @@ describe("PresentationInstanceFilterProperty", () => {
     Element.prototype.scrollIntoView = sinon.stub();
   });
 
-  after(() => {
+  afterAll(() => {
     sinon.restore();
   });
 

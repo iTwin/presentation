@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect, beforeEach } from "vitest";
 import sinon from "sinon";
 import { Format, FormatType, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import { getDecimalRoundingError, getPersistenceUnitRoundingError } from "../../../presentation-components/properties/inputs/Utils.js";

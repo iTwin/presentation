@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import sinon from "sinon";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { TreeActions } from "@itwin/components-react";
@@ -34,11 +34,11 @@ function createFilterInfo(propName: string = "prop"): PresentationInstanceFilter
 describe("PresentationTreeNodeRenderer", () => {
   const treeActions = {} as TreeActions;
 
-  before(() => {
+  beforeAll(() => {
     HTMLElement.prototype.scrollIntoView = () => {};
   });
 
-  after(() => {
+  afterAll(() => {
     delete (HTMLElement.prototype as any).scrollIntoView;
   });
 

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import sinon from "sinon";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager } from "@itwin/components-react";
@@ -45,7 +45,7 @@ describe("<NavigationPropertyTargetEditor />", () => {
   const testRecord = createTestPropertyRecord();
 
   stubVirtualization();
-  before(() => {
+  beforeAll(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
@@ -55,7 +55,7 @@ describe("<NavigationPropertyTargetEditor />", () => {
     }));
   });
 
-  after(() => {
+  afterAll(() => {
     sinon.restore();
   });
 

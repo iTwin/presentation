@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createRef } from "react";
 import sinon from "sinon";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, StandardTypeNames } from "@itwin/appui-abstract";

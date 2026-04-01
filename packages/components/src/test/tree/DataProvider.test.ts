@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
 import { PropertyRecord } from "@itwin/appui-abstract";
@@ -205,7 +205,7 @@ describe("TreeDataProvider", () => {
       presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode(), createTestECInstancesNode()]), total: 2 });
 
       const actualResult = await provider.getNodes(parentNode, pageOptions);
-      expect(actualResult).to.matchSnapshot();
+      expect(actualResult).toMatchSnapshot();
       expect(presentationManager.getNodesIterator).to.be.calledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 5));
     });
 
@@ -534,7 +534,7 @@ describe("TreeDataProvider", () => {
       presentationManager.getFilteredNodePaths.resolves([createTestNodePathElement(), createTestNodePathElement()]);
 
       const actualResult = await provider.getFilteredNodePaths(filter);
-      expect(actualResult).to.matchSnapshot();
+      expect(actualResult).toMatchSnapshot();
       expect(presentationManager.getFilteredNodePaths).to.be.calledWith(matchOptions<GetFilteredNodePathsOptions>((options) => options.filterText === filter));
     });
 

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { expect } from "vitest";
 import { createElement, PropsWithChildren, ReactElement } from "react";
 import sinon from "sinon";
 import { ThemeProvider } from "@itwin/itwinui-react";

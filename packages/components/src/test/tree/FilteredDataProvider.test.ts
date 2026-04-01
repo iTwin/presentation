@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import sinon from "sinon";
 import { PageOptions } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
@@ -128,14 +128,14 @@ describe("FilteredTreeDataProvider", () => {
   describe("getNodes", () => {
     it("returns root nodes", async () => {
       const result = await provider.getNodes(undefined, pageOptions);
-      expect(result).to.matchSnapshot();
+      expect(result).toMatchSnapshot();
     });
 
     it("returns child nodes", async () => {
       const parentNode = createTreeNodeItem(paths[1].node);
 
       const result = await provider.getNodes(parentNode, pageOptions);
-      expect(result).to.matchSnapshot();
+      expect(result).toMatchSnapshot();
     });
 
     it("applies same node customizations as parent data provider", async () => {

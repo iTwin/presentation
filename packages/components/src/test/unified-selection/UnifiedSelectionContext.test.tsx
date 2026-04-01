@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { PropsWithChildren, useEffect } from "react";
 import sinon from "sinon";
 import { IModelConnection } from "@itwin/core-frontend";
