@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import sinon from "sinon";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";

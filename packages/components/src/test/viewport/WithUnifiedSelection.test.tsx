@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Id64, Id64Arg, Id64String } from "@itwin/core-bentley";
 import { Code, ElementProps } from "@itwin/core-common";
 import { IModelApp, IModelConnection, ViewState3d } from "@itwin/core-frontend";
