@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1773932013261,
+  "lastUpdate": 1775032680666,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -44987,6 +44987,162 @@ window.BENCHMARK_DATA = {
             "value": 181,
             "unit": "ms",
             "extra": "count: 9\nmax: 181\np95: 181\nmedian: 32"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2504eefa67edce0f6b4ca00efa8a2f1a61b1ba6d",
+          "message": "[full-stack-tests] Migrate to `vitest` (#1269)\n\n* Migrate to vitest\n\n* Fix happy-dom fetch errors\n\n* Use test name for imodel file\n\n* lint\n\n* Deps\n\n* Add comment\n\n* Regression 4.4.0\n\n* regression core 4.10.7\n\n* pnpm-lock\n\n* Format\n\n* cleanup\n\n* cspell\n\n* Docs\n\n* Use test name for all imodels and ECDb\n\n* Cleanup\n\n* Use default test name for imodel\n\n* Import schema use testName variable\n\n* core 4.4.0 regression\n\n* core 4.10.7 regression\n\n* lint\n\n* Comment\n\n* Test name in before\n\n* core 4.4.0 regression",
+          "timestamp": "2026-04-01T11:35:04+03:00",
+          "tree_id": "5affc265a9d3ea9d5f247badc48890bbfb0bf78d",
+          "url": "https://github.com/iTwin/presentation/commit/2504eefa67edce0f6b4ca00efa8a2f1a61b1ba6d"
+        },
+        "date": 1775032679006,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 3968.58,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 65,
+            "unit": "ms",
+            "extra": "count: 12\nmax: 65\np95: 65\nmedian: 31.5"
+          },
+          {
+            "name": "filtering filters with 50000 paths",
+            "value": 7355.01,
+            "unit": "ms"
+          },
+          {
+            "name": "filtering filters with 50000 paths (P95 of main thread blocks)",
+            "value": 142,
+            "unit": "ms",
+            "extra": "count: 10\nmax: 142\np95: 142\nmedian: 27.5"
+          },
+          {
+            "name": "grouping by label",
+            "value": 8989.92,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 42,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 42\np95: 42\nmedian: 33"
+          },
+          {
+            "name": "grouping by class",
+            "value": 8989.48,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 36,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 36\np95: 36\nmedian: 32"
+          },
+          {
+            "name": "grouping by property",
+            "value": 9516.55,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 77,
+            "unit": "ms",
+            "extra": "count: 8\nmax: 77\np95: 77\nmedian: 33"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 6533.43,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 60,
+            "unit": "ms",
+            "extra": "count: 15\nmax: 60\np95: 60\nmedian: 34"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 24499.89,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 53,
+            "unit": "ms",
+            "extra": "count: 8\nmax: 53\np95: 53\nmedian: 34.5"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 34129.91,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 145.33,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 41.4,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 6237.18,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 90,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 90\np95: 90\nmedian: 77"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 2161.73,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 62,
+            "unit": "ms",
+            "extra": "count: 12\nmax: 62\np95: 62\nmedian: 39.5"
           }
         ]
       }
