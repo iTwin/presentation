@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "vitest";
 import { createElement, PropsWithChildren, ReactElement } from "react";
 import sinon from "sinon";
+import { expect } from "vitest";
 import { ThemeProvider } from "@itwin/itwinui-react";
 import { RenderOptions, RenderResult, render as renderRTL, waitFor } from "@testing-library/react";
 import { userEvent, UserEvent } from "@testing-library/user-event";

@@ -61,6 +61,7 @@ describe("<NavigationPropertyTargetEditor />", () => {
 
   beforeEach(() => {
     getContentStub.reset();
+    getContentStub.resolves(undefined);
   });
 
   it("renders selector when rendered inside context", async () => {

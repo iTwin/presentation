@@ -53,7 +53,7 @@ describe("Viewport withUnifiedSelection", () => {
   } as ViewportSelectionHandler;
 
   beforeEach(() => {
-    views.load.resolves({} as ViewState3d);
+    views.load.resolves({ iModel: { isOpen: false, isBlank: false } } as unknown as ViewState3d);
   });
 
   afterEach(() => {

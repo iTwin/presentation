@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import { ResolvablePromise } from "presentation-test-utilities";
 import { EMPTY, Subject } from "rxjs";
 import sinon from "sinon";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { StandardTypeNames } from "@itwin/appui-abstract";
 import {
   AbstractTreeNodeLoaderWithProvider,
@@ -19,17 +19,19 @@ import {
   TreeNodeLoadResult,
   UiComponents,
 } from "@itwin/components-react";
+import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Descriptor, PresentationError, PresentationStatus, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { translate } from "../../../presentation-components/common/Utils.js";
+import { ECClassInfo, getIModelMetadataProvider } from "../../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationTreeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer.js";
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider.js";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
-import { createTestPropertyInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../../_helpers/Common.js";
+import { createTestECClassInfo, createTestPropertyInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../../_helpers/Common.js";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
 import { act, cleanup, render, waitFor } from "../../TestUtils.js";
 import { createTreeModelNodeInput } from "./Helpers.js";
@@ -39,9 +41,26 @@ describe("PresentationTreeRenderer", () => {
   stubDOMMatrix();
   stubVirtualization();
 
+  const onCloseEvent = new BeEvent<() => void>();
+  const testImodel = {
+    key: "renderer-test-imodel",
+    onClose: onCloseEvent,
+    createQueryReader: sinon.stub().returns({ toArray: async () => [] }),
+  } as unknown as IModelConnection;
+
   const baseTreeProps = {
-    imodel: {} as IModelConnection,
-    treeActions: {} as TreeActions,
+    imodel: testImodel,
+    treeActions: {
+      onNodeCheckboxClicked: sinon.stub(),
+      onNodeExpanded: sinon.stub(),
+      onNodeCollapsed: sinon.stub(),
+      onNodeClicked: sinon.stub(),
+      onNodeMouseDown: sinon.stub(),
+      onNodeMouseMove: sinon.stub(),
+      onNodeEditorActivated: sinon.stub(),
+      onTreeKeyDown: sinon.stub(),
+      onTreeKeyUp: sinon.stub(),
+    } as TreeActions,
     dataProvider: {} as IPresentationTreeDataProvider,
     height: 100,
     width: 100,
@@ -49,7 +68,7 @@ describe("PresentationTreeRenderer", () => {
   };
 
   const dataProviderStub = {
-    imodel: {} as IModelConnection,
+    imodel: testImodel,
     rulesetId: "test-ruleset",
     createRequestOptions: () => ({}),
   };
@@ -73,6 +92,11 @@ describe("PresentationTreeRenderer", () => {
     // need to initialize for immer patches to be enabled.
     await UiComponents.initialize(localization);
     HTMLElement.prototype.scrollIntoView = () => {};
+
+    // stub getECClassInfo to prevent unhandled errors when filter dialog opens
+    const classInfo = createTestECClassInfo();
+    const metadataProvider = getIModelMetadataProvider(baseTreeProps.imodel);
+    sinon.stub(metadataProvider, "getECClassInfo").resolves(new ECClassInfo(classInfo.id, classInfo.name, classInfo.label, new Set(), new Set()));
   });
 
   afterAll(() => {

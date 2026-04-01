@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PropertyValueFormat as AbstractPropertyValueFormat, PrimitiveValue } from "@itwin/appui-abstract";
 import { UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
@@ -75,14 +75,14 @@ describe("PresentationInstanceFilterDialog", () => {
     onClose: onCloseEvent,
   } as IModelConnection;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     HTMLElement.prototype.scrollIntoView = () => {};
 
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
     sinon.stub(Presentation, "localization").get(() => localization);
-    sinon.stub(UiComponents, "translate").callsFake((key) => key as string);
+    await UiComponents.initialize(localization);
 
     const metadataProvider = getIModelMetadataProvider(imodel);
     sinon.stub(metadataProvider, "getECClassInfo").callsFake(async () => {
@@ -92,6 +92,7 @@ describe("PresentationInstanceFilterDialog", () => {
 
   afterAll(() => {
     onCloseEvent.raiseEvent();
+    UiComponents.terminate();
     sinon.restore();
     delete (HTMLElement.prototype as any).scrollIntoView;
   });

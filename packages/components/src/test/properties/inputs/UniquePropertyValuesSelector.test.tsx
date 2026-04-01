@@ -56,6 +56,7 @@ describe("UniquePropertyValuesSelector", () => {
     presentationManagerStub = sinon.stub(Presentation, "presentation").get(() => ({
       getDistinctValuesIterator: getDistinctValuesIteratorStub,
     }));
+    getDistinctValuesIteratorStub.resolves({ total: 0, items: createAsyncIterator([]) });
   });
 
   afterEach(async () => {

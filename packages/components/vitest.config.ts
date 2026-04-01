@@ -27,12 +27,7 @@ export default defineConfig({
     css: false,
     server: {
       deps: {
-        inline: [
-          "@itwin/core-react",
-          "@itwin/appui-react",
-          "@itwin/components-react",
-          "@itwin/imodel-components-react",
-        ],
+        inline: ["@itwin/core-react", "@itwin/appui-react", "@itwin/components-react", "@itwin/imodel-components-react"],
       },
     },
   },

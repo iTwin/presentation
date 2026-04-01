@@ -2,10 +2,10 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
 
 import { Component } from "react";
 import sinon from "sinon";
+import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
 import { BeDuration } from "@itwin/core-bentley";
 import { ClassInfo, InstanceKey, PropertyInfo, RelatedClassInfo, RelatedClassInfoWithOptionalRelationship, Ruleset } from "@itwin/presentation-common";
 import { WithConstraints } from "../../presentation-components/common/ContentBuilder.js";

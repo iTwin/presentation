@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import * as sinon from "sinon";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -60,14 +60,14 @@ describe("PresentationInstanceFilter", () => {
     onClose: onCloseEvent,
   } as IModelConnection;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     HTMLElement.prototype.scrollIntoView = () => {};
 
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(UiComponents, "translate").callsFake((key) => key as string);
     sinon.stub(Presentation, "localization").get(() => localization);
+    await UiComponents.initialize(localization);
 
     const metadataProvider = getIModelMetadataProvider(imodel);
     sinon.stub(metadataProvider, "getECClassInfo").callsFake(async () => {
@@ -77,6 +77,7 @@ describe("PresentationInstanceFilter", () => {
 
   afterAll(() => {
     onCloseEvent.raiseEvent();
+    UiComponents.terminate();
     sinon.restore();
     delete (HTMLElement.prototype as any).scrollIntoView;
   });
