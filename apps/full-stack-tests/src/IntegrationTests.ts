@@ -85,7 +85,7 @@ export async function initialize(props?: { backendTimeout?: number }) {
 
   // init backend
   await IModelHost.startup({
-    cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`),
+    cacheDir: path.join(import.meta.dirname, "..", "build", ".cache", `${process.pid}`),
   });
   PresentationBackend.initialize(backendInitProps);
 
@@ -122,7 +122,7 @@ export async function resetBackend() {
 
 function createTestLocalization(): ITwinLocalization {
   return new ITwinLocalization({
-    urlTemplate: `file://${path.join(path.resolve("lib/public/locales"), "{{lng}}/{{ns}}.json").replace(/\\/g, "/")}`,
+    urlTemplate: `file://${path.join(path.resolve("build/public/locales"), "{{lng}}/{{ns}}.json").replace(/\\/g, "/")}`,
     initOptions: {
       preload: ["test"],
     },

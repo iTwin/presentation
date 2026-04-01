@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   insertDrawingCategory,
   insertPhysicalElement,
@@ -16,26 +16,26 @@ import {
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Grouping", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
       describe("By label", () => {
-        it("groups by label", async function () {
-          const { imodel } = await buildIModel(this, async (builder) => {
+        it("groups by label", async () => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             const category = insertSpatialCategory({ builder, codeValue: "Category" });
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Model" });
             insertPhysicalElement({
@@ -95,7 +95,7 @@ describe("Hierarchies", () => {
 
           // The iModel has two elements of `BisCore.PhysicalElement` class, both with the same "Example element" label.
           // As requested by hierarchy definition, the provider returns them grouped under a label grouping node:
-          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+          expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
             {
               // the label grouping node
               label: "Example element",
@@ -109,8 +109,8 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_END__
         });
 
-        it("merges by label", async function () {
-          const { imodel } = await buildIModel(this, async (builder) => {
+        it("merges by label", async () => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             const category = insertSpatialCategory({ builder, codeValue: "Category" });
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Model" });
             const element1 = insertPhysicalElement({
@@ -168,7 +168,7 @@ describe("Hierarchies", () => {
 
           // The iModel has two elements of `BisCore.PhysicalElement` class, both with the same "Example element" label.
           // As requested by hierarchy definition, the provider returns them merged into a single node:
-          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+          expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
             {
               // the merged node has "Example element" label and instance keys of both elements in `key.instanceKeys` list
               label: "Example element",
@@ -179,8 +179,8 @@ describe("Hierarchies", () => {
       });
 
       describe("By class", () => {
-        it("groups by node's class", async function () {
-          const { imodel } = await buildIModel(this, async (builder) => {
+        it("groups by node's class", async () => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             const drawingCategory = insertDrawingCategory({ builder, codeValue: "Example drawing category" });
             const spatialCategory = insertSpatialCategory({ builder, codeValue: "Example spatial category" });
             return { spatialCategory, drawingCategory };
@@ -228,7 +228,7 @@ describe("Hierarchies", () => {
 
           // The iModel has two elements of `BisCore.Category` class - one `SpatialCategory` and one `DrawingCategory`.
           // As requested by hierarchy definition, the provider returns them grouped under class grouping nodes:
-          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+          expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
             {
               // the `BisCore.DrawingCategory` class grouping node
               label: "Drawing Category",
@@ -249,8 +249,8 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_END__
         });
 
-        it("groups by base classes", async function () {
-          const { imodel } = await buildIModel(this, async (builder) => {
+        it("groups by base classes", async () => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             const drawingCategory = insertDrawingCategory({ builder, codeValue: "Example drawing category" });
             const spatialCategory = insertSpatialCategory({ builder, codeValue: "Example spatial category" });
             return { spatialCategory, drawingCategory };
@@ -300,7 +300,7 @@ describe("Hierarchies", () => {
 
           // The iModel has two elements of `BisCore.Category` class - one `SpatialCategory` and one `DrawingCategory`.
           // As requested by hierarchy definition, the provider returns them grouped under 2 class grouping nodes:
-          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+          expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
             {
               // the `BisCore.Element` class grouping node
               label: "Element",
@@ -322,8 +322,8 @@ describe("Hierarchies", () => {
       });
 
       describe("By properties", () => {
-        it("groups by property value", async function () {
-          const { imodel } = await buildIModel(this, async (builder) => {
+        it("groups by property value", async () => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             insertRepositoryLink({ builder, repositoryLabel: "Example iModel link 1", format: "iModel" });
             insertRepositoryLink({ builder, repositoryLabel: "Example iModel link 2", format: "iModel" });
             insertRepositoryLink({ builder, repositoryLabel: "Example DGN link", format: "DGN" });
@@ -386,7 +386,7 @@ describe("Hierarchies", () => {
           // | Example link with no format |                         |
           //
           // As requested by hierarchy definition, the provider returns them grouped by `Format` property value:
-          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+          expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
             {
               // the `Format="DGN"` property grouping node
               label: "DGN",
@@ -413,8 +413,8 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_END__
         });
 
-        it("groups by property value ranges", async function () {
-          const { imodel } = await buildIModel(this, async (builder) => {
+        it("groups by property value ranges", async () => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             insertPhysicalMaterial({ builder, userLabel: "Material 1", density: 4 });
             insertPhysicalMaterial({ builder, userLabel: "Material 2", density: 7 });
             insertPhysicalMaterial({ builder, userLabel: "Material 3", density: 11 });
@@ -482,7 +482,7 @@ describe("Hierarchies", () => {
           // | Material 4      | 200           |
           //
           // As requested by hierarchy definition, the provider returns them grouped by the `Density` property value:
-          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+          expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
             {
               // the `10 - 100` range property grouping node
               label: "10 - 100",
@@ -503,8 +503,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("creates multi-level grouping hierarchy", async function () {
-        const { imodel } = await buildIModel(this, async (builder) => {
+      it("creates multi-level grouping hierarchy", async () => {
+        const { imodel } = await buildTestIModel(async (builder) => {
           insertRepositoryLink({ builder, repositoryLabel: "Example iModel link", format: "iModel" });
           insertRepositoryLink({ builder, repositoryLabel: "Example iModel link", format: "iModel" });
           insertRepositoryLink({ builder, repositoryLabel: "Example DGN link 1", format: "DGN" });
@@ -574,7 +574,7 @@ describe("Hierarchies", () => {
         // | Example DGN link 2    | DGN                     |
         //
         // As requested by hierarchy definition, the provider returns them grouped under a hierarchy of grouping nodes:
-        expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+        expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
           // a class grouping node for `BisCore.Element` base class
           {
             label: "Element",
@@ -635,8 +635,8 @@ describe("Hierarchies", () => {
       });
 
       describe("Customization options", () => {
-        it("doesn't return grouping node if there's only one grouped instance and `hideIfOneGroupedNode = true`", async function () {
-          const { imodel } = await buildIModel(this, async (builder) => {
+        it("doesn't return grouping node if there's only one grouped instance and `hideIfOneGroupedNode = true`", async () => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             insertRepositoryLink({ builder, repositoryLabel: "Example link 1" });
             insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
             insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
@@ -690,7 +690,7 @@ describe("Hierarchies", () => {
           // | Example link 2  |
           //
           // As requested by hierarchy definition, the provider didn't place "Example link 1" under a grouping node:
-          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+          expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
             { label: "Example link 1" },
             {
               label: "Example link 2",
@@ -700,8 +700,8 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_END__
         });
 
-        it("doesn't return grouping node if it has no siblings and `hideIfNoSiblings = true`", async function () {
-          const { imodel } = await buildIModel(this, async (builder) => {
+        it("doesn't return grouping node if it has no siblings and `hideIfNoSiblings = true`", async () => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             insertRepositoryLink({ builder, repositoryLabel: "Example link 1" });
             insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
           });
@@ -753,7 +753,7 @@ describe("Hierarchies", () => {
           //
           // As requested by hierarchy definition, the provider didn't place them under a grouping node, because
           // there're no sibling nodes:
-          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+          expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
             // note: no class grouping node
             { label: "Example link 1" },
             { label: "Example link 2" },
@@ -761,8 +761,8 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_END__
         });
 
-        it("sets auto-expand flag on grouping nodes when `autoExpand = true`", async function () {
-          const { imodel } = await buildIModel(this, async (builder) => {
+        it("sets auto-expand flag on grouping nodes when `autoExpand = true`", async () => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             insertRepositoryLink({ builder, repositoryLabel: "Example link 1" });
             insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
           });

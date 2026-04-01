@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
 
-import * as sinon from "sinon";
-import { expect } from "chai";
+import { describe, expect, it, vi } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Logging.Imports
 import { Logger } from "@itwin/core-bentley";
 import { createLogger } from "@itwin/presentation-core-interop";
@@ -16,7 +15,7 @@ import { getLogger } from "@itwin/presentation-hierarchies";
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Logging", () => {
-      it("forwards logs to itwinjs-core `Logger`", async function () {
+      it("forwards logs to itwinjs-core `Logger`", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Logging.ForwardingLogsToCoreBentleyLogger
         // create a logger that forwards all logs to Logger from @itwin/core-bentley
         const logger = createLogger(Logger);
@@ -24,9 +23,9 @@ describe("Hierarchies", () => {
         setLogger(logger);
         // __PUBLISH_EXTRACT_END__
 
-        const spy = sinon.spy(Logger, "logTrace");
+        const spy = vi.spyOn(Logger, "logTrace");
         getLogger().logTrace("test category", "test message");
-        expect(spy).to.be.calledOnceWithExactly("test category", "test message");
+        expect(spy).toHaveBeenCalledExactlyOnceWith("test category", "test message");
       });
     });
   });

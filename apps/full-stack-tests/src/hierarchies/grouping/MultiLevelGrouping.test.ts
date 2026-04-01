@@ -4,12 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "../Utils.js";
 
@@ -18,21 +19,21 @@ describe("Hierarchies", () => {
     let subjectClassName: string;
     let physicalPartitionClassName: string;
 
-    before(async function () {
+    beforeAll(async () => {
       await initialize();
       subjectClassName = Subject.classFullName.replace(":", ".");
       physicalPartitionClassName = PhysicalPartition.classFullName.replace(":", ".");
     });
 
-    after(async () => {
+    afterAll(async () => {
       await terminate();
     });
 
-    it("groups by base class, class, property and label", async function () {
+    it("groups by base class, class, property and label", async () => {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
       const description1 = "test description1";
-      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
         const childSubject1 = insertSubject({
           builder,
           codeValue: "A1",

@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { expect } from "vitest";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
 import { BisCodeSpec, Code, CodeScopeProps, CodeSpec, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
@@ -51,21 +52,47 @@ class TestIModelBuilderImpl implements TestIModelBuilder {
   }
 }
 
-export async function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => void | Promise<void>): Promise<IModelConnection>;
-// eslint-disable-next-line @typescript-eslint/unified-signatures
-export async function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => void | Promise<void>): Promise<IModelConnection>;
-export async function buildTestIModel(nameParam: string | Mocha.Context, cb: (builder: TestIModelBuilder) => void | Promise<void>): Promise<IModelConnection> {
-  const name = typeof nameParam === "string" ? nameParam : createFileNameFromString(nameParam.test!.fullTitle());
-  const outputFile = setupOutputFileLocation(`${name}.bim`);
+function getTestName() {
+  return expect.getState().currentTestName!;
+}
+
+/**
+ * Create test iModel and returns a connection to it.
+ *
+ * **Note:** do not call this function outside `it` block without name. It uses `expect.getState().currentTestName` to determine the test name.
+ */
+export async function buildTestIModel<TResult extends {} | void>(
+  cb: (builder: TestIModelBuilder, testName: string) => TResult | Promise<TResult>,
+): Promise<TResult & { imodel: IModelConnection }>;
+export async function buildTestIModel<TResult extends {} | void>(
+  name: string,
+  cb: (builder: TestIModelBuilder, testName: string) => TResult | Promise<TResult>,
+): Promise<TResult & { imodel: IModelConnection }>;
+export async function buildTestIModel(cb?: (builder: TestIModelBuilder, testName: string) => void | Promise<void>): Promise<{ imodel: IModelConnection }>;
+export async function buildTestIModel(
+  name: string,
+  cb?: (builder: TestIModelBuilder, testName: string) => void | Promise<void>,
+): Promise<{ imodel: IModelConnection }>;
+export async function buildTestIModel<TResult extends {} | void>(
+  nameOrCb?: string | ((builder: TestIModelBuilder, testName: string) => TResult | Promise<TResult>),
+  cb?: (builder: TestIModelBuilder, testName: string) => TResult | Promise<TResult>,
+): Promise<TResult & { imodel: IModelConnection }> {
+  const name = typeof nameOrCb === "string" ? nameOrCb : getTestName();
+  const callback = typeof nameOrCb === "function" ? nameOrCb : cb;
+  const fileName = createFileNameFromString(`${name}.bim`);
+  const outputFile = setupOutputFileLocation(fileName);
   const db = SnapshotDb.createEmpty(outputFile, { rootSubject: { name } });
   const builder = new TestIModelBuilderImpl(db);
+  let result!: TResult;
   try {
-    await cb(builder);
+    if (callback) {
+      result = await callback?.(builder, name);
+    }
   } finally {
     db.saveChanges("Created test IModel");
     db.close();
   }
-  return TestIModelConnection.openFile(outputFile);
+  return { ...result, imodel: TestIModelConnection.openFile(outputFile) };
 }
 
 export class TestIModelConnection extends IModelConnection {

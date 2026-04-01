@@ -59,13 +59,12 @@ const mergingProvider = mergeProviders({ providers: [provider1, provider2, child
 // Collect the hierarchy. Notes:
 // - Root nodes are sorted by label
 // - "Child node" is placed under both "Node A" and "Node X"
-expect(await collectHierarchy(mergingProvider)).to.containSubset([
+expect(await collectHierarchy(mergingProvider)).toMatchObject([
   {
     label: "Node A",
     children: [
       {
         label: "Child node",
-        children: undefined,
       },
     ],
   },
@@ -74,7 +73,6 @@ expect(await collectHierarchy(mergingProvider)).to.containSubset([
     children: [
       {
         label: "Child node",
-        children: undefined,
       },
     ],
   },

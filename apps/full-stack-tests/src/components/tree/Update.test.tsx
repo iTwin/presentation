@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import * as sinon from "sinon";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import {
   AbstractTreeNodeLoader,
@@ -30,31 +29,31 @@ import { TestIModelConnection } from "../../TestIModelSetup.js";
 describe("Tree update", () => {
   let imodel: IModelConnection;
 
-  before(async () => {
+  beforeAll(async () => {
     await initialize();
     const testIModelName: string = "assets/datasets/Properties_60InstancesWithUrl2.ibim";
     imodel = TestIModelConnection.openFile(testIModelName);
-    expect(imodel).is.not.null;
+    expect(imodel).not.toBeNull();
   });
 
-  after(async () => {
+  afterAll(async () => {
     await imodel.close();
     await terminate();
   });
 
   afterEach(async () => {
-    sinon.restore();
+    vi.restoreAllMocks();
     await Presentation.presentation.rulesets().clear();
   });
 
   describe("detection", () => {
     let defaultProps: Omit<UsePresentationTreeStateProps, "ruleset">;
 
-    before(async () => {
+    beforeAll(async () => {
       await UiComponents.initialize(IModelApp.localization);
     });
 
-    after(() => {
+    afterAll(() => {
       UiComponents.terminate();
     });
 
@@ -485,7 +484,7 @@ describe("Tree update", () => {
       });
 
       await waitFor(() => {
-        expect(result.current).to.not.be.undefined;
+        expect(result.current).toBeDefined();
       });
       await expectTree(result.current!.nodeLoader, expectedTree);
 
@@ -513,7 +512,7 @@ describe("Tree update", () => {
 
       const model = nodeLoader.modelSource.getModel();
       const actualHierarchy = buildActualHierarchy(undefined);
-      expect(actualHierarchy).to.deep.equal(expectedHierarchy);
+      expect(actualHierarchy).toEqual(expectedHierarchy);
 
       function buildActualHierarchy(parentId: string | undefined): TreeHierarchy[] {
         const result: TreeHierarchy[] = [];

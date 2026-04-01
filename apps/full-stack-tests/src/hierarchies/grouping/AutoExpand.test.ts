@@ -4,13 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertSubject } from "presentation-test-utilities";
+import { afterAll, describe, it, test } from "vitest";
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createNodesQueryClauseFactory, HierarchyDefinition, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "../Utils.js";
 
@@ -20,13 +21,13 @@ describe("Hierarchies", () => {
     let subjectClassName: string;
     let emptyIModel: IModelConnection;
 
-    before(async function () {
+    test.beforeAll(async (_, suite) => {
       await initialize();
-      emptyIModel = (await buildIModel(this)).imodel;
+      emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodel;
       subjectClassName = Subject.classFullName.replace(":", ".");
     });
 
-    after(async () => {
+    afterAll(async () => {
       await terminate();
     });
 
@@ -80,7 +81,7 @@ describe("Hierarchies", () => {
         },
       };
 
-      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async function () {
+      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async () => {
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, baseClassAutoExpandAlways) }),
           expect: [
@@ -99,7 +100,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async function () {
+      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async () => {
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, baseClassAutoExpandSingleChild) }),
           expect: [
@@ -118,8 +119,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
@@ -165,7 +166,7 @@ describe("Hierarchies", () => {
         },
       };
 
-      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async function () {
+      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async () => {
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, classAutoExpandAlways) }),
           expect: [
@@ -183,7 +184,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async function () {
+      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async () => {
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, classAutoExpandSingleChild) }),
           expect: [
@@ -201,8 +202,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
@@ -247,7 +248,7 @@ describe("Hierarchies", () => {
         },
       };
 
-      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async function () {
+      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async () => {
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, labelAutoExpandAlways) }),
           expect: [
@@ -264,7 +265,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async function () {
+      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async () => {
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, labelAutoExpandSingleChild) }),
           expect: [
@@ -281,9 +282,9 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async function () {
+      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async () => {
         const groupName = "test1";
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: groupName });
           const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: groupName });
           return { childSubject1, childSubject2 };
@@ -339,7 +340,7 @@ describe("Hierarchies", () => {
         },
       };
 
-      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async function () {
+      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async () => {
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, propertiesAutoExpandAlways) }),
           expect: [
@@ -356,7 +357,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async function () {
+      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async () => {
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, propertiesAutoExpandSingleChild) }),
           expect: [
@@ -373,8 +374,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };

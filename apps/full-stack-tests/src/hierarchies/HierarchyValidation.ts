@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert, expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { isDeepStrictEqual } from "util";
+import { assert, expect } from "vitest";
 import { Logger } from "@itwin/core-bentley";
 import {
   GenericNodeKey,
@@ -86,10 +86,7 @@ export namespace NodeValidators {
     }
     if (expectations.filterTargetOptions !== undefined) {
       assert(node.filtering?.isFilterTarget, `[${node.label}] Expected node to be a filter target`);
-      expect(node.filtering.filterTargetOptions).to.deep.eq(
-        expectations.filterTargetOptions,
-        `[${node.label}] Nodes's 'filtering.filterTargetOptions' flag property doesn't match the expectation.`,
-      );
+      expect(node.filtering.filterTargetOptions).toEqual(expectations.filterTargetOptions);
     }
     if (expectations.extendedData !== undefined && !isDeepStrictEqual(node.extendedData, expectations.extendedData)) {
       throw new Error(

@@ -6,9 +6,8 @@
 /* eslint-disable no-duplicate-imports */
 
 // Test-specific imports should be kept out of extracted code
-import { expect } from "chai";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
-import * as sinon from "sinon";
 import { Logger } from "@itwin/core-bentley";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccessImports
 import { IModelConnection } from "@itwin/core-frontend";
@@ -31,8 +30,8 @@ import {
 import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccess
 // Not really part of the package, but we need SchemaContext to create a hierarchy provider. It's
@@ -147,7 +146,7 @@ async function main() {
 // __PUBLISH_EXTRACT_END__
 
 async function getIModelConnection(): Promise<IModelConnection> {
-  const { imodel } = await buildIModel("Hierarchies Learning snippets Readme example Creates expected hierarchy", async (builder) => {
+  const { imodel } = await buildTestIModel(async (builder) => {
     const category = insertSpatialCategory({ builder, codeValue: "Test category" });
     const model = insertPhysicalModelWithPartition({ builder, codeValue: "Test model" });
     insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "Test element 1" });
@@ -159,24 +158,24 @@ async function getIModelConnection(): Promise<IModelConnection> {
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Readme example", () => {
-      let logStub: sinon.SinonStub;
+      let logStub: ReturnType<typeof vi.spyOn>;
       beforeEach(async () => {
         await initialize();
         // re-initialize to stubs to avoid iTwin.js core logging to console an ruining our testing strategy
-        Logger.initialize(sinon.stub(), sinon.stub(), sinon.stub(), sinon.stub());
-        logStub = sinon.stub(console, "log");
+        Logger.initialize(vi.fn(), vi.fn(), vi.fn(), vi.fn());
+        logStub = vi.spyOn(console, "log").mockImplementation(() => {});
       });
       afterEach(async () => {
-        logStub.restore();
+        logStub.mockRestore();
         await terminate();
       });
       it("creates expected hierarchy", async () => {
         await main();
-        expect(logStub.callCount).to.eq(4);
-        expect(logStub.getCall(0).args[0]).to.match(/^Test model/);
-        expect(logStub.getCall(1).args[0]).to.match(/^  Physical Object/);
-        expect(logStub.getCall(2).args[0]).to.match(/^    Test element 1 \[[\d]+-[\w\d]+\]/);
-        expect(logStub.getCall(3).args[0]).to.match(/^    Test element 2 \[[\d]+-[\w\d]+\]/);
+        expect(logStub.mock.calls.length).toBe(4);
+        expect(logStub.mock.calls[0][0]).toMatch(/^Test model/);
+        expect(logStub.mock.calls[1][0]).toMatch(/^  Physical Object/);
+        expect(logStub.mock.calls[2][0]).toMatch(/^    Test element 1 \[[\d]+-[\w\d]+\]/);
+        expect(logStub.mock.calls[3][0]).toMatch(/^    Test element 2 \[[\d]+-[\w\d]+\]/);
       });
     });
   });

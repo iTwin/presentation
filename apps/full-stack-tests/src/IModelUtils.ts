@@ -7,6 +7,7 @@ import { XMLParser } from "fast-xml-parser";
 import * as fs from "fs";
 import hash from "object-hash";
 import { getFullSchemaXml } from "presentation-test-utilities";
+import { expect } from "vitest";
 import { ECDb, ECSqlWriteStatement, IModelDb } from "@itwin/core-backend";
 import { assert, BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -14,7 +15,6 @@ import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { ECSqlBinding, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 import { createFileNameFromString, limitFilePathLength, setupOutputFileLocation } from "./FilenameUtils.js";
-import { buildTestIModel, TestIModelBuilder } from "./TestIModelSetup.js";
 import { safeDispose } from "./Utils.js";
 
 // cspell:words jpath
@@ -158,60 +158,38 @@ export class ECDbBuilder {
   }
 }
 
-export async function withECDb(
-  mochaContext: Mocha.Context,
-  setup: (db: ECDbBuilder, mochaContext: Mocha.Context) => Promise<void>,
-  use: (db: ECDb) => Promise<void>,
-): Promise<void>;
+export async function withECDb(setup: (db: ECDbBuilder, testName: string) => Promise<void>, use: (db: ECDb) => Promise<void>): Promise<void>;
 export async function withECDb<TResult extends {}>(
-  mochaContext: Mocha.Context,
-  setup: (db: ECDbBuilder, mochaContext: Mocha.Context) => Promise<TResult>,
+  setup: (db: ECDbBuilder, testName: string) => Promise<TResult>,
+  use: (db: ECDb, res: TResult) => Promise<void>,
+): Promise<void>;
+export async function withECDb(testName: string, setup: (db: ECDbBuilder, testName: string) => Promise<void>, use: (db: ECDb) => Promise<void>): Promise<void>;
+export async function withECDb<TResult extends {}>(
+  testName: string,
+  setup: (db: ECDbBuilder, testName: string) => Promise<TResult>,
   use: (db: ECDb, res: TResult) => Promise<void>,
 ): Promise<void>;
 export async function withECDb<TResult extends {} | undefined>(
-  mochaContext: Mocha.Context,
-  setup: (db: ECDbBuilder, mochaContext: Mocha.Context) => Promise<TResult | undefined>,
-  use: (db: ECDb, res: TResult | undefined) => Promise<void>,
+  testNameOrSetup: string | ((db: ECDbBuilder, testName: string) => Promise<TResult | undefined>),
+  setupOrUse: ((db: ECDbBuilder, testName: string) => Promise<TResult | undefined>) | ((db: ECDb, res: TResult | undefined) => Promise<void>),
+  useOrNone?: (db: ECDb, res: TResult | undefined) => Promise<void>,
 ) {
-  const name = createFileNameFromString(mochaContext.test!.fullTitle());
+  const testName = typeof testNameOrSetup === "string" ? testNameOrSetup : expect.getState().currentTestName!;
+  const setup = (typeof testNameOrSetup === "function" ? testNameOrSetup : setupOrUse) as (db: ECDbBuilder, testName: string) => Promise<TResult | undefined>;
+  const use = (typeof testNameOrSetup === "function" ? setupOrUse : useOrNone!) as (db: ECDb, res: TResult | undefined) => Promise<void>;
+
+  const name = createFileNameFromString(testName);
   const outputFile = setupOutputFileLocation(name);
   const db = new ECDb();
 
   db.createDb(outputFile);
-  const res = await setup(new ECDbBuilder(db, outputFile), mochaContext);
+  const res = await setup(new ECDbBuilder(db, outputFile), testName);
   db.saveChanges("Created test ECDb");
   await use(db, res);
   safeDispose(db);
 }
 
-export async function buildIModel<TFirstArg extends Mocha.Context | string>(
-  mochaContextOrTestName: TFirstArg,
-  setup?: (builder: TestIModelBuilder, mochaContextOrTestName: TFirstArg) => Promise<void>,
-): Promise<{ imodel: IModelConnection }>;
-export async function buildIModel<TFirstArg extends Mocha.Context | string, TResult extends {}>(
-  mochaContextOrTestName: TFirstArg,
-  setup: (builder: TestIModelBuilder, mochaContextOrTestName: TFirstArg) => Promise<TResult>,
-): Promise<{ imodel: IModelConnection } & TResult>;
-export async function buildIModel<TFirstArg extends Mocha.Context | string, TResult extends {} | undefined>(
-  mochaContextOrTestName: TFirstArg,
-  setup?: (builder: TestIModelBuilder, mochaContextOrTestName: TFirstArg) => Promise<TResult>,
-) {
-  let res!: TResult;
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  const imodel = await buildTestIModel(mochaContextOrTestName as any, async (builder) => {
-    if (setup) {
-      res = await setup(builder, mochaContextOrTestName);
-    }
-  });
-  return { ...res, imodel };
-}
-
-export async function importSchema(
-  mochaContextOrTestName: Mocha.Context | string,
-  imodel: { importSchema: (xml: string) => Promise<void> | void },
-  schemaContentXml: string,
-) {
-  const testName = typeof mochaContextOrTestName === "string" ? mochaContextOrTestName : mochaContextOrTestName.test!.fullTitle();
+export async function importSchema(testName: string, imodel: { importSchema: (xml: string) => Promise<void> | void }, schemaContentXml: string) {
   const schemaName = `SCHEMA_${testName}`.replace(/[^\w\d_]/gi, "_").replace(/_+/g, "_");
   const schemaAlias = `a_${Guid.createValue().replaceAll("-", "")}`;
   const schemaXml = getFullSchemaXml({ schemaName, schemaAlias, schemaContentXml });

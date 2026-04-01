@@ -58,7 +58,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 
 // The iModel has two elements of `BisCore.PhysicalElement` class, both with the same "Example element" label.
 // As requested by hierarchy definition, the provider returns them grouped under a label grouping node:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     // the label grouping node
     label: "Example element",
@@ -122,7 +122,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 
 // The iModel has two elements of `BisCore.PhysicalElement` class, both with the same "Example element" label.
 // As requested by hierarchy definition, the provider returns them merged into a single node:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     // the merged node has "Example element" label and instance keys of both elements in `key.instanceKeys` list
     label: "Example element",
@@ -189,7 +189,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 
 // The iModel has two elements of `BisCore.Category` class - one `SpatialCategory` and one `DrawingCategory`.
 // As requested by hierarchy definition, the provider returns them grouped under class grouping nodes:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     // the `BisCore.DrawingCategory` class grouping node
     label: "Drawing Category",
@@ -266,7 +266,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 
 // The iModel has two elements of `BisCore.Category` class - one `SpatialCategory` and one `DrawingCategory`.
 // As requested by hierarchy definition, the provider returns them grouped under 2 class grouping nodes:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     // the `BisCore.Element` class grouping node
     label: "Element",
@@ -360,7 +360,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 // | Example link with no format |                         |
 //
 // As requested by hierarchy definition, the provider returns them grouped by `Format` property value:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     // the `Format="DGN"` property grouping node
     label: "DGN",
@@ -464,7 +464,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 // | Material 4      | 200           |
 //
 // As requested by hierarchy definition, the provider returns them grouped by the `Density` property value:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     // the `10 - 100` range property grouping node
     label: "10 - 100",
@@ -557,7 +557,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 // | Example DGN link 2    | DGN                     |
 //
 // As requested by hierarchy definition, the provider returns them grouped under a hierarchy of grouping nodes:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   // a class grouping node for `BisCore.Element` base class
   {
     label: "Element",
@@ -683,7 +683,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 // | Example link 2  |
 //
 // As requested by hierarchy definition, the provider didn't place "Example link 1" under a grouping node:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   { label: "Example link 1" },
   {
     label: "Example link 2",
@@ -750,7 +750,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 //
 // As requested by hierarchy definition, the provider didn't place them under a grouping node, because
 // there're no sibling nodes:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   // note: no class grouping node
   { label: "Example link 1" },
   { label: "Example link 2" },
