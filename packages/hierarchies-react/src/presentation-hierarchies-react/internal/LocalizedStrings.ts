@@ -135,7 +135,9 @@ export const LOCALIZED_STRINGS = {
   unspecified: "Unspecified",
 };
 
-type AddPrefix<TPrefix extends string, TPath extends string> = [TPrefix] extends [never] ? `${TPath}` : `${TPrefix}.${TPath}`;
+type AddPrefix<TPrefix extends string, TPath extends string> = [TPrefix] extends [never]
+  ? `${TPath}`
+  : `${TPrefix}.${TPath}`;
 
 /**
  * Utility type that extracts all possible keys from a nested object as dot-separated strings
@@ -157,7 +159,9 @@ type AddPrefix<TPrefix extends string, TPath extends string> = [TPrefix] extends
 type ObjectKeys<TObject extends object, Acc extends string = never> =
   | Acc
   | {
-      [K in keyof TObject & string]: TObject[K] extends object ? ObjectKeys<TObject[K], AddPrefix<Acc, K>> : AddPrefix<Acc, K>;
+      [K in keyof TObject & string]: TObject[K] extends object
+        ? ObjectKeys<TObject[K], AddPrefix<Acc, K>>
+        : AddPrefix<Acc, K>;
     }[keyof TObject & string];
 
 /**

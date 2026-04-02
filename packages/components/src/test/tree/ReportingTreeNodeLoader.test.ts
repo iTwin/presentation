@@ -32,7 +32,10 @@ describe("ReportingTreeNodeLoader", () => {
   beforeEach(() => {
     loadNodeSubject = new Subject<TreeNodeLoadResult>();
     nodeLoaderStub.loadNode.returns(loadNodeSubject);
-    reportingNodeLoader = new ReportingTreeNodeLoader(nodeLoaderStub as unknown as PagedTreeNodeLoader<TreeDataProvider>, reportStub);
+    reportingNodeLoader = new ReportingTreeNodeLoader(
+      nodeLoaderStub as unknown as PagedTreeNodeLoader<TreeDataProvider>,
+      reportStub,
+    );
   });
 
   afterEach(() => {
@@ -95,7 +98,10 @@ describe("ReportingTreeNodeLoader", () => {
       let loadedNodes: TreeNodeItem[] = [];
       const observable = reportingNodeLoader.loadNode({ id: "id" } as TreeModelNode, 0);
 
-      observable.subscribe({ next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]), error: () => {} });
+      observable.subscribe({
+        next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]),
+        error: () => {},
+      });
       loadNodeSubject.error(new Error());
 
       await waitFor(() => {
@@ -107,7 +113,9 @@ describe("ReportingTreeNodeLoader", () => {
     it("does not report if no longer subscribed", async () => {
       let loadedNodes: TreeNodeItem[] = [];
       const observable = reportingNodeLoader.loadNode({ id: "id" } as TreeModelNode, 0);
-      const subscription = observable.subscribe({ next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]) });
+      const subscription = observable.subscribe({
+        next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]),
+      });
 
       subscription.unsubscribe();
       loadNodeSubject.next({ loadedNodes: [{ id: "node 1" }] } as TreeNodeLoadResult);
@@ -122,7 +130,9 @@ describe("ReportingTreeNodeLoader", () => {
     it("reports root nodes load event if observable if unsubscribed", async () => {
       let loadedNodes: TreeNodeItem[] = [];
       const observable = reportingNodeLoader.loadNode({ id: undefined } as TreeModelRootNode, 0);
-      const subscription = observable.subscribe({ next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]) });
+      const subscription = observable.subscribe({
+        next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]),
+      });
 
       subscription.unsubscribe();
       loadNodeSubject.next({ loadedNodes: [{ id: "node 1" }] } as TreeNodeLoadResult);

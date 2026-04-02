@@ -16,14 +16,10 @@ import { createStub } from "../TestUtils.js";
 import type { RulesetManager } from "@itwin/presentation-frontend";
 
 describe("RulesetRegistrationHelper", () => {
-  const rulesetManager = {
-    add: createStub<RulesetManager["add"]>(),
-  };
+  const rulesetManager = { add: createStub<RulesetManager["add"]>() };
 
   beforeEach(() => {
-    sinon.stub(Presentation, "presentation").get(() => ({
-      rulesets: () => rulesetManager,
-    }));
+    sinon.stub(Presentation, "presentation").get(() => ({ rulesets: () => rulesetManager }));
   });
 
   afterEach(() => {

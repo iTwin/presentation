@@ -107,7 +107,13 @@ export function ErrorItemRenderer({
     );
   }
 
-  return <ErrorItemContainer errorNode={errorNode} message={errorNode.error.message} scrollToElement={() => scrollToNode(errorNode)} />;
+  return (
+    <ErrorItemContainer
+      errorNode={errorNode}
+      message={errorNode.error.message}
+      scrollToElement={() => scrollToNode(errorNode)}
+    />
+  );
 }
 
 type ErrorItemContainerProps = {

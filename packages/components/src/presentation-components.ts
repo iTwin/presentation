@@ -22,7 +22,10 @@ export type * from "./presentation-components/common/IUnifiedSelectionComponent.
 export * from "./presentation-components/common/PropertyRecordsBuilder.js";
 export * from "./presentation-components/common/SchemaMetadataContext.js";
 // eslint-disable-next-line @typescript-eslint/no-deprecated
-export { PortalTargetContextProvider, type PortalTargetContextProviderProps } from "./presentation-components/common/PortalTargetContext.js";
+export {
+  PortalTargetContextProvider,
+  type PortalTargetContextProviderProps,
+} from "./presentation-components/common/PortalTargetContext.js";
 export * from "./presentation-components/hooks/UseRulesetRegistration.js";
 
 /**

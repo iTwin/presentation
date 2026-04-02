@@ -12,7 +12,14 @@ import { buildTestIModel, setupOutputFileLocation, TestIModelConnection } from "
 
 import type { ECDb } from "@itwin/core-backend";
 import type { Id64String } from "@itwin/core-bentley";
-import type { BisCodeSpec, CodeScopeProps, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
+import type {
+  BisCodeSpec,
+  CodeScopeProps,
+  ElementAspectProps,
+  ElementProps,
+  ModelProps,
+  RelationshipProps,
+} from "@itwin/core-common";
 import type { SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
 import type { TestIModelBuilder } from "@itwin/presentation-testing";
 
@@ -70,7 +77,9 @@ export async function createChangedIModels<TResultBase extends {}, TResultChange
 ) {
   const baseIModelPath = setupOutputFileLocation(`${mochaContext.test!.fullTitle()}-base.bim`);
   const base = await buildIModel(`${mochaContext.test!.fullTitle()}-base`, setupBase);
-  const changeset1 = await cloneIModel(baseIModelPath, `${mochaContext.test!.fullTitle()}-changeset1`, async (ecdb) => setupChangeset1(ecdb, base));
+  const changeset1 = await cloneIModel(baseIModelPath, `${mochaContext.test!.fullTitle()}-changeset1`, async (ecdb) =>
+    setupChangeset1(ecdb, base),
+  );
   return {
     base,
     changeset1,
@@ -90,10 +99,18 @@ export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) 
   }
   const schemas = new SchemaContext();
   schemas.addLocater({
-    getSchemaSync<T extends Schema>(_schemaKey: Readonly<SchemaKey>, _matchType: SchemaMatchType, _schemaContext: SchemaContext): T | undefined {
+    getSchemaSync<T extends Schema>(
+      _schemaKey: Readonly<SchemaKey>,
+      _matchType: SchemaMatchType,
+      _schemaContext: SchemaContext,
+    ): T | undefined {
       throw new Error(`getSchemaSync not implemented`);
     },
-    async getSchemaInfo(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<SchemaInfo | undefined> {
+    async getSchemaInfo(
+      schemaKey: Readonly<SchemaKey>,
+      matchType: SchemaMatchType,
+      schemaContext: SchemaContext,
+    ): Promise<SchemaInfo | undefined> {
       const schemaJson = imodel.getSchemaProps(schemaKey.name);
       const schemaInfo = await Schema.startLoadingFromJson(schemaJson, schemaContext);
       if (schemaInfo.schemaKey.matches(schemaKey as SchemaKey, matchType)) {
@@ -101,7 +118,11 @@ export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) 
       }
       return undefined;
     },
-    async getSchema<T extends Schema>(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<T | undefined> {
+    async getSchema<T extends Schema>(
+      schemaKey: Readonly<SchemaKey>,
+      matchType: SchemaMatchType,
+      schemaContext: SchemaContext,
+    ): Promise<T | undefined> {
       await this.getSchemaInfo(schemaKey as SchemaKey, matchType, schemaContext);
       // eslint-disable-next-line @itwin/no-internal
       const schema = await schemaContext.getCachedSchema(schemaKey as SchemaKey, matchType);

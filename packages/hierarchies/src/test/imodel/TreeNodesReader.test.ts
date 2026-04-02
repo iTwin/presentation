@@ -19,7 +19,10 @@ import type { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 describe("readNodes", () => {
   const parser = sinon.stub<[{ [columnName: string]: any }], SourceInstanceHierarchyNode>();
   const queryExecutor = {
-    createQueryReader: sinon.stub<Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>, ReturnType<LimitingECSqlQueryExecutor["createQueryReader"]>>(),
+    createQueryReader: sinon.stub<
+      Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>,
+      ReturnType<LimitingECSqlQueryExecutor["createQueryReader"]>
+    >(),
   };
 
   beforeEach(() => {
@@ -41,7 +44,10 @@ describe("readNodes", () => {
 
     const query = { ecsql: "QUERY", ctes: ["CTE1, CTE2"] };
     const result = await collect(readNodes({ queryExecutor, query, parser: (row) => of(parser(row)) }));
-    expect(queryExecutor.createQueryReader).to.be.calledOnceWith(query, sinon.match({ rowFormat: "ECSqlPropertyNames", restartToken: sinon.match.string }));
+    expect(queryExecutor.createQueryReader).to.be.calledOnceWith(
+      query,
+      sinon.match({ rowFormat: "ECSqlPropertyNames", restartToken: sinon.match.string }),
+    );
     expect(parser).to.be.calledThrice;
     expect(result).to.deep.eq(nodes);
   });
@@ -52,11 +58,7 @@ describe("readNodes", () => {
     await collect(readNodes({ queryExecutor, query, limit: 123, parser: (row) => of(parser(row)) }));
     expect(queryExecutor.createQueryReader).to.be.calledOnceWith(
       query,
-      sinon.match({
-        rowFormat: "ECSqlPropertyNames",
-        limit: 123,
-        restartToken: sinon.match.string,
-      }),
+      sinon.match({ rowFormat: "ECSqlPropertyNames", limit: 123, restartToken: sinon.match.string }),
     );
   });
 });
@@ -71,30 +73,19 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.HideIfNoChildren]: true,
       [NodeSelectClauseColumnNames.HideNodeInHierarchy]: true,
       [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
-        byBaseClasses: {
-          fullClassNames: [],
-          hideIfNoSiblings: true,
-          hideIfOneGroupedNode: true,
-        },
+        byBaseClasses: { fullClassNames: [], hideIfNoSiblings: true, hideIfOneGroupedNode: true },
         byClass: true,
         byLabel: true,
       }),
-      [NodeSelectClauseColumnNames.ExtendedData]: JSON.stringify({
-        test: 123,
-      }),
+      [NodeSelectClauseColumnNames.ExtendedData]: JSON.stringify({ test: 123 }),
       [NodeSelectClauseColumnNames.AutoExpand]: true,
       [NodeSelectClauseColumnNames.SupportsFiltering]: true,
     };
     const node = defaultNodesParser({ row });
     expect(node).to.deep.eq({
-      key: {
-        type: "instances",
-        instanceKeys: [{ className: "schema.class", id: "0x1" }],
-      },
+      key: { type: "instances", instanceKeys: [{ className: "schema.class", id: "0x1" }] },
       label: "test label",
-      extendedData: {
-        test: 123,
-      },
+      extendedData: { test: 123 },
       children: true,
       autoExpand: true,
       supportsFiltering: true,
@@ -102,11 +93,7 @@ describe("defaultNodesParser", () => {
         hideIfNoChildren: true,
         hideInHierarchy: true,
         grouping: {
-          byBaseClasses: {
-            fullClassNames: [],
-            hideIfNoSiblings: true,
-            hideIfOneGroupedNode: true,
-          },
+          byBaseClasses: { fullClassNames: [], hideIfNoSiblings: true, hideIfOneGroupedNode: true },
           byClass: true,
           byLabel: true,
         },
@@ -138,18 +125,9 @@ describe("defaultNodesParser", () => {
 
   it("parses complex label of multiple parts", () => {
     const labelParts: ConcatenatedValue = [
-      {
-        type: "Integer",
-        value: 123,
-      },
+      { type: "Integer", value: 123 },
       "test",
-      [
-        {
-          type: "Boolean",
-          value: true,
-        },
-        "xxx",
-      ],
+      [{ type: "Boolean", value: true }, "xxx"],
     ];
     const row: RowDef = {
       [NodeSelectClauseColumnNames.FullClassName]: "schema.class",

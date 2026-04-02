@@ -18,104 +18,111 @@ import addSvg from "@stratakit/icons/add.svg";
 
 import type { ComponentProps } from "react";
 import type { TreeNode } from "@itwin/presentation-hierarchies-react";
-import type { StrataKitTreeRendererAttributes, TreeActionBaseAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
+import type {
+  StrataKitTreeRendererAttributes,
+  TreeActionBaseAttributes,
+} from "@itwin/presentation-hierarchies-react/stratakit";
 
 /* eslint-disable no-console */
 
 type TreeRendererProps = ComponentProps<typeof StrataKitTreeRenderer>;
 
-export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttributes, TreeRendererProps>(function TreeRendererWithFilterAction(
-  props: TreeRendererProps,
-  forwardedRef,
-) {
-  const { getHierarchyLevelDetails, filterHierarchyLevel, ...treeProps } = props;
-  const nodesWithError = useMemo(() => {
-    return mapNodesHierarchy(treeProps.rootNodes, (node) => {
-      if (node.label.includes("[0-1M]") || node.label.includes("[0-1U]") || node.label.includes("[0-29]")) {
-        return {
-          ...node,
-          error: {
-            id: `${node.id}-object-error`,
-            type: "Unknown",
-            message: "Object {{node}} is not available",
-            additionalData: {
-              code: "404",
+export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttributes, TreeRendererProps>(
+  function TreeRendererWithFilterAction(props: TreeRendererProps, forwardedRef) {
+    const { getHierarchyLevelDetails, filterHierarchyLevel, ...treeProps } = props;
+    const nodesWithError = useMemo(() => {
+      return mapNodesHierarchy(treeProps.rootNodes, (node) => {
+        if (node.label.includes("[0-1M]") || node.label.includes("[0-1U]") || node.label.includes("[0-29]")) {
+          return {
+            ...node,
+            error: {
+              id: `${node.id}-object-error`,
+              type: "Unknown",
+              message: "Object {{node}} is not available",
+              additionalData: { code: "404" },
             },
-          },
-        };
-      }
-      return node;
-    });
-  }, [treeProps.rootNodes]);
+          };
+        }
+        return node;
+      });
+    }, [treeProps.rootNodes]);
 
-  const getInlineActions = useCallback<Required<TreeRendererProps>["getInlineActions"]>(
-    ({ targetNode, selectedNodes }) => [
-      <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
-      <TreeNodeFilterAction key="filter" node={targetNode} onFilter={filterHierarchyLevel} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
-      <TreeNodeRenameAction key="rename" node={targetNode} />,
-    ],
-    [filterHierarchyLevel, getHierarchyLevelDetails],
-  );
-  const getMenuActions = useCallback<Required<TreeRendererProps>["getMenuActions"]>(
-    ({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />],
-    [],
-  );
-  const getContextMenuActions = useCallback<Required<TreeRendererProps>["getContextMenuActions"]>(
-    ({ targetNode, selectedNodes }) => [
-      <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
-      <TreeNodeFilterAction key="filter" node={targetNode} onFilter={filterHierarchyLevel} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
-      <TreeNodeRenameAction key="rename" node={targetNode} />,
-    ],
-    [filterHierarchyLevel, getHierarchyLevelDetails],
-  );
+    const getInlineActions = useCallback<Required<TreeRendererProps>["getInlineActions"]>(
+      ({ targetNode, selectedNodes }) => [
+        <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
+        <TreeNodeFilterAction
+          key="filter"
+          node={targetNode}
+          onFilter={filterHierarchyLevel}
+          getHierarchyLevelDetails={getHierarchyLevelDetails}
+        />,
+        <TreeNodeRenameAction key="rename" node={targetNode} />,
+      ],
+      [filterHierarchyLevel, getHierarchyLevelDetails],
+    );
+    const getMenuActions = useCallback<Required<TreeRendererProps>["getMenuActions"]>(
+      ({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />],
+      [],
+    );
+    const getContextMenuActions = useCallback<Required<TreeRendererProps>["getContextMenuActions"]>(
+      ({ targetNode, selectedNodes }) => [
+        <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
+        <TreeNodeFilterAction
+          key="filter"
+          node={targetNode}
+          onFilter={filterHierarchyLevel}
+          getHierarchyLevelDetails={getHierarchyLevelDetails}
+        />,
+        <TreeNodeRenameAction key="rename" node={targetNode} />,
+      ],
+      [filterHierarchyLevel, getHierarchyLevelDetails],
+    );
 
-  const getEditingProps = useCallback<Required<TreeRendererProps>["getEditingProps"]>((node) => {
-    return {
-      onLabelChanged: (newLabel: string) => {
-        // Handle label change
-        console.log(`Node label changed from ${node.label} to ${newLabel}`);
-      },
-      labelValidationHint: `Allowed are A to Z, 0 to 9, "-" and "_"`,
-      validate: (newLabel: string) => {
-        return /^[A-Za-z0-9\-\_\[\] ]+$/.test(newLabel);
-      },
-    };
-  }, []);
+    const getEditingProps = useCallback<Required<TreeRendererProps>["getEditingProps"]>((node) => {
+      return {
+        onLabelChanged: (newLabel: string) => {
+          // Handle label change
+          console.log(`Node label changed from ${node.label} to ${newLabel}`);
+        },
+        labelValidationHint: `Allowed are A to Z, 0 to 9, "-" and "_"`,
+        validate: (newLabel: string) => {
+          return /^[A-Za-z0-9\-\_\[\] ]+$/.test(newLabel);
+        },
+      };
+    }, []);
 
-  return (
-    <StrataKitTreeRenderer
-      {...treeProps}
-      ref={forwardedRef}
-      rootNodes={nodesWithError}
-      getInlineActions={getInlineActions}
-      getMenuActions={getMenuActions}
-      getContextMenuActions={getContextMenuActions}
-      filterHierarchyLevel={filterHierarchyLevel}
-      getHierarchyLevelDetails={getHierarchyLevelDetails}
-      getEditingProps={getEditingProps}
-      errorRenderer={(errorProps) => {
-        return (
-          <TreeErrorRenderer
-            {...errorProps}
-            renderError={(errorItemProps) => {
-              if (errorItemProps.errorNode.error.type === "Unknown") {
-                return <ErrorRegion.Item message="Custom error" messageId={errorItemProps.errorNode.id} />;
-              }
-              return <ErrorItemRenderer {...errorItemProps} />;
-            }}
-          />
-        );
-      }}
-    />
-  );
-});
+    return (
+      <StrataKitTreeRenderer
+        {...treeProps}
+        ref={forwardedRef}
+        rootNodes={nodesWithError}
+        getInlineActions={getInlineActions}
+        getMenuActions={getMenuActions}
+        getContextMenuActions={getContextMenuActions}
+        filterHierarchyLevel={filterHierarchyLevel}
+        getHierarchyLevelDetails={getHierarchyLevelDetails}
+        getEditingProps={getEditingProps}
+        errorRenderer={(errorProps) => {
+          return (
+            <TreeErrorRenderer
+              {...errorProps}
+              renderError={(errorItemProps) => {
+                if (errorItemProps.errorNode.error.type === "Unknown") {
+                  return <ErrorRegion.Item message="Custom error" messageId={errorItemProps.errorNode.id} />;
+                }
+                return <ErrorItemRenderer {...errorItemProps} />;
+              }}
+            />
+          );
+        }}
+      />
+    );
+  },
+);
 
 function mapNodesHierarchy(nodes: TreeNode[], callback: (node: TreeNode) => TreeNode): TreeNode[] {
   return nodes.map((node) => {
-    return {
-      ...callback(node),
-      children: node.children === true ? true : mapNodesHierarchy(node.children, callback),
-    };
+    return { ...callback(node), children: node.children === true ? true : mapNodesHierarchy(node.children, callback) };
   });
 }
 

@@ -11,9 +11,16 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
 import { createStorage, Selectables } from "@itwin/unified-selection";
-import { usePresentationTable, usePresentationTableWithUnifiedSelection } from "../../presentation-components/table/UsePresentationTable.js";
+import {
+  usePresentationTable,
+  usePresentationTableWithUnifiedSelection,
+} from "../../presentation-components/table/UsePresentationTable.js";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
-import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content.js";
+import {
+  createTestContentDescriptor,
+  createTestContentItem,
+  createTestPropertiesContentField,
+} from "../_helpers/Content.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 import { act, renderHook, waitFor } from "../TestUtils.js";
 
@@ -21,14 +28,15 @@ import type { FormattingUnitSystemChangedArgs } from "@itwin/core-frontend";
 import type { ContentDescriptorRequestOptions, InstanceKey, Item, RulesetVariable } from "@itwin/presentation-common";
 import type { SelectionStorage } from "@itwin/unified-selection";
 import type { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types.js";
-import type { UsePresentationTableProps, UsePresentationTableWithUnifiedSelectionProps } from "../../presentation-components/table/UsePresentationTable.js";
+import type {
+  UsePresentationTableProps,
+  UsePresentationTableWithUnifiedSelectionProps,
+} from "../../presentation-components/table/UsePresentationTable.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 describe("usePresentationTable", () => {
-  const imodel = {
-    key: "imodel_key",
-  } as IModelConnection;
+  const imodel = { key: "imodel_key" } as IModelConnection;
   const initialProps: UsePresentationTableProps<TableColumnDefinition, TableRowDefinition> = {
     imodel,
     keys: new KeySet([createTestECInstanceKey()]),
@@ -43,9 +51,9 @@ describe("usePresentationTable", () => {
   beforeEach(() => {
     presentationManager = sinon.createStubInstance(PresentationManager);
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    }));
+    sinon
+      .stub(IModelApp, "quantityFormatter")
+      .get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
   });
 
   afterEach(() => {
@@ -65,37 +73,30 @@ describe("usePresentationTable", () => {
     });
 
     presentationManager.getContentDescriptor.resolves(descriptor);
-    presentationManager.getContentIterator.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
+    presentationManager.getContentIterator.callsFake(async () => ({
+      descriptor,
+      items: createAsyncIterator([item]),
+      total: 1,
+    }));
 
-    const { result } = renderHook((props: UsePresentationTableProps<TableColumnDefinition, TableRowDefinition>) => usePresentationTable(props), {
-      initialProps,
-    });
+    const { result } = renderHook(
+      (props: UsePresentationTableProps<TableColumnDefinition, TableRowDefinition>) => usePresentationTable(props),
+      { initialProps },
+    );
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(result.current.columns)
       .to.have.lengthOf(1)
-      .and.containSubset([
-        {
-          name: propertiesField.name,
-          label: propertiesField.label,
-          field: propertiesField,
-        },
-      ]);
+      .and.containSubset([{ name: propertiesField.name, label: propertiesField.label, field: propertiesField }]);
     expect(result.current.rows).to.have.lengthOf(1);
     expect(result.current.rows[0].cells)
       .to.have.lengthOf(1)
-      .and.containSubset([
-        {
-          key: propertiesField.name,
-        },
-      ]);
+      .and.containSubset([{ key: propertiesField.name }]);
   });
 });
 
 describe("usePresentationTableWithUnifiedSelection", () => {
-  const imodel = {
-    key: "imodel_key",
-  } as IModelConnection;
+  const imodel = { key: "imodel_key" } as IModelConnection;
   const initialProps: UsePresentationTableWithUnifiedSelectionProps<TableColumnDefinition, TableRowDefinition> = {
     imodel,
     ruleset: "ruleset_id",
@@ -110,9 +111,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
   beforeEach(() => {
     presentationManager = sinon.createStubInstance(PresentationManager);
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    }));
+    sinon
+      .stub(IModelApp, "quantityFormatter")
+      .get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
     IModelConnection.onOpen.raiseEvent(imodel);
   });
 
@@ -129,38 +130,38 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     });
 
     presentationManager.getContentDescriptor.resolves(descriptor);
-    presentationManager.getContentIterator.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
+    presentationManager.getContentIterator.callsFake(async () => ({
+      descriptor,
+      items: createAsyncIterator([item]),
+      total: 1,
+    }));
 
     const selectedKey = createTestECInstanceKey();
     const selectionStorage = createStorage();
     selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [selectedKey] });
 
-    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection({ ...initialProps, selectionStorage }));
+    const { result } = renderHook(() =>
+      usePresentationTableWithUnifiedSelection({ ...initialProps, selectionStorage }),
+    );
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(result.current.columns)
       .to.have.lengthOf(1)
-      .and.containSubset([
-        {
-          name: propertiesField.name,
-          label: propertiesField.label,
-          field: propertiesField,
-        },
-      ]);
+      .and.containSubset([{ name: propertiesField.name, label: propertiesField.label, field: propertiesField }]);
     expect(result.current.rows).to.have.lengthOf(1);
     expect(result.current.rows[0].cells)
       .to.have.lengthOf(1)
-      .and.containSubset([
-        {
-          key: propertiesField.name,
-        },
-      ]);
+      .and.containSubset([{ key: propertiesField.name }]);
 
     expect(presentationManager.getContentDescriptor).to.be.calledWith(
-      sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.has(selectedKey)),
+      sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) =>
+        options.keys.has(selectedKey),
+      ),
     );
     expect(presentationManager.getContentIterator).to.be.calledWith(
-      sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.has(selectedKey)),
+      sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) =>
+        options.keys.has(selectedKey),
+      ),
     );
   });
 
@@ -200,10 +201,14 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       });
 
       expect(presentationManager.getContentDescriptor).to.be.calledWith(
-        sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keys)),
+        sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) =>
+          options.keys.hasAll(keys),
+        ),
       );
       expect(presentationManager.getContentIterator).to.be.calledWith(
-        sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keys)),
+        sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) =>
+          options.keys.hasAll(keys),
+        ),
       );
     });
 
@@ -308,10 +313,14 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           expect(result.current.rows.length).to.be.equal(1);
         });
         expect(presentationManager.getContentDescriptor).to.be.calledWith(
-          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keySet)),
+          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) =>
+            options.keys.hasAll(keySet),
+          ),
         );
         expect(presentationManager.getContentIterator).to.be.calledWith(
-          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keySet)),
+          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) =>
+            options.keys.hasAll(keySet),
+          ),
         );
       });
 
@@ -549,7 +558,12 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => expect(result.current.isLoading).to.be.false);
 
         act(() => {
-          Presentation.selection.addToSelection(selectionSource, initialProps.imodel, new KeySet([createTestECInstanceKey()]), 3);
+          Presentation.selection.addToSelection(
+            selectionSource,
+            initialProps.imodel,
+            new KeySet([createTestECInstanceKey()]),
+            3,
+          );
         });
 
         await waitFor(() => {
@@ -574,7 +588,12 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         setupPresentationManager();
 
         const selectionLevel0 = [createTestECInstanceKey()];
-        selectionStorage.addToSelection({ imodelKey: imodel.key, source: "UnifiedSelectionTable", selectables: selectionLevel0, level: 0 });
+        selectionStorage.addToSelection({
+          imodelKey: imodel.key,
+          source: "UnifiedSelectionTable",
+          selectables: selectionLevel0,
+          level: 0,
+        });
         expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).to.be.true;
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
@@ -588,7 +607,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           result.current.onSelect(stringifiedKeys);
         });
         await waitFor(() => {
-          expect(Selectables.hasAll(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }), selectionLevel0)).to.be.true;
+          expect(
+            Selectables.hasAll(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }), selectionLevel0),
+          ).to.be.true;
         });
       });
 
@@ -625,7 +646,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
         setupPresentationManager([createTestECInstanceKey()]);
 
-        const selectablesInstanceKeys = [createTestECInstanceKey({ id: "0x123" }), createTestECInstanceKey({ id: "0x456" })];
+        const selectablesInstanceKeys = [
+          createTestECInstanceKey({ id: "0x123" }),
+          createTestECInstanceKey({ id: "0x456" }),
+        ];
 
         act(() => {
           // select the row to get loaded onto the component
@@ -634,7 +658,11 @@ describe("usePresentationTableWithUnifiedSelection", () => {
             source: selectionSource,
             selectables: [
               selectablesInstanceKeys[0],
-              { identifier: "custom", loadInstanceKeys: () => createAsyncIterator([selectablesInstanceKeys[1]]), data: undefined },
+              {
+                identifier: "custom",
+                loadInstanceKeys: () => createAsyncIterator([selectablesInstanceKeys[1]]),
+                data: undefined,
+              },
             ],
             level: 0,
           });
@@ -644,10 +672,14 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           expect(result.current.rows.length).to.be.equal(1);
         });
         expect(presentationManager.getContentDescriptor).to.be.calledWith(
-          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(selectablesInstanceKeys)),
+          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) =>
+            options.keys.hasAll(selectablesInstanceKeys),
+          ),
         );
         expect(presentationManager.getContentIterator).to.be.calledWith(
-          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(selectablesInstanceKeys)),
+          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) =>
+            options.keys.hasAll(selectablesInstanceKeys),
+          ),
         );
       });
 
@@ -664,7 +696,12 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         IModelConnection.onOpen.raiseEvent(otherIModel);
         act(() => {
           // select the row to get loaded onto the component
-          selectionStorage.addToSelection({ imodelKey: otherIModel.key, source: selectionSource, selectables: [instanceKey], level: 0 });
+          selectionStorage.addToSelection({
+            imodelKey: otherIModel.key,
+            source: selectionSource,
+            selectables: [instanceKey],
+            level: 0,
+          });
         });
         await waitFor(() => {
           expect(result.current.isLoading).to.be.false;
@@ -678,9 +715,19 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         setupPresentationManager();
 
         // select the row to get loaded onto the component
-        selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey], level: 0 });
+        selectionStorage.addToSelection({
+          imodelKey: imodel.key,
+          source: selectionSource,
+          selectables: [instanceKey],
+          level: 0,
+        });
         // add the instance to level 1 to make the row selected
-        selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey], level: 1 });
+        selectionStorage.addToSelection({
+          imodelKey: imodel.key,
+          source: selectionSource,
+          selectables: [instanceKey],
+          level: 1,
+        });
         // wait for selection to be setup
         await waitFor(() => {
           expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).to.eq(1);
@@ -701,9 +748,19 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         setupPresentationManager([instanceKey1, instanceKey2]);
 
         // select both instances at level 0 to get them displayed in the component
-        selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1, instanceKey2], level: 0 });
+        selectionStorage.addToSelection({
+          imodelKey: imodel.key,
+          source: selectionSource,
+          selectables: [instanceKey1, instanceKey2],
+          level: 0,
+        });
         // select instanceKey1 at level 1 to get its row selected
-        selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1], level: 1 });
+        selectionStorage.addToSelection({
+          imodelKey: imodel.key,
+          source: selectionSource,
+          selectables: [instanceKey1],
+          level: 1,
+        });
         // wait for selection to be setup
         await waitFor(() => {
           expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).to.eq(2);
@@ -718,7 +775,12 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
 
         act(() => {
-          selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey2], level: 1 });
+          selectionStorage.addToSelection({
+            imodelKey: imodel.key,
+            source: selectionSource,
+            selectables: [instanceKey2],
+            level: 1,
+          });
         });
         await waitFor(() => {
           expect(result.current.isLoading).to.be.false;
@@ -733,9 +795,19 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         setupPresentationManager([instanceKey1, instanceKey2]);
 
         // select both instances at level 0 to get them displayed in the component
-        selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1, instanceKey2], level: 0 });
+        selectionStorage.addToSelection({
+          imodelKey: imodel.key,
+          source: selectionSource,
+          selectables: [instanceKey1, instanceKey2],
+          level: 0,
+        });
         // select instanceKey1 at level 1 to get its row selected
-        selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1], level: 1 });
+        selectionStorage.addToSelection({
+          imodelKey: imodel.key,
+          source: selectionSource,
+          selectables: [instanceKey1],
+          level: 1,
+        });
         // wait for selection to be setup
         await waitFor(() => {
           expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).to.eq(2);
@@ -751,7 +823,12 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
 
         act(() => {
-          selectionStorage.replaceSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey2], level: 1 });
+          selectionStorage.replaceSelection({
+            imodelKey: imodel.key,
+            source: selectionSource,
+            selectables: [instanceKey2],
+            level: 1,
+          });
         });
         await waitFor(() => {
           expect(result.current.isLoading).to.be.false;
@@ -767,8 +844,18 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         setupPresentationManager([instanceKey1, instanceKey2]);
 
         // select both instances on both levels to make sure rows are loaded onto the component and selected on initial load.
-        selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1, instanceKey2], level: 0 });
-        selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1, instanceKey2], level: 1 });
+        selectionStorage.addToSelection({
+          imodelKey: imodel.key,
+          source: selectionSource,
+          selectables: [instanceKey1, instanceKey2],
+          level: 0,
+        });
+        selectionStorage.addToSelection({
+          imodelKey: imodel.key,
+          source: selectionSource,
+          selectables: [instanceKey1, instanceKey2],
+          level: 1,
+        });
         // wait for selection to be setup
         await waitFor(() => {
           expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).to.eq(2);
@@ -783,7 +870,12 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
 
         act(() => {
-          selectionStorage.removeFromSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1], level: 1 });
+          selectionStorage.removeFromSelection({
+            imodelKey: imodel.key,
+            source: selectionSource,
+            selectables: [instanceKey1],
+            level: 1,
+          });
         });
         await waitFor(() => {
           expect(result.current.isLoading).to.be.false;
@@ -799,8 +891,18 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         setupPresentationManager([instanceKey1, instanceKey2]);
 
         // select both instances on both levels to make sure rows are loaded onto the component and selected on initial load.
-        selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1, instanceKey2], level: 0 });
-        selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1, instanceKey2], level: 1 });
+        selectionStorage.addToSelection({
+          imodelKey: imodel.key,
+          source: selectionSource,
+          selectables: [instanceKey1, instanceKey2],
+          level: 0,
+        });
+        selectionStorage.addToSelection({
+          imodelKey: imodel.key,
+          source: selectionSource,
+          selectables: [instanceKey1, instanceKey2],
+          level: 1,
+        });
         // wait for selection to be setup
         await waitFor(() => {
           expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).to.eq(2);
@@ -830,8 +932,18 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         setupPresentationManager([instanceKey1]);
 
         // select both instances on both levels to make sure rows are loaded onto the component and selected on initial load.
-        selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1], level: 0 });
-        selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1], level: 1 });
+        selectionStorage.addToSelection({
+          imodelKey: imodel.key,
+          source: selectionSource,
+          selectables: [instanceKey1],
+          level: 0,
+        });
+        selectionStorage.addToSelection({
+          imodelKey: imodel.key,
+          source: selectionSource,
+          selectables: [instanceKey1],
+          level: 1,
+        });
         // wait for selection to be setup
         await waitFor(() => {
           expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).to.eq(1);
@@ -847,7 +959,12 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
         setupPresentationManager([instanceKey1, instanceKey2]);
         act(() => {
-          selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey2], level: 0 });
+          selectionStorage.addToSelection({
+            imodelKey: imodel.key,
+            source: selectionSource,
+            selectables: [instanceKey2],
+            level: 0,
+          });
         });
         await waitFor(() => {
           expect(result.current.isLoading).to.be.false;
@@ -861,7 +978,12 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => expect(result.current.isLoading).to.be.false);
 
         act(() => {
-          selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [createTestECInstanceKey()], level: 3 });
+          selectionStorage.addToSelection({
+            imodelKey: imodel.key,
+            source: selectionSource,
+            selectables: [createTestECInstanceKey()],
+            level: 3,
+          });
         });
         await waitFor(() => {
           expect(result.current.isLoading).to.be.false;
@@ -896,6 +1018,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     });
 
     presentationManager.getContentDescriptor.resolves(descriptor);
-    presentationManager.getContentIterator.callsFake(async () => ({ descriptor, items: createAsyncIterator(items), total: keys.length }));
+    presentationManager.getContentIterator.callsFake(async () => ({
+      descriptor,
+      items: createAsyncIterator(items),
+      total: keys.length,
+    }));
   }
 });

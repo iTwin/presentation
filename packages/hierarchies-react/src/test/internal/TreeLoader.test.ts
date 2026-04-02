@@ -25,8 +25,11 @@ describe("TreeLoader", () => {
   };
 
   function createLoader() {
-    return new TreeLoader(hierarchyProvider as unknown as HierarchyProvider, onHierarchyLimitExceededStub, onHierarchyLoadErrorStub, (n) =>
-      HierarchyNode.isGeneric(n) ? n.key.id : createNodeId(n),
+    return new TreeLoader(
+      hierarchyProvider as unknown as HierarchyProvider,
+      onHierarchyLimitExceededStub,
+      onHierarchyLoadErrorStub,
+      (n) => (HierarchyNode.isGeneric(n) ? n.key.id : createNodeId(n)),
     );
   }
 
@@ -74,7 +77,8 @@ describe("TreeLoader", () => {
         loader.loadNodes({
           parent: { id: undefined, nodeData: undefined },
           getHierarchyLevelOptions: () => ({ instanceFilter: undefined, hierarchyLevelSizeLimit: undefined }),
-          shouldLoadChildren: (parentNode) => HierarchyNodeKey.equals(parentNode.nodeData.key, { type: "generic", id: "root-1" }),
+          shouldLoadChildren: (parentNode) =>
+            HierarchyNodeKey.equals(parentNode.nodeData.key, { type: "generic", id: "root-1" }),
         }),
       );
 
@@ -92,7 +96,9 @@ describe("TreeLoader", () => {
       const childHierarchyNodes = [createTestHierarchyNode({ id: "child-1" })];
       hierarchyProvider.getNodes.callsFake((props) => {
         return createAsyncIterator(
-          props.parentNode && HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" }) ? childHierarchyNodes : [],
+          props.parentNode && HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" })
+            ? childHierarchyNodes
+            : [],
         );
       });
 
@@ -184,7 +190,9 @@ describe("TreeLoader", () => {
       const loader = createLoader();
       const rootHierarchyNodes = [createTestHierarchyNode({ id: "root-1" })];
       hierarchyProvider.getNodes.callsFake((props) => {
-        return createAsyncIterator(props.parentNode === undefined && props.instanceFilter !== undefined ? rootHierarchyNodes : []);
+        return createAsyncIterator(
+          props.parentNode === undefined && props.instanceFilter !== undefined ? rootHierarchyNodes : [],
+        );
       });
 
       const filter: GenericInstanceFilter = {
@@ -196,7 +204,10 @@ describe("TreeLoader", () => {
       const nodes = await collectNodes(
         loader.loadNodes({
           parent: { id: undefined, nodeData: undefined, instanceFilter: filter },
-          getHierarchyLevelOptions: (parent) => ({ instanceFilter: parent.instanceFilter, hierarchyLevelSizeLimit: undefined }),
+          getHierarchyLevelOptions: (parent) => ({
+            instanceFilter: parent.instanceFilter,
+            hierarchyLevelSizeLimit: undefined,
+          }),
           shouldLoadChildren: () => true,
         }),
       );
@@ -226,7 +237,10 @@ describe("TreeLoader", () => {
       const nodes = await collectNodes(
         loader.loadNodes({
           parent: modelNode,
-          getHierarchyLevelOptions: (parent) => ({ instanceFilter: parent.instanceFilter, hierarchyLevelSizeLimit: undefined }),
+          getHierarchyLevelOptions: (parent) => ({
+            instanceFilter: parent.instanceFilter,
+            hierarchyLevelSizeLimit: undefined,
+          }),
           shouldLoadChildren: () => true,
         }),
       );

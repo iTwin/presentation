@@ -38,7 +38,9 @@ export type RxjsNodeParser = (props: {
  *
  * @internal
  */
-export type RxjsNodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(props: {
+export type RxjsNodePreProcessor = <
+  TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode,
+>(props: {
   node: TNode;
   parentNode?: ParentHierarchyNode;
 }) => Observable<TNode>;
@@ -49,7 +51,10 @@ export type RxjsNodePreProcessor = <TNode extends ProcessedGenericHierarchyNode 
  *
  * @internal
  */
-export type RxjsNodePostProcessor = (props: { node: ProcessedHierarchyNode; parentNode?: ParentHierarchyNode }) => Observable<ProcessedHierarchyNode>;
+export type RxjsNodePostProcessor = (props: {
+  node: ProcessedHierarchyNode;
+  parentNode?: ParentHierarchyNode;
+}) => Observable<ProcessedHierarchyNode>;
 
 /**
  * An interface for a factory that knows how define a hierarchy based on a given parent node.
@@ -101,9 +106,12 @@ export function getRxjsHierarchyDefinition(hierarchyDefinition: HierarchyDefinit
         }
       : undefined,
     preProcessNode: hierarchyDefinition.preProcessNode
-      ? (props) => from(hierarchyDefinition.preProcessNode!(props)).pipe(filter((preprocessedNode) => !!preprocessedNode))
+      ? (props) =>
+          from(hierarchyDefinition.preProcessNode!(props)).pipe(filter((preprocessedNode) => !!preprocessedNode))
       : undefined,
-    postProcessNode: hierarchyDefinition.postProcessNode ? (props) => from(hierarchyDefinition.postProcessNode!(props)) : undefined,
+    postProcessNode: hierarchyDefinition.postProcessNode
+      ? (props) => from(hierarchyDefinition.postProcessNode!(props))
+      : undefined,
     defineHierarchyLevel: (props) => from(hierarchyDefinition.defineHierarchyLevel(props)),
   };
 }

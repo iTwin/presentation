@@ -13,7 +13,11 @@ import { PresentationTreeDataProvider } from "../../presentation-components/tree
 import { FilteredPresentationTreeDataProvider } from "../../presentation-components/tree/FilteredDataProvider.js";
 import { createTreeNodeItem } from "../../presentation-components/tree/Utils.js";
 import { createTestECInstanceKey } from "../_helpers/Common.js";
-import { createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy.js";
+import {
+  createTestECInstancesNode,
+  createTestECInstancesNodeKey,
+  createTestNodePathElement,
+} from "../_helpers/Hierarchy.js";
 import { createStub } from "../TestUtils.js";
 
 import type { PageOptions } from "@itwin/components-react";
@@ -26,10 +30,7 @@ describe("FilteredTreeDataProvider", () => {
   function createTestNodePathElementWithId(id: string) {
     return createTestNodePathElement({
       node: createTestECInstancesNode({
-        key: createTestECInstancesNodeKey({
-          instanceKeys: [createTestECInstanceKey({ id })],
-          pathFromRoot: [id],
-        }),
+        key: createTestECInstancesNodeKey({ instanceKeys: [createTestECInstanceKey({ id })], pathFromRoot: [id] }),
       }),
     });
   }
@@ -84,9 +85,7 @@ describe("FilteredTreeDataProvider", () => {
   beforeEach(() => {
     const onVariableChanged = new BeEvent();
     const presentationManager = sinon.createStubInstance(PresentationManager);
-    presentationManager.vars.returns({
-      onVariableChanged,
-    } as RulesetVariablesManager);
+    presentationManager.vars.returns({ onVariableChanged } as RulesetVariablesManager);
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
 
     filter = "test_filter";

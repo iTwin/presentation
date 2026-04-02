@@ -14,7 +14,10 @@ import type { ECSqlQueryExecutor } from "@itwin/presentation-shared";
 
 describe("createLimitingECSqlQueryExecutor", () => {
   const baseExecutor = {
-    createQueryReader: sinon.stub<Parameters<ECSqlQueryExecutor["createQueryReader"]>, ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
+    createQueryReader: sinon.stub<
+      Parameters<ECSqlQueryExecutor["createQueryReader"]>,
+      ReturnType<ECSqlQueryExecutor["createQueryReader"]>
+    >(),
   };
 
   beforeEach(() => {
@@ -32,7 +35,9 @@ describe("createLimitingECSqlQueryExecutor", () => {
   it("throws when base executor returns more rows than the limit", async () => {
     baseExecutor.createQueryReader.returns(createAsyncIterator([{}, {}]));
     const limitingExecutor = createLimitingECSqlQueryExecutor(baseExecutor, 1);
-    await expect(collect(limitingExecutor.createQueryReader({ ecsql: "query" }))).to.eventually.be.rejectedWith(RowsLimitExceededError);
+    await expect(collect(limitingExecutor.createQueryReader({ ecsql: "query" }))).to.eventually.be.rejectedWith(
+      RowsLimitExceededError,
+    );
   });
 
   it(`calls base executor with original query when limit is "unbounded"`, async () => {
@@ -43,7 +48,12 @@ describe("createLimitingECSqlQueryExecutor", () => {
 
   it(`calls base executor with added CTEs`, async () => {
     baseExecutor.createQueryReader.returns(createAsyncIterator([{}]));
-    await collect(createLimitingECSqlQueryExecutor(baseExecutor, "unbounded").createQueryReader({ ecsql: "query", ctes: ["cte1", "cte2"] }));
+    await collect(
+      createLimitingECSqlQueryExecutor(baseExecutor, "unbounded").createQueryReader({
+        ecsql: "query",
+        ctes: ["cte1", "cte2"],
+      }),
+    );
     expect(baseExecutor.createQueryReader).to.be.calledOnceWith({ ecsql: "query", ctes: ["cte1", "cte2"] });
   });
 

@@ -6,7 +6,14 @@
 import { BeEvent } from "@itwin/core-bentley";
 
 import type { GenericInstanceFilter } from "@itwin/core-common";
-import type { Event, EventListener, InstanceKey, IPrimitiveValueFormatter, Props, RaisableEvent } from "@itwin/presentation-shared";
+import type {
+  Event,
+  EventListener,
+  InstanceKey,
+  IPrimitiveValueFormatter,
+  Props,
+  RaisableEvent,
+} from "@itwin/presentation-shared";
 import type { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
 import type { HierarchySearchTree } from "./HierarchySearch.js";
 
@@ -40,14 +47,10 @@ export interface GetHierarchyNodesProps {
  */
 interface HierarchyChangedEventArgs {
   /** Set when the hierarchy change was caused by a formatter change. */
-  formatterChange?: {
-    newFormatter: IPrimitiveValueFormatter | undefined;
-  };
+  formatterChange?: { newFormatter: IPrimitiveValueFormatter | undefined };
 
   /** Set when the hierarchy change was caused by a hierarchy search change. */
-  searchChange?: {
-    newSearch: Props<HierarchyProvider["setHierarchySearch"]>;
-  };
+  searchChange?: { newSearch: Props<HierarchyProvider["setHierarchySearch"]> };
 }
 
 /**
@@ -150,15 +153,23 @@ export interface HierarchyProvider {
  *
  * @public
  */
-export function createHierarchyProvider<TPartialProvider extends Partial<Omit<HierarchyProvider, "hierarchyChanged">> & Pick<HierarchyProvider, "getNodes">>(
-  partialFactory: (props: { hierarchyChanged: RaisableEvent<EventListener<HierarchyProvider["hierarchyChanged"]>> }) => TPartialProvider,
+export function createHierarchyProvider<
+  TPartialProvider extends Partial<Omit<HierarchyProvider, "hierarchyChanged">> & Pick<HierarchyProvider, "getNodes">,
+>(
+  partialFactory: (props: {
+    hierarchyChanged: RaisableEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>;
+  }) => TPartialProvider,
 ): TPartialProvider & HierarchyProvider {
   const hierarchyChanged: Props<typeof partialFactory>["hierarchyChanged"] = new BeEvent();
   const impl = partialFactory({ hierarchyChanged });
   return Object.assign(impl, {
     hierarchyChanged,
-    ...(impl.getNodeInstanceKeys ? { getNodeInstanceKeys: impl.getNodeInstanceKeys } : { /* c8 ignore next */ async *getNodeInstanceKeys() {} }),
+    ...(impl.getNodeInstanceKeys
+      ? { getNodeInstanceKeys: impl.getNodeInstanceKeys }
+      : { /* c8 ignore next */ async *getNodeInstanceKeys() {} }),
     ...(impl.setFormatter ? { setFormatter: impl.setFormatter } : { /* c8 ignore next */ setFormatter() {} }),
-    ...(impl.setHierarchySearch ? { setHierarchySearch: impl.setHierarchySearch } : { /* c8 ignore next */ setHierarchySearch() {} }),
+    ...(impl.setHierarchySearch
+      ? { setHierarchySearch: impl.setHierarchySearch }
+      : { /* c8 ignore next */ setHierarchySearch() {} }),
   });
 }

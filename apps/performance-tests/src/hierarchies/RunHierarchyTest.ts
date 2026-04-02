@@ -45,7 +45,9 @@ export function runHierarchyTest(
 
             const query = createNodesQueryClauseFactory({
               imodelAccess,
-              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                classHierarchyInspector: imodelAccess,
+              }),
             });
             return [
               {

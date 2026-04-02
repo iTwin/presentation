@@ -10,7 +10,10 @@ import sinon from "sinon";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionManager } from "@itwin/presentation-frontend";
-import { UnifiedSelectionContextProvider, useUnifiedSelectionContext } from "../../presentation-components/unified-selection/UnifiedSelectionContext.js";
+import {
+  UnifiedSelectionContextProvider,
+  useUnifiedSelectionContext,
+} from "../../presentation-components/unified-selection/UnifiedSelectionContext.js";
 import { act, render, renderHook, waitFor } from "../TestUtils.js";
 
 import type { PropsWithChildren } from "react";
@@ -20,7 +23,10 @@ import type { RenderHookResult } from "../TestUtils.js";
 describe("UnifiedSelectionContext", () => {
   const testIModel = { key: "" } as IModelConnection;
 
-  function renderUnifiedSelectionContextHook(imodel = {} as IModelConnection, selectionLevel?: number): RenderHookResult<UnifiedSelectionContext, unknown> {
+  function renderUnifiedSelectionContextHook(
+    imodel = {} as IModelConnection,
+    selectionLevel?: number,
+  ): RenderHookResult<UnifiedSelectionContext, unknown> {
     const Wrapper = ({ children }: PropsWithChildren<unknown>) => {
       return (
         <UnifiedSelectionContextProvider imodel={imodel} selectionLevel={selectionLevel}>
@@ -29,9 +35,7 @@ describe("UnifiedSelectionContext", () => {
       );
     };
 
-    return renderHook(() => useUnifiedSelectionContext()!, {
-      wrapper: Wrapper,
-    });
+    return renderHook(() => useUnifiedSelectionContext()!, { wrapper: Wrapper });
   }
 
   beforeEach(() => {
@@ -229,7 +233,12 @@ describe("UnifiedSelectionContext", () => {
 
       const stubRemoveFromSelection = sinon.stub(Presentation.selection, "removeFromSelection").returns();
       result.current.removeFromSelection(keys);
-      expect(stubRemoveFromSelection).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", testIModel, keys, 4);
+      expect(stubRemoveFromSelection).to.have.been.calledOnceWithExactly(
+        "UnifiedSelectionContext",
+        testIModel,
+        keys,
+        4,
+      );
     });
   });
 

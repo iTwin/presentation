@@ -34,7 +34,9 @@ if (uiVersion) {
   applyGitPatch(`ui-${uiVersion}.patch`);
 }
 
-const [{ name: workspaceRootName, path: workspaceRootPath }] = JSON.parse(execSync("pnpm list -w --only-projects --json", { encoding: "utf-8" }));
+const [{ name: workspaceRootName, path: workspaceRootPath }] = JSON.parse(
+  execSync("pnpm list -w --only-projects --json", { encoding: "utf-8" }),
+);
 
 const { corePackages, uiPackages } = parseWorkspaceFile(workspaceRootPath);
 
@@ -136,11 +138,15 @@ function parseWorkspaceFile(workspaceRoot) {
   const workspaceFile = fs.readFileSync(path.join(workspaceRoot, "pnpm-workspace.yaml"), "utf8");
   const workspace = YAML.parse(workspaceFile);
   if (workspace.catalogs["itwinjs-core"] === undefined) {
-    throw new Error("Catalog 'itwinjs-core' not found in workspace file. Please check the workspace file or update this script.");
+    throw new Error(
+      "Catalog 'itwinjs-core' not found in workspace file. Please check the workspace file or update this script.",
+    );
   }
 
   if (workspace.catalogs["appui"] === undefined) {
-    throw new Error("Catalog 'appui' not found in workspace file. Please check the workspace file or update this script.");
+    throw new Error(
+      "Catalog 'appui' not found in workspace file. Please check the workspace file or update this script.",
+    );
   }
 
   // list of packages from `itwinjs-core`

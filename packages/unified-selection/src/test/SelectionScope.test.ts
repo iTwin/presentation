@@ -8,17 +8,27 @@ import sinon from "sinon";
 import { computeSelection } from "../unified-selection/SelectionScope.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
-import type { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
+import type {
+  ECSqlQueryDef,
+  ECSqlQueryExecutor,
+  ECSqlQueryReaderOptions,
+  ECSqlQueryRow,
+} from "@itwin/presentation-shared";
 import type { SelectableInstanceKey } from "../unified-selection/Selectable.js";
 import type { SelectionScope } from "../unified-selection/SelectionScope.js";
 
 describe("SelectionScope", () => {
   const queryExecutor = {
-    createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
+    createQueryReader: sinon.stub<
+      [ECSqlQueryDef, ECSqlQueryReaderOptions | undefined],
+      ReturnType<ECSqlQueryExecutor["createQueryReader"]>
+    >(),
   };
 
   describe("computeSelection", () => {
-    function createFakeQueryReader<TRow extends object>(rows: TRow[]): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
+    function createFakeQueryReader<TRow extends object>(
+      rows: TRow[],
+    ): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
       return (async function* () {
         for (const row of rows) {
           yield row;
@@ -30,16 +40,19 @@ describe("SelectionScope", () => {
       queryExecutor.createQueryReader
         .withArgs(sinon.match((query: ECSqlQueryDef) => query.ecsql.includes(targetECSqlContent)))
         // eslint-disable-next-line @typescript-eslint/naming-convention
-        .returns(createFakeQueryReader<ECSqlQueryRow>(result.map((key) => ({ ECInstanceId: key.id, ClassName: key.className }))));
+        .returns(
+          createFakeQueryReader<ECSqlQueryRow>(
+            result.map((key) => ({ ECInstanceId: key.id, ClassName: key.className })),
+          ),
+        );
     }
 
-    async function getSelection(keys: SelectableInstanceKey[], scope: SelectionScope): Promise<SelectableInstanceKey[]> {
+    async function getSelection(
+      keys: SelectableInstanceKey[],
+      scope: SelectionScope,
+    ): Promise<SelectableInstanceKey[]> {
       const selectables: SelectableInstanceKey[] = [];
-      for await (const selectable of computeSelection({
-        queryExecutor,
-        elementIds: keys.map((k) => k.id),
-        scope,
-      })) {
+      for await (const selectable of computeSelection({ queryExecutor, elementIds: keys.map((k) => k.id), scope })) {
         selectables.push(selectable);
       }
       return selectables;

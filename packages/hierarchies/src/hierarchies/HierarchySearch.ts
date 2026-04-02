@@ -69,7 +69,9 @@ export interface HierarchySearchPathOptions {
  * A path of hierarchy node identifiers for search the hierarchy with additional options.
  * @public
  */
-export type HierarchySearchPath = HierarchyNodeIdentifiersPath | { path: HierarchyNodeIdentifiersPath; options?: HierarchySearchPathOptions };
+export type HierarchySearchPath =
+  | HierarchyNodeIdentifiersPath
+  | { path: HierarchyNodeIdentifiersPath; options?: HierarchySearchPathOptions };
 /** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchySearchPath {
@@ -110,7 +112,10 @@ export namespace HierarchySearchPath {
         }
       : undefined;
   }
-  function mergeRevealOptions(lhs: HierarchySearchPathOptions["reveal"], rhs: HierarchySearchPathOptions["reveal"]): HierarchySearchPathOptions["reveal"] {
+  function mergeRevealOptions(
+    lhs: HierarchySearchPathOptions["reveal"],
+    rhs: HierarchySearchPathOptions["reveal"],
+  ): HierarchySearchPathOptions["reveal"] {
     if (rhs === true || lhs === true) {
       return true;
     }
@@ -195,13 +200,13 @@ export interface HierarchySearchTree {
 export namespace HierarchySearchTree {
   /** @public */
   type HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras extends Record<string, unknown>> = Readonly<
-    Pick<HierarchySearchTree, "identifier" | "options"> & {
-      extras: TExtras;
-    }
+    Pick<HierarchySearchTree, "identifier" | "options"> & { extras: TExtras }
   > &
     Pick<HierarchySearchTree, "isTarget">;
   /** @public */
-  type HierarchySearchTreeBuilderAcceptHandlerTreeInput = Readonly<Pick<HierarchySearchTree, "identifier" | "isTarget" | "options"> & { hasChildren: boolean }>;
+  type HierarchySearchTreeBuilderAcceptHandlerTreeInput = Readonly<
+    Pick<HierarchySearchTree, "identifier" | "isTarget" | "options"> & { hasChildren: boolean }
+  >;
   /** @public */
   interface HierarchySearchTreeBuilderAcceptHandler<TExtras extends Record<string, unknown>> {
     /**
@@ -263,7 +268,9 @@ export namespace HierarchySearchTree {
      * Accepts a hierarchy search path or paths' tree and adds it to the builder's internal tree structure. Use `getTree()` to create
      * a `HierarchySearchTree[]` from the added paths.
      */
-    accept(props: HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras>): HierarchySearchTreeBuilder<TAcceptHandlerExtras>;
+    accept(
+      props: HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras>,
+    ): HierarchySearchTreeBuilder<TAcceptHandlerExtras>;
     /**
      * Create `HierarchySearchTree[]` from currently added search paths.
      */
@@ -305,7 +312,8 @@ export namespace HierarchySearchTree {
       ): HierarchySearchTree[] {
         const list: HierarchySearchTree[] = [];
         for (const { children, ...entry } of dictionary.values()) {
-          let processedEntry: (Omit<HierarchySearchTree, "children"> & { extras: TAcceptHandlerExtras }) | undefined = entry;
+          let processedEntry: (Omit<HierarchySearchTree, "children"> & { extras: TAcceptHandlerExtras }) | undefined =
+            entry;
           if (props?.processEntry) {
             processedEntry = props.processEntry({ treeEntry: entry, parentEntries });
           }
@@ -314,7 +322,10 @@ export namespace HierarchySearchTree {
           }
           const { extras: _, ...entryWithoutExtras } = processedEntry;
           parentEntries.push(processedEntry);
-          list.push({ ...entryWithoutExtras, ...(children ? { children: Impl.#mapDictionaryToTree(children, parentEntries, props) } : undefined) });
+          list.push({
+            ...entryWithoutExtras,
+            ...(children ? { children: Impl.#mapDictionaryToTree(children, parentEntries, props) } : undefined),
+          });
           parentEntries.pop();
         }
         return list;
@@ -544,9 +555,7 @@ export namespace HierarchySearchTree {
       return lhs;
     }
     const autoExpand = mergeSearchTreeAutoExpandOption(lhs.autoExpand, rhs.autoExpand);
-    const options: NonNullable<HierarchySearchTree["options"]> = {
-      ...(autoExpand ? { autoExpand } : undefined),
-    };
+    const options: NonNullable<HierarchySearchTree["options"]> = { ...(autoExpand ? { autoExpand } : undefined) };
     return Object.keys(options).length > 0 ? options : undefined;
   }
 
@@ -567,20 +576,16 @@ export namespace HierarchySearchTree {
 function extractSearchPropsInternal(
   rootLevelSearchProps: HierarchySearchTree[] | undefined,
   parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined,
-):
-  | {
-      childrenTargetPaths?: HierarchySearchTree[];
-      hasSearchTargetAncestor: boolean;
-    }
-  | undefined {
+): { childrenTargetPaths?: HierarchySearchTree[]; hasSearchTargetAncestor: boolean } | undefined {
   if (!parentNode) {
-    return rootLevelSearchProps ? { childrenTargetPaths: rootLevelSearchProps, hasSearchTargetAncestor: false } : undefined;
+    return rootLevelSearchProps
+      ? { childrenTargetPaths: rootLevelSearchProps, hasSearchTargetAncestor: false }
+      : undefined;
   }
-  const searchProps: {
-    childrenTargetPaths?: HierarchySearchTree[];
-    hasSearchTargetAncestor: boolean;
-  } = {
-    ...(parentNode.search?.childrenTargetPaths ? { childrenTargetPaths: parentNode.search.childrenTargetPaths } : undefined),
+  const searchProps: { childrenTargetPaths?: HierarchySearchTree[]; hasSearchTargetAncestor: boolean } = {
+    ...(parentNode.search?.childrenTargetPaths
+      ? { childrenTargetPaths: parentNode.search.childrenTargetPaths }
+      : undefined),
     hasSearchTargetAncestor: !!parentNode.search?.hasSearchTargetAncestor || !!parentNode.search?.isSearchTarget,
   };
   return searchProps.childrenTargetPaths || searchProps.hasSearchTargetAncestor ? searchProps : undefined;
@@ -600,13 +605,8 @@ export function createHierarchySearchHelper(
   const hasSearch = !!searchProps;
 
   function saveSearchPropsFromPathsIntoReducer(
-    extractionProps: {
-      pathsReducer: MatchingSearchPathsReducer;
-      nodeKey: InstancesNodeKey | GenericNodeKey;
-    } & (
-      | {
-          pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-        }
+    extractionProps: { pathsReducer: MatchingSearchPathsReducer; nodeKey: InstancesNodeKey | GenericNodeKey } & (
+      | { pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean }
       | {}
     ),
   ): void;
@@ -616,10 +616,7 @@ export function createHierarchySearchHelper(
     asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
   }): void | Promise<void>;
   function saveSearchPropsFromPathsIntoReducer(
-    extractionProps: {
-      pathsReducer: MatchingSearchPathsReducer;
-      nodeKey: InstancesNodeKey | GenericNodeKey;
-    } & (
+    extractionProps: { pathsReducer: MatchingSearchPathsReducer; nodeKey: InstancesNodeKey | GenericNodeKey } & (
       | { pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean }
       | { asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean> }
       | {}
@@ -637,7 +634,9 @@ export function createHierarchySearchHelper(
       if ("asyncPathMatcher" in extractionProps) {
         const matchesPossiblyPromise = extractionProps.asyncPathMatcher(childrenSearchTree.identifier);
         if (matchesPossiblyPromise instanceof Promise) {
-          matchedTreePromises.push(matchesPossiblyPromise.then((matches) => (matches ? childrenSearchTree : undefined)));
+          matchedTreePromises.push(
+            matchesPossiblyPromise.then((matches) => (matches ? childrenSearchTree : undefined)),
+          );
         } else if (matchesPossiblyPromise) {
           extractionProps.pathsReducer.accept(childrenSearchTree);
         }
@@ -659,7 +658,9 @@ export function createHierarchySearchHelper(
     );
   }
 
-  function createChildNodeProps(props: { nodeKey: InstancesNodeKey | GenericNodeKey }): Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
+  function createChildNodeProps(props: {
+    nodeKey: InstancesNodeKey | GenericNodeKey;
+  }): Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
   function createChildNodeProps(props: {
     nodeKey: InstancesNodeKey | GenericNodeKey;
     pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
@@ -667,25 +668,31 @@ export function createHierarchySearchHelper(
   function createChildNodeProps(props: {
     nodeKey: InstancesNodeKey | GenericNodeKey;
     asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-  }): Promise<Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined> | Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
+  }):
+    | Promise<Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined>
+    | Pick<NonGroupingHierarchyNode, "search" | "autoExpand">
+    | undefined;
   function createChildNodeProps(
     props: { nodeKey: InstancesNodeKey | GenericNodeKey } & (
-      | {
-          asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-        }
-      | {
-          pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-        }
+      | { asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean> }
+      | { pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean }
       | {}
     ),
-  ): Promise<Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined> | Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined {
+  ):
+    | Promise<Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined>
+    | Pick<NonGroupingHierarchyNode, "search" | "autoExpand">
+    | undefined {
     if (!hasSearch) {
       return undefined;
     }
 
     const reducer = new MatchingSearchPathsReducer(searchProps.hasSearchTargetAncestor);
     if ("asyncPathMatcher" in props) {
-      const extractResult = saveSearchPropsFromPathsIntoReducer({ pathsReducer: reducer, nodeKey: props.nodeKey, asyncPathMatcher: props.asyncPathMatcher });
+      const extractResult = saveSearchPropsFromPathsIntoReducer({
+        pathsReducer: reducer,
+        nodeKey: props.nodeKey,
+        asyncPathMatcher: props.asyncPathMatcher,
+      });
       if (extractResult instanceof Promise) {
         return extractResult.then(() => reducer.aggregatedOptions);
       }
@@ -732,10 +739,14 @@ export function createHierarchySearchHelper(
   };
 }
 
-function nodeKeyMatchesIdentifier(nodeKey: InstancesNodeKey | GenericNodeKey, identifier: HierarchyNodeIdentifier): boolean {
+function nodeKeyMatchesIdentifier(
+  nodeKey: InstancesNodeKey | GenericNodeKey,
+  identifier: HierarchyNodeIdentifier,
+): boolean {
   return (
     (HierarchyNodeKey.isGeneric(nodeKey) && HierarchyNodeIdentifier.equal(identifier, nodeKey)) ||
-    (HierarchyNodeKey.isInstances(nodeKey) && nodeKey.instanceKeys.some((ik) => HierarchyNodeIdentifier.equal(identifier, ik)))
+    (HierarchyNodeKey.isInstances(nodeKey) &&
+      nodeKey.instanceKeys.some((ik) => HierarchyNodeIdentifier.equal(identifier, ik)))
   );
 }
 
@@ -776,9 +787,6 @@ class MatchingSearchPathsReducer {
           }
         : undefined;
     const autoExpand = this._options?.autoExpand === true;
-    return {
-      ...(search ? { search } : undefined),
-      ...(autoExpand ? { autoExpand } : undefined),
-    };
+    return { ...(search ? { search } : undefined), ...(autoExpand ? { autoExpand } : undefined) };
   }
 }

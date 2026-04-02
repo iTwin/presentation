@@ -7,7 +7,10 @@ import { expect } from "chai";
 import { HierarchyNodesDefinition } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
 import { createTestSourceGenericNode } from "../Utils.js";
 
-import type { GenericHierarchyNodeDefinition, InstanceNodesQueryDefinition } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
+import type {
+  GenericHierarchyNodeDefinition,
+  InstanceNodesQueryDefinition,
+} from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
 
 describe("HierarchyNodesDefinition", () => {
   const genericNodeDefinition = createGenericNodeDefinition();
@@ -29,18 +32,11 @@ describe("HierarchyNodesDefinition", () => {
 });
 
 function createGenericNodeDefinition(props?: Partial<GenericHierarchyNodeDefinition>): GenericHierarchyNodeDefinition {
-  return {
-    node: createTestSourceGenericNode(),
-    ...props,
-  };
+  return { node: createTestSourceGenericNode(), ...props };
 }
 
-function createInstanceNodesQueryDefinition(props?: Partial<InstanceNodesQueryDefinition>): InstanceNodesQueryDefinition {
-  return {
-    fullClassName: "full.class_name",
-    query: {
-      ecsql: "test ecsql",
-    },
-    ...props,
-  };
+function createInstanceNodesQueryDefinition(
+  props?: Partial<InstanceNodesQueryDefinition>,
+): InstanceNodesQueryDefinition {
+  return { fullClassName: "full.class_name", query: { ecsql: "test ecsql" }, ...props };
 }

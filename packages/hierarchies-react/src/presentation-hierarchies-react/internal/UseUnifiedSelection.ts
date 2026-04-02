@@ -41,7 +41,10 @@ export interface UseUnifiedTreeSelectionProps {
    * @param node Hierarchy node to create a selectable for.
    * @param treeModelNodeId ID of the hierarchy node in the internal tree model. This ID uniquely identifies the node in the whole hierarchy, as opposed to `GenericNodeKey.id` contained within the `node`, which may not be unique.
    */
-  createSelectableForGenericNode?: (node: NonGroupingHierarchyNode & { key: GenericNodeKey }, treeModelNodeId: string) => Selectable;
+  createSelectableForGenericNode?: (
+    node: NonGroupingHierarchyNode & { key: GenericNodeKey },
+    treeModelNodeId: string,
+  ) => Selectable;
 
   /**
    * Unified selection storage to use for listening, getting and changing active selection.
@@ -55,7 +58,9 @@ export function useUnifiedTreeSelection({
   selectionStorage,
   getTreeModelNode,
   createSelectableForGenericNode = defaultCreateSelectableForGenericNode,
-}: UseUnifiedTreeSelectionProps & { getTreeModelNode: (nodeId: string) => TreeModelHierarchyNode | TreeModelRootNode | undefined }): TreeSelectionOptions {
+}: UseUnifiedTreeSelectionProps & {
+  getTreeModelNode: (nodeId: string) => TreeModelHierarchyNode | TreeModelRootNode | undefined;
+}): TreeSelectionOptions {
   const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
     isNodeSelected: /* c8 ignore next */ () => false,
     selectNodes: /* c8 ignore next */ () => {},
@@ -75,14 +80,9 @@ export function useUnifiedTreeSelection({
   return options;
 }
 
-const defaultCreateSelectableForGenericNode: NonNullable<UseUnifiedTreeSelectionProps["createSelectableForGenericNode"]> = (
-  node,
-  treeModelNodeId,
-): Selectable => ({
-  identifier: treeModelNodeId,
-  data: node,
-  async *loadInstanceKeys() {},
-});
+const defaultCreateSelectableForGenericNode: NonNullable<
+  UseUnifiedTreeSelectionProps["createSelectableForGenericNode"]
+> = (node, treeModelNodeId): Selectable => ({ identifier: treeModelNodeId, data: node, async *loadInstanceKeys() {} });
 
 function createOptions(
   source: string,
@@ -96,7 +96,10 @@ function createOptions(
       if (!node || node.id === undefined) {
         return false;
       }
-      for (const [imodelKey, nodeSelectables] of groupNodeSelectablesByIModelKey(node, createSelectableForGenericNode)) {
+      for (const [imodelKey, nodeSelectables] of groupNodeSelectablesByIModelKey(
+        node,
+        createSelectableForGenericNode,
+      )) {
         const storageSelectables = storage.getSelection({ imodelKey, level: 0 });
         if (Selectables.hasAny(storageSelectables, nodeSelectables)) {
           return true;
@@ -112,7 +115,10 @@ function createOptions(
         if (!node || node.id === undefined) {
           return;
         }
-        for (const [imodelKey, nodeSelectables] of groupNodeSelectablesByIModelKey(node, createSelectableForGenericNode)) {
+        for (const [imodelKey, nodeSelectables] of groupNodeSelectablesByIModelKey(
+          node,
+          createSelectableForGenericNode,
+        )) {
           let selectablesList = imodelSelectables.get(imodelKey);
           if (!selectablesList) {
             selectablesList = [];

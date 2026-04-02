@@ -12,7 +12,10 @@ import type { DelayLoadedTreeNodeItem } from "@itwin/components-react";
 import type { NodeKey } from "@itwin/presentation-common";
 import type { PresentationTreeNodeItem } from "../../presentation-components/tree/PresentationTreeNodeItem.js";
 
-export function createTestTreeNodeItem(key?: NodeKey, partialNode?: Partial<DelayLoadedTreeNodeItem>): PresentationTreeNodeItem {
+export function createTestTreeNodeItem(
+  key?: NodeKey,
+  partialNode?: Partial<DelayLoadedTreeNodeItem>,
+): PresentationTreeNodeItem {
   const node = {
     id: partialNode?.id ?? "node_id",
     parentId: partialNode?.parentId,

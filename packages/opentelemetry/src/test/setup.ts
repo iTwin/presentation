@@ -8,9 +8,4 @@ import sinonChai from "sinon-chai";
 // configure chai
 chai.use(sinonChai);
 
-export const mochaHooks = {
-  beforeAll() {},
-  beforeEach() {},
-  afterEach() {},
-  afterAll() {},
-};
+export const mochaHooks = { beforeAll() {}, beforeEach() {}, afterEach() {}, afterAll() {} };

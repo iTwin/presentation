@@ -37,11 +37,7 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
   };
 
   return from(queryExecutor.createQueryReader(query, config)).pipe(
-    log({
-      category: LOGGING_NAMESPACE,
-      severity: "trace",
-      message: /* c8 ignore next */ (row) => JSON.stringify(row),
-    }),
+    log({ category: LOGGING_NAMESPACE, severity: "trace", message: /* c8 ignore next */ (row) => JSON.stringify(row) }),
     mergeMap((row) => parser({ row })),
   );
 }
@@ -64,7 +60,9 @@ export interface RowDef {
 }
 
 /** @internal */
-export const defaultNodesParser: (props: Pick<Props<RxjsNodeParser>, "row">) => ObservedValueOf<ReturnType<RxjsNodeParser>> = ({ row }) => {
+export const defaultNodesParser: (
+  props: Pick<Props<RxjsNodeParser>, "row">,
+) => ObservedValueOf<ReturnType<RxjsNodeParser>> = ({ row }) => {
   const typedRow = row as RowDef;
   const processingParams: InstanceHierarchyNodeProcessingParams = {
     ...(typedRow.HideIfNoChildren ? { hideIfNoChildren: true } : undefined),

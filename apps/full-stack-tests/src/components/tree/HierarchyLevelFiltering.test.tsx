@@ -5,7 +5,11 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 import { expect } from "chai";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { useState } from "react";
 import sinon from "sinon";
 import { SelectionMode, UiComponents } from "@itwin/components-react";
@@ -53,7 +57,9 @@ describe("Learning snippets", () => {
 
         // create presentation-specific tree renderer that enables hierarchy
         // level filtering
-        const treeRenderer = (treeRendererProps: TreeRendererProps) => <PresentationTreeRenderer {...treeRendererProps} nodeLoader={state.nodeLoader} />;
+        const treeRenderer = (treeRendererProps: TreeRendererProps) => (
+          <PresentationTreeRenderer {...treeRendererProps} nodeLoader={state.nodeLoader} />
+        );
 
         return (
           <PresentationTree
@@ -93,8 +99,11 @@ describe("Learning snippets", () => {
       const filteringDialog = await waitFor(() => getByRole(baseElement, "dialog"));
 
       // open property selector and select the "User Label" property
-      // cspell:disable-next-line
-      const propertySelector = await waitFor(() => getByPlaceholderText<HTMLInputElement>(baseElement, "Çhóôsë pröpértý"));
+
+      const propertySelector = await waitFor(() =>
+        // cspell:disable-next-line
+        getByPlaceholderText<HTMLInputElement>(baseElement, "Çhóôsë pröpértý"),
+      );
       await user.click(propertySelector);
       await user.click(getByTitle(baseElement, "User Label"));
       await waitFor(() => expect(propertySelector.value).to.eq("User Label"));
@@ -107,7 +116,9 @@ describe("Learning snippets", () => {
       await user.keyboard("{Enter}");
       await waitFor(() => {
         // wait for the "apply" button to become enabled
-        const disabledButton = filteringDialog.querySelector(".presentation-instance-filter-dialog-apply-button[disabled]");
+        const disabledButton = filteringDialog.querySelector(
+          ".presentation-instance-filter-dialog-apply-button[disabled]",
+        );
         if (disabledButton) {
           throw new Error(`The "Apply" button is disabled`);
         }
@@ -148,10 +159,7 @@ const ruleset: Ruleset = {
         {
           specType: "RelatedInstanceNodes",
           relationshipPaths: [
-            {
-              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-              direction: "Forward",
-            },
+            { relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" },
           ],
           groupByClass: false,
           groupByLabel: false,
@@ -170,16 +178,10 @@ function stubGlobals() {
   const domMatrix = global.DOMMatrix;
 
   before(() => {
-    Object.defineProperty(global, "DOMMatrix", {
-      writable: true,
-      value: sinon.fake(() => ({ m41: 0, m42: 0 })),
-    });
+    Object.defineProperty(global, "DOMMatrix", { writable: true, value: sinon.fake(() => ({ m41: 0, m42: 0 })) });
   });
 
   after(() => {
-    Object.defineProperty(global, "DOMMatrix", {
-      writable: true,
-      value: domMatrix,
-    });
+    Object.defineProperty(global, "DOMMatrix", { writable: true, value: domMatrix });
   });
 }

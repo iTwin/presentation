@@ -15,7 +15,10 @@ import type { ComponentProps } from "react";
 import type { Id64String } from "@itwin/core-bentley";
 import type { IModelConnection } from "@itwin/core-frontend";
 
-export interface ViewportContentComponentProps extends Pick<ComponentProps<typeof SelectionScopePicker>, "onSelectionScopeChanged"> {
+export interface ViewportContentComponentProps extends Pick<
+  ComponentProps<typeof SelectionScopePicker>,
+  "onSelectionScopeChanged"
+> {
   imodel: IModelConnection;
 }
 
@@ -40,8 +43,14 @@ export default function ViewportContentComponent(props: ViewportContentComponent
 
   return (
     <div className="ViewportContentComponent" style={{ height: "100%" }}>
-      {selectedViewDefinitionId ? <ViewportComponent imodel={props.imodel} viewDefinitionId={selectedViewDefinitionId} /> : undefined}
-      <ViewDefinitionSelector imodel={props.imodel} selectedViewDefinition={selectedViewDefinitionId} onViewDefinitionSelected={onViewDefinitionChanged} />
+      {selectedViewDefinitionId ? (
+        <ViewportComponent imodel={props.imodel} viewDefinitionId={selectedViewDefinitionId} />
+      ) : undefined}
+      <ViewDefinitionSelector
+        imodel={props.imodel}
+        selectedViewDefinition={selectedViewDefinitionId}
+        onViewDefinitionSelected={onViewDefinitionChanged}
+      />
       <SelectionScopePicker onSelectionScopeChanged={props.onSelectionScopeChanged} />
     </div>
   );

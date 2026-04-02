@@ -87,11 +87,7 @@ export async function createRelationshipPathJoinClause(props: CreateRelationship
         ${getJoinClause(step.joinType)} ${getClassSelectClause(step.target, step.targetAlias)}
           ON ${relationshipJoinPropertyNames.this} = ${relationshipJoinPropertyNames.next}
       `;
-      prev = {
-        alias: step.targetAlias,
-        className: step.target.fullName,
-        joinPropertyName: "ECInstanceId",
-      };
+      prev = { alias: step.targetAlias, className: step.target.fullName, joinPropertyName: "ECInstanceId" };
     } else {
       const relationshipJoinPropertyNames = !step.relationshipReverse
         ? { this: "SourceECInstanceId", next: "TargetECInstanceId" }
@@ -120,23 +116,21 @@ export async function createRelationshipPathJoinClause(props: CreateRelationship
           ON ${createRawPropertyValueSelector(step.targetAlias, "ECInstanceId")}
             = ${createRawPropertyValueSelector(step.relationshipAlias, relationshipJoinPropertyNames.next)}
       `;
-      prev = {
-        alias: step.targetAlias,
-        className: step.target.fullName,
-        joinPropertyName: "ECInstanceId",
-      };
+      prev = { alias: step.targetAlias, className: step.target.fullName, joinPropertyName: "ECInstanceId" };
     }
   }
   return clause;
 }
 
-type ResolvedRelationshipPathStep = Omit<JoinRelationshipPathStep, "sourceClassName" | "relationshipName" | "targetClassName"> & {
-  source: EC.Class;
-  relationship: EC.RelationshipClass;
-  target: EC.Class;
-};
+type ResolvedRelationshipPathStep = Omit<
+  JoinRelationshipPathStep,
+  "sourceClassName" | "relationshipName" | "targetClassName"
+> & { source: EC.Class; relationship: EC.RelationshipClass; target: EC.Class };
 
-async function getRelationshipPathStepClasses(schemaProvider: ECSchemaProvider, step: JoinRelationshipPathStep): Promise<ResolvedRelationshipPathStep> {
+async function getRelationshipPathStepClasses(
+  schemaProvider: ECSchemaProvider,
+  step: JoinRelationshipPathStep,
+): Promise<ResolvedRelationshipPathStep> {
   const { sourceClassName, relationshipName, targetClassName, ...rest } = step;
   return {
     ...rest,
@@ -150,12 +144,20 @@ async function getNavigationProperty(step: ResolvedRelationshipPathStep): Promis
   const source = !step.relationshipReverse ? step.source : step.target;
   const target = !step.relationshipReverse ? step.target : step.source;
   for (const prop of await source.getProperties()) {
-    if (prop.isNavigation() && prop.direction === "Forward" && (await prop.relationshipClass).fullName === step.relationship.fullName) {
+    if (
+      prop.isNavigation() &&
+      prop.direction === "Forward" &&
+      (await prop.relationshipClass).fullName === step.relationship.fullName
+    ) {
       return prop;
     }
   }
   for (const prop of await target.getProperties()) {
-    if (prop.isNavigation() && prop.direction === "Backward" && (await prop.relationshipClass).fullName === step.relationship.fullName) {
+    if (
+      prop.isNavigation() &&
+      prop.direction === "Backward" &&
+      (await prop.relationshipClass).fullName === step.relationship.fullName
+    ) {
       return prop;
     }
   }

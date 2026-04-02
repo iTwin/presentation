@@ -17,12 +17,7 @@ import { Props } from "@itwin/presentation-shared";
 const provider = createHierarchyProvider(() => ({
   async *getNodes({ parentNode }) {
     yield !parentNode
-      ? {
-          key: { type: "generic", id: `root` },
-          label: `Root node`,
-          children: true,
-          parentKeys: [],
-        }
+      ? { key: { type: "generic", id: `root` }, label: `Root node`, children: true, parentKeys: [] }
       : {
           key: { type: "generic", id: `child-${parentNode.parentKeys.length + 1}` },
           label: `Child ${parentNode.parentKeys.length + 1}`,
@@ -57,7 +52,10 @@ using provider = createHierarchyProvider(({ hierarchyChanged }) => {
   // Briefcase connections support data modifications - the provider should listen to txn changes
   // and raise `hierarchyChanged` event when the hierarchy should be refreshed. `BriefcaseTxns` has a number
   // of events that we should listen to - here we're using `registerTxnListeners` helper to simplify subscription.
-  const disposeTxnListeners = imodel instanceof BriefcaseConnection ? registerTxnListeners(imodel.txns, () => hierarchyChanged.raiseEvent({})) : undefined;
+  const disposeTxnListeners =
+    imodel instanceof BriefcaseConnection
+      ? registerTxnListeners(imodel.txns, () => hierarchyChanged.raiseEvent({}))
+      : undefined;
   return {
     // Make this provider disposable. Owners of the provider should make sure `Symbol.dispose` is called when the
     // provider is no longer needed.
@@ -79,7 +77,10 @@ using provider = createHierarchyProvider(({ hierarchyChanged }) => {
           `,
         )) {
           yield {
-            key: { type: "instances", instanceKeys: [{ className: "BisCore.Subject", id: "0x1", imodelKey: imodel.key }] },
+            key: {
+              type: "instances",
+              instanceKeys: [{ className: "BisCore.Subject", id: "0x1", imodelKey: imodel.key }],
+            },
             label: row.label,
             children: !!row.hasChildren,
             parentKeys: [],
@@ -105,7 +106,10 @@ using provider = createHierarchyProvider(({ hierarchyChanged }) => {
           `,
         )) {
           yield {
-            key: { type: "instances", instanceKeys: [{ className: row.className, id: row.id, imodelKey: imodel.key }] },
+            key: {
+              type: "instances",
+              instanceKeys: [{ className: row.className, id: row.id, imodelKey: imodel.key }],
+            },
             label: row.label,
             children: !!row.hasChildren,
             parentKeys: [...parentNode.parentKeys, parentNode.key],
@@ -160,7 +164,9 @@ First, let's define a sample books service:
 
 ```ts
 // Define a type for a filter that can be applied to books service queries.
-type BooksServiceFilter<TEntry> = { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" } | Partial<TEntry>;
+type BooksServiceFilter<TEntry> =
+  | { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" }
+  | Partial<TEntry>;
 
 // Creates a books service that provides authors and books data. The service has two methods:
 // - `getAuthors` - returns authors based on the provided query.
@@ -315,7 +321,13 @@ With the above APIs at hand, implementing node label formatting is straightforwa
 import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
-import { ConcatenatedValue, ConcatenatedValuePart, createDefaultValueFormatter, IPrimitiveValueFormatter, julianToDateTime } from "@itwin/presentation-shared";
+import {
+  ConcatenatedValue,
+  ConcatenatedValuePart,
+  createDefaultValueFormatter,
+  IPrimitiveValueFormatter,
+  julianToDateTime,
+} from "@itwin/presentation-shared";
 
 // Create a hierarchy provider that returns a single root node with formatted label. The formatter used by the
 // provider can be changed by calling the `setFormatter` method.
@@ -413,14 +425,22 @@ Let's start with the first step:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchTree } from "@itwin/presentation-hierarchies";
+import {
+  createHierarchySearchHelper,
+  GenericNodeKey,
+  HierarchyNodeIdentifier,
+  HierarchySearchTree,
+} from "@itwin/presentation-hierarchies";
 
 // A function that matches given string against authors and books, and returns hierarchy tree
 // from root to the matched nodes. This function must be aware of the hierarchy structure to know what paths
 // to create.
 async function createHierarchySearchTree(searchText: string): Promise<HierarchySearchTree[]> {
   const searchTreeBuilder = HierarchySearchTree.createBuilder();
-  const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: searchText }), booksService.getBooks({ title: searchText })]);
+  const [matchingAuthors, matchingBooks] = await Promise.all([
+    booksService.getAuthors({ name: searchText }),
+    booksService.getBooks({ title: searchText }),
+  ]);
   for (const author of matchingAuthors) {
     searchTreeBuilder.accept({ path: [{ type: "generic", id: `author:${author.key}` }] });
   }
@@ -449,12 +469,20 @@ Now that we're able to find the paths, let's enhance our hierarchy provider to s
 import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
-import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchTree } from "@itwin/presentation-hierarchies";
+import {
+  createHierarchySearchHelper,
+  GenericNodeKey,
+  HierarchyNodeIdentifier,
+  HierarchySearchTree,
+} from "@itwin/presentation-hierarchies";
 
 let rootSearch: Props<HierarchyProvider["setHierarchySearch"]>;
 const provider = createHierarchyProvider(({ hierarchyChanged }) => ({
   async *getNodes({ parentNode }) {
-    const searchHelper = !parentNode || HierarchyNode.isGeneric(parentNode) ? createHierarchySearchHelper(rootSearch?.paths, parentNode) : undefined;
+    const searchHelper =
+      !parentNode || HierarchyNode.isGeneric(parentNode)
+        ? createHierarchySearchHelper(rootSearch?.paths, parentNode)
+        : undefined;
     const targetNodeKeys = searchHelper?.getChildNodeSearchIdentifiers();
     if (!parentNode) {
       // For root nodes, query authors and return nodes based on them
@@ -569,19 +597,23 @@ Hierarchy level filters are defined using the `GenericInstanceFilter` data struc
 import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
 
 // A function that creates a books service - specific filter, based on the given parent node and children filters
-function createBooksServiceFilter(parentNodeFilter: Record<string, unknown> | undefined, genericChildrenFilter: GenericInstanceFilter | undefined) {
+function createBooksServiceFilter(
+  parentNodeFilter: Record<string, unknown> | undefined,
+  genericChildrenFilter: GenericInstanceFilter | undefined,
+) {
   function createRuleFilter(rule: GenericInstanceFilterRule): Record<string, unknown> {
     // note: this is a very simplistic implementation that doesn't support different operators, value types, etc.
     return { [rule.propertyName]: rule.value?.rawValue ?? "" };
   }
   function createGroupFilter(group: GenericInstanceFilterRuleGroup): BooksServiceFilter<Record<string, unknown>> {
-    return {
-      operator: group.operator,
-      rules: group.rules.map(createRuleOrGroupFilter),
-    };
+    return { operator: group.operator, rules: group.rules.map(createRuleOrGroupFilter) };
   }
-  function createRuleOrGroupFilter(ruleOrGroup: GenericInstanceFilter["rules"]): BooksServiceFilter<Record<string, unknown>> {
-    return GenericInstanceFilter.isFilterRuleGroup(ruleOrGroup) ? createGroupFilter(ruleOrGroup) : createRuleFilter(ruleOrGroup);
+  function createRuleOrGroupFilter(
+    ruleOrGroup: GenericInstanceFilter["rules"],
+  ): BooksServiceFilter<Record<string, unknown>> {
+    return GenericInstanceFilter.isFilterRuleGroup(ruleOrGroup)
+      ? createGroupFilter(ruleOrGroup)
+      : createRuleFilter(ruleOrGroup);
   }
   const childrenFilter = genericChildrenFilter ? createRuleOrGroupFilter(genericChildrenFilter.rules) : undefined;
   if (parentNodeFilter && childrenFilter) {
@@ -625,7 +657,9 @@ const provider = createHierarchyProvider(() => ({
       }
     } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
       // For author parent node, query books and return nodes based on them
-      const books = await booksService.getBooks(createBooksServiceFilter({ authorKey: parentNode.key.id.slice(7) }, instanceFilter));
+      const books = await booksService.getBooks(
+        createBooksServiceFilter({ authorKey: parentNode.key.id.slice(7) }, instanceFilter),
+      );
       for (const book of books) {
         const nodeKey: GenericNodeKey = { type: "generic", id: `book:${book.key}` };
         yield {
@@ -664,20 +698,14 @@ const createAuthorsFilter = (): GenericInstanceFilter => ({
         operator: "like",
         propertyTypeName: "string",
         sourceAlias: "",
-        value: {
-          displayValue: "Mark",
-          rawValue: "Mark",
-        },
+        value: { displayValue: "Mark", rawValue: "Mark" },
       },
       {
         propertyName: "hasBooks",
         operator: "is-equal",
         propertyTypeName: "boolean",
         sourceAlias: "",
-        value: {
-          displayValue: "False",
-          rawValue: false,
-        },
+        value: { displayValue: "False", rawValue: false },
       },
     ],
   },
@@ -701,20 +729,14 @@ const createBooksFilter = (): GenericInstanceFilter => ({
         operator: "like",
         propertyTypeName: "string",
         sourceAlias: "",
-        value: {
-          displayValue: "OL274",
-          rawValue: "OL274",
-        },
+        value: { displayValue: "OL274", rawValue: "OL274" },
       },
       {
         propertyName: "title",
         operator: "like",
         propertyTypeName: "string",
         sourceAlias: "",
-        value: {
-          displayValue: "Hobbit",
-          rawValue: "Hobbit",
-        },
+        value: { displayValue: "Hobbit", rawValue: "Hobbit" },
       },
     ],
   },

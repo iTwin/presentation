@@ -51,10 +51,22 @@ describe("mergeProviders", () => {
       createTestProvider({
         nodes: ({ parentNode }) => {
           if (!parentNode) {
-            return [createTestGenericNode({ key: createTestGenericNodeKey({ id: "1", source: "s1" }), label: "1", children: true })];
+            return [
+              createTestGenericNode({
+                key: createTestGenericNodeKey({ id: "1", source: "s1" }),
+                label: "1",
+                children: true,
+              }),
+            ];
           }
           if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "1") {
-            return [createTestGenericNode({ key: createTestGenericNodeKey({ id: "2", source: "s1" }), label: "2", children: false })];
+            return [
+              createTestGenericNode({
+                key: createTestGenericNodeKey({ id: "2", source: "s1" }),
+                label: "2",
+                children: false,
+              }),
+            ];
           }
           return [];
         },
@@ -62,20 +74,32 @@ describe("mergeProviders", () => {
       createTestProvider({
         nodes: ({ parentNode }) =>
           parentNode && HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "2"
-            ? [createTestGenericNode({ key: createTestGenericNodeKey({ id: "3", source: "s2" }), label: "3", children: false })]
+            ? [
+                createTestGenericNode({
+                  key: createTestGenericNodeKey({ id: "3", source: "s2" }),
+                  label: "3",
+                  children: false,
+                }),
+              ]
             : [],
       }),
     ];
     const mergedProvider = mergeProviders({ providers });
 
     const nodes1 = await collect(mergedProvider.getNodes({ parentNode: undefined }));
-    expect(nodes1).to.deep.eq([createTestGenericNode({ key: createTestGenericNodeKey({ id: "1", source: "s1" }), label: "1", children: true })]);
+    expect(nodes1).to.deep.eq([
+      createTestGenericNode({ key: createTestGenericNodeKey({ id: "1", source: "s1" }), label: "1", children: true }),
+    ]);
 
     const nodes2 = await collect(mergedProvider.getNodes({ parentNode: nodes1[0] }));
-    expect(nodes2).to.deep.eq([createTestGenericNode({ key: createTestGenericNodeKey({ id: "2", source: "s1" }), label: "2", children: true })]);
+    expect(nodes2).to.deep.eq([
+      createTestGenericNode({ key: createTestGenericNodeKey({ id: "2", source: "s1" }), label: "2", children: true }),
+    ]);
 
     const nodes3 = await collect(mergedProvider.getNodes({ parentNode: nodes2[0] }));
-    expect(nodes3).to.deep.eq([createTestGenericNode({ key: createTestGenericNodeKey({ id: "3", source: "s2" }), label: "3", children: false })]);
+    expect(nodes3).to.deep.eq([
+      createTestGenericNode({ key: createTestGenericNodeKey({ id: "3", source: "s2" }), label: "3", children: false }),
+    ]);
   });
 
   it("returns instance keys from all providers", async () => {
@@ -86,9 +110,7 @@ describe("mergeProviders", () => {
           { className: "s.two", id: "two" },
         ],
       }),
-      createTestProvider({
-        instanceKeys: () => [{ className: "s.three", id: "three" }],
-      }),
+      createTestProvider({ instanceKeys: () => [{ className: "s.three", id: "three" }] }),
     ];
     const mergedProvider = mergeProviders({ providers });
     expect(await collect(mergedProvider.getNodeInstanceKeys({ parentNode: undefined })))
@@ -131,7 +153,11 @@ describe("mergeProviders", () => {
   });
 
   it("disposes all disposable providers", async () => {
-    const providers = [createTestProvider({ disposable: "yes" }), createTestProvider({ disposable: "deprecated" }), createTestProvider()];
+    const providers = [
+      createTestProvider({ disposable: "yes" }),
+      createTestProvider({ disposable: "deprecated" }),
+      createTestProvider(),
+    ];
     const mergedProvider = mergeProviders({ providers });
     mergedProvider[Symbol.dispose]();
     providers.forEach((provider) => {
@@ -143,11 +169,11 @@ describe("mergeProviders", () => {
 
 function createTestProvider(
   props: (
+    | { nodes: (props: Props<HierarchyProvider["getNodes"]>) => Partial<NonGroupingHierarchyNode>[] }
     | {
-        nodes: (props: Props<HierarchyProvider["getNodes"]>) => Partial<NonGroupingHierarchyNode>[];
-      }
-    | {
-        rootNodes?: (props: Omit<Props<HierarchyProvider["getNodes"]>, "parentNode">) => Partial<NonGroupingHierarchyNode>[];
+        rootNodes?: (
+          props: Omit<Props<HierarchyProvider["getNodes"]>, "parentNode">,
+        ) => Partial<NonGroupingHierarchyNode>[];
       }
   ) & {
     instanceKeys?: (props: Props<HierarchyProvider["getNodeInstanceKeys"]>) => InstanceKey[];
@@ -159,11 +185,19 @@ function createTestProvider(
     getNodes: sinon
       .stub<Parameters<HierarchyProvider["getNodes"]>>()
       .callsFake((getNodesProps) =>
-        createAsyncIterator("nodes" in props ? props.nodes(getNodesProps) : props.rootNodes && getNodesProps.parentNode ? props.rootNodes(getNodesProps) : []),
+        createAsyncIterator(
+          "nodes" in props
+            ? props.nodes(getNodesProps)
+            : props.rootNodes && getNodesProps.parentNode
+              ? props.rootNodes(getNodesProps)
+              : [],
+        ),
       ),
     getNodeInstanceKeys: sinon
       .stub<Parameters<HierarchyProvider["getNodeInstanceKeys"]>>()
-      .callsFake((getNodeInstanceKeysProps) => createAsyncIterator(props.instanceKeys ? props.instanceKeys(getNodeInstanceKeysProps) : [])),
+      .callsFake((getNodeInstanceKeysProps) =>
+        createAsyncIterator(props.instanceKeys ? props.instanceKeys(getNodeInstanceKeysProps) : []),
+      ),
     setFormatter: sinon.stub(),
     setHierarchySearch: sinon.stub(),
     ...(props.disposable === "yes" ? { [Symbol.dispose]: sinon.stub() } : {}),

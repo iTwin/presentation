@@ -52,10 +52,7 @@ export class HierarchyCache<T> {
 
     const parentKeys = props.parentNode.parentKeys;
 
-    return {
-      primaryKey: [...parentKeys, props.parentNode.key],
-      variationKey: createVariationKey(),
-    };
+    return { primaryKey: [...parentKeys, props.parentNode.key], variationKey: createVariationKey() };
   }
 
   private getCacheAccessors(primaryKey: HierarchyNodeKey[], variationKey?: string) {

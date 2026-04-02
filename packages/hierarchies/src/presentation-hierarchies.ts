@@ -23,8 +23,14 @@ export { createPredicateBasedHierarchyDefinition } from "./hierarchies/imodel/Pr
 export type { LimitingECSqlQueryExecutor } from "./hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 export { createLimitingECSqlQueryExecutor } from "./hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 export type { NodesQueryClauseFactory } from "./hierarchies/imodel/NodeSelectQueryFactory.js";
-export { NodeSelectClauseColumnNames, createNodesQueryClauseFactory } from "./hierarchies/imodel/NodeSelectQueryFactory.js";
-export { createIModelHierarchyProvider, createMergedIModelHierarchyProvider } from "./hierarchies/imodel/IModelHierarchyProvider.js";
+export {
+  NodeSelectClauseColumnNames,
+  createNodesQueryClauseFactory,
+} from "./hierarchies/imodel/NodeSelectQueryFactory.js";
+export {
+  createIModelHierarchyProvider,
+  createMergedIModelHierarchyProvider,
+} from "./hierarchies/imodel/IModelHierarchyProvider.js";
 export type { SourceHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode.js";
 export { ProcessedHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode.js";
 
@@ -51,5 +57,9 @@ export type { GetHierarchyNodesProps, HierarchyProvider } from "./hierarchies/Hi
 export { createHierarchyProvider } from "./hierarchies/HierarchyProvider.js";
 export { mergeProviders } from "./hierarchies/HierarchyMerge.js";
 export type { HierarchySearchPathOptions } from "./hierarchies/HierarchySearch.js";
-export { createHierarchySearchHelper, HierarchySearchPath, HierarchySearchTree } from "./hierarchies/HierarchySearch.js";
+export {
+  createHierarchySearchHelper,
+  HierarchySearchPath,
+  HierarchySearchTree,
+} from "./hierarchies/HierarchySearch.js";
 export { getLogger, setLogger } from "./hierarchies/Logging.js";

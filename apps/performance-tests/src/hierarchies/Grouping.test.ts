@@ -54,11 +54,7 @@ describe("grouping", () => {
     iModelName: "50k flat elements",
     fullClassName: baseFullClassName,
     expectedNodeCount: 50_000 + fullClassNames.length,
-    nodeSelectProps: {
-      grouping: {
-        byBaseClasses: { fullClassNames },
-      },
-    },
+    nodeSelectProps: { grouping: { byBaseClasses: { fullClassNames } } },
   });
 
   runHierarchyTest({

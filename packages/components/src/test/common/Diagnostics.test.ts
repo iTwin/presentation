@@ -29,12 +29,18 @@ describe("createDiagnosticsOptions", () => {
 
   it("returns options with dev severity when dev diagnostic props have it", () => {
     const handler = sinon.stub();
-    expect(createDiagnosticsOptions({ devDiagnostics: { severity: "warning", handler } })).to.deep.eq({ dev: "warning", handler });
+    expect(createDiagnosticsOptions({ devDiagnostics: { severity: "warning", handler } })).to.deep.eq({
+      dev: "warning",
+      handler,
+    });
   });
 
   it("returns options with editor severity when rule diagnostic props are set", () => {
     const handler = sinon.stub();
-    expect(createDiagnosticsOptions({ ruleDiagnostics: { severity: "warning", handler } })).to.deep.eq({ editor: "warning", handler });
+    expect(createDiagnosticsOptions({ ruleDiagnostics: { severity: "warning", handler } })).to.deep.eq({
+      editor: "warning",
+      handler,
+    });
   });
 
   it("returns options with combined handler when rule and dev props have different handlers", () => {
@@ -44,24 +50,13 @@ describe("createDiagnosticsOptions", () => {
       devDiagnostics: { severity: "info", handler: handler1 },
       ruleDiagnostics: { severity: "warning", handler: handler2 },
     });
-    expect(result).to.containSubset({
-      editor: "warning",
-      dev: "info",
-    });
+    expect(result).to.containSubset({ editor: "warning", dev: "info" });
     const diagnostics: ClientDiagnostics = {
       logs: [
         {
           scope: "test scope",
           logs: [
-            {
-              message: "message",
-              category: "category",
-              timestamp: 0,
-              severity: {
-                dev: "error",
-                editor: "error",
-              },
-            },
+            { message: "message", category: "category", timestamp: 0, severity: { dev: "error", editor: "error" } },
           ],
         },
       ],

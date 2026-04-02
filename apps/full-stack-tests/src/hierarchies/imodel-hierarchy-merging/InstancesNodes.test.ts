@@ -8,7 +8,13 @@ import { omit } from "@itwin/core-bentley";
 import { createChangedDbs } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy, validateHierarchyLevel } from "../HierarchyValidation.js";
-import { createHierarchyDefinitionFactory, createMergedHierarchyProvider, importQSchema, importXYZSchema, pickAndTransform } from "./HierarchiesMerging.js";
+import {
+  createHierarchyDefinitionFactory,
+  createMergedHierarchyProvider,
+  importQSchema,
+  importXYZSchema,
+  pickAndTransform,
+} from "./HierarchiesMerging.js";
 
 import type { createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 
@@ -64,7 +70,10 @@ describe("Hierarchies", () => {
         dbs = await setupDbs(this);
         keys = {
           base: pickAndTransform(dbs.base, ["x", "y1", "y2", "y3"], (_, value) => ({ ...value, imodelKey: "base" })),
-          changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y3", "w", "q1", "q2"], (_, value) => ({ ...value, imodelKey: "changeset1" })),
+          changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y3", "w", "q1", "q2"], (_, value) => ({
+            ...value,
+            imodelKey: "changeset1",
+          })),
         };
       });
 
@@ -75,18 +84,10 @@ describe("Hierarchies", () => {
       beforeEach(() => {
         provider = createMergedHierarchyProvider({
           imodels: [
-            {
-              ecdb: dbs.base.ecdb,
-              key: "base",
-            },
-            {
-              ecdb: dbs.changeset1.ecdb,
-              key: "changeset1",
-            },
+            { ecdb: dbs.base.ecdb, key: "base" },
+            { ecdb: dbs.changeset1.ecdb, key: "changeset1" },
           ],
-          createHierarchyDefinition: createHierarchyDefinitionFactory({
-            xyzSchema: dbs.changeset1.xyzSchema,
-          }),
+          createHierarchyDefinition: createHierarchyDefinitionFactory({ xyzSchema: dbs.changeset1.xyzSchema }),
         });
       });
 
@@ -97,31 +98,17 @@ describe("Hierarchies", () => {
             // the whole branch exists only in the second imodel, also comes from schema that also exists only in the second imodel
             NodeValidators.createForInstanceNode({
               label: "w",
-              children: [
-                NodeValidators.createForInstanceNode({
-                  label: "q2",
-                  instanceKeys: [keys.changeset1.q2],
-                }),
-              ],
+              children: [NodeValidators.createForInstanceNode({ label: "q2", instanceKeys: [keys.changeset1.q2] })],
             }),
             NodeValidators.createForInstanceNode({
               label: "x",
               children: [
                 // exists only in the second imodel, also comes from schema that also exists only in the second imodel
-                NodeValidators.createForInstanceNode({
-                  label: "q1",
-                  instanceKeys: [keys.changeset1.q1],
-                }),
+                NodeValidators.createForInstanceNode({ label: "q1", instanceKeys: [keys.changeset1.q1] }),
                 // exists in both imodels
-                NodeValidators.createForInstanceNode({
-                  label: "y1",
-                  instanceKeys: [keys.changeset1.y1, keys.base.y1],
-                }),
+                NodeValidators.createForInstanceNode({ label: "y1", instanceKeys: [keys.changeset1.y1, keys.base.y1] }),
                 // exists only in the first imodel
-                NodeValidators.createForInstanceNode({
-                  label: "y2",
-                  instanceKeys: [keys.base.y2],
-                }),
+                NodeValidators.createForInstanceNode({ label: "y2", instanceKeys: [keys.base.y2] }),
                 // exists in both, but have different values
                 NodeValidators.createForInstanceNode({
                   label: "y3-updated",
@@ -145,13 +132,13 @@ describe("Hierarchies", () => {
               {
                 identifier: keys.changeset1.x,
                 isTarget: true,
-                children: [{ identifier: keys.changeset1.y1 }, { identifier: keys.changeset1.y3 }, { identifier: keys.changeset1.q1 }],
+                children: [
+                  { identifier: keys.changeset1.y1 },
+                  { identifier: keys.changeset1.y3 },
+                  { identifier: keys.changeset1.q1 },
+                ],
               },
-              {
-                identifier: keys.changeset1.w,
-                isTarget: true,
-                children: [{ identifier: keys.changeset1.q2 }],
-              },
+              { identifier: keys.changeset1.w, isTarget: true, children: [{ identifier: keys.changeset1.q2 }] },
             ],
           });
           await validateHierarchy({
@@ -206,18 +193,9 @@ describe("Hierarchies", () => {
         it("creates hierarchy when targeting instances from different imodels", async () => {
           provider.setHierarchySearch({
             paths: [
-              {
-                identifier: keys.base.x,
-                children: [{ identifier: keys.base.y2 }],
-              },
-              {
-                identifier: keys.changeset1.x,
-                children: [{ identifier: keys.changeset1.q1 }],
-              },
-              {
-                identifier: keys.changeset1.w,
-                children: [{ identifier: keys.changeset1.q2 }],
-              },
+              { identifier: keys.base.x, children: [{ identifier: keys.base.y2 }] },
+              { identifier: keys.changeset1.x, children: [{ identifier: keys.changeset1.q1 }] },
+              { identifier: keys.changeset1.w, children: [{ identifier: keys.changeset1.q2 }] },
             ],
           });
           await validateHierarchy({
@@ -266,10 +244,7 @@ describe("Hierarchies", () => {
                   filteredClassNames: [dbs.changeset1.qSchema.items.W.fullName],
                   propertyClassNames: [],
                   relatedInstances: [],
-                  rules: {
-                    operator: "and",
-                    rules: [],
-                  },
+                  rules: { operator: "and", rules: [] },
                 },
               }),
             ),
@@ -285,12 +260,7 @@ describe("Hierarchies", () => {
                 instanceFilter: {
                   propertyClassNames: [dbs.changeset1.qSchema.items.W.fullName],
                   relatedInstances: [],
-                  rules: {
-                    sourceAlias: "this",
-                    propertyName: `PropW`,
-                    operator: "is-null",
-                    propertyTypeName: "int",
-                  },
+                  rules: { sourceAlias: "this", propertyName: `PropW`, operator: "is-null", propertyTypeName: "int" },
                 },
               }),
             ),
@@ -339,12 +309,7 @@ describe("Hierarchies", () => {
                       ],
                     },
                   ],
-                  rules: {
-                    sourceAlias: "qq",
-                    propertyName: "Label",
-                    operator: "is-not-null",
-                    propertyTypeName: "int",
-                  },
+                  rules: { sourceAlias: "qq", propertyName: "Label", operator: "is-not-null", propertyTypeName: "int" },
                 },
               }),
             ),

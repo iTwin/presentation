@@ -33,10 +33,7 @@ describe("FavoritePropertiesDataProvider", () => {
 
   beforeEach(() => {
     presentationManager = sinon.createStubInstance(PresentationManager);
-    presentationPropertyDataProvider = {
-      getData: sinon.stub(),
-      [Symbol.dispose]: sinon.stub(),
-    };
+    presentationPropertyDataProvider = { getData: sinon.stub(), [Symbol.dispose]: sinon.stub() };
     favoritePropertiesManager = sinon.createStubInstance(FavoritePropertiesManager);
 
     const localization = new EmptyLocalization();
@@ -74,7 +71,10 @@ describe("FavoritePropertiesDataProvider", () => {
         .returns(presentationPropertyDataProvider as unknown as PresentationPropertyDataProvider);
 
       const customRulesetId = "custom_ruleset_id";
-      provider = new FavoritePropertiesDataProvider({ ruleset: customRulesetId, activeScopeProvider: () => ({ id: "element" }) });
+      provider = new FavoritePropertiesDataProvider({
+        ruleset: customRulesetId,
+        activeScopeProvider: () => ({ id: "element" }),
+      });
       (provider as any).createPropertyDataProvider = factorySpy;
 
       await provider.getData(imodel, elementId);

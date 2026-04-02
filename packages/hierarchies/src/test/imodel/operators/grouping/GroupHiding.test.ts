@@ -306,9 +306,7 @@ describe("GroupHiding", () => {
         label: "1",
         processingParams: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
       });
-      const groupingNode = createTestProcessedGroupingNode({
-        children: [childNode],
-      });
+      const groupingNode = createTestProcessedGroupingNode({ children: [childNode] });
       const ungroupedSiblingNode = createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
         label: "1",
@@ -320,11 +318,7 @@ describe("GroupHiding", () => {
         groupingType: "label",
       };
       const res = applyGroupHidingParams(nodes, 0);
-      expect(res).to.deep.eq({
-        groupingType: "label",
-        grouped: [],
-        ungrouped: [ungroupedSiblingNode, childNode],
-      });
+      expect(res).to.deep.eq({ groupingType: "label", grouped: [], ungrouped: [ungroupedSiblingNode, childNode] });
     });
   });
 });

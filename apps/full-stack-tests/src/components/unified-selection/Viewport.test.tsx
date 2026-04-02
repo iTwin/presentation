@@ -5,7 +5,11 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 import { expect } from "chai";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { IModelApp, SpatialViewState, ViewManager } from "@itwin/core-frontend";
@@ -48,9 +52,19 @@ describe("Learning snippets", async () => {
 
       const imodel = await buildTestIModel(this, async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
-        const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
+        const modelKey = insertPhysicalModelWithPartition({
+          builder,
+          fullClassNameSeparator: ":",
+          codeValue: "My Model",
+        });
         (elementKeys.push(
-          insertPhysicalElement({ builder, fullClassNameSeparator: ":", userLabel: "My Assembly Element", modelId: modelKey.id, categoryId: categoryKey.id }),
+          insertPhysicalElement({
+            builder,
+            fullClassNameSeparator: ":",
+            userLabel: "My Assembly Element",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          }),
         ),
           elementKeys.push(
             insertPhysicalElement({
@@ -77,7 +91,10 @@ describe("Learning snippets", async () => {
 
       // render the component
       const { getByTestId } = render(
-        <MyViewport imodel={imodel} initialViewState={SpatialViewState.createBlank(imodel, Point3d.createZero(), Vector3d.create(400, 400))} />,
+        <MyViewport
+          imodel={imodel}
+          initialViewState={SpatialViewState.createBlank(imodel, Point3d.createZero(), Vector3d.create(400, 400))}
+        />,
       );
       await waitFor(() => getByTestId("viewport-component"));
 
@@ -122,10 +139,7 @@ describe("Learning snippets", async () => {
 
 function setupViewportStubs() {
   // `ViewportComponent` calls some of the `ViewManager` functions (gets it through `IModelApp.viewManager`)
-  const viewManager = sinon.createStubInstance(ViewManager, {
-    addViewport: sinon.stub(),
-    dropViewport: sinon.stub(),
-  });
+  const viewManager = sinon.createStubInstance(ViewManager, { addViewport: sinon.stub(), dropViewport: sinon.stub() });
   (viewManager as any).onSelectedViewportChanged = new BeUiEvent<SelectedViewportChangedArgs>();
   sinon.stub(IModelApp, "viewManager").get(() => viewManager as unknown as ViewManager);
 

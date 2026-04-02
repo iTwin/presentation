@@ -66,9 +66,7 @@ function PresentationTable(props: PresentationTableProps) {
   const table = useReactTable({
     data: rows,
     columns: visibleColumns ?? [],
-    state: {
-      rowSelection,
-    },
+    state: { rowSelection },
     enableRowSelection: true,
     onRowSelectionChange: (updater) => {
       const newRowSelection = typeof updater === "function" ? updater(rowSelection) : updater;
@@ -110,7 +108,11 @@ function PresentationTable(props: PresentationTableProps) {
   }
 
   return (
-    <div className="container" onScroll={(e) => fetchMoreOnBottomReached(e.target as HTMLDivElement)} ref={tableContainerRef}>
+    <div
+      className="container"
+      onScroll={(e) => fetchMoreOnBottomReached(e.target as HTMLDivElement)}
+      ref={tableContainerRef}
+    >
       <table>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -118,7 +120,9 @@ function PresentationTable(props: PresentationTableProps) {
               {headerGroup.headers.map((header) => {
                 return (
                   <th key={header.id} colSpan={header.colSpan}>
-                    {header.isPlaceholder ? null : <>{flexRender(header.column.columnDef.header, header.getContext())}</>}
+                    {header.isPlaceholder ? null : (
+                      <>{flexRender(header.column.columnDef.header, header.getContext())}</>
+                    )}
                   </th>
                 );
               })}

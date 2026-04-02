@@ -3,7 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { useCallback, useState } from "react";
 import sinon from "sinon";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
@@ -79,7 +83,12 @@ describe("Learning snippets", () => {
       const imodel = await buildTestIModel(this, async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
-        elementKey = insertPhysicalElement({ builder, userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });
+        elementKey = insertPhysicalElement({
+          builder,
+          userLabel: "My Element",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+        });
       });
       assert(elementKey !== undefined);
 

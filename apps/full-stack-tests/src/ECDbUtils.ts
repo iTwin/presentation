@@ -98,7 +98,10 @@ export class ECDbBuilder {
     };
   }
 
-  private createInsertQuery(fullClassName: string, props?: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined }) {
+  private createInsertQuery(
+    fullClassName: string,
+    props?: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined },
+  ) {
     if (!props) {
       props = { ecInstanceId: undefined };
     }
@@ -112,7 +115,10 @@ export class ECDbBuilder {
     return { clause, binder: this.createECSqlStatementBinder(props) };
   }
 
-  private createUpdateQuery(key: InstanceKey, props: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined }) {
+  private createUpdateQuery(
+    key: InstanceKey,
+    props: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined },
+  ) {
     const { schemaName, className } = parseFullClassName(key.className);
     const clause = `
       UPDATE [${schemaName}].[${className}]
@@ -124,13 +130,19 @@ export class ECDbBuilder {
     return { clause, binder: this.createECSqlStatementBinder({ ...props, ecInstanceId: key.id }) };
   }
 
-  public insertInstance(fullClassName: EC.FullClassName, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
+  public insertInstance(
+    fullClassName: EC.FullClassName,
+    props?: { [propertyName: string]: PrimitiveValue | undefined },
+  ) {
     const query = this.createInsertQuery(fullClassName, props);
     return this._ecdb.withWriteStatement(query.clause, (stmt) => {
       query.binder(stmt);
       const res = stmt.stepForInsert();
       if (res.status !== DbResult.BE_SQLITE_DONE) {
-        throw new BentleyError(res.status, `Failed to insert instance of class "${fullClassName}". Query: ${query.clause}`);
+        throw new BentleyError(
+          res.status,
+          `Failed to insert instance of class "${fullClassName}". Query: ${query.clause}`,
+        );
       }
       return { className: fullClassName, id: res.id! };
     });
@@ -151,7 +163,10 @@ export class ECDbBuilder {
       query.binder(stmt);
       const res = stmt.stepForInsert();
       if (res.status !== DbResult.BE_SQLITE_DONE) {
-        throw new BentleyError(res.status, `Failed to insert instance of relationship "${fullClassName}". Query: ${query.clause}`);
+        throw new BentleyError(
+          res.status,
+          `Failed to insert instance of relationship "${fullClassName}". Query: ${query.clause}`,
+        );
       }
       return { className: fullClassName, id: res.id! };
     });
@@ -191,7 +206,9 @@ export async function createECDb<TResult extends {}>(
   mochaContextOrName: Mocha.Context | string,
   setup: (db: ECDbBuilder) => Promise<TResult>,
 ): Promise<TResult & { ecdb: ECDb; ecdbPath: string }> {
-  const name = createFileNameFromString(typeof mochaContextOrName === "string" ? mochaContextOrName : mochaContextOrName.test!.fullTitle());
+  const name = createFileNameFromString(
+    typeof mochaContextOrName === "string" ? mochaContextOrName : mochaContextOrName.test!.fullTitle(),
+  );
   const ecdbPath = setupOutputFileLocation(`${name}.bim`);
   const ecdb = new ECDb();
   ecdb.createDb(ecdbPath);
@@ -233,8 +250,17 @@ export async function createChangedDbs<TResultBase extends {}, TResultChangeset1
   mochaContext: Mocha.Context,
   setupBase: (db: ECDbBuilder) => Promise<TResultBase>,
   setupChangeset1: (db: ECDbBuilder, before: TResultBase) => Promise<TResultChangeset1>,
-): Promise<{ base: Awaited<ReturnType<typeof createECDb>> & TResultBase; changeset1: Awaited<ReturnType<typeof createECDb>> & TResultChangeset1 } & Disposable>;
-export async function createChangedDbs<TResultBase extends {}, TResultChangeset1 extends {}, TResultChangeset2 extends {}>(
+): Promise<
+  {
+    base: Awaited<ReturnType<typeof createECDb>> & TResultBase;
+    changeset1: Awaited<ReturnType<typeof createECDb>> & TResultChangeset1;
+  } & Disposable
+>;
+export async function createChangedDbs<
+  TResultBase extends {},
+  TResultChangeset1 extends {},
+  TResultChangeset2 extends {},
+>(
   mochaContext: Mocha.Context,
   setupBase: (db: ECDbBuilder) => Promise<TResultBase>,
   setupChangeset1: (db: ECDbBuilder, before: TResultBase) => Promise<TResultChangeset1>,
@@ -246,16 +272,24 @@ export async function createChangedDbs<TResultBase extends {}, TResultChangeset1
     changeset2: Awaited<ReturnType<typeof createECDb>> & TResultChangeset2;
   } & Disposable
 >;
-export async function createChangedDbs<TResultBase extends {}, TResultChangeset1 extends {}, TResultChangeset2 extends {}>(
+export async function createChangedDbs<
+  TResultBase extends {},
+  TResultChangeset1 extends {},
+  TResultChangeset2 extends {},
+>(
   mochaContext: Mocha.Context,
   setupBase: (db: ECDbBuilder) => Promise<TResultBase>,
   setupChangeset1: (db: ECDbBuilder, before: TResultBase) => Promise<TResultChangeset1>,
   setupChangeset2?: (db: ECDbBuilder, before: TResultChangeset1) => Promise<TResultChangeset2>,
 ) {
   const base = await createECDb(`${mochaContext.test!.fullTitle()}-base`, setupBase);
-  const changeset1 = await cloneECDb(base.ecdbPath, `${mochaContext.test!.fullTitle()}-changeset1`, async (ecdb) => setupChangeset1(ecdb, base));
+  const changeset1 = await cloneECDb(base.ecdbPath, `${mochaContext.test!.fullTitle()}-changeset1`, async (ecdb) =>
+    setupChangeset1(ecdb, base),
+  );
   const changeset2 = setupChangeset2
-    ? await cloneECDb(changeset1.ecdbPath, `${mochaContext.test!.fullTitle()}-changeset2`, async (ecdb) => setupChangeset2(ecdb, changeset1))
+    ? await cloneECDb(changeset1.ecdbPath, `${mochaContext.test!.fullTitle()}-changeset2`, async (ecdb) =>
+        setupChangeset2(ecdb, changeset1),
+      )
     : undefined;
   return {
     base,

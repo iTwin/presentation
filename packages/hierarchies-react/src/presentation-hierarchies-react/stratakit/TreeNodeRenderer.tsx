@@ -5,7 +5,18 @@
 
 import "./TreeNodeRenderer.css";
 
-import { cloneElement, forwardRef, isValidElement, memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  cloneElement,
+  forwardRef,
+  isValidElement,
+  memo,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Description, IconButton, Spinner, Text, TextBox } from "@stratakit/bricks";
 import { DropdownMenu, unstable_Popover as Popover, Tree } from "@stratakit/structures";
 import { useTranslation } from "../LocalizationContext.js";
@@ -65,10 +76,21 @@ export type TreeNodeRendererProps = StrataKitTreeItemProps & TreeNodeRendererOwn
  */
 export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>> = memo(
   forwardRef<HTMLElement, TreeNodeRendererProps>(function HierarchyNode(props, forwardedRef) {
-    const { node, decorations, inlineActions, menuActions, contextMenuActions, expandNode, reloadTree, ...treeItemProps } = props;
+    const {
+      node,
+      decorations,
+      inlineActions,
+      menuActions,
+      contextMenuActions,
+      expandNode,
+      reloadTree,
+      ...treeItemProps
+    } = props;
     const translate = useTranslation();
     const renameContext = useTreeNodeRenameContext();
-    const [contextMenuProps, setContextMenuProps] = useState<{ position: { x: number; y: number }; actions: ReactNode[] } | undefined>(undefined);
+    const [contextMenuProps, setContextMenuProps] = useState<
+      { position: { x: number; y: number }; actions: ReactNode[] } | undefined
+    >(undefined);
 
     const label = treeItemProps.label ?? node.label;
     const inlineActionItems = useMemo(() => {
@@ -123,7 +145,13 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
 
     return (
       <>
-        <Popover content={labelEditor} placement="bottom" open={renameParameters?.nodeId === node.id} setOpen={cancelRename} unmountOnHide>
+        <Popover
+          content={labelEditor}
+          placement="bottom"
+          open={renameParameters?.nodeId === node.id}
+          setOpen={cancelRename}
+          unmountOnHide
+        >
           <Tree.Item
             {...treeItemProps}
             ref={forwardedRef}
@@ -154,13 +182,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
                 return;
               }
 
-              setContextMenuProps({
-                position: {
-                  x: e.clientX,
-                  y: e.clientY,
-                },
-                actions,
-              });
+              setContextMenuProps({ position: { x: e.clientX, y: e.clientY }, actions });
             }}
           />
         </Popover>
@@ -174,7 +196,10 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
           key={`${node.id}-${contextMenuProps?.position.x ?? ""}-${contextMenuProps?.position.y ?? ""}`}
         >
           {contextMenuProps ? (
-            <DropdownMenu.Button style={{ position: "fixed", top: contextMenuProps.position.y, left: contextMenuProps.position.x }} render={<div />} />
+            <DropdownMenu.Button
+              style={{ position: "fixed", top: contextMenuProps.position.y, left: contextMenuProps.position.x }}
+              render={<div />}
+            />
           ) : null}
           {/* `autoFocus` prop is coming from ariakit and is not native HTML `autoFocus` prop. */}
           {/* `focusable` is needed for `autoFocus` to work. StrataKit exposes only `autoFocus` and does not set `focusable` internally. */}
@@ -190,17 +215,23 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
 );
 
 export const PlaceholderNode: FC<
-  PropsWithRef<Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize"> & RefAttributes<HTMLElement>>
+  PropsWithRef<
+    Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize"> & RefAttributes<HTMLElement>
+  >
 > = memo(
-  forwardRef<HTMLElement, Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize">>(function PlaceholderNode(
-    { ...props },
-    forwardedRef,
-  ) {
-    const translate = useTranslation();
-    return (
-      <Tree.Item {...props} ref={forwardedRef} label={translate("loading")} unstable_decorations={<Spinner size={"small"} title={translate("loading")} />} />
-    );
-  }),
+  forwardRef<HTMLElement, Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize">>(
+    function PlaceholderNode({ ...props }, forwardedRef) {
+      const translate = useTranslation();
+      return (
+        <Tree.Item
+          {...props}
+          ref={forwardedRef}
+          label={translate("loading")}
+          unstable_decorations={<Spinner size={"small"} title={translate("loading")} />}
+        />
+      );
+    },
+  ),
 );
 
 function LabelEditor({
@@ -271,7 +302,12 @@ function LabelEditor({
           />
         </TextBox.Root>
         <IconButton icon={dismissSvg} label={translate("cancel")} onClick={cancelLabelChange} />
-        <IconButton icon={checkmarkSvg} label={translate("confirm")} onClick={handleLabelChange} disabled={!canRename} />
+        <IconButton
+          icon={checkmarkSvg}
+          label={translate("confirm")}
+          onClick={handleLabelChange}
+          disabled={!canRename}
+        />
       </div>
       {labelValidationHint !== undefined ? (
         <Description id={inputId} tone={hasError ? "critical" : "neutral"} style={{ display: "flex" }}>

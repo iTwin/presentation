@@ -23,7 +23,12 @@ import type { SelectableInstanceKey } from "./Selectable.js";
 import type { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
 import type { SelectionScope } from "./SelectionScope.js";
 import type { SelectionStorage } from "./SelectionStorage.js";
-import type { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectableIds, CoreSelectionSetEventUnsafe } from "./types/IModel.js";
+import type {
+  CoreIModelHiliteSet,
+  CoreIModelSelectionSet,
+  CoreSelectableIds,
+  CoreSelectionSetEventUnsafe,
+} from "./types/IModel.js";
 
 /**
  * Props for `enableUnifiedSelectionSyncWithIModel`.
@@ -97,7 +102,9 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    * @deprecated in 1.5. Use `imodelHiliteSetProvider` prop instead.
    */
   // eslint-disable-next-line @typescript-eslint/no-deprecated
-  cachingHiliteSetProvider?: CachingHiliteSetProvider | (Omit<CachingHiliteSetProvider, "dispose"> & { [Symbol.dispose]: () => void });
+  cachingHiliteSetProvider?:
+    | CachingHiliteSetProvider
+    | (Omit<CachingHiliteSetProvider, "dispose"> & { [Symbol.dispose]: () => void });
 }
 
 /**
@@ -160,14 +167,19 @@ export class IModelSelectionHandler {
       const internalProvider = createIModelHiliteSetProvider({
         selectionStorage: this._selectionStorage,
         imodelProvider: () => this._imodelAccess,
-        createHiliteSetProvider: () => props.hiliteSetProvider ?? createHiliteSetProvider({ imodelAccess: props.imodelAccess }),
+        createHiliteSetProvider: () =>
+          props.hiliteSetProvider ?? createHiliteSetProvider({ imodelAccess: props.imodelAccess }),
       });
       return [internalProvider, () => safeDispose(internalProvider)];
       /* c8 ignore end */
     })();
 
-    this._unregisterIModelSelectionSetListener = this._imodelAccess.selectionSet.onChanged.addListener(this.onIModelSelectionChanged);
-    this._unregisterUnifiedSelectionListener = this._selectionStorage.selectionChangeEvent.addListener(this.onUnifiedSelectionChanged);
+    this._unregisterIModelSelectionSetListener = this._imodelAccess.selectionSet.onChanged.addListener(
+      this.onIModelSelectionChanged,
+    );
+    this._unregisterUnifiedSelectionListener = this._selectionStorage.selectionChangeEvent.addListener(
+      this.onUnifiedSelectionChanged,
+    );
 
     if (!is5xSelectionSet(this._imodelAccess.selectionSet)) {
       // itwinjs-core@4: stop imodel from syncing tool selection with hilited list - we want to manage that sync ourselves
@@ -195,7 +207,11 @@ export class IModelSelectionHandler {
     };
   }
 
-  private syncHiliteSet(props: { changeType: StorageSelectionChangeType; selectables: Selectables; source: string }): void {
+  private syncHiliteSet(props: {
+    changeType: StorageSelectionChangeType;
+    selectables: Selectables;
+    source: string;
+  }): void {
     const { changeType, selectables, source } = props;
     switch (changeType) {
       case "clear":
@@ -213,7 +229,11 @@ export class IModelSelectionHandler {
                 "clearAll",
         });
       case "add":
-        return void from(this._imodelHiliteSetProvider.getHiliteSetProvider({ imodelKey: this._imodelAccess.key }).getHiliteSet({ selectables }))
+        return void from(
+          this._imodelHiliteSetProvider
+            .getHiliteSetProvider({ imodelKey: this._imodelAccess.key })
+            .getHiliteSet({ selectables }),
+        )
           .pipe(takeUntil(this._cancelOngoingChanges))
           .subscribe({
             next: (set) => {
@@ -221,7 +241,11 @@ export class IModelSelectionHandler {
             },
           });
       case "remove":
-        return void from(this._imodelHiliteSetProvider.getHiliteSetProvider({ imodelKey: this._imodelAccess.key }).getHiliteSet({ selectables }))
+        return void from(
+          this._imodelHiliteSetProvider
+            .getHiliteSetProvider({ imodelKey: this._imodelAccess.key })
+            .getHiliteSet({ selectables }),
+        )
           .pipe(takeUntil(this._cancelOngoingChanges))
           .subscribe({
             next: (set) => {
@@ -249,7 +273,11 @@ export class IModelSelectionHandler {
     this.syncHiliteSet(args);
   };
 
-  private applyCurrentHiliteSet({ activeSelectionAction }: { activeSelectionAction: "clearAll" | "clearHilited" | "keep" }) {
+  private applyCurrentHiliteSet({
+    activeSelectionAction,
+  }: {
+    activeSelectionAction: "clearAll" | "clearHilited" | "keep";
+  }) {
     if (activeSelectionAction !== "keep") {
       using _dispose = this.suspendIModelToolSelectionSync();
       if (!is5xSelectionSet(this._imodelAccess.selectionSet)) {
@@ -338,7 +366,9 @@ export class IModelSelectionHandler {
             }),
           )
         : /* c8 ignore next */ EMPTY,
-      ids.models ? from(ids.models).pipe(map((id): SelectableInstanceKey => ({ className: "BisCore.Model", id }))) : /* c8 ignore next */ EMPTY,
+      ids.models
+        ? from(ids.models).pipe(map((id): SelectableInstanceKey => ({ className: "BisCore.Model", id })))
+        : /* c8 ignore next */ EMPTY,
       ids.subcategories
         ? from(ids.subcategories).pipe(map((id): SelectableInstanceKey => ({ className: "BisCore.SubCategory", id })))
         : /* c8 ignore next */ EMPTY,
@@ -401,7 +431,9 @@ function getUnifiedSelectionChangeType(coreChangeType: CoreSelectionSetEventType
   }
 }
 
-function is5xSelectionSet(selectionSet: CoreIModelSelectionSet): selectionSet is Omit<CoreIModelSelectionSet, "add" | "remove"> & {
+function is5xSelectionSet(
+  selectionSet: CoreIModelSelectionSet,
+): selectionSet is Omit<CoreIModelSelectionSet, "add" | "remove"> & {
   readonly active: { [P in keyof CoreSelectableIds]-?: Id64Set };
   add: (ids: Id64Arg | CoreSelectableIds) => boolean;
   remove: (ids: Id64Arg | CoreSelectableIds) => boolean;

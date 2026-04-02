@@ -3,7 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export type { GenericErrorInfo, TreeNode, ErrorInfo, ResultSetTooLargeErrorInfo } from "./presentation-hierarchies-react/TreeNode.js";
+export type {
+  GenericErrorInfo,
+  TreeNode,
+  ErrorInfo,
+  ResultSetTooLargeErrorInfo,
+} from "./presentation-hierarchies-react/TreeNode.js";
 export { useTree, useUnifiedSelectionTree } from "./presentation-hierarchies-react/UseTree.js";
 export { useNodeHighlighting } from "./presentation-hierarchies-react/UseNodeHighlighting.js";
 export type { HierarchyLevelDetails, TreeRendererProps } from "./presentation-hierarchies-react/Renderers.js";

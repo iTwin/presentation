@@ -14,11 +14,17 @@ import type { UserEvent } from "@testing-library/user-event";
 
 function createWrapper(Outer: React.JSXElementConstructor<{ children: React.ReactNode }>) {
   return (Inner?: React.JSXElementConstructor<{ children: React.ReactNode }>) => {
-    return Inner ? ({ children }: PropsWithChildren<unknown>) => createElement(Outer, undefined, createElement(Inner, undefined, children)) : Outer;
+    return Inner
+      ? ({ children }: PropsWithChildren<unknown>) =>
+          createElement(Outer, undefined, createElement(Inner, undefined, children))
+      : Outer;
   };
 }
 
-function combineWrappers(wraps: Array<ReturnType<typeof createWrapper>>, wrapper?: React.JSXElementConstructor<{ children: React.ReactNode }>) {
+function combineWrappers(
+  wraps: Array<ReturnType<typeof createWrapper>>,
+  wrapper?: React.JSXElementConstructor<{ children: React.ReactNode }>,
+) {
   let currWrapper = wrapper;
   for (const wrap of wraps) {
     currWrapper = wrap(currWrapper);
@@ -40,13 +46,13 @@ function createDefaultWrappers(addThemeProvider?: boolean) {
  *
  * It should be used when test need to do interactions with rendered components.
  */
-function customRender(ui: ReactElement, options?: RenderOptions & { addThemeProvider?: boolean }): RenderResult & { user: UserEvent } {
+function customRender(
+  ui: ReactElement,
+  options?: RenderOptions & { addThemeProvider?: boolean },
+): RenderResult & { user: UserEvent } {
   const wrappers = createDefaultWrappers(options?.addThemeProvider);
   const wrapper = combineWrappers(wrappers, options?.wrapper);
-  return {
-    ...renderRTL(ui, { ...options, wrapper }),
-    user: userEvent.setup(),
-  };
+  return { ...renderRTL(ui, { ...options, wrapper }), user: userEvent.setup() };
 }
 
 export * from "@testing-library/react";

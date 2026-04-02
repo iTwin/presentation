@@ -26,8 +26,15 @@ export interface ViewWithUnifiedSelectionProps {}
 const ViewportSelectionHandlerContext = createContext<ViewportSelectionHandler | undefined>(undefined);
 
 /** @internal */
-export function ViewportSelectionHandlerContextProvider({ selectionHandler, children }: PropsWithChildren<{ selectionHandler: ViewportSelectionHandler }>) {
-  return <ViewportSelectionHandlerContext.Provider value={selectionHandler}>{children}</ViewportSelectionHandlerContext.Provider>;
+export function ViewportSelectionHandlerContextProvider({
+  selectionHandler,
+  children,
+}: PropsWithChildren<{ selectionHandler: ViewportSelectionHandler }>) {
+  return (
+    <ViewportSelectionHandlerContext.Provider value={selectionHandler}>
+      {children}
+    </ViewportSelectionHandlerContext.Provider>
+  );
 }
 
 /** @internal */
@@ -42,7 +49,9 @@ export function useViewportSelectionHandlerContext() {
  * @public
  * @deprecated in 5.7. Use `enableUnifiedSelectionSyncWithIModel` from `@itwin/unified-selection` package instead.
  */
-export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportComponent: React.ComponentType<P>): React.ComponentType<P> {
+export function viewWithUnifiedSelection<P extends ViewportProps>(
+  ViewportComponent: React.ComponentType<P>,
+): React.ComponentType<P> {
   const WithUnifiedSelection = memo<P>((props) => {
     const { imodel } = props;
     const [viewportSelectionHandler, setViewportSelectionHandler] = useState<ViewportSelectionHandler>();

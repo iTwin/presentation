@@ -27,13 +27,13 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   });
 
   it("returns root hierarchy level definition", async () => {
-    const rootHierarchyLevel: HierarchyLevelDefinition = [createGenericNodeDefinition(), createInstanceNodesQueryDefinition()];
+    const rootHierarchyLevel: HierarchyLevelDefinition = [
+      createGenericNodeDefinition(),
+      createInstanceNodesQueryDefinition(),
+    ];
     const factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
-      hierarchy: {
-        rootNodes: async () => rootHierarchyLevel,
-        childNodes: [],
-      },
+      hierarchy: { rootNodes: async () => rootHierarchyLevel, childNodes: [] },
     });
     const result = await factory.defineHierarchyLevel({ imodelAccess, parentNode: undefined });
     expect(result).to.deep.eq(rootHierarchyLevel);
@@ -42,10 +42,18 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   it("returns custom node children definition", async () => {
     const rootNode = createParentNode({ key: createTestGenericNodeKey({ id: "test-custom-node" }) });
 
-    const def1: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "1" }) })];
-    const def2: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "2" }) })];
-    const def3: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "3" }) })];
-    const def4: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "4" }) })];
+    const def1: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "1" }) }),
+    ];
+    const def2: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "2" }) }),
+    ];
+    const def3: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "3" }) }),
+    ];
+    const def4: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "4" }) }),
+    ];
 
     const factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
@@ -53,30 +61,15 @@ describe("createPredicateBasedHierarchyDefinition", () => {
         rootNodes: async () => [],
         childNodes: [
           // doesn't match parent node - should not be included
-          {
-            parentGenericNodePredicate: async (key) => key.id === "some-other-node",
-            definitions: async () => def1,
-          },
+          { parentGenericNodePredicate: async (key) => key.id === "some-other-node", definitions: async () => def1 },
           // matches parent node - should be included
-          {
-            parentGenericNodePredicate: async (key) => key.id === "test-custom-node",
-            definitions: async () => def2,
-          },
+          { parentGenericNodePredicate: async (key) => key.id === "test-custom-node", definitions: async () => def2 },
           // not event a custom node def - should not be included
-          {
-            parentInstancesNodePredicate: "some.class",
-            definitions: async () => def3,
-          },
+          { parentInstancesNodePredicate: "some.class", definitions: async () => def3 },
           // matches parent node - should be included
-          {
-            parentGenericNodePredicate: async (key) => key.id === "test-custom-node",
-            definitions: async () => def4,
-          },
+          { parentGenericNodePredicate: async (key) => key.id === "test-custom-node", definitions: async () => def4 },
           // matches parent node - should be included, but returns an empty list
-          {
-            parentGenericNodePredicate: async (key) => key.id === "test-custom-node",
-            definitions: async () => [],
-          },
+          { parentGenericNodePredicate: async (key) => key.id === "test-custom-node", definitions: async () => [] },
         ],
       },
     });
@@ -87,10 +80,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
 
   it("returns instance node children definition when parent node matches predicate", async () => {
     const rootNode = createParentNode({
-      key: {
-        type: "instances",
-        instanceKeys: [{ className: "TestSchema.ClassX", id: "0x1" }],
-      },
+      key: { type: "instances", instanceKeys: [{ className: "TestSchema.ClassX", id: "0x1" }] },
     });
 
     const baseClass = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "BaseOfX" });
@@ -98,11 +88,21 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "DerivedFromX", baseClass: xClass });
     imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "UnrelatedClass" });
 
-    const def1: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "1" }) })];
-    const def2: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "2" }) })];
-    const def3: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "3" }) })];
-    const def4: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "4" }) })];
-    const def5: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "5" }) })];
+    const def1: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "1" }) }),
+    ];
+    const def2: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "2" }) }),
+    ];
+    const def3: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "3" }) }),
+    ];
+    const def4: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "4" }) }),
+    ];
+    const def5: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "5" }) }),
+    ];
 
     const factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
@@ -110,35 +110,17 @@ describe("createPredicateBasedHierarchyDefinition", () => {
         rootNodes: async () => [],
         childNodes: [
           // not an instance node def - skip
-          {
-            parentGenericNodePredicate: async (key) => key.id === "custom-node",
-            definitions: async () => def1,
-          },
+          { parentGenericNodePredicate: async (key) => key.id === "custom-node", definitions: async () => def1 },
           // def for base class - should be included
-          {
-            parentInstancesNodePredicate: "TestSchema.BaseOfX",
-            definitions: async () => def2,
-          },
+          { parentInstancesNodePredicate: "TestSchema.BaseOfX", definitions: async () => def2 },
           // def for derived class - should not be included
-          {
-            parentInstancesNodePredicate: "TestSchema.DerivedFromX",
-            definitions: async () => def3,
-          },
+          { parentInstancesNodePredicate: "TestSchema.DerivedFromX", definitions: async () => def3 },
           // def for unrelated class - should not be included
-          {
-            parentInstancesNodePredicate: "TestSchema.UnrelatedClass",
-            definitions: async () => def4,
-          },
+          { parentInstancesNodePredicate: "TestSchema.UnrelatedClass", definitions: async () => def4 },
           // def for base class - should be included, but the list is empty
-          {
-            parentInstancesNodePredicate: "TestSchema.BaseOfX",
-            definitions: async () => [],
-          },
+          { parentInstancesNodePredicate: "TestSchema.BaseOfX", definitions: async () => [] },
           // def for matching predicate - should be included
-          {
-            parentInstancesNodePredicate: async () => true,
-            definitions: async () => def5,
-          },
+          { parentInstancesNodePredicate: async () => true, definitions: async () => def5 },
         ],
       },
     });
@@ -165,12 +147,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       classHierarchyInspector: imodelAccess,
       hierarchy: {
         rootNodes: async () => [],
-        childNodes: [
-          {
-            parentInstancesNodePredicate: "TestSchema.ClassX",
-            definitions: spy,
-          },
-        ],
+        childNodes: [{ parentInstancesNodePredicate: "TestSchema.ClassX", definitions: spy }],
       },
     });
 
@@ -185,19 +162,9 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   });
 
   it("doesn't apply instance node level definitions marked with `onlyIfNotHandled` flag if any of the previous ones have been applied", async () => {
-    const unrelatedClass = imodelAccess.stubEntityClass({
-      schemaName: "TestSchema",
-      className: "UnrelatedClass",
-    });
-    const baseClass = imodelAccess.stubEntityClass({
-      schemaName: "TestSchema",
-      className: "BaseClass",
-    });
-    const childClass = imodelAccess.stubEntityClass({
-      schemaName: "TestSchema",
-      className: "ChildClass",
-      baseClass,
-    });
+    const unrelatedClass = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "UnrelatedClass" });
+    const baseClass = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "BaseClass" });
+    const childClass = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "ChildClass", baseClass });
     const classX = imodelAccess.stubEntityClass({
       schemaName: "TestSchema",
       className: "ClassX",
@@ -205,10 +172,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     });
 
     const rootNode = createParentNode({
-      key: {
-        type: "instances",
-        instanceKeys: [{ className: classX.fullName, id: "0x1" }],
-      },
+      key: { type: "instances", instanceKeys: [{ className: classX.fullName, id: "0x1" }] },
     });
 
     const derivedClassDefs = sinon.stub().resolves([]);
@@ -218,15 +182,8 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [
-          {
-            parentInstancesNodePredicate: childClass.fullName,
-            definitions: derivedClassDefs,
-          },
-          {
-            parentInstancesNodePredicate: baseClass.fullName,
-            definitions: baseClassDefs,
-            onlyIfNotHandled: true,
-          },
+          { parentInstancesNodePredicate: childClass.fullName, definitions: derivedClassDefs },
+          { parentInstancesNodePredicate: baseClass.fullName, definitions: baseClassDefs, onlyIfNotHandled: true },
         ],
       },
     });
@@ -245,15 +202,8 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [
-          {
-            parentInstancesNodePredicate: unrelatedClass.fullName,
-            definitions: async () => [],
-          },
-          {
-            parentInstancesNodePredicate: baseClass.fullName,
-            definitions: baseClassDefs,
-            onlyIfNotHandled: true,
-          },
+          { parentInstancesNodePredicate: unrelatedClass.fullName, definitions: async () => [] },
+          { parentInstancesNodePredicate: baseClass.fullName, definitions: baseClassDefs, onlyIfNotHandled: true },
         ],
       },
     });
@@ -272,10 +222,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     const factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
       parseNode,
-      hierarchy: {
-        rootNodes: async () => [],
-        childNodes: [],
-      },
+      hierarchy: { rootNodes: async () => [], childNodes: [] },
     });
     expect(factory.parseNode).to.eq(parseNode);
   });
@@ -285,10 +232,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     const factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
       preProcessNode: preprocessor,
-      hierarchy: {
-        rootNodes: async () => [],
-        childNodes: [],
-      },
+      hierarchy: { rootNodes: async () => [], childNodes: [] },
     });
     expect(factory.preProcessNode).to.eq(preprocessor);
   });
@@ -298,37 +242,22 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     const factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
       postProcessNode: postprocessor,
-      hierarchy: {
-        rootNodes: async () => [],
-        childNodes: [],
-      },
+      hierarchy: { rootNodes: async () => [], childNodes: [] },
     });
     expect(factory.postProcessNode).to.eq(postprocessor);
   });
 });
 
 function createParentNode(src: Partial<NonNullable<DefineHierarchyLevelProps["parentNode"]>>) {
-  return {
-    label: "test",
-    key: createTestGenericNodeKey(),
-    parentKeys: [],
-    ...src,
-  };
+  return { label: "test", key: createTestGenericNodeKey(), parentKeys: [], ...src };
 }
 
 function createGenericNodeDefinition(props?: Partial<GenericHierarchyNodeDefinition>): GenericHierarchyNodeDefinition {
-  return {
-    node: createTestSourceGenericNode(),
-    ...props,
-  };
+  return { node: createTestSourceGenericNode(), ...props };
 }
 
-function createInstanceNodesQueryDefinition(props?: Partial<InstanceNodesQueryDefinition>): InstanceNodesQueryDefinition {
-  return {
-    fullClassName: "full.class_name",
-    query: {
-      ecsql: "test ecsql",
-    },
-    ...props,
-  };
+function createInstanceNodesQueryDefinition(
+  props?: Partial<InstanceNodesQueryDefinition>,
+): InstanceNodesQueryDefinition {
+  return { fullClassName: "full.class_name", query: { ecsql: "test ecsql" }, ...props };
 }

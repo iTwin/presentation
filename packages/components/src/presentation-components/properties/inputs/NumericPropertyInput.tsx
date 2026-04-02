@@ -29,15 +29,13 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
     setInputValue(newVal);
   };
 
-  const { min, max } = property.constraints ? getMinMaxFromPropertyConstraints(property.constraints) : { min: undefined, max: undefined };
+  const { min, max } = property.constraints
+    ? getMinMaxFromPropertyConstraints(property.constraints)
+    : { min: undefined, max: undefined };
   const commitInput = () => {
     const formattedInputValue = applyConstraints(inputValue, min, max);
     setInputValue(formattedInputValue);
-    onCommit &&
-      onCommit({
-        propertyRecord,
-        newValue: parsePrimitiveValue(formattedInputValue),
-      });
+    onCommit && onCommit({ propertyRecord, newValue: parsePrimitiveValue(formattedInputValue) });
   };
 
   return (
@@ -90,14 +88,9 @@ export interface NumericInputProps extends PropertyEditorProps {
 export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputProps>(
   ({ value, onChange, onBlur, isDisabled, setFocus, min, max, onCancel }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
-    useImperativeHandle(
-      ref,
-      () => ({
-        getValue: () => parsePrimitiveValue(value),
-        htmlElement: inputRef.current,
-      }),
-      [value],
-    );
+    useImperativeHandle(ref, () => ({ getValue: () => parsePrimitiveValue(value), htmlElement: inputRef.current }), [
+      value,
+    ]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.currentTarget.value;
@@ -178,7 +171,10 @@ function applyConstraints(inputAsNumber: string, min: number | undefined, max: n
   return valAsNumber.toString();
 }
 
-function getMinMaxFromPropertyConstraints(constraints: PropertyValueConstraints): { min: number | undefined; max: number | undefined } {
+function getMinMaxFromPropertyConstraints(constraints: PropertyValueConstraints): {
+  min: number | undefined;
+  max: number | undefined;
+} {
   if ("minimumValue" in constraints) {
     return { min: constraints.minimumValue, max: constraints.maximumValue };
   }

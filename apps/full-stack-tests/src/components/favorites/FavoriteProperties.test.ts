@@ -8,7 +8,12 @@ import sinon from "sinon";
 import { IModelApp } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "@itwin/presentation-components";
-import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
+import {
+  createFavoritePropertiesStorage,
+  DefaultFavoritePropertiesStorageTypes,
+  FavoritePropertiesScope,
+  Presentation,
+} from "@itwin/presentation-frontend";
 import { TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 
@@ -149,7 +154,9 @@ describe("Favorite properties", () => {
       propertyData = await propertiesDataProvider.getData();
       expect(propertyData.categories.length).to.eq(categoriesCountBefore + 1);
       expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.true;
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq(sourceFileNameRecord.property.displayLabel);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq(
+        sourceFileNameRecord.property.displayLabel,
+      );
     });
   });
 
@@ -184,13 +191,20 @@ describe("Favorite properties", () => {
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).to.eq("Category");
 
       const visibleFavoriteFields = await Promise.all(
-        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
+        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) =>
+          propertiesDataProvider.getFieldByPropertyDescription(r.property),
+        ),
       );
       expect(visibleFavoriteFields.every((f) => f !== undefined)).to.be.true;
 
       const record = getPropertyRecordByLabel(propertyData, "Category")!;
       const field = await propertiesDataProvider.getFieldByPropertyDescription(record.property);
-      await Presentation.favoriteProperties.changeFieldPriority(imodel, field!, undefined, visibleFavoriteFields as Field[]);
+      await Presentation.favoriteProperties.changeFieldPriority(
+        imodel,
+        field!,
+        undefined,
+        visibleFavoriteFields as Field[],
+      );
 
       propertyData = await propertiesDataProvider.getData();
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq("Category");
@@ -218,7 +232,9 @@ describe("Favorite properties", () => {
       propertyData = await propertiesDataProvider.getData();
 
       const visibleFavoriteFields = await Promise.all(
-        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
+        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) =>
+          propertiesDataProvider.getFieldByPropertyDescription(r.property),
+        ),
       );
       expect(visibleFavoriteFields.every((f) => f !== undefined)).to.be.true;
 
@@ -226,7 +242,12 @@ describe("Favorite properties", () => {
       const codeField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
       record = getPropertyRecordByLabel(propertyData, "Model")!;
       const modelField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
-      await Presentation.favoriteProperties.changeFieldPriority(imodel, codeField, modelField, visibleFavoriteFields as Field[]);
+      await Presentation.favoriteProperties.changeFieldPriority(
+        imodel,
+        codeField,
+        modelField,
+        visibleFavoriteFields as Field[],
+      );
 
       propertiesDataProvider.keys = new KeySet([
         { className: "PCJ_TestSchema:TestClass", id: "0x65" },
@@ -259,7 +280,9 @@ describe("Favorite properties", () => {
       propertyData = await propertiesDataProvider.getData();
 
       const visibleFavoriteFields = await Promise.all(
-        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
+        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) =>
+          propertiesDataProvider.getFieldByPropertyDescription(r.property),
+        ),
       );
       expect(visibleFavoriteFields.every((f) => f !== undefined)).to.be.true;
 
@@ -267,7 +290,12 @@ describe("Favorite properties", () => {
       const codeField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
       record = getPropertyRecordByLabel(propertyData, "Country")!;
       const modelField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
-      await Presentation.favoriteProperties.changeFieldPriority(imodel, codeField, modelField, visibleFavoriteFields as Field[]);
+      await Presentation.favoriteProperties.changeFieldPriority(
+        imodel,
+        codeField,
+        modelField,
+        visibleFavoriteFields as Field[],
+      );
 
       propertiesDataProvider.keys = new KeySet([
         { className: "PCJ_TestSchema:TestClass", id: "0x65" },
@@ -283,14 +311,14 @@ describe("Favorite properties", () => {
   describe("re-initialization", () => {
     const storage = new Map<string, any>();
     before(async () => {
-      sinon.stub(IModelApp, "userPreferences").get(() => ({
-        get: async (arg: PreferenceKeyArg & ITwinIdArg & TokenArg) => storage.get(arg.key),
-        save: async (arg: PreferenceArg & ITwinIdArg & TokenArg) => storage.set(arg.key, arg.content),
-        delete: async (arg: PreferenceKeyArg & ITwinIdArg & TokenArg) => storage.delete(arg.key),
-      }));
-      sinon.stub(IModelApp, "authorizationClient").get(() => ({
-        getAccessToken: async () => "accessToken",
-      }));
+      sinon
+        .stub(IModelApp, "userPreferences")
+        .get(() => ({
+          get: async (arg: PreferenceKeyArg & ITwinIdArg & TokenArg) => storage.get(arg.key),
+          save: async (arg: PreferenceArg & ITwinIdArg & TokenArg) => storage.set(arg.key, arg.content),
+          delete: async (arg: PreferenceKeyArg & ITwinIdArg & TokenArg) => storage.delete(arg.key),
+        }));
+      sinon.stub(IModelApp, "authorizationClient").get(() => ({ getAccessToken: async () => "accessToken" }));
       Presentation.terminate();
       await Presentation.initialize({
         favorites: {
