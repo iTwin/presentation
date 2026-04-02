@@ -4,7 +4,6 @@
     "module": "CommonJS",
     "moduleResolution": "Node",
     "outDir": "lib/cjs",
-    "noEmit": false
   },
-  "exclude": ["src/test/**/*"]
+  "include": ["src/presentation-components", "src/presentation-components.ts"],
 }
