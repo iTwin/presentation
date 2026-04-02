@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 import { ResolvablePromise } from "presentation-test-utilities";
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { TreeModelNode, TreeNodeItem, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";

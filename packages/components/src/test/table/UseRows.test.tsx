@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createAsyncIterator } from "presentation-test-utilities";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import { Content, DescriptorOverrides, KeySet, SortDirection } from "@itwin/presentation-common";
@@ -43,8 +43,6 @@ describe("useRows", () => {
       onActiveFormattingUnitSystemChanged,
     } as any);
   });
-
-  afterEach(() => {});
 
   afterEach(() => {
     getContentIteratorStub.mockReset();

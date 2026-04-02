@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createAsyncIterator } from "presentation-test-utilities";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { DEFAULT_KEYS_BATCH_SIZE, InstanceKey } from "@itwin/presentation-common";
@@ -12,8 +12,6 @@ import { Presentation, PresentationManager } from "@itwin/presentation-frontend"
 import { PresentationLabelsProvider } from "../../presentation-components/labels/LabelsProvider.js";
 import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { createMocked } from "../TestUtils.js";
-
-import type { Mocked } from "vitest";
 
 describe("PresentationLabelsProvider", () => {
   let provider: PresentationLabelsProvider;
@@ -27,8 +25,6 @@ describe("PresentationLabelsProvider", () => {
     vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
     provider = new PresentationLabelsProvider({ imodel });
   });
-
-  afterEach(() => {});
 
   describe("getLabel", () => {
     it("calls manager to get result and returns it", async () => {

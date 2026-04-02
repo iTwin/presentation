@@ -131,31 +131,6 @@ export const createTestPresentationInstanceFilterPropertyInfo = (props?: Partial
   ...props,
 });
 
-/**
- * Stubs global 'DOMMatrix' interface.
- * 'DOMMatrix' is needed for tests using draggable 'Dialog'.
- */
-export function stubDOMMatrix() {
-  const domMatrix = global.DOMMatrix;
-
-  beforeAll(() => {
-    Object.defineProperty(global, "DOMMatrix", {
-      writable: true,
-      // Must use a regular function (not arrow) so it's callable with `new`
-      value: vi.fn(function () {
-        return { m41: 0, m42: 0 };
-      }),
-    });
-  });
-
-  afterAll(() => {
-    Object.defineProperty(global, "DOMMatrix", {
-      writable: true,
-      value: domMatrix,
-    });
-  });
-}
-
 export function stubVirtualization() {
   beforeEach(() => {
     vi.spyOn(window.HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(800);

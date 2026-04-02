@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { TreeNodeItem } from "@itwin/components-react";
 import {

@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { CheckBoxState, PageOptions } from "@itwin/components-react";
 import { assert, BeEvent, Logger } from "@itwin/core-bentley";
@@ -41,8 +41,6 @@ import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTest
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
 import { createTestTreeNodeItem } from "../_helpers/UiComponents.js";
 import { createMocked } from "../TestUtils.js";
-
-import type { Mocked } from "vitest";
 
 function createTestECInstancesNodeKeyWithId(id?: string) {
   return createTestECInstancesNodeKey({

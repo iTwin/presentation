@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, Mocked, MockInstance, vi } from "vitest";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyData } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -14,8 +14,6 @@ import { FavoritePropertiesDataProvider } from "../../presentation-components/fa
 import { getFavoritesCategory } from "../../presentation-components/favorite-properties/Utils.js";
 import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 import { createMocked } from "../TestUtils.js";
-
-import type { Mocked, MockInstance } from "vitest";
 
 describe("FavoritePropertiesDataProvider", () => {
   let provider: FavoritePropertiesDataProvider;
@@ -48,8 +46,6 @@ describe("FavoritePropertiesDataProvider", () => {
     provider = new FavoritePropertiesDataProvider({ activeScopeProvider: () => ({ id: "element" }) });
     (provider as any).createPropertyDataProvider = () => presentationPropertyDataProvider;
   });
-
-  afterEach(() => {});
 
   describe("constructor", () => {
     it("sets `includeFieldsWithNoValues` to true", () => {

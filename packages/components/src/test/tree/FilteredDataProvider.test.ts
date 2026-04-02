@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PageOptions } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -16,8 +16,7 @@ import { IPresentationTreeDataProvider } from "../../presentation-components/tre
 import { createTreeNodeItem } from "../../presentation-components/tree/Utils.js";
 import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy.js";
-import { createStub } from "../TestUtils.js";
-import { createMocked } from "../TestUtils.js";
+import { createMocked, createStub } from "../TestUtils.js";
 
 describe("FilteredTreeDataProvider", () => {
   function createTestNodePathElementWithId(id: string) {

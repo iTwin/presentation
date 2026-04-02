@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ClientDiagnostics } from "@itwin/presentation-common";
 import { createDiagnosticsOptions } from "../../presentation-components/common/Diagnostics.js";
 

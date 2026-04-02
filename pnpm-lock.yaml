@@ -968,12 +968,6 @@ importers:
       '@types/react-dom':
         specifier: catalog:react
         version: 18.3.7(@types/react@18.3.28)
-      '@types/sinon':
-        specifier: catalog:test-tools
-        version: 17.0.4
-      '@types/sinon-chai':
-        specifier: catalog:test-tools
-        version: 4.0.0
       chai:
         specifier: catalog:test-tools
         version: 5.3.3
@@ -1007,12 +1001,6 @@ importers:
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.3
-      sinon:
-        specifier: catalog:test-tools
-        version: 19.0.5
-      sinon-chai:
-        specifier: catalog:test-tools
-        version: 4.0.1(chai@5.3.3)(sinon@19.0.5)
       typescript:
         specifier: catalog:build-tools
         version: 5.7.3

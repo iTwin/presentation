@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { PropertyValueRendererManager } from "@itwin/components-react";
 import { Localization } from "@itwin/core-common";
 import { Presentation } from "@itwin/presentation-frontend";

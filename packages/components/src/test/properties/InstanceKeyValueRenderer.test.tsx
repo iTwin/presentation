@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { Primitives, PrimitiveValue, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { TypeConverter, TypeConverterManager } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -14,7 +14,7 @@ import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react"
 import { WithIModelKey } from "../../presentation-components/common/Utils.js";
 import { InstanceKeyValueRenderer } from "../../presentation-components/properties/InstanceKeyValueRenderer.js";
 import { UnifiedSelectionContextProvider as UnifiedSelectionContextProviderDeprecated } from "../../presentation-components/unified-selection/UnifiedSelectionContext.js";
-import { act, cleanup, render, waitFor } from "../TestUtils.js";
+import { act, render, waitFor } from "../TestUtils.js";
 
 describe("InstanceKeyValueRenderer", () => {
   const renderer = new InstanceKeyValueRenderer();
@@ -63,10 +63,6 @@ describe("InstanceKeyValueRenderer", () => {
   describe("render", () => {
     beforeEach(() => {
       vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization() as any);
-    });
-
-    afterEach(() => {
-      cleanup();
     });
 
     describe("returned component", () => {

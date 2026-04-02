@@ -14,13 +14,12 @@ import {
   PresentationInstanceFilterBuilder,
   PresentationInstanceFilterInfo,
 } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
-import { createTestECClassInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../_helpers/Common.js";
+import { createTestECClassInfo, stubRaf, stubVirtualization } from "../_helpers/Common.js";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { render, waitFor, waitForElement, within } from "../TestUtils.js";
 
 describe("PresentationInstanceFilter", () => {
   stubRaf();
-  stubDOMMatrix();
   stubVirtualization();
 
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
@@ -60,7 +59,6 @@ describe("PresentationInstanceFilter", () => {
   } as IModelConnection;
 
   beforeAll(async () => {
-    HTMLElement.prototype.scrollIntoView = () => {};
     await UiComponents.initialize(new EmptyLocalization());
   });
 
@@ -79,8 +77,6 @@ describe("PresentationInstanceFilter", () => {
   afterAll(() => {
     onCloseEvent.raiseEvent();
     UiComponents.terminate();
-
-    delete (HTMLElement.prototype as any).scrollIntoView;
   });
 
   it("invokes 'onInstanceFilterChanged' with filter", async () => {

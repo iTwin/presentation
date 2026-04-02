@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import { PrimitiveValue, PropertyRecord, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyCategory } from "@itwin/components-react";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
@@ -30,14 +30,7 @@ import {
   Value,
   ValuesDictionary,
 } from "@itwin/presentation-common";
-import {
-  FavoritePropertiesManager,
-  FavoritePropertiesScope,
-  Presentation,
-  PresentationManager,
-  RulesetManager,
-  RulesetVariablesManager,
-} from "@itwin/presentation-frontend";
+import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider.js";
 import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils.js";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
@@ -51,8 +44,6 @@ import {
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
 import { createMocked } from "../TestUtils.js";
-
-import type { Mocked } from "vitest";
 
 /**
  * This is just a helper class to provide public access to

@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 import { createAsyncIterator } from "presentation-test-utilities";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import {
   MutableTreeModel,
@@ -39,10 +39,7 @@ import {
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider.js";
 import { ReportingTreeNodeLoader } from "../../../presentation-components/tree/ReportingTreeNodeLoader.js";
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils.js";
-import { renderHook, waitFor } from "../../TestUtils.js";
-import { createMocked } from "../../TestUtils.js";
-
-import type { Mocked } from "vitest";
+import { createMocked, renderHook, waitFor } from "../../TestUtils.js";
 
 describe("usePresentationTreeState", () => {
   const onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"] = new BeEvent<(args: IModelHierarchyChangeEventArgs) => void>();

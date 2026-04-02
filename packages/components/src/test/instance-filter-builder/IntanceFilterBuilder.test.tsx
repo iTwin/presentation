@@ -35,8 +35,6 @@ describe("InstanceFilterBuilder", () => {
     vi.spyOn(UiComponents, "translate").mockImplementation((key) => key as string);
   });
 
-  afterEach(async () => {});
-
   const testImodel = {} as IModelConnection;
   const testDescriptor = {} as Descriptor;
   const testActions = {

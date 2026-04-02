@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createRef } from "react";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyUpdatedArgs } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";

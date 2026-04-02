@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createRef } from "react";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { BeUiEvent } from "@itwin/core-bentley";

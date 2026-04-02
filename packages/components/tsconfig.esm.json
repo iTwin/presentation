@@ -4,6 +4,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "lib/esm",
+    "noEmit": false,
   },
   "exclude": ["src/test/**/*"],
 }

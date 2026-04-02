@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { TreeActions } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -33,23 +33,11 @@ function createFilterInfo(propName: string = "prop"): PresentationInstanceFilter
 describe("PresentationTreeNodeRenderer", () => {
   const treeActions = {} as TreeActions;
 
-  beforeAll(() => {
-    HTMLElement.prototype.scrollIntoView = () => {};
-  });
-
-  afterAll(() => {
-    delete (HTMLElement.prototype as any).scrollIntoView;
-  });
-
   beforeEach(async () => {
     const localization = new EmptyLocalization();
     vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true as any);
     vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization as any);
     vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
-  });
-
-  afterEach(() => {
-
   });
 
   it("renders default tree node", async () => {

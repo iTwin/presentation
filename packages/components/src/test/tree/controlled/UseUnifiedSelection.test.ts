@@ -9,7 +9,7 @@ import { Subject } from "rxjs";
 import { from } from "rxjs/internal/observable/from";
 import { finalize } from "rxjs/internal/operators/finalize";
 import { ObservableInput } from "rxjs/internal/types";
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import {
   AbstractTreeNodeLoaderWithProvider,
   TreeModelNodeInput,
@@ -41,10 +41,7 @@ import { IPresentationTreeDataProvider } from "../../../presentation-components/
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
 import { createTestTreeNodeItem } from "../../_helpers/UiComponents.js";
-import { configure, renderHook } from "../../TestUtils.js";
-import { createMocked } from "../../TestUtils.js";
-
-import type { Mocked } from "vitest";
+import { configure, createMocked, renderHook } from "../../TestUtils.js";
 
 const awaitableObservable = <T>(input: ObservableInput<T>) => {
   const promise = new ResolvablePromise<void>();

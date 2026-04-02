@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createAsyncIterator } from "presentation-test-utilities";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import {
   AbstractTreeNodeLoaderWithProvider,
@@ -27,7 +27,7 @@ import {
 } from "../../../presentation-components/tree/controlled/TreeHooks.js";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils.js";
-import { renderHook, waitFor, createMocked } from "../../TestUtils.js";
+import { createMocked, renderHook, waitFor } from "../../TestUtils.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 
@@ -50,7 +50,7 @@ describe("usePresentationNodeLoader", () => {
   };
 
   beforeEach(async () => {
-    const presentationManager = createMocked(PresentationManager);
+    const presentationManager = createMocked<PresentationManager>(PresentationManager as any);
     Object.assign(presentationManager, { onIModelHierarchyChanged });
 
     presentationManager.rulesets.mockReturnValue({
@@ -63,7 +63,7 @@ describe("usePresentationNodeLoader", () => {
 
     presentationManager.getNodesIterator.mockImplementation(async () => ({ total: 0, items: createAsyncIterator([]) }));
 
-    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
     vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged,
     } as any);

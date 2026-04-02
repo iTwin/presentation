@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { FieldDescriptorType, SortDirection } from "@itwin/presentation-common";
 import { useTableOptions, UseTableOptionsProps } from "../../presentation-components/table/UseTableOptions.js";
 import { createTestPropertyInfo } from "../_helpers/Common.js";

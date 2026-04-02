@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createAsyncIterator } from "presentation-test-utilities";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey, Item, KeySet } from "@itwin/presentation-common";
@@ -20,10 +20,7 @@ import {
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
-import { act, renderHook, waitFor } from "../TestUtils.js";
-import { createMocked } from "../TestUtils.js";
-
-import type { Mocked } from "vitest";
+import { act, createMocked, renderHook, waitFor } from "../TestUtils.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 
@@ -49,8 +46,6 @@ describe("usePresentationTable", () => {
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
     } as any);
   });
-
-  afterEach(() => {});
 
   it("loads columns and rows", async () => {
     const propertiesField = createTestPropertiesContentField({

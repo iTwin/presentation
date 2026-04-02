@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
@@ -37,8 +37,6 @@ import {
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
 import { createMocked } from "../TestUtils.js";
-
-import type { Mocked } from "vitest";
 
 /**
  * The Provider class is used to make protected [[ContentDataProvider]]
@@ -347,15 +345,18 @@ describe("ContentDataProvider", () => {
       });
 
       it("requests presentation manager for size", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         presentationManager.getContentAndSize.mockResolvedValue({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 });
         provider.pagingSize = 10;
         const size = await provider.getContentSetSize();
         expect(size).to.eq(2);
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
       });
 
       it("memoizes result", async () => {
         const resultPromiseContainer = new ResolvablePromise<{ content: Content; size: number }>();
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         presentationManager.getContentAndSize.mockReturnValue(resultPromiseContainer.promise);
         provider.pagingSize = 10;
         const requests = [provider.getContentSetSize(), provider.getContentSetSize()];
@@ -363,12 +364,14 @@ describe("ContentDataProvider", () => {
         resultPromiseContainer.resolveSync(result);
         const sizes = await Promise.all(requests);
         sizes.forEach((size) => expect(size).to.eq(result.size));
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
       });
 
       it("requests size and first page when paging size is set", async () => {
         const resultPromiseContainer = new ResolvablePromise<{ content: Content; size: number }>();
         const pagingSize = 20;
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         presentationManager.getContentAndSize.mockReturnValue(resultPromiseContainer.promise);
 
         provider.pagingSize = pagingSize;
@@ -376,6 +379,7 @@ describe("ContentDataProvider", () => {
         resultPromiseContainer.resolveSync(result);
         const size = await provider.getContentSetSize();
         expect(size).to.eq(result.size);
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(
           matchOptions(({ paging }) => paging?.start === 0 && paging.size === pagingSize),
         );
@@ -384,11 +388,13 @@ describe("ContentDataProvider", () => {
       it("returns content size equal to content set size when page options are undefined", async () => {
         const descriptor = createTestContentDescriptor({ fields: [] });
         const content = new Content(descriptor, [createTestContentItem({ values: {}, displayValues: {} })]);
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         presentationManager.getContent.mockResolvedValue(content);
 
         const size = await provider.getContentSetSize();
         expect(size).to.equal(content.contentSet.length);
         expect(presentationManager.getContentSetSize).not.toHaveBeenCalled();
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContent).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging === undefined));
       });
     });
@@ -493,6 +499,7 @@ describe("ContentDataProvider", () => {
       });
 
       it("returns undefined when manager returns undefined content", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         presentationManager.getContent.mockResolvedValue(undefined);
         const c = await provider.getContent();
         expect(c).to.be.undefined;
@@ -505,8 +512,10 @@ describe("ContentDataProvider", () => {
           size: 1,
         };
 
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         presentationManager.getContentAndSize.mockResolvedValue(result);
         const c = await provider.getContent({ start: 0, size: 10 });
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContentAndSize).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
         expect(c).to.deep.eq(result.content);
       });
@@ -516,8 +525,10 @@ describe("ContentDataProvider", () => {
         const resultContentNonFirstPagePromise = new ResolvablePromise<Content>();
 
         const resultContentFirstPagePromise1 = new ResolvablePromise<{ content: Content; size: number }>();
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         presentationManager.getContentAndSize.mockReturnValue(resultContentFirstPagePromise1.promise);
 
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         presentationManager.getContent.mockImplementation(async (options) => {
           if (options.paging === undefined) {
             return resultContentFirstPagePromise0.promise;
@@ -564,10 +575,14 @@ describe("ContentDataProvider", () => {
         expect(responses[4]).to.deep.eq(pagedContentAndSizeResponse.content, "responses[4] should eq pagedContentAndSizeResponse.content");
         expect(responses[5]).to.deep.eq(nonPagedContentStartingAt1Response, "responses[5] should eq nonPagedContentStartingAt1Response");
 
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContent).toHaveBeenCalledTimes(2);
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContent).toHaveBeenCalledWith(matchOptions(({ paging }) => paging === undefined));
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContent).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 1 && paging.size === 0));
 
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 1));
       });
 
@@ -575,7 +590,9 @@ describe("ContentDataProvider", () => {
         provider.keys = new KeySet();
         await provider.getContent();
         expect(presentationManager.getContentDescriptor).not.toHaveBeenCalled();
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContent).not.toHaveBeenCalled();
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContentAndSize).not.toHaveBeenCalled();
       });
     });

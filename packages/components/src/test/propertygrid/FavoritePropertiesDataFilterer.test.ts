@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
@@ -11,7 +11,7 @@ import { IPresentationPropertyDataProvider } from "../../presentation-components
 import { FavoritePropertiesDataFilterer } from "../../presentation-components/propertygrid/FavoritePropertiesDataFilterer.js";
 import { createTestSimpleContentField } from "../_helpers/Content.js";
 import { createArrayProperty, createPrimitiveStringProperty, createStructProperty } from "../_helpers/Properties.js";
-import { createStub, createMocked } from "../TestUtils.js";
+import { createMocked, createStub } from "../TestUtils.js";
 
 describe("FavoritePropertiesDataFilterer", () => {
   const imodel = {} as IModelConnection;
@@ -27,8 +27,6 @@ describe("FavoritePropertiesDataFilterer", () => {
   beforeEach(() => {
     dataProvider.getFieldByPropertyDescription.mockReset();
   });
-
-  afterEach(() => {});
 
   it("uses `FavoritePropertiesManager.hasAsync` to determine favorites if it's available and callback is not provided through props", async () => {
     const record = createPrimitiveStringProperty("Property", "Value");

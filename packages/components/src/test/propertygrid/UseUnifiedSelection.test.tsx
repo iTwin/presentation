@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { PropsWithChildren } from "react";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { ISelectionProvider, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
@@ -15,10 +15,7 @@ import {
   usePropertyDataProviderWithUnifiedSelection,
 } from "../../presentation-components/propertygrid/UseUnifiedSelection.js";
 import { createTestECInstanceKey } from "../_helpers/Common.js";
-import { act, renderHook, waitFor } from "../TestUtils.js";
-import { createMocked } from "../TestUtils.js";
-
-import type { Mocked } from "vitest";
+import { act, createMocked, renderHook, waitFor } from "../TestUtils.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 

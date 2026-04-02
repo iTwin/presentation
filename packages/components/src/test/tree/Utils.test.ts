@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { PageOptions } from "@itwin/components-react";
 import { LabelDefinition, Node } from "@itwin/presentation-common";
 import { createPartialTreeNodeItem, createTreeNodeItem, createTreeNodeItems, pageOptionsUiToPresentation } from "../../presentation-components/tree/Utils.js";

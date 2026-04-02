@@ -19,7 +19,7 @@ import {
   PresentationInstanceFilterDialog,
   PresentationInstanceFilterPropertiesSource,
 } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
-import { createTestECClassInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../_helpers/Common.js";
+import { createTestECClassInfo, stubRaf, stubVirtualization } from "../_helpers/Common.js";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import {
   act,
@@ -39,7 +39,6 @@ import {
 
 describe("PresentationInstanceFilterDialog", () => {
   stubRaf();
-  stubDOMMatrix();
   stubVirtualization();
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
   const classInfo = createTestECClassInfo();
@@ -75,7 +74,6 @@ describe("PresentationInstanceFilterDialog", () => {
   } as IModelConnection;
 
   beforeAll(async () => {
-    HTMLElement.prototype.scrollIntoView = () => {};
     await UiComponents.initialize(new EmptyLocalization());
   });
 
@@ -94,8 +92,6 @@ describe("PresentationInstanceFilterDialog", () => {
   afterAll(() => {
     onCloseEvent.raiseEvent();
     UiComponents.terminate();
-
-    delete (HTMLElement.prototype as any).scrollIntoView;
   });
 
   it("renders with initial filter", async () => {

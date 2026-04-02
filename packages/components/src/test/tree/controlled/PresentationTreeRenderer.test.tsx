@@ -30,14 +30,13 @@ import { PresentationTreeRenderer } from "../../../presentation-components/tree/
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider.js";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
-import { createTestECClassInfo, createTestPropertyInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../../_helpers/Common.js";
+import { createTestECClassInfo, createTestPropertyInfo, stubRaf, stubVirtualization } from "../../_helpers/Common.js";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
 import { act, cleanup, render, waitFor } from "../../TestUtils.js";
 import { createTreeModelNodeInput } from "./Helpers.js";
 
 describe("PresentationTreeRenderer", () => {
   stubRaf();
-  stubDOMMatrix();
   stubVirtualization();
 
   const onCloseEvent = new BeEvent<() => void>();
@@ -87,12 +86,10 @@ describe("PresentationTreeRenderer", () => {
   beforeAll(async () => {
     // need to initialize for immer patches to be enabled.
     await UiComponents.initialize(localization);
-    HTMLElement.prototype.scrollIntoView = () => {};
   });
 
   afterAll(() => {
     UiComponents.terminate();
-    delete (HTMLElement.prototype as any).scrollIntoView;
   });
 
   beforeEach(() => {

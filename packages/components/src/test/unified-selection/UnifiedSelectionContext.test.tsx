@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 import { PropsWithChildren, useEffect } from "react";
-import { describe, it, expect, beforeEach, afterEach, vi, MockInstance } from "vitest";
+import { beforeEach, describe, expect, it, MockInstance, vi } from "vitest";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionManager } from "@itwin/presentation-frontend";
@@ -38,8 +38,6 @@ describe("UnifiedSelectionContext", () => {
     vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager as any);
     IModelConnection.onOpen.raiseEvent(testIModel);
   });
-
-  afterEach(() => {});
 
   it("uses selection level 0 by default", () => {
     const { result } = renderUnifiedSelectionContextHook();

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Subject } from "rxjs";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ITreeNodeLoader,
   PagedTreeNodeLoader,
