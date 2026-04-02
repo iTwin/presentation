@@ -5,6 +5,9 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  esbuild: {
+    target: "esnext",
+  },
   test: {
     environment: "happy-dom",
     include: ["src/**/*.test.{ts,tsx}"],
@@ -26,6 +29,18 @@ export default defineConfig({
     },
     setupFiles: ["./src/test/setup.ts"],
     css: false,
+    coverage: {
+      provider: "v8",
+      include: ["src/presentation-components/**/*.{ts,tsx}"],
+      reportsDirectory: "./lib/test/coverage",
+      reporter: ["text-summary", "lcov", "cobertura"],
+      thresholds: {
+        statements: 100,
+        functions: 100,
+        branches: 100,
+        lines: 100,
+      },
+    },
     server: {
       deps: {
         inline: ["@itwin/core-react", "@itwin/appui-react", "@itwin/components-react", "@itwin/imodel-components-react"],

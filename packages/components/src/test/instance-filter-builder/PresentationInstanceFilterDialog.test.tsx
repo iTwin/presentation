@@ -19,7 +19,7 @@ import {
   PresentationInstanceFilterDialog,
   PresentationInstanceFilterPropertiesSource,
 } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
-import { createTestECClassInfo, stubRaf, stubVirtualization } from "../_helpers/Common.js";
+import { createTestECClassInfo, stubVirtualization } from "../_helpers/Common.js";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import {
   act,
@@ -38,7 +38,6 @@ import {
 } from "../TestUtils.js";
 
 describe("PresentationInstanceFilterDialog", () => {
-  stubRaf();
   stubVirtualization();
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
   const classInfo = createTestECClassInfo();

@@ -111,6 +111,7 @@
     "@types/node": "catalog:build-tools",
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
+    "@vitest/coverage-v8": "catalog:test-tools",
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",

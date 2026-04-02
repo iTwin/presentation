@@ -8,11 +8,10 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { PresentationInstanceFilterProperty } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterProperty.js";
-import { createTestPresentationInstanceFilterPropertyInfo, stubRaf } from "../_helpers/Common.js";
+import { createTestPresentationInstanceFilterPropertyInfo } from "../_helpers/Common.js";
 import { render, waitFor } from "../TestUtils.js";
 
 describe("PresentationInstanceFilterProperty", () => {
-  stubRaf();
   const className = "TestClassName";
   const schemaName = "TestSchema";
 

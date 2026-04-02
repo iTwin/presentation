@@ -84,7 +84,7 @@ function NonPrimitiveCellRenderer(props: NonPrimitiveCellRendererProps) {
       >
         {buttonLabel}
       </Anchor>
-      <Modal isOpen={isOpen} title={dialogLabel} onClose={/* c8 ignore next */ () => setIsOpen(false)} className="presentation-components-non-primitive-value">
+      <Modal isOpen={isOpen} title={dialogLabel} onClose={/* v8 ignore next -- @preserve */ () => setIsOpen(false)} className="presentation-components-non-primitive-value">
         <ModalContent>
           {/* Can't change our import to `components-react`, because it was added there in a version later than our peer dependency */}
           {/* eslint-disable-next-line @typescript-eslint/no-deprecated */}

@@ -83,41 +83,6 @@ export const waitForPendingAsyncs = async (handler: { pendingAsyncs: Set<string>
   await recursiveWaitInternal();
 };
 
-/**
- * Stubs global 'requestAnimationFrame' and 'cancelAnimationFrame' functions.
- * This is needed for tests using 'react-select' component.
- */
-export function stubRaf() {
-  const raf = global.requestAnimationFrame;
-  const caf = global.cancelAnimationFrame;
-
-  beforeAll(() => {
-    Object.defineProperty(global, "requestAnimationFrame", {
-      writable: true,
-      value: (cb: FrameRequestCallback) => {
-        return setTimeout(cb, 0);
-      },
-    });
-    Object.defineProperty(global, "cancelAnimationFrame", {
-      writable: true,
-      value: (handle: number) => {
-        clearTimeout(handle);
-      },
-    });
-  });
-
-  afterAll(() => {
-    Object.defineProperty(global, "requestAnimationFrame", {
-      writable: true,
-      value: raf,
-    });
-    Object.defineProperty(global, "cancelAnimationFrame", {
-      writable: true,
-      value: caf,
-    });
-  });
-}
-
 export const createTestPresentationInstanceFilterPropertyInfo = (props?: Partial<PresentationInstanceFilterPropertyInfo>) => ({
   sourceClassId: "0x1",
   sourceClassIds: ["0x1"],

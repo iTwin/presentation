@@ -14,12 +14,11 @@ import {
   PresentationInstanceFilterBuilder,
   PresentationInstanceFilterInfo,
 } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
-import { createTestECClassInfo, stubRaf, stubVirtualization } from "../_helpers/Common.js";
+import { createTestECClassInfo, stubVirtualization } from "../_helpers/Common.js";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { render, waitFor, waitForElement, within } from "../TestUtils.js";
 
 describe("PresentationInstanceFilter", () => {
-  stubRaf();
   stubVirtualization();
 
   const category = createTestCategoryDescription({ name: "root", label: "Root" });

@@ -16,7 +16,6 @@ import { SchemaMetadataContextProvider } from "../../../presentation-components/
 import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 import { QuantityEditorName } from "../../../presentation-components/properties/editors/QuantityPropertyEditor.js";
 import { QuantityPropertyEditorInput } from "../../../presentation-components/properties/inputs/QuantityPropertyEditorInput.js";
-import { stubRaf } from "../../_helpers/Common.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 
@@ -28,8 +27,6 @@ const createRecord = ({ initialValue, kindOfQuantityName }: { initialValue?: num
 };
 
 describe("<QuantityPropertyEditorInput />", () => {
-  stubRaf();
-
   const schemaContext = {} as SchemaContext;
   const format = new Format("test format");
   const formatterSpec = {
@@ -141,8 +138,6 @@ describe("<QuantityPropertyEditorInput />", () => {
     const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
     await waitFor(() => expect(input.disabled).to.be.false);
 
-    // Verify that selection logic is applied
-    await waitFor(() => expect(input.selectionEnd).to.eq(0));
     await user.type(input, "123.4 ", { skipClick: true });
     await user.tab();
 
@@ -168,7 +163,7 @@ describe("<QuantityPropertyEditorInput />", () => {
   });
 
   it("should focus on input if setFocus is true", async () => {
-    const record = createRecord({ initialValue: undefined, kindOfQuantityName: "TestKOQ" });
+    const record = createRecord({ initialValue: 123, kindOfQuantityName: "TestKOQ" });
     const ref = createRef<PropertyEditorAttributes>();
 
     const { getByRole } = render(
@@ -177,10 +172,13 @@ describe("<QuantityPropertyEditorInput />", () => {
       </SchemaMetadataContextProvider>,
     );
 
-    const input = await waitFor(() => getByRole("textbox"));
+    const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
     await waitFor(() => {
       expect(input).to.be.eq(document.activeElement);
     });
+
+    // Verify that selection logic is applied
+    await waitFor(() => expect(input.selectionEnd).to.eq(8));
   });
 
   it("commits value and blurs input when Enter is pressed", async () => {
