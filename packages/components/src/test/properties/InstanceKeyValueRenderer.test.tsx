@@ -29,9 +29,9 @@ describe("InstanceKeyValueRenderer", () => {
 
   beforeAll(() => {
     const localization = new EmptyLocalization();
-    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true as any);
-    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization as any);
-    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
   });
 
   afterAll(async () => {
@@ -62,7 +62,7 @@ describe("InstanceKeyValueRenderer", () => {
 
   describe("render", () => {
     beforeEach(() => {
-      vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization() as any);
+      vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization());
     });
 
     describe("returned component", () => {
@@ -82,7 +82,7 @@ describe("InstanceKeyValueRenderer", () => {
       describe("with deprecated unified selection context", () => {
         beforeEach(() => {
           const selectionManager = new SelectionManager({ scopes: undefined as any });
-          vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager as any);
+          vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager);
         });
 
         it("renders empty when there is no display value", () => {

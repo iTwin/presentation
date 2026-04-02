@@ -81,7 +81,7 @@ describe("UnifiedSelectionEventHandler", () => {
     selectionManager.getSelection.mockReturnValue(new KeySet());
     Object.assign(selectionManager, { selectionChange: selectionChangeEvent });
 
-    vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager as any);
+    vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager);
   });
 
   function createHandler() {
@@ -587,7 +587,7 @@ describe("useUnifiedSelectionTreeEventHandler", () => {
   beforeEach(() => {
     const selectionManager = createMocked(SelectionManager);
     Object.assign(selectionManager, { selectionChange: new SelectionChangeEvent() });
-    vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager as any);
+    vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager);
   });
 
   afterEach(() => {});

@@ -73,8 +73,8 @@ describe("TreeDataProvider", () => {
       onVariableChanged,
     } as RulesetVariablesManager);
 
-    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
-    vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization() as any);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization());
     provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId, onHierarchyLimitExceeded: onHierarchyLimitExceededSpy });
   });
 

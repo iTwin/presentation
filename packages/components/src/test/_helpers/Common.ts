@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Component } from "react";
-import { afterAll, beforeAll, beforeEach, vi } from "vitest";
+import { beforeEach, vi } from "vitest";
 import { BeDuration } from "@itwin/core-bentley";
 import { ClassInfo, InstanceKey, PropertyInfo, RelatedClassInfo, RelatedClassInfoWithOptionalRelationship, Ruleset } from "@itwin/presentation-common";
 import { WithConstraints } from "../../presentation-components/common/ContentBuilder.js";

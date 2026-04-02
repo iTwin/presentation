@@ -37,7 +37,7 @@ describe("FavoritePropertiesDataFilterer", () => {
     const manager = createMocked(FavoritePropertiesManager);
     manager.hasAsync.mockImplementation(async (field) => field === matchingField);
 
-    vi.spyOn(Presentation, "favoriteProperties", "get").mockReturnValue(manager as any);
+    vi.spyOn(Presentation, "favoriteProperties", "get").mockReturnValue(manager);
 
     const filterer = new FavoritePropertiesDataFilterer({
       source: getProvider(),
@@ -60,7 +60,7 @@ describe("FavoritePropertiesDataFilterer", () => {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     manager.has.mockImplementation((field) => field === matchingField);
 
-    vi.spyOn(Presentation, "favoriteProperties", "get").mockReturnValue(manager as any);
+    vi.spyOn(Presentation, "favoriteProperties", "get").mockReturnValue(manager);
 
     const filterer = new FavoritePropertiesDataFilterer({
       source: getProvider(),

@@ -83,7 +83,7 @@ describe("FilteredTreeDataProvider", () => {
     presentationManager.vars.mockReturnValue({
       onVariableChanged,
     } as RulesetVariablesManager);
-    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
 
     filter = "test_filter";
     paths = createPaths();

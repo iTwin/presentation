@@ -16,7 +16,7 @@ describe("initializeLocalization", () => {
       registerNamespace: createStub<Localization["registerNamespace"]>().mockResolvedValue(),
       unregisterNamespace: createStub<Localization["unregisterNamespace"]>(),
     };
-    vi.spyOn(Presentation, "localization", "get").mockReturnValue(i18n as any);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(i18n as unknown as Localization);
 
     const terminate = await initializeLocalization();
     expect(i18n.registerNamespace).toHaveBeenCalledOnce();

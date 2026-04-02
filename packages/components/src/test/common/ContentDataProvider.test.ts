@@ -93,13 +93,13 @@ describe("ContentDataProvider", () => {
       onVariableChanged,
     } as RulesetVariablesManager);
 
-    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
     vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged,
-    } as any);
+    } as QuantityFormatter);
     vi.spyOn(IModelApp, "formatsProvider", "get").mockReturnValue({
       onFormatsChanged,
-    } as any);
+    } as FormatsProvider);
 
     provider = new Provider({ imodel, ruleset: rulesetId, displayType });
     invalidateCacheSpy = vi.spyOn(provider, "invalidateCache");
@@ -621,7 +621,7 @@ describe("ContentDataProvider", () => {
           },
         ],
       });
-      provider.getFieldByPropertyDescription = vi.fn(async () => field) as any;
+      provider.getFieldByPropertyDescription = vi.fn(async () => field);
 
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       const actualField = await provider.getFieldByPropertyRecord(record);

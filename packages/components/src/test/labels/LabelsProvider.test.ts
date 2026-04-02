@@ -21,8 +21,8 @@ describe("PresentationLabelsProvider", () => {
   beforeEach(() => {
     presentationManager = createMocked(PresentationManager as any);
     const localization = new EmptyLocalization();
-    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
-    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
     provider = new PresentationLabelsProvider({ imodel });
   });
 

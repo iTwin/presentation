@@ -6,8 +6,8 @@
 import { useEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp } from "@itwin/core-frontend";
-import { Format, FormatterSpec, FormatType, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
+import { FormattingUnitSystemChangedArgs, IModelApp, QuantityFormatter } from "@itwin/core-frontend";
+import { Format, FormatsProvider, FormatterSpec, FormatType, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { QuantityValue, useQuantityValueInput, UseQuantityValueInputProps } from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
@@ -50,8 +50,8 @@ describe("UseQuantityValueInput", () => {
     getFormatterSpecStub = vi.spyOn(KoqPropertyValueFormatter.prototype, "getFormatterSpec");
     getParserSpecStub = vi.spyOn(KoqPropertyValueFormatter.prototype, "getParserSpec");
 
-    vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue(quantityFormatter as any);
-    vi.spyOn(IModelApp, "formatsProvider", "get").mockReturnValue(formatProvider as any);
+    vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue(quantityFormatter as unknown as QuantityFormatter);
+    vi.spyOn(IModelApp, "formatsProvider", "get").mockReturnValue(formatProvider as unknown as FormatsProvider);
 
     formatterSpec.applyFormatting.mockImplementation((raw) => `${raw} unit`);
     parserSpec.parseToQuantityValue.mockImplementation((value) => {
@@ -84,13 +84,13 @@ describe("UseQuantityValueInput", () => {
   });
 
   it("renders disabled input if cannot create formatter", async () => {
-    getFormatterSpecStub.mockResolvedValue(undefined as any);
+    getFormatterSpecStub.mockResolvedValue(undefined);
     const { getByRole } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />);
     await waitFor(() => expect((getByRole("textbox") as HTMLInputElement).disabled).to.be.true);
   });
 
   it("renders disabled input if cannot create parser", async () => {
-    getParserSpecStub.mockResolvedValue(undefined as any);
+    getParserSpecStub.mockResolvedValue(undefined);
     const { getByRole } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />);
     await waitFor(() => expect((getByRole("textbox") as HTMLInputElement).disabled).to.be.true);
   });

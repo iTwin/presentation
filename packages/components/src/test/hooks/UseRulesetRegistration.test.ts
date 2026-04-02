@@ -6,7 +6,7 @@
 import { ResolvablePromise } from "presentation-test-utilities";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
-import { Presentation, RulesetManager } from "@itwin/presentation-frontend";
+import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
 import { useRulesetRegistration } from "../../presentation-components/hooks/UseRulesetRegistration.js";
 import { renderHook } from "../TestUtils.js";
 
@@ -26,7 +26,7 @@ describe("[deprecated] useRulesetRegistration", () => {
   };
 
   beforeEach(() => {
-    vi.spyOn(Presentation, "presentation", "get").mockReturnValue({ rulesets: () => rulesetManagerStub } as any);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue({ rulesets: () => rulesetManagerStub } as unknown as PresentationManager);
   });
 
   afterEach(() => {

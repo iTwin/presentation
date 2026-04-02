@@ -55,18 +55,18 @@ describe("usePresentationNodeLoader", () => {
 
     presentationManager.rulesets.mockReturnValue({
       onRulesetModified,
-    } as any);
+    } as RulesetManager);
 
     presentationManager.vars.mockReturnValue({
       onVariableChanged: onRulesetVariableChanged,
-    } as any);
+    } as RulesetVariablesManager);
 
     presentationManager.getNodesIterator.mockImplementation(async () => ({ total: 0, items: createAsyncIterator([]) }));
 
     vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
     vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged,
-    } as any);
+    } as unknown as QuantityFormatter);
 
     await UiComponents.initialize(new EmptyLocalization());
   });

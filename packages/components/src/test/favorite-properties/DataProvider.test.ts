@@ -39,9 +39,9 @@ describe("FavoritePropertiesDataProvider", () => {
     favoritePropertiesManager = createMocked(FavoritePropertiesManager);
 
     const localization = new EmptyLocalization();
-    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
-    vi.spyOn(Presentation, "favoriteProperties", "get").mockReturnValue(favoritePropertiesManager as any);
-    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
+    vi.spyOn(Presentation, "favoriteProperties", "get").mockReturnValue(favoritePropertiesManager);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
 
     provider = new FavoritePropertiesDataProvider({ activeScopeProvider: () => ({ id: "element" }) });
     (provider as any).createPropertyDataProvider = () => presentationPropertyDataProvider;

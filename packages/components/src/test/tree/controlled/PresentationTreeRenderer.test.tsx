@@ -92,9 +92,9 @@ describe("PresentationTreeRenderer", () => {
   });
 
   beforeEach(() => {
-    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization as any);
-    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
-    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as unknown as PresentationManager);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
 
     // stub getECClassInfo to prevent unhandled errors when filter dialog opens
     const classInfo = createTestECClassInfo();

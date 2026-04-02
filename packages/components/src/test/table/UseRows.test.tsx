@@ -37,11 +37,11 @@ describe("useRows", () => {
   beforeEach(() => {
     presentationManagerSpy = vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
       getContentIterator: getContentIteratorStub,
-    } as any);
+    } as unknown as PresentationManager);
     onActiveFormattingUnitSystemChanged = new BeUiEvent<FormattingUnitSystemChangedArgs>();
     vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged,
-    } as any);
+    } as unknown as QuantityFormatter);
   });
 
   afterEach(() => {
@@ -54,7 +54,7 @@ describe("useRows", () => {
     beforeEach(() => {
       presentationManagerSpy.mockReturnValue({
         getContentAndSize: getContentAndSizeStub,
-      } as any);
+      } as unknown as PresentationManager);
     });
 
     it("loads rows", async () => {

@@ -82,11 +82,11 @@ describe("usePresentationTreeState", () => {
 
     presentationManager.getNodesIterator.mockResolvedValue({ total: 0, items: createAsyncIterator([]) });
 
-    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
-    vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization() as any);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization());
     vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged,
-    } as any);
+    } as unknown as QuantityFormatter);
 
     isBriefcaseConnectionStub.mockReturnValue(false);
 

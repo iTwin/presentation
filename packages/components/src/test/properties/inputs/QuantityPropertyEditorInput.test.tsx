@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import { Format, FormatterSpec, FormatType, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
@@ -46,10 +46,10 @@ describe("<QuantityPropertyEditorInput />", () => {
     getFormatterSpecStub = vi.spyOn(KoqPropertyValueFormatter.prototype, "getFormatterSpec");
     getParserSpecStub = vi.spyOn(KoqPropertyValueFormatter.prototype, "getParserSpec");
 
-    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Decimal as any);
+    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Decimal);
     vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    } as any);
+    } as unknown as QuantityFormatter);
 
     formatterSpec.applyFormatting.mockImplementation((raw) => `${raw} unit`);
     parserSpec.parseToQuantityValue.mockImplementation((value) => {

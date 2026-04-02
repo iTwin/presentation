@@ -46,12 +46,12 @@ describe("UniquePropertyValuesSelector", () => {
   beforeEach(async () => {
     window.innerHeight = 1000;
     const localization = new EmptyLocalization();
-    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true as any);
-    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization as any);
-    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
     presentationManagerStub = vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
       getDistinctValuesIterator: getDistinctValuesIteratorStub,
-    } as any);
+    } as unknown as PresentationManager);
     getDistinctValuesIteratorStub.mockResolvedValue({ total: 0, items: createAsyncIterator([]) });
   });
 
@@ -104,7 +104,7 @@ describe("UniquePropertyValuesSelector", () => {
           { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
         ],
       }),
-    } as any);
+    });
 
     const { getByText, getByPlaceholderText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,

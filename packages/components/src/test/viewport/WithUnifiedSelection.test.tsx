@@ -7,7 +7,7 @@ import { ResolvablePromise } from "presentation-test-utilities";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Id64, Id64Arg, Id64String } from "@itwin/core-bentley";
 import { Code, ElementProps } from "@itwin/core-common";
-import { IModelApp, IModelConnection, ViewState3d } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection, ViewManager, ViewState3d } from "@itwin/core-frontend";
 import { ViewportComponent } from "@itwin/imodel-components-react";
 import { KeySet } from "@itwin/presentation-common";
 import {
@@ -75,7 +75,7 @@ describe("Viewport withUnifiedSelection", () => {
       *getHiliteSetIterator() {},
       setSyncWithIModelToolSelection: () => {},
     };
-    vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManagerMock as any);
+    vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManagerMock as unknown as SelectionManager);
 
     expect(selectionChangeEvent.numberOfListeners).to.be.eq(0);
 
@@ -162,8 +162,8 @@ describe("ViewportSelectionHandler", () => {
   }
 
   beforeEach(() => {
-    vi.spyOn(IModelApp, "viewManager", "get").mockReturnValue({ onSelectionSetChanged: () => {} } as any);
-    vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager as any);
+    vi.spyOn(IModelApp, "viewManager", "get").mockReturnValue({ onSelectionSetChanged: () => {} } as unknown as ViewManager);
+    vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager as unknown as SelectionManager);
 
     async function* emptyGenerator() {}
     selectionManager.getHiliteSetIterator.mockImplementation(() => emptyGenerator());

@@ -6,7 +6,7 @@
 import { createAsyncIterator } from "presentation-test-utilities";
 import { beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import { InstanceKey, Item, KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
 import { createStorage, Selectables, SelectionStorage } from "@itwin/unified-selection";
@@ -41,10 +41,10 @@ describe("usePresentationTable", () => {
 
   beforeEach(() => {
     presentationManager = createMocked(PresentationManager as any);
-    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
     vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    } as any);
+    } as unknown as QuantityFormatter);
   });
 
   it("loads columns and rows", async () => {
@@ -104,10 +104,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
   beforeEach(() => {
     presentationManager = createMocked(PresentationManager as any);
-    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
     vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    } as any);
+    } as unknown as QuantityFormatter);
     IModelConnection.onOpen.raiseEvent(imodel);
   });
 
@@ -174,7 +174,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
   describe("with deprecated `SelectionManager` from `presentation-frontend` package", () => {
     beforeEach(() => {
       const selectionManager = new SelectionManager({ scopes: undefined as any });
-      vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager as any);
+      vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager);
     });
 
     it("loads data when grouping node is selected", async () => {

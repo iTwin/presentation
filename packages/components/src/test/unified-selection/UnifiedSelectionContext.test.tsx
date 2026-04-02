@@ -35,7 +35,7 @@ describe("UnifiedSelectionContext", () => {
 
   beforeEach(() => {
     const selectionManager = new SelectionManager({ scopes: undefined as any });
-    vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager as any);
+    vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager);
     IModelConnection.onOpen.raiseEvent(testIModel);
   });
 

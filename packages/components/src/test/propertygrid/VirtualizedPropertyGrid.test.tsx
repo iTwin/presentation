@@ -121,7 +121,7 @@ describe("Category renderer customization", () => {
           },
         },
       };
-      const { result } = renderHook(() => useInstanceKeys(stubProps as any));
+      const { result } = renderHook(() => useInstanceKeys(stubProps as unknown as PropertyCategoryRendererProps));
       await waitFor(() => {
         expect(result.current).to.not.be.undefined;
       });

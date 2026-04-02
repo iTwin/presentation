@@ -24,9 +24,9 @@ describe("useNavigationPropertyTargetsLoader", () => {
 
   beforeEach(() => {
     const localization = new EmptyLocalization();
-    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true as any);
-    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization as any);
-    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
   });
 
   it("returns empty targets array if ruleset is undefined", async () => {
@@ -44,11 +44,11 @@ describe("useNavigationPropertyTargetsLoader", () => {
       getContentIteratorStub.mockReset();
       vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
         getContentIterator: getContentIteratorStub,
-      } as any);
+      } as unknown as PresentationManager);
     });
 
     it("returns empty targets array if there's no content", async () => {
-      getContentIteratorStub.mockResolvedValue(undefined as any);
+      getContentIteratorStub.mockResolvedValue(undefined);
       const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
       await waitFor(() => {
         expect(result.current.isLoading).to.eq(false);
@@ -126,11 +126,11 @@ describe("useNavigationPropertyTargetsLoader", () => {
       getContentStub.mockReset();
       vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
         getContent: getContentStub,
-      } as any);
+      } as unknown as PresentationManager);
     });
 
     it("returns empty targets array if there's no content", async () => {
-      getContentStub.mockResolvedValue(undefined as any);
+      getContentStub.mockResolvedValue(undefined);
       const { result } = renderHook(useNavigationPropertyTargetsLoader, {
         initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] }, filterText: "" },
       });

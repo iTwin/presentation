@@ -45,7 +45,7 @@ describe("getPersistenceUnitRoundingError", () => {
 
   it("uses decimal precision if format type is 'Decimal`", () => {
     parserSpec.parseToQuantityValue.mockReturnValue({ ok: true, value: 0.5 });
-    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Decimal as any);
+    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Decimal);
 
     const result = getPersistenceUnitRoundingError("123", parserSpec as unknown as ParserSpec);
     expect(result).to.eq(0.5);
@@ -54,7 +54,7 @@ describe("getPersistenceUnitRoundingError", () => {
 
   it("uses fractional precision if format type is 'Fractional`", () => {
     parserSpec.parseToQuantityValue.mockReturnValue({ ok: true, value: 1 / 2 });
-    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Fractional as any);
+    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Fractional);
 
     const result = getPersistenceUnitRoundingError("123", parserSpec as unknown as ParserSpec);
     expect(result).to.eq(1 / 2);
@@ -63,7 +63,7 @@ describe("getPersistenceUnitRoundingError", () => {
 
   it("returns undefined for other format types", () => {
     parserSpec.parseToQuantityValue.mockReturnValue({ ok: true, value: 0.5 });
-    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Azimuth as any);
+    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Azimuth);
 
     const result = getPersistenceUnitRoundingError("123'", parserSpec as unknown as ParserSpec);
     expect(result).to.be.undefined;
@@ -72,7 +72,7 @@ describe("getPersistenceUnitRoundingError", () => {
 
   it("returns undefined for invalid numbers types", () => {
     parserSpec.parseToQuantityValue.mockReturnValue({ ok: true, value: 0.5 });
-    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Fractional as any);
+    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Fractional);
 
     const result = getPersistenceUnitRoundingError("not a number", parserSpec as unknown as ParserSpec);
     expect(result).to.be.undefined;

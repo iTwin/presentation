@@ -157,7 +157,7 @@ describe("filterRuleValidator", () => {
   };
 
   beforeEach(() => {
-    vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization() as any);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization());
   });
 
   it("returns error message for invalid numeric rule", () => {

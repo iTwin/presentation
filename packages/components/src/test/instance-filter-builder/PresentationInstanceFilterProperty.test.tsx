@@ -17,10 +17,9 @@ describe("PresentationInstanceFilterProperty", () => {
 
   beforeEach(() => {
     const localization = new EmptyLocalization();
-    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true as any);
-    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization as any);
-    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
-    Element.prototype.scrollIntoView = vi.fn() as any;
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
   });
 
   afterAll(() => {

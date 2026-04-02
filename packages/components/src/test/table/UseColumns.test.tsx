@@ -24,7 +24,7 @@ describe("useColumns", () => {
 
   beforeEach(() => {
     presentationManager = createMocked(PresentationManager as any);
-    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
   });
 
   it("loads columns", async () => {
