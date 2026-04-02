@@ -112,6 +112,7 @@
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
     "@vitest/coverage-v8": "catalog:test-tools",
+    "cross-env": "catalog:build-tools",
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
