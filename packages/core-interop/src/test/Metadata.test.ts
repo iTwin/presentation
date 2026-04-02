@@ -123,7 +123,7 @@ describe("createECSchema", () => {
           label: "C",
           schemaItemType: SchemaItemType.EntityClass,
         }),
-      }
+      };
 
       const schema = createECSchema(coreSchema as unknown as CoreSchema);
       const result = await schema.getClass("c");
@@ -146,7 +146,6 @@ describe("createECSchema", () => {
 
       const schema = createECSchema(coreSchema as unknown as CoreSchema);
       const result = await schema.getClass("c");
-
 
       expect(coreSchema.getItem).toHaveBeenCalledOnce();
       expect(coreSchema.getItem).toHaveBeenCalledWith("c");
@@ -346,7 +345,6 @@ describe("createECClass", () => {
       const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
       const prop = await ecClass.getProperty("p");
 
-       
       expect(coreClass.getProperty).toHaveBeenCalledOnce();
       expect(coreClass.getProperty).toHaveBeenCalledWith("p", false);
       expect(prop).toBeDefined();
@@ -363,7 +361,6 @@ describe("createECClass", () => {
       const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
       const prop = await ecClass.getProperty("p");
 
-       
       expect(coreClass.getProperty).toHaveBeenCalledOnce();
       expect(coreClass.getProperty).toHaveBeenCalledWith("p", false);
       expect(prop).toBeUndefined();

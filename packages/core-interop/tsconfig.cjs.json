@@ -3,7 +3,7 @@
   "compilerOptions": {
     "module": "CommonJS",
     "moduleResolution": "Node",
-    "outDir": "lib/cjs",
+    "outDir": "lib/cjs"
   },
   "include": ["src/presentation-core-interop", "src/presentation-core-interop.ts"]
 }
