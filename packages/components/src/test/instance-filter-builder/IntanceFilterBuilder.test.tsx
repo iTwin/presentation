@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { PropertyFilterBuilderActions, PropertyFilterBuilderRuleGroup, PropertyFilterRuleGroupOperator, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
@@ -29,16 +28,14 @@ describe("InstanceFilterBuilder", () => {
 
   beforeEach(async () => {
     const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true as any);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization as any);
 
-    sinon.stub(Presentation, "localization").get(() => localization);
-    sinon.stub(UiComponents, "translate").callsFake((key) => key as string);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
+    vi.spyOn(UiComponents, "translate").mockImplementation((key) => key as string);
   });
 
-  afterEach(async () => {
-    sinon.restore();
-  });
+  afterEach(async () => {});
 
   const testImodel = {} as IModelConnection;
   const testDescriptor = {} as Descriptor;
@@ -54,7 +51,7 @@ describe("InstanceFilterBuilder", () => {
   } as PropertyFilterBuilderRuleGroup;
 
   it("invokes 'onSelectedClassesChanged' when class is selected", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { getByRole, getAllByRole } = render(
       <InstanceFilterBuilder
         classes={classInfos}
@@ -74,7 +71,7 @@ describe("InstanceFilterBuilder", () => {
     const option = await waitFor(() => getByRole("option", { name: classInfos[0].label }));
     fireEvent.click(option);
 
-    expect(spy).to.be.calledOnceWith([classInfos[0].id]);
+    expect(spy).toHaveBeenCalledExactlyOnceWith([classInfos[0].id]);
   });
 
   it("renders appropriate text in class selector when no class is selected", async () => {
@@ -112,7 +109,7 @@ describe("InstanceFilterBuilder", () => {
   });
 
   it("invokes 'onSelectedClassesChanged' when class is deselected", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { getByRole, getAllByRole } = render(
       <InstanceFilterBuilder
         classes={classInfos}
@@ -132,7 +129,7 @@ describe("InstanceFilterBuilder", () => {
     const option = await waitFor(() => getByRole("option", { name: classInfos[0].label }));
     fireEvent.click(option);
 
-    expect(spy).to.be.calledOnceWith([]);
+    expect(spy).toHaveBeenCalledExactlyOnceWith([]);
   });
 
   describe("UniqueValuesRenderer", () => {
@@ -272,7 +269,7 @@ describe("usePresentationInstanceFilteringProps", () => {
 
     // stub metadataProvider for test imodel
     const metadataProvider = getIModelMetadataProvider(imodel);
-    sinon.stub(metadataProvider, "getECClassInfo").callsFake(async (id) => {
+    vi.spyOn(metadataProvider, "getECClassInfo").mockImplementation(async (id) => {
       switch (id) {
         case baseClass.id:
           return new ECClassInfo(baseClass.id, baseClass.name, baseClass.label, new Set(), new Set([concreteClass1.id, concreteClass2.id, derivedClass.id]));
@@ -289,7 +286,6 @@ describe("usePresentationInstanceFilteringProps", () => {
 
   afterEach(() => {
     onCloseEvent.raiseEvent();
-    sinon.restore();
   });
 
   it("initializes class list from descriptor", () => {

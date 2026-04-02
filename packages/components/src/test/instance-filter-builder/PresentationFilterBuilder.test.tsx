@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import * as sinon from "sinon";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -62,15 +61,17 @@ describe("PresentationInstanceFilter", () => {
 
   beforeAll(async () => {
     HTMLElement.prototype.scrollIntoView = () => {};
+    await UiComponents.initialize(new EmptyLocalization());
+  });
 
+  beforeEach(() => {
     const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "localization").get(() => localization);
-    await UiComponents.initialize(localization);
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true as any);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization as any);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
 
     const metadataProvider = getIModelMetadataProvider(imodel);
-    sinon.stub(metadataProvider, "getECClassInfo").callsFake(async () => {
+    vi.spyOn(metadataProvider, "getECClassInfo").mockImplementation(async () => {
       return new ECClassInfo(classInfo.id, classInfo.name, classInfo.label, new Set(), new Set());
     });
   });
@@ -78,12 +79,12 @@ describe("PresentationInstanceFilter", () => {
   afterAll(() => {
     onCloseEvent.raiseEvent();
     UiComponents.terminate();
-    sinon.restore();
+
     delete (HTMLElement.prototype as any).scrollIntoView;
   });
 
   it("invokes 'onInstanceFilterChanged' with filter", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { container, getByText, getByTitle, getByDisplayValue, user } = render(
       <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} />,
     );
@@ -110,7 +111,7 @@ describe("PresentationInstanceFilter", () => {
     await waitFor(() => getByText("filterBuilder.operators.isNotNull"));
 
     await waitFor(() =>
-      expect(spy).to.be.calledWith({
+      expect(spy).toHaveBeenCalledWith({
         filter: {
           field: propertiesField,
           operator: PropertyFilterRuleOperator.IsNotNull,
@@ -141,7 +142,7 @@ describe("PresentationInstanceFilter", () => {
       usedClasses: [classInfo],
     };
 
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { queryByDisplayValue } = render(
       <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
     );
@@ -170,7 +171,7 @@ describe("PresentationInstanceFilter", () => {
       usedClasses: [classInfo, classInfo2],
     };
 
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { queryByDisplayValue, user, getByPlaceholderText, getByRole } = render(
       <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
       {

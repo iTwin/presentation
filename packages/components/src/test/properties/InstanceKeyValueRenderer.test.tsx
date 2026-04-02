@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
-import sinon from "sinon";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from "vitest";
 import { Primitives, PrimitiveValue, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { TypeConverter, TypeConverterManager } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -30,13 +29,13 @@ describe("InstanceKeyValueRenderer", () => {
 
   beforeAll(() => {
     const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "localization").get(() => localization);
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true as any);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization as any);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
   });
 
   afterAll(async () => {
-    sinon.restore();
+    vi.restoreAllMocks();
   });
 
   describe("canRender", () => {
@@ -63,12 +62,11 @@ describe("InstanceKeyValueRenderer", () => {
 
   describe("render", () => {
     beforeEach(() => {
-      sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
+      vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization() as any);
     });
 
     afterEach(() => {
       cleanup();
-      sinon.restore();
     });
 
     describe("returned component", () => {
@@ -88,7 +86,7 @@ describe("InstanceKeyValueRenderer", () => {
       describe("with deprecated unified selection context", () => {
         beforeEach(() => {
           const selectionManager = new SelectionManager({ scopes: undefined as any });
-          sinon.stub(Presentation, "selection").get(() => selectionManager);
+          vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager as any);
         });
 
         it("renders empty when there is no display value", () => {
@@ -120,7 +118,7 @@ describe("InstanceKeyValueRenderer", () => {
         let selectionStorage: SelectionStorage;
         beforeEach(() => {
           selectionStorage = {
-            replaceSelection: sinon.stub(),
+            replaceSelection: vi.fn(),
           } as unknown as SelectionStorage;
         });
 
@@ -146,7 +144,7 @@ describe("InstanceKeyValueRenderer", () => {
             selector.click();
           });
           await waitFor(() =>
-            expect(selectionStorage.replaceSelection).to.be.calledWith({
+            expect(selectionStorage.replaceSelection).toHaveBeenCalledWith({
               imodelKey: "test-imodel-key",
               source: "InstanceKeyValueRenderer",
               selectables: [instanceKey],

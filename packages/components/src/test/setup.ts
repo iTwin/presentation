@@ -4,14 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 import { afterAll, afterEach, beforeAll, beforeEach, chai } from "vitest";
 import chaiAsPromised from "chai-as-promised";
-import sinonChai from "sinon-chai";
 import { cleanup, configure } from "@testing-library/react";
 
 // Register chai plugins on Vitest's internal chai instance so that
-// sinon-chai assertions (.to.be.calledOnce, etc.) and chai-as-promised
-// (.to.eventually.*) work with expect() imported from "vitest".
+// chai-as-promised (.to.eventually.*) works with expect() imported from "vitest".
 chai.use(chaiAsPromised);
-chai.use(sinonChai);
 
 // Polyfill ResizeObserver — happy-dom does not provide it.
 global.ResizeObserver = class ResizeObserver {

@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { Subject } from "rxjs";
-import sinon from "sinon";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   ITreeNodeLoader,
   PagedTreeNodeLoader,
@@ -21,29 +20,27 @@ import { waitFor } from "../TestUtils.js";
 describe("ReportingTreeNodeLoader", () => {
   let reportingNodeLoader: ReportingTreeNodeLoader<TreeDataProvider>;
   let loadNodeSubject: Subject<TreeNodeLoadResult>;
-  const reportStub = sinon.stub<[{ node: string | undefined; duration: number }], void>();
+  const reportStub = vi.fn<(props: { node: string | undefined; duration: number }) => void>();
   const nodeLoaderStub = {
-    loadNode: sinon.stub<Parameters<ITreeNodeLoader["loadNode"]>, ReturnType<ITreeNodeLoader["loadNode"]>>(),
+    loadNode: vi.fn<ITreeNodeLoader["loadNode"]>(),
     modelSource: {},
     dataProvider: {},
   };
 
   beforeEach(() => {
     loadNodeSubject = new Subject<TreeNodeLoadResult>();
-    nodeLoaderStub.loadNode.returns(loadNodeSubject);
+    nodeLoaderStub.loadNode.mockReturnValue(loadNodeSubject);
     reportingNodeLoader = new ReportingTreeNodeLoader(nodeLoaderStub as unknown as PagedTreeNodeLoader<TreeDataProvider>, reportStub);
   });
 
   afterEach(() => {
-    nodeLoaderStub.loadNode.reset();
-    reportStub.reset();
+    nodeLoaderStub.loadNode.mockReset();
+    reportStub.mockReset();
   });
 
   describe("loadNode", () => {
     it("reports node loading duration", async () => {
-      const performanceStub = sinon.stub(performance, "now");
-      performanceStub.onCall(0).returns(0);
-      performanceStub.onCall(1).returns(300);
+      vi.spyOn(performance, "now").mockReturnValueOnce(0).mockReturnValueOnce(300);
 
       let loadedNodes: TreeNodeItem[] = [];
       const observable = reportingNodeLoader.loadNode({ id: "id" } as TreeModelNode, 0);
@@ -55,7 +52,7 @@ describe("ReportingTreeNodeLoader", () => {
 
       await waitFor(() => {
         expect(loadedNodes).to.have.lengthOf(2);
-        expect(reportStub).to.be.calledWithMatch({ node: "id", duration: 300 });
+        expect(reportStub).toHaveBeenCalledWith(expect.objectContaining({ node: "id", duration: 300 }));
       });
     });
 
@@ -69,7 +66,7 @@ describe("ReportingTreeNodeLoader", () => {
 
       await waitFor(() => {
         expect(loadedNodes).to.have.lengthOf(1);
-        expect(reportStub).to.not.be.called;
+        expect(reportStub).not.toHaveBeenCalled();
       });
     });
 
@@ -86,7 +83,7 @@ describe("ReportingTreeNodeLoader", () => {
 
       await waitFor(() => {
         expect(loadedNodes).to.have.lengthOf(2);
-        expect(reportStub).to.be.calledOnce;
+        expect(reportStub).toHaveBeenCalledOnce();
       });
     });
 
@@ -99,7 +96,7 @@ describe("ReportingTreeNodeLoader", () => {
 
       await waitFor(() => {
         expect(loadedNodes).to.have.lengthOf(0);
-        expect(reportStub).to.not.be.called;
+        expect(reportStub).not.toHaveBeenCalled();
       });
     });
 
@@ -114,7 +111,7 @@ describe("ReportingTreeNodeLoader", () => {
 
       await waitFor(() => {
         expect(loadedNodes).to.have.lengthOf(0);
-        expect(reportStub).to.not.be.called;
+        expect(reportStub).not.toHaveBeenCalled();
       });
     });
 
@@ -129,7 +126,7 @@ describe("ReportingTreeNodeLoader", () => {
 
       await waitFor(() => {
         expect(loadedNodes).to.have.lengthOf(0);
-        expect(reportStub).to.be.calledOnce;
+        expect(reportStub).toHaveBeenCalledOnce();
       });
     });
   });

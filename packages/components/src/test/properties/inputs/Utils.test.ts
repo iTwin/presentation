@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeEach } from "vitest";
-import sinon from "sinon";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { Format, FormatType, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import { getDecimalRoundingError, getPersistenceUnitRoundingError } from "../../../presentation-components/properties/inputs/Utils.js";
 
@@ -20,64 +19,63 @@ describe("getDecimalRoundingError", () => {
 describe("getPersistenceUnitRoundingError", () => {
   const format = new Format("test format");
   const parserSpec = {
-    parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(),
+    parseToQuantityValue: vi.fn<(value: string) => QuantityParseResult>(),
     format,
   };
 
   beforeEach(() => {
-    sinon.restore();
-    parserSpec.parseToQuantityValue.reset();
+    parserSpec.parseToQuantityValue.mockReset();
   });
 
   it("uses decimal precision if there is decimal separator", () => {
-    parserSpec.parseToQuantityValue.returns({ ok: true, value: 0.05 });
+    parserSpec.parseToQuantityValue.mockReturnValue({ ok: true, value: 0.05 });
 
     const result = getPersistenceUnitRoundingError("123.4 unit", parserSpec as unknown as ParserSpec);
     expect(result).to.eq(0.05);
-    expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("0.05unit");
+    expect(parserSpec.parseToQuantityValue).toHaveBeenCalledWith("0.05unit");
   });
 
   it("uses fractional precision if there is fractional separator", () => {
-    parserSpec.parseToQuantityValue.returns({ ok: true, value: 1 / 8 });
+    parserSpec.parseToQuantityValue.mockReturnValue({ ok: true, value: 1 / 8 });
 
     const result = getPersistenceUnitRoundingError("3/4 unit", parserSpec as unknown as ParserSpec);
     expect(result).to.eq(1 / 8);
-    expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("1/8unit");
+    expect(parserSpec.parseToQuantityValue).toHaveBeenCalledWith("1/8unit");
   });
 
   it("uses decimal precision if format type is 'Decimal`", () => {
-    parserSpec.parseToQuantityValue.returns({ ok: true, value: 0.5 });
-    sinon.stub(format, "type").get(() => FormatType.Decimal);
+    parserSpec.parseToQuantityValue.mockReturnValue({ ok: true, value: 0.5 });
+    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Decimal as any);
 
     const result = getPersistenceUnitRoundingError("123", parserSpec as unknown as ParserSpec);
     expect(result).to.eq(0.5);
-    expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("0.5");
+    expect(parserSpec.parseToQuantityValue).toHaveBeenCalledWith("0.5");
   });
 
   it("uses fractional precision if format type is 'Fractional`", () => {
-    parserSpec.parseToQuantityValue.returns({ ok: true, value: 1 / 2 });
-    sinon.stub(format, "type").get(() => FormatType.Fractional);
+    parserSpec.parseToQuantityValue.mockReturnValue({ ok: true, value: 1 / 2 });
+    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Fractional as any);
 
     const result = getPersistenceUnitRoundingError("123", parserSpec as unknown as ParserSpec);
     expect(result).to.eq(1 / 2);
-    expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("1/2");
+    expect(parserSpec.parseToQuantityValue).toHaveBeenCalledWith("1/2");
   });
 
   it("returns undefined for other format types", () => {
-    parserSpec.parseToQuantityValue.returns({ ok: true, value: 0.5 });
-    sinon.stub(format, "type").get(() => FormatType.Azimuth);
+    parserSpec.parseToQuantityValue.mockReturnValue({ ok: true, value: 0.5 });
+    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Azimuth as any);
 
     const result = getPersistenceUnitRoundingError("123'", parserSpec as unknown as ParserSpec);
     expect(result).to.be.undefined;
-    expect(parserSpec.parseToQuantityValue).to.not.be.called;
+    expect(parserSpec.parseToQuantityValue).not.toHaveBeenCalled();
   });
 
   it("returns undefined for invalid numbers types", () => {
-    parserSpec.parseToQuantityValue.returns({ ok: true, value: 0.5 });
-    sinon.stub(format, "type").get(() => FormatType.Fractional);
+    parserSpec.parseToQuantityValue.mockReturnValue({ ok: true, value: 0.5 });
+    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Fractional as any);
 
     const result = getPersistenceUnitRoundingError("not a number", parserSpec as unknown as ParserSpec);
     expect(result).to.be.undefined;
-    expect(parserSpec.parseToQuantityValue).to.not.be.called;
+    expect(parserSpec.parseToQuantityValue).not.toHaveBeenCalled();
   });
 });

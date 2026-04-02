@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import sinon from "sinon";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -41,27 +40,21 @@ function render(ui: React.ReactElement, context?: Partial<NavigationPropertyEdit
 }
 
 describe("<NavigationPropertyTargetEditor />", () => {
-  const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
+  const getContentStub = vi.fn<PresentationManager["getContent"]>();
   const testRecord = createTestPropertyRecord();
 
   stubVirtualization();
-  beforeAll(() => {
-    const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "localization").get(() => localization);
-    sinon.stub(Presentation, "presentation").get(() => ({
-      getContent: getContentStub,
-    }));
-  });
-
-  afterAll(() => {
-    sinon.restore();
-  });
-
   beforeEach(() => {
-    getContentStub.reset();
-    getContentStub.resolves(undefined);
+    const localization = new EmptyLocalization();
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true as any);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization as any);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
+      getContent: getContentStub,
+    } as any);
+
+    getContentStub.mockReset();
+    getContentStub.mockResolvedValue(undefined);
   });
 
   it("renders selector when rendered inside context", async () => {
@@ -70,9 +63,9 @@ describe("<NavigationPropertyTargetEditor />", () => {
   });
 
   it("uses default property renderer when rendered not in the context", () => {
-    const rendererStub = sinon.stub(PropertyValueRendererManager.defaultManager, "render");
+    const rendererStub = vi.spyOn(PropertyValueRendererManager.defaultManager, "render");
     renderRTL(<NavigationPropertyTargetEditor propertyRecord={testRecord} />);
-    expect(rendererStub).to.be.calledWith(testRecord);
+    expect(rendererStub).toHaveBeenCalledWith(testRecord);
   });
 
   it("renders nothing when property record is 'undefined'", () => {
@@ -87,8 +80,8 @@ describe("<NavigationPropertyTargetEditor />", () => {
       values: {},
       displayValues: {},
     });
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
-    const spy = sinon.spy();
+    getContentStub.mockResolvedValue(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
+    const spy = vi.fn();
     const { getByPlaceholderText, getByText, getByDisplayValue, user } = render(
       <NavigationPropertyTargetEditor propertyRecord={testRecord} onCancel={() => {}} onCommit={spy} />,
       {
@@ -110,7 +103,7 @@ describe("<NavigationPropertyTargetEditor />", () => {
     await user.click(target);
 
     await waitFor(() => getByDisplayValue(contentItem.label.displayValue));
-    expect(spy).to.be.calledOnce;
+    expect(spy).toHaveBeenCalledOnce();
   });
 });
 

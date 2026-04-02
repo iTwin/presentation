@@ -6,8 +6,7 @@
 
 import { ResolvablePromise } from "presentation-test-utilities";
 import { EMPTY, Subject } from "rxjs";
-import sinon from "sinon";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { StandardTypeNames } from "@itwin/appui-abstract";
 import {
   AbstractTreeNodeLoaderWithProvider,
@@ -45,21 +44,21 @@ describe("PresentationTreeRenderer", () => {
   const testImodel = {
     key: "renderer-test-imodel",
     onClose: onCloseEvent,
-    createQueryReader: sinon.stub().returns({ toArray: async () => [] }),
+    createQueryReader: vi.fn().mockReturnValue({ toArray: async () => [] }),
   } as unknown as IModelConnection;
 
   const baseTreeProps = {
     imodel: testImodel,
     treeActions: {
-      onNodeCheckboxClicked: sinon.stub(),
-      onNodeExpanded: sinon.stub(),
-      onNodeCollapsed: sinon.stub(),
-      onNodeClicked: sinon.stub(),
-      onNodeMouseDown: sinon.stub(),
-      onNodeMouseMove: sinon.stub(),
-      onNodeEditorActivated: sinon.stub(),
-      onTreeKeyDown: sinon.stub(),
-      onTreeKeyUp: sinon.stub(),
+      onNodeCheckboxClicked: vi.fn(),
+      onNodeExpanded: vi.fn(),
+      onNodeCollapsed: vi.fn(),
+      onNodeClicked: vi.fn(),
+      onNodeMouseDown: vi.fn(),
+      onNodeMouseMove: vi.fn(),
+      onNodeEditorActivated: vi.fn(),
+      onTreeKeyDown: vi.fn(),
+      onTreeKeyUp: vi.fn(),
     } as TreeActions,
     dataProvider: {} as IPresentationTreeDataProvider,
     height: 100,
@@ -74,45 +73,45 @@ describe("PresentationTreeRenderer", () => {
   };
 
   const nodeLoaderStub = {
-    loadNode: sinon.stub<Parameters<ITreeNodeLoader["loadNode"]>, ReturnType<ITreeNodeLoader["loadNode"]>>(),
+    loadNode: vi.fn<ITreeNodeLoader["loadNode"]>(),
     modelSource: {},
     dataProvider: dataProviderStub,
   };
 
   const presentationManager = {
-    getNodesCount: sinon.stub<Parameters<PresentationManager["getNodesCount"]>, ReturnType<PresentationManager["getNodesCount"]>>(),
+    getNodesCount: vi.fn<PresentationManager["getNodesCount"]>(),
   };
 
-  beforeAll(async () => {
-    const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(Presentation, "localization").get(() => localization);
+  const localization = new EmptyLocalization();
 
+  beforeAll(async () => {
     // need to initialize for immer patches to be enabled.
     await UiComponents.initialize(localization);
     HTMLElement.prototype.scrollIntoView = () => {};
-
-    // stub getECClassInfo to prevent unhandled errors when filter dialog opens
-    const classInfo = createTestECClassInfo();
-    const metadataProvider = getIModelMetadataProvider(baseTreeProps.imodel);
-    sinon.stub(metadataProvider, "getECClassInfo").resolves(new ECClassInfo(classInfo.id, classInfo.name, classInfo.label, new Set(), new Set()));
   });
 
   afterAll(() => {
-    sinon.restore();
     UiComponents.terminate();
     delete (HTMLElement.prototype as any).scrollIntoView;
   });
 
   beforeEach(() => {
-    nodeLoaderStub.loadNode.returns(EMPTY);
-    presentationManager.getNodesCount.resolves(15);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization as any);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
+
+    // stub getECClassInfo to prevent unhandled errors when filter dialog opens
+    const classInfo = createTestECClassInfo();
+    const metadataProvider = getIModelMetadataProvider(baseTreeProps.imodel);
+    vi.spyOn(metadataProvider, "getECClassInfo").mockResolvedValue(new ECClassInfo(classInfo.id, classInfo.name, classInfo.label, new Set(), new Set()));
+
+    nodeLoaderStub.loadNode.mockReturnValue(EMPTY);
+    presentationManager.getNodesCount.mockResolvedValue(15);
   });
 
   afterEach(() => {
-    nodeLoaderStub.loadNode.reset();
-    presentationManager.getNodesCount.reset();
+    nodeLoaderStub.loadNode.mockReset();
+    presentationManager.getNodesCount.mockReset();
   });
 
   const property = createTestPropertyInfo({ name: "TestProperty", type: StandardTypeNames.Bool });
@@ -232,7 +231,7 @@ describe("PresentationTreeRenderer", () => {
     });
 
     // stub getNode method to make it return undefined when onFilterClick() is called.
-    sinon.stub(nodeLoader.modelSource.getModel(), "getNode").returns(undefined);
+    vi.spyOn(nodeLoader.modelSource.getModel(), "getNode").mockReturnValue(undefined);
 
     const { queryByText, baseElement, user, container } = render(
       <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />,
@@ -276,8 +275,8 @@ describe("PresentationTreeRenderer", () => {
 
   it("sets `node.isLoading` to true when filter is applied", async () => {
     const subject = new Subject<TreeNodeLoadResult>();
-    nodeLoaderStub.loadNode.reset();
-    nodeLoaderStub.loadNode.callsFake(() => subject);
+    nodeLoaderStub.loadNode.mockReset();
+    nodeLoaderStub.loadNode.mockImplementation(() => subject);
 
     const { visibleNodes, modelSource, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
@@ -299,13 +298,13 @@ describe("PresentationTreeRenderer", () => {
 
     await applyFilter(result, propertyField.label);
 
-    await waitFor(() => expect(nodeLoaderStub.loadNode).to.be.calledOnce);
+    await waitFor(() => expect(nodeLoaderStub.loadNode).toHaveBeenCalledOnce());
     expect(modelSource.getModel().getNode("A")?.isLoading).to.be.true;
     subject.complete();
   });
 
   it("calls `onFilterApplied` when filter is applied", async () => {
-    const onFilterAppliedSpy = sinon.spy();
+    const onFilterAppliedSpy = vi.fn();
 
     const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
@@ -328,12 +327,12 @@ describe("PresentationTreeRenderer", () => {
     await waitFor(() => expect(queryByText("A")).to.not.be.null);
     await applyFilter(result, propertyField.label);
 
-    await waitFor(() => expect(onFilterAppliedSpy).to.be.calledOnce);
+    await waitFor(() => expect(onFilterAppliedSpy).toHaveBeenCalledOnce());
     cleanup();
   });
 
   it("does not call `onFilterApplied` when filter is cleared", async () => {
-    const onFilterAppliedSpy = sinon.spy();
+    const onFilterAppliedSpy = vi.fn();
 
     const { visibleNodes, modelSource, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
@@ -370,7 +369,7 @@ describe("PresentationTreeRenderer", () => {
       expect(nodeItem.filtering?.active).to.be.undefined;
     });
 
-    expect(onFilterAppliedSpy).to.not.be.called;
+    expect(onFilterAppliedSpy).not.toHaveBeenCalled();
     cleanup();
   });
 
@@ -396,12 +395,12 @@ describe("PresentationTreeRenderer", () => {
     await openFilterDialog(result);
 
     await waitFor(() => expect(queryByText(/15$/i)).to.not.be.null);
-    expect(presentationManager.getNodesCount).to.be.calledOnce;
+    expect(presentationManager.getNodesCount).toHaveBeenCalledOnce();
   });
 
   it("renders information message if results set too large error is thrown", async () => {
-    presentationManager.getNodesCount.reset();
-    presentationManager.getNodesCount.callsFake(async () => {
+    presentationManager.getNodesCount.mockReset();
+    presentationManager.getNodesCount.mockImplementation(async () => {
       throw new PresentationError(PresentationStatus.ResultSetTooLarge, "Results set too large");
     });
     const limit = 5;
@@ -432,13 +431,13 @@ describe("PresentationTreeRenderer", () => {
 
     await openFilterDialog(result);
 
-    await waitFor(() => expect(presentationManager.getNodesCount).to.be.calledOnce);
+    await waitFor(() => expect(presentationManager.getNodesCount).toHaveBeenCalledOnce());
     expect(queryByText(translate("tree.filter-dialog.result-limit-exceeded"), { exact: false })).to.not.be.null;
   });
 
   it("does not render result if unknown error is encountered", async () => {
-    presentationManager.getNodesCount.reset();
-    presentationManager.getNodesCount.callsFake(async () => {
+    presentationManager.getNodesCount.mockReset();
+    presentationManager.getNodesCount.mockImplementation(async () => {
       throw new Error("Test Error");
     });
 
@@ -462,7 +461,7 @@ describe("PresentationTreeRenderer", () => {
 
     await openFilterDialog(result);
 
-    await waitFor(() => expect(presentationManager.getNodesCount).to.be.calledOnce);
+    await waitFor(() => expect(presentationManager.getNodesCount).toHaveBeenCalledOnce());
     expect(queryByText(/tree.filter-dialog/i)).to.be.null;
   });
 

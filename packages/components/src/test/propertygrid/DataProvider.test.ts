@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import * as sinon from "sinon";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { PrimitiveValue, PropertyRecord, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyCategory } from "@itwin/components-react";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
@@ -51,6 +50,9 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
+import { createMocked } from "../TestUtils.js";
+
+import type { Mocked } from "vitest";
 
 /**
  * This is just a helper class to provide public access to
@@ -84,8 +86,8 @@ describe("PropertyDataProvider", () => {
   const rulesetId = "TestRulesetId";
 
   let provider: Provider;
-  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
-  let favoritePropertiesManager: sinon.SinonStubbedInstance<FavoritePropertiesManager>;
+  let presentationManager: Mocked<PresentationManager>;
+  let favoritePropertiesManager: Mocked<FavoritePropertiesManager>;
 
   const onFavoritesChanged = new BeEvent<() => void>();
 
@@ -95,43 +97,43 @@ describe("PropertyDataProvider", () => {
     iTwinId,
     imodelId,
     key: "test-imodel",
-    schemaContext: sinon.createStubInstance(SchemaContext),
+    schemaContext: createMocked(SchemaContext),
   } as unknown as IModelConnection;
 
   beforeEach(async () => {
-    presentationManager = sinon.createStubInstance(PresentationManager, {
-      rulesets: {
-        onRulesetModified: new BeUiEvent(),
-      } as unknown as RulesetManager,
-      vars: {
-        onVariableChanged: new BeUiEvent(),
-      } as unknown as RulesetVariablesManager,
+    presentationManager = createMocked(PresentationManager as any);
+    Object.assign(presentationManager, {
+      onIModelContentChanged: new BeUiEvent(),
     });
-    presentationManager.onIModelContentChanged = new BeUiEvent();
+    presentationManager.rulesets.mockReturnValue({
+      onRulesetModified: new BeUiEvent(),
+    } as any);
+    presentationManager.vars.mockReturnValue({
+      onVariableChanged: new BeUiEvent(),
+    } as any);
 
-    favoritePropertiesManager = sinon.createStubInstance(FavoritePropertiesManager);
-    favoritePropertiesManager.hasAsync.callsFake(async () => false);
+    favoritePropertiesManager = createMocked(FavoritePropertiesManager);
+    favoritePropertiesManager.hasAsync.mockImplementation(async () => false);
     // eslint-disable-next-line @typescript-eslint/no-deprecated
-    favoritePropertiesManager.has.callsFake(() => false);
+    favoritePropertiesManager.has.mockImplementation(() => false);
     Object.assign(favoritePropertiesManager, {
       onFavoritesChanged,
       sortFieldsAsync: async (_imodel: IModelConnection, fields: Field[]) => fields,
       sortFields: (_imodel: IModelConnection, fields: Field[]) => fields,
     });
 
-    sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(Presentation, "favoriteProperties").get(() => favoritePropertiesManager);
-    sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
+    vi.spyOn(Presentation, "favoriteProperties", "get").mockReturnValue(favoritePropertiesManager as any);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization() as any);
+    vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    }));
+    } as any);
 
     provider = new Provider({ imodel, ruleset: rulesetId });
   });
 
   afterEach(() => {
     provider[Symbol.dispose]();
-    sinon.restore();
   });
 
   describe("constructor", () => {
@@ -154,10 +156,10 @@ describe("PropertyDataProvider", () => {
       provider = new Provider({ imodel, ruleset: rulesetId });
       await provider.getData();
 
-      const s = sinon.spy(provider, "invalidateCache");
+      const s = vi.spyOn(provider, "invalidateCache");
 
       onFavoritesChanged.raiseEvent();
-      expect(s).to.be.calledOnce;
+      expect(s).toHaveBeenCalledOnce();
     });
   });
 
@@ -174,9 +176,9 @@ describe("PropertyDataProvider", () => {
 
   describe("invalidateCache", () => {
     it("raises onDataChanged event", () => {
-      const s = sinon.spy(provider.onDataChanged, "raiseEvent");
+      const s = vi.spyOn(provider.onDataChanged, "raiseEvent");
       provider.invalidateCache({});
-      expect(s).to.be.calledOnce;
+      expect(s).toHaveBeenCalledOnce();
     });
   });
 
@@ -190,33 +192,33 @@ describe("PropertyDataProvider", () => {
 
   describe("[deprecated] includeFieldsWithNoValues", () => {
     it("invalidates cache when setting to different value", () => {
-      const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
+      const invalidateCacheSpy = vi.spyOn(provider, "invalidateCache");
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       provider.includeFieldsWithNoValues = !provider.includeFieldsWithNoValues;
-      expect(invalidateCacheSpy).to.be.calledOnce;
+      expect(invalidateCacheSpy).toHaveBeenCalledOnce();
     });
 
     it("doesn't invalidate cache when setting to same value", () => {
-      const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
+      const invalidateCacheSpy = vi.spyOn(provider, "invalidateCache");
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       provider.includeFieldsWithNoValues = provider.includeFieldsWithNoValues;
-      expect(invalidateCacheSpy).to.not.be.called;
+      expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
   });
 
   describe("[deprecated] includeFieldsWithCompositeValues", () => {
     it("invalidates cache when setting to different value", () => {
-      const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
+      const invalidateCacheSpy = vi.spyOn(provider, "invalidateCache");
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       provider.includeFieldsWithCompositeValues = !provider.includeFieldsWithCompositeValues;
-      expect(invalidateCacheSpy).to.be.calledOnce;
+      expect(invalidateCacheSpy).toHaveBeenCalledOnce();
     });
 
     it("doesn't invalidate cache when setting to same value", () => {
-      const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
+      const invalidateCacheSpy = vi.spyOn(provider, "invalidateCache");
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       provider.includeFieldsWithCompositeValues = provider.includeFieldsWithCompositeValues;
-      expect(invalidateCacheSpy).to.not.be.called;
+      expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -225,14 +227,17 @@ describe("PropertyDataProvider", () => {
 
     it("calls `FavoritePropertiesManager.hasAsync` when it's available", async () => {
       await provider.isFieldFavoriteAsync(field);
-      expect(favoritePropertiesManager.hasAsync).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
+      expect(favoritePropertiesManager.hasAsync).toHaveBeenCalledOnce();
+      expect(favoritePropertiesManager.hasAsync).toHaveBeenCalledWith(field, imodel, FavoritePropertiesScope.IModel);
     });
 
     it("calls `FavoritePropertiesManager.has` when `hasAsync` is not available", async () => {
       Object.assign(favoritePropertiesManager, { hasAsync: undefined });
       await provider.isFieldFavoriteAsync(field);
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      expect(favoritePropertiesManager.has).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
+      expect(favoritePropertiesManager.has).toHaveBeenCalledOnce();
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      expect(favoritePropertiesManager.has).toHaveBeenCalledWith(field, imodel, FavoritePropertiesScope.IModel);
     });
 
     it("calls deprecated `isFieldFavorite` when it's overridden by a subclass", async () => {
@@ -243,11 +248,13 @@ describe("PropertyDataProvider", () => {
         }
       }
       using subclassProvider = new Subclass({ imodel, ruleset: rulesetId });
-      const spy = sinon.spy(subclassProvider, "isFieldFavorite");
+      const spy = vi.spyOn(subclassProvider, "isFieldFavorite");
       await subclassProvider.isFieldFavoriteAsync(field);
-      expect(spy).to.be.calledOnce;
+      expect(spy).toHaveBeenCalledOnce();
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      expect(favoritePropertiesManager.has).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
+      expect(favoritePropertiesManager.has).toHaveBeenCalledOnce();
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      expect(favoritePropertiesManager.has).toHaveBeenCalledWith(field, imodel, FavoritePropertiesScope.IModel);
     });
   });
 
@@ -284,12 +291,12 @@ describe("PropertyDataProvider", () => {
         }
       }
       using subclassProvider = new Subclass({ imodel, ruleset: rulesetId });
-      const spy = sinon.spy(subclassProvider, "sortFields");
+      const spy = vi.spyOn(subclassProvider, "sortFields");
       await subclassProvider.sortFieldsAsync(
         createTestCategoryDescription(),
         [0, 1, 2].map(() => createTestSimpleContentField()),
       );
-      expect(spy).to.be.calledOnce;
+      expect(spy).toHaveBeenCalledOnce();
     });
   });
 
@@ -445,7 +452,7 @@ describe("PropertyDataProvider", () => {
             [field.name]: "123.5 m",
           };
           const record = createTestContentItem({ values, displayValues });
-          presentationManager.getContentIterator.resolves({
+          presentationManager.getContentIterator.mockResolvedValue({
             descriptor,
             total: 1,
             items: (async function* () {
@@ -455,12 +462,12 @@ describe("PropertyDataProvider", () => {
 
           // stub formats provider
           const onFormatsChanged = new BeUiEvent<FormatsChangedArgs>();
-          sinon.stub(IModelApp, "formatsProvider").get(() => ({
+          vi.spyOn(IModelApp, "formatsProvider", "get").mockReturnValue({
             onFormatsChanged,
-          }));
+          } as any);
 
           // setup provider
-          const dataChangedSpy = sinon.spy();
+          const dataChangedSpy = vi.fn();
           provider.onDataChanged.addListener(dataChangedSpy);
 
           // check the first (unformatted) request
@@ -471,9 +478,9 @@ describe("PropertyDataProvider", () => {
           } satisfies PrimitiveValue);
 
           // change the format and ensure the results are different
-          sinon.stub(KoqPropertyValueFormatter.prototype, "format").resolves("formatted value");
+          vi.spyOn(KoqPropertyValueFormatter.prototype, "format").mockResolvedValue("formatted value");
           onFormatsChanged.raiseEvent({ formatsChanged: "all" });
-          expect(dataChangedSpy).to.be.calledOnce;
+          expect(dataChangedSpy).toHaveBeenCalledOnce();
           expect((await provider.getData()).records[field.category.name][0].value).to.deep.eq({
             valueFormat: UiPropertyValueFormat.Primitive,
             value: 123.456789,
@@ -1408,8 +1415,8 @@ describe("PropertyDataProvider", () => {
             provider[Symbol.dispose]();
             provider = new Provider({ imodel, ruleset: rulesetId, disableFavoritesCategory: true });
 
-            favoritePropertiesManager.hasAsync.resetBehavior();
-            favoritePropertiesManager.hasAsync.callsFake(async () => true);
+            favoritePropertiesManager.hasAsync.mockReset();
+            favoritePropertiesManager.hasAsync.mockImplementation(async () => true);
 
             const descriptor = createTestContentDescriptor({
               fields: [
@@ -1569,7 +1576,7 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField] });
 
-              favoritePropertiesManager.hasAsync.callsFake(async (field) => {
+              favoritePropertiesManager.hasAsync.mockImplementation(async (field) => {
                 return field.name === "primitive-property";
               });
 
@@ -1650,7 +1657,7 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField, propertiesField2] });
 
-              favoritePropertiesManager.hasAsync.callsFake(async (field) => {
+              favoritePropertiesManager.hasAsync.mockImplementation(async (field) => {
                 return field.name === nestedContentField.name || field.name === propertiesField1.name || field.name === propertiesField2.name;
               });
 
@@ -1771,7 +1778,7 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField] });
 
-              favoritePropertiesManager.hasAsync.callsFake(async (field) => {
+              favoritePropertiesManager.hasAsync.mockImplementation(async (field) => {
                 return field.name === propertiesField.name;
               });
 
@@ -1826,7 +1833,7 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField] });
 
-              favoritePropertiesManager.hasAsync.callsFake(async (field) => {
+              favoritePropertiesManager.hasAsync.mockImplementation(async (field) => {
                 return field.name === propertiesField1.name || field.name === propertiesField2.name;
               });
 

@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Component } from "react";
-import sinon from "sinon";
-import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
+import { afterAll, beforeAll, beforeEach, vi } from "vitest";
 import { BeDuration } from "@itwin/core-bentley";
 import { ClassInfo, InstanceKey, PropertyInfo, RelatedClassInfo, RelatedClassInfoWithOptionalRelationship, Ruleset } from "@itwin/presentation-common";
 import { WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
@@ -142,12 +141,15 @@ export function stubDOMMatrix() {
   beforeAll(() => {
     Object.defineProperty(global, "DOMMatrix", {
       writable: true,
-      value: sinon.fake(() => ({ m41: 0, m42: 0 })),
+      // Must use a regular function (not arrow) so it's callable with `new`
+      value: vi.fn(function () {
+        return { m41: 0, m42: 0 };
+      }),
     });
   });
 
   afterAll(() => {
-    Object.defineProperty(global, "DOMGlobal", {
+    Object.defineProperty(global, "DOMMatrix", {
       writable: true,
       value: domMatrix,
     });
@@ -155,30 +157,20 @@ export function stubDOMMatrix() {
 }
 
 export function stubVirtualization() {
-  let stubs: sinon.SinonStub[] = [];
-
   beforeEach(() => {
-    stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetHeight").get(() => 800));
-    stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetWidth").get(() => 800));
-
-    stubs.push(
-      sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
-        height: 20,
-        width: 20,
-        x: 0,
-        y: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-        top: 0,
-        toJSON: () => {},
-      }),
-    );
-  });
-
-  afterEach(() => {
-    stubs.forEach((stub) => stub.restore());
-    stubs = [];
+    vi.spyOn(window.HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(800);
+    vi.spyOn(window.HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(800);
+    vi.spyOn(window.Element.prototype, "getBoundingClientRect").mockReturnValue({
+      height: 20,
+      width: 20,
+      x: 0,
+      y: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      top: 0,
+      toJSON: () => {},
+    });
   });
 }
 
@@ -198,14 +190,16 @@ export interface TestErrorBoundaryState {
  *
  * Example usage:
  * ```tsx
- * const errorSpy = sinon.spy();
+ * const errorSpy = vi.fn();
  * render(
  *   <TestErrorBoundary onError={errorSpy}>
  *     <TestComponent />
  *   </TestErrorBoundary>
  * );
  * await waitFor(() => {
- *   expect(errorSpy).to.be.calledOnce.and.calledWith(sinon.match((error: Error) => error.message === "test error"));
+ *   expect(errorSpy).toHaveBeenCalledOnce();
+ *   const [error] = errorSpy.mock.calls[0];
+ *   expect(error.message).toBe("test error");
  * });
  * ```
  */

@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import sinon from "sinon";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyFilterBuilderRuleRangeValue } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -157,12 +156,8 @@ describe("filterRuleValidator", () => {
     quantityType: "TestKOQ",
   };
 
-  beforeAll(() => {
-    sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
-  });
-
-  afterAll(() => {
-    sinon.restore();
+  beforeEach(() => {
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization() as any);
   });
 
   it("returns error message for invalid numeric rule", () => {

@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createAsyncIterator } from "presentation-test-utilities";
-import sinon from "sinon";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import {
   AbstractTreeNodeLoaderWithProvider,
@@ -28,7 +27,7 @@ import {
 } from "../../../presentation-components/tree/controlled/TreeHooks.js";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils.js";
-import { renderHook, waitFor } from "../../TestUtils.js";
+import { renderHook, waitFor, createMocked } from "../../TestUtils.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 
@@ -51,30 +50,29 @@ describe("usePresentationNodeLoader", () => {
   };
 
   beforeEach(async () => {
-    const presentationManager = sinon.createStubInstance(PresentationManager);
+    const presentationManager = createMocked(PresentationManager);
     Object.assign(presentationManager, { onIModelHierarchyChanged });
 
-    presentationManager.rulesets.returns({
+    presentationManager.rulesets.mockReturnValue({
       onRulesetModified,
-    } as RulesetManager);
+    } as any);
 
-    presentationManager.vars.returns({
+    presentationManager.vars.mockReturnValue({
       onVariableChanged: onRulesetVariableChanged,
-    } as RulesetVariablesManager);
+    } as any);
 
-    presentationManager.getNodesIterator.callsFake(async () => ({ total: 0, items: createAsyncIterator([]) }));
+    presentationManager.getNodesIterator.mockImplementation(async () => ({ total: 0, items: createAsyncIterator([]) }));
 
-    sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
+    vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged,
-    }));
+    } as any);
 
     await UiComponents.initialize(new EmptyLocalization());
   });
 
   afterEach(() => {
     UiComponents.terminate();
-    sinon.restore();
   });
 
   it("creates node loader", () => {
@@ -229,10 +227,7 @@ describe("usePresentationNodeLoader", () => {
 });
 
 describe("useControlledPresentationTreeFiltering", () => {
-  const getFilteredNodePathsStub = sinon.stub<
-    Parameters<IPresentationTreeDataProvider["getFilteredNodePaths"]>,
-    ReturnType<IPresentationTreeDataProvider["getFilteredNodePaths"]>
-  >();
+  const getFilteredNodePathsStub = vi.fn<IPresentationTreeDataProvider["getFilteredNodePaths"]>();
   const dataProvider = {
     getFilteredNodePaths: getFilteredNodePathsStub,
   } as unknown as IPresentationTreeDataProvider;
@@ -241,7 +236,7 @@ describe("useControlledPresentationTreeFiltering", () => {
   } as AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
 
   beforeEach(() => {
-    getFilteredNodePathsStub.reset();
+    getFilteredNodePathsStub.mockReset();
   });
 
   it("returns original node loader if filter is not provided", () => {
@@ -251,7 +246,7 @@ describe("useControlledPresentationTreeFiltering", () => {
 
   it("returns filtered node loader when tree is filtered", async () => {
     const node = createNode("root");
-    getFilteredNodePathsStub.resolves([{ children: [], index: 0, node, filteringData: { matchesCount: 1, childMatchesCount: 0 }, isMarked: true }]);
+    getFilteredNodePathsStub.mockResolvedValue([{ children: [], index: 0, node, filteringData: { matchesCount: 1, childMatchesCount: 0 }, isMarked: true }]);
 
     const { result } = renderHook(useControlledPresentationTreeFiltering, { initialProps: { nodeLoader, filter: "test" } });
 

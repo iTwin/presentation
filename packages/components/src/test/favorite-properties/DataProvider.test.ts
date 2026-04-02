@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import sinon from "sinon";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyData } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -14,6 +13,9 @@ import { FavoritePropertiesManager, Presentation, PresentationManager } from "@i
 import { FavoritePropertiesDataProvider } from "../../presentation-components/favorite-properties/DataProvider.js";
 import { getFavoritesCategory } from "../../presentation-components/favorite-properties/Utils.js";
 import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
+import { createMocked } from "../TestUtils.js";
+
+import type { Mocked, MockInstance } from "vitest";
 
 describe("FavoritePropertiesDataProvider", () => {
   let provider: FavoritePropertiesDataProvider;
@@ -23,33 +25,31 @@ describe("FavoritePropertiesDataProvider", () => {
       yield { toRow: () => ({ ECInstanceId: elementId, ClassName: "BisCore.Element" }) };
     },
   } as unknown as IModelConnection;
-  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
+  let presentationManager: Mocked<PresentationManager>;
   let presentationPropertyDataProvider: {
-    getData: sinon.SinonStub<[], PropertyData>;
-    [Symbol.dispose]: sinon.SinonStub<[], void>;
+    getData: MockInstance<() => PropertyData>;
+    [Symbol.dispose]: MockInstance<() => void>;
   };
-  let favoritePropertiesManager: sinon.SinonStubbedInstance<FavoritePropertiesManager>;
+  let favoritePropertiesManager: Mocked<FavoritePropertiesManager>;
 
   beforeEach(() => {
-    presentationManager = sinon.createStubInstance(PresentationManager);
+    presentationManager = createMocked(PresentationManager as any);
     presentationPropertyDataProvider = {
-      getData: sinon.stub(),
-      [Symbol.dispose]: sinon.stub(),
+      getData: vi.fn<() => PropertyData>(),
+      [Symbol.dispose]: vi.fn<() => void>(),
     };
-    favoritePropertiesManager = sinon.createStubInstance(FavoritePropertiesManager);
+    favoritePropertiesManager = createMocked(FavoritePropertiesManager);
 
     const localization = new EmptyLocalization();
-    sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(Presentation, "favoriteProperties").get(() => favoritePropertiesManager);
-    sinon.stub(Presentation, "localization").get(() => localization);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as any);
+    vi.spyOn(Presentation, "favoriteProperties", "get").mockReturnValue(favoritePropertiesManager as any);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
 
     provider = new FavoritePropertiesDataProvider({ activeScopeProvider: () => ({ id: "element" }) });
     (provider as any).createPropertyDataProvider = () => presentationPropertyDataProvider;
   });
 
-  afterEach(() => {
-    sinon.restore();
-  });
+  afterEach(() => {});
 
   describe("constructor", () => {
     it("sets `includeFieldsWithNoValues` to true", () => {
@@ -63,21 +63,21 @@ describe("FavoritePropertiesDataProvider", () => {
 
   describe("getData", () => {
     it("passes `customRulesetId` to PropertyDataProvider if set", async () => {
-      presentationPropertyDataProvider.getData.resolves({
+      presentationPropertyDataProvider.getData.mockResolvedValue({
         label: PropertyRecord.fromString("Test Item"),
         categories: [],
         records: {},
       });
-      const factorySpy = sinon
-        .stub<[IModelConnection, Ruleset | string | undefined], PresentationPropertyDataProvider>()
-        .returns(presentationPropertyDataProvider as unknown as PresentationPropertyDataProvider);
+      const factorySpy = vi
+        .fn<(imodel: IModelConnection, ruleset: Ruleset | string | undefined) => PresentationPropertyDataProvider>()
+        .mockReturnValue(presentationPropertyDataProvider as unknown as PresentationPropertyDataProvider);
 
       const customRulesetId = "custom_ruleset_id";
       provider = new FavoritePropertiesDataProvider({ ruleset: customRulesetId, activeScopeProvider: () => ({ id: "element" }) });
       (provider as any).createPropertyDataProvider = factorySpy;
 
       await provider.getData(imodel, elementId);
-      expect(factorySpy).to.be.calledWith(imodel, customRulesetId);
+      expect(factorySpy).toHaveBeenCalledWith(imodel, customRulesetId);
     });
 
     it("returns empty property data when there is no favorite category", async () => {
@@ -93,7 +93,7 @@ describe("FavoritePropertiesDataProvider", () => {
           ],
         },
       };
-      presentationPropertyDataProvider.getData.resolves(dataToReturn);
+      presentationPropertyDataProvider.getData.mockResolvedValue(dataToReturn);
 
       const data = await provider.getData(imodel, elementId);
       expect(data.categories.length).to.eq(0);
@@ -123,7 +123,7 @@ describe("FavoritePropertiesDataProvider", () => {
           ],
         },
       };
-      presentationPropertyDataProvider.getData.resolves(dataToReturn);
+      presentationPropertyDataProvider.getData.mockResolvedValue(dataToReturn);
 
       const data = await provider.getData(imodel, elementId);
       expect(data.categories.length).to.eq(1);

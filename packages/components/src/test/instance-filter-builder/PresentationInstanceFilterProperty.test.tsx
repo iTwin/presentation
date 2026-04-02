@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import sinon from "sinon";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -17,16 +16,16 @@ describe("PresentationInstanceFilterProperty", () => {
   const className = "TestClassName";
   const schemaName = "TestSchema";
 
-  beforeAll(() => {
+  beforeEach(() => {
     const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "localization").get(() => localization);
-    Element.prototype.scrollIntoView = sinon.stub();
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true as any);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization as any);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization as any);
+    Element.prototype.scrollIntoView = vi.fn() as any;
   });
 
   afterAll(() => {
-    sinon.restore();
+    vi.restoreAllMocks();
   });
 
   it("renders with badge", async () => {

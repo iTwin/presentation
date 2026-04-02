@@ -4,10 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { Subject } from "rxjs";
 import { from } from "rxjs/internal/observable/from";
-import sinon from "sinon";
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { ITreeNodeLoader, TreeModelNode, TreeModelNodeInput, TreeModelSource, TreeNodeLoadResult, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -61,7 +60,7 @@ describe("useHierarchyLevelFiltering", () => {
   });
 
   beforeEach(() => {
-    nodeLoader.loadNode.reset();
+    nodeLoader.loadNode.mockReset();
     modelSource.modifyModel((model) => {
       model.clearChildren(undefined);
     });
@@ -72,7 +71,7 @@ describe("useHierarchyLevelFiltering", () => {
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);
     });
-    nodeLoader.loadNode.returns(from([]));
+    nodeLoader.loadNode.mockReturnValue(from([]));
 
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
@@ -87,12 +86,13 @@ describe("useHierarchyLevelFiltering", () => {
       model.setChildren(undefined, [node], 0);
     });
 
-    nodeLoader.loadNode.returns(from([]));
+    nodeLoader.loadNode.mockReturnValue(from([]));
 
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.applyFilter(node.item.id, filterInfo);
-    expect(nodeLoader.loadNode).to.be.calledOnceWith(sinon.match((parentNode: TreeModelNode) => parentNode.id === node.id));
+    expect(nodeLoader.loadNode).toHaveBeenCalledOnce();
+    expect(nodeLoader.loadNode).toHaveBeenCalledWith(expect.objectContaining({ id: node.id }), expect.anything());
   });
 
   it("clears children from tree model when filter applied", () => {
@@ -105,7 +105,7 @@ describe("useHierarchyLevelFiltering", () => {
       model.setChildren(undefined, [parentNode], 0);
       model.setChildren(parentNode.id, [childNode], 0);
     });
-    nodeLoader.loadNode.returns(from([]));
+    nodeLoader.loadNode.mockReturnValue(from([]));
 
     expect(modelSource.getModel().getNode(childNode.id)).to.not.be.undefined;
 
@@ -170,12 +170,13 @@ describe("useHierarchyLevelFiltering", () => {
       model.setChildren(undefined, [node], 0);
     });
 
-    nodeLoader.loadNode.returns(from([]));
+    nodeLoader.loadNode.mockReturnValue(from([]));
 
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.clearFilter(node.item.id);
-    expect(nodeLoader.loadNode).to.be.calledOnceWith(sinon.match((parentNode: TreeModelNode) => parentNode.id === node.id));
+    expect(nodeLoader.loadNode).toHaveBeenCalledOnce();
+    expect(nodeLoader.loadNode).toHaveBeenCalledWith(expect.objectContaining({ id: node.id }), expect.anything());
   });
 
   it("clears children from tree model when filter cleared", () => {
@@ -206,8 +207,8 @@ describe("useHierarchyLevelFiltering", () => {
   it("clears filter unsubscribes from observable created by `applyFilter`", () => {
     const applyFilterActionSubject = new Subject<TreeNodeLoadResult>();
     const clearFilterActionSubject = new Subject<TreeNodeLoadResult>();
-    nodeLoader.loadNode.onFirstCall().returns(applyFilterActionSubject);
-    nodeLoader.loadNode.onSecondCall().returns(clearFilterActionSubject);
+    nodeLoader.loadNode.mockReturnValueOnce(applyFilterActionSubject);
+    nodeLoader.loadNode.mockReturnValueOnce(clearFilterActionSubject);
 
     const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     modelSource.modifyModel((model) => {
@@ -225,10 +226,10 @@ describe("useHierarchyLevelFiltering", () => {
 
   it("`applyFilter` unsubscribes from previous observable if called second time", () => {
     const nodeLoad1 = new Subject<TreeNodeLoadResult>();
-    nodeLoader.loadNode.onFirstCall().returns(nodeLoad1);
+    nodeLoader.loadNode.mockReturnValueOnce(nodeLoad1);
 
     const nodeLoad2 = new Subject<TreeNodeLoadResult>();
-    nodeLoader.loadNode.onSecondCall().returns(nodeLoad2);
+    nodeLoader.loadNode.mockReturnValueOnce(nodeLoad2);
 
     const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     modelSource.modifyModel((model) => {
@@ -248,7 +249,7 @@ describe("useHierarchyLevelFiltering", () => {
 
   it("unsubscribes from observable if error is thrown", () => {
     const subject = new Subject<TreeNodeLoadResult>();
-    nodeLoader.loadNode.returns(subject);
+    nodeLoader.loadNode.mockReturnValue(subject);
     const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);

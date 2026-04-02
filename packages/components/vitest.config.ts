@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: "happy-dom",
     include: ["src/**/*.test.{ts,tsx}"],
+    restoreMocks: true,
     testTimeout: 60000,
     slowTestThreshold: 500,
     pool: "forks",
