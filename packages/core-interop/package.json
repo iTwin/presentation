@@ -33,7 +33,7 @@
     "build": "npm run -s typecheck && npm run -s build:cjs && npm run -s build:esm",
     "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "rimraf lib",
     "cover": "vitest run --coverage",
     "lint": "eslint ./src/**/*.ts",
