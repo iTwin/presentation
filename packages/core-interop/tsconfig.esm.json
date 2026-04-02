@@ -3,6 +3,8 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "outDir": "lib/esm"
-  }
+    "outDir": "lib/esm",
+    "noEmit": false
+  },
+  "exclude": ["src/test/**/*"]
 }

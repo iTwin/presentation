@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { QueryBinder, QueryOptions, QueryRowFormat } from "@itwin/core-common";
 import { Point2d, Point3d } from "@itwin/core-geometry";
 import { ECSqlBinding } from "@itwin/presentation-shared";
@@ -14,7 +13,7 @@ describe("createECSqlQueryExecutor", () => {
   describe("createQueryReader", () => {
     it("calls IModel's `createQueryReader` with default params", async () => {
       const imodel = {
-        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([{}, {}])),
+        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([{}, {}])),
       };
 
       const executor = createECSqlQueryExecutor(imodel);
@@ -22,16 +21,16 @@ describe("createECSqlQueryExecutor", () => {
       for await (const _ of reader) {
       }
 
-      expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
-        "ecsql",
-        sinon.match((binder: QueryBinder) => Object.keys(binder.serialize()).length === 0),
-        sinon.match((options: QueryOptions) => Object.keys(options).length === 0),
-      );
+      expect(imodel.createQueryReader).toHaveBeenCalledOnce();
+      const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
+      expect(ecsql).toBe("ecsql");
+      expect(Object.keys((binder as QueryBinder).serialize()).length).toBe(0);
+      expect(Object.keys(options as QueryOptions).length).toBe(0);
     });
 
     it("calls IModel's `createQueryReader` with CTEs", async () => {
       const imodel = {
-        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([{}, {}])),
+        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([{}, {}])),
       };
 
       const executor = createECSqlQueryExecutor(imodel);
@@ -39,12 +38,13 @@ describe("createECSqlQueryExecutor", () => {
       for await (const _ of reader) {
       }
 
-      expect(imodel.createQueryReader).to.be.calledOnceWith("WITH RECURSIVE cte1, cte2 ecsql");
+      expect(imodel.createQueryReader).toHaveBeenCalledOnce();
+      expect(imodel.createQueryReader.mock.calls[0][0]).toBe("WITH RECURSIVE cte1, cte2 ecsql");
     });
 
     it("calls IModel's `createQueryReader` with whitespace removed from ECSQL and CTEs", async () => {
       const imodel = {
-        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])),
+        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])),
       };
 
       const executor = createECSqlQueryExecutor(imodel);
@@ -52,12 +52,13 @@ describe("createECSqlQueryExecutor", () => {
       for await (const _ of reader) {
       }
 
-      expect(imodel.createQueryReader).to.be.calledOnceWith("WITH RECURSIVE cte with whitespace (ecsql, with whitespace)");
+      expect(imodel.createQueryReader).toHaveBeenCalledOnce();
+      expect(imodel.createQueryReader.mock.calls[0][0]).toBe("WITH RECURSIVE cte with whitespace (ecsql, with whitespace)");
     });
 
     it("calls IModel's `createQueryReader` with `ECSqlPropertyNames` row format", async () => {
       const imodel = {
-        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])),
+        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])),
       };
 
       const executor = createECSqlQueryExecutor(imodel);
@@ -65,16 +66,16 @@ describe("createECSqlQueryExecutor", () => {
       for await (const _ of reader) {
       }
 
-      expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
-        "ecsql",
-        sinon.match((binder: QueryBinder) => Object.keys(binder.serialize()).length === 0),
-        sinon.match((options: QueryOptions) => options.rowFormat === QueryRowFormat.UseECSqlPropertyNames),
-      );
+      expect(imodel.createQueryReader).toHaveBeenCalledOnce();
+      const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
+      expect(ecsql).toBe("ecsql");
+      expect(Object.keys((binder as QueryBinder).serialize()).length).toBe(0);
+      expect((options as QueryOptions).rowFormat).toBe(QueryRowFormat.UseECSqlPropertyNames);
     });
 
     it("calls IModel's `createQueryReader` with `Indexes` row format", async () => {
       const imodel = {
-        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])),
+        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])),
       };
 
       const executor = createECSqlQueryExecutor(imodel);
@@ -82,16 +83,16 @@ describe("createECSqlQueryExecutor", () => {
       for await (const _ of reader) {
       }
 
-      expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
-        "ecsql",
-        sinon.match((binder: QueryBinder) => Object.keys(binder.serialize()).length === 0),
-        sinon.match((options: QueryOptions) => options.rowFormat === QueryRowFormat.UseECSqlPropertyIndexes),
-      );
+      expect(imodel.createQueryReader).toHaveBeenCalledOnce();
+      const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
+      expect(ecsql).toBe("ecsql");
+      expect(Object.keys((binder as QueryBinder).serialize()).length).toBe(0);
+      expect((options as QueryOptions).rowFormat).toBe(QueryRowFormat.UseECSqlPropertyIndexes);
     });
 
     it("calls IModel's `createQueryReader` with `restartToken`", async () => {
       const imodel = {
-        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])),
+        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])),
       };
 
       const executor = createECSqlQueryExecutor(imodel);
@@ -99,16 +100,16 @@ describe("createECSqlQueryExecutor", () => {
       for await (const _ of reader) {
       }
 
-      expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
-        "ecsql",
-        sinon.match((binder: QueryBinder) => Object.keys(binder.serialize()).length === 0),
-        sinon.match((options: QueryOptions) => options.restartToken === "TestToken"),
-      );
+      expect(imodel.createQueryReader).toHaveBeenCalledOnce();
+      const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
+      expect(ecsql).toBe("ecsql");
+      expect(Object.keys((binder as QueryBinder).serialize()).length).toBe(0);
+      expect((options as QueryOptions).restartToken).toBe("TestToken");
     });
 
     it("calls IModel's `createQueryReader` with different bindings", async () => {
       const imodel = {
-        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])),
+        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])),
       };
 
       const bindings: ECSqlBinding[] = [
@@ -168,17 +169,17 @@ describe("createECSqlQueryExecutor", () => {
       for await (const _ of reader) {
       }
 
-      expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
-        "ecsql",
-        sinon.match((binder: QueryBinder) => JSON.stringify(expectedBinder.serialize()) === JSON.stringify(binder.serialize())),
-        sinon.match((options: QueryOptions) => Object.keys(options).length === 0),
-      );
+      expect(imodel.createQueryReader).toHaveBeenCalledOnce();
+      const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
+      expect(ecsql).toBe("ecsql");
+      expect(JSON.stringify((binder as QueryBinder).serialize())).toBe(JSON.stringify(expectedBinder.serialize()));
+      expect(Object.keys(options as QueryOptions).length).toBe(0);
     });
 
     it("creates iterable reader for rows as objects", async () => {
       const rows = [{ x: 1 }, { y: 2 }];
       const imodel = {
-        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub(rows)),
+        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub(rows)),
       };
 
       const executor = createECSqlQueryExecutor(imodel);
@@ -189,7 +190,7 @@ describe("createECSqlQueryExecutor", () => {
         resultRows.push(row);
       }
 
-      expect(resultRows).to.deep.eq(rows);
+      expect(resultRows).toEqual(rows);
     });
 
     it("creates iterable reader for rows as arrays", async () => {
@@ -198,7 +199,7 @@ describe("createECSqlQueryExecutor", () => {
         [3, 4],
       ];
       const imodel = {
-        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub(rows)),
+        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub(rows)),
       };
 
       const executor = createECSqlQueryExecutor(imodel);
@@ -209,7 +210,7 @@ describe("createECSqlQueryExecutor", () => {
         resultRows.push(row);
       }
 
-      expect(resultRows).to.deep.eq(rows);
+      expect(resultRows).toEqual(rows);
     });
   });
 });
@@ -217,7 +218,7 @@ describe("createECSqlQueryExecutor", () => {
 function createCoreECSqlReaderStub(rows: object[]) {
   let curr = -1;
   const reader = {
-    next: sinon.fake(async () => {
+    next: vi.fn(async () => {
       ++curr;
       if (curr < rows.length) {
         return { done: false, value: createQueryRowProxy(rows[curr]) };
