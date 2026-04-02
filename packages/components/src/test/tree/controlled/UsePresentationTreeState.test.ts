@@ -196,7 +196,7 @@ describe("usePresentationTreeState", () => {
       const observable = result.current?.nodeLoader.loadNode({ id: undefined, depth: -1, numChildren: 1 }, 0);
       observable?.subscribe();
 
-      await waitFor(() => expect(onNodeLoaded).toHaveBeenCalledOnce);
+      await waitFor(() => expect(onNodeLoaded).toHaveBeenCalledOnce());
     });
 
     it("doesn't create a new nodeLoader when `RulesetsManager` raises an unrelated `onRulesetModified` event", async () => {
