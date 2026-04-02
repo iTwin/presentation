@@ -109,7 +109,10 @@ const hierarchyDefinition: HierarchyDefinition = {
   },
   parseNode({ row }) {
     // Parse the row into an instance node
-    return { key: { type: "instances", instanceKeys: [{ className: row.ClassName, id: row.Id }] }, label: row.Label };
+    return {
+      key: { type: "instances", instanceKeys: [{ className: row.ClassName, id: row.Id }] },
+      label: row.Label,
+    };
   },
 };
 ```

@@ -106,7 +106,10 @@ using provider = createHierarchyProvider(({ hierarchyChanged }) => {
           `,
         )) {
           yield {
-            key: { type: "instances", instanceKeys: [{ className: row.className, id: row.id, imodelKey: imodel.key }] },
+            key: {
+              type: "instances",
+              instanceKeys: [{ className: row.className, id: row.id, imodelKey: imodel.key }],
+            },
             label: row.label,
             children: !!row.hasChildren,
             parentKeys: [...parentNode.parentKeys, parentNode.key],
@@ -741,7 +744,11 @@ const createBooksFilter = (): GenericInstanceFilter => ({
 // Print child hierarchy level for "J.R.R. Tolkien" author parent node. Output:
 // - The Hobbit
 for await (const node of provider.getNodes({
-  parentNode: { key: { type: "generic" as const, id: "author:OL26320A" }, label: "J.R.R. Tolkien", parentKeys: [] },
+  parentNode: {
+    key: { type: "generic" as const, id: "author:OL26320A" },
+    label: "J.R.R. Tolkien",
+    parentKeys: [],
+  },
   instanceFilter: createBooksFilter(),
 })) {
   console.log(`- ${node.label}`);

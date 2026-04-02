@@ -131,7 +131,11 @@ The `NodesQueryClauseFactory.createSelectClause` function has a required `nodeLa
   <!-- BEGIN EXTRACTION -->
 
   ```ts
-  import { createIModelHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+  import {
+    createIModelHierarchyProvider,
+    createNodesQueryClauseFactory,
+    HierarchyDefinition,
+  } from "@itwin/presentation-hierarchies";
   import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 
   nodeLabel: {

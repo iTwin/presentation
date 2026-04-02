@@ -113,7 +113,10 @@ The above hierarchy definition creates the following hierarchy for each of the i
 //
 // The resulting hierarchy:
 [
-  { label: "Model 1", children: [{ label: "Element 1" }, { label: "Element 4" }, { label: "Updated element 3" }] },
+  {
+    label: "Model 1",
+    children: [{ label: "Element 1" }, { label: "Element 4" }, { label: "Updated element 3" }],
+  },
   { label: "Model 2", children: [{ label: "Element 5" }] },
 ],
 ```
