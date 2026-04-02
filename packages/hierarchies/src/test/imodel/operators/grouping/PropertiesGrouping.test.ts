@@ -1578,8 +1578,8 @@ describe("PropertiesGrouping", () => {
                   /* cspell:disable-next-line */
                   propertiesClassName: "testschema:class2",
                   createGroupForOutOfRangeValues: true,
-                  /* cspell:disable-next-line */
                   propertyGroups: [
+                    /* cspell:disable-next-line */
                     { propertyName: "propertyname2", propertyValue: 6, ranges: [{ fromValue: 7, toValue: 10 }] },
                   ],
                 },
@@ -1904,9 +1904,9 @@ describe("PropertiesGrouping", () => {
               grouping: {
                 byProperties: {
                   propertiesClassName: "testSchema:Class",
-                  /* cspell:disable-next-line */
                   propertyGroups: [
                     {
+                      /* cspell:disable-next-line */
                       propertyName: "propertyname",
                       propertyValue: 2,
                       ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }],

@@ -99,8 +99,9 @@ describe("Learning snippets", () => {
       const filteringDialog = await waitFor(() => getByRole(baseElement, "dialog"));
 
       // open property selector and select the "User Label" property
-      // cspell:disable-next-line
+
       const propertySelector = await waitFor(() =>
+        // cspell:disable-next-line
         getByPlaceholderText<HTMLInputElement>(baseElement, "Çhóôsë pröpértý"),
       );
       await user.click(propertySelector);
