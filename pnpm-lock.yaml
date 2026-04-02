@@ -953,12 +953,6 @@ importers:
       '@testing-library/user-event':
         specifier: catalog:test-tools
         version: 14.6.1(@testing-library/dom@10.4.1)
-      '@types/chai':
-        specifier: catalog:test-tools
-        version: 5.2.3
-      '@types/chai-as-promised':
-        specifier: catalog:test-tools
-        version: 8.0.2
       '@types/node':
         specifier: catalog:build-tools
         version: 24.12.0
@@ -968,12 +962,6 @@ importers:
       '@types/react-dom':
         specifier: catalog:react
         version: 18.3.7(@types/react@18.3.28)
-      chai:
-        specifier: catalog:test-tools
-        version: 5.3.3
-      chai-as-promised:
-        specifier: catalog:test-tools
-        version: 8.0.2(chai@5.3.3)
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2
@@ -986,9 +974,6 @@ importers:
       happy-dom:
         specifier: catalog:test-tools
         version: 20.8.9
-      ignore-styles:
-        specifier: catalog:test-tools
-        version: 5.0.1
       presentation-test-utilities:
         specifier: workspace:^
         version: link:../test-utilities

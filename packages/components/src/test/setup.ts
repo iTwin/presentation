@@ -2,13 +2,8 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-import { afterAll, afterEach, beforeAll, beforeEach, chai } from "vitest";
-import chaiAsPromised from "chai-as-promised";
+import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
 import { cleanup, configure } from "@testing-library/react";
-
-// Register chai plugins on Vitest's internal chai instance so that
-// chai-as-promised (.to.eventually.*) works with expect() imported from "vitest".
-chai.use(chaiAsPromised);
 
 // Polyfill ResizeObserver — happy-dom does not provide it.
 global.ResizeObserver = class ResizeObserver {

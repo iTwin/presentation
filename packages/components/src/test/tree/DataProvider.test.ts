@@ -639,7 +639,7 @@ describe("TreeDataProvider", () => {
       expect(actualResult).to.have.lengthOf(1);
       const treeItem = actualResult[0] as PresentationTreeNodeItem;
       expect(treeItem.filtering).to.not.be.undefined;
-      await expect(loadDescriptor(treeItem.filtering!)).to.eventually.be.rejected;
+      await expect(loadDescriptor(treeItem.filtering!)).rejects.toThrow();
     });
 
     it("adds parent filter to grouping node filtering info", async () => {
