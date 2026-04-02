@@ -114,13 +114,13 @@ function Tree({
         {
           type: "Unknown",
           id: `${node.label}-error-1`,
-          message: `test error node `,
+          message: `test error node`,
           isNodeExpandable: true,
         },
         {
           type: "Unknown",
           id: `${node.label}-error-2`,
-          message: `test error node 2 `,
+          message: `test error node 2`,
           isNodeExpandable: true,
         },
       ];
