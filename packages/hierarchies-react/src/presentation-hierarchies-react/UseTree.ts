@@ -93,7 +93,7 @@ export interface UseTreeProps {
   onHierarchyLoadError?: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void;
   /** Callback to set custom TreeNode errors.
    *
-   * **Note:** Internal errors take precedence over custom ones.
+   * Errors returned from this callback are combined with internal errors when populating `TreeNode.errors`.
    */
   getTreeNodeErrors?: (node: HierarchyNode) => ErrorInfo[];
 }
@@ -164,14 +164,14 @@ function useTreeInternal({
   const onPerformanceMeasuredRef = useLatest(onPerformanceMeasured);
   const onHierarchyLimitExceededRef = useLatest(onHierarchyLimitExceeded);
   const onHierarchyLoadErrorRef = useLatest(onHierarchyLoadError);
-  const getTreeNodeErrorRef = useLatest(getTreeNodeErrors);
+  const getTreeNodeErrorsRef = useLatest(getTreeNodeErrors);
 
   const [actions] = useState<TreeActions>(
     () =>
       new TreeActions(
         (model) => {
           const rootNodes =
-            model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model, getTreeNodeErrorRef.current) : undefined;
+            model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model, getTreeNodeErrorsRef.current) : undefined;
           setState({
             model,
             rootNodes,
@@ -249,9 +249,9 @@ function useTreeInternal({
       if (!node || node.id === undefined) {
         return undefined;
       }
-      return createTreeNode(node, state.model, getTreeNodeErrorRef.current);
+      return createTreeNode(node, state.model, getTreeNodeErrorsRef.current);
     },
-    [actions, getTreeNodeErrorRef, state.model],
+    [actions, getTreeNodeErrorsRef, state.model],
   );
 
   const expandNode = useCallback<TreeRendererProps["expandNode"]>(
@@ -322,7 +322,7 @@ function useTreeInternal({
     if (state.model.rootNode.error) {
       return {
         rootErrorRendererProps: {
-          errors: [state.model.rootNode.error],
+          error: state.model.rootNode.error,
           reloadTree,
           getHierarchyLevelDetails,
         },

@@ -41,7 +41,7 @@ export type RootErrorRendererProps = {
   /**
    * Object containing root error information
    */
-  errors: ErrorInfo[];
+  error: ErrorInfo;
 } & CommonRendererProps;
 
 /**

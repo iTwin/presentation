@@ -531,7 +531,7 @@ describe("useTree", () => {
     const { result } = renderHook(useTree, { initialProps });
 
     await waitFor(() => {
-      expect(result.current.rootErrorRendererProps!.errors[0].type).to.be.eq("ResultSetTooLarge");
+      expect(result.current.rootErrorRendererProps!.error.type).to.be.eq("ResultSetTooLarge");
     });
 
     act(() => {
@@ -736,7 +736,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       expect(result.current.rootErrorRendererProps).to.not.be.undefined;
-      expect(result.current.rootErrorRendererProps!.errors[0].type).to.eq("NoFilterMatches");
+      expect(result.current.rootErrorRendererProps!.error.type).to.eq("NoFilterMatches");
     });
   });
 
@@ -896,7 +896,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       expect(result.current.rootErrorRendererProps).to.not.be.undefined;
-      const errorInfo = result.current.rootErrorRendererProps?.errors[0];
+      const errorInfo = result.current.rootErrorRendererProps?.error;
       expect(errorInfo!.type).to.be.eq("ResultSetTooLarge");
       expect(onHierarchyLimitExceededSpy).to.be.calledWith({
         parentId: undefined,
@@ -915,7 +915,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       expect(result.current.rootErrorRendererProps).to.not.be.undefined;
-      const errorInfo = result.current.rootErrorRendererProps?.errors[0];
+      const errorInfo = result.current.rootErrorRendererProps?.error;
       expect(errorInfo!.type).to.be.eq("ChildrenLoad");
       expect(onHierarchyLoadErrorStub).to.be.calledWith({
         parentId: undefined,
@@ -934,7 +934,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       expect(result.current.rootErrorRendererProps).to.not.be.undefined;
-      const errorInfo = result.current.rootErrorRendererProps?.errors[0];
+      const errorInfo = result.current.rootErrorRendererProps?.error;
       expect(errorInfo!.type).to.be.eq("ChildrenLoad");
       expect(onHierarchyLoadErrorStub).to.be.calledWith({
         parentId: undefined,

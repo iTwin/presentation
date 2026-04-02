@@ -22,9 +22,8 @@ export type StrataKitRootErrorRendererProps = RootErrorRendererProps;
  *
  * @alpha
  */
-export function StrataKitRootErrorRenderer({ errors, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): JSX.Element {
+export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): JSX.Element {
   const translate = useTranslation();
-  const error = errors[0];
 
   if (error.type === "ResultSetTooLarge") {
     const onOverrideLimit = () => getHierarchyLevelDetails(undefined)?.setSizeLimit("unbounded");

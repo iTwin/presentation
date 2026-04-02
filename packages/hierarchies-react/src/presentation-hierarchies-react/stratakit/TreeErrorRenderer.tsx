@@ -49,10 +49,10 @@ export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...error
             error,
             ...errorItemRendererProps,
           }),
-          { key: error.id },
+          { key: `${errorNode.id}:${error.id}` },
         );
       }
-      return <ErrorItemRenderer key={error.id} treeNode={errorNode} error={error} {...errorItemRendererProps} />;
+      return <ErrorItemRenderer key={`${errorNode.id}:${error.id}`} treeNode={errorNode} error={error} {...errorItemRendererProps} />;
     }),
   );
 

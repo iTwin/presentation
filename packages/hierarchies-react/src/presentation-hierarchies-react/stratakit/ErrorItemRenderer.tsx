@@ -125,7 +125,7 @@ function ErrorItemContainer({ treeNode, error, message, actions, scrollToElement
   return (
     <ErrorRegion.Item
       message={<MessageWithLink linkLabel={treeNode.label} scrollToElement={scrollToElement} message={message} />}
-      messageId={error.id}
+      messageId={`${treeNode.id}:${error.id}`}
       actions={actions
         ?.filter(({ condition }) => condition())
         .map(({ label, action }) => (
