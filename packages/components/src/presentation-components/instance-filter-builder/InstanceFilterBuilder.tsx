@@ -20,7 +20,10 @@ import { PresentationFilterBuilderValueRenderer, useInstanceFilterPropertyInfos 
 import { isFilterNonEmpty } from "./Utils.js";
 
 import type { PropertyDescription } from "@itwin/appui-abstract";
-import type { PropertyFilterBuilderRendererProps, PropertyFilterBuilderRuleValueRendererProps } from "@itwin/components-react";
+import type {
+  PropertyFilterBuilderRendererProps,
+  PropertyFilterBuilderRuleValueRendererProps,
+} from "@itwin/components-react";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { SelectOption } from "@itwin/itwinui-react";
 import type { ClassInfo, Descriptor, Keys } from "@itwin/presentation-common";
@@ -51,7 +54,8 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
  * @internal
  */
 export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
-  const { selectedClasses, classes, onSelectedClassesChanged, imodel, descriptor, descriptorInputKeys, ...restProps } = props;
+  const { selectedClasses, classes, onSelectedClassesChanged, imodel, descriptor, descriptorInputKeys, ...restProps } =
+    props;
 
   const [showClassSelectionWarning, setShowClassSelectionWarning] = useState(false);
   const options = useMemo(() => classes.map(createOption), [classes]);
@@ -118,7 +122,13 @@ export function usePresentationInstanceFilteringProps(
 ): Required<
   Pick<
     InstanceFilterBuilderProps,
-    "properties" | "classes" | "selectedClasses" | "onSelectedClassesChanged" | "propertyRenderer" | "onRulePropertySelected" | "isDisabled"
+    | "properties"
+    | "classes"
+    | "selectedClasses"
+    | "onSelectedClassesChanged"
+    | "propertyRenderer"
+    | "onRulePropertySelected"
+    | "isDisabled"
   >
 > {
   const { propertyInfos, propertyRenderer } = useInstanceFilterPropertyInfos({ descriptor });
@@ -128,7 +138,11 @@ export function usePresentationInstanceFilteringProps(
     availableClasses: classes,
     initialActiveClasses,
   });
-  const { properties, isFilteringProperties } = usePropertiesFilteringByClass({ imodel, availableProperties: propertyInfos, activeClasses });
+  const { properties, isFilteringProperties } = usePropertiesFilteringByClass({
+    imodel,
+    availableProperties: propertyInfos,
+    activeClasses,
+  });
 
   const onRulePropertySelected = useCallback(
     (property: PropertyDescription) => {
@@ -157,7 +171,9 @@ interface UsePropertyClassesProps {
 function usePropertyClasses({ descriptor }: UsePropertyClassesProps) {
   return useMemo((): ClassInfo[] => {
     const uniqueClasses = new Map();
-    descriptor.selectClasses.forEach((selectClass) => uniqueClasses.set(selectClass.selectClassInfo.id, selectClass.selectClassInfo));
+    descriptor.selectClasses.forEach((selectClass) =>
+      uniqueClasses.set(selectClass.selectClassInfo.id, selectClass.selectClassInfo),
+    );
     return [...uniqueClasses.values()];
   }, [descriptor]);
 }
@@ -168,7 +184,11 @@ interface UsePropertiesFilteringByClassProps {
   activeClasses: ClassInfo[];
 }
 
-function usePropertiesFilteringByClass({ imodel, availableProperties, activeClasses }: UsePropertiesFilteringByClassProps) {
+function usePropertiesFilteringByClass({
+  imodel,
+  availableProperties,
+  activeClasses,
+}: UsePropertiesFilteringByClassProps) {
   const [filteredProperties, setFilteredProperties] = useState<PresentationInstanceFilterPropertyInfo[] | undefined>();
   const [isFilteringProperties, setIsFilteringProperties] = useState(false);
   const properties = useMemo(
@@ -230,7 +250,11 @@ function useActiveClasses({ imodel, availableClasses, initialActiveClasses }: Us
     (property: PresentationInstanceFilterPropertyInfo) => {
       setIsFilteringClasses(true);
       void (async () => {
-        const newActiveClasses = await computeClassesByProperty(activeClasses.length === 0 ? availableClasses : activeClasses, property, imodel);
+        const newActiveClasses = await computeClassesByProperty(
+          activeClasses.length === 0 ? availableClasses : activeClasses,
+          property,
+          imodel,
+        );
         setActiveClasses(newActiveClasses);
         setIsFilteringClasses(false);
       })();
@@ -240,7 +264,9 @@ function useActiveClasses({ imodel, availableClasses, initialActiveClasses }: Us
 
   const changeActiveClasses = useCallback(
     (classIds: string[]) => {
-      const newSelectedClasses = availableClasses.filter((availableClass) => classIds.findIndex((classId) => classId === availableClass.id) !== -1);
+      const newSelectedClasses = availableClasses.filter(
+        (availableClass) => classIds.findIndex((classId) => classId === availableClass.id) !== -1,
+      );
       setActiveClasses(newSelectedClasses);
     },
     [availableClasses],
@@ -259,7 +285,11 @@ async function computePropertiesByClasses(
   const filteredProperties: PresentationInstanceFilterPropertyInfo[] = [];
   for (const prop of properties) {
     // property should be shown if at least one of selected classes is derived from property source class
-    if (ecClassInfos.some((info) => info && prop.sourceClassIds.some((sourceClassId) => info.isDerivedFrom(sourceClassId)))) {
+    if (
+      ecClassInfos.some(
+        (info) => info && prop.sourceClassIds.some((sourceClassId) => info.isDerivedFrom(sourceClassId)),
+      )
+    ) {
       filteredProperties.push(prop);
     }
   }

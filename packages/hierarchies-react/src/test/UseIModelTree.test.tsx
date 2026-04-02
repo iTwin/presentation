@@ -40,7 +40,10 @@ describe("useIModelTree hooks", () => {
   describe("useIModelTree", () => {
     type UseIModelTreeProps = Props<typeof originalUseIModelTree>;
     const hierarchyDefinition = {} as presentationHierarchiesModule.HierarchyDefinition;
-    const initialProps: UseIModelTreeProps = { imodelAccess: {} as UseIModelTreeProps["imodelAccess"], getHierarchyDefinition: () => hierarchyDefinition };
+    const initialProps: UseIModelTreeProps = {
+      imodelAccess: {} as UseIModelTreeProps["imodelAccess"],
+      getHierarchyDefinition: () => hierarchyDefinition,
+    };
 
     it("creates imodel hierarchy provider using given imodel and hierarchy definition", async () => {
       stubs.hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
@@ -105,7 +108,9 @@ describe("useIModelTree hooks", () => {
         signal = abortSignal;
         return undefined;
       });
-      const { result } = renderHook(useIModelUnifiedSelectionTree, { initialProps: { ...initialProps, getSearchPaths } });
+      const { result } = renderHook(useIModelUnifiedSelectionTree, {
+        initialProps: { ...initialProps, getSearchPaths },
+      });
       await waitFor(() => {
         expect(getTreeRendererProps(result.current)).to.not.be.undefined;
       });
@@ -115,7 +120,10 @@ describe("useIModelTree hooks", () => {
 
   async function stubIModelHierarchyProviderFactory() {
     const hierarchyProvider = createHierarchyProviderStub();
-    const factory = sinon.fake<Parameters<typeof presentationHierarchiesModule.createIModelHierarchyProvider>, typeof hierarchyProvider>(() => {
+    const factory = sinon.fake<
+      Parameters<typeof presentationHierarchiesModule.createIModelHierarchyProvider>,
+      typeof hierarchyProvider
+    >(() => {
       return hierarchyProvider;
     });
 

@@ -5,7 +5,10 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } from "../shared/ecsql-snippets/ECSqlValueSelectorSnippets.js";
+import {
+  createConcatenatedValueJsonSelector,
+  createRawPropertyValueSelector,
+} from "../shared/ecsql-snippets/ECSqlValueSelectorSnippets.js";
 import {
   createBisInstanceLabelSelectClauseFactory,
   createClassBasedInstanceLabelSelectClauseFactory,
@@ -68,7 +71,9 @@ describe("createDefaultInstanceLabelSelectClauseFactory", () => {
           { value: ` [`, type: "String" },
           { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
           { value: `-`, type: "String" },
-          { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
+          {
+            selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)`,
+          },
           { value: `]`, type: "String" },
         ])}
         FROM [meta].[ECClassDef] AS [c]
@@ -90,7 +95,11 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns default clause when given an empty list of clauses", async () => {
-    const factory = createClassBasedInstanceLabelSelectClauseFactory({ classHierarchyInspector, defaultClauseFactory, clauses: [] });
+    const factory = createClassBasedInstanceLabelSelectClauseFactory({
+      classHierarchyInspector,
+      defaultClauseFactory,
+      clauses: [],
+    });
     const result = await factory.createSelectClause({ classAlias: "class-alias" });
     expect(result).to.eq("default selector");
   });
@@ -147,7 +156,9 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
         { className: "Schema.ClassB", clause: async () => "b selector" },
       ],
     });
-    classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => derived === "Schema.ClassA" && base === "Schema.QueryClass");
+    classHierarchyInspector.classDerivesFrom.callsFake(
+      async (derived, base) => derived === "Schema.ClassA" && base === "Schema.QueryClass",
+    );
     const result = await factory.createSelectClause({ classAlias: "class-alias", className: "Schema.QueryClass" });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`
@@ -172,7 +183,9 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
         { className: "Schema.ClassB", clause: async () => "b selector" },
       ],
     });
-    classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => derived === "Schema.QueryClass" && base === "Schema.ClassB");
+    classHierarchyInspector.classDerivesFrom.callsFake(
+      async (derived, base) => derived === "Schema.QueryClass" && base === "Schema.ClassB",
+    );
     const result = await factory.createSelectClause({ classAlias: "class-alias", className: "Schema.QueryClass" });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`
@@ -228,7 +241,9 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
                   { value: ` [`, type: "String" },
                   { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
                   { value: `-`, type: "String" },
-                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
+                  {
+                    selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)`,
+                  },
                   { value: `]`, type: "String" },
                 ],
                 `${createRawPropertyValueSelector("test", "UserLabel")} IS NOT NULL`,
@@ -265,7 +280,9 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
                   { value: ` [`, type: "String" },
                   { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
                   { value: `-`, type: "String" },
-                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
+                  {
+                    selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)`,
+                  },
                   { value: `]`, type: "String" },
                 ],
                 `${createRawPropertyValueSelector("test", "UserLabel")} IS NOT NULL`,

@@ -9,7 +9,12 @@
 
 import type { ActiveMatchInfo, ITreeDataProvider, TreeNodeItem } from "@itwin/components-react";
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { HierarchyRequestOptions, InstanceFilterDefinition, NodeKey, NodePathElement } from "@itwin/presentation-common";
+import type {
+  HierarchyRequestOptions,
+  InstanceFilterDefinition,
+  NodeKey,
+  NodePathElement,
+} from "@itwin/presentation-common";
 import type { IPresentationDataProvider } from "../common/IPresentationDataProvider.js";
 
 /**
@@ -34,7 +39,10 @@ export interface IPresentationTreeDataProvider extends ITreeDataProvider, IPrese
   /**
    * Creates options for nodes request.
    */
-  createRequestOptions(parentKey?: NodeKey, instanceFilter?: InstanceFilterDefinition): HierarchyRequestOptions<IModelConnection, NodeKey>;
+  createRequestOptions(
+    parentKey?: NodeKey,
+    instanceFilter?: InstanceFilterDefinition,
+  ): HierarchyRequestOptions<IModelConnection, NodeKey>;
 }
 
 /**

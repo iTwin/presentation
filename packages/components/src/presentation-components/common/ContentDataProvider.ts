@@ -10,7 +10,15 @@ import "./DisposePolyfill.js";
 
 import { assert, Logger } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
-import { Content, DEFAULT_KEYS_BATCH_SIZE, Descriptor, DisplayValue, KeySet, KoqPropertyValueFormatter, Value } from "@itwin/presentation-common";
+import {
+  Content,
+  DEFAULT_KEYS_BATCH_SIZE,
+  Descriptor,
+  DisplayValue,
+  KeySet,
+  KoqPropertyValueFormatter,
+  Value,
+} from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
 import { createDiagnosticsOptions } from "./Diagnostics.js";
@@ -94,7 +102,12 @@ export namespace CacheInvalidationProps {
   /**
    * Create CacheInvalidationProps to fully invalidate all caches.
    */
-  export const full = (): CacheInvalidationProps => ({ descriptor: true, descriptorConfiguration: true, size: true, content: true });
+  export const full = (): CacheInvalidationProps => ({
+    descriptor: true,
+    descriptorConfiguration: true,
+    size: true,
+    content: true,
+  });
 }
 
 /**
@@ -308,7 +321,11 @@ export class ContentDataProvider implements IContentDataProvider {
   }
 
   private createRequestOptions(): RequestOptionsWithRuleset<IModelConnection, RulesetVariable> {
-    return { imodel: this._imodel, rulesetOrId: this._ruleset, ...(this._diagnosticsOptions ? { diagnostics: this._diagnosticsOptions } : undefined) };
+    return {
+      imodel: this._imodel,
+      rulesetOrId: this._ruleset,
+      ...(this._diagnosticsOptions ? { diagnostics: this._diagnosticsOptions } : undefined),
+    };
   }
 
   private setupListeners() {
@@ -318,11 +335,18 @@ export class ContentDataProvider implements IContentDataProvider {
 
     this._listeners.push(Presentation.presentation.onIModelContentChanged.addListener(this.onIModelContentChanged));
     this._listeners.push(Presentation.presentation.rulesets().onRulesetModified.addListener(this.onRulesetModified));
-    this._listeners.push(Presentation.presentation.vars(getRulesetId(this._ruleset)).onVariableChanged.addListener(this.onRulesetVariableChanged));
-    this._listeners.push(IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(this.onUnitSystemChanged));
+    this._listeners.push(
+      Presentation.presentation
+        .vars(getRulesetId(this._ruleset))
+        .onVariableChanged.addListener(this.onRulesetVariableChanged),
+    );
+    this._listeners.push(
+      IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(this.onUnitSystemChanged),
+    );
     // note: IModelApp.formatsProvider may not be available in older versions of core
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    IModelApp.formatsProvider && this._listeners.push(IModelApp.formatsProvider.onFormatsChanged.addListener(this.onFormatsChanged));
+    IModelApp.formatsProvider &&
+      this._listeners.push(IModelApp.formatsProvider.onFormatsChanged.addListener(this.onFormatsChanged));
   }
 
   /**
@@ -433,7 +457,12 @@ export class ContentDataProvider implements IContentDataProvider {
         Logger.logWarning(PresentationComponentsLoggerCategory.Content, msg);
       }
 
-      const options = { ...this.createRequestOptions(), descriptor: descriptorOverrides, keys: this.keys, paging: pageOptions };
+      const options = {
+        ...this.createRequestOptions(),
+        descriptor: descriptorOverrides,
+        keys: this.keys,
+        paging: pageOptions,
+      };
 
       // we always get formatted content from presentation manager - ensure
       // we set `_isContentFormatted = true` when we finish getting content, to
@@ -547,7 +576,9 @@ class ContentFormatter {
     // note: using deprecated version of `KoqPropertyValueFormatter` constructor because we
     // support 4.x core, where the updated overload doesn't exist
     // eslint-disable-next-line @typescript-eslint/no-deprecated
-    this._propertyValueFormatter = new ContentPropertyValueFormatter(new KoqPropertyValueFormatter(imodel.schemaContext, undefined, IModelApp.formatsProvider));
+    this._propertyValueFormatter = new ContentPropertyValueFormatter(
+      new KoqPropertyValueFormatter(imodel.schemaContext, undefined, IModelApp.formatsProvider),
+    );
     this._unitSystem = IModelApp.quantityFormatter.activeUnitSystem;
   }
 
@@ -565,7 +596,11 @@ class ContentFormatter {
     );
   }
 
-  private async formatValues(values: ValuesDictionary<Value>, displayValues: ValuesDictionary<DisplayValue>, fields: Field[]) {
+  private async formatValues(
+    values: ValuesDictionary<Value>,
+    displayValues: ValuesDictionary<DisplayValue>,
+    fields: Field[],
+  ) {
     for (const field of fields) {
       const value = values[field.name];
 
@@ -587,7 +622,11 @@ class ContentFormatter {
         continue;
       }
 
-      displayValues[field.name] = await this._propertyValueFormatter.formatPropertyValue(field, value, this._unitSystem);
+      displayValues[field.name] = await this._propertyValueFormatter.formatPropertyValue(
+        field,
+        value,
+        this._unitSystem,
+      );
     }
   }
 
@@ -599,7 +638,11 @@ class ContentFormatter {
     );
   }
 
-  private async formatPropertyValue(value: Value, fallbackDisplayValue: DisplayValue, field: PropertiesField): Promise<DisplayValue> {
+  private async formatPropertyValue(
+    value: Value,
+    fallbackDisplayValue: DisplayValue,
+    field: PropertiesField,
+  ): Promise<DisplayValue> {
     if (field.isArrayPropertiesField()) {
       assert(Value.isArray(value));
       assert(DisplayValue.isArray(fallbackDisplayValue));
@@ -613,11 +656,23 @@ class ContentFormatter {
     return this._propertyValueFormatter.formatPropertyValue(field, value, fallbackDisplayValue, this._unitSystem);
   }
 
-  private async formatArrayItems(itemValues: ValuesArray, itemFallbackDisplayValues: DisplayValuesArray, field: ArrayPropertiesField) {
-    return Promise.all(itemValues.map(async (value, index) => this.formatPropertyValue(value, itemFallbackDisplayValues[index], field.itemsField)));
+  private async formatArrayItems(
+    itemValues: ValuesArray,
+    itemFallbackDisplayValues: DisplayValuesArray,
+    field: ArrayPropertiesField,
+  ) {
+    return Promise.all(
+      itemValues.map(async (value, index) =>
+        this.formatPropertyValue(value, itemFallbackDisplayValues[index], field.itemsField),
+      ),
+    );
   }
 
-  private async formatStructMembers(memberValues: ValuesMap, memberFallbackDisplayValues: DisplayValuesMap, field: StructPropertiesField) {
+  private async formatStructMembers(
+    memberValues: ValuesMap,
+    memberFallbackDisplayValues: DisplayValuesMap,
+    field: StructPropertiesField,
+  ) {
     const displayValues: DisplayValuesMap = {};
     await Promise.all(
       field.memberFields.map(async (memberField) => {
@@ -635,7 +690,12 @@ class ContentFormatter {
 class ContentPropertyValueFormatter {
   constructor(private _koqValueFormatter: KoqPropertyValueFormatter) {}
 
-  public async formatPropertyValue(field: Field, value: Value, fallbackDisplayValue: DisplayValue, unitSystem?: UnitSystemKey): Promise<DisplayValue> {
+  public async formatPropertyValue(
+    field: Field,
+    value: Value,
+    fallbackDisplayValue: DisplayValue,
+    unitSystem?: UnitSystemKey,
+  ): Promise<DisplayValue> {
     const doubleFormatter = isFieldWithKoq(field)
       ? async (rawValue: number) => {
           const koq = field.properties[0].property.kindOfQuantity;
@@ -709,7 +769,11 @@ class ContentPropertyValueFormatter {
 
     const formattedMember: DisplayValuesMap = {};
     for (const member of field.memberFields) {
-      formattedMember[member.name] = await this.formatValue(member, value[member.name], fallbackDisplayValue[member.name]);
+      formattedMember[member.name] = await this.formatValue(
+        member,
+        value[member.name],
+        fallbackDisplayValue[member.name],
+      );
     }
     return formattedMember;
   }
@@ -731,10 +795,16 @@ function formatDouble(value: number) {
   return value.toFixed(2);
 }
 
-type FieldWithKoq = PropertiesField & { properties: [{ property: PropertyInfo & { kindOfQuantity: KindOfQuantityInfo } }] };
+type FieldWithKoq = PropertiesField & {
+  properties: [{ property: PropertyInfo & { kindOfQuantity: KindOfQuantityInfo } }];
+};
 
 function isFieldWithKoq(field: Field): field is FieldWithKoq {
-  return field.isPropertiesField() && field.properties.length > 0 && field.properties[0].property.kindOfQuantity !== undefined;
+  return (
+    field.isPropertiesField() &&
+    field.properties.length > 0 &&
+    field.properties[0].property.kindOfQuantity !== undefined
+  );
 }
 
 function isPoint2d(obj: Value): obj is { x: number; y: number } {

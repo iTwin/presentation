@@ -64,7 +64,11 @@ export function App() {
 
   const onRulesetSelected = (rulesetId: string | undefined) => {
     if (state.imodel) {
-      MyAppFrontend.selectionStorage.clearSelection({ imodelKey: createIModelKey(state.imodel), source: "onRulesetChanged", level: 0 });
+      MyAppFrontend.selectionStorage.clearSelection({
+        imodelKey: createIModelKey(state.imodel),
+        source: "onRulesetChanged",
+        level: 0,
+      });
     }
 
     setState((prev) => ({ ...prev, rulesetId }));
@@ -84,10 +88,15 @@ export function App() {
     }
     const schemaUnitsProvider = new SchemaUnitProvider(state.imodel.schemaContext);
     IModelApp.quantityFormatter.unitsProvider = schemaUnitsProvider;
-    const schemaFormatsProvider = new SchemaFormatsProvider(state.imodel.schemaContext, IModelApp.quantityFormatter.activeUnitSystem);
-    const removeFormatterListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener((args) => {
-      schemaFormatsProvider.unitSystem = args.system;
-    });
+    const schemaFormatsProvider = new SchemaFormatsProvider(
+      state.imodel.schemaContext,
+      IModelApp.quantityFormatter.activeUnitSystem,
+    );
+    const removeFormatterListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(
+      (args) => {
+        schemaFormatsProvider.unitSystem = args.system;
+      },
+    );
     IModelApp.formatsProvider = schemaFormatsProvider;
 
     return () => {
@@ -120,10 +129,16 @@ export function App() {
       const hiliteSetProvider = createHiliteSetProvider({
         imodelAccess: {
           ...createECSqlQueryExecutor(state.imodel),
-          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(state.imodel.schemaContext) }),
+          ...createCachingECClassHierarchyInspector({
+            schemaProvider: createECSchemaProvider(state.imodel.schemaContext),
+          }),
         },
       });
-      from(hiliteSetProvider.getHiliteSet({ selectables: MyAppFrontend.selectionStorage.getSelection({ imodelKey: createIModelKey(state.imodel) }) }))
+      from(
+        hiliteSetProvider.getHiliteSet({
+          selectables: MyAppFrontend.selectionStorage.getSelection({ imodelKey: createIModelKey(state.imodel) }),
+        }),
+      )
         .pipe(
           takeUntil(cancel),
           reduce<HiliteSet, { elements: Id64String[] }>(
@@ -150,7 +165,14 @@ export function App() {
   }, [state.imodel]);
 
   return (
-    <ThemeProvider theme={"light"} future={{ themeBridge: true }} as={Root} colorScheme={"light"} synchronizeColorScheme density="dense">
+    <ThemeProvider
+      theme={"light"}
+      future={{ themeBridge: true }}
+      as={Root}
+      colorScheme={"light"}
+      synchronizeColorScheme
+      density="dense"
+    >
       <UnifiedSelectionContextProvider storage={MyAppFrontend.selectionStorage}>
         <div className="app">
           <div className="app-header">
@@ -159,8 +181,16 @@ export function App() {
           <div className="app-pickers">
             <IModelSelector onIModelSelected={onIModelSelected} activeIModelPath={state.imodelPath} />
             <RulesetSelector onRulesetSelected={onRulesetSelected} activeRulesetId={state.rulesetId} />
-            <UnitSystemSelector selectedUnitSystem={state.activeUnitSystem} onUnitSystemSelected={onUnitSystemSelected} />
-            <ToggleSwitch label="Persist settings" labelPosition="right" checked={state.persistSettings} onChange={onPersistSettingsValueChange} />
+            <UnitSystemSelector
+              selectedUnitSystem={state.activeUnitSystem}
+              onUnitSystemSelected={onUnitSystemSelected}
+            />
+            <ToggleSwitch
+              label="Persist settings"
+              labelPosition="right"
+              checked={state.persistSettings}
+              onChange={onPersistSettingsValueChange}
+            />
           </div>
           {state.imodel ? <IModelComponents imodel={state.imodel} rulesetId={state.rulesetId} /> : null}
         </div>
@@ -182,7 +212,10 @@ function updateAppSettings(state: State) {
 function useAppState(): [State, (produceState: (prev: State) => State) => void] {
   const [state, setState] = useState<State>(() => {
     const settings = MyAppFrontend.settings;
-    const update: Partial<State> = { persistSettings: settings.persistSettings, activeUnitSystem: IModelApp.quantityFormatter.activeUnitSystem };
+    const update: Partial<State> = {
+      persistSettings: settings.persistSettings,
+      activeUnitSystem: IModelApp.quantityFormatter.activeUnitSystem,
+    };
     if (!settings.persistSettings) {
       return update as State;
     }
@@ -236,7 +269,12 @@ function IModelComponents(props: IModelComponentsProps) {
           {
             id: "primaryContent",
             classId: "",
-            content: <ViewportContentControl imodel={imodel} onSelectionScopeChanged={(scope) => (activeSelectionScope.current = scope)} />,
+            content: (
+              <ViewportContentControl
+                imodel={imodel}
+                onSelectionScopeChanged={(scope) => (activeSelectionScope.current = scope)}
+              />
+            ),
           },
         ],
       }),
@@ -355,7 +393,12 @@ function MultiDataSourceTreePanel(props: { imodel: IModelConnection }) {
   const { width, height, ref } = useResizeDetector<HTMLDivElement>();
   return (
     <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
-      <MultiDataSourceTree treeLabel="Multi data source tree" imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
+      <MultiDataSourceTree
+        treeLabel="Multi data source tree"
+        imodel={props.imodel}
+        width={width ?? 0}
+        height={height ?? 0}
+      />
     </div>
   );
 }

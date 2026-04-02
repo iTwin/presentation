@@ -18,7 +18,12 @@ import { reloadTree } from "./TreeReloader.js";
 import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering.js";
 
 import type { Subscription } from "rxjs/internal/Subscription";
-import type { AbstractTreeNodeLoaderWithProvider, PagedTreeNodeLoader, RenderedItemsRange, TreeModel } from "@itwin/components-react";
+import type {
+  AbstractTreeNodeLoaderWithProvider,
+  PagedTreeNodeLoader,
+  RenderedItemsRange,
+  TreeModel,
+} from "@itwin/components-react";
 import type { IModelHierarchyChangeEventArgs } from "@itwin/presentation-frontend";
 import type { PresentationTreeDataProviderProps } from "../DataProvider.js";
 import type { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
@@ -67,7 +72,9 @@ export interface PresentationTreeNodeLoaderResult {
  * @public
  * @deprecated in 4.x. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTreeState]] instead.
  */
-export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult {
+export function usePresentationTreeNodeLoader(
+  props: PresentationTreeNodeLoaderProps,
+): PresentationTreeNodeLoaderResult {
   const { seedTreeModel, ...rest } = props;
 
   const firstRenderRef = useRef(true);
@@ -83,7 +90,10 @@ export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderP
 
   useEffect(() => {
     const provider = new PresentationTreeDataProvider({ ...treeNodeLoaderStateProps });
-    setState({ modelSource: new TreeModelSource(new MutableTreeModel(treeNodeLoaderStateProps.seedTreeModel)), dataProvider: provider });
+    setState({
+      modelSource: new TreeModelSource(new MutableTreeModel(treeNodeLoaderStateProps.seedTreeModel)),
+      dataProvider: provider,
+    });
     return () => {
       provider[Symbol.dispose]();
     };
@@ -170,13 +180,22 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: UpdateParams): void
 
   useEffect(() => {
     let subscription: Subscription | undefined;
-    const removeListener = Presentation.presentation.onIModelHierarchyChanged.addListener((args: IModelHierarchyChangeEventArgs) => {
-      if (args.rulesetId !== rulesetId || args.imodelKey !== dataProviderProps.imodel.key) {
-        return;
-      }
+    const removeListener = Presentation.presentation.onIModelHierarchyChanged.addListener(
+      (args: IModelHierarchyChangeEventArgs) => {
+        if (args.rulesetId !== rulesetId || args.imodelKey !== dataProviderProps.imodel.key) {
+          return;
+        }
 
-      subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
-    });
+        subscription = startTreeReload({
+          dataProviderProps,
+          rulesetId,
+          pageSize,
+          modelSource,
+          renderedItems,
+          setTreeNodeLoaderState,
+        });
+      },
+    );
 
     return () => {
       removeListener();
@@ -195,7 +214,14 @@ function useModelSourceUpdateOnRulesetModification(params: UpdateParams): void {
         return;
       }
 
-      subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
+      subscription = startTreeReload({
+        dataProviderProps,
+        rulesetId,
+        pageSize,
+        modelSource,
+        renderedItems,
+        setTreeNodeLoaderState,
+      });
     });
 
     return () => {
@@ -212,7 +238,14 @@ function useModelSourceUpdateOnRulesetVariablesChange(params: UpdateParams): voi
     let subscription: Subscription | undefined;
     const removeListener = Presentation.presentation.vars(rulesetId).onVariableChanged.addListener(() => {
       // note: we should probably debounce these events while accumulating changed variables in case multiple vars are changed
-      subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
+      subscription = startTreeReload({
+        dataProviderProps,
+        rulesetId,
+        pageSize,
+        modelSource,
+        renderedItems,
+        setTreeNodeLoaderState,
+      });
     });
 
     return () => {
@@ -228,7 +261,14 @@ function useModelSourceUpdateOnUnitSystemChange(params: UpdateParams): void {
   useEffect(() => {
     let subscription: Subscription | undefined;
     const removeListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(() => {
-      subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
+      subscription = startTreeReload({
+        dataProviderProps,
+        rulesetId,
+        pageSize,
+        modelSource,
+        renderedItems,
+        setTreeNodeLoaderState,
+      });
     });
 
     return () => {
@@ -238,7 +278,14 @@ function useModelSourceUpdateOnUnitSystemChange(params: UpdateParams): void {
   }, [dataProviderProps, modelSource, pageSize, rulesetId, setTreeNodeLoaderState, renderedItems]);
 }
 
-function startTreeReload({ dataProviderProps, rulesetId, modelSource, pageSize, renderedItems, setTreeNodeLoaderState }: UpdateParams): Subscription {
+function startTreeReload({
+  dataProviderProps,
+  rulesetId,
+  modelSource,
+  pageSize,
+  renderedItems,
+  setTreeNodeLoaderState,
+}: UpdateParams): Subscription {
   const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: rulesetId });
   return reloadTree(modelSource.getModel(), dataProvider, pageSize, renderedItems.current).subscribe({
     next: (newModelSource) => setTreeNodeLoaderState({ modelSource: newModelSource, dataProvider }),

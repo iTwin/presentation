@@ -27,7 +27,10 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   });
 
   it("returns root hierarchy level definition", async () => {
-    const rootHierarchyLevel: HierarchyLevelDefinition = [createGenericNodeDefinition(), createInstanceNodesQueryDefinition()];
+    const rootHierarchyLevel: HierarchyLevelDefinition = [
+      createGenericNodeDefinition(),
+      createInstanceNodesQueryDefinition(),
+    ];
     const factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
       hierarchy: { rootNodes: async () => rootHierarchyLevel, childNodes: [] },
@@ -39,10 +42,18 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   it("returns custom node children definition", async () => {
     const rootNode = createParentNode({ key: createTestGenericNodeKey({ id: "test-custom-node" }) });
 
-    const def1: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "1" }) })];
-    const def2: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "2" }) })];
-    const def3: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "3" }) })];
-    const def4: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "4" }) })];
+    const def1: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "1" }) }),
+    ];
+    const def2: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "2" }) }),
+    ];
+    const def3: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "3" }) }),
+    ];
+    const def4: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "4" }) }),
+    ];
 
     const factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
@@ -68,18 +79,30 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   });
 
   it("returns instance node children definition when parent node matches predicate", async () => {
-    const rootNode = createParentNode({ key: { type: "instances", instanceKeys: [{ className: "TestSchema.ClassX", id: "0x1" }] } });
+    const rootNode = createParentNode({
+      key: { type: "instances", instanceKeys: [{ className: "TestSchema.ClassX", id: "0x1" }] },
+    });
 
     const baseClass = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "BaseOfX" });
     const xClass = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "ClassX", baseClass });
     imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "DerivedFromX", baseClass: xClass });
     imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "UnrelatedClass" });
 
-    const def1: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "1" }) })];
-    const def2: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "2" }) })];
-    const def3: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "3" }) })];
-    const def4: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "4" }) })];
-    const def5: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "5" }) })];
+    const def1: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "1" }) }),
+    ];
+    const def2: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "2" }) }),
+    ];
+    const def3: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "3" }) }),
+    ];
+    const def4: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "4" }) }),
+    ];
+    const def5: HierarchyLevelDefinition = [
+      createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "5" }) }),
+    ];
 
     const factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
@@ -122,7 +145,10 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     const spy = sinon.stub().resolves([]);
     const factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
-      hierarchy: { rootNodes: async () => [], childNodes: [{ parentInstancesNodePredicate: "TestSchema.ClassX", definitions: spy }] },
+      hierarchy: {
+        rootNodes: async () => [],
+        childNodes: [{ parentInstancesNodePredicate: "TestSchema.ClassX", definitions: spy }],
+      },
     });
 
     const result = await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
@@ -139,9 +165,15 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     const unrelatedClass = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "UnrelatedClass" });
     const baseClass = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "BaseClass" });
     const childClass = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "ChildClass", baseClass });
-    const classX = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "ClassX", baseClass: childClass });
+    const classX = imodelAccess.stubEntityClass({
+      schemaName: "TestSchema",
+      className: "ClassX",
+      baseClass: childClass,
+    });
 
-    const rootNode = createParentNode({ key: { type: "instances", instanceKeys: [{ className: classX.fullName, id: "0x1" }] } });
+    const rootNode = createParentNode({
+      key: { type: "instances", instanceKeys: [{ className: classX.fullName, id: "0x1" }] },
+    });
 
     const derivedClassDefs = sinon.stub().resolves([]);
     const baseClassDefs = sinon.stub().resolves([]);
@@ -224,6 +256,8 @@ function createGenericNodeDefinition(props?: Partial<GenericHierarchyNodeDefinit
   return { node: createTestSourceGenericNode(), ...props };
 }
 
-function createInstanceNodesQueryDefinition(props?: Partial<InstanceNodesQueryDefinition>): InstanceNodesQueryDefinition {
+function createInstanceNodesQueryDefinition(
+  props?: Partial<InstanceNodesQueryDefinition>,
+): InstanceNodesQueryDefinition {
   return { fullClassName: "full.class_name", query: { ecsql: "test ecsql" }, ...props };
 }

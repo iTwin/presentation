@@ -5,7 +5,11 @@
 
 import { expect } from "chai";
 import { KeySet } from "@itwin/presentation-common";
-import { DEFAULT_PROPERTY_GRID_RULESET, FavoritePropertiesDataProvider, PresentationPropertyDataProvider } from "@itwin/presentation-components";
+import {
+  DEFAULT_PROPERTY_GRID_RULESET,
+  FavoritePropertiesDataProvider,
+  PresentationPropertyDataProvider,
+} from "@itwin/presentation-components";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
 import { TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -26,7 +30,10 @@ describe("FavoritePropertiesDataProvider", async () => {
   });
 
   beforeEach(() => {
-    provider = new FavoritePropertiesDataProvider({ ruleset: DEFAULT_PROPERTY_GRID_RULESET, activeScopeProvider: () => ({ id: "element" }) });
+    provider = new FavoritePropertiesDataProvider({
+      ruleset: DEFAULT_PROPERTY_GRID_RULESET,
+      activeScopeProvider: () => ({ id: "element" }),
+    });
   });
 
   after(async () => {

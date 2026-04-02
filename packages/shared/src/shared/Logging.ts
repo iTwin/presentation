@@ -32,4 +32,10 @@ export interface ILogger {
  * @public
  */
 /* c8 ignore next 7 */
-export const NOOP_LOGGER: ILogger = { isEnabled: () => false, logError: () => {}, logWarning: () => {}, logInfo: () => {}, logTrace: () => {} };
+export const NOOP_LOGGER: ILogger = {
+  isEnabled: () => false,
+  logError: () => {},
+  logWarning: () => {},
+  logInfo: () => {},
+  logTrace: () => {},
+};

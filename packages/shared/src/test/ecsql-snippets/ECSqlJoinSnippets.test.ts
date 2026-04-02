@@ -53,7 +53,11 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[PhysicalMaterial] [t] ON [t].[ECInstanceId] = [s].[PhysicalMaterial].[Id]`));
+      ).to.eq(
+        trimWhitespace(
+          `INNER JOIN [${schemaName}].[PhysicalMaterial] [t] ON [t].[ECInstanceId] = [s].[PhysicalMaterial].[Id]`,
+        ),
+      );
     });
 
     it("creates a forward join on forward navigation property with backward relationship", async () => {
@@ -80,7 +84,9 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[ECInstanceId] = [s].[ModeledElement].[Id]`));
+      ).to.eq(
+        trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[ECInstanceId] = [s].[ModeledElement].[Id]`),
+      );
     });
 
     it("creates a forward join on backward navigation property with forward relationship", async () => {
@@ -134,7 +140,11 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[ExternalSourceAspect] [t] ON [t].[Scope].[Id] = [s].[ECInstanceId]`));
+      ).to.eq(
+        trimWhitespace(
+          `INNER JOIN [${schemaName}].[ExternalSourceAspect] [t] ON [t].[Scope].[Id] = [s].[ECInstanceId]`,
+        ),
+      );
     });
 
     it("creates a reversed join on forward navigation property with forward relationship", async () => {
@@ -162,7 +172,11 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[PhysicalElement] [t] ON [t].[PhysicalMaterial].[Id] = [s].[ECInstanceId]`));
+      ).to.eq(
+        trimWhitespace(
+          `INNER JOIN [${schemaName}].[PhysicalElement] [t] ON [t].[PhysicalMaterial].[Id] = [s].[ECInstanceId]`,
+        ),
+      );
     });
 
     it("creates a reversed join on forward navigation property with backward relationship", async () => {
@@ -190,7 +204,9 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[Model] [t] ON [t].[ModeledElement].[Id] = [s].[ECInstanceId]`));
+      ).to.eq(
+        trimWhitespace(`INNER JOIN [${schemaName}].[Model] [t] ON [t].[ModeledElement].[Id] = [s].[ECInstanceId]`),
+      );
     });
 
     it("creates a reversed join on backward navigation property with forward relationship", async () => {
@@ -536,17 +552,35 @@ describe("createRelationshipPathJoinClause", () => {
       schemaName,
       className: typeof props.relationship === "string" ? props.relationship : "relationship",
       direction: "Forward",
-      source: { polymorphic: false, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: Promise.resolve(sourceClass) },
-      target: { polymorphic: false, multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX }, abstractConstraint: Promise.resolve(targetClass) },
+      source: {
+        polymorphic: false,
+        multiplicity: { lowerLimit: 0, upperLimit: 1 },
+        abstractConstraint: Promise.resolve(sourceClass),
+      },
+      target: {
+        polymorphic: false,
+        multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
+        abstractConstraint: Promise.resolve(targetClass),
+      },
       ...(typeof props.relationship === "object" ? props.relationship : undefined),
     });
     await navigationRelationshipRes.resolve(relationship);
     return { sourceClass, targetClass, relationship, navigationProperty };
   }
 
-  function setupLinkTableRelationshipClasses(props?: { source?: EC.Class | string; target?: EC.Class | string; relationship?: EC.RelationshipClass | string }) {
-    const sourceClass = typeof props?.source === "object" ? props.source : schemaProvider.stubEntityClass({ schemaName, className: props?.source ?? "source" });
-    const targetClass = typeof props?.target === "object" ? props.target : schemaProvider.stubEntityClass({ schemaName, className: props?.target ?? "target" });
+  function setupLinkTableRelationshipClasses(props?: {
+    source?: EC.Class | string;
+    target?: EC.Class | string;
+    relationship?: EC.RelationshipClass | string;
+  }) {
+    const sourceClass =
+      typeof props?.source === "object"
+        ? props.source
+        : schemaProvider.stubEntityClass({ schemaName, className: props?.source ?? "source" });
+    const targetClass =
+      typeof props?.target === "object"
+        ? props.target
+        : schemaProvider.stubEntityClass({ schemaName, className: props?.target ?? "target" });
     const relationship =
       typeof props?.relationship === "object"
         ? props.relationship
@@ -554,8 +588,16 @@ describe("createRelationshipPathJoinClause", () => {
             schemaName,
             className: props?.relationship ?? "relationship",
             direction: "Forward",
-            source: { polymorphic: false, abstractConstraint: Promise.resolve(sourceClass), multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX } },
-            target: { polymorphic: false, abstractConstraint: Promise.resolve(targetClass), multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX } },
+            source: {
+              polymorphic: false,
+              abstractConstraint: Promise.resolve(sourceClass),
+              multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
+            },
+            target: {
+              polymorphic: false,
+              abstractConstraint: Promise.resolve(targetClass),
+              multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
+            },
           });
     return { sourceClass, targetClass, relationship };
   }

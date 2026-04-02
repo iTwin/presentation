@@ -96,7 +96,10 @@ export namespace Selectables {
    * @public
    */
   export function create(source: Selectable[]): Selectables {
-    const newSelectables = { instanceKeys: new Map<string, Set<string>>(), custom: new Map<string, CustomSelectable>() };
+    const newSelectables = {
+      instanceKeys: new Map<string, Set<string>>(),
+      custom: new Map<string, CustomSelectable>(),
+    };
     Selectables.add(newSelectables, source);
     return newSelectables;
   }
@@ -282,7 +285,9 @@ export namespace Selectables {
   export function load(selectables: Selectables): AsyncIterableIterator<SelectableInstanceKey> {
     return eachValueFrom(
       merge(
-        from(selectables.instanceKeys).pipe(mergeMap(([className, ids]) => from(ids).pipe(map((id) => ({ className, id }))))),
+        from(selectables.instanceKeys).pipe(
+          mergeMap(([className, ids]) => from(ids).pipe(map((id) => ({ className, id })))),
+        ),
         from(selectables.custom).pipe(mergeMap(([_, selectable]) => from(selectable.loadInstanceKeys()))),
       ),
     );

@@ -7,7 +7,11 @@ import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import sinon from "sinon";
 import { Selectable, Selectables, TRANSIENT_ELEMENT_CLASSNAME } from "../unified-selection/Selectable.js";
-import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
+import {
+  createCustomSelectable,
+  createECInstanceId,
+  createSelectableInstanceKey,
+} from "./_helpers/SelectablesCreator.js";
 
 import type { CustomSelectable, SelectableInstanceKey } from "../unified-selection/Selectable.js";
 
@@ -59,7 +63,10 @@ describe("Selectables", () => {
     });
 
     it("returns false when non empty", () => {
-      const selectables = { instanceKeys: new Map<string, Set<string>>(), custom: new Map<string, CustomSelectable>([["id", createCustomSelectable()]]) };
+      const selectables = {
+        instanceKeys: new Map<string, Set<string>>(),
+        custom: new Map<string, CustomSelectable>([["id", createCustomSelectable()]]),
+      };
       expect(Selectables.isEmpty(selectables)).to.be.false;
     });
   });
@@ -72,7 +79,10 @@ describe("Selectables", () => {
     });
 
     it("creates from instance keys", () => {
-      const selectableInstanceKeys = [createSelectableInstanceKey(1, "schema.class1"), createSelectableInstanceKey(2, "schema.class2")];
+      const selectableInstanceKeys = [
+        createSelectableInstanceKey(1, "schema.class1"),
+        createSelectableInstanceKey(2, "schema.class2"),
+      ];
       const selectables = Selectables.create(selectableInstanceKeys);
       expect(selectables.instanceKeys.size).to.eq(2);
       expect(selectables.custom.size).to.eq(0);
@@ -100,7 +110,10 @@ describe("Selectables", () => {
     });
 
     it("clears instance selectables", () => {
-      const instanceSelectables = [createSelectableInstanceKey(1, "schema.class1"), createSelectableInstanceKey(2, "schema.class2")];
+      const instanceSelectables = [
+        createSelectableInstanceKey(1, "schema.class1"),
+        createSelectableInstanceKey(2, "schema.class2"),
+      ];
       const selectables = Selectables.create(instanceSelectables);
       expect(selectables.instanceKeys.size).to.eq(2);
       Selectables.clear(selectables);
@@ -216,7 +229,11 @@ describe("Selectables", () => {
     });
 
     it("removes an array of selectables", () => {
-      const selectablesToRemove = [createCustomSelectable(1), createSelectableInstanceKey(1), createCustomSelectable(2)];
+      const selectablesToRemove = [
+        createCustomSelectable(1),
+        createSelectableInstanceKey(1),
+        createCustomSelectable(2),
+      ];
       const selectables = Selectables.create(selectablesToRemove);
       expect(Selectables.size(selectables)).to.eq(3);
       Selectables.remove(selectables, [selectablesToRemove[0], selectablesToRemove[1]]);
@@ -313,7 +330,10 @@ describe("Selectables", () => {
 
     it("returns false when instance selectable classes are different", () => {
       const instanceKey1 = createSelectableInstanceKey();
-      const instanceKey2: SelectableInstanceKey = { className: `${instanceKey1.className}_different`, id: instanceKey1.id };
+      const instanceKey2: SelectableInstanceKey = {
+        className: `${instanceKey1.className}_different`,
+        id: instanceKey1.id,
+      };
       const selectables = Selectables.create([instanceKey1]);
       expect(Selectables.hasAll(selectables, [instanceKey2])).to.be.false;
     });

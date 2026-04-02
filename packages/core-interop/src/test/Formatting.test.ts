@@ -6,7 +6,14 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { FormatterSpec, Format as QuantityFormat } from "@itwin/core-quantity";
-import { DelayedPromiseWithProps, OverrideFormat, SchemaItemKey, SchemaItemType, SchemaKey, SchemaUnitProvider } from "@itwin/ecschema-metadata";
+import {
+  DelayedPromiseWithProps,
+  OverrideFormat,
+  SchemaItemKey,
+  SchemaItemType,
+  SchemaKey,
+  SchemaUnitProvider,
+} from "@itwin/ecschema-metadata";
 import { parseFullClassName } from "@itwin/presentation-shared";
 import { createValueFormatter } from "../core-interop/Formatting.js";
 
@@ -31,7 +38,11 @@ describe("createValueFormatter", () => {
   let formatter: IPrimitiveValueFormatter;
 
   function initFormatter(unitSystem?: UnitSystemKey) {
-    formatter = createValueFormatter({ schemaContext: schemaContext as unknown as SchemaContext, unitSystem, baseFormatter: defaultFormatter });
+    formatter = createValueFormatter({
+      schemaContext: schemaContext as unknown as SchemaContext,
+      unitSystem,
+      baseFormatter: defaultFormatter,
+    });
   }
 
   beforeEach(() => {
@@ -80,7 +91,10 @@ describe("createValueFormatter", () => {
           return {
             persistenceUnit: createLazyLoaded({
               key: new SchemaItemKey("persistence_unit", new SchemaKey("units_schema")),
-              unitSystem: createLazyLoaded({ key: new SchemaItemKey("metric", new SchemaKey("units_schema")), name: "metric" } as UnitSystem),
+              unitSystem: createLazyLoaded({
+                key: new SchemaItemKey("metric", new SchemaKey("units_schema")),
+                name: "metric",
+              } as UnitSystem),
             } as Unit),
             presentationFormats: [],
             defaultPresentationFormat: undefined,
@@ -107,7 +121,10 @@ describe("createValueFormatter", () => {
             schemaItemType: SchemaItemType.KindOfQuantity,
             persistenceUnit: createLazyLoaded(persistenceUnit),
             presentationFormats: [
-              { units: [[createLazyLoaded(presentationUnit), "presentation unit"]], toJSON: () => presentationFormatProps } as unknown as LazyLoadedFormat,
+              {
+                units: [[createLazyLoaded(presentationUnit), "presentation unit"]],
+                toJSON: () => presentationFormatProps,
+              } as unknown as LazyLoadedFormat,
             ],
             defaultPresentationFormat: undefined,
           } as unknown as KindOfQuantity;
@@ -125,7 +142,9 @@ describe("createValueFormatter", () => {
     const koqFormatterStub = sinon.stub().returns("KOQ FORMAT");
     const quantityFormat = {} as unknown as QuantityFormat;
     const createQuantityFormatStub = sinon.stub(QuantityFormat, "createFromJSON").resolves(quantityFormat);
-    const createFormatSpecStub = sinon.stub(FormatterSpec, "create").resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
+    const createFormatSpecStub = sinon
+      .stub(FormatterSpec, "create")
+      .resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
 
     expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).to.eq("KOQ FORMAT");
     expect(createQuantityFormatStub).to.be.calledOnceWithExactly(
@@ -147,9 +166,11 @@ describe("createValueFormatter", () => {
     const persistenceUnit = createUnit("schema.persistence_unit", "metric");
     const presentationUnit = createUnit("schema.presentation_unit", "metric");
     // eslint-disable-next-line @itwin/no-internal
-    const overrideFormat = new OverrideFormat({ fullName: "schema.base_format", toJSON: () => ({}) } as Format, undefined, [
-      [createLazyLoaded(presentationUnit), "presentation unit"],
-    ]);
+    const overrideFormat = new OverrideFormat(
+      { fullName: "schema.base_format", toJSON: () => ({}) } as Format,
+      undefined,
+      [[createLazyLoaded(presentationUnit), "presentation unit"]],
+    );
     schemaContext.getSchema.resolves({
       name: "schema",
       getItem: async (name: string) => {
@@ -174,7 +195,9 @@ describe("createValueFormatter", () => {
     const koqFormatterStub = sinon.stub().returns("KOQ FORMAT");
     const quantityFormat = {} as unknown as QuantityFormat;
     const createQuantityFormatStub = sinon.stub(QuantityFormat, "createFromJSON").resolves(quantityFormat);
-    const createFormatSpecStub = sinon.stub(FormatterSpec, "create").resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
+    const createFormatSpecStub = sinon
+      .stub(FormatterSpec, "create")
+      .resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
 
     expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).to.eq("KOQ FORMAT");
     expect(createQuantityFormatStub).to.be.calledOnceWithExactly(
@@ -216,7 +239,9 @@ describe("createValueFormatter", () => {
     const koqFormatterStub = sinon.stub().returns("KOQ FORMAT");
     const quantityFormat = {} as unknown as QuantityFormat;
     const createQuantityFormatStub = sinon.stub(QuantityFormat, "createFromJSON").resolves(quantityFormat);
-    const createFormatSpecStub = sinon.stub(FormatterSpec, "create").resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
+    const createFormatSpecStub = sinon
+      .stub(FormatterSpec, "create")
+      .resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
 
     expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).to.eq("KOQ FORMAT");
     expect(createQuantityFormatStub).to.be.calledOnceWithExactly(
@@ -266,7 +291,9 @@ describe("createValueFormatter", () => {
     const koqFormatterStub = sinon.stub().returns("KOQ FORMAT");
     const quantityFormat = {} as unknown as QuantityFormat;
     const createQuantityFormatStub = sinon.stub(QuantityFormat, "createFromJSON").resolves(quantityFormat);
-    const createFormatSpecStub = sinon.stub(FormatterSpec, "create").resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
+    const createFormatSpecStub = sinon
+      .stub(FormatterSpec, "create")
+      .resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
 
     expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).to.eq("KOQ FORMAT");
     expect(createQuantityFormatStub).to.be.calledOnceWithExactly(
@@ -289,9 +316,11 @@ describe("createValueFormatter", () => {
     const persistenceUnit = createUnit("schema.persistence_unit", "metric");
     const presentationUnit = createUnit("schema.presentation_unit", "usSurvey");
     // eslint-disable-next-line @itwin/no-internal
-    const overrideFormat = new OverrideFormat({ fullName: "schema.base_format", toJSON: () => ({}) } as Format, undefined, [
-      [createLazyLoaded(presentationUnit), "presentation unit"],
-    ]);
+    const overrideFormat = new OverrideFormat(
+      { fullName: "schema.base_format", toJSON: () => ({}) } as Format,
+      undefined,
+      [[createLazyLoaded(presentationUnit), "presentation unit"]],
+    );
     schemaContext.getSchema.resolves({
       name: "schema",
       getItem: async (name: string) => {
@@ -316,7 +345,9 @@ describe("createValueFormatter", () => {
     const koqFormatterStub = sinon.stub().returns("KOQ FORMAT");
     const quantityFormat = {} as unknown as QuantityFormat;
     const createQuantityFormatStub = sinon.stub(QuantityFormat, "createFromJSON").resolves(quantityFormat);
-    const createFormatSpecStub = sinon.stub(FormatterSpec, "create").resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
+    const createFormatSpecStub = sinon
+      .stub(FormatterSpec, "create")
+      .resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
 
     expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).to.eq("KOQ FORMAT");
     expect(createQuantityFormatStub).to.be.calledOnceWithExactly(
@@ -341,7 +372,10 @@ function createUnit(fullName: string, unitSystem: UnitSystemKey) {
     key: new SchemaItemKey(className, new SchemaKey(schemaName)),
     schema: {} as Schema,
     fullName,
-    unitSystem: createLazyLoaded({ key: new SchemaItemKey(unitSystem, new SchemaKey("units_schema")), name: unitSystem } as UnitSystem),
+    unitSystem: createLazyLoaded({
+      key: new SchemaItemKey(unitSystem, new SchemaKey("units_schema")),
+      name: unitSystem,
+    } as UnitSystem),
   } as unknown as Unit;
 }
 

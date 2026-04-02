@@ -80,7 +80,11 @@ describe("HierarchyCache", () => {
 
       const variationProps = {
         ...primaryProps,
-        instanceFilter: { propertyClassNames: ["x"], relatedInstances: [], rules: { operator: "and" as const, rules: [] } },
+        instanceFilter: {
+          propertyClassNames: ["x"],
+          relatedInstances: [],
+          rules: { operator: "and" as const, rules: [] },
+        },
       };
       const value = "variation";
       cache.set(variationProps, value);

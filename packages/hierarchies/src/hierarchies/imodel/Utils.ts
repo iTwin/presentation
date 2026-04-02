@@ -6,7 +6,11 @@
 import { assert } from "@itwin/core-bentley";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 
-import type { HierarchyNodeLabelGroupingParams, InstanceHierarchyNodeProcessingParams, ProcessedInstanceHierarchyNode } from "./IModelHierarchyNode.js";
+import type {
+  HierarchyNodeLabelGroupingParams,
+  InstanceHierarchyNodeProcessingParams,
+  ProcessedInstanceHierarchyNode,
+} from "./IModelHierarchyNode.js";
 
 function mergeNodeHandlingParams(
   lhs: InstanceHierarchyNodeProcessingParams | undefined,
@@ -27,7 +31,15 @@ function mergeByLabelParams(
   lhs: HierarchyNodeLabelGroupingParams | undefined,
   rhs: HierarchyNodeLabelGroupingParams | undefined,
 ): InstanceHierarchyNodeProcessingParams | undefined {
-  if (lhs && typeof lhs === "object" && lhs.action === "merge" && rhs && typeof rhs === "object" && rhs.action === "merge" && lhs.groupId === rhs.groupId) {
+  if (
+    lhs &&
+    typeof lhs === "object" &&
+    lhs.action === "merge" &&
+    rhs &&
+    typeof rhs === "object" &&
+    rhs.action === "merge" &&
+    lhs.groupId === rhs.groupId
+  ) {
     return { grouping: { byLabel: lhs } };
   }
   return undefined;
@@ -45,10 +57,18 @@ function mergeParentNodeKeys(lhsKeys: HierarchyNodeKey[], rhsKeys: HierarchyNode
 }
 
 /** @internal */
-export function mergeInstanceNodes(lhs: ProcessedInstanceHierarchyNode, rhs: ProcessedInstanceHierarchyNode): ProcessedInstanceHierarchyNode {
+export function mergeInstanceNodes(
+  lhs: ProcessedInstanceHierarchyNode,
+  rhs: ProcessedInstanceHierarchyNode,
+): ProcessedInstanceHierarchyNode {
   assert(typeof lhs.key === typeof rhs.key);
   const mergedProcessingParams = mergeNodeHandlingParams(lhs.processingParams, rhs.processingParams);
-  const mergedChildren = lhs.children === true || rhs.children === true ? true : lhs.children === false && rhs.children === false ? false : undefined;
+  const mergedChildren =
+    lhs.children === true || rhs.children === true
+      ? true
+      : lhs.children === false && rhs.children === false
+        ? false
+        : undefined;
   const mergedNode: ProcessedInstanceHierarchyNode = {
     ...lhs,
     ...rhs,
@@ -60,7 +80,11 @@ export function mergeInstanceNodes(lhs: ProcessedInstanceHierarchyNode, rhs: Pro
   mergedChildren !== undefined ? (mergedNode.children = mergedChildren) : delete mergedNode.children;
   mergedProcessingParams ? (mergedNode.processingParams = mergedProcessingParams) : delete mergedNode.processingParams;
   lhs.autoExpand || rhs.autoExpand ? (mergedNode.autoExpand = true) : delete mergedNode.autoExpand;
-  lhs.extendedData || rhs.extendedData ? (mergedNode.extendedData = { ...lhs.extendedData, ...rhs.extendedData }) : delete mergedNode.extendedData;
-  lhs.supportsFiltering && rhs.supportsFiltering ? (mergedNode.supportsFiltering = true) : delete mergedNode.supportsFiltering;
+  lhs.extendedData || rhs.extendedData
+    ? (mergedNode.extendedData = { ...lhs.extendedData, ...rhs.extendedData })
+    : delete mergedNode.extendedData;
+  lhs.supportsFiltering && rhs.supportsFiltering
+    ? (mergedNode.supportsFiltering = true)
+    : delete mergedNode.supportsFiltering;
   return mergedNode;
 }

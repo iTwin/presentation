@@ -7,7 +7,11 @@ import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { DictionaryModel, InformationPartitionElement, LinkModel, Model, Subject } from "@itwin/core-backend";
 import { createNodesQueryClauseFactory, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, InstanceKey, normalizeFullClassName } from "@itwin/presentation-shared";
+import {
+  createBisInstanceLabelSelectClauseFactory,
+  InstanceKey,
+  normalizeFullClassName,
+} from "@itwin/presentation-shared";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils.js";
@@ -34,7 +38,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel() {
@@ -67,11 +73,17 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
-          if (parentNode && HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((ik) => InstanceKey.equals(ik, rootSubjectKey))) {
+          if (
+            parentNode &&
+            HierarchyNode.isInstancesNode(parentNode) &&
+            parentNode.key.instanceKeys.some((ik) => InstanceKey.equals(ik, rootSubjectKey))
+          ) {
             return [
               {
                 fullClassName: normalizeFullClassName(Subject.classFullName),
@@ -94,7 +106,12 @@ describe("Hierarchies", () => {
           return [];
         },
       };
-      const rootSubjectNode = { key: { type: "instances" as const, instanceKeys: [rootSubjectKey] }, parentKeys: [], label: "root subject", children: true };
+      const rootSubjectNode = {
+        key: { type: "instances" as const, instanceKeys: [rootSubjectKey] },
+        parentKeys: [],
+        label: "root subject",
+        children: true,
+      };
       const provider = createProvider({ imodel, hierarchy });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: rootSubjectNode }));
       expect(keys)
@@ -109,7 +126,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
@@ -133,7 +152,12 @@ describe("Hierarchies", () => {
           return [];
         },
       };
-      const testCustomNode: HierarchyNode = { key: { type: "generic", id: "test" }, parentKeys: [], label: "custom parent node", children: true };
+      const testCustomNode: HierarchyNode = {
+        key: { type: "generic", id: "test" },
+        parentKeys: [],
+        label: "custom parent node",
+        children: true,
+      };
       const provider = createProvider({ imodel, hierarchy });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: testCustomNode }));
       expect(keys)
@@ -146,7 +170,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
@@ -168,7 +194,10 @@ describe("Hierarchies", () => {
               },
             ];
           }
-          if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((ik) => ik.id === rootSubjectKey.id)) {
+          if (
+            HierarchyNode.isInstancesNode(parentNode) &&
+            parentNode.key.instanceKeys.some((ik) => ik.id === rootSubjectKey.id)
+          ) {
             return [
               {
                 fullClassName: normalizeFullClassName(Subject.classFullName),
@@ -205,12 +234,16 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
-            return [{ node: { key: "test", label: "hidden custom node", processingParams: { hideInHierarchy: true } } }];
+            return [
+              { node: { key: "test", label: "hidden custom node", processingParams: { hideInHierarchy: true } } },
+            ];
           }
           if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "test") {
             return [

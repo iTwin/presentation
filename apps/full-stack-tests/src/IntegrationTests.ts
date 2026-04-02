@@ -12,7 +12,11 @@ import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
-import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationBackendNativeLoggerCategory } from "@itwin/presentation-backend";
+import {
+  HierarchyCacheMode,
+  Presentation as PresentationBackend,
+  PresentationBackendNativeLoggerCategory,
+} from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { initialize as initializePresentation, terminate as terminatePresentation } from "@itwin/presentation-testing";
 

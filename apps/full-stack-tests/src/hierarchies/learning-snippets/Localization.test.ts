@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Localization.Imports
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
@@ -91,7 +95,9 @@ describe("Hierarchies", () => {
                       ecsql: `
                         SELECT ${await createNodesQueryClauseFactory({
                           imodelAccess,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                            classHierarchyInspector: imodelAccess,
+                          }),
                         }).createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },
@@ -99,7 +105,13 @@ describe("Hierarchies", () => {
                           grouping: {
                             byProperties: {
                               propertiesClassName: myPhysicalObjectClassName,
-                              propertyGroups: [{ propertyClassAlias: "this", propertyName: "IntProperty", ranges: [{ fromValue: 1, toValue: 5 }] }],
+                              propertyGroups: [
+                                {
+                                  propertyClassAlias: "this",
+                                  propertyName: "IntProperty",
+                                  ranges: [{ fromValue: 1, toValue: 5 }],
+                                },
+                              ],
                               createGroupForOutOfRangeValues: true,
                               createGroupForUnspecifiedValues: true,
                             },

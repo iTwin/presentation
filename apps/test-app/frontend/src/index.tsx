@@ -15,7 +15,11 @@ import { ElectronApp } from "@itwin/core-electron/lib/cjs/ElectronFrontend";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 // __PUBLISH_EXTRACT_START__ Presentation.Frontend.Imports
-import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, Presentation } from "@itwin/presentation-frontend";
+import {
+  createFavoritePropertiesStorage,
+  DefaultFavoritePropertiesStorageTypes,
+  Presentation,
+} from "@itwin/presentation-frontend";
 // __PUBLISH_EXTRACT_END__
 import { LOCALIZATION_NAMESPACES } from "@itwin/presentation-hierarchies-react";
 import { rpcInterfaces } from "@test-app/common";
@@ -63,7 +67,9 @@ async function initializePresentation() {
       // specify locale for localizing presentation data, it can be changed afterwards
       activeLocale: IModelApp.localization.getLanguageList()[0],
     },
-    favorites: { storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage) },
+    favorites: {
+      storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),
+    },
     selection: {
       // tell @itwin/presentation-frontend to use our selection storage - this enables interop with
       // unified selection storage used in this app

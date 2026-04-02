@@ -66,11 +66,10 @@ async function initBackend() {
   });
 
   // tell BentleyCloudRpcManager which RPC interfaces to handle
-  const rpcConfig = BentleyCloudRpcManager.initializeImpl({ info: { title: "presentation-load-tests-backend", version: "v1.0" } }, [
-    ECSchemaRpcInterface,
-    IModelReadRpcInterface,
-    PresentationRpcInterface,
-  ]);
+  const rpcConfig = BentleyCloudRpcManager.initializeImpl(
+    { info: { title: "presentation-load-tests-backend", version: "v1.0" } },
+    [ECSchemaRpcInterface, IModelReadRpcInterface, PresentationRpcInterface],
+  );
   ECSchemaRpcImpl.register();
 
   // create a basic express web server

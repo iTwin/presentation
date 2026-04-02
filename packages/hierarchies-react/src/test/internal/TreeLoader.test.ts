@@ -20,11 +20,16 @@ import type { ErrorInfo } from "../../presentation-hierarchies-react/TreeNode.js
 describe("TreeLoader", () => {
   const onHierarchyLimitExceededStub = sinon.stub();
   const onHierarchyLoadErrorStub = sinon.stub();
-  const hierarchyProvider = { getNodes: sinon.stub<Parameters<HierarchyProvider["getNodes"]>, ReturnType<HierarchyProvider["getNodes"]>>() };
+  const hierarchyProvider = {
+    getNodes: sinon.stub<Parameters<HierarchyProvider["getNodes"]>, ReturnType<HierarchyProvider["getNodes"]>>(),
+  };
 
   function createLoader() {
-    return new TreeLoader(hierarchyProvider as unknown as HierarchyProvider, onHierarchyLimitExceededStub, onHierarchyLoadErrorStub, (n) =>
-      HierarchyNode.isGeneric(n) ? n.key.id : createNodeId(n),
+    return new TreeLoader(
+      hierarchyProvider as unknown as HierarchyProvider,
+      onHierarchyLimitExceededStub,
+      onHierarchyLoadErrorStub,
+      (n) => (HierarchyNode.isGeneric(n) ? n.key.id : createNodeId(n)),
     );
   }
 
@@ -72,7 +77,8 @@ describe("TreeLoader", () => {
         loader.loadNodes({
           parent: { id: undefined, nodeData: undefined },
           getHierarchyLevelOptions: () => ({ instanceFilter: undefined, hierarchyLevelSizeLimit: undefined }),
-          shouldLoadChildren: (parentNode) => HierarchyNodeKey.equals(parentNode.nodeData.key, { type: "generic", id: "root-1" }),
+          shouldLoadChildren: (parentNode) =>
+            HierarchyNodeKey.equals(parentNode.nodeData.key, { type: "generic", id: "root-1" }),
         }),
       );
 
@@ -90,7 +96,9 @@ describe("TreeLoader", () => {
       const childHierarchyNodes = [createTestHierarchyNode({ id: "child-1" })];
       hierarchyProvider.getNodes.callsFake((props) => {
         return createAsyncIterator(
-          props.parentNode && HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" }) ? childHierarchyNodes : [],
+          props.parentNode && HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" })
+            ? childHierarchyNodes
+            : [],
         );
       });
 
@@ -182,15 +190,24 @@ describe("TreeLoader", () => {
       const loader = createLoader();
       const rootHierarchyNodes = [createTestHierarchyNode({ id: "root-1" })];
       hierarchyProvider.getNodes.callsFake((props) => {
-        return createAsyncIterator(props.parentNode === undefined && props.instanceFilter !== undefined ? rootHierarchyNodes : []);
+        return createAsyncIterator(
+          props.parentNode === undefined && props.instanceFilter !== undefined ? rootHierarchyNodes : [],
+        );
       });
 
-      const filter: GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
+      const filter: GenericInstanceFilter = {
+        propertyClassNames: [],
+        relatedInstances: [],
+        rules: { operator: "and", rules: [] },
+      };
 
       const nodes = await collectNodes(
         loader.loadNodes({
           parent: { id: undefined, nodeData: undefined, instanceFilter: filter },
-          getHierarchyLevelOptions: (parent) => ({ instanceFilter: parent.instanceFilter, hierarchyLevelSizeLimit: undefined }),
+          getHierarchyLevelOptions: (parent) => ({
+            instanceFilter: parent.instanceFilter,
+            hierarchyLevelSizeLimit: undefined,
+          }),
           shouldLoadChildren: () => true,
         }),
       );
@@ -205,7 +222,11 @@ describe("TreeLoader", () => {
     });
 
     it("loads info node if all children are filtered out", async () => {
-      const filter: GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
+      const filter: GenericInstanceFilter = {
+        propertyClassNames: [],
+        relatedInstances: [],
+        rules: { operator: "and", rules: [] },
+      };
       const loader = createLoader();
       const rootHierarchyNode = createTestHierarchyNode({ id: "root-1" });
       const modelNode = createTreeModelNode({ id: "root-1", nodeData: rootHierarchyNode, instanceFilter: filter });
@@ -216,7 +237,10 @@ describe("TreeLoader", () => {
       const nodes = await collectNodes(
         loader.loadNodes({
           parent: modelNode,
-          getHierarchyLevelOptions: (parent) => ({ instanceFilter: parent.instanceFilter, hierarchyLevelSizeLimit: undefined }),
+          getHierarchyLevelOptions: (parent) => ({
+            instanceFilter: parent.instanceFilter,
+            hierarchyLevelSizeLimit: undefined,
+          }),
           shouldLoadChildren: () => true,
         }),
       );

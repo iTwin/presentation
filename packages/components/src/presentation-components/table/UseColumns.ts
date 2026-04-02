@@ -54,7 +54,11 @@ export function useColumns(props: UseColumnsProps): TableColumnDefinition[] | un
   return columns;
 }
 
-async function loadColumns(imodel: IModelConnection, ruleset: Ruleset | string, keys: Readonly<KeySet>): Promise<TableColumnDefinition[] | undefined> {
+async function loadColumns(
+  imodel: IModelConnection,
+  ruleset: Ruleset | string,
+  keys: Readonly<KeySet>,
+): Promise<TableColumnDefinition[] | undefined> {
   const descriptor = await Presentation.presentation.getContentDescriptor({
     imodel,
     rulesetOrId: ruleset,

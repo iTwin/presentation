@@ -23,7 +23,11 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
   const result = useMemo(
     (): DiagnosticsProps => ({
       ruleDiagnostics: { severity: editorSeverity as DiagnosticsLoggerSeverity, handler: consoleDiagnosticsHandler },
-      devDiagnostics: { perf: shouldMeasurePerformance, severity: devSeverity as DiagnosticsLoggerSeverity, handler: consoleDiagnosticsHandler },
+      devDiagnostics: {
+        perf: shouldMeasurePerformance,
+        severity: devSeverity as DiagnosticsLoggerSeverity,
+        handler: consoleDiagnosticsHandler,
+      },
     }),
     [shouldMeasurePerformance, editorSeverity, devSeverity],
   );
@@ -68,7 +72,12 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
         }}
         size="small"
       />
-      <ToggleSwitch label="Measure performance" labelPosition="right" checked={shouldMeasurePerformance} onChange={handleMeasurePerformanceChange} />
+      <ToggleSwitch
+        label="Measure performance"
+        labelPosition="right"
+        checked={shouldMeasurePerformance}
+        onChange={handleMeasurePerformanceChange}
+      />
     </MenuExtraContent>,
   ];
 

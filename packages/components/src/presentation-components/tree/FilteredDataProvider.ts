@@ -11,10 +11,19 @@ import { memoize } from "../common/Utils.js";
 import { PresentationTreeDataProvider } from "./DataProvider.js";
 import { createTreeNodeItem } from "./Utils.js";
 
-import type { ActiveMatchInfo, DelayLoadedTreeNodeItem, PageOptions, SimpleTreeDataProviderHierarchy, TreeNodeItem } from "@itwin/components-react";
+import type {
+  ActiveMatchInfo,
+  DelayLoadedTreeNodeItem,
+  PageOptions,
+  SimpleTreeDataProviderHierarchy,
+  TreeNodeItem,
+} from "@itwin/components-react";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { InstanceFilterDefinition, Node, NodeKey, NodePathElement } from "@itwin/presentation-common";
-import type { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider.js";
+import type {
+  IFilteredPresentationTreeDataProvider,
+  IPresentationTreeDataProvider,
+} from "./IPresentationTreeDataProvider.js";
 import type { PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
 
 /** @internal */
@@ -99,23 +108,25 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     hierarchy.set(parentId, treeNodes);
   }
 
-  public getActiveMatch: (index: number) => ActiveMatchInfo | undefined = memoize((index: number): ActiveMatchInfo | undefined => {
-    let activeMatch: ActiveMatchInfo | undefined;
-    if (index <= 0) {
-      return undefined;
-    }
-
-    let i = 1;
-    for (const node of this._filteredResultMatches) {
-      if (index < i + node.matchesCount) {
-        activeMatch = { nodeId: node.id, matchIndex: index - i };
-        break;
+  public getActiveMatch: (index: number) => ActiveMatchInfo | undefined = memoize(
+    (index: number): ActiveMatchInfo | undefined => {
+      let activeMatch: ActiveMatchInfo | undefined;
+      if (index <= 0) {
+        return undefined;
       }
 
-      i += node.matchesCount;
-    }
-    return activeMatch;
-  });
+      let i = 1;
+      for (const node of this._filteredResultMatches) {
+        if (index < i + node.matchesCount) {
+          activeMatch = { nodeId: node.id, matchIndex: index - i };
+          break;
+        }
+
+        i += node.matchesCount;
+      }
+      return activeMatch;
+    },
+  );
 
   /** Count filtering results. Including multiple possible matches within node labels */
   public countFilteringResults(nodePaths: ReadonlyArray<Readonly<NodePathElement>>): number {

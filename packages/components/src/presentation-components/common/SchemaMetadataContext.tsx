@@ -38,7 +38,11 @@ export interface SchemaMetadataContextProviderProps {
  * Provides schema metadata to components that work with schemas.
  * @public
  */
-export function SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren<SchemaMetadataContextProviderProps>) {
+export function SchemaMetadataContextProvider({
+  schemaContextProvider,
+  imodel,
+  children,
+}: PropsWithChildren<SchemaMetadataContextProviderProps>) {
   const [state, setState] = useState<SchemaMetadataContext>(() => ({ schemaContext: schemaContextProvider(imodel) }));
 
   useEffect(() => {

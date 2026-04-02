@@ -154,7 +154,10 @@ There is no such global "active" selection scope in the new system and in case c
 In some rare cases, consumers need to compute selection based on the picked elements and an arbitrary selection scope. To achieve that in the old system, you'd do something like this:
 
 ```ts
-const selection: KeySet = await Presentation.selection.scopes.computeSelection(iModelConnection, elementIds, { id: "element", ancestorLevel: 1 });
+const selection: KeySet = await Presentation.selection.scopes.computeSelection(iModelConnection, elementIds, {
+  id: "element",
+  ancestorLevel: 1,
+});
 ```
 
 In the new system, the `computeSelection` is a top-level function:

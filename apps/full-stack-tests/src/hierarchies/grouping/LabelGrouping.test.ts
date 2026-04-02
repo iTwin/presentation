@@ -33,17 +33,39 @@ describe("Hierarchies", () => {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: IModel.rootSubjectId, userLabel: labelGroupName1 });
-        const childSubject2 = insertSubject({ builder, codeValue: "2", parentId: IModel.rootSubjectId, userLabel: labelGroupName2 });
-        const childSubject3 = insertSubject({ builder, codeValue: "3", parentId: IModel.rootSubjectId, userLabel: labelGroupName1 });
-        const childSubject4 = insertSubject({ builder, codeValue: "4", parentId: IModel.rootSubjectId, userLabel: labelGroupName2 });
+        const childSubject1 = insertSubject({
+          builder,
+          codeValue: "1",
+          parentId: IModel.rootSubjectId,
+          userLabel: labelGroupName1,
+        });
+        const childSubject2 = insertSubject({
+          builder,
+          codeValue: "2",
+          parentId: IModel.rootSubjectId,
+          userLabel: labelGroupName2,
+        });
+        const childSubject3 = insertSubject({
+          builder,
+          codeValue: "3",
+          parentId: IModel.rootSubjectId,
+          userLabel: labelGroupName1,
+        });
+        const childSubject4 = insertSubject({
+          builder,
+          codeValue: "4",
+          parentId: IModel.rootSubjectId,
+          userLabel: labelGroupName2,
+        });
         return { childSubject1, childSubject2, childSubject3, childSubject4 };
       });
 
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel(props) {
@@ -95,17 +117,43 @@ describe("Hierarchies", () => {
       const descriptionGroupName1 = "test1";
       const descriptionGroupName2 = "test2";
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: IModel.rootSubjectId, userLabel: "test", description: descriptionGroupName1 });
-        const childSubject2 = insertSubject({ builder, codeValue: "2", parentId: IModel.rootSubjectId, userLabel: "test", description: descriptionGroupName2 });
-        const childSubject3 = insertSubject({ builder, codeValue: "3", parentId: IModel.rootSubjectId, userLabel: "test", description: descriptionGroupName1 });
-        const childSubject4 = insertSubject({ builder, codeValue: "4", parentId: IModel.rootSubjectId, userLabel: "test", description: descriptionGroupName2 });
+        const childSubject1 = insertSubject({
+          builder,
+          codeValue: "1",
+          parentId: IModel.rootSubjectId,
+          userLabel: "test",
+          description: descriptionGroupName1,
+        });
+        const childSubject2 = insertSubject({
+          builder,
+          codeValue: "2",
+          parentId: IModel.rootSubjectId,
+          userLabel: "test",
+          description: descriptionGroupName2,
+        });
+        const childSubject3 = insertSubject({
+          builder,
+          codeValue: "3",
+          parentId: IModel.rootSubjectId,
+          userLabel: "test",
+          description: descriptionGroupName1,
+        });
+        const childSubject4 = insertSubject({
+          builder,
+          codeValue: "4",
+          parentId: IModel.rootSubjectId,
+          userLabel: "test",
+          description: descriptionGroupName2,
+        });
         return { childSubject1, childSubject2, childSubject3, childSubject4 };
       });
 
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel(props) {
@@ -160,16 +208,36 @@ describe("Hierarchies", () => {
     it("doesn't merge when different groupIds or labels are provided", async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: rootSubject.id, userLabel: "label1", description: "description1" });
-        const childSubject2 = insertSubject({ builder, codeValue: "2", parentId: rootSubject.id, userLabel: "label1", description: "description2" });
-        const childSubject3 = insertSubject({ builder, codeValue: "3", parentId: rootSubject.id, userLabel: "label2", description: "description1" });
+        const childSubject1 = insertSubject({
+          builder,
+          codeValue: "1",
+          parentId: rootSubject.id,
+          userLabel: "label1",
+          description: "description1",
+        });
+        const childSubject2 = insertSubject({
+          builder,
+          codeValue: "2",
+          parentId: rootSubject.id,
+          userLabel: "label1",
+          description: "description2",
+        });
+        const childSubject3 = insertSubject({
+          builder,
+          codeValue: "3",
+          parentId: rootSubject.id,
+          userLabel: "label2",
+          description: "description1",
+        });
         return { rootSubject, childSubject1, childSubject2, childSubject3 };
       });
 
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel(props) {
@@ -217,7 +285,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel(props) {
@@ -246,7 +316,13 @@ describe("Hierarchies", () => {
 
       await validateHierarchy({
         provider: createProvider({ imodel, hierarchy }),
-        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1, keys.childSubject2], label: "merge this", children: false })],
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [keys.childSubject1, keys.childSubject2],
+            label: "merge this",
+            children: false,
+          }),
+        ],
       });
     });
 
@@ -262,7 +338,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel(props) {
@@ -312,7 +390,13 @@ describe("Hierarchies", () => {
 
       await validateHierarchy({
         provider: createProvider({ imodel, hierarchy }),
-        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.visibleSubject1, keys.visibleSubject2], label: "merged", children: false })],
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [keys.visibleSubject1, keys.visibleSubject2],
+            label: "merged",
+            children: false,
+          }),
+        ],
       });
     });
   });

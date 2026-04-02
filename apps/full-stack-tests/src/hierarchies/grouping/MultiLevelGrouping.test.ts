@@ -49,16 +49,33 @@ describe("Hierarchies", () => {
           userLabel: labelGroupName1,
           description: description1,
         });
-        const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: labelGroupName1 });
-        const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: IModel.rootSubjectId, userLabel: labelGroupName2 });
-        const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: IModel.rootSubjectId, userLabel: labelGroupName2 });
+        const childPartition3 = insertPhysicalPartition({
+          builder,
+          codeValue: "B3",
+          parentId: IModel.rootSubjectId,
+          userLabel: labelGroupName1,
+        });
+        const childPartition4 = insertPhysicalPartition({
+          builder,
+          codeValue: "B4",
+          parentId: IModel.rootSubjectId,
+          userLabel: labelGroupName2,
+        });
+        const childPartition5 = insertPhysicalPartition({
+          builder,
+          codeValue: "B5",
+          parentId: IModel.rootSubjectId,
+          userLabel: labelGroupName2,
+        });
         return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
       });
 
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
@@ -75,7 +92,9 @@ describe("Hierarchies", () => {
                       grouping: {
                         byClass: true,
                         byLabel: true,
-                        byBaseClasses: { fullClassNames: ["BisCore.InformationContentElement", "BisCore.InformationPartitionElement"] },
+                        byBaseClasses: {
+                          fullClassNames: ["BisCore.InformationContentElement", "BisCore.InformationPartitionElement"],
+                        },
                         byProperties: {
                           propertiesClassName: "BisCore.Subject",
                           propertyGroups: [
@@ -101,7 +120,9 @@ describe("Hierarchies", () => {
                       grouping: {
                         byClass: true,
                         byLabel: true,
-                        byBaseClasses: { fullClassNames: ["BisCore.InformationContentElement", "BisCore.InformationPartitionElement"] },
+                        byBaseClasses: {
+                          fullClassNames: ["BisCore.InformationContentElement", "BisCore.InformationPartitionElement"],
+                        },
                       },
                     })}
                     FROM ${physicalPartitionClassName} AS this
@@ -131,13 +152,24 @@ describe("Hierarchies", () => {
                     children: [
                       NodeValidators.createForLabelGroupingNode({
                         label: labelGroupName1,
-                        children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition3], children: false })],
+                        children: [
+                          NodeValidators.createForInstanceNode({
+                            instanceKeys: [keys.childPartition3],
+                            children: false,
+                          }),
+                        ],
                       }),
                       NodeValidators.createForLabelGroupingNode({
                         label: labelGroupName2,
                         children: [
-                          NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition5], children: false }),
-                          NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition4], children: false }),
+                          NodeValidators.createForInstanceNode({
+                            instanceKeys: [keys.childPartition5],
+                            children: false,
+                          }),
+                          NodeValidators.createForInstanceNode({
+                            instanceKeys: [keys.childPartition4],
+                            children: false,
+                          }),
                         ],
                       }),
                     ],
@@ -162,8 +194,14 @@ describe("Hierarchies", () => {
                           NodeValidators.createForLabelGroupingNode({
                             label: labelGroupName1,
                             children: [
-                              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
-                              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+                              NodeValidators.createForInstanceNode({
+                                instanceKeys: [keys.childSubject2],
+                                children: false,
+                              }),
+                              NodeValidators.createForInstanceNode({
+                                instanceKeys: [keys.childSubject1],
+                                children: false,
+                              }),
                             ],
                           }),
                         ],

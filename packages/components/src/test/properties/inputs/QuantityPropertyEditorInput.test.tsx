@@ -33,21 +33,30 @@ const createRecord = ({ initialValue, kindOfQuantityName }: { initialValue?: num
 describe("<QuantityPropertyEditorInput />", () => {
   const schemaContext = {} as SchemaContext;
   const format = new Format("test format");
-  const formatterSpec = { applyFormatting: sinon.stub<[number], string>(), unitConversions: [{ name: "test unit", label: "unit" }], format };
+  const formatterSpec = {
+    applyFormatting: sinon.stub<[number], string>(),
+    unitConversions: [{ name: "test unit", label: "unit" }],
+    format,
+  };
   const parserSpec = { parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(), format };
 
   let getFormatterSpecStub: sinon.SinonStub<
     Parameters<KoqPropertyValueFormatter["getFormatterSpec"]>,
     ReturnType<KoqPropertyValueFormatter["getFormatterSpec"]>
   >;
-  let getParserSpecStub: sinon.SinonStub<Parameters<KoqPropertyValueFormatter["getParserSpec"]>, ReturnType<KoqPropertyValueFormatter["getParserSpec"]>>;
+  let getParserSpecStub: sinon.SinonStub<
+    Parameters<KoqPropertyValueFormatter["getParserSpec"]>,
+    ReturnType<KoqPropertyValueFormatter["getParserSpec"]>
+  >;
 
   before(() => {
     getFormatterSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec");
     getParserSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec");
 
     sinon.stub(format, "type").get(() => FormatType.Decimal);
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
+    sinon
+      .stub(IModelApp, "quantityFormatter")
+      .get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
   });
 
   beforeEach(() => {
@@ -106,9 +115,14 @@ describe("<QuantityPropertyEditorInput />", () => {
 
   it("allows entering number when schema context is not available", async () => {
     const ref = createRef<PropertyEditorAttributes>();
-    const spy = sinon.stub<Parameters<Required<PropertyEditorProps>["onCommit"]>, ReturnType<Required<PropertyEditorProps>["onCommit"]>>();
+    const spy = sinon.stub<
+      Parameters<Required<PropertyEditorProps>["onCommit"]>,
+      ReturnType<Required<PropertyEditorProps>["onCommit"]>
+    >();
     const record = createRecord({ initialValue: undefined, kindOfQuantityName: "TestKOQ" });
-    const { getByRole, user } = render(<QuantityPropertyEditorInput ref={ref} propertyRecord={record} onCommit={spy} />);
+    const { getByRole, user } = render(
+      <QuantityPropertyEditorInput ref={ref} propertyRecord={record} onCommit={spy} />,
+    );
 
     const input = await waitFor(() => getByRole("textbox"));
     await waitFor(() => expect((input as HTMLInputElement).disabled).to.be.false);
@@ -119,7 +133,12 @@ describe("<QuantityPropertyEditorInput />", () => {
     await waitFor(() => {
       expect(spy).to.be.calledWith({
         propertyRecord: record,
-        newValue: { valueFormat: PropertyValueFormat.Primitive, value: 123.4, displayValue: "123.4", roundingError: 0.05 },
+        newValue: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: 123.4,
+          displayValue: "123.4",
+          roundingError: 0.05,
+        },
       });
     });
   });
@@ -149,11 +168,21 @@ describe("<QuantityPropertyEditorInput />", () => {
     await waitFor(() => {
       expect(spy).to.be.calledWith({
         propertyRecord: record,
-        newValue: { valueFormat: PropertyValueFormat.Primitive, value: 123.4, displayValue: "123.4 unit", roundingError: 0.05 },
+        newValue: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: 123.4,
+          displayValue: "123.4 unit",
+          roundingError: 0.05,
+        },
       });
     });
 
-    expect(ref.current?.getValue()).to.deep.eq({ valueFormat: PropertyValueFormat.Primitive, value: 123.4, displayValue: "123.4 unit", roundingError: 0.05 });
+    expect(ref.current?.getValue()).to.deep.eq({
+      valueFormat: PropertyValueFormat.Primitive,
+      value: 123.4,
+      displayValue: "123.4 unit",
+      roundingError: 0.05,
+    });
   });
 
   it("should focus on input if setFocus is true", async () => {

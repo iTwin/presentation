@@ -54,6 +54,8 @@ export class QuantityPropertyEditor extends PureComponent<PropertyEditorProps> i
 
   /** @internal */
   public override render() {
-    return this.props.propertyRecord ? <QuantityPropertyEditorInput ref={this._ref} {...this.props} propertyRecord={this.props.propertyRecord} /> : null;
+    return this.props.propertyRecord ? (
+      <QuantityPropertyEditorInput ref={this._ref} {...this.props} propertyRecord={this.props.propertyRecord} />
+    ) : null;
   }
 }

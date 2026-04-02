@@ -37,7 +37,13 @@ describe("Hierarchies", () => {
           },
         },
       });
-      await validateHierarchy({ provider, expect: [NodeValidators.createForGenericNode({ label: "1" }), NodeValidators.createForGenericNode({ label: "2" })] });
+      await validateHierarchy({
+        provider,
+        expect: [
+          NodeValidators.createForGenericNode({ label: "1" }),
+          NodeValidators.createForGenericNode({ label: "2" }),
+        ],
+      });
     });
 
     it("creates generic child nodes", async () => {
@@ -61,7 +67,13 @@ describe("Hierarchies", () => {
           NodeValidators.createForGenericNode({
             key: { type: "generic" as const, id: "root" },
             label: "r",
-            children: [NodeValidators.createForGenericNode({ key: { type: "generic" as const, id: "child" }, label: "c", children: false })],
+            children: [
+              NodeValidators.createForGenericNode({
+                key: { type: "generic" as const, id: "child" },
+                label: "c",
+                children: false,
+              }),
+            ],
           }),
         ],
       });
@@ -111,7 +123,10 @@ describe("Hierarchies", () => {
           },
         },
       });
-      await validateHierarchy({ provider, expect: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "root" }, children: false })] });
+      await validateHierarchy({
+        provider,
+        expect: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "root" }, children: false })],
+      });
     });
   });
 });

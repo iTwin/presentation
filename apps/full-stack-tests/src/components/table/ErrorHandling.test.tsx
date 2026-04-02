@@ -3,7 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import sinon from "sinon";
 import { PropertyValueRendererManager, UiComponents } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
@@ -104,7 +108,10 @@ describe("Learning snippets", () => {
       }
 
       /** A function that maps presentation type of column definition to something that table renderer knows how to render */
-      const mapTableColumns = (columnDefinitions: TableColumnDefinition) => ({ id: columnDefinitions.name, label: columnDefinitions.label });
+      const mapTableColumns = (columnDefinitions: TableColumnDefinition) => ({
+        id: columnDefinitions.name,
+        label: columnDefinitions.label,
+      });
 
       /** A function that maps presentation type of row definition to something that table renderer knows how to render */
       function mapTableRow(rowDefinition: TableRowDefinition) {
@@ -156,7 +163,9 @@ const ruleset: Ruleset = {
       specifications: [
         {
           specType: "ContentRelatedInstances",
-          relationshipPaths: [{ relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" }],
+          relationshipPaths: [
+            { relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" },
+          ],
         },
       ],
     },

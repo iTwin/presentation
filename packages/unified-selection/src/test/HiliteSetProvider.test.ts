@@ -8,9 +8,18 @@ import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
 import { createHiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
 import { Selectables } from "../unified-selection/Selectable.js";
-import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
+import {
+  createCustomSelectable,
+  createECInstanceId,
+  createSelectableInstanceKey,
+} from "./_helpers/SelectablesCreator.js";
 
-import type { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
+import type {
+  ECSqlQueryDef,
+  ECSqlQueryExecutor,
+  ECSqlQueryReaderOptions,
+  ECSqlQueryRow,
+} from "@itwin/presentation-shared";
 import type { HiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
 import type { SelectableInstanceKey } from "../unified-selection/Selectable.js";
 
@@ -18,7 +27,10 @@ describe("HiliteSetProvider", () => {
   describe("create", () => {
     it("creates a new HiliteSetProvider instance", () => {
       const imodelAccess = {
-        createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
+        createQueryReader: sinon.stub<
+          [ECSqlQueryDef, ECSqlQueryReaderOptions | undefined],
+          ReturnType<ECSqlQueryExecutor["createQueryReader"]>
+        >(),
         classDerivesFrom: sinon.stub<[string, string], Promise<boolean> | boolean>(),
       };
       const result = createHiliteSetProvider({ imodelAccess });
@@ -28,7 +40,10 @@ describe("HiliteSetProvider", () => {
 
   describe("getHiliteSet", () => {
     const imodelAccess = {
-      createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
+      createQueryReader: sinon.stub<
+        [ECSqlQueryDef, ECSqlQueryReaderOptions | undefined],
+        ReturnType<ECSqlQueryExecutor["createQueryReader"]>
+      >(),
       classDerivesFrom: sinon.stub<[string, string], Promise<boolean> | boolean>(),
     };
     let provider: HiliteSetProvider;
@@ -42,7 +57,11 @@ describe("HiliteSetProvider", () => {
       }
     }
 
-    function mockQuery(modelKeys: (string | Promise<string>)[], subCategoryKeys: (string | Promise<string>)[], elementKeys: (string | Promise<string>)[]) {
+    function mockQuery(
+      modelKeys: (string | Promise<string>)[],
+      subCategoryKeys: (string | Promise<string>)[],
+      elementKeys: (string | Promise<string>)[],
+    ) {
       // eslint-disable-next-line @typescript-eslint/promise-function-async
       const toQueryResponse = (k: string | Promise<string>) => {
         if (typeof k === "string") {
@@ -302,7 +321,9 @@ describe("HiliteSetProvider", () => {
         expect(result.models).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.elements).to.deep.eq([resultKey]);
-        expect(imodelAccess.createQueryReader).to.be.calledWith(sinon.match((query: ECSqlQueryDef) => query.ctes!.some((cte) => cte.includes("InVirtualSet"))));
+        expect(imodelAccess.createQueryReader).to.be.calledWith(
+          sinon.match((query: ECSqlQueryDef) => query.ctes!.some((cte) => cte.includes("InVirtualSet"))),
+        );
       });
 
       it("doesn't output duplicate instance IDs", async () => {
@@ -330,16 +351,23 @@ describe("HiliteSetProvider", () => {
         elementPromises[0].resolveSync(elementKeys[0].id);
 
         const nextValuePromise = iter.next();
-        await expect(Promise.race([nextValuePromise, timers.tickAsync(5).then(() => "timeout")])).to.eventually.eq("timeout");
+        await expect(Promise.race([nextValuePromise, timers.tickAsync(5).then(() => "timeout")])).to.eventually.eq(
+          "timeout",
+        );
 
         await timers.tickAsync(15);
         elementPromises[1].resolveSync(elementKeys[1].id);
-        await expect(nextValuePromise).to.eventually.deep.eq({ done: false, value: { models: [], subCategories: [], elements: elementKeys.map((x) => x.id) } });
+        await expect(nextValuePromise).to.eventually.deep.eq({
+          done: false,
+          value: { models: [], subCategories: [], elements: elementKeys.map((x) => x.id) },
+        });
         expect((await iter.next()).done).to.be.true;
       });
 
       it("rethrows ECClassHierarchyInspector errors", async () => {
-        imodelAccess.classDerivesFrom.withArgs("TestSchema.TestElement", "BisCore.Element").throws(new Error("dummy error"));
+        imodelAccess.classDerivesFrom
+          .withArgs("TestSchema.TestElement", "BisCore.Element")
+          .throws(new Error("dummy error"));
         mockQuery([], [], []);
         const selectables = Selectables.create([createSelectableInstanceKey(1, "TestSchema:TestElement")]);
         await expect(loadHiliteSet(selectables)).to.eventually.be.rejected;

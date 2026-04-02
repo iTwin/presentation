@@ -8,7 +8,12 @@
 
 import { createCombinedDiagnosticsHandler } from "@itwin/presentation-frontend";
 
-import type { ClientDiagnosticsHandler, ClientDiagnosticsOptions, DiagnosticsLoggerSeverity, DiagnosticsOptions } from "@itwin/presentation-common";
+import type {
+  ClientDiagnosticsHandler,
+  ClientDiagnosticsOptions,
+  DiagnosticsLoggerSeverity,
+  DiagnosticsOptions,
+} from "@itwin/presentation-common";
 
 /**
  * Settings for capturing diagnostics data.
@@ -71,5 +76,9 @@ export function createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnos
     handler = props.ruleDiagnostics.handler;
   }
 
-  return { ...options, ...(props.devDiagnostics?.backendVersion ? { backendVersion: props.devDiagnostics.backendVersion } : undefined), handler: handler! };
+  return {
+    ...options,
+    ...(props.devDiagnostics?.backendVersion ? { backendVersion: props.devDiagnostics.backendVersion } : undefined),
+    handler: handler!,
+  };
 }

@@ -8,7 +8,14 @@ import sinon from "sinon";
 import { BeDuration } from "@itwin/core-bentley";
 import { createTestCategoryDescription, createTestPropertiesContentField } from "./Content.js";
 
-import type { ClassInfo, InstanceKey, PropertyInfo, RelatedClassInfo, RelatedClassInfoWithOptionalRelationship, Ruleset } from "@itwin/presentation-common";
+import type {
+  ClassInfo,
+  InstanceKey,
+  PropertyInfo,
+  RelatedClassInfo,
+  RelatedClassInfoWithOptionalRelationship,
+  Ruleset,
+} from "@itwin/presentation-common";
 import type { WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
 import type { PresentationInstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 
@@ -16,7 +23,12 @@ export function createTestECInstanceKey(key?: Partial<InstanceKey>): InstanceKey
   return { className: key?.className ?? "TestSchema:TestClass", id: key?.id ?? "0x1" };
 }
 
-export const createTestECClassInfo = (props?: Partial<ClassInfo>) => ({ id: "0x1", name: "SchemaName:ClassName", label: "Class Label", ...props });
+export const createTestECClassInfo = (props?: Partial<ClassInfo>) => ({
+  id: "0x1",
+  name: "SchemaName:ClassName",
+  label: "Class Label",
+  ...props,
+});
 
 export const createTestPropertyInfo = (props?: Partial<WithConstraints<PropertyInfo>>) => ({
   classInfo: createTestECClassInfo(),
@@ -35,7 +47,9 @@ export const createTestRelatedClassInfo = (props?: Partial<RelatedClassInfo>) =>
   ...props,
 });
 
-export const createTestRelatedClassInfoWithOptionalRelationship = (props?: Partial<RelatedClassInfoWithOptionalRelationship>) => ({
+export const createTestRelatedClassInfoWithOptionalRelationship = (
+  props?: Partial<RelatedClassInfoWithOptionalRelationship>,
+) => ({
   sourceClassInfo: createTestECClassInfo({ id: "0x1", name: "source:class", label: "Source" }),
   targetClassInfo: createTestECClassInfo({ id: "0x2", name: "target:class", label: "Target" }),
   isPolymorphicTargetClass: false,
@@ -102,10 +116,15 @@ export function stubRaf() {
   });
 }
 
-export const createTestPresentationInstanceFilterPropertyInfo = (props?: Partial<PresentationInstanceFilterPropertyInfo>) => ({
+export const createTestPresentationInstanceFilterPropertyInfo = (
+  props?: Partial<PresentationInstanceFilterPropertyInfo>,
+) => ({
   sourceClassId: "0x1",
   sourceClassIds: ["0x1"],
-  field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo() }], category: createTestCategoryDescription() }),
+  field: createTestPropertiesContentField({
+    properties: [{ property: createTestPropertyInfo() }],
+    category: createTestCategoryDescription(),
+  }),
   propertyDescription: { name: "TestName", displayLabel: "TestDisplayLabel", typename: "string" },
   className: "testSchema:testClass",
   ...props,

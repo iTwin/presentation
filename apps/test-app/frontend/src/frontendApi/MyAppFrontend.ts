@@ -88,7 +88,9 @@ export class MyAppFrontend {
   public static async getViewDefinitions(imodel: IModelConnection) {
     const viewQueryParams: ViewQueryParams = { wantPrivate: false };
     const viewSpecs = await imodel.views.queryProps(viewQueryParams);
-    return viewSpecs.filter((spec) => !spec.isPrivate).map((spec) => ({ id: spec.id!, class: spec.classFullName, label: spec.userLabel ?? spec.code.value! }));
+    return viewSpecs
+      .filter((spec) => !spec.isPrivate)
+      .map((spec) => ({ id: spec.id!, class: spec.classFullName, label: spec.userLabel ?? spec.code.value! }));
   }
 
   public static async updateElement(imodel: IModelConnection, newProps: ElementProps) {

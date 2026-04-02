@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
 
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Imports
 import {
@@ -57,7 +61,9 @@ describe("Hierarchies", () => {
             if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "physical-elements") {
               const queryClauseFactory = createNodesQueryClauseFactory({
                 imodelAccess,
-                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                  classHierarchyInspector: imodelAccess,
+                }),
               });
               return [
                 {
@@ -86,7 +92,10 @@ describe("Hierarchies", () => {
             NodeValidators.createForGenericNode({
               key: "physical-elements",
               label: "Physical elements",
-              children: [NodeValidators.createForInstanceNode({ label: "A" }), NodeValidators.createForInstanceNode({ label: "B" })],
+              children: [
+                NodeValidators.createForInstanceNode({ label: "A" }),
+                NodeValidators.createForInstanceNode({ label: "B" }),
+              ],
             }),
           ],
         });
@@ -122,13 +131,19 @@ describe("Hierarchies", () => {
           },
           parseNode({ row }) {
             // Parse the row into an instance node
-            return { key: { type: "instances", instanceKeys: [{ className: row.ClassName, id: row.Id }] }, label: row.Label };
+            return {
+              key: { type: "instances", instanceKeys: [{ className: row.ClassName, id: row.Id }] },
+              label: row.Label,
+            };
           },
         };
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
           provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
-          expect: [NodeValidators.createForInstanceNode({ label: "A" }), NodeValidators.createForInstanceNode({ label: "B" })],
+          expect: [
+            NodeValidators.createForInstanceNode({ label: "A" }),
+            NodeValidators.createForInstanceNode({ label: "B" }),
+          ],
         });
       });
 
@@ -149,7 +164,9 @@ describe("Hierarchies", () => {
             if (!parentNode) {
               const queryClauseFactory = createNodesQueryClauseFactory({
                 imodelAccess,
-                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                  classHierarchyInspector: imodelAccess,
+                }),
               });
               return [
                 {
@@ -184,7 +201,9 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
           provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
-          expect: [NodeValidators.createForInstanceNode({ label: "A", extendedData: { externalId: "test-external-id" } })],
+          expect: [
+            NodeValidators.createForInstanceNode({ label: "A", extendedData: { externalId: "test-external-id" } }),
+          ],
         });
       });
 
@@ -197,7 +216,9 @@ describe("Hierarchies", () => {
             if (!parentNode) {
               const queryClauseFactory = createNodesQueryClauseFactory({
                 imodelAccess,
-                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                  classHierarchyInspector: imodelAccess,
+                }),
               });
               return [
                 {
@@ -252,7 +273,9 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PredicateBasedHierarchyDefinition
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
           classHierarchyInspector: imodelAccess,
@@ -289,7 +312,10 @@ describe("Hierarchies", () => {
             NodeValidators.createForGenericNode({
               key: "physical-elements",
               label: "Physical elements",
-              children: [NodeValidators.createForInstanceNode({ label: "A" }), NodeValidators.createForInstanceNode({ label: "B" })],
+              children: [
+                NodeValidators.createForInstanceNode({ label: "A" }),
+                NodeValidators.createForInstanceNode({ label: "B" }),
+              ],
             }),
           ],
         });

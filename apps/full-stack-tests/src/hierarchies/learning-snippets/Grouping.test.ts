@@ -38,8 +38,18 @@ describe("Hierarchies", () => {
           const { imodel } = await buildIModel(this, async (builder) => {
             const category = insertSpatialCategory({ builder, codeValue: "Category" });
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Model" });
-            insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "Example element" });
-            insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "Example element" });
+            insertPhysicalElement({
+              builder,
+              modelId: model.id,
+              categoryId: category.id,
+              userLabel: "Example element",
+            });
+            insertPhysicalElement({
+              builder,
+              modelId: model.id,
+              categoryId: category.id,
+              userLabel: "Example element",
+            });
           });
           const imodelAccess = createIModelAccess(imodel);
 
@@ -58,7 +68,9 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                              classHierarchyInspector: imodelAccess,
+                            }),
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -103,8 +115,18 @@ describe("Hierarchies", () => {
           const { imodel } = await buildIModel(this, async (builder) => {
             const category = insertSpatialCategory({ builder, codeValue: "Category" });
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Model" });
-            const element1 = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "Example element" });
-            const element2 = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "Example element" });
+            const element1 = insertPhysicalElement({
+              builder,
+              modelId: model.id,
+              categoryId: category.id,
+              userLabel: "Example element",
+            });
+            const element2 = insertPhysicalElement({
+              builder,
+              modelId: model.id,
+              categoryId: category.id,
+              userLabel: "Example element",
+            });
             return { element1, element2 };
           });
           const imodelAccess = createIModelAccess(imodel);
@@ -124,7 +146,9 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                              classHierarchyInspector: imodelAccess,
+                            }),
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -178,7 +202,9 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                              classHierarchyInspector: imodelAccess,
+                            }),
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -249,7 +275,9 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                              classHierarchyInspector: imodelAccess,
+                            }),
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -322,7 +350,9 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                              classHierarchyInspector: imodelAccess,
+                            }),
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -408,7 +438,9 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                              classHierarchyInspector: imodelAccess,
+                            }),
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -498,7 +530,9 @@ describe("Hierarchies", () => {
                       ecsql: `
                         SELECT ${await createNodesQueryClauseFactory({
                           imodelAccess,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                            classHierarchyInspector: imodelAccess,
+                          }),
                         }).createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },
@@ -622,7 +656,9 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                              classHierarchyInspector: imodelAccess,
+                            }),
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -678,7 +714,9 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                              classHierarchyInspector: imodelAccess,
+                            }),
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -734,7 +772,9 @@ describe("Hierarchies", () => {
                           `
                             SELECT ${await createNodesQueryClauseFactory({
                               imodelAccess,
-                              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                                classHierarchyInspector: imodelAccess,
+                              }),
                             }).createSelectClause({
                               ecClassId: { selector: "this.ECClassId" },
                               ecInstanceId: { selector: "this.ECInstanceId" },

@@ -24,22 +24,23 @@ import type { TreeActionBaseAttributes } from "./TreeAction.js";
  *
  * @alpha
  */
-export const TreeNodeRenameAction: NamedExoticComponent<TreeActionBaseAttributes & { node: TreeNode }> = memo(function TreeNodeRenameAction({
-  node,
-  ...actionAttributes
-}: TreeActionBaseAttributes & { node: TreeNode }) {
-  const translate = useTranslation();
-  const context = useTreeNodeRenameContext();
-  const rename = translate("rename");
+export const TreeNodeRenameAction: NamedExoticComponent<TreeActionBaseAttributes & { node: TreeNode }> = memo(
+  function TreeNodeRenameAction({ node, ...actionAttributes }: TreeActionBaseAttributes & { node: TreeNode }) {
+    const translate = useTranslation();
+    const context = useTreeNodeRenameContext();
+    const rename = translate("rename");
 
-  const canRename = context?.canRename(node) ?? false;
-  const startRename = context?.startRename;
-  const handleClick = useCallback(() => {
-    startRename?.(node);
-  }, [startRename, node]);
+    const canRename = context?.canRename(node) ?? false;
+    const startRename = context?.startRename;
+    const handleClick = useCallback(() => {
+      startRename?.(node);
+    }, [startRename, node]);
 
-  return <TreeActionBase {...actionAttributes} label={rename} onClick={handleClick} icon={renameSvg} hide={!canRename} />;
-});
+    return (
+      <TreeActionBase {...actionAttributes} label={rename} onClick={handleClick} icon={renameSvg} hide={!canRename} />
+    );
+  },
+);
 
 /** @alpha */
 export interface TreeNodeEditingProps {
@@ -75,12 +76,19 @@ export const useTreeNodeRenameContext = () => {
 };
 
 /** @internal */
-export function TreeNodeRenameContextProvider({ value, children }: PropsWithChildren<{ value: TreeNodeRenameContext }>) {
+export function TreeNodeRenameContextProvider({
+  value,
+  children,
+}: PropsWithChildren<{ value: TreeNodeRenameContext }>) {
   return <treeNodeRenameContext.Provider value={value}>{children}</treeNodeRenameContext.Provider>;
 }
 
 /** @internal */
-export function useTreeNodeRenameContextValue({ getEditingProps }: { getEditingProps?: (node: TreeNode) => TreeNodeEditingProps | undefined }) {
+export function useTreeNodeRenameContextValue({
+  getEditingProps,
+}: {
+  getEditingProps?: (node: TreeNode) => TreeNodeEditingProps | undefined;
+}) {
   const [renameParameters, setRenameParameters] = useState<RenameParameters | undefined>(undefined);
 
   const startRename = useCallback(
@@ -112,5 +120,8 @@ export function useTreeNodeRenameContextValue({ getEditingProps }: { getEditingP
     [getEditingProps],
   );
 
-  return useMemo(() => ({ renameParameters, cancelRename, startRename, canRename }), [renameParameters, canRename, startRename, cancelRename]);
+  return useMemo(
+    () => ({ renameParameters, cancelRename, startRename, canRename }),
+    [renameParameters, canRename, startRename, cancelRename],
+  );
 }

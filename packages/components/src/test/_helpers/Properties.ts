@@ -5,7 +5,13 @@
 
 import { PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 
-import type { ArrayValue, PrimitiveValue, PropertyDescription, PropertyEditorInfo, StructValue } from "@itwin/appui-abstract";
+import type {
+  ArrayValue,
+  PrimitiveValue,
+  PropertyDescription,
+  PropertyEditorInfo,
+  StructValue,
+} from "@itwin/appui-abstract";
 
 export function createPrimitiveStringProperty(
   name: string,
@@ -37,7 +43,11 @@ export function createArrayProperty(name: string, items?: PropertyRecord[], auto
     items = [];
   }
 
-  const value: ArrayValue = { items, valueFormat: PropertyValueFormat.Array, itemsTypeName: items.length !== 0 ? items[0].property.typename : "string" };
+  const value: ArrayValue = {
+    items,
+    valueFormat: PropertyValueFormat.Array,
+    itemsTypeName: items.length !== 0 ? items[0].property.typename : "string",
+  };
 
   const description: PropertyDescription = { displayLabel: name, name, typename: StandardTypeNames.Array };
   const property = new PropertyRecord(value, description);
@@ -46,7 +56,11 @@ export function createArrayProperty(name: string, items?: PropertyRecord[], auto
   return property;
 }
 
-export function createStructProperty(name: string, members?: { [name: string]: PropertyRecord }, autoExpand?: boolean): PropertyRecord {
+export function createStructProperty(
+  name: string,
+  members?: { [name: string]: PropertyRecord },
+  autoExpand?: boolean,
+): PropertyRecord {
   if (!members) {
     members = {};
   }

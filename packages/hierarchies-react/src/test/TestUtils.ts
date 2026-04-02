@@ -11,11 +11,18 @@ import { userEvent } from "@testing-library/user-event";
 import { TreeModel } from "../presentation-hierarchies-react/internal/TreeModel.js";
 
 import type { ReactElement } from "react";
-import type { GroupingHierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import type {
+  GroupingHierarchyNode,
+  HierarchyProvider,
+  NonGroupingHierarchyNode,
+} from "@itwin/presentation-hierarchies";
 import type { EventListener, RaisableEvent } from "@itwin/presentation-shared";
 import type { RenderOptions, RenderResult } from "@testing-library/react";
 import type { UserEvent } from "@testing-library/user-event";
-import type { TreeModelHierarchyNode, TreeModelRootNode } from "../presentation-hierarchies-react/internal/TreeModel.js";
+import type {
+  TreeModelHierarchyNode,
+  TreeModelRootNode,
+} from "../presentation-hierarchies-react/internal/TreeModel.js";
 import type {
   ChildrenLoadErrorInfo,
   ErrorInfo,
@@ -47,11 +54,18 @@ export function getHierarchyNode(model: TreeModel, id: string | undefined) {
   return node && isTreeModelHierarchyNode(node) ? node : undefined;
 }
 
-type ModelInputNode = Partial<Omit<TreeModelHierarchyNode, "children" | "id">> & { id: string | undefined; children?: string[] };
+type ModelInputNode = Partial<Omit<TreeModelHierarchyNode, "children" | "id">> & {
+  id: string | undefined;
+  children?: string[];
+};
 type ModelInput = Array<ModelInputNode>;
 
 export function createTreeModel(seed: ModelInput) {
-  const model: TreeModel = { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } };
+  const model: TreeModel = {
+    idToNode: new Map(),
+    parentChildMap: new Map(),
+    rootNode: { id: undefined, nodeData: undefined },
+  };
 
   for (const input of seed) {
     if (input.children) {
@@ -59,7 +73,11 @@ export function createTreeModel(seed: ModelInput) {
     }
 
     if (input.id === undefined) {
-      model.rootNode = { ...model.rootNode, instanceFilter: input.instanceFilter, hierarchyLimit: input.hierarchyLimit };
+      model.rootNode = {
+        ...model.rootNode,
+        instanceFilter: input.instanceFilter,
+        hierarchyLimit: input.hierarchyLimit,
+      };
       continue;
     }
 
@@ -80,26 +98,46 @@ export function createTreeModel(seed: ModelInput) {
 }
 
 export function createTreeModelNode(props: Partial<TreeModelHierarchyNode> & { id: string }): TreeModelHierarchyNode {
-  return { ...props, label: props.label ?? props.id, children: props.children ?? false, nodeData: props.nodeData ?? createTestHierarchyNode({ id: props.id }) };
+  return {
+    ...props,
+    label: props.label ?? props.id,
+    children: props.children ?? false,
+    nodeData: props.nodeData ?? createTestHierarchyNode({ id: props.id }),
+  };
 }
 
-export function createTestGenericErrorInfo({ id, ...props }: Partial<GenericErrorInfo> & { id: string }): GenericErrorInfo {
+export function createTestGenericErrorInfo({
+  id,
+  ...props
+}: Partial<GenericErrorInfo> & { id: string }): GenericErrorInfo {
   return { ...props, id, message: props.message ?? "test-message", type: props.type ?? "Unknown" };
 }
 
-export function createTestChildrenLoadErrorInfo({ id, ...props }: Partial<ChildrenLoadErrorInfo> & { id: string }): ChildrenLoadErrorInfo {
+export function createTestChildrenLoadErrorInfo({
+  id,
+  ...props
+}: Partial<ChildrenLoadErrorInfo> & { id: string }): ChildrenLoadErrorInfo {
   return { ...props, id, message: props.message ?? "test-message", type: "ChildrenLoad" };
 }
 
-export function createTestNoFilterMatchesErrorInfo({ id, ...props }: Partial<NoFilterMatchesErrorInfo> & { id: string }): NoFilterMatchesErrorInfo {
+export function createTestNoFilterMatchesErrorInfo({
+  id,
+  ...props
+}: Partial<NoFilterMatchesErrorInfo> & { id: string }): NoFilterMatchesErrorInfo {
   return { ...props, id, type: "NoFilterMatches" };
 }
 
-export function createTestResultSetTooLargeErrorInfo({ id, ...props }: Partial<ResultSetTooLargeErrorInfo> & { id: string }): ResultSetTooLargeErrorInfo {
+export function createTestResultSetTooLargeErrorInfo({
+  id,
+  ...props
+}: Partial<ResultSetTooLargeErrorInfo> & { id: string }): ResultSetTooLargeErrorInfo {
   return { ...props, id, type: "ResultSetTooLarge", resultSetSizeLimit: props.resultSetSizeLimit ?? 10 };
 }
 
-export function createTestHierarchyNode({ id, ...props }: Partial<NonGroupingHierarchyNode> & { id: string }): NonGroupingHierarchyNode {
+export function createTestHierarchyNode({
+  id,
+  ...props
+}: Partial<NonGroupingHierarchyNode> & { id: string }): NonGroupingHierarchyNode {
   return {
     ...props,
     key: props.key ?? { type: "generic", id },
@@ -109,7 +147,10 @@ export function createTestHierarchyNode({ id, ...props }: Partial<NonGroupingHie
   };
 }
 
-export function createTestGroupingNode({ id, ...props }: Partial<GroupingHierarchyNode> & { id: string }): GroupingHierarchyNode {
+export function createTestGroupingNode({
+  id,
+  ...props
+}: Partial<GroupingHierarchyNode> & { id: string }): GroupingHierarchyNode {
   return {
     ...props,
     key: props.key ?? { type: "class-grouping", className: id },
@@ -142,8 +183,13 @@ export function stubVirtualization() {
 
 export type StubbedHierarchyProvider = {
   [P in keyof Omit<HierarchyProvider, "hierarchyChanged">]: ReturnType<typeof createStub<HierarchyProvider[P]>>;
-} & { hierarchyChanged: RaisableEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>; [Symbol.dispose]: sinon.SinonStub<[], void> };
-export function createHierarchyProviderStub(customizations?: Partial<StubbedHierarchyProvider>): StubbedHierarchyProvider {
+} & {
+  hierarchyChanged: RaisableEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>;
+  [Symbol.dispose]: sinon.SinonStub<[], void>;
+};
+export function createHierarchyProviderStub(
+  customizations?: Partial<StubbedHierarchyProvider>,
+): StubbedHierarchyProvider {
   const provider = createHierarchyProvider(() => ({
     getNodes: createStub<HierarchyProvider["getNodes"]>(),
     getNodeInstanceKeys: createStub<HierarchyProvider["getNodeInstanceKeys"]>(),
@@ -152,8 +198,12 @@ export function createHierarchyProviderStub(customizations?: Partial<StubbedHier
     [Symbol.dispose]: createStub<() => void>(),
     ...customizations,
   }));
-  provider.setFormatter.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: arg } }));
-  provider.setHierarchySearch.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ searchChange: { newSearch: arg } }));
+  provider.setFormatter.callsFake((arg) =>
+    provider.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: arg } }),
+  );
+  provider.setHierarchySearch.callsFake((arg) =>
+    provider.hierarchyChanged.raiseEvent({ searchChange: { newSearch: arg } }),
+  );
   return provider;
 }
 
@@ -165,6 +215,8 @@ export function getTreeRendererProps(useTreeResult: UseTreeResult) {
   return useTreeResult.treeRendererProps;
 }
 
-export function isTreeModelHierarchyNode(node: TreeModelHierarchyNode | ErrorInfo | TreeModelRootNode): node is TreeModelHierarchyNode {
+export function isTreeModelHierarchyNode(
+  node: TreeModelHierarchyNode | ErrorInfo | TreeModelRootNode,
+): node is TreeModelHierarchyNode {
   return "nodeData" in node && node.nodeData !== undefined;
 }

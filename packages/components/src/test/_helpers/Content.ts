@@ -169,7 +169,8 @@ export function createTestContentItem(props: {
   return new Item({
     ...props,
     primaryKeys: props.primaryKeys ?? [createTestECInstanceKey()],
-    label: props.label && typeof props.label !== "string" ? props.label : LabelDefinition.fromLabelString(props.label ?? ""),
+    label:
+      props.label && typeof props.label !== "string" ? props.label : LabelDefinition.fromLabelString(props.label ?? ""),
     mergedFieldNames: props.mergedFieldNames ?? [],
   });
 }

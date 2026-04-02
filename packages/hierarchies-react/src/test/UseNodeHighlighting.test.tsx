@@ -111,7 +111,13 @@ function createTreeNode(partial?: Partial<TreeNode>): TreeNode {
 }
 
 function createNonGroupingHierarchyNode(partial?: Partial<NonGroupingHierarchyNode>): NonGroupingHierarchyNode {
-  return { label: "test-node", key: { type: "instances", instanceKeys: [] }, parentKeys: [], children: false, ...partial };
+  return {
+    label: "test-node",
+    key: { type: "instances", instanceKeys: [] },
+    parentKeys: [],
+    children: false,
+    ...partial,
+  };
 }
 
 function createdSearchTargetTreeNode(partial?: Partial<TreeNode>): TreeNode {

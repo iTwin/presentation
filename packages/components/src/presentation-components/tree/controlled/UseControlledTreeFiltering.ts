@@ -6,13 +6,21 @@
 
 import { useCallback, useMemo } from "react";
 import { of } from "rxjs";
-import { AbstractTreeNodeLoaderWithProvider, PagedTreeNodeLoader, TreeModelSource, useDebouncedAsyncValue } from "@itwin/components-react";
+import {
+  AbstractTreeNodeLoaderWithProvider,
+  PagedTreeNodeLoader,
+  TreeModelSource,
+  useDebouncedAsyncValue,
+} from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { FilteredPresentationTreeDataProvider } from "../FilteredDataProvider.js";
 
 import type { Observable } from "rxjs/internal/Observable";
 import type { HighlightableTreeProps, LoadedNodeHierarchy } from "@itwin/components-react";
-import type { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import type {
+  IFilteredPresentationTreeDataProvider,
+  IPresentationTreeDataProvider,
+} from "../IPresentationTreeDataProvider.js";
 
 const FILTERED_DATA_PAGE_SIZE = 20;
 
@@ -74,7 +82,11 @@ function useFilteredProvider(dataProvider?: IPresentationTreeDataProvider, filte
     assert(dataProvider !== undefined);
     assert(filter !== undefined);
     const filteredPaths = await dataProvider.getFilteredNodePaths(filter);
-    const provider = new FilteredPresentationTreeDataProvider({ parentDataProvider: dataProvider, filter, paths: filteredPaths });
+    const provider = new FilteredPresentationTreeDataProvider({
+      parentDataProvider: dataProvider,
+      filter,
+      paths: filteredPaths,
+    });
     return { filteredProvider: provider, matchesCount: provider.countFilteringResults(filteredPaths) };
   }, [dataProvider, filter]);
   return useDebouncedAsyncValue(filter && dataProvider ? getFilteredProvider : undefined);

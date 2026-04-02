@@ -22,12 +22,17 @@ if (!targets) {
 }
 
 // get workspace root path
-const [{ path: workspaceRootPath }] = JSON.parse(execFileSync("pnpm", ["list", "-w", "--only-projects", "--json"], { shell: true, encoding: "utf-8" }));
+const [{ path: workspaceRootPath }] = JSON.parse(
+  execFileSync("pnpm", ["list", "-w", "--only-projects", "--json"], { shell: true, encoding: "utf-8" }),
+);
 
 // gather extractions from different packages into the workspace root
 if (gatherDocs) {
   console.log(`Gathering extractions from different packages...`);
-  execFileSync("node", [path.join(workspaceRootPath, "scripts", "gatherDocs.js")], { stdio: "inherit", cwd: workspaceRootPath });
+  execFileSync("node", [path.join(workspaceRootPath, "scripts", "gatherDocs.js")], {
+    stdio: "inherit",
+    cwd: workspaceRootPath,
+  });
 }
 
 // set up constants
@@ -35,7 +40,8 @@ const extractionsDir = path.join(workspaceRootPath, "build/docs/extract");
 const extractionStart = "<!-- BEGIN EXTRACTION -->";
 const extractionEnd = "<!-- END EXTRACTION -->";
 const targetFileExtensions = [".ts", ".tsx", ".md"];
-const re = /^(\s*)(?:<!--|\/\/|\/\*)\s*\[\[include:\s*([\w\d\._-]+|\[(?:\s*,?\s*[\w\d\._-]+)+\])(?:,[\s]*([\w\d_]+))?\]\]/;
+const re =
+  /^(\s*)(?:<!--|\/\/|\/\*)\s*\[\[include:\s*([\w\d\._-]+|\[(?:\s*,?\s*[\w\d\._-]+)+\])(?:,[\s]*([\w\d_]+))?\]\]/;
 const reIndentIndex = 1;
 const reExtractionNameIndex = 2;
 const reExtractionTypeIndex = 3;
@@ -141,7 +147,9 @@ function handleTargetFile(targetFilePath) {
     const nextLine = lines[insertion.line + 1];
     if (!nextLine.trimStart().startsWith(extractionStart)) {
       lines.splice(insertion.line + 1, 0, insertionContent);
-      console.log(`Inserted extraction "${insertion.extraction.name}" at line ${insertion.line + 1} in file "${targetFilePath}".`);
+      console.log(
+        `Inserted extraction "${insertion.extraction.name}" at line ${insertion.line + 1} in file "${targetFilePath}".`,
+      );
     } else {
       let existingExtractionLinesCount = 0;
       let didFindExtractionEnd = false;
@@ -157,7 +165,9 @@ function handleTargetFile(targetFilePath) {
         process.exit(1);
       }
       lines.splice(insertion.line + 1, existingExtractionLinesCount + 2, insertionContent);
-      console.log(`Updated extraction "${insertion.extraction.name}" at line ${insertion.line + 1} in file "${targetFilePath}".`);
+      console.log(
+        `Updated extraction "${insertion.extraction.name}" at line ${insertion.line + 1} in file "${targetFilePath}".`,
+      );
     }
   });
 

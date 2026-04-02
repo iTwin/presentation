@@ -19,7 +19,10 @@ import type { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 describe("readNodes", () => {
   const parser = sinon.stub<[{ [columnName: string]: any }], SourceInstanceHierarchyNode>();
   const queryExecutor = {
-    createQueryReader: sinon.stub<Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>, ReturnType<LimitingECSqlQueryExecutor["createQueryReader"]>>(),
+    createQueryReader: sinon.stub<
+      Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>,
+      ReturnType<LimitingECSqlQueryExecutor["createQueryReader"]>
+    >(),
   };
 
   beforeEach(() => {
@@ -41,7 +44,10 @@ describe("readNodes", () => {
 
     const query = { ecsql: "QUERY", ctes: ["CTE1, CTE2"] };
     const result = await collect(readNodes({ queryExecutor, query, parser: (row) => of(parser(row)) }));
-    expect(queryExecutor.createQueryReader).to.be.calledOnceWith(query, sinon.match({ rowFormat: "ECSqlPropertyNames", restartToken: sinon.match.string }));
+    expect(queryExecutor.createQueryReader).to.be.calledOnceWith(
+      query,
+      sinon.match({ rowFormat: "ECSqlPropertyNames", restartToken: sinon.match.string }),
+    );
     expect(parser).to.be.calledThrice;
     expect(result).to.deep.eq(nodes);
   });
@@ -86,7 +92,11 @@ describe("defaultNodesParser", () => {
       processingParams: {
         hideIfNoChildren: true,
         hideInHierarchy: true,
-        grouping: { byBaseClasses: { fullClassNames: [], hideIfNoSiblings: true, hideIfOneGroupedNode: true }, byClass: true, byLabel: true },
+        grouping: {
+          byBaseClasses: { fullClassNames: [], hideIfNoSiblings: true, hideIfOneGroupedNode: true },
+          byClass: true,
+          byLabel: true,
+        },
       },
     } satisfies SourceHierarchyNode);
   });
@@ -114,7 +124,11 @@ describe("defaultNodesParser", () => {
   });
 
   it("parses complex label of multiple parts", () => {
-    const labelParts: ConcatenatedValue = [{ type: "Integer", value: 123 }, "test", [{ type: "Boolean", value: true }, "xxx"]];
+    const labelParts: ConcatenatedValue = [
+      { type: "Integer", value: 123 },
+      "test",
+      [{ type: "Boolean", value: true }, "xxx"],
+    ];
     const row: RowDef = {
       [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
       [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",

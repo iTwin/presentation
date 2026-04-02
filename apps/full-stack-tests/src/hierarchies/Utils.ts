@@ -5,7 +5,11 @@
 
 import { IModelDb } from "@itwin/core-backend";
 import { IModelConnection } from "@itwin/core-frontend";
-import { createECSchemaProvider as createECSchemaProviderInterop, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
+import {
+  createECSchemaProvider as createECSchemaProviderInterop,
+  createECSqlQueryExecutor,
+  createIModelKey,
+} from "@itwin/presentation-core-interop";
 import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, parseFullClassName } from "@itwin/presentation-shared";
 import { createSchemaContext } from "../IModelUtils.js";
@@ -40,7 +44,10 @@ export function createProvider(
         search?: HierarchySearchPaths;
         queryCacheSize?: number;
       }
-    | { imodel: IModelConnection | IModelDb | ECDb; formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter }
+    | {
+        imodel: IModelConnection | IModelDb | ECDb;
+        formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter;
+      }
   ) & {
     imodelChanged?: Event<() => void>;
     hierarchy: HierarchyDefinition;
@@ -51,7 +58,8 @@ export function createProvider(
   },
 ) {
   const { imodelChanged, hierarchy, localizedStrings, search, queryCacheSize } = props;
-  const formatter = "imodel" in props && props.formatterFactory ? props.formatterFactory(createSchemaContext(props.imodel)) : undefined;
+  const formatter =
+    "imodel" in props && props.formatterFactory ? props.formatterFactory(createSchemaContext(props.imodel)) : undefined;
   return createIModelHierarchyProvider({
     imodelAccess: "imodelAccess" in props ? props.imodelAccess : createIModelAccess(props.imodel),
     imodelChanged,

@@ -48,7 +48,10 @@ describe("NavigationPropertyTargetSelector", () => {
     values: {},
   });
 
-  const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
+  const getContentStub = sinon.stub<
+    Parameters<PresentationManager["getContent"]>,
+    ReturnType<PresentationManager["getContent"]>
+  >();
 
   stubVirtualization();
   before(() => {
@@ -70,7 +73,11 @@ describe("NavigationPropertyTargetSelector", () => {
 
   it("renders selector", async () => {
     const { getByRole, queryByText, user } = render(
-      <NavigationPropertyTargetSelector imodel={testImodel} getNavigationPropertyInfo={async () => testNavigationPropertyInfo} propertyRecord={testRecord} />,
+      <NavigationPropertyTargetSelector
+        imodel={testImodel}
+        getNavigationPropertyInfo={async () => testNavigationPropertyInfo}
+        propertyRecord={testRecord}
+      />,
     );
 
     const inputContainer = await waitFor(() => getByRole("combobox"));
@@ -97,7 +104,11 @@ describe("NavigationPropertyTargetSelector", () => {
     await user.click(target);
     expect(spy).to.be.calledOnceWith({
       propertyRecord: testRecord,
-      newValue: { valueFormat: PropertyValueFormat.Primitive, value: contentItem.primaryKeys[0], displayValue: contentItem.label.displayValue },
+      newValue: {
+        valueFormat: PropertyValueFormat.Primitive,
+        value: contentItem.primaryKeys[0],
+        displayValue: contentItem.label.displayValue,
+      },
     });
   });
 
@@ -137,7 +148,9 @@ describe("NavigationPropertyTargetSelector", () => {
       displayValues: {},
       values: {},
     });
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem, baseContentItem]));
+    getContentStub.resolves(
+      new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem, baseContentItem]),
+    );
 
     const initialProps: NavigationPropertyTargetSelectorProps = {
       imodel: testImodel,
@@ -163,7 +176,9 @@ describe("NavigationPropertyTargetSelector", () => {
       displayValues: {},
       values: {},
     });
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem, baseContentItem]));
+    getContentStub.resolves(
+      new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem, baseContentItem]),
+    );
 
     const initialProps: NavigationPropertyTargetSelectorProps = {
       imodel: testImodel,
@@ -188,7 +203,13 @@ describe("NavigationPropertyTargetSelector", () => {
       values: {},
     });
 
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem, baseContentItem, newContentItem]));
+    getContentStub.resolves(
+      new Content(createTestContentDescriptor({ fields: [], categories: [] }), [
+        contentItem,
+        baseContentItem,
+        newContentItem,
+      ]),
+    );
     rerender(<NavigationPropertyTargetSelector {...initialProps} propertyRecord={newPropertyRecord} />);
 
     await waitFor(() => {
@@ -198,7 +219,11 @@ describe("NavigationPropertyTargetSelector", () => {
 
   it("does not load options on filter change when there is enough options", async () => {
     const propertyDescription = createNavigationPropertyDescription();
-    const value = { valueFormat: PropertyValueFormat.Primitive, value: { id: "1", className: "TestSchema:TargetClass" }, displayValue: "1" };
+    const value = {
+      valueFormat: PropertyValueFormat.Primitive,
+      value: { id: "1", className: "TestSchema:TargetClass" },
+      displayValue: "1",
+    };
     const propertyRecord = new PropertyRecord(value as PropertyValue, propertyDescription);
     const initialProps: NavigationPropertyTargetSelectorProps = {
       imodel: testImodel,
@@ -218,7 +243,9 @@ describe("NavigationPropertyTargetSelector", () => {
       );
     }
 
-    getContentStub.callsFake(async () => new Content(createTestContentDescriptor({ fields: [], categories: [] }), items));
+    getContentStub.callsFake(
+      async () => new Content(createTestContentDescriptor({ fields: [], categories: [] }), items),
+    );
 
     const { getByPlaceholderText, user } = render(<NavigationPropertyTargetSelector {...initialProps} />);
     await waitFor(() => {
@@ -249,7 +276,9 @@ describe("NavigationPropertyTargetSelector", () => {
       getNavigationPropertyInfo: async () => testNavigationPropertyInfo,
       propertyRecord,
     };
-    const { getByDisplayValue, getByRole, queryByText, user, getByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
+    const { getByDisplayValue, getByRole, queryByText, user, getByText } = render(
+      <NavigationPropertyTargetSelector {...initialProps} />,
+    );
 
     const inputContainer = await waitFor(() => getByRole("combobox"));
 

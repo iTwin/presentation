@@ -38,7 +38,9 @@ export namespace TypedValueSelectClauseProps {
   export function isPrimitiveValue(props: TypedValueSelectClauseProps): props is TypedPrimitiveValue {
     return "value" in props;
   }
-  export function isPrimitiveValueSelector(props: TypedValueSelectClauseProps): props is TypedPrimitiveValueSelectorProps {
+  export function isPrimitiveValueSelector(
+    props: TypedValueSelectClauseProps,
+  ): props is TypedPrimitiveValueSelectorProps {
     return "selector" in props;
   }
 }
@@ -111,7 +113,11 @@ export async function createPrimitivePropertyValueSelectorProps({
         ...(koqName ? { koqName } : /* c8 ignore next */ {}),
       };
   }
-  return { selector: propertySelector, type: propertyValueType, ...(extendedType ? { extendedType } : /* c8 ignore next */ {}) };
+  return {
+    selector: propertySelector,
+    type: propertyValueType,
+    ...(extendedType ? { extendedType } : /* c8 ignore next */ {}),
+  };
 }
 
 /**
@@ -120,7 +126,11 @@ export async function createPrimitivePropertyValueSelectorProps({
  *
  * @public
  */
-export function createRawPropertyValueSelector(classAlias: string, propertyName: string, componentName?: string): string {
+export function createRawPropertyValueSelector(
+  classAlias: string,
+  propertyName: string,
+  componentName?: string,
+): string {
   let propertySelector = `[${classAlias}].[${propertyName}]`;
   if (componentName) {
     propertySelector += `.[${componentName}]`;
@@ -267,8 +277,13 @@ function createPrimitiveValueJsonSelector(value: PrimitiveValue): string {
  *
  * @public
  */
-export function createConcatenatedValueStringSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string) {
-  const combinedSelectors = selectors.length ? selectors.map((sel) => createTypedValueStringSelector(sel)).join(" || ") : "''";
+export function createConcatenatedValueStringSelector(
+  selectors: TypedValueSelectClauseProps[],
+  checkSelector?: string,
+) {
+  const combinedSelectors = selectors.length
+    ? selectors.map((sel) => createTypedValueStringSelector(sel)).join(" || ")
+    : "''";
   if (checkSelector) {
     return createNullableSelector({ checkSelector, valueSelector: combinedSelectors });
   }

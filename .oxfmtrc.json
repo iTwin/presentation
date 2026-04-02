@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "printWidth": 160,
+  "printWidth": 120,
   "trailingComma": "all",
   "tabWidth": 2,
   "singleQuote": false,
@@ -57,7 +57,11 @@
             "unknown"
           ],
           "customGroups": [
-            { "groupName": "side-effect-imports", "modifiers": ["side_effect"], "elementNamePattern": ["**/*.js", "@*/*"] },
+            {
+              "groupName": "side-effect-imports",
+              "modifiers": ["side_effect"],
+              "elementNamePattern": ["**/*.js", "@*/*"]
+            },
             { "groupName": "icons", "elementNamePattern": ["**/*.svg"] },
             { "groupName": "style-imports", "elementNamePattern": ["**/*.css", "**/*.scss"] },
             { "groupName": "scoped", "modifiers": ["value"], "elementNamePattern": ["@*/**"] },

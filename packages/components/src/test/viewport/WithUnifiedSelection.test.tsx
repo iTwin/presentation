@@ -11,9 +11,17 @@ import { Code } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { ViewportComponent } from "@itwin/imodel-components-react";
 import { KeySet } from "@itwin/presentation-common";
-import { HiliteSetProvider, Presentation, SelectionChangeEvent, SelectionChangeType } from "@itwin/presentation-frontend";
+import {
+  HiliteSetProvider,
+  Presentation,
+  SelectionChangeEvent,
+  SelectionChangeType,
+} from "@itwin/presentation-frontend";
 import { ViewportSelectionHandler } from "../../presentation-components/viewport/ViewportSelectionHandler.js";
-import { ViewportSelectionHandlerContextProvider, viewWithUnifiedSelection } from "../../presentation-components/viewport/WithUnifiedSelection.js";
+import {
+  ViewportSelectionHandlerContextProvider,
+  viewWithUnifiedSelection,
+} from "../../presentation-components/viewport/WithUnifiedSelection.js";
 import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { render, waitFor } from "../TestUtils.js";
 
@@ -29,11 +37,20 @@ const PresentationViewport = viewWithUnifiedSelection(ViewportComponent);
 describe("Viewport withUnifiedSelection", () => {
   const viewDefinitionId = "0x1";
 
-  const views = { load: sinon.stub<Parameters<IModelConnection.Views["load"]>, ReturnType<IModelConnection.Views["load"]>>() };
+  const views = {
+    load: sinon.stub<Parameters<IModelConnection.Views["load"]>, ReturnType<IModelConnection.Views["load"]>>(),
+  };
 
-  const imodel = { views, hilited: { clear: () => {}, wantSyncWithSelectionSet: false }, selectionSet: { emptyAll: () => {} } } as unknown as IModelConnection;
+  const imodel = {
+    views,
+    hilited: { clear: () => {}, wantSyncWithSelectionSet: false },
+    selectionSet: { emptyAll: () => {} },
+  } as unknown as IModelConnection;
 
-  const selectionHandler = { imodel: {} as IModelConnection, applyCurrentSelection: () => {} } as ViewportSelectionHandler;
+  const selectionHandler = {
+    imodel: {} as IModelConnection,
+    applyCurrentSelection: () => {},
+  } as ViewportSelectionHandler;
 
   beforeEach(() => {
     views.load.resolves({} as ViewState3d);
@@ -102,7 +119,11 @@ describe("ViewportSelectionHandler", () => {
     subcategories: { addIds: sinon.stub<[Id64Arg], void>(), deleteIds: sinon.stub<[Id64Arg], void>() },
   };
 
-  const selectionSet = { emptyAll: sinon.stub<[], void>(), add: sinon.stub<[Id64Arg], void>(), remove: sinon.stub<[Id64Arg], void>() };
+  const selectionSet = {
+    emptyAll: sinon.stub<[], void>(),
+    add: sinon.stub<[Id64Arg], void>(),
+    remove: sinon.stub<[Id64Arg], void>(),
+  };
 
   const imodelElements: IModelConnection.Elements = {
     getProps: sinon.stub().callsFake(async (ids: Id64Arg) => createElementProps(ids)),
@@ -114,7 +135,10 @@ describe("ViewportSelectionHandler", () => {
     selectionChange: new SelectionChangeEvent(),
     setSyncWithIModelToolSelection: () => {},
     suspendIModelToolSelectionSync: () => ({ [Symbol.dispose]: () => {} }),
-    getHiliteSetIterator: sinon.stub<Parameters<SelectionManager["getHiliteSetIterator"]>, ReturnType<SelectionManager["getHiliteSetIterator"]>>(),
+    getHiliteSetIterator: sinon.stub<
+      Parameters<SelectionManager["getHiliteSetIterator"]>,
+      ReturnType<SelectionManager["getHiliteSetIterator"]>
+    >(),
   };
 
   function resetHilitedStub() {
@@ -486,7 +510,9 @@ describe("ViewportSelectionHandler", () => {
         // verify hilite was updated with expected ids
         expect(hilited.clear).to.not.be.called;
         expect(hilited.elements.deleteIds).to.be.calledOnceWith([removedIds[0], removedIds[1]]);
-        expect(hilited.elements.addIds).to.be.calledAfter(hilited.elements.deleteIds).and.calledOnceWith([hilitedId, removedIds[1]]);
+        expect(hilited.elements.addIds)
+          .to.be.calledAfter(hilited.elements.deleteIds)
+          .and.calledOnceWith([hilitedId, removedIds[1]]);
 
         // verify selection set was updated
         expect(selectionSet.emptyAll).to.not.be.called;
@@ -519,7 +545,9 @@ describe("ViewportSelectionHandler", () => {
         // verify hilite was updated with expected ids
         expect(hilited.clear).to.not.be.called;
         expect(hilited.models.deleteIds).to.be.calledOnceWith([removedIds[0], removedIds[1]]);
-        expect(hilited.models.addIds).to.be.calledAfter(hilited.models.deleteIds).and.calledOnceWith([hilitedId, removedIds[1]]);
+        expect(hilited.models.addIds)
+          .to.be.calledAfter(hilited.models.deleteIds)
+          .and.calledOnceWith([hilitedId, removedIds[1]]);
 
         // verify selection set was not changed
         expect(selectionSet.emptyAll).to.not.be.called;
@@ -552,7 +580,9 @@ describe("ViewportSelectionHandler", () => {
         // verify hilite was updated with expected ids
         expect(hilited.clear).to.not.be.called;
         expect(hilited.subcategories.deleteIds).to.be.calledOnceWith([removedIds[0], removedIds[1]]);
-        expect(hilited.subcategories.addIds).to.be.calledAfter(hilited.subcategories.deleteIds).and.calledOnceWith([hilitedId, removedIds[1]]);
+        expect(hilited.subcategories.addIds)
+          .to.be.calledAfter(hilited.subcategories.deleteIds)
+          .and.calledOnceWith([hilitedId, removedIds[1]]);
 
         // verify selection set was not changed
         expect(selectionSet.emptyAll).to.not.be.called;
@@ -666,6 +696,11 @@ describe("ViewportSelectionHandler", () => {
 
 const createElementProps = (ids: Id64Arg): ElementProps[] => {
   return [...Id64.toIdSet(ids)].map(
-    (id: Id64String): ElementProps => ({ id, classFullName: "ElementSchema:ElementClass", code: Code.createEmpty(), model: id }),
+    (id: Id64String): ElementProps => ({
+      id,
+      classFullName: "ElementSchema:ElementClass",
+      code: Code.createEmpty(),
+      model: id,
+    }),
   );
 };

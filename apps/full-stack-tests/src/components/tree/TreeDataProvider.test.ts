@@ -24,14 +24,26 @@ const RULESET: Ruleset = {
     {
       ruleType: RuleTypes.RootNodes,
       specifications: [
-        { specType: ChildNodeSpecificationTypes.CustomNode, type: "root", label: "root label", description: "root description", imageId: "root image id" },
+        {
+          specType: ChildNodeSpecificationTypes.CustomNode,
+          type: "root",
+          label: "root label",
+          description: "root description",
+          imageId: "root image id",
+        },
       ],
     },
     {
       ruleType: RuleTypes.ChildNodes,
       condition: `ParentNode.Type = "root"`,
       specifications: [
-        { specType: ChildNodeSpecificationTypes.CustomNode, type: "child", label: "child label", description: "child description", imageId: "child image id" },
+        {
+          specType: ChildNodeSpecificationTypes.CustomNode,
+          type: "child",
+          label: "child label",
+          description: "child description",
+          imageId: "child image id",
+        },
       ],
     },
   ],
@@ -160,7 +172,9 @@ describe("TreeDataProvider", async () => {
       const key = (item as PresentationTreeNodeItem).key;
       assert(NodeKey.isClassGroupingNodeKey(key));
       assert(item.label.value.valueFormat === PropertyValueFormat.Primitive);
-      expect(item.label.value.displayValue).to.match(new RegExp(`^[\\w\\d_ ]+ \\(${key.groupedInstancesCount}\\)$`, "i"));
+      expect(item.label.value.displayValue).to.match(
+        new RegExp(`^[\\w\\d_ ]+ \\(${key.groupedInstancesCount}\\)$`, "i"),
+      );
     });
   });
 });

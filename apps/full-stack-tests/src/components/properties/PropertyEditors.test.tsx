@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import sinon from "sinon";
 import { EditorContainer, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
@@ -183,7 +187,9 @@ describe("Property editors", () => {
     // render an editor for the property
     const commitSpy = sinon.spy();
     const cancelSpy = sinon.spy();
-    const { findByRole, user } = render(<EditorContainer propertyRecord={propertyRecord!} onCommit={commitSpy} onCancel={cancelSpy} />);
+    const { findByRole, user } = render(
+      <EditorContainer propertyRecord={propertyRecord!} onCommit={commitSpy} onCancel={cancelSpy} />,
+    );
 
     // ensure the input is editable
     const input = await findByRole("textbox");

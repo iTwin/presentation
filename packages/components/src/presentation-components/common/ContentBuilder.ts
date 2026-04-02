@@ -13,7 +13,13 @@ import { combineFieldNames, PropertyValueFormat as PresentationPropertyValueForm
 import { NumericEditorName } from "../properties/editors/NumericPropertyEditor.js";
 import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor.js";
 
-import type { ArrayValue, PrimitiveValue, PropertyDescription, PropertyEditorInfo, StructValue } from "@itwin/appui-abstract";
+import type {
+  ArrayValue,
+  PrimitiveValue,
+  PropertyDescription,
+  PropertyEditorInfo,
+  StructValue,
+} from "@itwin/appui-abstract";
 import type {
   EditorDescription,
   EnumerationInfo,
@@ -67,7 +73,9 @@ export interface FieldInfo {
 
 /** @internal */
 export function createFieldInfo(field: Field, parentFieldName?: string): FieldInfo {
-  const property: undefined | WithConstraints<PropertyInfo> = field.isPropertiesField() ? field.properties[0].property : undefined;
+  const property: undefined | WithConstraints<PropertyInfo> = field.isPropertiesField()
+    ? field.properties[0].property
+    : undefined;
   return {
     name: combineFieldNames(field.name, parentFieldName),
     type: field.isNestedContentField() ? field.type : { ...field.type, typeName: field.type.typeName.toLowerCase() },
@@ -83,7 +91,11 @@ export function createFieldInfo(field: Field, parentFieldName?: string): FieldIn
 
 /** @internal */
 export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
-  const description: WithConstraints<PropertyDescription> = { typename: info.type.typeName, name: info.name, displayLabel: info.label };
+  const description: WithConstraints<PropertyDescription> = {
+    typename: info.type.typeName,
+    name: info.name,
+    displayLabel: info.label,
+  };
 
   if (info.renderer) {
     description.renderer = { name: info.renderer.name };
@@ -212,7 +224,10 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
   private _rootAppenderFactory: (item: Item) => IRootPropertiesAppender;
   private _propertyRecordsProcessor?: (record: PropertyRecord) => void;
 
-  public constructor(rootPropertiesAppenderFactory: (item: Item) => IRootPropertiesAppender, propertyRecordsProcessor?: (record: PropertyRecord) => void) {
+  public constructor(
+    rootPropertiesAppenderFactory: (item: Item) => IRootPropertiesAppender,
+    propertyRecordsProcessor?: (record: PropertyRecord) => void,
+  ) {
     this._rootAppenderFactory = rootPropertiesAppenderFactory;
     this._propertyRecordsProcessor = propertyRecordsProcessor;
   }
@@ -249,7 +264,13 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
   public startStruct(props: StartStructProps): boolean {
     const fieldInfo = { ...createFieldInfo(props.hierarchy.field, props.parentFieldName), type: props.valueType };
     this._appendersStack.push(
-      new StructMembersAppender(this.currentPropertiesAppender, props.hierarchy, fieldInfo, props.label, this._propertyRecordsProcessor),
+      new StructMembersAppender(
+        this.currentPropertiesAppender,
+        props.hierarchy,
+        fieldInfo,
+        props.label,
+        this._propertyRecordsProcessor,
+      ),
     );
     return true;
   }
@@ -279,7 +300,10 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
   public processMergedValue(props: ProcessMergedValueProps): void {
     const propertyField = props.requestedField;
     const value: PrimitiveValue = { valueFormat: UiPropertyValueFormat.Primitive };
-    const record = new PropertyRecord(value, createPropertyDescriptionFromFieldInfo(createFieldInfo(propertyField, props.parentFieldName)));
+    const record = new PropertyRecord(
+      value,
+      createPropertyDescriptionFromFieldInfo(createFieldInfo(propertyField, props.parentFieldName)),
+    );
     record.isMerged = true;
     record.autoExpand = propertyField.isNestedContentField() && propertyField.autoExpand;
     this._propertyRecordsProcessor?.(record);
@@ -296,7 +320,10 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
     };
     const record = new PropertyRecord(
       value,
-      createPropertyDescriptionFromFieldInfo({ ...createFieldInfo(props.field, props.parentFieldName), type: props.valueType }),
+      createPropertyDescriptionFromFieldInfo({
+        ...createFieldInfo(props.field, props.parentFieldName),
+        type: props.valueType,
+      }),
     );
     applyPropertyRecordAttributes(
       record,

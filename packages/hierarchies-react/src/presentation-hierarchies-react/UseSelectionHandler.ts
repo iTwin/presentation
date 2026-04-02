@@ -108,7 +108,12 @@ interface SelectionAction {
   type: SelectionChangeType | "disabled";
 }
 
-function getSelectionAction(selectionMode: SelectionMode, isSelected: boolean, shiftDown: boolean, ctrlDown: boolean): SelectionAction {
+function getSelectionAction(
+  selectionMode: SelectionMode,
+  isSelected: boolean,
+  shiftDown: boolean,
+  ctrlDown: boolean,
+): SelectionAction {
   switch (selectionMode) {
     case "none":
       return { select: "node", type: "disabled" };

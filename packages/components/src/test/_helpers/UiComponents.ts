@@ -12,7 +12,10 @@ import type { DelayLoadedTreeNodeItem } from "@itwin/components-react";
 import type { NodeKey } from "@itwin/presentation-common";
 import type { PresentationTreeNodeItem } from "../../presentation-components/tree/PresentationTreeNodeItem.js";
 
-export function createTestTreeNodeItem(key?: NodeKey, partialNode?: Partial<DelayLoadedTreeNodeItem>): PresentationTreeNodeItem {
+export function createTestTreeNodeItem(
+  key?: NodeKey,
+  partialNode?: Partial<DelayLoadedTreeNodeItem>,
+): PresentationTreeNodeItem {
   const node = {
     id: partialNode?.id ?? "node_id",
     parentId: partialNode?.parentId,
@@ -31,6 +34,11 @@ export function createTestPropertyRecord(value?: Partial<PrimitiveValue>, proper
     displayValue: "test_prop_displayValue",
     ...value,
   };
-  const description: PropertyDescription = { typename: "string", name: "test_prop", displayLabel: "TestProp", ...property };
+  const description: PropertyDescription = {
+    typename: "string",
+    name: "test_prop",
+    displayLabel: "TestProp",
+    ...property,
+  };
   return new PropertyRecord(recordValue, description);
 }

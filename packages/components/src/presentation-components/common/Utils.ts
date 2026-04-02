@@ -88,7 +88,11 @@ export const findField = (descriptor: Descriptor, recordPropertyName: string): F
  * @internal
  */
 export const createLabelRecord = (label: LabelDefinition, name: string): PropertyRecord => {
-  const value: PrimitiveValue = { displayValue: label.displayValue, value: createPrimitiveLabelValue(label), valueFormat: PropertyValueFormat.Primitive };
+  const value: PrimitiveValue = {
+    displayValue: label.displayValue,
+    value: createPrimitiveLabelValue(label),
+    valueFormat: PropertyValueFormat.Primitive,
+  };
   const property: PropertyDescription = { displayLabel: "Label", typename: label.typeName, name };
 
   return new PropertyRecord(value, property);
@@ -101,7 +105,11 @@ const createPrimitiveLabelValue = (label: LabelDefinition) => {
 const createPrimitiveCompositeValue = (compositeValue: LabelCompositeValue): Primitives.Composite => {
   return {
     separator: compositeValue.separator,
-    parts: compositeValue.values.map((part) => ({ displayValue: part.displayValue, typeName: part.typeName, rawValue: createPrimitiveLabelValue(part) })),
+    parts: compositeValue.values.map((part) => ({
+      displayValue: part.displayValue,
+      typeName: part.typeName,
+      rawValue: createPrimitiveLabelValue(part),
+    })),
   };
 };
 
@@ -221,7 +229,10 @@ export function serializeUniqueValues(values: UniqueValue[]): { displayValues: s
  * Function for deserializing `displayValues` and `groupedRawValues`.
  * Returns an array of `UniqueValue` or undefined if parsing fails.
  */
-export function deserializeUniqueValues(serializedDisplayValues: string, serializedGroupedRawValues: string): UniqueValue[] | undefined {
+export function deserializeUniqueValues(
+  serializedDisplayValues: string,
+  serializedGroupedRawValues: string,
+): UniqueValue[] | undefined {
   const tryParseJSON = (value: string) => {
     try {
       return JSON.parse(value);
@@ -232,7 +243,12 @@ export function deserializeUniqueValues(serializedDisplayValues: string, seriali
   const displayValues = tryParseJSON(serializedDisplayValues);
   const groupedRawValues = tryParseJSON(serializedGroupedRawValues);
 
-  if (!displayValues || !groupedRawValues || !Array.isArray(displayValues) || Object.keys(groupedRawValues).length !== displayValues.length) {
+  if (
+    !displayValues ||
+    !groupedRawValues ||
+    !Array.isArray(displayValues) ||
+    Object.keys(groupedRawValues).length !== displayValues.length
+  ) {
     return undefined;
   }
 

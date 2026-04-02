@@ -15,8 +15,20 @@ import { StyleHelper } from "../common/StyleHelper.js";
 import { createLabelRecord } from "../common/Utils.js";
 import { InfoTreeNodeItemType } from "./PresentationTreeNodeItem.js";
 
-import type { DelayLoadedTreeNodeItem, ItemColorOverrides, ItemStyle, Observable, TreeNodeItem, PageOptions as UiPageOptions } from "@itwin/components-react";
-import type { LabelDefinition, Node, PartialNode, PageOptions as PresentationPageOptions } from "@itwin/presentation-common";
+import type {
+  DelayLoadedTreeNodeItem,
+  ItemColorOverrides,
+  ItemStyle,
+  Observable,
+  TreeNodeItem,
+  PageOptions as UiPageOptions,
+} from "@itwin/components-react";
+import type {
+  LabelDefinition,
+  Node,
+  PartialNode,
+  PageOptions as PresentationPageOptions,
+} from "@itwin/presentation-common";
 import type { PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
 
 /** @internal */
@@ -26,7 +38,11 @@ export interface CreateTreeNodeItemProps {
 }
 
 /** @internal */
-export function createTreeNodeItems(nodes: ReadonlyArray<Readonly<Node>>, parentId?: string, props?: CreateTreeNodeItemProps): PresentationTreeNodeItem[] {
+export function createTreeNodeItems(
+  nodes: ReadonlyArray<Readonly<Node>>,
+  parentId?: string,
+  props?: CreateTreeNodeItemProps,
+): PresentationTreeNodeItem[] {
   const list = new Array<PresentationTreeNodeItem>();
   for (const node of nodes) {
     list.push(createTreeNodeItem(node, parentId, props));
@@ -35,7 +51,11 @@ export function createTreeNodeItems(nodes: ReadonlyArray<Readonly<Node>>, parent
 }
 
 /** @internal */
-export function createTreeNodeItem(node: Readonly<Node>, parentId?: string, props?: CreateTreeNodeItemProps): PresentationTreeNodeItem {
+export function createTreeNodeItem(
+  node: Readonly<Node>,
+  parentId?: string,
+  props?: CreateTreeNodeItemProps,
+): PresentationTreeNodeItem {
   const item: PresentationTreeNodeItem = {
     id: createTreeNodeId(node.key),
     label: createNodeLabelRecord(node, !!props?.appendChildrenCountForGroupingNodes),
@@ -48,7 +68,11 @@ export function createTreeNodeItem(node: Readonly<Node>, parentId?: string, prop
 }
 
 /** @internal */
-export function createPartialTreeNodeItem(node: PartialNode, parentId: string | undefined, props: CreateTreeNodeItemProps): Partial<PresentationTreeNodeItem> {
+export function createPartialTreeNodeItem(
+  node: PartialNode,
+  parentId: string | undefined,
+  props: CreateTreeNodeItemProps,
+): Partial<PresentationTreeNodeItem> {
   const item: Partial<PresentationTreeNodeItem> = {};
   if (node.key !== undefined) {
     item.id = createTreeNodeId(node.key);
@@ -66,7 +90,11 @@ export function createTreeNodeId(key: NodeKey): string {
   return [...key.pathFromRoot].reverse().join("/");
 }
 
-function assignOptionalTreeNodeItemFields(item: Partial<PresentationTreeNodeItem>, node: Partial<Node>, parentId?: string): void {
+function assignOptionalTreeNodeItemFields(
+  item: Partial<PresentationTreeNodeItem>,
+  node: Partial<Node>,
+  parentId?: string,
+): void {
   if (node.key !== undefined) {
     item.key = node.key;
   }
@@ -183,7 +211,11 @@ export function toRxjsObservable<T>(source: Observable<T>): RxjsObservable<T> {
   return new RxjsObservable((subscriber) => source.subscribe(subscriber));
 }
 
-export function createInfoNode(parentNode: TreeNodeItem | undefined, message: string, type?: InfoTreeNodeItemType): PresentationInfoTreeNodeItem {
+export function createInfoNode(
+  parentNode: TreeNodeItem | undefined,
+  message: string,
+  type?: InfoTreeNodeItemType,
+): PresentationInfoTreeNodeItem {
   const id = parentNode ? `${parentNode.id}/info-node` : `/info-node/${message}`;
   return {
     id,

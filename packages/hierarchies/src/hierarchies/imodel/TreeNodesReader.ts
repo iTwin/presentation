@@ -60,7 +60,9 @@ export interface RowDef {
 }
 
 /** @internal */
-export const defaultNodesParser: (props: Pick<Props<RxjsNodeParser>, "row">) => ObservedValueOf<ReturnType<RxjsNodeParser>> = ({ row }) => {
+export const defaultNodesParser: (
+  props: Pick<Props<RxjsNodeParser>, "row">,
+) => ObservedValueOf<ReturnType<RxjsNodeParser>> = ({ row }) => {
   const typedRow = row as RowDef;
   const processingParams: InstanceHierarchyNodeProcessingParams = {
     ...(typedRow.HideIfNoChildren ? { hideIfNoChildren: true } : undefined),
@@ -70,7 +72,10 @@ export const defaultNodesParser: (props: Pick<Props<RxjsNodeParser>, "row">) => 
   return {
     // don't format the label here - we're going to do that at node pre-processing step to handle both - instance and generic nodes
     label: parseInstanceLabel(typedRow.DisplayLabel),
-    key: { type: "instances", instanceKeys: [{ className: normalizeFullClassName(typedRow.FullClassName), id: typedRow.ECInstanceId }] },
+    key: {
+      type: "instances",
+      instanceKeys: [{ className: normalizeFullClassName(typedRow.FullClassName), id: typedRow.ECInstanceId }],
+    },
     ...(typedRow.HasChildren !== undefined ? { children: !!typedRow.HasChildren } : undefined),
     ...(typedRow.AutoExpand ? { autoExpand: true } : undefined),
     ...(typedRow.SupportsFiltering ? { supportsFiltering: true } : undefined),

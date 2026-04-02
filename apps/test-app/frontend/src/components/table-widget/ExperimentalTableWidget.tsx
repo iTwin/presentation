@@ -108,7 +108,11 @@ function PresentationTable(props: PresentationTableProps) {
   }
 
   return (
-    <div className="container" onScroll={(e) => fetchMoreOnBottomReached(e.target as HTMLDivElement)} ref={tableContainerRef}>
+    <div
+      className="container"
+      onScroll={(e) => fetchMoreOnBottomReached(e.target as HTMLDivElement)}
+      ref={tableContainerRef}
+    >
       <table>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -116,7 +120,9 @@ function PresentationTable(props: PresentationTableProps) {
               {headerGroup.headers.map((header) => {
                 return (
                   <th key={header.id} colSpan={header.colSpan}>
-                    {header.isPlaceholder ? null : <>{flexRender(header.column.columnDef.header, header.getContext())}</>}
+                    {header.isPlaceholder ? null : (
+                      <>{flexRender(header.column.columnDef.header, header.getContext())}</>
+                    )}
                   </th>
                 );
               })}
@@ -147,7 +153,12 @@ function PresentationTable(props: PresentationTableProps) {
 }
 
 function mapTableColumns(columnDefinitions: TableColumnDefinition) {
-  return { id: columnDefinitions.name, accessorKey: columnDefinitions.name, header: columnDefinitions.label, cell: cellRenderer };
+  return {
+    id: columnDefinitions.name,
+    accessorKey: columnDefinitions.name,
+    header: columnDefinitions.label,
+    cell: cellRenderer,
+  };
 }
 
 function mapTableRow(rowDefinition: TableRowDefinition) {

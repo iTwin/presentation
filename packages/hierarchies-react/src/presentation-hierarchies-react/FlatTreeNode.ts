@@ -73,7 +73,11 @@ function getFlatItems(nodes: TreeNode[], level: number) {
       return;
     }
 
-    flatItems.push({ id: `${node.id}-children-placeholder`, level: level + 1, placeholder: true } satisfies FlatPlaceholderItem);
+    flatItems.push({
+      id: `${node.id}-children-placeholder`,
+      level: level + 1,
+      placeholder: true,
+    } satisfies FlatPlaceholderItem);
   });
   return flatItems;
 }

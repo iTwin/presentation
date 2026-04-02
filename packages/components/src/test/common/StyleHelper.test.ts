@@ -12,7 +12,10 @@ import type { Node } from "@itwin/presentation-common";
 
 describe("StyleHelper", () => {
   // eslint-disable-next-line @typescript-eslint/no-deprecated
-  const createNodeBase = (): Node => ({ label: LabelDefinition.fromLabelString("Test Label"), key: createTestECInstancesNodeKey() });
+  const createNodeBase = (): Node => ({
+    label: LabelDefinition.fromLabelString("Test Label"),
+    key: createTestECInstancesNodeKey(),
+  });
 
   describe("isBold", () => {
     it("returns true when fontStyle property contains 'Bold'", () => {

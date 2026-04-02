@@ -9,7 +9,11 @@ import "../../common/DisposePolyfill.js";
 export const VALUE_BATCH_SIZE = 100;
 
 /** @internal */
-export const FILTER_WARNING_OPTION = { label: "Too many values please use filter", value: "__filter__", disabled: true };
+export const FILTER_WARNING_OPTION = {
+  label: "Too many values please use filter",
+  value: "__filter__",
+  disabled: true,
+};
 
 interface LoadedItems<T> {
   options: T[];
@@ -56,7 +60,9 @@ export class ItemsLoader<T> {
         return options.length < VALUE_BATCH_SIZE;
       }
 
-      const matchingItems = options.filter((option) => this._getOptionLabel(option).toLowerCase().includes(searchText.toLowerCase()));
+      const matchingItems = options.filter((option) =>
+        this._getOptionLabel(option).toLowerCase().includes(searchText.toLowerCase()),
+      );
       return matchingItems.length < VALUE_BATCH_SIZE;
     };
 

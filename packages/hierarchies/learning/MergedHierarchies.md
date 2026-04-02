@@ -16,7 +16,12 @@ The below example demonstrates how to create a hierarchy provider that merges th
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, GetHierarchyNodesProps, HierarchyNode, mergeProviders } from "@itwin/presentation-hierarchies";
+import {
+  createHierarchyProvider,
+  GetHierarchyNodesProps,
+  HierarchyNode,
+  mergeProviders,
+} from "@itwin/presentation-hierarchies";
 
 // Create a very basic hierarchy provider factory
 function createBasicHierarchyProvider(nodes: (parentNode: GetHierarchyNodesProps["parentNode"]) => HierarchyNode[]) {
@@ -45,7 +50,14 @@ const provider2 = createBasicHierarchyProvider((parent) => {
 // A provider that returns no root nodes, but returns a single "Child node" for parent nodes "A" and "X"
 const childrenProvider = createBasicHierarchyProvider((parent) => {
   if (parent && HierarchyNode.isGeneric(parent) && (parent.key.id === "a" || parent.key.id === "x")) {
-    return [{ key: { type: "generic", id: "c" }, label: "Child node", children: false, parentKeys: [...parent.parentKeys, parent.key] }];
+    return [
+      {
+        key: { type: "generic", id: "c" },
+        label: "Child node",
+        children: false,
+        parentKeys: [...parent.parentKeys, parent.key],
+      },
+    ];
   }
   return [];
 });

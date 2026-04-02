@@ -64,7 +64,10 @@ const SelectionHandlerContext = createContext<SelectionHandler | undefined>(unde
 
 /** @internal */
 // eslint-disable-next-line @typescript-eslint/no-deprecated
-export function SelectionHandlerContextProvider({ selectionHandler, children }: PropsWithChildren<{ selectionHandler: SelectionHandler }>) {
+export function SelectionHandlerContextProvider({
+  selectionHandler,
+  children,
+}: PropsWithChildren<{ selectionHandler: SelectionHandler }>) {
   return <SelectionHandlerContext.Provider value={selectionHandler}>{children}</SelectionHandlerContext.Provider>;
 }
 
@@ -82,7 +85,8 @@ export function usePropertyDataProviderWithUnifiedSelection(
 ): UsePropertyDataProviderWithUnifiedSelectionResult {
   const { dataProvider, selectionStorage } = props;
   const { imodel, rulesetId } = dataProvider;
-  const requestedContentInstancesLimit = props.requestedContentInstancesLimit ?? DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT;
+  const requestedContentInstancesLimit =
+    props.requestedContentInstancesLimit ?? DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT;
   const [numSelectedElements, setNumSelectedElements] = useState(0);
 
   const suppliedSelectionHandler = useSelectionHandlerContext();
@@ -95,7 +99,12 @@ export function usePropertyDataProviderWithUnifiedSelection(
     if (selectionStorage) {
       return initUnifiedSelectionFromStorage({ imodel, selectionStorage, onSelectionChanged });
     }
-    return initUnifiedSelectionFromPresentationFrontend({ imodel, rulesetId, suppliedSelectionHandler, onSelectionChanged });
+    return initUnifiedSelectionFromPresentationFrontend({
+      imodel,
+      rulesetId,
+      suppliedSelectionHandler,
+      onSelectionChanged,
+    });
   }, [dataProvider, imodel, rulesetId, requestedContentInstancesLimit, suppliedSelectionHandler, selectionStorage]);
 
   return { isOverLimit: isOverLimit(numSelectedElements, requestedContentInstancesLimit), numSelectedElements };

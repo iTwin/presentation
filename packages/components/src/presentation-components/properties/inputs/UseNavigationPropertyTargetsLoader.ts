@@ -168,7 +168,9 @@ async function getItems(imodel: IModelConnection, ruleset: Ruleset, filter?: str
           toArray(),
         )
       : // eslint-disable-next-line @typescript-eslint/no-deprecated
-        from(Presentation.presentation.getContent(requestProps)).pipe(map((content) => (content ? content.contentSet : [])))
+        from(Presentation.presentation.getContent(requestProps)).pipe(
+          map((content) => (content ? content.contentSet : [])),
+        )
     ).subscribe({ next: resolve, error: reject });
   });
 
@@ -193,11 +195,17 @@ export class NavigationPropertyItemsLoader {
   }
 
   public async loadItems(filterText?: string) {
-    if (this._isLoading || filterText === undefined || (filterText === "" && this._loadedItems.length >= VALUE_BATCH_SIZE)) {
+    if (
+      this._isLoading ||
+      filterText === undefined ||
+      (filterText === "" && this._loadedItems.length >= VALUE_BATCH_SIZE)
+    ) {
       return;
     }
 
-    const filteredItems = this._loadedItems.filter((option) => option.label.displayValue.toLowerCase().includes(filterText.toLowerCase()));
+    const filteredItems = this._loadedItems.filter((option) =>
+      option.label.displayValue.toLowerCase().includes(filterText.toLowerCase()),
+    );
     if (filteredItems.length >= VALUE_BATCH_SIZE) {
       return;
     }

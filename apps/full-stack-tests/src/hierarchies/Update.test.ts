@@ -19,7 +19,14 @@ import {
   SubjectOwnsSubjects,
 } from "@itwin/core-backend";
 import { BeEvent, Guid, OpenMode } from "@itwin/core-bentley";
-import { BisCodeSpec, EmptyLocalization, IModel, IModelReadRpcInterface, RpcConfiguration, RpcManager } from "@itwin/core-common";
+import {
+  BisCodeSpec,
+  EmptyLocalization,
+  IModel,
+  IModelReadRpcInterface,
+  RpcConfiguration,
+  RpcManager,
+} from "@itwin/core-common";
 import { BriefcaseConnection, IpcApp, NullRenderSystem } from "@itwin/core-frontend";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
@@ -31,7 +38,14 @@ import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation.js
 import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils.js";
 
 import type { Id64String } from "@itwin/core-bentley";
-import type { ExternalSourceAspectProps, IpcListener, IpcSocketBackend, IpcSocketFrontend, RelationshipProps, RemoveFunction } from "@itwin/core-common";
+import type {
+  ExternalSourceAspectProps,
+  IpcListener,
+  IpcSocketBackend,
+  IpcSocketFrontend,
+  RelationshipProps,
+  RemoveFunction,
+} from "@itwin/core-common";
 import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
@@ -70,7 +84,10 @@ describe("Hierarchies", () => {
       if (fs.existsSync(filePath)) {
         fs.rmSync(filePath);
       }
-      db = StandaloneDb.createEmpty(filePath, { rootSubject: { name: fileName }, allowEdit: JSON.stringify({ txns: true }) });
+      db = StandaloneDb.createEmpty(filePath, {
+        rootSubject: { name: fileName },
+        allowEdit: JSON.stringify({ txns: true }),
+      });
       db.close();
 
       // we want connection to point to the exact same imodel and the only way to do this is to first open
@@ -105,7 +122,11 @@ describe("Hierarchies", () => {
 
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }] })],
+            expect: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
+              }),
+            ],
           });
         });
 
@@ -167,7 +188,10 @@ describe("Hierarchies", () => {
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
-              NodeValidators.createForInstanceNode({ instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }], label: "" }),
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
+                label: "",
+              }),
             ],
           });
 
@@ -237,7 +261,10 @@ describe("Hierarchies", () => {
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
-              NodeValidators.createForInstanceNode({ instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }], label: "" }),
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
+                label: "",
+              }),
             ],
           });
         });
@@ -254,7 +281,11 @@ describe("Hierarchies", () => {
 
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: normalizeFullClassName(PhysicalModel.classFullName), id: modelId }] })],
+            expect: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [{ className: normalizeFullClassName(PhysicalModel.classFullName), id: modelId }],
+              }),
+            ],
           });
         });
 
@@ -296,7 +327,11 @@ describe("Hierarchies", () => {
           const provider = createPhysicalModelsProvider();
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: normalizeFullClassName(PhysicalModel.classFullName), id: modelId }] })],
+            expect: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [{ className: normalizeFullClassName(PhysicalModel.classFullName), id: modelId }],
+              }),
+            ],
           });
 
           deleteModel(modelId);
@@ -318,7 +353,11 @@ describe("Hierarchies", () => {
 
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }] })],
+            expect: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
+              }),
+            ],
           });
         });
 
@@ -332,7 +371,11 @@ describe("Hierarchies", () => {
           const provider = createRootSubjectReferredElementsProvider();
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subject1Id }] })],
+            expect: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subject1Id }],
+              }),
+            ],
           });
 
           updateElementRefersToElementRelationship({ ...relationshipProps, targetId: subject2Id });
@@ -340,7 +383,11 @@ describe("Hierarchies", () => {
 
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subject2Id }] })],
+            expect: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subject2Id }],
+              }),
+            ],
           });
         });
 
@@ -353,7 +400,11 @@ describe("Hierarchies", () => {
           const provider = createRootSubjectReferredElementsProvider();
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }] })],
+            expect: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
+              }),
+            ],
           });
 
           deleteRelationship(relationshipProps);
@@ -362,11 +413,15 @@ describe("Hierarchies", () => {
           validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
         });
 
-        function createRootSubjectChildrenProvider(props: { label: "codeValue" | "aspectIdentifier" } = { label: "codeValue" }) {
+        function createRootSubjectChildrenProvider(
+          props: { label: "codeValue" | "aspectIdentifier" } = { label: "codeValue" },
+        ) {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel() {
@@ -399,7 +454,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel() {
@@ -432,7 +489,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel() {
@@ -516,12 +575,20 @@ describe("Hierarchies", () => {
             classFullName: PhysicalPartition.classFullName,
             model: IModel.repositoryModelId,
             parent: { id: parentSubjectId, relClassName: SubjectOwnsPartitionElements.classFullName },
-            code: { scope: parentSubjectId, spec: db.codeSpecs.getByName(BisCodeSpec.informationPartitionElement).id, value: codeValue },
+            code: {
+              scope: parentSubjectId,
+              spec: db.codeSpecs.getByName(BisCodeSpec.informationPartitionElement).id,
+              value: codeValue,
+            },
           });
         }
 
         function insertPhysicalModel(modeledElementId: Id64String, isPrivate: boolean) {
-          return db.models.insertModel({ classFullName: PhysicalModel.classFullName, modeledElement: { id: modeledElementId }, isPrivate });
+          return db.models.insertModel({
+            classFullName: PhysicalModel.classFullName,
+            modeledElement: { id: modeledElementId },
+            isPrivate,
+          });
         }
 
         function updatePhysicalModel(modelId: Id64String, newIsPrivate: boolean) {
@@ -533,7 +600,10 @@ describe("Hierarchies", () => {
           db.models.deleteModel(modelId);
         }
 
-        function insertElementRefersToElementRelationship(sourceId: Id64String, targetId: Id64String): RelationshipProps {
+        function insertElementRefersToElementRelationship(
+          sourceId: Id64String,
+          targetId: Id64String,
+        ): RelationshipProps {
           const props: RelationshipProps = { classFullName: ElementRefersToElements.classFullName, sourceId, targetId };
           const id = db.relationships.insertInstance(props);
           return { ...props, id };

@@ -11,7 +11,11 @@ import { IModelHost } from "@itwin/core-backend";
 import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
 import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration } from "@itwin/core-common";
 import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
-import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationBackendNativeLoggerCategory } from "@itwin/presentation-backend";
+import {
+  HierarchyCacheMode,
+  Presentation as PresentationBackend,
+  PresentationBackendNativeLoggerCategory,
+} from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation as PresentationFrontend } from "@itwin/presentation-frontend";
 import { getTestOutputDir, setTestOutputDir } from "./FilenameUtils.js";
@@ -105,7 +109,10 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
   if (!props.backendProps.id) {
     props.backendProps.id = `test-${Guid.createValue()}`;
   }
-  await IModelHost.startup({ cacheDir: join(getTestOutputDir(), ".cache", `${process.pid}`), ...props.backendHostProps });
+  await IModelHost.startup({
+    cacheDir: join(getTestOutputDir(), ".cache", `${process.pid}`),
+    ...props.backendHostProps,
+  });
   PresentationBackend.initialize(props.backendProps);
 
   // init frontend
@@ -113,7 +120,9 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
     props.frontendApp = NoRenderApp;
   }
   await props.frontendApp.startup(props.frontendAppOptions);
-  const defaultFrontendProps: PresentationFrontendProps = { presentation: { activeLocale: IModelApp.localization.getLanguageList()[0] } };
+  const defaultFrontendProps: PresentationFrontendProps = {
+    presentation: { activeLocale: IModelApp.localization.getLanguageList()[0] },
+  };
   await PresentationFrontend.initialize({ ...defaultFrontendProps, ...props.frontendProps });
   setTestOutputDir(props.testOutputDir);
 

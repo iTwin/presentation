@@ -120,7 +120,9 @@ describe("Helpers", () => {
     it("clears cache directory when PresentationBackend has DiskHierarchyCacheConfig in initProps", async () => {
       const testDirectory = "/test/directory/";
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      sinon.stub(PresentationBackend, "initProps").get(() => ({ caching: { hierarchies: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } }));
+      sinon
+        .stub(PresentationBackend, "initProps")
+        .get(() => ({ caching: { hierarchies: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } }));
       await initialize();
 
       await terminate();
@@ -131,7 +133,12 @@ describe("Helpers", () => {
       const testDirectory = "/test/directory/";
       sinon.stub(PresentationBackend, "initProps").get(() => ({
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        caching: { hierarchies: { mode: HierarchyCacheMode.Hybrid, disk: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } },
+        caching: {
+          hierarchies: {
+            mode: HierarchyCacheMode.Hybrid,
+            disk: { mode: HierarchyCacheMode.Disk, directory: testDirectory },
+          },
+        },
       }));
       await initialize();
 

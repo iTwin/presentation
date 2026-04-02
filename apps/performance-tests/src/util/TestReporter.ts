@@ -106,7 +106,12 @@ export class TestReporter extends Base {
         .join(", ");
 
       /* eslint-disable @typescript-eslint/naming-convention */
-      return { Status: test.isPassed() ? "PASS" : "FAIL", Test: testFullName, Duration: `${duration} ms`, Blocks: blockingInfo };
+      return {
+        Status: test.isPassed() ? "PASS" : "FAIL",
+        Test: testFullName,
+        Duration: `${duration} ms`,
+        Blocks: blockingInfo,
+      };
       /* eslint-enable @typescript-eslint/naming-convention */
     });
 

@@ -16,7 +16,15 @@ import { safeDispose } from "./Helpers.js";
 import type { PropertyRecord } from "@itwin/appui-abstract";
 import type { GuidString } from "@itwin/core-bentley";
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { Content, InstanceId, InstanceKey, PageOptions, ProcessPrimitiveValueProps, Ruleset, ValuesMap } from "@itwin/presentation-common";
+import type {
+  Content,
+  InstanceId,
+  InstanceKey,
+  PageOptions,
+  ProcessPrimitiveValueProps,
+  Ruleset,
+  ValuesMap,
+} from "@itwin/presentation-common";
 
 /**
  * Interface for a data provider, which is used by ContentBuilder.
@@ -89,8 +97,14 @@ export class ContentBuilder {
     this._decimalPrecision = props.decimalPrecision;
   }
 
-  private async doCreateContent(rulesetId: string, instanceKeys: InstanceKey[], displayType: string): Promise<PropertyRecord[]> {
-    const dataProvider = this._dataProvider ? this._dataProvider : new ContentDataProvider({ imodel: this._iModel, ruleset: rulesetId, displayType });
+  private async doCreateContent(
+    rulesetId: string,
+    instanceKeys: InstanceKey[],
+    displayType: string,
+  ): Promise<PropertyRecord[]> {
+    const dataProvider = this._dataProvider
+      ? this._dataProvider
+      : new ContentDataProvider({ imodel: this._iModel, ruleset: rulesetId, displayType });
     dataProvider.keys = new KeySet(instanceKeys);
 
     const content = await dataProvider.getContent();
@@ -112,7 +126,11 @@ export class ContentBuilder {
    * @param displayType Type of content container display. For example:
    * "PropertyPane", "Grid", "List" etc.
    */
-  public async createContent(rulesetOrId: Ruleset | string, instanceKeys: InstanceKey[], displayType: string = DefaultContentDisplayTypes.PropertyPane) {
+  public async createContent(
+    rulesetOrId: Ruleset | string,
+    instanceKeys: InstanceKey[],
+    displayType: string = DefaultContentDisplayTypes.PropertyPane,
+  ) {
     if (typeof rulesetOrId === "string") {
       return this.doCreateContent(rulesetOrId, instanceKeys, displayType);
     }
@@ -130,7 +148,10 @@ export class ContentBuilder {
         ORDER BY s.Name, c.Name
       `,
       undefined,
-      { rowFormat: QueryRowFormat.UseJsPropertyNames, restartToken: `${this.#componentName}/${this.#componentId}/ec-class-names/${Guid.createValue()}` },
+      {
+        rowFormat: QueryRowFormat.UseJsPropertyNames,
+        restartToken: `${this.#componentName}/${this.#componentId}/ec-class-names/${Guid.createValue()}`,
+      },
     );
     return reader.toArray();
   }
@@ -159,9 +180,14 @@ export class ContentBuilder {
         continue;
       }
 
-      const instanceKeys = instanceIds.map((idEntry) => ({ className: `${nameEntry.schemaName}:${nameEntry.className}`, id: idEntry }) as InstanceKey);
+      const instanceKeys = instanceIds.map(
+        (idEntry) => ({ className: `${nameEntry.schemaName}:${nameEntry.className}`, id: idEntry }) as InstanceKey,
+      );
 
-      contents.push({ className: `${nameEntry.schemaName}:${nameEntry.className}`, records: await this.createContent(rulesetOrId, instanceKeys, displayType) });
+      contents.push({
+        className: `${nameEntry.schemaName}:${nameEntry.className}`,
+        records: await this.createContent(rulesetOrId, instanceKeys, displayType),
+      });
     }
 
     return contents;
@@ -175,7 +201,10 @@ export class ContentBuilder {
    * "PropertyPane", "Grid", "List" etc.
    * @deprecated in 3.x. This method turned out to be useless as it creates content for too many instances. Should use [[createContent]] instead.
    */
-  public async createContentForAllInstances(rulesetOrId: Ruleset | string, displayType: string = DefaultContentDisplayTypes.PropertyPane) {
+  public async createContentForAllInstances(
+    rulesetOrId: Ruleset | string,
+    displayType: string = DefaultContentDisplayTypes.PropertyPane,
+  ) {
     return this.createContentForClasses(rulesetOrId, false, displayType);
   }
 
@@ -187,7 +216,10 @@ export class ContentBuilder {
    * "PropertyPane", "Grid", "List" etc.
    * @deprecated in 3.x. This method turned out to be useless as it creates content for too many instances. Should use [[createContent]] instead.
    */
-  public async createContentForInstancePerClass(rulesetOrId: Ruleset | string, displayType: string = DefaultContentDisplayTypes.PropertyPane) {
+  public async createContentForInstancePerClass(
+    rulesetOrId: Ruleset | string,
+    displayType: string = DefaultContentDisplayTypes.PropertyPane,
+  ) {
     return this.createContentForClasses(rulesetOrId, true, displayType);
   }
 }

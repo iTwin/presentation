@@ -25,7 +25,10 @@ describe("FavoritePropertiesDataProvider", () => {
     },
   } as unknown as IModelConnection;
   let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
-  let presentationPropertyDataProvider: { getData: sinon.SinonStub<[], PropertyData>; [Symbol.dispose]: sinon.SinonStub<[], void> };
+  let presentationPropertyDataProvider: {
+    getData: sinon.SinonStub<[], PropertyData>;
+    [Symbol.dispose]: sinon.SinonStub<[], void>;
+  };
   let favoritePropertiesManager: sinon.SinonStubbedInstance<FavoritePropertiesManager>;
 
   beforeEach(() => {
@@ -58,13 +61,20 @@ describe("FavoritePropertiesDataProvider", () => {
 
   describe("getData", () => {
     it("passes `customRulesetId` to PropertyDataProvider if set", async () => {
-      presentationPropertyDataProvider.getData.resolves({ label: PropertyRecord.fromString("Test Item"), categories: [], records: {} });
+      presentationPropertyDataProvider.getData.resolves({
+        label: PropertyRecord.fromString("Test Item"),
+        categories: [],
+        records: {},
+      });
       const factorySpy = sinon
         .stub<[IModelConnection, Ruleset | string | undefined], PresentationPropertyDataProvider>()
         .returns(presentationPropertyDataProvider as unknown as PresentationPropertyDataProvider);
 
       const customRulesetId = "custom_ruleset_id";
-      provider = new FavoritePropertiesDataProvider({ ruleset: customRulesetId, activeScopeProvider: () => ({ id: "element" }) });
+      provider = new FavoritePropertiesDataProvider({
+        ruleset: customRulesetId,
+        activeScopeProvider: () => ({ id: "element" }),
+      });
       (provider as any).createPropertyDataProvider = factorySpy;
 
       await provider.getData(imodel, elementId);

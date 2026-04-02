@@ -61,7 +61,8 @@ export function useUniquePropertyValuesLoader({
       (newItems) => {
         setLoadedOptions((prev) => ({ options: [...prev.options, ...newItems], isLoading: false }));
       },
-      async (offset: number) => getItems({ imodel, offset, field: field.getFieldDescriptor(), ruleset, keys: new KeySet(descriptorInputKeys) }),
+      async (offset: number) =>
+        getItems({ imodel, offset, field: field.getFieldDescriptor(), ruleset, keys: new KeySet(descriptorInputKeys) }),
       (option) => option.displayValue,
     );
     void loader.loadMatchingItems(initialSelectedValues);
@@ -139,7 +140,14 @@ async function getItems({
   ruleset: Ruleset;
   keys: KeySet;
 }) {
-  const requestProps = { imodel, descriptor: {}, fieldDescriptor: field, rulesetOrId: ruleset, paging: { start: offset, size: VALUE_BATCH_SIZE }, keys };
+  const requestProps = {
+    imodel,
+    descriptor: {},
+    fieldDescriptor: field,
+    rulesetOrId: ruleset,
+    paging: { start: offset, size: VALUE_BATCH_SIZE },
+    keys,
+  };
   const items = await new Promise<DisplayValueGroup[]>((resolve) => {
     // note: `getDistinctValuesIterator` may not be available in older versions of core
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition

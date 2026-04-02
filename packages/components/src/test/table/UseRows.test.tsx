@@ -29,10 +29,19 @@ import type { UseRowsProps } from "../../presentation-components/table/UseRows.j
 describe("useRows", () => {
   let onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"];
   const imodel = { key: "test-imodel" } as IModelConnection;
-  const initialProps: UseRowsProps = { imodel, keys: new KeySet([createTestECInstanceKey()]), ruleset: "ruleset_id", pageSize: 10, options: {} };
+  const initialProps: UseRowsProps = {
+    imodel,
+    keys: new KeySet([createTestECInstanceKey()]),
+    ruleset: "ruleset_id",
+    pageSize: 10,
+    options: {},
+  };
 
   let presentationManagerStub: sinon.SinonStub;
-  const getContentIteratorStub = sinon.stub<Parameters<PresentationManager["getContentIterator"]>, ReturnType<PresentationManager["getContentIterator"]>>();
+  const getContentIteratorStub = sinon.stub<
+    Parameters<PresentationManager["getContentIterator"]>,
+    ReturnType<PresentationManager["getContentIterator"]>
+  >();
 
   beforeEach(() => {
     presentationManagerStub = sinon.stub(Presentation, "presentation");
@@ -50,7 +59,10 @@ describe("useRows", () => {
   });
 
   describe("when `getContentIterator` is not available", () => {
-    const getContentAndSizeStub = sinon.stub<Parameters<PresentationManager["getContentAndSize"]>, ReturnType<PresentationManager["getContentAndSize"]>>();
+    const getContentAndSizeStub = sinon.stub<
+      Parameters<PresentationManager["getContentAndSize"]>,
+      ReturnType<PresentationManager["getContentAndSize"]>
+    >();
 
     beforeEach(() => {
       presentationManagerStub.resetBehavior();
@@ -64,7 +76,10 @@ describe("useRows", () => {
         properties: [{ property: createTestPropertyInfo() }],
       });
       const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-      const item = createTestContentItem({ values: { [propertiesField.name]: "test_value" }, displayValues: { [propertiesField.name]: "Test value" } });
+      const item = createTestContentItem({
+        values: { [propertiesField.name]: "test_value" },
+        displayValues: { [propertiesField.name]: "Test value" },
+      });
       getContentAndSizeStub.resolves({ content: new Content(descriptor, [item]), size: 1 });
 
       const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
@@ -89,7 +104,10 @@ describe("useRows", () => {
       properties: [{ property: createTestPropertyInfo() }],
     });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-    const item = createTestContentItem({ values: { [propertiesField.name]: "test_value" }, displayValues: { [propertiesField.name]: "Test value" } });
+    const item = createTestContentItem({
+      values: { [propertiesField.name]: "test_value" },
+      displayValues: { [propertiesField.name]: "Test value" },
+    });
     getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
@@ -112,16 +130,29 @@ describe("useRows", () => {
       category: nestedCategory,
       properties: [{ property: createTestPropertyInfo() }],
     });
-    const nestingField = createTestNestedContentField({ name: "nesting_field", label: "Nesting Field", category: nestedCategory, nestedFields: [nestedField] });
+    const nestingField = createTestNestedContentField({
+      name: "nesting_field",
+      label: "Nesting Field",
+      category: nestedCategory,
+      nestedFields: [nestedField],
+    });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField, nestingField] });
     const item = createTestContentItem({
       values: {
         [propertiesField.name]: "test_value",
         [nestingField.name]: [
-          { primaryKeys: [], values: { [nestedField.name]: "nested_value" }, displayValues: { [nestedField.name]: "Nested Value" }, mergedFieldNames: [] },
+          {
+            primaryKeys: [],
+            values: { [nestedField.name]: "nested_value" },
+            displayValues: { [nestedField.name]: "Nested Value" },
+            mergedFieldNames: [],
+          },
         ],
       },
-      displayValues: { [propertiesField.name]: "Test value", [nestingField.name]: { [nestedField.name]: "Nested Value" } },
+      displayValues: {
+        [propertiesField.name]: "Test value",
+        [nestingField.name]: { [nestedField.name]: "Nested Value" },
+      },
     });
     getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
 
@@ -140,8 +171,14 @@ describe("useRows", () => {
       properties: [{ property: createTestPropertyInfo() }],
     });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-    const item1 = createTestContentItem({ values: { [propertiesField.name]: "test_value_1" }, displayValues: { [propertiesField.name]: "Test value 1" } });
-    const item2 = createTestContentItem({ values: { [propertiesField.name]: "test_value_2" }, displayValues: { [propertiesField.name]: "Test value 2" } });
+    const item1 = createTestContentItem({
+      values: { [propertiesField.name]: "test_value_1" },
+      displayValues: { [propertiesField.name]: "Test value 1" },
+    });
+    const item2 = createTestContentItem({
+      values: { [propertiesField.name]: "test_value_2" },
+      displayValues: { [propertiesField.name]: "Test value 2" },
+    });
     getContentIteratorStub.callsFake(async (options) => {
       if (options.paging?.start === 0) {
         return { descriptor, items: createAsyncIterator([item1]), total: 2 };
@@ -152,7 +189,9 @@ describe("useRows", () => {
       return undefined;
     });
 
-    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 1 } });
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, pageSize: 1 },
+    });
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
 
@@ -170,10 +209,15 @@ describe("useRows", () => {
       properties: [{ property: createTestPropertyInfo() }],
     });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-    const item = createTestContentItem({ values: { [propertiesField.name]: "test_value_1" }, displayValues: { [propertiesField.name]: "Test value 1" } });
+    const item = createTestContentItem({
+      values: { [propertiesField.name]: "test_value_1" },
+      displayValues: { [propertiesField.name]: "Test value 1" },
+    });
     getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
 
-    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 1 } });
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, pageSize: 1 },
+    });
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
     getContentIteratorStub.reset();
@@ -202,7 +246,9 @@ describe("useRows", () => {
     );
 
     await waitFor(() => {
-      expect(errorSpy).to.be.calledOnce.and.calledWith(sinon.match((error: Error) => error.message === "Failed to load"));
+      expect(errorSpy).to.be.calledOnce.and.calledWith(
+        sinon.match((error: Error) => error.message === "Failed to load"),
+      );
     });
     consoleErrorStub.restore();
   });
@@ -217,7 +263,9 @@ describe("useRows", () => {
 
   it("returns empty rows list if key set is empty", async () => {
     const emptyKeySet = new KeySet();
-    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, keys: emptyKeySet } });
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, keys: emptyKeySet },
+    });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(result.current.rows).to.have.lengthOf(0);
@@ -226,7 +274,11 @@ describe("useRows", () => {
 
   it("applies fields filter expression", async () => {
     const filterExpression = "propField = 1";
-    getContentIteratorStub.callsFake(async () => ({ descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([]), total: 0 }));
+    getContentIteratorStub.callsFake(async () => ({
+      descriptor: createTestContentDescriptor({ fields: [] }),
+      items: createAsyncIterator([]),
+      total: 0,
+    }));
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), {
       initialProps: { ...initialProps, options: { fieldsFilterExpression: filterExpression } },
@@ -234,7 +286,10 @@ describe("useRows", () => {
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(getContentIteratorStub).to.be.calledWith(
-      sinon.match((options: Parameters<typeof getContentIteratorStub>[0]) => options.descriptor.fieldsFilterExpression === filterExpression),
+      sinon.match(
+        (options: Parameters<typeof getContentIteratorStub>[0]) =>
+          options.descriptor.fieldsFilterExpression === filterExpression,
+      ),
     );
   });
 
@@ -246,14 +301,21 @@ describe("useRows", () => {
     });
     const fieldDescriptor = propertiesField.getFieldDescriptor();
     const sorting = { field: fieldDescriptor, direction: SortDirection.Descending };
-    getContentIteratorStub.callsFake(async () => ({ descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([]), total: 0 }));
+    getContentIteratorStub.callsFake(async () => ({
+      descriptor: createTestContentDescriptor({ fields: [] }),
+      items: createAsyncIterator([]),
+      total: 0,
+    }));
 
-    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, options: { sorting } } });
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, options: { sorting } },
+    });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(getContentIteratorStub).to.be.calledWith(
       sinon.match(
-        (options: Parameters<typeof getContentIteratorStub>[0]) => (options.descriptor as DescriptorOverrides).sorting?.direction === SortDirection.Descending,
+        (options: Parameters<typeof getContentIteratorStub>[0]) =>
+          (options.descriptor as DescriptorOverrides).sorting?.direction === SortDirection.Descending,
       ),
     );
   });
@@ -265,16 +327,30 @@ describe("useRows", () => {
       properties: [{ property: createTestPropertyInfo() }],
     });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-    const item1 = createTestContentItem({ values: { [propertiesField.name]: "test_value_1" }, displayValues: { [propertiesField.name]: "Test value 1" } });
-    const item2 = createTestContentItem({ values: { [propertiesField.name]: "test_value_2" }, displayValues: { [propertiesField.name]: "Test value 2" } });
+    const item1 = createTestContentItem({
+      values: { [propertiesField.name]: "test_value_1" },
+      displayValues: { [propertiesField.name]: "Test value 1" },
+    });
+    const item2 = createTestContentItem({
+      values: { [propertiesField.name]: "test_value_2" },
+      displayValues: { [propertiesField.name]: "Test value 2" },
+    });
 
-    getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator([item1, item2]), total: 2 }));
-    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 10 } });
+    getContentIteratorStub.callsFake(async () => ({
+      descriptor,
+      items: createAsyncIterator([item1, item2]),
+      total: 2,
+    }));
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, pageSize: 10 },
+    });
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(2));
     // initial rows load request
     expect(getContentIteratorStub).to.be.calledWith(
-      sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging.size === 10),
+      sinon.match(
+        ({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging.size === 10,
+      ),
     );
 
     act(() => {
@@ -285,7 +361,9 @@ describe("useRows", () => {
       expect(result.current.rows).to.have.lengthOf(2);
       // reload request should have page options to get only previously loaded rows.
       expect(getContentIteratorStub).to.be.calledWith(
-        sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging.size === 2),
+        sinon.match(
+          ({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging.size === 2,
+        ),
       );
     });
   });
@@ -299,7 +377,9 @@ describe("useRows", () => {
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
     getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator([]), total: 0 }));
 
-    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 10 } });
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, pageSize: 10 },
+    });
 
     await waitFor(() => {
       expect(result.current.rows).to.have.lengthOf(0);
@@ -308,7 +388,9 @@ describe("useRows", () => {
 
     // initial load request
     expect(getContentIteratorStub).to.be.calledWith(
-      sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging.size === 10),
+      sinon.match(
+        ({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging.size === 10,
+      ),
     );
     getContentIteratorStub.resetHistory();
 
@@ -331,13 +413,22 @@ describe("useRows", () => {
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
     const itemsCount = ROWS_RELOAD_PAGE_SIZE + 1;
     const items = Array.from(Array(itemsCount).keys()).map((i) =>
-      createTestContentItem({ values: { [propertiesField.name]: `test_value_${i}` }, displayValues: { [propertiesField.name]: `Test value ${i}` } }),
+      createTestContentItem({
+        values: { [propertiesField.name]: `test_value_${i}` },
+        displayValues: { [propertiesField.name]: `Test value ${i}` },
+      }),
     );
 
-    getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator(items), total: itemsCount }));
+    getContentIteratorStub.callsFake(async () => ({
+      descriptor,
+      items: createAsyncIterator(items),
+      total: itemsCount,
+    }));
 
     // all items should be loaded with single request
-    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: itemsCount } });
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, pageSize: itemsCount },
+    });
     await waitFor(() => {
       expect(result.current.rows).to.have.lengthOf(itemsCount);
     });
@@ -346,7 +437,11 @@ describe("useRows", () => {
     getContentIteratorStub.reset();
     getContentIteratorStub.callsFake(async (options) => {
       if (options.paging?.start === 0 && options.paging.size === ROWS_RELOAD_PAGE_SIZE) {
-        return { descriptor, items: createAsyncIterator(items.slice(0, ROWS_RELOAD_PAGE_SIZE)), total: ROWS_RELOAD_PAGE_SIZE };
+        return {
+          descriptor,
+          items: createAsyncIterator(items.slice(0, ROWS_RELOAD_PAGE_SIZE)),
+          total: ROWS_RELOAD_PAGE_SIZE,
+        };
       }
       if (options.paging?.start === ROWS_RELOAD_PAGE_SIZE && options.paging.size === 1) {
         return { descriptor, items: createAsyncIterator(items.slice(ROWS_RELOAD_PAGE_SIZE)), total: 1 };
@@ -361,10 +456,16 @@ describe("useRows", () => {
     await waitFor(() => {
       expect(result.current.rows).to.have.lengthOf(itemsCount);
       expect(getContentIteratorStub).to.be.calledWith(
-        sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging.size === ROWS_RELOAD_PAGE_SIZE),
+        sinon.match(
+          ({ paging }: Parameters<typeof getContentIteratorStub>[0]) =>
+            paging?.start === 0 && paging.size === ROWS_RELOAD_PAGE_SIZE,
+        ),
       );
       expect(getContentIteratorStub).to.be.calledWith(
-        sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === ROWS_RELOAD_PAGE_SIZE && paging.size === 1),
+        sinon.match(
+          ({ paging }: Parameters<typeof getContentIteratorStub>[0]) =>
+            paging?.start === ROWS_RELOAD_PAGE_SIZE && paging.size === 1,
+        ),
       );
     });
   });

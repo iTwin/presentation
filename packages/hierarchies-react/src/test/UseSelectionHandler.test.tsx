@@ -26,7 +26,9 @@ describe("useSelectionHandler", () => {
   describe("`none` selection mode", () => {
     it("does nothing when node is clicked", async () => {
       const rootNode = createTreeNode("node");
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: [rootNode], selectionMode: "none", selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: [rootNode], selectionMode: "none", selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: false, ctrlDown: false });
 
@@ -41,7 +43,9 @@ describe("useSelectionHandler", () => {
 
     it("replaces selection when node is clicked", async () => {
       const rootNode = createTreeNode("node");
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: false, ctrlDown: false });
 
@@ -52,7 +56,9 @@ describe("useSelectionHandler", () => {
 
     it("replaces selection when clicking using `ctrl` and `shift`", async () => {
       const rootNode = createTreeNode("node");
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: false, ctrlDown: true });
 
@@ -70,7 +76,9 @@ describe("useSelectionHandler", () => {
 
     it("removes from selection when a selected node is clicked", async () => {
       const rootNode = createTreeNode("node");
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: true, shiftDown: false, ctrlDown: false });
 
@@ -85,7 +93,9 @@ describe("useSelectionHandler", () => {
 
     it("adds to selection when node is clicked", async () => {
       const rootNode = createTreeNode("node");
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: false, ctrlDown: false });
 
@@ -96,7 +106,9 @@ describe("useSelectionHandler", () => {
 
     it("adds to selection when clicking using `ctrl` and `shift`", async () => {
       const rootNode = createTreeNode("node");
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: false, ctrlDown: true });
 
@@ -113,7 +125,9 @@ describe("useSelectionHandler", () => {
 
     it("removes from selection when a selected node is clicked", async () => {
       const rootNode = createTreeNode("node");
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: true, shiftDown: false, ctrlDown: false });
 
@@ -128,7 +142,9 @@ describe("useSelectionHandler", () => {
 
     it("replaces selection when node is clicked", async () => {
       const rootNode = createTreeNode("node");
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: false, ctrlDown: false });
 
@@ -139,7 +155,9 @@ describe("useSelectionHandler", () => {
 
     it("replaces selection when selected node is clicked", async () => {
       const rootNode = createTreeNode("node");
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: true, shiftDown: false, ctrlDown: false });
 
@@ -150,7 +168,9 @@ describe("useSelectionHandler", () => {
 
     it("adds to selection when node is clicked and `ctrl` used", async () => {
       const rootNode = createTreeNode("node");
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: false, ctrlDown: true });
       await waitFor(() => {
@@ -160,7 +180,9 @@ describe("useSelectionHandler", () => {
 
     it("removes from selection when a selected node is clicked and `ctrl` used", async () => {
       const rootNode = createTreeNode("node");
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: [rootNode], selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: true, shiftDown: false, ctrlDown: true });
       await waitFor(() => {
@@ -170,7 +192,9 @@ describe("useSelectionHandler", () => {
 
     it("replaces selection with node range when node clicked and `shift` used", async () => {
       const nodes = [createTreeNode("node-1"), createTreeNode("node-2"), createTreeNode("node-3")];
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: nodes, selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: nodes, selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node-1", isSelected: false, shiftDown: false, ctrlDown: false });
       await waitFor(() => {
@@ -186,7 +210,9 @@ describe("useSelectionHandler", () => {
 
     it("starts range selection from first node when previous selection does not exist", async () => {
       const nodes = [createTreeNode("node-1"), createTreeNode("node-2"), createTreeNode("node-3")];
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: nodes, selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: nodes, selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node-3", isSelected: false, shiftDown: true, ctrlDown: false });
       await waitFor(() => {
@@ -196,7 +222,9 @@ describe("useSelectionHandler", () => {
 
     it("selects range when second selected node has lower index", async () => {
       const nodes = [createTreeNode("node-1"), createTreeNode("node-2"), createTreeNode("node-3")];
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: nodes, selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: nodes, selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node-3", isSelected: false, shiftDown: false, ctrlDown: false });
       await waitFor(() => {
@@ -214,7 +242,9 @@ describe("useSelectionHandler", () => {
       const innerChild = createTreeNode("child-inner");
       const outerChild = createTreeNode("child-outer", [innerChild]);
       const nodes = [createTreeNode("node-1", [outerChild]), createTreeNode("node-2")];
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: nodes, selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: nodes, selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node-1", isSelected: false, shiftDown: false, ctrlDown: false });
       await waitFor(() => {
@@ -232,7 +262,9 @@ describe("useSelectionHandler", () => {
       const innerChild = createTreeNode("child-inner");
       const outerChild = createTreeNode("child-outer", [innerChild]);
       const nodes = [createTreeNode("node-1", [outerChild], false), createTreeNode("node-2")];
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: nodes, selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: nodes, selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node-1", isSelected: false, shiftDown: false, ctrlDown: false });
       await waitFor(() => {
@@ -247,8 +279,15 @@ describe("useSelectionHandler", () => {
     });
 
     it("subsequent range selections use the same starting point", async () => {
-      const nodes = [createTreeNode("node-1"), createTreeNode("node-2"), createTreeNode("node-3"), createTreeNode("node-4")];
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: nodes, selectionMode, selectNodes: selectNodesStub } });
+      const nodes = [
+        createTreeNode("node-1"),
+        createTreeNode("node-2"),
+        createTreeNode("node-3"),
+        createTreeNode("node-4"),
+      ];
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: nodes, selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "node-2", isSelected: false, shiftDown: false, ctrlDown: false });
       await waitFor(() => {
@@ -281,7 +320,9 @@ describe("useSelectionHandler", () => {
     });
 
     it("does nothing when invalid node clicked and `shift` used", async () => {
-      const { result } = renderHook(useSelectionHandler, { initialProps: { rootNodes: [], selectionMode, selectNodes: selectNodesStub } });
+      const { result } = renderHook(useSelectionHandler, {
+        initialProps: { rootNodes: [], selectionMode, selectNodes: selectNodesStub },
+      });
 
       result.current.handleNodeSelect({ nodeId: "invalid", isSelected: false, shiftDown: true, ctrlDown: false });
 

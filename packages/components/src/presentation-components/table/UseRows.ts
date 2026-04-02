@@ -154,7 +154,9 @@ function createRowsLoader({
           return from(loadRows(imodel, ruleset, keys, { start: loaderOptions.pageStart, size: pageSize }, options));
         }
         case "reload": {
-          return loaderOptions.loadedRowsCount === 0 ? EMPTY : createReloadObs(imodel, ruleset, keys, options, loaderOptions.loadedRowsCount);
+          return loaderOptions.loadedRowsCount === 0
+            ? EMPTY
+            : createReloadObs(imodel, ruleset, keys, options, loaderOptions.loadedRowsCount);
         }
       }
     }),
@@ -174,7 +176,13 @@ function createRowsLoader({
 /** @internal */
 export const ROWS_RELOAD_PAGE_SIZE = 1000;
 
-function createReloadObs(imodel: IModelConnection, ruleset: Ruleset | string, keys: Readonly<KeySet>, options: TableOptions, loadedItemsCount: number) {
+function createReloadObs(
+  imodel: IModelConnection,
+  ruleset: Ruleset | string,
+  keys: Readonly<KeySet>,
+  options: TableOptions,
+  loadedItemsCount: number,
+) {
   const lastPageIndex = Math.floor(loadedItemsCount / ROWS_RELOAD_PAGE_SIZE);
   const lastPageSize = loadedItemsCount % ROWS_RELOAD_PAGE_SIZE;
 
@@ -202,7 +210,11 @@ async function loadRows(
   const requestProps = {
     imodel,
     keys: new KeySet(keys),
-    descriptor: { displayType: DefaultContentDisplayTypes.Grid, sorting: options.sorting, fieldsFilterExpression: options.fieldsFilterExpression },
+    descriptor: {
+      displayType: DefaultContentDisplayTypes.Grid,
+      sorting: options.sorting,
+      fieldsFilterExpression: options.fieldsFilterExpression,
+    },
     rulesetOrId: ruleset,
     paging,
   };

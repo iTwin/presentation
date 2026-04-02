@@ -45,7 +45,11 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
   describe("with deprecated SelectionHandler", () => {
     let selectionHandler: sinon.SinonStubbedInstance<SelectionHandler>;
     function SelectionHandlerWrapper({ children }: PropsWithChildren) {
-      return <SelectionHandlerContextProvider selectionHandler={selectionHandler}>{children}</SelectionHandlerContextProvider>;
+      return (
+        <SelectionHandlerContextProvider selectionHandler={selectionHandler}>
+          {children}
+        </SelectionHandlerContextProvider>
+      );
     }
 
     beforeEach(() => {
@@ -190,7 +194,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
 
     it("doesn't set provider keys when selection storage has no selection", () => {
       sinon.stub(selectionStorage, "getSelectionLevels").returns([]);
-      const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, { initialProps: { selectionStorage, dataProvider: getProvider() } });
+      const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
+        initialProps: { selectionStorage, dataProvider: getProvider() },
+      });
       expect(result.current).to.not.be.undefined;
       expect(result.current.isOverLimit).to.be.false;
       expect(result.current.numSelectedElements).to.be.equal(0);
@@ -201,7 +207,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       sinon.stub(selectionStorage, "getSelectionLevels").returns([0]);
       sinon.stub(selectionStorage, "getSelection").returns(Selectables.create([]));
 
-      const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, { initialProps: { selectionStorage, dataProvider: getProvider() } });
+      const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
+        initialProps: { selectionStorage, dataProvider: getProvider() },
+      });
       await waitFor(async () => {
         expect(result.current).to.not.be.undefined;
         expect(result.current.isOverLimit).to.be.false;
@@ -214,12 +222,16 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       const selectedInstances = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
       selectionStorage.addToSelection({ imodelKey, source: "test", selectables: selectedInstances });
 
-      const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, { initialProps: { selectionStorage, dataProvider: getProvider() } });
+      const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
+        initialProps: { selectionStorage, dataProvider: getProvider() },
+      });
       await waitFor(async () => {
         expect(result.current).to.not.be.undefined;
         expect(result.current.isOverLimit).to.be.false;
         expect(result.current.numSelectedElements).to.be.equal(2);
-        expect(setKeysSpy).to.be.calledWith(sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances), keys)));
+        expect(setKeysSpy).to.be.calledWith(
+          sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances), keys)),
+        );
       });
     });
 
@@ -244,9 +256,13 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
 
       selectionStorage.addToSelection({ imodelKey, source: "test", selectables: selectedInstances1 });
 
-      const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, { initialProps: { selectionStorage, dataProvider: getProvider() } });
+      const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
+        initialProps: { selectionStorage, dataProvider: getProvider() },
+      });
       await waitFor(async () => {
-        expect(setKeysSpy).to.be.calledWith(sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances1), keys)));
+        expect(setKeysSpy).to.be.calledWith(
+          sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances1), keys)),
+        );
         expect(result.current).to.not.be.undefined;
         expect(result.current.isOverLimit).to.be.false;
         expect(result.current.numSelectedElements).to.be.equal(2);
@@ -256,7 +272,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         selectionStorage.replaceSelection({ imodelKey, source: "test", selectables: selectedInstances2 });
       });
       await waitFor(async () => {
-        expect(setKeysSpy).to.be.calledWith(sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances2), keys)));
+        expect(setKeysSpy).to.be.calledWith(
+          sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances2), keys)),
+        );
       });
     });
   });

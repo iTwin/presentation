@@ -32,7 +32,11 @@ function exportDiagnosticsLogs(logs: DiagnosticsScopeLogs, ctx?: Context) {
     .getTracer("iTwin.js Presentation")
     .startActiveSpan(
       logs.scope,
-      { kind: SpanKind.INTERNAL, attributes: { ...(logs.attributes ? logs.attributes : undefined) }, startTime: millisToHrTime(logs.scopeCreateTimestamp) },
+      {
+        kind: SpanKind.INTERNAL,
+        attributes: { ...(logs.attributes ? logs.attributes : undefined) },
+        startTime: millisToHrTime(logs.scopeCreateTimestamp),
+      },
       ctx ?? context.active(),
       (thisSpan) => {
         for (const entry of logs.logs ?? []) {

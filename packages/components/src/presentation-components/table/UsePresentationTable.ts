@@ -67,7 +67,9 @@ export interface UsePresentationTableResult<TColumns, TRow> {
  * @throws on failure to get table data. The error is thrown in the React's render loop, so it can be caught using an error boundary.
  * @public
  */
-export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableProps<TColumn, TRow>): UsePresentationTableResult<TColumn, TRow> {
+export function usePresentationTable<TColumn, TRow>(
+  props: UsePresentationTableProps<TColumn, TRow>,
+): UsePresentationTableResult<TColumn, TRow> {
   const { imodel, ruleset, keys, pageSize, columnMapper, rowMapper } = props;
   const columns = useColumns({ imodel, ruleset, keys });
   const { options, sort, filter } = useTableOptions({ columns });
@@ -87,7 +89,10 @@ export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableP
  * Props for [[usePresentationTableWithUnifiedSelection]] hook.
  * @public
  */
-export interface UsePresentationTableWithUnifiedSelectionProps<TColumn, TRow> extends Omit<UsePresentationTableProps<TColumn, TRow>, "keys"> {
+export interface UsePresentationTableWithUnifiedSelectionProps<TColumn, TRow> extends Omit<
+  UsePresentationTableProps<TColumn, TRow>,
+  "keys"
+> {
   /**
    * Unified selection storage to use for listening, getting and changing active selection.
    *
@@ -101,7 +106,10 @@ export interface UsePresentationTableWithUnifiedSelectionProps<TColumn, TRow> ex
  * Return type of [[usePresentationTableWithUnifiedSelection]] hook.
  * @public
  */
-export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> extends UsePresentationTableResult<TColumns, TRow> {
+export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> extends UsePresentationTableResult<
+  TColumns,
+  TRow
+> {
   /** Specifies rows that have been selected (toggled) by other components on the appropriate selection level. */
   selectedRows: TRow[];
 
@@ -206,7 +214,15 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
   };
 }
 
-function useSelectionHandler({ imodel, selectionStorage, tableName }: { imodel: IModelConnection; selectionStorage?: SelectionStorage; tableName: string }) {
+function useSelectionHandler({
+  imodel,
+  selectionStorage,
+  tableName,
+}: {
+  imodel: IModelConnection;
+  selectionStorage?: SelectionStorage;
+  tableName: string;
+}) {
   const [selectionChange] = useState(() => new BeEvent<(level: number) => void>());
   useEffect(() => {
     if (selectionStorage) {
@@ -227,7 +243,9 @@ function useSelectionHandler({ imodel, selectionStorage, tableName }: { imodel: 
   const getSelection = useCallback(
     async (args: { level: number }): Promise<SelectableInstanceKey[]> => {
       return selectionStorage
-        ? loadInstanceKeysFromSelectables(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel), level: args.level }))
+        ? loadInstanceKeysFromSelectables(
+            selectionStorage.getSelection({ imodelKey: createIModelKey(imodel), level: args.level }),
+          )
         : // eslint-disable-next-line @typescript-eslint/no-deprecated
           loadInstanceKeysFromKeySet(Presentation.selection.getSelection(imodel, args.level));
     },
@@ -237,7 +255,11 @@ function useSelectionHandler({ imodel, selectionStorage, tableName }: { imodel: 
   const getSelectionKeySet = useCallback(
     async (args: { level: number }): Promise<KeySet> => {
       return selectionStorage
-        ? new KeySet(await loadInstanceKeysFromSelectables(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel), level: args.level })))
+        ? new KeySet(
+            await loadInstanceKeysFromSelectables(
+              selectionStorage.getSelection({ imodelKey: createIModelKey(imodel), level: args.level }),
+            ),
+          )
         : // eslint-disable-next-line @typescript-eslint/no-deprecated
           new KeySet(Presentation.selection.getSelection(imodel, args.level));
     },
@@ -247,7 +269,12 @@ function useSelectionHandler({ imodel, selectionStorage, tableName }: { imodel: 
   const replaceSelection = useCallback(
     (args: { source: string; level: number; selectables: SelectableInstanceKey[] }) => {
       return selectionStorage
-        ? selectionStorage.replaceSelection({ imodelKey: createIModelKey(imodel), source: args.source, level: args.level, selectables: args.selectables })
+        ? selectionStorage.replaceSelection({
+            imodelKey: createIModelKey(imodel),
+            source: args.source,
+            level: args.level,
+            selectables: args.selectables,
+          })
         : // eslint-disable-next-line @typescript-eslint/no-deprecated
           Presentation.selection.replaceSelection(args.source, imodel, args.selectables, args.level);
     },

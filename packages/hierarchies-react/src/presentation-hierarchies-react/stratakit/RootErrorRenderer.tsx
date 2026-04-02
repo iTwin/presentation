@@ -28,7 +28,11 @@ export type StrataKitRootErrorRendererProps = {
  *
  * @alpha
  */
-export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): JSX.Element {
+export function StrataKitRootErrorRenderer({
+  error,
+  getHierarchyLevelDetails,
+  reloadTree,
+}: StrataKitRootErrorRendererProps): JSX.Element {
   const translate = useTranslation();
 
   if (error.type === "ResultSetTooLarge") {
@@ -36,7 +40,9 @@ export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, re
     return (
       <RootErrorContainer
         message={translate("rootResultLimitExceeded").replace("{{limit}}", error.resultSetSizeLimit.toString())}
-        actions={[{ action: onOverrideLimit, label: translate("increaseHierarchyLimitToUnlimited"), condition: () => true }]}
+        actions={[
+          { action: onOverrideLimit, label: translate("increaseHierarchyLimitToUnlimited"), condition: () => true },
+        ]}
       />
     );
   }
@@ -44,7 +50,13 @@ export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, re
   return (
     <RootErrorContainer
       message={translate("failedToCreateRootHierarchy")}
-      actions={[{ action: () => reloadTree({ parentNodeId: undefined, state: "reset" }), label: translate("retry"), condition: () => true }]}
+      actions={[
+        {
+          action: () => reloadTree({ parentNodeId: undefined, state: "reset" }),
+          label: translate("retry"),
+          condition: () => true,
+        },
+      ]}
     />
   );
 }
@@ -56,7 +68,16 @@ interface RootErrorContainerProps {
 
 function RootErrorContainer({ actions, message }: RootErrorContainerProps) {
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "0.5rem" }}>
+    <div
+      style={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: "0.5rem",
+      }}
+    >
       <Icon href={errorSvg} size="large" />
       <Text variant={"body-sm"} style={{ textAlign: "center" }}>
         {message}

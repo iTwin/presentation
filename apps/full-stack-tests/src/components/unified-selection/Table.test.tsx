@@ -3,7 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { PropertyValueRendererManager, UiComponents } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
 import { usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
@@ -87,7 +91,10 @@ describe("Learning snippets", async () => {
       }
 
       // a function that maps presentation type of column definition to something that table renderer knows how to render
-      const mapTableColumns = (columnDefinitions: TableColumnDefinition) => ({ id: columnDefinitions.name, label: columnDefinitions.label });
+      const mapTableColumns = (columnDefinitions: TableColumnDefinition) => ({
+        id: columnDefinitions.name,
+        label: columnDefinitions.label,
+      });
 
       // a function that maps presentation type of row definition to something that table renderer knows how to render
       function mapTableRow(rowDefinition: TableRowDefinition) {
@@ -107,8 +114,18 @@ describe("Learning snippets", async () => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
         elementKeys.push(
-          insertPhysicalElement({ builder, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id }),
-          insertPhysicalElement({ builder, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id }),
+          insertPhysicalElement({
+            builder,
+            userLabel: "My Element 1",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          }),
+          insertPhysicalElement({
+            builder,
+            userLabel: "My Element 2",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          }),
         );
       });
 
@@ -128,13 +145,23 @@ describe("Learning snippets", async () => {
       await waitFor(() => getByText(container, "Select something to see properties"));
 
       // test Unified Selection -> Table content synchronization
-      act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[0]] }));
+      act(() =>
+        selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[0]] }),
+      );
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1"]);
 
-      act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[1]] }));
+      act(() =>
+        selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[1]] }),
+      );
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 2"]);
 
-      act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[0], elementKeys[1]] }));
+      act(() =>
+        selectionStorage.replaceSelection({
+          imodelKey: imodel.key,
+          source: "",
+          selectables: [elementKeys[0], elementKeys[1]],
+        }),
+      );
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1", "My Element 2"]);
 
       act(() => selectionStorage.clearSelection({ imodelKey: imodel.key, source: "" }));
@@ -149,14 +176,20 @@ describe("Learning snippets", async () => {
 const ruleset: Ruleset = {
   id: "my-table-rules",
   rules: [
-    { ruleType: "Content", condition: `SelectedNode.IsOfClass("Element", "BisCore")`, specifications: [{ specType: "SelectedNodeInstances" }] },
+    {
+      ruleType: "Content",
+      condition: `SelectedNode.IsOfClass("Element", "BisCore")`,
+      specifications: [{ specType: "SelectedNodeInstances" }],
+    },
     {
       ruleType: "Content",
       condition: `SelectedNode.IsOfClass("Model", "BisCore")`,
       specifications: [
         {
           specType: "ContentRelatedInstances",
-          relationshipPaths: [{ relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" }],
+          relationshipPaths: [
+            { relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" },
+          ],
         },
       ],
     },

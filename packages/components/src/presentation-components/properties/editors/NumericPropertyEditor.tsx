@@ -61,6 +61,8 @@ export class NumericPropertyEditor extends PureComponent<PropertyEditorProps> im
 
   /** @internal */
   public override render() {
-    return this.props.propertyRecord ? <NumericPropertyInput ref={this._ref} {...this.props} propertyRecord={this.props.propertyRecord} /> : null;
+    return this.props.propertyRecord ? (
+      <NumericPropertyInput ref={this._ref} {...this.props} propertyRecord={this.props.propertyRecord} />
+    ) : null;
   }
 }

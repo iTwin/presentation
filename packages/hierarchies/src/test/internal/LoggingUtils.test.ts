@@ -14,7 +14,13 @@ import type { ILogger, LogLevel } from "@itwin/presentation-shared";
 describe("LoggingUtils", () => {
   let logger: sinon.SinonStubbedInstance<ILogger>;
   beforeEach(() => {
-    logger = { isEnabled: sinon.stub(), logError: sinon.stub(), logWarning: sinon.stub(), logInfo: sinon.stub(), logTrace: sinon.stub() };
+    logger = {
+      isEnabled: sinon.stub(),
+      logError: sinon.stub(),
+      logWarning: sinon.stub(),
+      logInfo: sinon.stub(),
+      logTrace: sinon.stub(),
+    };
     setLogger(logger);
   });
 

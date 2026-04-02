@@ -16,9 +16,15 @@ import { render, waitFor } from "../../TestUtils.js";
 import type { FormattingUnitSystemChangedArgs } from "@itwin/core-frontend";
 import type { FormatterSpec, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import type { SchemaContext } from "@itwin/ecschema-metadata";
-import type { QuantityValue, UseQuantityValueInputProps } from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
+import type {
+  QuantityValue,
+  UseQuantityValueInputProps,
+} from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
 
-function TestInput({ onChange, ...restProps }: UseQuantityValueInputProps & { onChange?: (value: QuantityValue) => void }) {
+function TestInput({
+  onChange,
+  ...restProps
+}: UseQuantityValueInputProps & { onChange?: (value: QuantityValue) => void }) {
   const { quantityValue, inputProps } = useQuantityValueInput(restProps);
 
   useEffect(() => {
@@ -31,7 +37,11 @@ function TestInput({ onChange, ...restProps }: UseQuantityValueInputProps & { on
 describe("UseQuantityValueInput", () => {
   const schemaContext = {} as SchemaContext;
   const format = new Format("test format");
-  const formatterSpec = { applyFormatting: sinon.stub<[number], string>(), unitConversions: [{ name: "test unit", label: "unit" }], format };
+  const formatterSpec = {
+    applyFormatting: sinon.stub<[number], string>(),
+    unitConversions: [{ name: "test unit", label: "unit" }],
+    format,
+  };
   const parserSpec = { parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(), format };
   const quantityFormatter = { onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() };
 
@@ -41,7 +51,10 @@ describe("UseQuantityValueInput", () => {
     Parameters<KoqPropertyValueFormatter["getFormatterSpec"]>,
     ReturnType<KoqPropertyValueFormatter["getFormatterSpec"]>
   >;
-  let getParserSpecStub: sinon.SinonStub<Parameters<KoqPropertyValueFormatter["getParserSpec"]>, ReturnType<KoqPropertyValueFormatter["getParserSpec"]>>;
+  let getParserSpecStub: sinon.SinonStub<
+    Parameters<KoqPropertyValueFormatter["getParserSpec"]>,
+    ReturnType<KoqPropertyValueFormatter["getParserSpec"]>
+  >;
 
   before(() => {
     getFormatterSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec");
@@ -82,7 +95,9 @@ describe("UseQuantityValueInput", () => {
   });
 
   it("renders with formatted initial raw value", async () => {
-    const { queryByDisplayValue } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />);
+    const { queryByDisplayValue } = render(
+      <TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />,
+    );
     await waitFor(() => expect(queryByDisplayValue("2.5 unit")).to.not.be.null);
   });
 
@@ -100,7 +115,9 @@ describe("UseQuantityValueInput", () => {
 
   it("parses entered value", async () => {
     const spy = sinon.stub<[QuantityValue], void>();
-    const { user, getByRole, queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" onChange={spy} />);
+    const { user, getByRole, queryByPlaceholderText } = render(
+      <TestInput schemaContext={schemaContext} koqName="testKOQ" onChange={spy} />,
+    );
     await waitFor(() => expect(queryByPlaceholderText("unit")).to.not.be.null);
 
     const input = getByRole("textbox");
@@ -118,7 +135,11 @@ describe("UseQuantityValueInput", () => {
     const { queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
     await waitFor(() => expect(queryByPlaceholderText("unit")).to.not.be.null);
 
-    const newFormatterSpec = { applyFormatting: (num: number) => `${num} new unit`, unitConversions: [{ name: "test unit", label: "new unit" }], format };
+    const newFormatterSpec = {
+      applyFormatting: (num: number) => `${num} new unit`,
+      unitConversions: [{ name: "test unit", label: "new unit" }],
+      format,
+    };
     const newParserSpec = {
       parseToQuantityValue: (str: string) => {
         if (!str.endsWith("new unit")) {

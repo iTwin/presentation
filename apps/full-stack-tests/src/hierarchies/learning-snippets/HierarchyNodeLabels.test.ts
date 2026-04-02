@@ -4,9 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.Imports
-import { createIModelHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import {
+  createIModelHierarchyProvider,
+  createNodesQueryClauseFactory,
+  HierarchyDefinition,
+} from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
@@ -41,7 +49,12 @@ describe("Hierarchies", () => {
                   {
                     node: {
                       key: "root",
-                      label: ["Example | ", { type: "Integer", value: 123 }, { type: "String", value: " | " }, { type: "Point2d", value: { x: 1, y: 2 } }],
+                      label: [
+                        "Example | ",
+                        { type: "Integer", value: 123 },
+                        { type: "String", value: " | " },
+                        { type: "Point2d", value: { x: 1, y: 2 } },
+                      ],
                     },
                   },
                 ];
@@ -72,8 +85,13 @@ describe("Hierarchies", () => {
           async defineHierarchyLevel({ parentNode }) {
             // For root nodes, return a query that selects all physical elements
             if (!parentNode) {
-              const labelSelectorsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-              const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelSelectorsFactory });
+              const labelSelectorsFactory = createBisInstanceLabelSelectClauseFactory({
+                classHierarchyInspector: imodelAccess,
+              });
+              const queryClauseFactory = createNodesQueryClauseFactory({
+                imodelAccess,
+                instanceLabelSelectClauseFactory: labelSelectorsFactory,
+              });
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
@@ -108,11 +126,9 @@ describe("Hierarchies", () => {
         // | 0x15       | B          | <NULL>     |
         // | 0x16       | <NULL>     | <NULL>     |
         //
-        expect(await collectHierarchy(createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }))).to.containSubset([
-          { label: "A" },
-          { label: "B [0-L]" },
-          { label: "Physical Object [0-M]" },
-        ]);
+        expect(
+          await collectHierarchy(createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition })),
+        ).to.containSubset([{ label: "A" }, { label: "B [0-L]" }, { label: "Physical Object [0-M]" }]);
         // __PUBLISH_EXTRACT_END__
       });
 
@@ -139,7 +155,9 @@ describe("Hierarchies", () => {
                       ecsql: `
                         SELECT ${await createNodesQueryClauseFactory({
                           imodelAccess,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                            classHierarchyInspector: imodelAccess,
+                          }),
                         }).createSelectClause({
                           ecClassId: { selector: "x.ECClassId" },
                           ecInstanceId: { selector: "x.ECInstanceId" },
@@ -175,7 +193,11 @@ describe("Hierarchies", () => {
         });
 
         // All returned nodes have their labels set in format "{CodeValue} [{ECInstanceId}]":
-        expect(await collectHierarchy(hierarchyProvider)).to.containSubset([{ label: "A [0x14]" }, { label: "B [0x15]" }, { label: "C [0x16]" }]);
+        expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+          { label: "A [0x14]" },
+          { label: "B [0x15]" },
+          { label: "C [0x16]" },
+        ]);
       });
 
       it("formats property grouping node's label", async function () {
@@ -227,7 +249,9 @@ describe("Hierarchies", () => {
                       ecsql: `
                         SELECT ${await createNodesQueryClauseFactory({
                           imodelAccess,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                            classHierarchyInspector: imodelAccess,
+                          }),
                         }).createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },

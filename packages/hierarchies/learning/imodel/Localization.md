@@ -27,7 +27,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -35,7 +37,13 @@ const hierarchyProvider = createIModelHierarchyProvider({
                   grouping: {
                     byProperties: {
                       propertiesClassName: myPhysicalObjectClassName,
-                      propertyGroups: [{ propertyClassAlias: "this", propertyName: "IntProperty", ranges: [{ fromValue: 1, toValue: 5 }] }],
+                      propertyGroups: [
+                        {
+                          propertyClassAlias: "this",
+                          propertyName: "IntProperty",
+                          ranges: [{ fromValue: 1, toValue: 5 }],
+                        },
+                      ],
                       createGroupForOutOfRangeValues: true,
                       createGroupForUnspecifiedValues: true,
                     },

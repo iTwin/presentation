@@ -6,7 +6,12 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { createClassGroups } from "../../../../hierarchies/imodel/operators/grouping/ClassGrouping.js";
-import { createECSchemaProviderStub, createTestGenericNodeKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils.js";
+import {
+  createECSchemaProviderStub,
+  createTestGenericNodeKey,
+  createTestProcessedGroupingNode,
+  createTestProcessedInstanceNode,
+} from "../../../Utils.js";
 
 import type { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
 import type { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping.js";
@@ -40,7 +45,10 @@ describe("ClassGrouping", () => {
           key: expectedClassGroupingNodeKey,
           parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-          children: nodes.map((gn) => ({ ...gn, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedClassGroupingNodeKey] })),
+          children: nodes.map((gn) => ({
+            ...gn,
+            parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedClassGroupingNodeKey],
+          })),
         },
       ],
       ungrouped: [],
@@ -73,7 +81,10 @@ describe("ClassGrouping", () => {
           key: expectedClassGroupingNodeKey,
           parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-          children: nodes.map((gn) => ({ ...gn, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedClassGroupingNodeKey] })),
+          children: nodes.map((gn) => ({
+            ...gn,
+            parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedClassGroupingNodeKey],
+          })),
         },
       ],
       ungrouped: [],
@@ -107,14 +118,20 @@ describe("ClassGrouping", () => {
           key: expectedClassAGroupingNodeKey,
           parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes[0].key.instanceKeys,
-          children: [nodes[0]].map((gn) => ({ ...gn, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedClassAGroupingNodeKey] })),
+          children: [nodes[0]].map((gn) => ({
+            ...gn,
+            parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedClassAGroupingNodeKey],
+          })),
         },
         {
           label: "Class B",
           key: expectedClassBGroupingNodeKey,
           parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes[1].key.instanceKeys,
-          children: [nodes[1]].map((gn) => ({ ...gn, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedClassBGroupingNodeKey] })),
+          children: [nodes[1]].map((gn) => ({
+            ...gn,
+            parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedClassBGroupingNodeKey],
+          })),
         },
       ],
       ungrouped: [],
@@ -122,7 +139,9 @@ describe("ClassGrouping", () => {
   });
 
   it("doesn't create duplicate class group", async () => {
-    const parentNode = createTestProcessedGroupingNode({ key: { type: "class-grouping", className: "TestSchema.TestClass" } });
+    const parentNode = createTestProcessedGroupingNode({
+      key: { type: "class-grouping", className: "TestSchema.TestClass" },
+    });
     const nodes = [
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },

@@ -69,7 +69,9 @@ export interface HierarchySearchPathOptions {
  * A path of hierarchy node identifiers for search the hierarchy with additional options.
  * @public
  */
-export type HierarchySearchPath = HierarchyNodeIdentifiersPath | { path: HierarchyNodeIdentifiersPath; options?: HierarchySearchPathOptions };
+export type HierarchySearchPath =
+  | HierarchyNodeIdentifiersPath
+  | { path: HierarchyNodeIdentifiersPath; options?: HierarchySearchPathOptions };
 /** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchySearchPath {
@@ -104,10 +106,16 @@ export namespace HierarchySearchPath {
     const reveal = mergeRevealOptions(lhs?.reveal, rhs?.reveal);
     const autoExpand = mergeAutoExpandOption(lhs?.autoExpand, rhs?.autoExpand);
     return reveal || autoExpand
-      ? { ...(reveal !== undefined ? { reveal } : undefined), ...(autoExpand !== undefined ? { autoExpand } : undefined) }
+      ? {
+          ...(reveal !== undefined ? { reveal } : undefined),
+          ...(autoExpand !== undefined ? { autoExpand } : undefined),
+        }
       : undefined;
   }
-  function mergeRevealOptions(lhs: HierarchySearchPathOptions["reveal"], rhs: HierarchySearchPathOptions["reveal"]): HierarchySearchPathOptions["reveal"] {
+  function mergeRevealOptions(
+    lhs: HierarchySearchPathOptions["reveal"],
+    rhs: HierarchySearchPathOptions["reveal"],
+  ): HierarchySearchPathOptions["reveal"] {
     if (rhs === true || lhs === true) {
       return true;
     }
@@ -196,7 +204,9 @@ export namespace HierarchySearchTree {
   > &
     Pick<HierarchySearchTree, "isTarget">;
   /** @public */
-  type HierarchySearchTreeBuilderAcceptHandlerTreeInput = Readonly<Pick<HierarchySearchTree, "identifier" | "isTarget" | "options"> & { hasChildren: boolean }>;
+  type HierarchySearchTreeBuilderAcceptHandlerTreeInput = Readonly<
+    Pick<HierarchySearchTree, "identifier" | "isTarget" | "options"> & { hasChildren: boolean }
+  >;
   /** @public */
   interface HierarchySearchTreeBuilderAcceptHandler<TExtras extends Record<string, unknown>> {
     /**
@@ -258,7 +268,9 @@ export namespace HierarchySearchTree {
      * Accepts a hierarchy search path or paths' tree and adds it to the builder's internal tree structure. Use `getTree()` to create
      * a `HierarchySearchTree[]` from the added paths.
      */
-    accept(props: HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras>): HierarchySearchTreeBuilder<TAcceptHandlerExtras>;
+    accept(
+      props: HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras>,
+    ): HierarchySearchTreeBuilder<TAcceptHandlerExtras>;
     /**
      * Create `HierarchySearchTree[]` from currently added search paths.
      */
@@ -300,7 +312,8 @@ export namespace HierarchySearchTree {
       ): HierarchySearchTree[] {
         const list: HierarchySearchTree[] = [];
         for (const { children, ...entry } of dictionary.values()) {
-          let processedEntry: (Omit<HierarchySearchTree, "children"> & { extras: TAcceptHandlerExtras }) | undefined = entry;
+          let processedEntry: (Omit<HierarchySearchTree, "children"> & { extras: TAcceptHandlerExtras }) | undefined =
+            entry;
           if (props?.processEntry) {
             processedEntry = props.processEntry({ treeEntry: entry, parentEntries });
           }
@@ -309,7 +322,10 @@ export namespace HierarchySearchTree {
           }
           const { extras: _, ...entryWithoutExtras } = processedEntry;
           parentEntries.push(processedEntry);
-          list.push({ ...entryWithoutExtras, ...(children ? { children: Impl.#mapDictionaryToTree(children, parentEntries, props) } : undefined) });
+          list.push({
+            ...entryWithoutExtras,
+            ...(children ? { children: Impl.#mapDictionaryToTree(children, parentEntries, props) } : undefined),
+          });
           parentEntries.pop();
         }
         return list;
@@ -459,7 +475,12 @@ export namespace HierarchySearchTree {
           level: HierarchySearchTreeDictionary,
           node: HierarchySearchTree,
         ) => {
-          const acceptedNode = this.#acceptNode({ parentEntries, node: { ...node, hasChildren: node.children !== undefined }, level, handler });
+          const acceptedNode = this.#acceptNode({
+            parentEntries,
+            node: { ...node, hasChildren: node.children !== undefined },
+            level,
+            handler,
+          });
           if (!acceptedNode) {
             // It was decided to reject this node and its children, if any
             return;
@@ -468,7 +489,11 @@ export namespace HierarchySearchTree {
           const inputsPath = [...parentInputs, node];
           if (!node.children || node.isTarget) {
             // Found an effective search target - merge options from its path
-            Impl.#assignOptionsOnTreePath({ treePath, targetEntryIndex: treePath.length - 1, getEntryOptions: (index) => inputsPath[index].options });
+            Impl.#assignOptionsOnTreePath({
+              treePath,
+              targetEntryIndex: treePath.length - 1,
+              getEntryOptions: (index) => inputsPath[index].options,
+            });
           }
           const currentLevel = acceptedNode.children;
           if (currentLevel) {
@@ -553,10 +578,14 @@ function extractSearchPropsInternal(
   parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined,
 ): { childrenTargetPaths?: HierarchySearchTree[]; hasSearchTargetAncestor: boolean } | undefined {
   if (!parentNode) {
-    return rootLevelSearchProps ? { childrenTargetPaths: rootLevelSearchProps, hasSearchTargetAncestor: false } : undefined;
+    return rootLevelSearchProps
+      ? { childrenTargetPaths: rootLevelSearchProps, hasSearchTargetAncestor: false }
+      : undefined;
   }
   const searchProps: { childrenTargetPaths?: HierarchySearchTree[]; hasSearchTargetAncestor: boolean } = {
-    ...(parentNode.search?.childrenTargetPaths ? { childrenTargetPaths: parentNode.search.childrenTargetPaths } : undefined),
+    ...(parentNode.search?.childrenTargetPaths
+      ? { childrenTargetPaths: parentNode.search.childrenTargetPaths }
+      : undefined),
     hasSearchTargetAncestor: !!parentNode.search?.hasSearchTargetAncestor || !!parentNode.search?.isSearchTarget,
   };
   return searchProps.childrenTargetPaths || searchProps.hasSearchTargetAncestor ? searchProps : undefined;
@@ -605,7 +634,9 @@ export function createHierarchySearchHelper(
       if ("asyncPathMatcher" in extractionProps) {
         const matchesPossiblyPromise = extractionProps.asyncPathMatcher(childrenSearchTree.identifier);
         if (matchesPossiblyPromise instanceof Promise) {
-          matchedTreePromises.push(matchesPossiblyPromise.then((matches) => (matches ? childrenSearchTree : undefined)));
+          matchedTreePromises.push(
+            matchesPossiblyPromise.then((matches) => (matches ? childrenSearchTree : undefined)),
+          );
         } else if (matchesPossiblyPromise) {
           extractionProps.pathsReducer.accept(childrenSearchTree);
         }
@@ -627,7 +658,9 @@ export function createHierarchySearchHelper(
     );
   }
 
-  function createChildNodeProps(props: { nodeKey: InstancesNodeKey | GenericNodeKey }): Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
+  function createChildNodeProps(props: {
+    nodeKey: InstancesNodeKey | GenericNodeKey;
+  }): Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
   function createChildNodeProps(props: {
     nodeKey: InstancesNodeKey | GenericNodeKey;
     pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
@@ -635,21 +668,31 @@ export function createHierarchySearchHelper(
   function createChildNodeProps(props: {
     nodeKey: InstancesNodeKey | GenericNodeKey;
     asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-  }): Promise<Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined> | Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
+  }):
+    | Promise<Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined>
+    | Pick<NonGroupingHierarchyNode, "search" | "autoExpand">
+    | undefined;
   function createChildNodeProps(
     props: { nodeKey: InstancesNodeKey | GenericNodeKey } & (
       | { asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean> }
       | { pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean }
       | {}
     ),
-  ): Promise<Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined> | Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined {
+  ):
+    | Promise<Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined>
+    | Pick<NonGroupingHierarchyNode, "search" | "autoExpand">
+    | undefined {
     if (!hasSearch) {
       return undefined;
     }
 
     const reducer = new MatchingSearchPathsReducer(searchProps.hasSearchTargetAncestor);
     if ("asyncPathMatcher" in props) {
-      const extractResult = saveSearchPropsFromPathsIntoReducer({ pathsReducer: reducer, nodeKey: props.nodeKey, asyncPathMatcher: props.asyncPathMatcher });
+      const extractResult = saveSearchPropsFromPathsIntoReducer({
+        pathsReducer: reducer,
+        nodeKey: props.nodeKey,
+        asyncPathMatcher: props.asyncPathMatcher,
+      });
       if (extractResult instanceof Promise) {
         return extractResult.then(() => reducer.aggregatedOptions);
       }
@@ -696,10 +739,14 @@ export function createHierarchySearchHelper(
   };
 }
 
-function nodeKeyMatchesIdentifier(nodeKey: InstancesNodeKey | GenericNodeKey, identifier: HierarchyNodeIdentifier): boolean {
+function nodeKeyMatchesIdentifier(
+  nodeKey: InstancesNodeKey | GenericNodeKey,
+  identifier: HierarchyNodeIdentifier,
+): boolean {
   return (
     (HierarchyNodeKey.isGeneric(nodeKey) && HierarchyNodeIdentifier.equal(identifier, nodeKey)) ||
-    (HierarchyNodeKey.isInstances(nodeKey) && nodeKey.instanceKeys.some((ik) => HierarchyNodeIdentifier.equal(identifier, ik)))
+    (HierarchyNodeKey.isInstances(nodeKey) &&
+      nodeKey.instanceKeys.some((ik) => HierarchyNodeIdentifier.equal(identifier, ik)))
   );
 }
 

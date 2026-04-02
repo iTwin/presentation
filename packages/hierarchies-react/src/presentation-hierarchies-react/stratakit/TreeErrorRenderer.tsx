@@ -38,7 +38,12 @@ export type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemR
  *
  * @alpha
  */
-export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): JSX.Element {
+export function TreeErrorRenderer({
+  treeLabel,
+  errorNodes,
+  renderError,
+  ...errorItemRendererProps
+}: TreeErrorRendererProps): JSX.Element {
   const translate = useTranslation();
   const errorItems = errorNodes.map((errorNode) => {
     const errorRendererProps: ErrorItemRendererProps = { errorNode, ...errorItemRendererProps };
@@ -54,7 +59,11 @@ export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...error
     <ErrorRegion.Root
       style={{ width: "100%" }}
       aria-label={translate("issuesForTree").replace("{{tree_label}}", treeLabel)}
-      label={errorNodes.length === 0 ? translate("noIssuesFound") : translate("issuesFound").replace("{{number_of_issues}}", errorNodes.length.toString())}
+      label={
+        errorNodes.length === 0
+          ? translate("noIssuesFound")
+          : translate("issuesFound").replace("{{number_of_issues}}", errorNodes.length.toString())
+      }
       items={errorItems}
     />
   );

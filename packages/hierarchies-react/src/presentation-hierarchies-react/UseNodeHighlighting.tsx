@@ -70,7 +70,9 @@ export function useNodeHighlighting({ highlightText }: UseNodeHighlightingProps)
         lastAddedPosition = endingPlace;
       }
       if (lastAddedPosition < node.label.length) {
-        finalLabel.push(<span key={`normal-${matchedIndexes.length + 1}`}>{node.label.substring(lastAddedPosition)}</span>);
+        finalLabel.push(
+          <span key={`normal-${matchedIndexes.length + 1}`}>{node.label.substring(lastAddedPosition)}</span>,
+        );
       }
 
       return <>{finalLabel}</>;

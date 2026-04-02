@@ -66,7 +66,9 @@ export function createECSchemaProviderStub() {
         return props.is(`${schemaName!}.${targetClassOrClassName}`);
       }
       // need this just to make sure `.` is used for separating schema and class names
-      const { schemaName: parsedSchemaName, className: parsedClassName } = parseFullClassName(targetClassOrClassName.fullName);
+      const { schemaName: parsedSchemaName, className: parsedClassName } = parseFullClassName(
+        targetClassOrClassName.fullName,
+      );
       return props.is(`${parsedSchemaName}.${parsedClassName}`);
     }),
     isEntityClass: () => false,

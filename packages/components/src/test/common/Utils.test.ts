@@ -6,7 +6,13 @@
 import { expect } from "chai";
 import { Component } from "react";
 import { combineFieldNames } from "@itwin/presentation-common";
-import { AsyncTasksTracker, createLabelRecord, deserializeUniqueValues, findField, getDisplayName } from "../../presentation-components/common/Utils.js";
+import {
+  AsyncTasksTracker,
+  createLabelRecord,
+  deserializeUniqueValues,
+  findField,
+  getDisplayName,
+} from "../../presentation-components/common/Utils.js";
 import { createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestContentDescriptor,
@@ -120,7 +126,10 @@ describe("Utils", () => {
     });
 
     it("creates PropertyRecord for label with composite value", () => {
-      const definition = createTestLabelDefinition({ rawValue: createTestLabelCompositeValue(), typeName: "composite" });
+      const definition = createTestLabelDefinition({
+        rawValue: createTestLabelCompositeValue(),
+        typeName: "composite",
+      });
       const record = createLabelRecord(definition, "test");
       const primitiveValue = record.value as PrimitiveValue;
       validateCompositeValue(primitiveValue.value as Primitives.Composite, definition.rawValue as LabelCompositeValue);

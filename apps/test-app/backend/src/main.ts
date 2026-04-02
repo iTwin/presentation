@@ -14,7 +14,10 @@ import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.Imports
 import { Presentation, PresentationProps } from "@itwin/presentation-backend";
 // __PUBLISH_EXTRACT_END__
-import { PresentationBackendLoggerCategory, PresentationBackendNativeLoggerCategory } from "@itwin/presentation-backend";
+import {
+  PresentationBackendLoggerCategory,
+  PresentationBackendNativeLoggerCategory,
+} from "@itwin/presentation-backend";
 // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.OpenTelemetry.Imports
 import { exportDiagnostics } from "@itwin/presentation-opentelemetry";
 import { context } from "@opentelemetry/api";
@@ -61,7 +64,9 @@ void (async () => {
 
   // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.Props
   // set up props for the presentation backend
-  const presentationBackendProps: PresentationProps = { rulesetDirectories: [path.join("assets", "presentation_rules")] };
+  const presentationBackendProps: PresentationProps = {
+    rulesetDirectories: [path.join("assets", "presentation_rules")],
+  };
   // __PUBLISH_EXTRACT_END__
 
   // props that we don't want to show in documentation set up example

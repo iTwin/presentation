@@ -74,7 +74,10 @@ export function createHierarchyDefinitionFactory({
     });
     const [filterY, filterZ] = await Promise.all(
       [classes.Y.fullName, classes.Z.fullName].map(async (contentClassName) =>
-        queryClauseFactory.createFilterClauses({ contentClass: { fullName: contentClassName, alias: "this" }, filter: instanceFilter }),
+        queryClauseFactory.createFilterClauses({
+          contentClass: { fullName: contentClassName, alias: "this" },
+          filter: instanceFilter,
+        }),
       ),
     );
     return [
@@ -128,7 +131,15 @@ export function createHierarchyDefinitionFactory({
             parentInstancesNodePredicate: classes.X.fullName,
             definitions: async (props: DefineInstanceNodeChildHierarchyLevelProps) =>
               createGenericNodeForY
-                ? [{ node: { label: "Y elements", key: "y-elements", extendedData: { parentNodeInstanceIds: props.parentNodeInstanceIds } } }]
+                ? [
+                    {
+                      node: {
+                        label: "Y elements",
+                        key: "y-elements",
+                        extendedData: { parentNodeInstanceIds: props.parentNodeInstanceIds },
+                      },
+                    },
+                  ]
                 : childNodesForX(props),
           },
           {
@@ -213,10 +224,17 @@ const xyzSchema101Xml = xyzSchema100Xml
     `,
   );
 export async function importXYZSchema(target: ECDbBuilder, version: "1.0.0" | "1.0.1" = "1.0.0") {
-  return importSchema({ schemaName: "XYZ", schemaAlias: "xyz", schemaVersion: version }, target, version === "1.0.0" ? xyzSchema100Xml : xyzSchema101Xml);
+  return importSchema(
+    { schemaName: "XYZ", schemaAlias: "xyz", schemaVersion: version },
+    target,
+    version === "1.0.0" ? xyzSchema100Xml : xyzSchema101Xml,
+  );
 }
 
-export async function importQSchema(target: ECDbBuilder, xyzSchema?: Omit<Awaited<ReturnType<typeof importSchema>>, "items">) {
+export async function importQSchema(
+  target: ECDbBuilder,
+  xyzSchema?: Omit<Awaited<ReturnType<typeof importSchema>>, "items">,
+) {
   if (!xyzSchema) {
     xyzSchema = { schemaName: "XYZ", schemaAlias: "xyz", schemaVersion: "01.00.00" };
   }
@@ -239,11 +257,18 @@ export async function importQSchema(target: ECDbBuilder, xyzSchema?: Omit<Awaite
 
 export function createMergedHierarchyProvider(props: {
   imodels: Array<{ ecdb: ECDb; key: string }>;
-  createHierarchyDefinition: (props: { primaryIModelAccess: ReturnType<typeof createIModelAccess> }) => HierarchyDefinition;
+  createHierarchyDefinition: (props: {
+    primaryIModelAccess: ReturnType<typeof createIModelAccess>;
+  }) => HierarchyDefinition;
 }) {
-  const imodels = props.imodels.map(({ ecdb, key }) => ({ imodelAccess: { ...createIModelAccess(ecdb), imodelKey: key } }));
+  const imodels = props.imodels.map(({ ecdb, key }) => ({
+    imodelAccess: { ...createIModelAccess(ecdb), imodelKey: key },
+  }));
   const primaryIModelAccess = imodels[imodels.length - 1].imodelAccess;
-  return createMergedIModelHierarchyProvider({ imodels, hierarchyDefinition: props.createHierarchyDefinition({ primaryIModelAccess }) });
+  return createMergedIModelHierarchyProvider({
+    imodels,
+    hierarchyDefinition: props.createHierarchyDefinition({ primaryIModelAccess }),
+  });
 }
 
 export function pickAndTransform<TObj extends {}, TKey extends keyof TObj>(

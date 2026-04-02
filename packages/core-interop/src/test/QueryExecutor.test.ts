@@ -44,11 +44,16 @@ describe("createECSqlQueryExecutor", () => {
       const imodel = { createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])) };
 
       const executor = createECSqlQueryExecutor(imodel);
-      const reader = executor.createQueryReader({ ctes: [" cte  with   whitespace "], ecsql: " ( ecsql , with   whitespace) " });
+      const reader = executor.createQueryReader({
+        ctes: [" cte  with   whitespace "],
+        ecsql: " ( ecsql , with   whitespace) ",
+      });
       for await (const _ of reader) {
       }
 
-      expect(imodel.createQueryReader).to.be.calledOnceWith("WITH RECURSIVE cte with whitespace (ecsql, with whitespace)");
+      expect(imodel.createQueryReader).to.be.calledOnceWith(
+        "WITH RECURSIVE cte with whitespace (ecsql, with whitespace)",
+      );
     });
 
     it("calls IModel's `createQueryReader` with `ECSqlPropertyNames` row format", async () => {
@@ -131,7 +136,9 @@ describe("createECSqlQueryExecutor", () => {
 
       expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
         "ecsql",
-        sinon.match((binder: QueryBinder) => JSON.stringify(expectedBinder.serialize()) === JSON.stringify(binder.serialize())),
+        sinon.match(
+          (binder: QueryBinder) => JSON.stringify(expectedBinder.serialize()) === JSON.stringify(binder.serialize()),
+        ),
         sinon.match((options: QueryOptions) => Object.keys(options).length === 0),
       );
     });

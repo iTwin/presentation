@@ -78,7 +78,8 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
     /* c8 ignore start */
     this._getActiveScope =
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      props?.activeScopeProvider ?? (() => mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(Presentation.selection.scopes.activeScope));
+      props?.activeScopeProvider ??
+      (() => mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(Presentation.selection.scopes.activeScope));
     /* c8 ignore end */
   }
 
@@ -105,7 +106,11 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
       return propertyData;
     }
 
-    const iter = computeSelection({ queryExecutor: createECSqlQueryExecutor(imodel), scope: this._getActiveScope(), elementIds });
+    const iter = computeSelection({
+      queryExecutor: createECSqlQueryExecutor(imodel),
+      scope: this._getActiveScope(),
+      elementIds,
+    });
     const keys = new KeySet();
     for await (const key of iter) {
       keys.add(key);

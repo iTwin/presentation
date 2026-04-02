@@ -35,7 +35,12 @@ export class MainThreadBlocksDetector {
 
   public getSummary(): Summary {
     const arr = this._samples.extractArray();
-    return { count: arr.length, max: arr.length ? arr[arr.length - 1] : undefined, p95: getP95(arr), median: getMedian(arr) };
+    return {
+      count: arr.length,
+      max: arr.length ? arr[arr.length - 1] : undefined,
+      p95: getP95(arr),
+      median: getMedian(arr),
+    };
   }
 
   /**

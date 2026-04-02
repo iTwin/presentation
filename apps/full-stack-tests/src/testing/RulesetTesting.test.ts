@@ -10,7 +10,12 @@ import path from "path";
 import { Id64 } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
 import { SchemaFormatsProvider } from "@itwin/ecschema-metadata";
-import { ChildNodeSpecificationTypes, ContentSpecificationTypes, RelationshipDirection, RuleTypes } from "@itwin/presentation-common";
+import {
+  ChildNodeSpecificationTypes,
+  ContentSpecificationTypes,
+  RelationshipDirection,
+  RuleTypes,
+} from "@itwin/presentation-common";
 import { ContentBuilder, HierarchyBuilder, TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests.js";
 
@@ -42,7 +47,12 @@ const MY_HIERARCHY_RULESET: Ruleset = {
       specifications: [
         {
           specType: ChildNodeSpecificationTypes.RelatedInstanceNodes,
-          relationshipPaths: [{ relationship: { schemaName: "BisCore", className: "SubjectOwnsSubjects" }, direction: RelationshipDirection.Forward }],
+          relationshipPaths: [
+            {
+              relationship: { schemaName: "BisCore", className: "SubjectOwnsSubjects" },
+              direction: RelationshipDirection.Forward,
+            },
+          ],
           groupByClass: false,
           groupByLabel: false,
         },
@@ -73,7 +83,12 @@ const MY_HIERARCHY_RULESET: Ruleset = {
       specifications: [
         {
           specType: ChildNodeSpecificationTypes.RelatedInstanceNodes,
-          relationshipPaths: [{ relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: RelationshipDirection.Forward }],
+          relationshipPaths: [
+            {
+              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
+              direction: RelationshipDirection.Forward,
+            },
+          ],
           instanceFilter: "this.Parent = NULL",
           groupByClass: false,
           groupByLabel: false,
@@ -87,7 +102,12 @@ const MY_HIERARCHY_RULESET: Ruleset = {
       specifications: [
         {
           specType: ChildNodeSpecificationTypes.RelatedInstanceNodes,
-          relationshipPaths: [{ relationship: { schemaName: "BisCore", className: "ElementOwnsChildElements" }, direction: RelationshipDirection.Forward }],
+          relationshipPaths: [
+            {
+              relationship: { schemaName: "BisCore", className: "ElementOwnsChildElements" },
+              direction: RelationshipDirection.Forward,
+            },
+          ],
           groupByClass: false,
           groupByLabel: false,
         },
@@ -161,7 +181,11 @@ describe("RulesetTesting", () => {
   // set up a function to create snapshot file path - we want the snapshots to be placed next
   // to source file
   function createSnapshotPath(currentTest: Mocha.Runnable, fileName: string) {
-    return path.join(path.dirname(currentTest.file!).replace(/(?!\\|\/)(lib)(?=\\|\/)/g, "src"), `ruleset-testing-snapshots`, `${fileName}.snap`);
+    return path.join(
+      path.dirname(currentTest.file!).replace(/(?!\\|\/)(lib)(?=\\|\/)/g, "src"),
+      `ruleset-testing-snapshots`,
+      `${fileName}.snap`,
+    );
   }
 
   // __PUBLISH_EXTRACT_START__ Presentation.Testing.Rulesets.Hierarchies
@@ -172,7 +196,10 @@ describe("RulesetTesting", () => {
     const hierarchy = await builder.createHierarchy(MY_HIERARCHY_RULESET);
 
     // verify it through snapshot
-    expect(hierarchy).to.matchSnapshot(createSnapshotPath(this.test!, MY_HIERARCHY_RULESET.id), MY_HIERARCHY_RULESET.id);
+    expect(hierarchy).to.matchSnapshot(
+      createSnapshotPath(this.test!, MY_HIERARCHY_RULESET.id),
+      MY_HIERARCHY_RULESET.id,
+    );
   });
   // __PUBLISH_EXTRACT_END__
 
@@ -185,7 +212,10 @@ describe("RulesetTesting", () => {
     const records = await builder.createContent(MY_CONTENT_RULESET, [myElementKey]);
 
     // verify the records through snapshot
-    expect(records).to.matchSnapshot(createSnapshotPath(this.test!, MY_CONTENT_RULESET.id), `${myElementKey.className}-${myElementKey.id}`);
+    expect(records).to.matchSnapshot(
+      createSnapshotPath(this.test!, MY_CONTENT_RULESET.id),
+      `${myElementKey.className}-${myElementKey.id}`,
+    );
   });
   // __PUBLISH_EXTRACT_END__
 });

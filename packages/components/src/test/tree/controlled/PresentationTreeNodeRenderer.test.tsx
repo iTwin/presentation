@@ -54,7 +54,12 @@ describe("PresentationTreeNodeRenderer", () => {
     const node = createTreeModelNode(undefined, { id: "node_id", label: PropertyRecord.fromString(testLabel) });
 
     const { getByText, container } = render(
-      <PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />,
+      <PresentationTreeNodeRenderer
+        treeActions={treeActions}
+        node={node}
+        onFilterClick={() => {}}
+        onClearFilterClick={() => {}}
+      />,
     );
 
     await waitFor(() => {
@@ -75,7 +80,14 @@ describe("PresentationTreeNodeRenderer", () => {
     };
     const node = createTreeModelNode(undefined, item);
 
-    const { getByText } = render(<PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />);
+    const { getByText } = render(
+      <PresentationTreeNodeRenderer
+        treeActions={treeActions}
+        node={node}
+        onFilterClick={() => {}}
+        onClearFilterClick={() => {}}
+      />,
+    );
 
     await waitFor(() => {
       getByText(message);
@@ -88,7 +100,12 @@ describe("PresentationTreeNodeRenderer", () => {
     const node = createTreeModelNode(undefined, item);
 
     const { getByText, container } = render(
-      <PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />,
+      <PresentationTreeNodeRenderer
+        treeActions={treeActions}
+        node={node}
+        onFilterClick={() => {}}
+        onClearFilterClick={() => {}}
+      />,
     );
 
     await waitFor(() => getByText(testLabel));
@@ -96,24 +113,48 @@ describe("PresentationTreeNodeRenderer", () => {
   });
 
   it("renders node with filter button", async () => {
-    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
+    const nodeItem = createTreeNodeItem({
+      filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] },
+    });
     const node = createTreeModelNode(undefined, nodeItem);
 
-    const { container } = render(<PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />);
+    const { container } = render(
+      <PresentationTreeNodeRenderer
+        treeActions={treeActions}
+        node={node}
+        onFilterClick={() => {}}
+        onClearFilterClick={() => {}}
+      />,
+    );
 
-    const buttons = await waitFor(() => container.querySelectorAll(".presentation-components-node-action-buttons button"));
+    const buttons = await waitFor(() =>
+      container.querySelectorAll(".presentation-components-node-action-buttons button"),
+    );
     expect(buttons.length).to.eq(1);
   });
 
   it("renders filtered node with filter and clear filter buttons", async () => {
     const nodeItem = createTreeNodeItem({
-      filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [], active: createFilterInfo() },
+      filtering: {
+        descriptor: createTestContentDescriptor({ fields: [] }),
+        ancestorFilters: [],
+        active: createFilterInfo(),
+      },
     });
     const node = createTreeModelNode(undefined, nodeItem);
 
-    const { container } = render(<PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />);
+    const { container } = render(
+      <PresentationTreeNodeRenderer
+        treeActions={treeActions}
+        node={node}
+        onFilterClick={() => {}}
+        onClearFilterClick={() => {}}
+      />,
+    );
 
-    const buttons = await waitFor(() => container.querySelectorAll(".presentation-components-node-action-buttons button"));
+    const buttons = await waitFor(() =>
+      container.querySelectorAll(".presentation-components-node-action-buttons button"),
+    );
     expect(buttons.length).to.eq(2);
   });
 
@@ -121,9 +162,18 @@ describe("PresentationTreeNodeRenderer", () => {
     const nodeItem = createTreeNodeItem();
     const node = createTreeModelNode(undefined, nodeItem);
 
-    const { container } = render(<PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />);
+    const { container } = render(
+      <PresentationTreeNodeRenderer
+        treeActions={treeActions}
+        node={node}
+        onFilterClick={() => {}}
+        onClearFilterClick={() => {}}
+      />,
+    );
 
-    const buttons = await waitFor(() => container.querySelectorAll(".presentation-components-node-action-buttons button"));
+    const buttons = await waitFor(() =>
+      container.querySelectorAll(".presentation-components-node-action-buttons button"),
+    );
     expect(buttons).to.be.empty;
   });
 
@@ -132,7 +182,12 @@ describe("PresentationTreeNodeRenderer", () => {
     const node = createTreeModelNode(undefined, nodeItem);
 
     const { queryByText } = render(
-      <PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />,
+      <PresentationTreeNodeRenderer
+        treeActions={treeActions}
+        node={node}
+        onFilterClick={() => {}}
+        onClearFilterClick={() => {}}
+      />,
     );
 
     const infoNode = await waitFor(() => queryByText("tree.additional-filtering", { exact: false }));
@@ -145,7 +200,12 @@ describe("PresentationTreeNodeRenderer", () => {
     const filterClickSpy = sinon.spy();
 
     const { getByText } = render(
-      <PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={filterClickSpy} onClearFilterClick={() => {}} />,
+      <PresentationTreeNodeRenderer
+        treeActions={treeActions}
+        node={node}
+        onFilterClick={filterClickSpy}
+        onClearFilterClick={() => {}}
+      />,
     );
 
     const infoNode = await waitFor(() => getByText("tree.additional-filtering", { exact: false }));
@@ -161,7 +221,12 @@ describe("PresentationTreeNodeRenderer", () => {
     const filterClickSpy = sinon.spy();
 
     const { getByText } = render(
-      <PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={filterClickSpy} onClearFilterClick={() => {}} />,
+      <PresentationTreeNodeRenderer
+        treeActions={treeActions}
+        node={node}
+        onFilterClick={filterClickSpy}
+        onClearFilterClick={() => {}}
+      />,
     );
 
     const infoNode = await waitFor(() => getByText("tree.additional-filtering", { exact: false }));
@@ -172,12 +237,23 @@ describe("PresentationTreeNodeRenderer", () => {
 
   it("invokes 'onFilterClick' when filter button is clicked", async () => {
     const spy = sinon.spy();
-    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
+    const nodeItem = createTreeNodeItem({
+      filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] },
+    });
     const node = createTreeModelNode(undefined, nodeItem);
 
-    const { container } = render(<PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={spy} onClearFilterClick={() => {}} />);
+    const { container } = render(
+      <PresentationTreeNodeRenderer
+        treeActions={treeActions}
+        node={node}
+        onFilterClick={spy}
+        onClearFilterClick={() => {}}
+      />,
+    );
 
-    const buttons = await waitFor(() => container.querySelectorAll(".presentation-components-node-action-buttons button"));
+    const buttons = await waitFor(() =>
+      container.querySelectorAll(".presentation-components-node-action-buttons button"),
+    );
     expect(buttons.length).to.eq(1);
     fireEvent.click(buttons[0]);
     expect(spy).be.calledOnce;
@@ -186,13 +262,26 @@ describe("PresentationTreeNodeRenderer", () => {
   it("invokes 'onClearFilterClick' when clear button is clicked", async () => {
     const spy = sinon.spy();
     const nodeItem = createTreeNodeItem({
-      filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [], active: createFilterInfo() },
+      filtering: {
+        descriptor: createTestContentDescriptor({ fields: [] }),
+        ancestorFilters: [],
+        active: createFilterInfo(),
+      },
     });
     const node = createTreeModelNode(undefined, nodeItem);
 
-    const { container } = render(<PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={() => {}} onClearFilterClick={spy} />);
+    const { container } = render(
+      <PresentationTreeNodeRenderer
+        treeActions={treeActions}
+        node={node}
+        onFilterClick={() => {}}
+        onClearFilterClick={spy}
+      />,
+    );
 
-    const buttons = await waitFor(() => container.querySelectorAll(".presentation-components-node-action-buttons button"));
+    const buttons = await waitFor(() =>
+      container.querySelectorAll(".presentation-components-node-action-buttons button"),
+    );
     expect(buttons.length).to.eq(2);
     fireEvent.click(buttons[0]);
     expect(spy).be.calledOnce;

@@ -219,7 +219,11 @@ describe("TreeModel", () => {
     });
 
     it("overrides existing hierarchy part", () => {
-      const model = createTreeModel([{ id: undefined, children: ["root-1"] }, { id: "root-1", children: ["child-1"] }, { id: "child-1" }]);
+      const model = createTreeModel([
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", children: ["child-1"] },
+        { id: "child-1" },
+      ]);
       const hierarchyPart = createTreeModel([{ id: "root-1", children: ["child-2"] }, { id: "child-2" }]);
 
       expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
@@ -336,7 +340,11 @@ describe("TreeModel", () => {
   });
 
   describe("setInstanceFilter", () => {
-    const filter: GenericInstanceFilter = { rules: { operator: "and", rules: [] }, propertyClassNames: [], relatedInstances: [] };
+    const filter: GenericInstanceFilter = {
+      rules: { operator: "and", rules: [] },
+      propertyClassNames: [],
+      relatedInstances: [],
+    };
 
     it("sets filter on tree root", () => {
       const model = createTreeModel([]);
@@ -522,7 +530,13 @@ describe("isTreeModelHierarchyNode", () => {
   it("returns correct result", () => {
     expect(isTreeModelHierarchyNode({ id: undefined, nodeData: undefined })).to.be.false;
     expect(isTreeModelHierarchyNode({ id: "info-node", type: "Unknown", message: "info" })).to.be.false;
-    expect(isTreeModelHierarchyNode({ id: "hierarchy-node", label: "Node", children: false, nodeData: createTestHierarchyNode({ id: "hierarchy-node" }) })).to
-      .be.true;
+    expect(
+      isTreeModelHierarchyNode({
+        id: "hierarchy-node",
+        label: "Node",
+        children: false,
+        nodeData: createTestHierarchyNode({ id: "hierarchy-node" }),
+      }),
+    ).to.be.true;
   });
 });

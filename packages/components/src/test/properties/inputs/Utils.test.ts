@@ -6,7 +6,10 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { Format, FormatType } from "@itwin/core-quantity";
-import { getDecimalRoundingError, getPersistenceUnitRoundingError } from "../../../presentation-components/properties/inputs/Utils.js";
+import {
+  getDecimalRoundingError,
+  getPersistenceUnitRoundingError,
+} from "../../../presentation-components/properties/inputs/Utils.js";
 
 import type { ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 

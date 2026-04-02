@@ -97,7 +97,9 @@ describe("InstanceKeyValueRenderer", () => {
         it("renders empty when there is no display value", () => {
           const record = createNavigationPropertyRecord(createPrimitiveValue(instanceKey));
           const { getByTitle } = render(
-            <UnifiedSelectionContextProviderDeprecated imodel={testIModel}>{renderer.render(record)}</UnifiedSelectionContextProviderDeprecated>,
+            <UnifiedSelectionContextProviderDeprecated imodel={testIModel}>
+              {renderer.render(record)}
+            </UnifiedSelectionContextProviderDeprecated>,
           );
           expect(getByTitle("instance-key-value-renderer.select-instance").textContent).to.be.empty;
         });
@@ -129,9 +131,13 @@ describe("InstanceKeyValueRenderer", () => {
           const record = createNavigationPropertyRecord(createPrimitiveValue(instanceKey));
           record.imodelKey = "test-imodel-key";
           const { getByTitle } = render(
-            <UnifiedSelectionContextProvider storage={selectionStorage}>{renderer.render(record)}</UnifiedSelectionContextProvider>,
+            <UnifiedSelectionContextProvider storage={selectionStorage}>
+              {renderer.render(record)}
+            </UnifiedSelectionContextProvider>,
           );
-          await waitFor(() => expect(getByTitle("instance-key-value-renderer.select-instance").textContent).to.be.empty);
+          await waitFor(
+            () => expect(getByTitle("instance-key-value-renderer.select-instance").textContent).to.be.empty,
+          );
         });
 
         it("changes current selection when clicked", async () => {
@@ -139,7 +145,9 @@ describe("InstanceKeyValueRenderer", () => {
           record.imodelKey = "test-imodel-key";
 
           const { getByTitle } = render(
-            <UnifiedSelectionContextProvider storage={selectionStorage}>{renderer.render(record)}</UnifiedSelectionContextProvider>,
+            <UnifiedSelectionContextProvider storage={selectionStorage}>
+              {renderer.render(record)}
+            </UnifiedSelectionContextProvider>,
           );
 
           const selector = await waitFor(() => getByTitle("instance-key-value-renderer.select-instance"));
@@ -198,9 +206,13 @@ describe("InstanceKeyValueRenderer", () => {
           record.imodelKey = "test-imodel-key";
           applyCustomTypeConverter(record, undefined);
           const { getByTitle } = render(
-            <UnifiedSelectionContextProvider storage={{} as unknown as SelectionStorage}>{renderer.render(record)}</UnifiedSelectionContextProvider>,
+            <UnifiedSelectionContextProvider storage={{} as unknown as SelectionStorage}>
+              {renderer.render(record)}
+            </UnifiedSelectionContextProvider>,
           );
-          await waitFor(() => expect(getByTitle("instance-key-value-renderer.select-instance").textContent).to.be.empty);
+          await waitFor(
+            () => expect(getByTitle("instance-key-value-renderer.select-instance").textContent).to.be.empty,
+          );
         });
       });
     });

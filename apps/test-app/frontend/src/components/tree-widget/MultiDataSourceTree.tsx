@@ -24,7 +24,11 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
-import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector, ECSql } from "@itwin/presentation-shared";
+import {
+  createBisInstanceLabelSelectClauseFactory,
+  createCachingECClassHierarchyInspector,
+  ECSql,
+} from "@itwin/presentation-shared";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { SampleRpcInterface } from "@test-app/common";
 
@@ -46,7 +50,15 @@ import type { IInstanceLabelSelectClauseFactory, Props } from "@itwin/presentati
 type UseTreeProps = Props<typeof useUnifiedSelectionTree>;
 type IModelAccess = Props<typeof createIModelHierarchyProvider>["imodelAccess"];
 
-export function MultiDataSourceTree({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number; treeLabel: string }) {
+export function MultiDataSourceTree({
+  imodel,
+  ...props
+}: {
+  imodel: IModelConnection;
+  height: number;
+  width: number;
+  treeLabel: string;
+}) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
   useEffect(() => setIModelAccess(createIModelAccess(imodel)), [imodel]);
 
@@ -69,7 +81,17 @@ function createIModelAccess(imodel: IModelConnection) {
 
 const RSS_PROVIDER = createRssHierarchyProvider();
 
-function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModelAccess; height: number; width: number; treeLabel: string }) {
+function Tree({
+  imodelAccess,
+  height,
+  width,
+  treeLabel,
+}: {
+  imodelAccess: IModelAccess;
+  height: number;
+  width: number;
+  treeLabel: string;
+}) {
   const [searchText, setSearchText] = useState("");
   const [componentId] = useState(() => Guid.createValue());
   const getSearchPaths = useMemo<UseTreeProps["getSearchPaths"]>(() => {
@@ -78,7 +100,12 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
         return undefined;
       }
       const searchTreeBuilder = HierarchySearchTree.createBuilder();
-      for await (const path of getModelsHierarchySearchPaths({ imodelAccess, searchText, componentId, componentName: "MultiDataSourceTree" })) {
+      for await (const path of getModelsHierarchySearchPaths({
+        imodelAccess,
+        searchText,
+        componentId,
+        componentName: "MultiDataSourceTree",
+      })) {
         searchTreeBuilder.accept({ path });
       }
       for await (const path of RSS_PROVIDER.getSearchPaths(searchText)) {
@@ -95,15 +122,27 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
 
   const { isReloading, ...treeProps } = useUnifiedSelectionTree({
     selectionStorage: unifiedSelectionContext.storage,
-    createSelectableForGenericNode: useCallback<NonNullable<Props<typeof useUnifiedSelectionTree>["createSelectableForGenericNode"]>>(
-      (node, uniqueId) => ({ identifier: node.key.source === "rss" ? node.key.id : uniqueId, data: node, async *loadInstanceKeys() {} }),
+    createSelectableForGenericNode: useCallback<
+      NonNullable<Props<typeof useUnifiedSelectionTree>["createSelectableForGenericNode"]>
+    >(
+      (node, uniqueId) => ({
+        identifier: node.key.source === "rss" ? node.key.id : uniqueId,
+        data: node,
+        async *loadInstanceKeys() {},
+      }),
       [],
     ),
     sourceName: "MultiIModelTree",
     getHierarchyProvider: useCallback(
       () =>
         mergeProviders({
-          providers: [createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: createModelsHierarchyDefinition({ imodelAccess }) }), RSS_PROVIDER],
+          providers: [
+            createIModelHierarchyProvider({
+              imodelAccess,
+              hierarchyDefinition: createModelsHierarchyDefinition({ imodelAccess }),
+            }),
+            RSS_PROVIDER,
+          ],
         }),
       [imodelAccess],
     ),
@@ -191,12 +230,20 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
 
 type SearchBoxProps = ComponentPropsWithoutRef<typeof SearchBox>;
 
-function DebouncedSearchBox({ onChange, ...props }: Omit<SearchBoxProps, "onChange"> & { onChange: (text: string) => void }) {
+function DebouncedSearchBox({
+  onChange,
+  ...props
+}: Omit<SearchBoxProps, "onChange"> & { onChange: (text: string) => void }) {
   const handleChange = useMemo(() => {
     return debounced(onChange, 500);
   }, [onChange]);
 
-  return <SearchBox {...props} inputProps={{ ...props.inputProps, value: undefined, onChange: (e) => handleChange(e.currentTarget.value) }} />;
+  return (
+    <SearchBox
+      {...props}
+      inputProps={{ ...props.inputProps, value: undefined, onChange: (e) => handleChange(e.currentTarget.value) }}
+    />
+  );
 }
 
 function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
@@ -224,7 +271,9 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
               SELECT ${await clauses.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
-                nodeLabel: { selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Subject" }) },
+                nodeLabel: {
+                  selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Subject" }),
+                },
                 hasChildren: true,
                 extendedData: { nodeType: "root-subject" },
               })}
@@ -245,7 +294,9 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
                   SELECT ${await clauses.createSelectClause({
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
-                    nodeLabel: { selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Model" }) },
+                    nodeLabel: {
+                      selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Model" }),
+                    },
                     grouping: { byClass: true },
                     extendedData: { nodeType: "model" },
                   })}
@@ -265,7 +316,9 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
                   SELECT ${await clauses.createSelectClause({
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
-                    nodeLabel: { selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Model" }) },
+                    nodeLabel: {
+                      selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Model" }),
+                    },
                     grouping: { byClass: true },
                     extendedData: { nodeType: "model" },
                   })}
@@ -416,7 +469,9 @@ function getIcon(node: TreeNode): ReactElement | undefined {
   return undefined;
 }
 
-function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (filter: string) => AsyncIterableIterator<HierarchySearchPath> } {
+function createRssHierarchyProvider(): HierarchyProvider & {
+  getSearchPaths: (filter: string) => AsyncIterableIterator<HierarchySearchPath>;
+} {
   let feedPromise: Promise<{ title?: string; items: Array<{ title?: string; guid: GuidString }> }> | undefined;
   async function getFeed() {
     if (!feedPromise) {
@@ -479,7 +534,10 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (fi
           }
         }
       }
-      const searchHelper = !parentNode || HierarchyNode.isGeneric(parentNode) ? createHierarchySearchHelper(search, parentNode) : undefined;
+      const searchHelper =
+        !parentNode || HierarchyNode.isGeneric(parentNode)
+          ? createHierarchySearchHelper(search, parentNode)
+          : undefined;
 
       if (!searchHelper?.hasSearch) {
         yield* generateNodes();

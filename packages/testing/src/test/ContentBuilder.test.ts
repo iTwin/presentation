@@ -7,7 +7,16 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { BeEvent, BeUiEvent, Guid } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
-import { Content, Descriptor, Field, Item, KeySet, LabelDefinition, PropertyValueFormat, RegisteredRuleset } from "@itwin/presentation-common";
+import {
+  Content,
+  Descriptor,
+  Field,
+  Item,
+  KeySet,
+  LabelDefinition,
+  PropertyValueFormat,
+  RegisteredRuleset,
+} from "@itwin/presentation-common";
 import { ContentDataProvider } from "@itwin/presentation-components";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { ContentBuilder } from "../presentation-testing/ContentBuilder.js";
@@ -81,9 +90,18 @@ async function getContent(items: ItemValues[], descriptor: Descriptor) {
   return new Content(descriptor, items.map(createItem));
 }
 
-const createCategoryDescription = (): CategoryDescription => ({ name: "test", label: "test", priority: 1, description: "", expand: false });
+const createCategoryDescription = (): CategoryDescription => ({
+  name: "test",
+  label: "test",
+  priority: 1,
+  description: "",
+  expand: false,
+});
 
-const createPrimitiveTypeDescription = (typeName: string): PrimitiveTypeDescription => ({ valueFormat: PropertyValueFormat.Primitive, typeName });
+const createPrimitiveTypeDescription = (typeName: string): PrimitiveTypeDescription => ({
+  valueFormat: PropertyValueFormat.Primitive,
+  typeName,
+});
 const createStringTypeDescription = () => createPrimitiveTypeDescription("string");
 const createIntTypeDescription = () => createPrimitiveTypeDescription("int");
 const createDoubleTypeDescription = () => createPrimitiveTypeDescription("double");
@@ -109,9 +127,30 @@ const createContentDescriptor = () => {
     selectClasses: [],
     categories: [category],
     fields: [
-      new Field({ category, name: "width", label: "Width", type: createIntTypeDescription(), isReadonly: false, priority: 1 }),
-      new Field({ category, name: "title", label: "title", type: createStringTypeDescription(), isReadonly: false, priority: 1 }),
-      new Field({ category, name: "radius", label: "radius", type: createStringTypeDescription(), isReadonly: false, priority: 1 }),
+      new Field({
+        category,
+        name: "width",
+        label: "Width",
+        type: createIntTypeDescription(),
+        isReadonly: false,
+        priority: 1,
+      }),
+      new Field({
+        category,
+        name: "title",
+        label: "title",
+        type: createStringTypeDescription(),
+        isReadonly: false,
+        priority: 1,
+      }),
+      new Field({
+        category,
+        name: "radius",
+        label: "radius",
+        type: createStringTypeDescription(),
+        isReadonly: false,
+        priority: 1,
+      }),
     ],
     contentFlags: 1,
   });
@@ -217,8 +256,12 @@ describe("ContentBuilder", () => {
     });
 
     it("uses `ContentDataProvider` if data provider was not supplied", async () => {
-      sinon.stub(IModelApp, "quantityFormatter").get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
-      const getContentStub = sinon.stub(ContentDataProvider.prototype, "getContent").resolves(new Content(createContentDescriptor(), []));
+      sinon
+        .stub(IModelApp, "quantityFormatter")
+        .get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
+      const getContentStub = sinon
+        .stub(ContentDataProvider.prototype, "getContent")
+        .resolves(new Content(createContentDescriptor(), []));
       const builder = new ContentBuilder({ ...initialProps });
 
       const content = await builder.createContent("1", []);
@@ -252,16 +295,28 @@ describe("ContentBuilder", () => {
           displayValue: ["1.2", "4.6", "7.9"],
           type: createArrayTypeDescription(createDoubleTypeDescription()),
         },
-        { name: "doublesStruct", value: { a: 1.234 }, displayValue: { a: "1.2" }, type: createStructTypeDescription({ a: createDoubleTypeDescription() }) },
+        {
+          name: "doublesStruct",
+          value: { a: 1.234 },
+          displayValue: { a: "1.2" },
+          type: createStructTypeDescription({ a: createDoubleTypeDescription() }),
+        },
         { name: "point2d", value: [1.456, 4.789], displayValue: ["1.5", "4.8"], type: createPoint2dTypeDescription() },
-        { name: "point3d", value: { x: 1.234, y: 4.567, z: 7.89 }, displayValue: { x: "1.2", y: "4.6", z: "7.9" }, type: createPoint3dTypeDescription() },
+        {
+          name: "point3d",
+          value: { x: 1.234, y: 4.567, z: 7.89 },
+          displayValue: { x: "1.2", y: "4.6", z: "7.9" },
+          type: createPoint3dTypeDescription(),
+        },
       ];
       const category = createCategoryDescription();
       const descriptor = new Descriptor({
         displayType: "",
         selectClasses: [],
         categories: [category],
-        fields: testValues.map((v) => new Field({ category, name: v.name, label: v.name, type: v.type, isReadonly: false, priority: 1 })),
+        fields: testValues.map(
+          (v) => new Field({ category, name: v.name, label: v.name, type: v.type, isReadonly: false, priority: 1 }),
+        ),
         contentFlags: 1,
       });
       class TestDataProvider extends EmptyDataProvider {
@@ -288,7 +343,9 @@ describe("ContentBuilder", () => {
       expect((content[2].value as PrimitiveValue).value).to.eq(1.9);
       expect((content[3].value as PrimitiveValue).value).to.eq(1.23);
       expect((content[4].value as PrimitiveValue).value).to.eq(4.57);
-      expect((content[5].value as ArrayValue).items.map((item) => (item.value as PrimitiveValue).value)).to.deep.eq([1.23, 4.57, 7.89]);
+      expect((content[5].value as ArrayValue).items.map((item) => (item.value as PrimitiveValue).value)).to.deep.eq([
+        1.23, 4.57, 7.89,
+      ]);
       expect(((content[6].value as StructValue).members.a.value as PrimitiveValue).value).to.deep.eq(1.23);
       expect((content[7].value as PrimitiveValue).value).to.deep.eq([1.46, 4.79]);
       expect((content[8].value as PrimitiveValue).value).to.deep.eq({ x: 1.23, y: 4.57, z: 7.89 });

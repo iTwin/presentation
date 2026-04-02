@@ -33,7 +33,9 @@ describe("createDefaultValueFormatter", () => {
     expect(await valueFormatter({ type: "Long", value: 0 })).to.eq("0");
     expect(await valueFormatter({ type: "Long", value: 1.23 })).to.eq("1");
     expect(await valueFormatter({ type: "Long", value: 7.89 })).to.eq("8");
-    expect(await valueFormatter({ type: "Long", value: Number.MAX_SAFE_INTEGER })).to.eq(Number.MAX_SAFE_INTEGER.toLocaleString());
+    expect(await valueFormatter({ type: "Long", value: Number.MAX_SAFE_INTEGER })).to.eq(
+      Number.MAX_SAFE_INTEGER.toLocaleString(),
+    );
   });
 
   it("formats double values", async () => {
@@ -49,7 +51,9 @@ describe("createDefaultValueFormatter", () => {
     expect(await valueFormatter({ type: "DateTime", value: 0 })).to.eq(julianToDateTime(0).toLocaleString());
     expect(await valueFormatter({ type: "DateTime", value: date.toISOString() })).to.eq(date.toLocaleString());
     expect(await valueFormatter({ type: "DateTime", value: date })).to.eq(date.toLocaleString());
-    expect(await valueFormatter({ type: "DateTime", extendedType: "ShortDate", value: date })).to.eq(date.toLocaleDateString());
+    expect(await valueFormatter({ type: "DateTime", extendedType: "ShortDate", value: date })).to.eq(
+      date.toLocaleDateString(),
+    );
   });
 
   it("formats point2d values", async () => {

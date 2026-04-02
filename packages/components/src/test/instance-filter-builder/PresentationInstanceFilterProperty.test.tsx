@@ -30,7 +30,10 @@ describe("PresentationInstanceFilterProperty", () => {
   });
 
   it("renders with badge", async () => {
-    const testPropertyInfo = createTestPresentationInstanceFilterPropertyInfo({ className: `${schemaName}:${className}`, categoryLabel: "TestCategoryLabel" });
+    const testPropertyInfo = createTestPresentationInstanceFilterPropertyInfo({
+      className: `${schemaName}:${className}`,
+      categoryLabel: "TestCategoryLabel",
+    });
     const { user, container, queryByText, queryByTitle } = render(
       <PresentationInstanceFilterProperty
         propertyDescription={testPropertyInfo.propertyDescription}
@@ -51,9 +54,14 @@ describe("PresentationInstanceFilterProperty", () => {
   });
 
   it("renders without badge", () => {
-    const testPropertyInfo = createTestPresentationInstanceFilterPropertyInfo({ className: `${schemaName}:${className}` });
+    const testPropertyInfo = createTestPresentationInstanceFilterPropertyInfo({
+      className: `${schemaName}:${className}`,
+    });
     const { container, queryByTitle } = render(
-      <PresentationInstanceFilterProperty propertyDescription={testPropertyInfo.propertyDescription} fullClassName={testPropertyInfo.className} />,
+      <PresentationInstanceFilterProperty
+        propertyDescription={testPropertyInfo.propertyDescription}
+        fullClassName={testPropertyInfo.className}
+      />,
     );
 
     expect(queryByTitle(testPropertyInfo.propertyDescription.displayLabel)).to.not.be.null;

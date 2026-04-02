@@ -45,7 +45,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
@@ -75,7 +77,10 @@ describe("Hierarchies", () => {
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [x1] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [x2] }),
+            ],
           });
           validateHierarchyLevel({
             nodes: await collect(
@@ -123,7 +128,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
@@ -152,8 +159,15 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await collect(provider.getNodes({ parentNode: { key: { type: "instances", instanceKeys: [x] }, parentKeys: [], label: "" } })),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y1] }), NodeValidators.createForInstanceNode({ instanceKeys: [y2] })],
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: { key: { type: "instances", instanceKeys: [x] }, parentKeys: [], label: "" },
+              }),
+            ),
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [y1] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [y2] }),
+            ],
           });
           validateHierarchyLevel({
             nodes: await collect(
@@ -201,7 +215,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
@@ -239,7 +255,10 @@ describe("Hierarchies", () => {
           };
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: groupingNode })),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y1] }), NodeValidators.createForInstanceNode({ instanceKeys: [y2] })],
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [y1] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [y2] }),
+            ],
           });
           validateHierarchyLevel({
             nodes: await collect(
@@ -286,7 +305,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
@@ -316,13 +337,20 @@ describe("Hierarchies", () => {
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x] }), NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [x] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [y] }),
+            ],
           });
           validateHierarchyLevel({
             nodes: await collect(
               provider.getNodes({
                 parentNode: undefined,
-                instanceFilter: { propertyClassNames: [schema.items.Y.fullName], relatedInstances: [], rules: { operator: "and", rules: [] } },
+                instanceFilter: {
+                  propertyClassNames: [schema.items.Y.fullName],
+                  relatedInstances: [],
+                  rules: { operator: "and", rules: [] },
+                },
               }),
             ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
@@ -353,7 +381,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
@@ -383,7 +413,10 @@ describe("Hierarchies", () => {
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x] }), NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [x] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [y] }),
+            ],
           });
           validateHierarchyLevel({
             nodes: await collect(
@@ -424,7 +457,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
@@ -454,7 +489,10 @@ describe("Hierarchies", () => {
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [x1] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [x2] }),
+            ],
           });
           validateHierarchyLevel({
             nodes: await collect(
@@ -513,7 +551,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
@@ -543,7 +583,10 @@ describe("Hierarchies", () => {
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [x1] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [x2] }),
+            ],
           });
           validateHierarchyLevel({
             nodes: await collect(

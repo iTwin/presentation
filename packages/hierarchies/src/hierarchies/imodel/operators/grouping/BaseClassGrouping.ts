@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SortedArray } from "@itwin/core-bentley";
-import { compareFullClassNames, createMainThreadReleaseOnTimePassedHandler, getClass } from "@itwin/presentation-shared";
+import {
+  compareFullClassNames,
+  createMainThreadReleaseOnTimePassedHandler,
+  getClass,
+} from "@itwin/presentation-shared";
 import { HierarchyNode } from "../../../HierarchyNode.js";
 
 import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
@@ -31,11 +35,15 @@ export async function getBaseClassGroupingECClasses(
     await releaseMainThread();
     baseClasses.push(await getClass(schemaProvider, fullName));
   }
-  const sortedClasses = await sortByBaseClass(baseClasses.filter((baseClass) => baseClass.isRelationshipClass() || baseClass.isEntityClass()));
+  const sortedClasses = await sortByBaseClass(
+    baseClasses.filter((baseClass) => baseClass.isRelationshipClass() || baseClass.isEntityClass()),
+  );
 
   if (parentNode && HierarchyNode.isClassGroupingNode(parentNode)) {
     // if we have a class grouping node, we can cut the front of sortedClasses up to a point where our grouping class is
-    const cutPosition = sortedClasses.findIndex((c) => compareFullClassNames(c.fullName, parentNode.key.className) === 0);
+    const cutPosition = sortedClasses.findIndex(
+      (c) => compareFullClassNames(c.fullName, parentNode.key.className) === 0,
+    );
     if (cutPosition >= 0) {
       return sortedClasses.slice(cutPosition + 1);
     }
@@ -59,7 +67,9 @@ export async function createBaseClassGroupsForSingleBaseClass(
     await releaseMainThread();
     if (
       !node.processingParams?.grouping?.byBaseClasses ||
-      !node.processingParams.grouping.byBaseClasses.fullClassNames.some((className) => compareFullClassNames(className, baseClassFullName) === 0)
+      !node.processingParams.grouping.byBaseClasses.fullClassNames.some(
+        (className) => compareFullClassNames(className, baseClassFullName) === 0,
+      )
     ) {
       ungroupedNodes.push(node);
       continue;
@@ -134,5 +144,7 @@ export async function createBaseClassGroupingHandlers(
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<GroupingHandler[]> {
   const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(imodelAccess, parentNode, nodes);
-  return baseClassGroupingECClasses.map((baseECClass) => async (allNodes) => createBaseClassGroupsForSingleBaseClass(allNodes, baseECClass, imodelAccess));
+  return baseClassGroupingECClasses.map(
+    (baseECClass) => async (allNodes) => createBaseClassGroupsForSingleBaseClass(allNodes, baseECClass, imodelAccess),
+  );
 }

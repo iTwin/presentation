@@ -33,7 +33,12 @@ import type {
   NonGroupingHierarchyNode,
 } from "@itwin/presentation-hierarchies";
 import type { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
-import type { Selectable, SelectionStorage, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
+import type {
+  Selectable,
+  SelectionStorage,
+  StorageSelectionChangeEventArgs,
+  StorageSelectionChangesListener,
+} from "@itwin/unified-selection";
 import type { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
 import type { StubbedHierarchyProvider } from "./TestUtils.js";
 
@@ -42,7 +47,10 @@ describe("useTree", () => {
   const onHierarchyLoadErrorStub = sinon.stub();
 
   type UseTreeProps = Props<typeof useTree>;
-  const initialProps: UseTreeProps = { getHierarchyProvider: () => hierarchyProvider, onHierarchyLoadError: onHierarchyLoadErrorStub };
+  const initialProps: UseTreeProps = {
+    getHierarchyProvider: () => hierarchyProvider,
+    onHierarchyLoadError: onHierarchyLoadErrorStub,
+  };
 
   beforeEach(() => {
     hierarchyProvider = createHierarchyProviderStub();
@@ -50,7 +58,9 @@ describe("useTree", () => {
   });
 
   it("disposes hierarchy provider on unmount", async () => {
-    hierarchyProvider.getNodes.callsFake((props) => createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []));
+    hierarchyProvider.getNodes.callsFake((props) =>
+      createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []),
+    );
     const { result, unmount } = renderHook(useTree, { initialProps });
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
@@ -81,7 +91,11 @@ describe("useTree", () => {
 
   it("loads root nodes", async () => {
     hierarchyProvider.getNodes.callsFake((props) => {
-      return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })] : []);
+      return createAsyncIterator(
+        props.parentNode === undefined
+          ? [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })]
+          : [],
+      );
     });
     const { result } = renderHook(useTree, { initialProps });
 
@@ -127,7 +141,11 @@ describe("useTree", () => {
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps!.rootNodes[0].error).to.deep.equal({ id: "root-1-error", type: "Unknown", message: "Test error" });
+      expect(treeRenderProps!.rootNodes[0].error).to.deep.equal({
+        id: "root-1-error",
+        type: "Unknown",
+        message: "Test error",
+      });
     });
   });
 
@@ -180,7 +198,9 @@ describe("useTree", () => {
     }));
 
     const promise = new ResolvablePromise<HierarchyNodeIdentifiersPath[]>();
-    const { result, rerender } = renderHook(useTree, { initialProps: { getHierarchyProvider: () => customHierarchyProvider, getSearchPaths: () => promise } });
+    const { result, rerender } = renderHook(useTree, {
+      initialProps: { getHierarchyProvider: () => customHierarchyProvider, getSearchPaths: () => promise },
+    });
     await waitFor(() => {
       expect(getNodesCallCount).to.eq(0);
       expect(result.current.isReloading).to.be.true;
@@ -277,7 +297,9 @@ describe("useTree", () => {
     const promise1 = new ResolvablePromise<HierarchyNodeIdentifiersPath[]>();
     const getSearchPaths1 = sinon.stub().callsFake(async () => promise1);
 
-    const { result, rerender } = renderHook(useTree, { initialProps: { ...initialProps, getSearchPaths: getSearchPaths1 } });
+    const { result, rerender } = renderHook(useTree, {
+      initialProps: { ...initialProps, getSearchPaths: getSearchPaths1 },
+    });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
@@ -327,7 +349,10 @@ describe("useTree", () => {
       if (props.parentNode === undefined) {
         return createAsyncIterator(rootNodes1);
       }
-      return createAsyncIterator([createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })]);
+      return createAsyncIterator([
+        createTestHierarchyNode({ id: "child-1" }),
+        createTestHierarchyNode({ id: "child-2" }),
+      ]);
     });
 
     const { result, rerender } = renderHook(useTree, { initialProps: { ...initialProps } });
@@ -347,7 +372,10 @@ describe("useTree", () => {
       if (props.parentNode === undefined) {
         return createAsyncIterator(rootNodes2);
       }
-      return createAsyncIterator([createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })]);
+      return createAsyncIterator([
+        createTestHierarchyNode({ id: "child-1" }),
+        createTestHierarchyNode({ id: "child-2" }),
+      ]);
     });
 
     rerender({ ...initialProps, getSearchPaths: async () => [] });
@@ -389,7 +417,10 @@ describe("useTree", () => {
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
-      expect(result.current.getNode(createNodeId(rootNodes[0]))).to.containSubset({ id: createNodeId(rootNodes[0]), nodeData: rootNodes[0] });
+      expect(result.current.getNode(createNodeId(rootNodes[0]))).to.containSubset({
+        id: createNodeId(rootNodes[0]),
+        nodeData: rootNodes[0],
+      });
     });
   });
 
@@ -507,7 +538,11 @@ describe("useTree", () => {
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(2);
     });
 
-    const filter: GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
+    const filter: GenericInstanceFilter = {
+      propertyClassNames: [],
+      relatedInstances: [],
+      rules: { operator: "and", rules: [] },
+    };
 
     act(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
@@ -530,7 +565,9 @@ describe("useTree", () => {
   });
 
   it("applies and removes instance filter", async () => {
-    const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, supportsFiltering: true, children: true })];
+    const rootNodes = [
+      createTestHierarchyNode({ id: "root-1", autoExpand: true, supportsFiltering: true, children: true }),
+    ];
     const childNodes = [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-1" })];
 
     hierarchyProvider.getNodes.callsFake((props) => {
@@ -550,10 +587,16 @@ describe("useTree", () => {
       expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(2);
     });
 
-    const filter: GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
+    const filter: GenericInstanceFilter = {
+      propertyClassNames: [],
+      relatedInstances: [],
+      rules: { operator: "and", rules: [] },
+    };
 
     act(() => {
-      getTreeRendererProps(result.current)!.getHierarchyLevelDetails(createNodeId(rootNodes[0]))?.setInstanceFilter(filter);
+      getTreeRendererProps(result.current)!
+        .getHierarchyLevelDetails(createNodeId(rootNodes[0]))
+        ?.setInstanceFilter(filter);
     });
 
     await waitFor(() => {
@@ -563,7 +606,9 @@ describe("useTree", () => {
     });
 
     act(() => {
-      getTreeRendererProps(result.current)!.getHierarchyLevelDetails(createNodeId(rootNodes[0]))!.setInstanceFilter(undefined);
+      getTreeRendererProps(result.current)!
+        .getHierarchyLevelDetails(createNodeId(rootNodes[0]))!
+        .setInstanceFilter(undefined);
     });
 
     await waitFor(() => {
@@ -574,7 +619,9 @@ describe("useTree", () => {
   });
 
   it("applies instance filter on grouping node parent", async () => {
-    const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, children: true, supportsFiltering: true })];
+    const rootNodes = [
+      createTestHierarchyNode({ id: "root-1", autoExpand: true, children: true, supportsFiltering: true }),
+    ];
     const groupingNode = createTestGroupingNode({
       id: "grouping-node",
       key: { type: "class-grouping", className: "Schema:Class" },
@@ -605,10 +652,16 @@ describe("useTree", () => {
       expect(groupingTreeNode.children).to.have.lengthOf(2);
     });
 
-    const filter: GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
+    const filter: GenericInstanceFilter = {
+      propertyClassNames: [],
+      relatedInstances: [],
+      rules: { operator: "and", rules: [] },
+    };
 
     act(() => {
-      getTreeRendererProps(result.current)!.getHierarchyLevelDetails(createNodeId(rootNodes[0]))!.setInstanceFilter(filter);
+      getTreeRendererProps(result.current)!
+        .getHierarchyLevelDetails(createNodeId(rootNodes[0]))!
+        .setInstanceFilter(filter);
     });
 
     await waitFor(() => {
@@ -636,7 +689,11 @@ describe("useTree", () => {
       expect(treeRenderProps!.rootNodes[0].id).to.eq(createNodeId(rootNode));
     });
 
-    const filter: GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
+    const filter: GenericInstanceFilter = {
+      propertyClassNames: [],
+      relatedInstances: [],
+      rules: { operator: "and", rules: [] },
+    };
     act(() => {
       getTreeRendererProps(result.current)!.getHierarchyLevelDetails(undefined)!.setInstanceFilter(filter);
     });
@@ -665,7 +722,10 @@ describe("useTree", () => {
 
   it("`getHierarchyLevelDetails` returns undefined for grouping node", async () => {
     const rootNodes = [createTestGroupingNode({ id: "grouping-node", children: true, autoExpand: true })];
-    const childNodes = [createTestHierarchyNode({ id: "grouped-node-1" }), createTestHierarchyNode({ id: "grouped-node-1" })];
+    const childNodes = [
+      createTestHierarchyNode({ id: "grouped-node-1" }),
+      createTestHierarchyNode({ id: "grouped-node-1" }),
+    ];
 
     hierarchyProvider.getNodes.callsFake((props) => {
       if (props.parentNode === undefined) {
@@ -689,7 +749,9 @@ describe("useTree", () => {
   it("`getHierarchyLevelDetails` returns options for hierarchy node", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1" })];
 
-    hierarchyProvider.getNodes.callsFake((props) => createAsyncIterator(props.parentNode === undefined ? rootNodes : []));
+    hierarchyProvider.getNodes.callsFake((props) =>
+      createAsyncIterator(props.parentNode === undefined ? rootNodes : []),
+    );
     hierarchyProvider.getNodeInstanceKeys.callsFake(() =>
       createAsyncIterator([
         { id: "0x1", className: "Schema:Class" },
@@ -706,11 +768,20 @@ describe("useTree", () => {
     const details = getTreeRendererProps(result.current)!.getHierarchyLevelDetails(nodeId);
     expect(details).to.not.be.undefined;
     expect(details!.hierarchyNode).to.be.eq(rootNodes[0]);
-    const filter = { rules: { rules: [], operator: "and" }, propertyClassNames: [], relatedInstances: [] } satisfies GenericInstanceFilter;
-    const keys = await collect(details?.getInstanceKeysIterator({ instanceFilter: filter, hierarchyLevelSizeLimit: 100 }) ?? []);
+    const filter = {
+      rules: { rules: [], operator: "and" },
+      propertyClassNames: [],
+      relatedInstances: [],
+    } satisfies GenericInstanceFilter;
+    const keys = await collect(
+      details?.getInstanceKeysIterator({ instanceFilter: filter, hierarchyLevelSizeLimit: 100 }) ?? [],
+    );
     expect(keys).to.have.lengthOf(2);
     expect(hierarchyProvider.getNodeInstanceKeys).to.be.calledWith(
-      sinon.match((props: Props<typeof hierarchyProvider.getNodeInstanceKeys>) => props.instanceFilter === filter && props.hierarchyLevelSizeLimit === 100),
+      sinon.match(
+        (props: Props<typeof hierarchyProvider.getNodeInstanceKeys>) =>
+          props.instanceFilter === filter && props.hierarchyLevelSizeLimit === 100,
+      ),
     );
   });
 
@@ -754,7 +825,9 @@ describe("useTree", () => {
   it("reports nodes load performance", async () => {
     hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
     const onPerformanceMeasuredSpy = sinon.spy();
-    const { result } = renderHook(useTree, { initialProps: { ...initialProps, onPerformanceMeasured: onPerformanceMeasuredSpy } });
+    const { result } = renderHook(useTree, {
+      initialProps: { ...initialProps, onPerformanceMeasured: onPerformanceMeasuredSpy },
+    });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
@@ -768,7 +841,9 @@ describe("useTree", () => {
       return throwingAsyncIterator(new RowsLimitExceededError(555));
     });
     const onHierarchyLimitExceededSpy = sinon.spy();
-    const { result } = renderHook(useTree, { initialProps: { ...initialProps, onHierarchyLimitExceeded: onHierarchyLimitExceededSpy } });
+    const { result } = renderHook(useTree, {
+      initialProps: { ...initialProps, onHierarchyLimitExceeded: onHierarchyLimitExceededSpy },
+    });
 
     await waitFor(() => {
       expect(result.current.rootErrorRendererProps).to.not.be.undefined;
@@ -949,7 +1024,10 @@ describe("useTree", () => {
     });
 
     const { result } = renderHook(useTree, {
-      initialProps: { ...initialProps, getTreeNodeError: () => ({ id: "custom-error", type: "Unknown", message: "Custom error" }) },
+      initialProps: {
+        ...initialProps,
+        getTreeNodeError: () => ({ id: "custom-error", type: "Unknown", message: "Custom error" }),
+      },
     });
 
     await waitFor(() => {
@@ -995,7 +1073,11 @@ describe("useUnifiedSelectionTree", () => {
     changeListener.reset();
     storage = createStorage();
     storage.selectionChangeEvent.addListener(changeListener);
-    initialProps = { getHierarchyProvider: () => hierarchyProvider as unknown as HierarchyProvider, sourceName, selectionStorage: storage };
+    initialProps = {
+      getHierarchyProvider: () => hierarchyProvider as unknown as HierarchyProvider,
+      sourceName,
+      selectionStorage: storage,
+    };
   });
 
   afterEach(() => {
@@ -1047,7 +1129,9 @@ describe("useUnifiedSelectionTree", () => {
 
     const testSelectable: Selectable = { identifier: "test-selectable", data: {}, async *loadInstanceKeys() {} };
 
-    const { result } = renderHook(useUnifiedSelectionTree, { initialProps: { ...initialProps, createSelectableForGenericNode: () => testSelectable } });
+    const { result } = renderHook(useUnifiedSelectionTree, {
+      initialProps: { ...initialProps, createSelectableForGenericNode: () => testSelectable },
+    });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);

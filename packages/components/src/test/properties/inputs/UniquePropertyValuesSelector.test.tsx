@@ -33,7 +33,13 @@ import { render, waitFor } from "../../TestUtils.js";
 
 import type { PropertyDescription, PropertyValue } from "@itwin/appui-abstract";
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { ClassInfo, ContentInstancesOfSpecificClassesSpecification, ContentRule, RelatedClassInfo, Ruleset } from "@itwin/presentation-common";
+import type {
+  ClassInfo,
+  ContentInstancesOfSpecificClassesSpecification,
+  ContentRule,
+  RelatedClassInfo,
+  Ruleset,
+} from "@itwin/presentation-common";
 import type { PresentationManager } from "@itwin/presentation-frontend";
 import type { UniqueValue } from "../../../presentation-components/common/Utils.js";
 
@@ -51,7 +57,9 @@ describe("UniquePropertyValuesSelector", () => {
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
     sinon.stub(Presentation, "localization").get(() => localization);
-    presentationManagerStub = sinon.stub(Presentation, "presentation").get(() => ({ getDistinctValuesIterator: getDistinctValuesIteratorStub }));
+    presentationManagerStub = sinon
+      .stub(Presentation, "presentation")
+      .get(() => ({ getDistinctValuesIterator: getDistinctValuesIteratorStub }));
   });
 
   afterEach(async () => {
@@ -75,7 +83,12 @@ describe("UniquePropertyValuesSelector", () => {
     fields: [propertiesField],
   });
 
-  const propertyDescription = { name: "#propertyName", displayLabel: "propertiesField", typename: "number", editor: undefined };
+  const propertyDescription = {
+    name: "#propertyName",
+    displayLabel: "propertiesField",
+    typename: "number",
+    editor: undefined,
+  };
 
   const convertToPropertyValue = (uniqueValue: UniqueValue[]): PropertyValue => {
     const { displayValues, groupedRawValues } = serializeUniqueValues(uniqueValue);
@@ -98,7 +111,12 @@ describe("UniquePropertyValuesSelector", () => {
     }));
 
     const { getByText, getByPlaceholderText, user } = render(
-      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      <UniquePropertyValuesSelector
+        property={propertyDescription}
+        onChange={() => {}}
+        imodel={testImodel}
+        descriptor={descriptor}
+      />,
     );
 
     // open menu
@@ -121,7 +139,12 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     const { getByText, getByPlaceholderText, user } = render(
-      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      <UniquePropertyValuesSelector
+        property={propertyDescription}
+        onChange={() => {}}
+        imodel={testImodel}
+        descriptor={descriptor}
+      />,
     );
 
     // open menu
@@ -147,7 +170,12 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     const { getByText, getByPlaceholderText, user } = render(
-      <UniquePropertyValuesSelector property={propertyDescription} onChange={spy} imodel={testImodel} descriptor={descriptor} />,
+      <UniquePropertyValuesSelector
+        property={propertyDescription}
+        onChange={spy}
+        imodel={testImodel}
+        descriptor={descriptor}
+      />,
     );
 
     // open menu
@@ -176,7 +204,13 @@ describe("UniquePropertyValuesSelector", () => {
     const initialValue = convertToPropertyValue([{ displayValue: "TestValue2", groupedRawValues: ["TestValue2"] }]);
 
     const { getByText, getByPlaceholderText, user } = render(
-      <UniquePropertyValuesSelector property={propertyDescription} onChange={spy} imodel={testImodel} descriptor={descriptor} value={initialValue} />,
+      <UniquePropertyValuesSelector
+        property={propertyDescription}
+        onChange={spy}
+        imodel={testImodel}
+        descriptor={descriptor}
+        value={initialValue}
+      />,
     );
 
     // open menu
@@ -208,7 +242,13 @@ describe("UniquePropertyValuesSelector", () => {
     const initialValue = convertToPropertyValue([{ displayValue: "TestValue1", groupedRawValues: ["TestValue1"] }]);
 
     const { getAllByText, user, getByPlaceholderText } = render(
-      <UniquePropertyValuesSelector property={propertyDescription} onChange={spy} imodel={testImodel} descriptor={descriptor} value={initialValue} />,
+      <UniquePropertyValuesSelector
+        property={propertyDescription}
+        onChange={spy}
+        imodel={testImodel}
+        descriptor={descriptor}
+        value={initialValue}
+      />,
     );
 
     // open menu
@@ -221,7 +261,13 @@ describe("UniquePropertyValuesSelector", () => {
     expect(menuItem).to.have.lengthOf(2);
     await user.click(menuItem[1]);
 
-    await waitFor(() => expect(spy).to.be.calledWith({ valueFormat: PropertyValueFormat.Primitive, displayValue: undefined, value: undefined }));
+    await waitFor(() =>
+      expect(spy).to.be.calledWith({
+        valueFormat: PropertyValueFormat.Primitive,
+        displayValue: undefined,
+        value: undefined,
+      }),
+    );
   });
 
   it("menu shows `No values` message when there is no `fieldDescriptor`", async () => {
@@ -234,7 +280,12 @@ describe("UniquePropertyValuesSelector", () => {
     });
     const description: PropertyDescription = { name: "", displayLabel: "", typename: "", editor: undefined };
     const { getByText, getByPlaceholderText, user } = render(
-      <UniquePropertyValuesSelector property={description} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      <UniquePropertyValuesSelector
+        property={description}
+        onChange={() => {}}
+        imodel={testImodel}
+        descriptor={descriptor}
+      />,
     );
 
     const selector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
@@ -307,10 +358,18 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("does not load a row with undefined values", async () => {
-    getDistinctValuesIteratorStub.resolves({ total: 1, items: createAsyncIterator([{ displayValue: undefined, groupedRawValues: [undefined] }]) });
+    getDistinctValuesIteratorStub.resolves({
+      total: 1,
+      items: createAsyncIterator([{ displayValue: undefined, groupedRawValues: [undefined] }]),
+    });
 
     const { getByText, getByPlaceholderText, user } = render(
-      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      <UniquePropertyValuesSelector
+        property={propertyDescription}
+        onChange={() => {}}
+        imodel={testImodel}
+        descriptor={descriptor}
+      />,
     );
 
     // open menu
@@ -323,10 +382,18 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("does not load a row with a displayLabel but no defined groupedRawValues", async () => {
-    getDistinctValuesIteratorStub.resolves({ total: 1, items: createAsyncIterator([{ displayValue: "TestValue", groupedRawValues: [undefined] }]) });
+    getDistinctValuesIteratorStub.resolves({
+      total: 1,
+      items: createAsyncIterator([{ displayValue: "TestValue", groupedRawValues: [undefined] }]),
+    });
 
     const { getByText, getByPlaceholderText, user } = render(
-      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      <UniquePropertyValuesSelector
+        property={propertyDescription}
+        onChange={() => {}}
+        imodel={testImodel}
+        descriptor={descriptor}
+      />,
     );
 
     // open menu
@@ -339,10 +406,18 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("loads row with empty string as displayValue and sets it to an 'Empty Value' string", async () => {
-    getDistinctValuesIteratorStub.resolves({ total: 1, items: createAsyncIterator([{ displayValue: "", groupedRawValues: [""] }]) });
+    getDistinctValuesIteratorStub.resolves({
+      total: 1,
+      items: createAsyncIterator([{ displayValue: "", groupedRawValues: [""] }]),
+    });
 
     const { getByText, getByPlaceholderText, user } = render(
-      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      <UniquePropertyValuesSelector
+        property={propertyDescription}
+        onChange={() => {}}
+        imodel={testImodel}
+        descriptor={descriptor}
+      />,
     );
 
     // open menu
@@ -356,10 +431,18 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("loads row even if one of the groupedRawValues is undefined ", async () => {
-    getDistinctValuesIteratorStub.resolves({ total: 1, items: createAsyncIterator([{ displayValue: "TestValue", groupedRawValues: [undefined, ""] }]) });
+    getDistinctValuesIteratorStub.resolves({
+      total: 1,
+      items: createAsyncIterator([{ displayValue: "TestValue", groupedRawValues: [undefined, ""] }]),
+    });
 
     const { getByText, getByPlaceholderText, user } = render(
-      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      <UniquePropertyValuesSelector
+        property={propertyDescription}
+        onChange={() => {}}
+        imodel={testImodel}
+        descriptor={descriptor}
+      />,
     );
 
     // open menu
@@ -376,7 +459,12 @@ describe("UniquePropertyValuesSelector", () => {
     getDistinctValuesIteratorStub.rejects();
 
     const { getByPlaceholderText, getByText, user } = render(
-      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      <UniquePropertyValuesSelector
+        property={propertyDescription}
+        onChange={() => {}}
+        imodel={testImodel}
+        descriptor={descriptor}
+      />,
     );
 
     // open menu
@@ -405,7 +493,12 @@ describe("UniquePropertyValuesSelector", () => {
       });
 
       const { getByText, queryByText, user, getByPlaceholderText } = render(
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        <UniquePropertyValuesSelector
+          property={propertyDescription}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={descriptor}
+        />,
       );
 
       // type in search
@@ -430,7 +523,12 @@ describe("UniquePropertyValuesSelector", () => {
       });
 
       const { getByText, queryByText, getByPlaceholderText, user } = render(
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        <UniquePropertyValuesSelector
+          property={propertyDescription}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={descriptor}
+        />,
       );
 
       // open menu
@@ -479,7 +577,12 @@ describe("UniquePropertyValuesSelector", () => {
       });
 
       const { getByText, queryByText, getByPlaceholderText, user, rerender } = render(
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={baseDescriptor} />,
+        <UniquePropertyValuesSelector
+          property={propertyDescription}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={baseDescriptor}
+        />,
       );
 
       // open menu
@@ -487,7 +590,12 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(menuSelector);
       await waitFor(() => getByText("TestValue2"));
 
-      const changedPropertyDescription = { name: "#newPropertyName", displayLabel: "newPropertiesField", typename: "string", editor: undefined };
+      const changedPropertyDescription = {
+        name: "#newPropertyName",
+        displayLabel: "newPropertiesField",
+        typename: "string",
+        editor: undefined,
+      };
 
       getDistinctValuesIteratorStub.callsFake(async () => {
         return {
@@ -499,7 +607,14 @@ describe("UniquePropertyValuesSelector", () => {
         };
       });
 
-      rerender(<UniquePropertyValuesSelector property={changedPropertyDescription} onChange={() => {}} imodel={testImodel} descriptor={baseDescriptor} />);
+      rerender(
+        <UniquePropertyValuesSelector
+          property={changedPropertyDescription}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={baseDescriptor}
+        />,
+      );
 
       // close and reopen menu
       await user.click(menuSelector);
@@ -527,7 +642,9 @@ describe("UniquePropertyValuesSelector", () => {
         pageItems.push({ displayValue: name, groupedRawValues: [name] });
       }
 
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({ total: VALUE_BATCH_SIZE, items: createAsyncIterator(pageItems) });
+      getDistinctValuesIteratorStub
+        .withArgs(matchPageStart(0))
+        .resolves({ total: VALUE_BATCH_SIZE, items: createAsyncIterator(pageItems) });
       getDistinctValuesIteratorStub.withArgs(matchPageStart(VALUE_BATCH_SIZE)).resolves({
         total: 2,
         items: createAsyncIterator([
@@ -537,7 +654,12 @@ describe("UniquePropertyValuesSelector", () => {
       });
 
       const { getByText, getByPlaceholderText, queryAllByText, user } = render(
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        <UniquePropertyValuesSelector
+          property={propertyDescription}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={descriptor}
+        />,
       );
 
       // open menu
@@ -570,9 +692,13 @@ describe("UniquePropertyValuesSelector", () => {
         pageItems.push({ displayValue: name, groupedRawValues: [name] });
       }
       // single page of values loaded before search filter is applied
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({ total: VALUE_BATCH_SIZE, items: createAsyncIterator(pageItems) });
+      getDistinctValuesIteratorStub
+        .withArgs(matchPageStart(0))
+        .resolves({ total: VALUE_BATCH_SIZE, items: createAsyncIterator(pageItems) });
       // next page with search filter applied
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(VALUE_BATCH_SIZE)).resolves({ total: VALUE_BATCH_SIZE, items: createAsyncIterator(pageItems) });
+      getDistinctValuesIteratorStub
+        .withArgs(matchPageStart(VALUE_BATCH_SIZE))
+        .resolves({ total: VALUE_BATCH_SIZE, items: createAsyncIterator(pageItems) });
       // last page with search filter applied
       getDistinctValuesIteratorStub.withArgs(matchPageStart(2 * VALUE_BATCH_SIZE)).resolves({
         total: 2,
@@ -583,7 +709,12 @@ describe("UniquePropertyValuesSelector", () => {
       });
 
       const { getByText, queryAllByText, getByPlaceholderText, user } = render(
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        <UniquePropertyValuesSelector
+          property={propertyDescription}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={descriptor}
+        />,
       );
 
       // open menu
@@ -611,10 +742,18 @@ describe("UniquePropertyValuesSelector", () => {
       // single page of values loaded before search filter is applied
       getDistinctValuesIteratorStub
         .withArgs(matchPageStart(0))
-        .resolves({ total: 1, items: createAsyncIterator([{ displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] }]) });
+        .resolves({
+          total: 1,
+          items: createAsyncIterator([{ displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] }]),
+        });
 
       const { queryAllByText, getByPlaceholderText, user } = render(
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        <UniquePropertyValuesSelector
+          property={propertyDescription}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={descriptor}
+        />,
       );
 
       // open menu
@@ -668,10 +807,18 @@ describe("UniquePropertyValuesSelector", () => {
       // last page with search filter applied
       getDistinctValuesIteratorStub
         .withArgs(matchPageStart(2 * VALUE_BATCH_SIZE))
-        .resolves({ total: 1, items: createAsyncIterator([{ displayValue: "SearchedValue3", groupedRawValues: ["SearchedValue3"] }]) });
+        .resolves({
+          total: 1,
+          items: createAsyncIterator([{ displayValue: "SearchedValue3", groupedRawValues: ["SearchedValue3"] }]),
+        });
 
       const { getByText, getByPlaceholderText, queryAllByText, user } = render(
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        <UniquePropertyValuesSelector
+          property={propertyDescription}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={descriptor}
+        />,
       );
 
       // open menu
@@ -703,11 +850,24 @@ describe("UniquePropertyValuesSelector", () => {
 
   describe("Date formatting", () => {
     it(`displays date in valid format when typename is 'shortDate'`, async () => {
-      getDistinctValuesIteratorStub.resolves({ total: 1, items: createAsyncIterator([{ displayValue: "1410-07-15", groupedRawValues: [""] }]) });
-      const datePropertyDescription = { name: "#propertyName", displayLabel: "property", typename: "shortDate", editor: undefined };
+      getDistinctValuesIteratorStub.resolves({
+        total: 1,
+        items: createAsyncIterator([{ displayValue: "1410-07-15", groupedRawValues: [""] }]),
+      });
+      const datePropertyDescription = {
+        name: "#propertyName",
+        displayLabel: "property",
+        typename: "shortDate",
+        editor: undefined,
+      };
 
       const { getByText, getByPlaceholderText, user } = render(
-        <UniquePropertyValuesSelector property={datePropertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        <UniquePropertyValuesSelector
+          property={datePropertyDescription}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={descriptor}
+        />,
       );
 
       // open menu
@@ -721,11 +881,24 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     it(`displays empty value string when typename is 'dateTime' but date is set as empty string`, async () => {
-      getDistinctValuesIteratorStub.resolves({ total: 1, items: createAsyncIterator([{ displayValue: "", groupedRawValues: [""] }]) });
-      const datePropertyDescription = { name: "#propertyName", displayLabel: "property", typename: "dateTime", editor: undefined };
+      getDistinctValuesIteratorStub.resolves({
+        total: 1,
+        items: createAsyncIterator([{ displayValue: "", groupedRawValues: [""] }]),
+      });
+      const datePropertyDescription = {
+        name: "#propertyName",
+        displayLabel: "property",
+        typename: "dateTime",
+        editor: undefined,
+      };
 
       const { getByText, user, getByPlaceholderText } = render(
-        <UniquePropertyValuesSelector property={datePropertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        <UniquePropertyValuesSelector
+          property={datePropertyDescription}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={descriptor}
+        />,
       );
 
       // open menu
@@ -739,11 +912,24 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     it(`displays date in valid format when typename is 'dateTime'`, async () => {
-      getDistinctValuesIteratorStub.resolves({ total: 1, items: createAsyncIterator([{ displayValue: "1410-07-15T12:34:00Z", groupedRawValues: [""] }]) });
-      const datePropertyDescription = { name: "#propertyName", displayLabel: "property", typename: "dateTime", editor: undefined };
+      getDistinctValuesIteratorStub.resolves({
+        total: 1,
+        items: createAsyncIterator([{ displayValue: "1410-07-15T12:34:00Z", groupedRawValues: [""] }]),
+      });
+      const datePropertyDescription = {
+        name: "#propertyName",
+        displayLabel: "property",
+        typename: "dateTime",
+        editor: undefined,
+      };
 
       const { getByText, getByPlaceholderText, user } = render(
-        <UniquePropertyValuesSelector property={datePropertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        <UniquePropertyValuesSelector
+          property={datePropertyDescription}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={descriptor}
+        />,
       );
 
       // open menu
@@ -814,7 +1000,11 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     it("calls 'getDistinctValuesIterator' with ruleset that is created from a 'NestedContentField'", async () => {
-      const testProperty = { name: `#${combineFieldNames("testField", "parentField")}`, displayLabel: "propertiesField", typename: "number" };
+      const testProperty = {
+        name: `#${combineFieldNames("testField", "parentField")}`,
+        displayLabel: "propertiesField",
+        typename: "number",
+      };
 
       const relationshipPath = createTestRelationshipPath();
       const lastStepOfRelationshipPath: RelatedClassInfo = createTestRelatedClassInfo({
@@ -824,12 +1014,21 @@ describe("UniquePropertyValuesSelector", () => {
 
       // create the field that is checked and set its parent's pathToPrimaryClass
       const testField = createTestPropertiesContentField({ name: "testField", properties: [] });
-      const parentField = createTestNestedContentField({ name: "parentField", nestedFields: [testField], pathToPrimaryClass: relationshipPath });
+      const parentField = createTestNestedContentField({
+        name: "parentField",
+        nestedFields: [testField],
+        pathToPrimaryClass: relationshipPath,
+      });
 
       const testDescriptor = createTestContentDescriptor({ fields: [parentField] });
 
       const { getByPlaceholderText, user } = render(
-        <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
+        <UniquePropertyValuesSelector
+          property={testProperty}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={testDescriptor}
+        />,
       );
 
       // trigger loadTargets function
@@ -837,10 +1036,9 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(selector);
 
       const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
-      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
-        schemaName: expectedSchemaName,
-        classNames: [expectedClassName],
-      });
+      expect(
+        getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset),
+      ).to.deep.eq({ schemaName: expectedSchemaName, classNames: [expectedClassName] });
     });
 
     it("calls 'getDistinctValuesIterator' with ruleset that is created from a 'NestedContentField' with multiple layers of nesting", async () => {
@@ -868,7 +1066,12 @@ describe("UniquePropertyValuesSelector", () => {
       const testDescriptor = createTestContentDescriptor({ fields: [grandParentField] });
 
       const { getByPlaceholderText, user } = render(
-        <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
+        <UniquePropertyValuesSelector
+          property={testProperty}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={testDescriptor}
+        />,
       );
 
       // trigger loadTargets function
@@ -876,10 +1079,9 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(selector);
 
       const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
-      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
-        schemaName: expectedSchemaName,
-        classNames: [expectedClassName],
-      });
+      expect(
+        getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset),
+      ).to.deep.eq({ schemaName: expectedSchemaName, classNames: [expectedClassName] });
     });
 
     it("calls 'getDistinctValuesIterator' with ruleset that is created from a 'PropertiesField' with a single property", async () => {
@@ -894,7 +1096,12 @@ describe("UniquePropertyValuesSelector", () => {
       const testDescriptor = createTestContentDescriptor({ fields: [testField] });
 
       const { getByPlaceholderText, user } = render(
-        <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
+        <UniquePropertyValuesSelector
+          property={testProperty}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={testDescriptor}
+        />,
       );
 
       // trigger loadTargets function
@@ -902,10 +1109,9 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(selector);
 
       const [expectedSchemaName, expectedClassName] = testClassInfo.name.split(":");
-      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
-        schemaName: expectedSchemaName,
-        classNames: [expectedClassName],
-      });
+      expect(
+        getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset),
+      ).to.deep.eq({ schemaName: expectedSchemaName, classNames: [expectedClassName] });
     });
 
     it("calls 'getDistinctValuesIterator' with ruleset that is created from a 'PropertiesField' with multiple properties", async () => {
@@ -925,14 +1131,21 @@ describe("UniquePropertyValuesSelector", () => {
       const testDescriptor = createTestContentDescriptor({ fields: [testField] });
 
       const { getByPlaceholderText, user } = render(
-        <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
+        <UniquePropertyValuesSelector
+          property={testProperty}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={testDescriptor}
+        />,
       );
 
       // trigger loadTargets function
       const selector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(selector);
 
-      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq([
+      expect(
+        getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset),
+      ).to.deep.eq([
         { schemaName: "testSchema1", classNames: ["testClass1", "testClass2"] },
         { schemaName: "testSchema2", classNames: ["testClass3"] },
       ]);
@@ -951,7 +1164,13 @@ describe("UniquePropertyValuesSelector", () => {
 
       const keys = [{ id: "0x1", className: "testSchema1:testClass1" }];
       const { getByPlaceholderText, user } = render(
-        <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} descriptorInputKeys={keys} />,
+        <UniquePropertyValuesSelector
+          property={testProperty}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={testDescriptor}
+          descriptorInputKeys={keys}
+        />,
       );
 
       // trigger loadTargets function
@@ -976,7 +1195,13 @@ describe("UniquePropertyValuesSelector", () => {
 
       const keys = new KeySet([{ id: "0x1", className: "testSchema1:testClass1" }]);
       const { getByPlaceholderText, user } = render(
-        <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} descriptorInputKeys={keys} />,
+        <UniquePropertyValuesSelector
+          property={testProperty}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={testDescriptor}
+          descriptorInputKeys={keys}
+        />,
       );
 
       // trigger loadTargets function
@@ -991,10 +1216,17 @@ describe("UniquePropertyValuesSelector", () => {
     it("does not create ruleset when field is a 'NestedContentField' with no parent, thus 'getDistinctValuesIterator' is not called", async () => {
       const testProperty = { name: "#testField", displayLabel: "testField", typename: "number" };
 
-      const testDescriptor = createTestContentDescriptor({ fields: [createTestNestedContentField({ name: "testField", nestedFields: [] })] });
+      const testDescriptor = createTestContentDescriptor({
+        fields: [createTestNestedContentField({ name: "testField", nestedFields: [] })],
+      });
 
       const { getByPlaceholderText, user } = render(
-        <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
+        <UniquePropertyValuesSelector
+          property={testProperty}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={testDescriptor}
+        />,
       );
 
       // trigger loadTargets function
@@ -1007,7 +1239,10 @@ describe("UniquePropertyValuesSelector", () => {
     it("calls 'getDistinctValuesIterator' with ruleset containing `SelectedNodeInstances` specification with accepted class names when selected classes are provided", async () => {
       const testProperty = { name: "#testField", displayLabel: "testField", typename: "number" };
 
-      const testClassInfos = [createTestECClassInfo({ name: "testSchema1:testClass1" }), createTestECClassInfo({ name: "testSchema2:testClass2" })];
+      const testClassInfos = [
+        createTestECClassInfo({ name: "testSchema1:testClass1" }),
+        createTestECClassInfo({ name: "testSchema2:testClass2" }),
+      ];
       const testField = createTestPropertiesContentField({
         name: "testField",
         properties: testClassInfos.map((c) => ({ property: createTestPropertyInfo({ classInfo: c }) })),
@@ -1042,7 +1277,11 @@ describe("UniquePropertyValuesSelector", () => {
           {
             ruleType: "Content",
             specifications: [
-              { specType: "SelectedNodeInstances", acceptableClassNames: [selectedClasses[0].name.split(":")[1]], acceptablePolymorphically: true },
+              {
+                specType: "SelectedNodeInstances",
+                acceptableClassNames: [selectedClasses[0].name.split(":")[1]],
+                acceptablePolymorphically: true,
+              },
             ],
           },
         ],
@@ -1061,7 +1300,11 @@ describe("UniquePropertyValuesSelector", () => {
       );
 
       getItemsStub.callsFake(() => {
-        return { options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"), length: VALUE_BATCH_SIZE, hasMore: true };
+        return {
+          options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
+          length: VALUE_BATCH_SIZE,
+          hasMore: true,
+        };
       });
       await itemsLoader.loadMatchingItems();
       await itemsLoader.loadItems("");
@@ -1080,7 +1323,11 @@ describe("UniquePropertyValuesSelector", () => {
       );
 
       getItemsStub.callsFake(() => {
-        return { options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"), length: VALUE_BATCH_SIZE, hasMore: true };
+        return {
+          options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
+          length: VALUE_BATCH_SIZE,
+          hasMore: true,
+        };
       });
       await itemsLoader.loadMatchingItems();
       await itemsLoader.loadItems("filterText");
@@ -1099,7 +1346,11 @@ describe("UniquePropertyValuesSelector", () => {
       );
 
       getItemsStub.callsFake(() => {
-        return { options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"), length: VALUE_BATCH_SIZE, hasMore: false };
+        return {
+          options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
+          length: VALUE_BATCH_SIZE,
+          hasMore: false,
+        };
       });
       await itemsLoader.loadMatchingItems();
       await itemsLoader.loadItems("filterText");
@@ -1117,7 +1368,11 @@ describe("UniquePropertyValuesSelector", () => {
       );
 
       getItemsStub.callsFake(() => {
-        return { options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"), length: VALUE_BATCH_SIZE, hasMore: true };
+        return {
+          options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
+          length: VALUE_BATCH_SIZE,
+          hasMore: true,
+        };
       });
       itemsLoader[Symbol.dispose]();
       await itemsLoader.loadItems("filterText");
@@ -1135,7 +1390,11 @@ describe("UniquePropertyValuesSelector", () => {
       );
 
       getItemsStub.callsFake(() => {
-        return { options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"), length: VALUE_BATCH_SIZE, hasMore: true };
+        return {
+          options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
+          length: VALUE_BATCH_SIZE,
+          hasMore: true,
+        };
       });
       await itemsLoader.loadItems("filterText");
       await itemsLoader.loadMatchingItems(["filterText"]);

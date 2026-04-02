@@ -13,8 +13,14 @@ import { act, renderHook, waitFor } from "../TestUtils.js";
 import type { UseTableOptionsProps } from "../../presentation-components/table/UseTableOptions.js";
 
 describe("useTableOptions", () => {
-  const propertiesField = createTestPropertiesContentField({ name: "prop_field", label: "Prop Field", properties: [{ property: createTestPropertyInfo() }] });
-  const initialProps: UseTableOptionsProps = { columns: [{ name: propertiesField.name, label: propertiesField.label, field: propertiesField }] };
+  const propertiesField = createTestPropertiesContentField({
+    name: "prop_field",
+    label: "Prop Field",
+    properties: [{ property: createTestPropertyInfo() }],
+  });
+  const initialProps: UseTableOptionsProps = {
+    columns: [{ name: propertiesField.name, label: propertiesField.label, field: propertiesField }],
+  };
 
   it("applies sorting ascending", async () => {
     const { result } = renderHook((props: UseTableOptionsProps) => useTableOptions(props), { initialProps });
@@ -109,7 +115,11 @@ describe("useTableOptions", () => {
     });
     await waitFor(() => expect(result.current.options.fieldsFilterExpression).to.be.eq(filterExpression));
 
-    const newField = createTestPropertiesContentField({ name: "new_field", label: "New Field", properties: [{ property: createTestPropertyInfo() }] });
+    const newField = createTestPropertiesContentField({
+      name: "new_field",
+      label: "New Field",
+      properties: [{ property: createTestPropertyInfo() }],
+    });
     rerender({ ...initialProps, columns: [{ name: newField.name, label: newField.label, field: newField }] });
     expect(result.current.options.fieldsFilterExpression).to.be.undefined;
   });

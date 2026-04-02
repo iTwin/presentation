@@ -5,7 +5,10 @@
 
 import { execSync } from "child_process";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "fs";
-import { LOCALIZATION_NAMESPACE, LOCALIZED_STRINGS } from "../presentation-hierarchies-react/internal/LocalizedStrings.js";
+import {
+  LOCALIZATION_NAMESPACE,
+  LOCALIZED_STRINGS,
+} from "../presentation-hierarchies-react/internal/LocalizedStrings.js";
 
 const localeContent = JSON.stringify(LOCALIZED_STRINGS, null, 2);
 

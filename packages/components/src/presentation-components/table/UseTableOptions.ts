@@ -49,7 +49,10 @@ export function useTableOptions(props: UseTableOptionsProps): UseTableOptionsRes
 
       setOptions((prev) => ({
         ...prev,
-        sorting: { field: field.getFieldDescriptor(), direction: descending ? SortDirection.Descending : SortDirection.Ascending },
+        sorting: {
+          field: field.getFieldDescriptor(),
+          direction: descending ? SortDirection.Descending : SortDirection.Ascending,
+        },
       }));
     },
     [columns],

@@ -15,7 +15,13 @@ import {
 import { HierarchyNode } from "../../../HierarchyNode.js";
 import { HierarchyNodeKey } from "../../../HierarchyNodeKey.js";
 
-import type { ArrayElement, EC, ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import type {
+  ArrayElement,
+  EC,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+  IPrimitiveValueFormatter,
+} from "@itwin/presentation-shared";
 import type { ParentHierarchyNode } from "../../../HierarchyNode.js";
 import type { PropertyGroupingNodeKey } from "../../../HierarchyNodeKey.js";
 import type {
@@ -33,7 +39,10 @@ interface DisplayablePropertyGroupingInfo {
 
 interface PropertyGroupingInformation {
   ungrouped: ProcessedInstanceHierarchyNode[];
-  grouped: Map<string, { displayablePropertyGroupingInfo: DisplayablePropertyGroupingInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>;
+  grouped: Map<
+    string,
+    { displayablePropertyGroupingInfo: DisplayablePropertyGroupingInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }
+  >;
 }
 
 /** @internal */
@@ -50,7 +59,11 @@ export interface PropertyGroupInfo {
 }
 
 /** @internal */
-export type PreviousPropertiesGroupingInfo = Array<{ propertiesClassName: EC.FullClassName; propertyName: string; isRange?: boolean }>;
+export type PreviousPropertiesGroupingInfo = Array<{
+  propertiesClassName: EC.FullClassName;
+  propertyName: string;
+  isRange?: boolean;
+}>;
 
 /** @internal */
 export async function createPropertyGroups(
@@ -92,7 +105,14 @@ export async function createPropertyGroups(
       groupings.ungrouped.push(node);
       continue;
     }
-    if (!(await shouldCreatePropertyGroup(handlerGroupingParams, byProperties, node.key.instanceKeys[0].className, classHierarchyInspector))) {
+    if (
+      !(await shouldCreatePropertyGroup(
+        handlerGroupingParams,
+        byProperties,
+        node.key.instanceKeys[0].className,
+        classHierarchyInspector,
+      ))
+    ) {
       groupings.ungrouped.push(node);
       continue;
     }
@@ -100,7 +120,10 @@ export async function createPropertyGroups(
     const propertyClass = handlerGroupingParams.ecClass;
     const property = await propertyClass.getProperty(currentProperty.propertyName);
 
-    if (!property?.isNavigation() && (!property?.isPrimitive() || property.primitiveType === "Binary" || property.primitiveType === "IGeometry")) {
+    if (
+      !property?.isNavigation() &&
+      (!property?.isPrimitive() || property.primitiveType === "Binary" || property.primitiveType === "IGeometry")
+    ) {
       groupings.ungrouped.push(node);
       continue;
     }
@@ -117,7 +140,11 @@ export async function createPropertyGroups(
           `${currentProperty.propertyName.toLocaleLowerCase()}:Unspecified`,
           {
             label: localizedStrings.unspecified,
-            propertyGroupingNodeKey: { type: "property-grouping:value", ...propertyIdentifier, formattedPropertyValue: "" },
+            propertyGroupingNodeKey: {
+              type: "property-grouping:value",
+              ...propertyIdentifier,
+              formattedPropertyValue: "",
+            },
           },
           node,
         );
@@ -131,7 +158,9 @@ export async function createPropertyGroups(
     if (currentProperty.ranges) {
       if (typeof currentProperty.propertyValue === "number") {
         const propValue = currentProperty.propertyValue;
-        const matchingRange = currentProperty.ranges.find((range) => propValue >= range.fromValue && propValue <= range.toValue);
+        const matchingRange = currentProperty.ranges.find(
+          (range) => propValue >= range.fromValue && propValue <= range.toValue,
+        );
 
         if (matchingRange) {
           const fromValueTypedPrimitive: TypedPrimitiveValue = {
@@ -147,7 +176,9 @@ export async function createPropertyGroups(
             value: matchingRange.toValue,
           };
 
-          const rangeLabel = matchingRange.rangeLabel ?? `${await valueFormatter(fromValueTypedPrimitive)} - ${await valueFormatter(toValueTypedPrimitive)}`;
+          const rangeLabel =
+            matchingRange.rangeLabel ??
+            `${await valueFormatter(fromValueTypedPrimitive)} - ${await valueFormatter(toValueTypedPrimitive)}`;
           addGroupingToMap(
             groupings.grouped,
             `${currentProperty.propertyName.toLocaleLowerCase()}:[${matchingRange.fromValue}-${matchingRange.toValue}]${matchingRange.rangeLabel ? `(${matchingRange.rangeLabel})` : ""}`,
@@ -168,7 +199,10 @@ export async function createPropertyGroups(
       if (byProperties.createGroupForOutOfRangeValues) {
         const groupingNode = getOtherValuesGroupingNode();
         assert(HierarchyNodeKey.isPropertyOtherValuesGrouping(groupingNode.key));
-        const thisPropertyIdentifier = { className: propertyIdentifier.propertyClassName, propertyName: propertyIdentifier.propertyName };
+        const thisPropertyIdentifier = {
+          className: propertyIdentifier.propertyClassName,
+          propertyName: propertyIdentifier.propertyName,
+        };
         const hasPropertyIdentifier = groupingNode.key.properties.find(
           (x) =>
             compareFullClassNames(x.className, thisPropertyIdentifier.className) === 0 &&
@@ -189,12 +223,21 @@ export async function createPropertyGroups(
     const formattedValue =
       currentProperty.propertyValue instanceof Array
         ? await formatConcatenatedValue({ value: currentProperty.propertyValue, valueFormatter })
-        : await valueFormatter(TypedPrimitiveValue.create(currentProperty.propertyValue, primitiveType, koqName, extendedTypeName));
+        : await valueFormatter(
+            TypedPrimitiveValue.create(currentProperty.propertyValue, primitiveType, koqName, extendedTypeName),
+          );
 
     addGroupingToMap(
       groupings.grouped,
       `${currentProperty.propertyName.toLocaleLowerCase()}:${formattedValue}`,
-      { label: formattedValue, propertyGroupingNodeKey: { ...propertyIdentifier, type: "property-grouping:value", formattedPropertyValue: formattedValue } },
+      {
+        label: formattedValue,
+        propertyGroupingNodeKey: {
+          ...propertyIdentifier,
+          type: "property-grouping:value",
+          formattedPropertyValue: formattedValue,
+        },
+      },
       node,
     );
   }
@@ -202,7 +245,10 @@ export async function createPropertyGroups(
 }
 
 function addGroupingToMap(
-  groupingMap: Map<string, { displayablePropertyGroupingInfo: DisplayablePropertyGroupingInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>,
+  groupingMap: Map<
+    string,
+    { displayablePropertyGroupingInfo: DisplayablePropertyGroupingInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }
+  >,
   mapKey: string,
   propertyToAdd: DisplayablePropertyGroupingInfo,
   node: ProcessedInstanceHierarchyNode,
@@ -240,7 +286,9 @@ function createGroupingNodes(
   return { grouped: groupedNodes, ungrouped: groupings.ungrouped, groupingType: "property" };
 }
 
-function createNodePropertyGroupPathMatchers(node: ParentHierarchyNode): Array<(x: ArrayElement<PreviousPropertiesGroupingInfo>) => boolean> {
+function createNodePropertyGroupPathMatchers(
+  node: ParentHierarchyNode,
+): Array<(x: ArrayElement<PreviousPropertiesGroupingInfo>) => boolean> {
   if (!HierarchyNode.isPropertyGroupingNode(node)) {
     return [];
   }
@@ -300,9 +348,13 @@ export async function getUniquePropertiesGroupInfo(
     const previousPropertiesInfo = new Array<{ propertyGroup: HierarchyNodePropertyGroup; propertyGroupKey: string }>();
     for (const propertyGroup of byProperties.propertyGroups) {
       const mapKeyRanges = getRangesAsString(propertyGroup.ranges);
-      const lastKey = previousPropertiesInfo.length > 0 ? previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey : "";
+      const lastKey =
+        previousPropertiesInfo.length > 0
+          ? previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey
+          : "";
       const propertyGroupKey = `${lastKey}:${propertyGroup.propertyName}(${mapKeyRanges})`;
-      const mapKey = `${normalizeFullClassName(byProperties.propertiesClassName)}:${propertyGroupKey}`.toLocaleLowerCase();
+      const mapKey =
+        `${normalizeFullClassName(byProperties.propertiesClassName)}:${propertyGroupKey}`.toLocaleLowerCase();
 
       let isAlreadyGrouped = false;
       if (parentPropertyGroupPath.length > 0 && propertyGroupIndex < parentPropertyGroupPath.length) {
@@ -330,7 +382,9 @@ export async function getUniquePropertiesGroupInfo(
     }
   }
   // Order might change in uniqueProperties, resorting to make sure that properties with fewer previous properties are returned first.
-  return [...uniqueProperties.values()].sort((lhs, rhs) => lhs.previousPropertiesGroupingInfo.length - rhs.previousPropertiesGroupingInfo.length);
+  return [...uniqueProperties.values()].sort(
+    (lhs, rhs) => lhs.previousPropertiesGroupingInfo.length - rhs.previousPropertiesGroupingInfo.length,
+  );
 }
 
 function getRangesAsString(ranges?: HierarchyNodePropertyValueRange[]): string {
@@ -349,14 +403,17 @@ async function shouldCreatePropertyGroup(
   classHierarchyInspector: ECClassHierarchyInspector,
 ): Promise<boolean> {
   if (
-    compareFullClassNames(nodePropertyGroupingParams.propertiesClassName, handlerGroupingParams.ecClass.fullName) !== 0 ||
+    compareFullClassNames(nodePropertyGroupingParams.propertiesClassName, handlerGroupingParams.ecClass.fullName) !==
+      0 ||
     nodePropertyGroupingParams.propertyGroups.length < handlerGroupingParams.previousPropertiesGroupingInfo.length + 1
   ) {
     return false;
   }
-  const currentProperty = nodePropertyGroupingParams.propertyGroups[handlerGroupingParams.previousPropertiesGroupingInfo.length];
+  const currentProperty =
+    nodePropertyGroupingParams.propertyGroups[handlerGroupingParams.previousPropertiesGroupingInfo.length];
   if (
-    currentProperty.propertyName.toLocaleLowerCase() !== handlerGroupingParams.propertyGroup.propertyName.toLocaleLowerCase() ||
+    currentProperty.propertyName.toLocaleLowerCase() !==
+      handlerGroupingParams.propertyGroup.propertyName.toLocaleLowerCase() ||
     !doRangesMatch(currentProperty.ranges, handlerGroupingParams.propertyGroup.ranges)
   ) {
     return false;
@@ -377,14 +434,18 @@ export function doPreviousPropertiesMatch(
     previousPropertiesGroupingInfo.every(
       (groupingInfo, index) =>
         compareFullClassNames(groupingInfo.propertiesClassName, nodesProperties.propertiesClassName) === 0 &&
-        groupingInfo.propertyName.toLocaleLowerCase() === nodesProperties.propertyGroups[index].propertyName.toLocaleLowerCase() &&
+        groupingInfo.propertyName.toLocaleLowerCase() ===
+          nodesProperties.propertyGroups[index].propertyName.toLocaleLowerCase() &&
         !!groupingInfo.isRange === !!nodesProperties.propertyGroups[index].ranges,
     )
   );
 }
 
 /** @internal */
-export function doRangesMatch(ranges1: HierarchyNodePropertyValueRange[] | undefined, ranges2: HierarchyNodePropertyValueRange[] | undefined): boolean {
+export function doRangesMatch(
+  ranges1: HierarchyNodePropertyValueRange[] | undefined,
+  ranges2: HierarchyNodePropertyValueRange[] | undefined,
+): boolean {
   if (typeof ranges1 !== typeof ranges2) {
     return false;
   }
@@ -399,12 +460,18 @@ export function doRangesMatch(ranges1: HierarchyNodePropertyValueRange[] | undef
     // Check twice, to validate if both ranges have the same elements (elements can be in a different order)
     ranges1.every((lhsRange) =>
       ranges2.some(
-        (rhsRange) => lhsRange.fromValue === rhsRange.fromValue && lhsRange.toValue === rhsRange.toValue && lhsRange.rangeLabel === rhsRange.rangeLabel,
+        (rhsRange) =>
+          lhsRange.fromValue === rhsRange.fromValue &&
+          lhsRange.toValue === rhsRange.toValue &&
+          lhsRange.rangeLabel === rhsRange.rangeLabel,
       ),
     ) &&
     ranges2.every((lhsRange) =>
       ranges1.some(
-        (rhsRange) => lhsRange.fromValue === rhsRange.fromValue && lhsRange.toValue === rhsRange.toValue && lhsRange.rangeLabel === rhsRange.rangeLabel,
+        (rhsRange) =>
+          lhsRange.fromValue === rhsRange.fromValue &&
+          lhsRange.toValue === rhsRange.toValue &&
+          lhsRange.rangeLabel === rhsRange.rangeLabel,
       ),
     )
   );
@@ -421,6 +488,13 @@ export async function createPropertiesGroupingHandlers(
   const propertiesGroupInfo = await getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
   return propertiesGroupInfo.map(
     (propertyInfo) => async (nodesToGroup, nodesAlreadyGrouped) =>
-      createPropertyGroups(nodesToGroup, nodesAlreadyGrouped, propertyInfo, valueFormatter, localizedStrings, imodelAccess),
+      createPropertyGroups(
+        nodesToGroup,
+        nodesAlreadyGrouped,
+        propertyInfo,
+        valueFormatter,
+        localizedStrings,
+        imodelAccess,
+      ),
   );
 }

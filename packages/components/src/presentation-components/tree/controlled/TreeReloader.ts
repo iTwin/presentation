@@ -17,7 +17,13 @@ import { map } from "rxjs/internal/operators/map";
 import { mergeMap } from "rxjs/internal/operators/mergeMap";
 import { take } from "rxjs/internal/operators/take";
 import { tap } from "rxjs/internal/operators/tap";
-import { computeVisibleNodes, isTreeModelNode, isTreeModelNodePlaceholder, PagedTreeNodeLoader, TreeModelSource } from "@itwin/components-react";
+import {
+  computeVisibleNodes,
+  isTreeModelNode,
+  isTreeModelNodePlaceholder,
+  PagedTreeNodeLoader,
+  TreeModelSource,
+} from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { toRxjsObservable } from "../Utils.js";
 
@@ -143,7 +149,9 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
       // load all placeholder nodes in visible range
       return from(notLoadedNode).pipe(
         mergeMap((placeholder) => {
-          const parentNode = placeholder.parentId ? this.modelSource.getModel().getNode(placeholder.parentId) : this.modelSource.getModel().getRootNode();
+          const parentNode = placeholder.parentId
+            ? this.modelSource.getModel().getNode(placeholder.parentId)
+            : this.modelSource.getModel().getRootNode();
           assert(parentNode !== undefined);
           return toRxjsObservable(super.loadNode(parentNode, placeholder.childIndex));
         }),
@@ -173,7 +181,10 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
   }
 
   /** Only loads the node if it is not present in the tree model already */
-  public override loadNode(parent: TreeModelNode | TreeModelRootNode, childIndex: number): Observable<TreeNodeLoadResult> {
+  public override loadNode(
+    parent: TreeModelNode | TreeModelRootNode,
+    childIndex: number,
+  ): Observable<TreeNodeLoadResult> {
     const node = this.modelSource.getModel().getNode(parent.id, childIndex);
     if (isTreeModelNode(node)) {
       return EMPTY;
@@ -197,7 +208,12 @@ function collectExpandedNodes(rootNodeId: string | undefined, treeModel: TreeMod
     if (isTreeModelNode(node) && node.isExpanded) {
       const index = treeModel.getChildOffset(node.parentId, node.id);
       assert(index !== undefined);
-      expandedNodes.push({ id: node.id, parentId: node.parentId, index, expandedChildren: collectExpandedNodes(node.id, treeModel) });
+      expandedNodes.push({
+        id: node.id,
+        parentId: node.parentId,
+        index,
+        expandedChildren: collectExpandedNodes(node.id, treeModel),
+      });
     }
   }
 

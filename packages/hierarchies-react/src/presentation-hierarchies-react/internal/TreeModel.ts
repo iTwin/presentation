@@ -40,7 +40,11 @@ export interface TreeModel {
 
 /** @internal */
 export namespace TreeModel {
-  export function expandNode(model: TreeModel, nodeId: string, isExpanded: boolean): "none" | "loadChildren" | "reloadChildren" {
+  export function expandNode(
+    model: TreeModel,
+    nodeId: string,
+    isExpanded: boolean,
+  ): "none" | "loadChildren" | "reloadChildren" {
     const node = model.idToNode.get(nodeId);
     if (!node) {
       return "none";
@@ -109,13 +113,21 @@ export namespace TreeModel {
     }
   }
 
-  export function setHierarchyLimit(model: TreeModel, nodeId: string | undefined, limit?: number | "unbounded"): boolean {
+  export function setHierarchyLimit(
+    model: TreeModel,
+    nodeId: string | undefined,
+    limit?: number | "unbounded",
+  ): boolean {
     return updateForReload(model, nodeId, (node) => {
       node.hierarchyLimit = limit;
     });
   }
 
-  export function setInstanceFilter(model: TreeModel, nodeId: string | undefined, filter?: GenericInstanceFilter): boolean {
+  export function setInstanceFilter(
+    model: TreeModel,
+    nodeId: string | undefined,
+    filter?: GenericInstanceFilter,
+  ): boolean {
     return updateForReload(model, nodeId, (node) => {
       if (filter && node.id !== undefined) {
         node.isExpanded = true;
@@ -145,7 +157,10 @@ export namespace TreeModel {
     return !!currentNode && !!currentNode.isSelected;
   }
 
-  export function getNode(model: TreeModel, nodeId: string | undefined): TreeModelHierarchyNode | TreeModelRootNode | undefined {
+  export function getNode(
+    model: TreeModel,
+    nodeId: string | undefined,
+  ): TreeModelHierarchyNode | TreeModelRootNode | undefined {
     if (!nodeId) {
       return model.rootNode;
     }
@@ -166,7 +181,11 @@ export namespace TreeModel {
   }
 }
 
-function updateForReload(model: TreeModel, nodeId: string | undefined, update: (node: TreeModelHierarchyNode | TreeModelRootNode) => void) {
+function updateForReload(
+  model: TreeModel,
+  nodeId: string | undefined,
+  update: (node: TreeModelHierarchyNode | TreeModelRootNode) => void,
+) {
   TreeModel.removeSubTree(model, nodeId);
   if (nodeId === undefined) {
     update(model.rootNode);

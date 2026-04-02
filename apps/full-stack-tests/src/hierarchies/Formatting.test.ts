@@ -21,7 +21,12 @@ import { Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSql, julianToDateTime, normalizeFullClassName } from "@itwin/presentation-shared";
+import {
+  createBisInstanceLabelSelectClauseFactory,
+  ECSql,
+  julianToDateTime,
+  normalizeFullClassName,
+} from "@itwin/presentation-shared";
 import { buildIModel } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
@@ -120,7 +125,9 @@ describe("Hierarchies", () => {
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -233,7 +240,9 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(emptyIModel);
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -370,7 +379,9 @@ describe("Hierarchies", () => {
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -407,7 +418,10 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy }),
-          expect: [{ node: (node) => expect(node.label).to.eq(`[false]`) }, { node: (node) => expect(node.label).to.eq(`[true]`) }],
+          expect: [
+            { node: (node) => expect(node.label).to.eq(`[false]`) },
+            { node: (node) => expect(node.label).to.eq(`[true]`) },
+          ],
         });
       });
 
@@ -448,7 +462,9 @@ describe("Hierarchies", () => {
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -483,7 +499,10 @@ describe("Hierarchies", () => {
             return [];
           },
         };
-        await validateHierarchy({ provider: createProvider({ imodel, hierarchy }), expect: [{ node: (node) => expect(node.label).to.eq(`[2]`) }] });
+        await validateHierarchy({
+          provider: createProvider({ imodel, hierarchy }),
+          expect: [{ node: (node) => expect(node.label).to.eq(`[2]`) }],
+        });
       });
       it("formats generic node labels", async function () {
         const hierarchy: HierarchyDefinition = {
@@ -531,7 +550,9 @@ describe("Hierarchies", () => {
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -566,7 +587,10 @@ describe("Hierarchies", () => {
             return [];
           },
         };
-        await validateHierarchy({ provider: createProvider({ imodel, hierarchy }), expect: [{ node: (node) => expect(node.label).to.eq(`[90.79]`) }] });
+        await validateHierarchy({
+          provider: createProvider({ imodel, hierarchy }),
+          expect: [{ node: (node) => expect(node.label).to.eq(`[90.79]`) }],
+        });
       });
 
       it("formats generic node labels", async function () {
@@ -615,7 +639,9 @@ describe("Hierarchies", () => {
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -650,7 +676,10 @@ describe("Hierarchies", () => {
             return [];
           },
         };
-        await validateHierarchy({ provider: createProvider({ imodel, hierarchy }), expect: [{ node: (node) => expect(node.label).to.eq(`[(1.48, 2.59)]`) }] });
+        await validateHierarchy({
+          provider: createProvider({ imodel, hierarchy }),
+          expect: [{ node: (node) => expect(node.label).to.eq(`[(1.48, 2.59)]`) }],
+        });
       });
 
       it("formats generic node labels", async function () {
@@ -699,7 +728,9 @@ describe("Hierarchies", () => {
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -775,14 +806,21 @@ describe("Hierarchies", () => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           // eslint-disable-next-line @typescript-eslint/no-shadow
-          const element = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, federationGuid: guid });
+          const element = insertPhysicalElement({
+            builder,
+            modelId: model.id,
+            categoryId: category.id,
+            federationGuid: guid,
+          });
           return { model, category, element };
         });
         const imodelAccess = createIModelAccess(imodel);
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -817,7 +855,10 @@ describe("Hierarchies", () => {
             return [];
           },
         };
-        await validateHierarchy({ provider: createProvider({ imodel, hierarchy }), expect: [{ node: (node) => expect(node.label).to.eq(`[${guid}]`) }] });
+        await validateHierarchy({
+          provider: createProvider({ imodel, hierarchy }),
+          expect: [{ node: (node) => expect(node.label).to.eq(`[${guid}]`) }],
+        });
       });
     });
   });
@@ -831,7 +872,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(emptyIModel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {

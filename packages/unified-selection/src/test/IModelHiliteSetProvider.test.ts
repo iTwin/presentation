@@ -50,8 +50,14 @@ describe("createIModelHiliteSetProvider", () => {
   beforeEach(async () => {
     selectionStorage = createStorage();
 
-    factory = sinon.stub<[props: HiliteSetProviderProps], HiliteSetProvider>().returns(provider as unknown as HiliteSetProvider);
-    hiliteSetCache = createIModelHiliteSetProvider({ selectionStorage, imodelProvider, createHiliteSetProvider: factory });
+    factory = sinon
+      .stub<[props: HiliteSetProviderProps], HiliteSetProvider>()
+      .returns(provider as unknown as HiliteSetProvider);
+    hiliteSetCache = createIModelHiliteSetProvider({
+      selectionStorage,
+      imodelProvider,
+      createHiliteSetProvider: factory,
+    });
     imodelProvider.returns(stubIModelAccess());
     selectionStorage.addToSelection({ imodelKey, source: "test", selectables: generateSelection() });
 

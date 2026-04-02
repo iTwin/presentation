@@ -5,7 +5,12 @@
 
 import { expect } from "chai";
 import { LabelDefinition } from "@itwin/presentation-common";
-import { createPartialTreeNodeItem, createTreeNodeItem, createTreeNodeItems, pageOptionsUiToPresentation } from "../../presentation-components/tree/Utils.js";
+import {
+  createPartialTreeNodeItem,
+  createTreeNodeItem,
+  createTreeNodeItems,
+  pageOptionsUiToPresentation,
+} from "../../presentation-components/tree/Utils.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNode } from "../_helpers/Hierarchy.js";
 
 import type { PageOptions } from "@itwin/components-react";
@@ -52,7 +57,10 @@ describe("Utils", () => {
 
     it("appends grouped nodes count if requested", () => {
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      const node: Node = { key: createTestECClassGroupingNodeKey({ groupedInstancesCount: 999 }), label: LabelDefinition.fromLabelString("test") };
+      const node: Node = {
+        key: createTestECClassGroupingNodeKey({ groupedInstancesCount: 999 }),
+        label: LabelDefinition.fromLabelString("test"),
+      };
       const treeNode = createTreeNodeItem(node, undefined, { appendChildrenCountForGroupingNodes: true });
       expect(treeNode).to.matchSnapshot();
     });

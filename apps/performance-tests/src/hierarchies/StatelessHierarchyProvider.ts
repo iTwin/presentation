@@ -10,8 +10,20 @@ import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shar
 import { LOGGER } from "../util/Logging";
 
 import type { IModelDb } from "@itwin/core-backend";
-import type { HierarchyDefinition, HierarchyNode, HierarchyProvider, HierarchySearchTree } from "@itwin/presentation-hierarchies";
-import type { EC, ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions } from "@itwin/presentation-shared";
+import type {
+  HierarchyDefinition,
+  HierarchyNode,
+  HierarchyProvider,
+  HierarchySearchTree,
+} from "@itwin/presentation-hierarchies";
+import type {
+  EC,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+  ECSqlQueryDef,
+  ECSqlQueryExecutor,
+  ECSqlQueryReaderOptions,
+} from "@itwin/presentation-shared";
 
 interface ProviderOptionsBase {
   rowLimit?: number | "unbounded";
@@ -76,7 +88,9 @@ export class StatelessHierarchyProvider {
 
   private createProvider() {
     const imodelAccess =
-      "iModel" in this._props ? StatelessHierarchyProvider.createIModelAccess(this._props.iModel, this._props.rowLimit) : this._props.imodelAccess;
+      "iModel" in this._props
+        ? StatelessHierarchyProvider.createIModelAccess(this._props.iModel, this._props.rowLimit)
+        : this._props.imodelAccess;
     return createIModelHierarchyProvider({
       imodelAccess,
       hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),

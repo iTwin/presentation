@@ -33,30 +33,32 @@ type TreeNodeFilterActionProps = {
  *
  * @alpha
  */
-export const TreeNodeFilterAction: NamedExoticComponent<TreeNodeFilterActionProps & { node: TreeNode }> = memo(function TreeNodeFilterAction({
-  node,
-  onFilter,
-  getHierarchyLevelDetails,
-  ...actionAttributes
-}: TreeNodeFilterActionProps & { node: TreeNode }) {
-  const translate = useTranslation();
-  const filterHierarchyLevel = translate("filterHierarchyLevel");
-  const filterHierarchyLevelActiveDescription = translate("filterHierarchyLevelActiveDescription");
+export const TreeNodeFilterAction: NamedExoticComponent<TreeNodeFilterActionProps & { node: TreeNode }> = memo(
+  function TreeNodeFilterAction({
+    node,
+    onFilter,
+    getHierarchyLevelDetails,
+    ...actionAttributes
+  }: TreeNodeFilterActionProps & { node: TreeNode }) {
+    const translate = useTranslation();
+    const filterHierarchyLevel = translate("filterHierarchyLevel");
+    const filterHierarchyLevelActiveDescription = translate("filterHierarchyLevelActiveDescription");
 
-  const handleClick = useCallback(() => {
-    const hierarchyLevelDetails = getHierarchyLevelDetails(node.id);
-    hierarchyLevelDetails && onFilter?.(hierarchyLevelDetails);
-  }, [node, getHierarchyLevelDetails, onFilter]);
+    const handleClick = useCallback(() => {
+      const hierarchyLevelDetails = getHierarchyLevelDetails(node.id);
+      hierarchyLevelDetails && onFilter?.(hierarchyLevelDetails);
+    }, [node, getHierarchyLevelDetails, onFilter]);
 
-  return (
-    <TreeActionBase
-      {...actionAttributes}
-      label={filterHierarchyLevel}
-      onClick={handleClick}
-      icon={filterSvg}
-      visible={node.isFiltered ? true : undefined}
-      dot={node.isFiltered ? filterHierarchyLevelActiveDescription : undefined}
-      hide={!onFilter || !node.isFilterable}
-    />
-  );
-});
+    return (
+      <TreeActionBase
+        {...actionAttributes}
+        label={filterHierarchyLevel}
+        onClick={handleClick}
+        icon={filterSvg}
+        visible={node.isFiltered ? true : undefined}
+        dot={node.isFiltered ? filterHierarchyLevelActiveDescription : undefined}
+        hide={!onFilter || !node.isFilterable}
+      />
+    );
+  },
+);

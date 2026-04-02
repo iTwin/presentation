@@ -13,9 +13,19 @@ describe("grouping", () => {
   const expectedNodeCount = 50_000 + 50_000 / itemsPerGroup;
   const baseFullClassName: EC.FullClassName = `${schemaName}.${baseClassName}`;
 
-  runHierarchyTest({ testName: "by label", iModelName: "50k flat elements", expectedNodeCount, nodeSelectProps: { grouping: { byLabel: true } } });
+  runHierarchyTest({
+    testName: "by label",
+    iModelName: "50k flat elements",
+    expectedNodeCount,
+    nodeSelectProps: { grouping: { byLabel: true } },
+  });
 
-  runHierarchyTest({ testName: "by class", iModelName: "50k flat elements", expectedNodeCount, nodeSelectProps: { grouping: { byClass: true } } });
+  runHierarchyTest({
+    testName: "by class",
+    iModelName: "50k flat elements",
+    expectedNodeCount,
+    nodeSelectProps: { grouping: { byClass: true } },
+  });
 
   runHierarchyTest({
     testName: "by property",
@@ -23,7 +33,12 @@ describe("grouping", () => {
     fullClassName: baseFullClassName,
     expectedNodeCount,
     nodeSelectProps: {
-      grouping: { byProperties: { propertiesClassName: baseFullClassName, propertyGroups: [{ propertyName: customPropName, propertyClassAlias: "this" }] } },
+      grouping: {
+        byProperties: {
+          propertiesClassName: baseFullClassName,
+          propertyGroups: [{ propertyName: customPropName, propertyClassAlias: "this" }],
+        },
+      },
     },
   });
 
@@ -51,7 +66,10 @@ describe("grouping", () => {
         byBaseClasses: { fullClassNames: [physicalElementFullClassName] },
         byClass: true,
         byLabel: true,
-        byProperties: { propertiesClassName: baseFullClassName, propertyGroups: [{ propertyName: customPropName, propertyClassAlias: "this" }] },
+        byProperties: {
+          propertiesClassName: baseFullClassName,
+          propertyGroups: [{ propertyName: customPropName, propertyClassAlias: "this" }],
+        },
       },
     },
   });

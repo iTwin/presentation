@@ -27,7 +27,10 @@ export interface PortalTargetContextProviderProps {
  * @public
  * @deprecated in 5.6. No longer needed.
  */
-export function PortalTargetContextProvider({ portalTarget, children }: PropsWithChildren<PortalTargetContextProviderProps>) {
+export function PortalTargetContextProvider({
+  portalTarget,
+  children,
+}: PropsWithChildren<PortalTargetContextProviderProps>) {
   return <portalTargetContext.Provider value={{ portalTarget }}>{children}</portalTargetContext.Provider>;
 }
 

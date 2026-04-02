@@ -36,7 +36,9 @@ const hierarchyDefinition: HierarchyDefinition = {
     if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "physical-elements") {
       const queryClauseFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       return [
         {
@@ -138,7 +140,9 @@ const hierarchyDefinition: HierarchyDefinition = {
     if (!parentNode) {
       const queryClauseFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       return [
         {
@@ -198,7 +202,9 @@ const hierarchyDefinition: HierarchyDefinition = {
     if (!parentNode) {
       const queryClauseFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       return [
         {
@@ -256,7 +262,9 @@ import {
 
 const queryClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
-  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+    classHierarchyInspector: imodelAccess,
+  }),
 });
 const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
   classHierarchyInspector: imodelAccess,

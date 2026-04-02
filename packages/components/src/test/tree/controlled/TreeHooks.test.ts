@@ -12,27 +12,45 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { LabelDefinition, RegisteredRuleset, StandardNodeTypes } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { useControlledPresentationTreeFiltering, usePresentationTreeNodeLoader } from "../../../presentation-components/tree/controlled/TreeHooks.js";
+import {
+  useControlledPresentationTreeFiltering,
+  usePresentationTreeNodeLoader,
+} from "../../../presentation-components/tree/controlled/TreeHooks.js";
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils.js";
 import { renderHook, waitFor } from "../../TestUtils.js";
 
 import type { PrimitiveValue } from "@itwin/appui-abstract";
-import type { AbstractTreeNodeLoaderWithProvider, TreeModel, TreeModelNode, TreeModelNodeEditingInfo, TreeModelNodeInput } from "@itwin/components-react";
+import type {
+  AbstractTreeNodeLoaderWithProvider,
+  TreeModel,
+  TreeModelNode,
+  TreeModelNodeEditingInfo,
+  TreeModelNodeInput,
+} from "@itwin/components-react";
 import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import type { Node, Ruleset, VariableValue } from "@itwin/presentation-common";
-import type { IModelHierarchyChangeEventArgs, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import type {
+  IModelHierarchyChangeEventArgs,
+  RulesetManager,
+  RulesetVariablesManager,
+} from "@itwin/presentation-frontend";
 import type { PresentationTreeNodeLoaderProps } from "../../../presentation-components/tree/controlled/TreeHooks.js";
 import type { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 describe("usePresentationNodeLoader", () => {
-  const onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"] = new BeEvent<(args: IModelHierarchyChangeEventArgs) => void>();
-  const onRulesetModified: RulesetManager["onRulesetModified"] = new BeEvent<(curr: RegisteredRuleset, prev: Ruleset) => void>();
+  const onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"] = new BeEvent<
+    (args: IModelHierarchyChangeEventArgs) => void
+  >();
+  const onRulesetModified: RulesetManager["onRulesetModified"] = new BeEvent<
+    (curr: RegisteredRuleset, prev: Ruleset) => void
+  >();
   const onRulesetVariableChanged: RulesetVariablesManager["onVariableChanged"] = new BeEvent<
     (variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void
   >();
-  const onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"] = new BeUiEvent<FormattingUnitSystemChangedArgs>();
+  const onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"] =
+    new BeUiEvent<FormattingUnitSystemChangedArgs>();
 
   const imodel = { key: "test-imodel-key" } as IModelConnection;
   const rulesetId = "test-ruleset-id";
@@ -60,13 +78,18 @@ describe("usePresentationNodeLoader", () => {
   });
 
   it("creates node loader", () => {
-    const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
+    const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), {
+      initialProps,
+    });
 
     expect(result.current.nodeLoader).to.not.be.undefined;
   });
 
   it("creates new nodeLoader when imodel changes", () => {
-    const { result, rerender } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
+    const { result, rerender } = renderHook(
+      (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
+      { initialProps },
+    );
     const oldNodeLoader = result.current.nodeLoader;
 
     const newImodel = { key: "new-imodel-key" } as IModelConnection;
@@ -76,7 +99,10 @@ describe("usePresentationNodeLoader", () => {
   });
 
   it("creates new nodeLoader when ruleset changes", () => {
-    const { result, rerender } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
+    const { result, rerender } = renderHook(
+      (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
+      { initialProps },
+    );
     const oldNodeLoader = result.current.nodeLoader;
 
     rerender({ ...initialProps, ruleset: "changed" });
@@ -85,7 +111,10 @@ describe("usePresentationNodeLoader", () => {
   });
 
   it("creates new nodeLoader when pagingSize changes", () => {
-    const { result, rerender } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
+    const { result, rerender } = renderHook(
+      (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
+      { initialProps },
+    );
     const oldNodeLoader = result.current.nodeLoader;
 
     rerender({ ...initialProps, pagingSize: 20 });
@@ -95,7 +124,9 @@ describe("usePresentationNodeLoader", () => {
 
   describe("auto-updating model source", () => {
     it("doesn't create a new nodeLoader when `PresentationManager` raises `onIModelHierarchyChanged` event with unrelated ruleset", async () => {
-      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
+      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), {
+        initialProps,
+      });
       const oldNodeLoader = result.current.nodeLoader;
 
       onIModelHierarchyChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey: imodel.key });
@@ -104,7 +135,9 @@ describe("usePresentationNodeLoader", () => {
     });
 
     it("doesn't create a new nodeLoader when `PresentationManager` raises `onIModelHierarchyChanged` event with unrelated imodel", async () => {
-      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
+      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), {
+        initialProps,
+      });
       const oldNodeLoader = result.current.nodeLoader;
 
       onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: "unrelated" });
@@ -124,7 +157,9 @@ describe("usePresentationNodeLoader", () => {
     });
 
     it("doesn't create a new nodeLoader when `RulesetsManager` raises an unrelated `onRulesetModified` event", async () => {
-      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
+      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), {
+        initialProps,
+      });
       const oldNodeLoader = result.current.nodeLoader;
 
       const currRuleset = new RegisteredRuleset({ id: "unrelated", rules: [] }, "", () => {});
@@ -134,7 +169,9 @@ describe("usePresentationNodeLoader", () => {
     });
 
     it("creates a new nodeLoader when `RulesetsManager` raises a related `onRulesetModified` event", async () => {
-      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
+      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), {
+        initialProps,
+      });
       const oldNodeLoader = result.current.nodeLoader;
 
       const currRuleset = new RegisteredRuleset({ id: rulesetId, rules: [] }, "", () => {});
@@ -143,7 +180,9 @@ describe("usePresentationNodeLoader", () => {
     });
 
     it("creates a new nodeLoader when `RulesetVariablesManager` raises an `onRulesetVariableChanged` event with a new value", async () => {
-      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
+      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), {
+        initialProps,
+      });
       const oldNodeLoader = result.current.nodeLoader;
 
       onRulesetVariableChanged.raiseEvent("var-id", undefined, "curr");
@@ -151,7 +190,9 @@ describe("usePresentationNodeLoader", () => {
     });
 
     it("creates a new nodeLoader when `RulesetVariablesManager` raises an `onRulesetVariableChanged` event with a changed value", async () => {
-      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
+      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), {
+        initialProps,
+      });
       const oldNodeLoader = result.current.nodeLoader;
 
       onRulesetVariableChanged.raiseEvent("var-id", "prev", "curr");
@@ -159,7 +200,9 @@ describe("usePresentationNodeLoader", () => {
     });
 
     it("creates a new nodeLoader when `RulesetVariablesManager` raises an `onRulesetVariableChanged` event with a removed value", async () => {
-      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
+      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), {
+        initialProps,
+      });
       const oldNodeLoader = result.current.nodeLoader;
 
       onRulesetVariableChanged.raiseEvent("var-id", "prev", undefined);
@@ -167,7 +210,9 @@ describe("usePresentationNodeLoader", () => {
     });
 
     it("creates a new nodeLoader when `QuantityFormatter` raises an `onActiveFormattingUnitSystemChanged` event", async () => {
-      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
+      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), {
+        initialProps,
+      });
       const oldNodeLoader = result.current.nodeLoader;
 
       onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
@@ -175,7 +220,9 @@ describe("usePresentationNodeLoader", () => {
     });
 
     it("does not create a new nodeLoader when `onRulesetModified` event is raised but there are no changes", async () => {
-      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
+      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), {
+        initialProps,
+      });
       const oldNodeLoader = result.current.nodeLoader;
 
       const currRuleset = new RegisteredRuleset({ id: rulesetId, rules: [] }, "", () => {});
@@ -229,9 +276,13 @@ describe("useControlledPresentationTreeFiltering", () => {
 
   it("returns filtered node loader when tree is filtered", async () => {
     const node = createNode("root");
-    getFilteredNodePathsStub.resolves([{ children: [], index: 0, node, filteringData: { matchesCount: 1, childMatchesCount: 0 }, isMarked: true }]);
+    getFilteredNodePathsStub.resolves([
+      { children: [], index: 0, node, filteringData: { matchesCount: 1, childMatchesCount: 0 }, isMarked: true },
+    ]);
 
-    const { result } = renderHook(useControlledPresentationTreeFiltering, { initialProps: { nodeLoader, filter: "test" } });
+    const { result } = renderHook(useControlledPresentationTreeFiltering, {
+      initialProps: { nodeLoader, filter: "test" },
+    });
 
     await waitFor(() => {
       expect(result.current.isFiltering).to.be.false;
@@ -257,7 +308,14 @@ function createNodeInput(label: string): TreeModelNodeInput {
 type TreeHierarchy =
   | string
   | { [label: string]: TreeHierarchy[] }
-  | { label: string; selected?: true; expanded?: true; loading?: true; editingInfo?: TreeModelNodeEditingInfo; children?: TreeHierarchy[] };
+  | {
+      label: string;
+      selected?: true;
+      expanded?: true;
+      loading?: true;
+      editingInfo?: TreeModelNodeEditingInfo;
+      children?: TreeHierarchy[];
+    };
 
 function expectTree(model: TreeModel, expectedHierarchy: TreeHierarchy[]): void {
   const actualHierarchy = buildActualHierarchy(undefined);

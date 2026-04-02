@@ -8,7 +8,10 @@ import { collect, waitFor } from "presentation-test-utilities";
 import { EMPTY, from, Observable, of, Subject } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
-import { createHideIfNoChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/HideIfNoChildren.js";
+import {
+  createHideIfNoChildrenOperator,
+  LOGGING_NAMESPACE,
+} from "../../../hierarchies/imodel/operators/HideIfNoChildren.js";
 import { createTestProcessedGenericNode, setupLogging } from "../../Utils.js";
 
 describe("HideIfNoChildrenOperator", () => {
@@ -35,22 +38,34 @@ describe("HideIfNoChildrenOperator", () => {
   });
 
   it("doesn't return nodes that need hiding, need children determined and don't have children", async () => {
-    const nodes = [createTestProcessedGenericNode({ processingParams: { hideIfNoChildren: true }, children: undefined })];
+    const nodes = [
+      createTestProcessedGenericNode({ processingParams: { hideIfNoChildren: true }, children: undefined }),
+    ];
     const hasNodes = sinon.fake(() => of(false));
     const result = await collect(from(nodes).pipe(createHideIfNoChildrenOperator(hasNodes)));
     expect(result).to.deep.eq([]);
   });
 
   it("returns nodes that need hiding, need children determined and do have children", async () => {
-    const nodes = [createTestProcessedGenericNode({ processingParams: { hideIfNoChildren: true }, children: undefined })];
+    const nodes = [
+      createTestProcessedGenericNode({ processingParams: { hideIfNoChildren: true }, children: undefined }),
+    ];
     const hasNodes = sinon.fake(() => of(true));
     const result = await collect(from(nodes).pipe(createHideIfNoChildrenOperator(hasNodes)));
     expect(result).to.deep.eq([{ ...nodes[0], children: true }]);
   });
 
   it("checks children of all siblings at once when `stopOnFirstChild = false`", async () => {
-    const nodeA = createTestProcessedGenericNode({ processingParams: { hideIfNoChildren: true }, label: "a", children: undefined });
-    const nodeB = createTestProcessedGenericNode({ processingParams: { hideIfNoChildren: true }, label: "b", children: undefined });
+    const nodeA = createTestProcessedGenericNode({
+      processingParams: { hideIfNoChildren: true },
+      label: "a",
+      children: undefined,
+    });
+    const nodeB = createTestProcessedGenericNode({
+      processingParams: { hideIfNoChildren: true },
+      label: "b",
+      children: undefined,
+    });
     const aHasNodesSubject = new Subject<boolean>();
     const bHasNodesSubject = new Subject<boolean>();
     const hasNodes = sinon.fake((node) => {

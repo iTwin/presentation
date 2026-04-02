@@ -52,9 +52,21 @@ export function safeDispose(disposable: {} | { [Symbol.dispose]: () => void } | 
 }
 
 // eslint-disable-next-line @typescript-eslint/no-deprecated
-type GetNodesRequestOptions = HierarchyRequestOptions<IModelConnection, NodeKey, RulesetVariable> & ClientDiagnosticsAttribute;
-type GetContentRequestOptions = ContentRequestOptions<IModelConnection, Descriptor | DescriptorOverrides, KeySet, RulesetVariable> & ClientDiagnosticsAttribute;
-type GetDistinctValuesRequestOptions = DistinctValuesRequestOptions<IModelConnection, Descriptor | DescriptorOverrides, KeySet, RulesetVariable> &
+type GetNodesRequestOptions = HierarchyRequestOptions<IModelConnection, NodeKey, RulesetVariable> &
+  ClientDiagnosticsAttribute;
+type GetContentRequestOptions = ContentRequestOptions<
+  IModelConnection,
+  Descriptor | DescriptorOverrides,
+  KeySet,
+  RulesetVariable
+> &
+  ClientDiagnosticsAttribute;
+type GetDistinctValuesRequestOptions = DistinctValuesRequestOptions<
+  IModelConnection,
+  Descriptor | DescriptorOverrides,
+  KeySet,
+  RulesetVariable
+> &
   ClientDiagnosticsAttribute;
 
 type MultipleValuesRequestOptions = Paged<{
@@ -72,7 +84,9 @@ type MultipleValuesRequestOptions = Paged<{
 }>;
 
 type WithIterableMethods<T extends PresentationManager> = {
-  getNodesIterator(requestOptions: GetNodesRequestOptions & MultipleValuesRequestOptions): Promise<{ total: number; items: AsyncIterableIterator<Node> }>;
+  getNodesIterator(
+    requestOptions: GetNodesRequestOptions & MultipleValuesRequestOptions,
+  ): Promise<{ total: number; items: AsyncIterableIterator<Node> }>;
   getContentIterator(
     requestOptions: GetContentRequestOptions & MultipleValuesRequestOptions,
   ): Promise<{ descriptor: Descriptor; total: number; items: AsyncIterableIterator<Item> } | undefined>;

@@ -46,7 +46,9 @@ export function createTestSourceGenericNode(src?: Partial<SourceGenericHierarchy
   return { label: "test", key: "test", ...src };
 }
 
-export function createTestProcessedGenericNode(src?: Partial<ProcessedGenericHierarchyNode>): ProcessedGenericHierarchyNode {
+export function createTestProcessedGenericNode(
+  src?: Partial<ProcessedGenericHierarchyNode>,
+): ProcessedGenericHierarchyNode {
   return { label: "test", key: createTestGenericNodeKey(), parentKeys: [], ...src };
 }
 
@@ -62,7 +64,9 @@ export function createTestSourceInstanceNode(src?: Partial<SourceInstanceHierarc
   return { label: "test", key: createTestInstanceNodeKey(), ...src };
 }
 
-export function createTestProcessedInstanceNode(src?: Partial<ProcessedInstanceHierarchyNode>): ProcessedInstanceHierarchyNode {
+export function createTestProcessedInstanceNode(
+  src?: Partial<ProcessedInstanceHierarchyNode>,
+): ProcessedInstanceHierarchyNode {
   return { label: "test", key: createTestInstanceNodeKey(), parentKeys: [], ...src };
 }
 
@@ -77,7 +81,9 @@ export function createTestGroupingNode(src?: Partial<GroupingHierarchyNode>): Gr
   };
 }
 
-export function createTestProcessedGroupingNode<TChild = ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>(
+export function createTestProcessedGroupingNode<
+  TChild = ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode,
+>(
   src?: Partial<Omit<ProcessedGroupingHierarchyNode, "children">> & { children?: TChild[] },
 ): Omit<ProcessedGroupingHierarchyNode, "children"> & { children: TChild[] } {
   return {
@@ -94,16 +100,39 @@ export function createTestClassGroupingNodeKey(src?: Partial<ClassGroupingNodeKe
   return { type: "class-grouping", className: "TestSchema.TestClass", ...src };
 }
 
-export function createTestPropertyValueGroupingNodeKey(src?: Partial<PropertyValueGroupingNodeKey>): PropertyValueGroupingNodeKey {
-  return { type: "property-grouping:value", propertyClassName: "TestSchema.TestClass", propertyName: "TestProperty", formattedPropertyValue: "test", ...src };
+export function createTestPropertyValueGroupingNodeKey(
+  src?: Partial<PropertyValueGroupingNodeKey>,
+): PropertyValueGroupingNodeKey {
+  return {
+    type: "property-grouping:value",
+    propertyClassName: "TestSchema.TestClass",
+    propertyName: "TestProperty",
+    formattedPropertyValue: "test",
+    ...src,
+  };
 }
 
-export function createTestPropertyValueRangeGroupingNodeKey(src?: Partial<PropertyValueRangeGroupingNodeKey>): PropertyValueRangeGroupingNodeKey {
-  return { type: "property-grouping:range", propertyClassName: "TestSchema.TestClass", propertyName: "TestProperty", fromValue: 1.23, toValue: 4.56, ...src };
+export function createTestPropertyValueRangeGroupingNodeKey(
+  src?: Partial<PropertyValueRangeGroupingNodeKey>,
+): PropertyValueRangeGroupingNodeKey {
+  return {
+    type: "property-grouping:range",
+    propertyClassName: "TestSchema.TestClass",
+    propertyName: "TestProperty",
+    fromValue: 1.23,
+    toValue: 4.56,
+    ...src,
+  };
 }
 
-export function createTestPropertyOtherValueGroupingNodeKey(src?: Partial<PropertyOtherValuesGroupingNodeKey>): PropertyOtherValuesGroupingNodeKey {
-  return { type: "property-grouping:other", properties: [{ className: "TestSchema.TestClass", propertyName: "TestProperty" }], ...src };
+export function createTestPropertyOtherValueGroupingNodeKey(
+  src?: Partial<PropertyOtherValuesGroupingNodeKey>,
+): PropertyOtherValuesGroupingNodeKey {
+  return {
+    type: "property-grouping:other",
+    properties: [{ className: "TestSchema.TestClass", propertyName: "TestProperty" }],
+    ...src,
+  };
 }
 
 export function createTestInstanceKey(src?: Partial<IModelInstanceKey>): IModelInstanceKey {
@@ -133,24 +162,30 @@ export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
 }
 export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class & ECClassExtraMembers;
 export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass & ECClassExtraMembers;
-export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass & ECClassExtraMembers;
+export type TStubRelationshipClassFunc = (
+  props: StubRelationshipClassFuncProps,
+) => EC.RelationshipClass & ECClassExtraMembers;
 
 export function createECSchemaProviderStub() {
   const schemaStubs = new Map<string, sinon.SinonStubbedInstance<EC.Schema>>();
   const classes = new Dictionary<EC.FullClassName, EC.Class>(compareFullClassNames); // className -> class
   const classHierarchy = new Dictionary<EC.FullClassName, EC.FullClassName>(compareFullClassNames); // className -> baseClassName
-  const getSchemaStub = sinon.stub<[string], sinon.SinonStubbedInstance<EC.Schema>>().callsFake((schemaName: string) => {
-    let schemaStub = schemaStubs.get(schemaName);
-    if (!schemaStub) {
-      schemaStub = {
-        name: schemaName,
-        getClass: sinon.stub<[string], Promise<EC.Class | undefined>>().callsFake(async (className) => classes.get(`${schemaName}.${className}`)),
-        getCustomAttributes: sinon.stub<[], Promise<EC.CustomAttributeSet>>().callsFake(async () => new Map()),
-      };
-      schemaStubs.set(schemaName, schemaStub);
-    }
-    return schemaStub;
-  });
+  const getSchemaStub = sinon
+    .stub<[string], sinon.SinonStubbedInstance<EC.Schema>>()
+    .callsFake((schemaName: string) => {
+      let schemaStub = schemaStubs.get(schemaName);
+      if (!schemaStub) {
+        schemaStub = {
+          name: schemaName,
+          getClass: sinon
+            .stub<[string], Promise<EC.Class | undefined>>()
+            .callsFake(async (className) => classes.get(`${schemaName}.${className}`)),
+          getCustomAttributes: sinon.stub<[], Promise<EC.CustomAttributeSet>>().callsFake(async () => new Map()),
+        };
+        schemaStubs.set(schemaName, schemaStub);
+      }
+      return schemaStub;
+    });
   const getDerivedClasses = (classFullName: EC.FullClassName): EC.Class[] => {
     const derivedClasses = new Array<EC.Class>();
     for (const { key: derivedClassName, value: baseClassName } of classHierarchy) {
@@ -190,7 +225,9 @@ export function createECSchemaProviderStub() {
     is: async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
       const myName: EC.FullClassName = `${props.schemaName}.${props.className}`;
       const targetName: EC.FullClassName =
-        typeof targetClassOrClassName === "string" ? `${schemaName!}.${targetClassOrClassName}` : targetClassOrClassName.fullName;
+        typeof targetClassOrClassName === "string"
+          ? `${schemaName!}.${targetClassOrClassName}`
+          : targetClassOrClassName.fullName;
       return (
         compareFullClassNames(targetName, myName) === 0 ||
         getBaseClasses(myName).some((baseClass) => compareFullClassNames(baseClass.fullName, targetName) === 0)
@@ -208,7 +245,10 @@ export function createECSchemaProviderStub() {
     isRelationshipClass: () => false,
   });
   const stubEntityClass: TStubEntityClassFunc = (props) => {
-    const res = { ...createBaseClassProps(props), isEntityClass: () => true } as unknown as ReturnType<TStubEntityClassFunc>;
+    const res = {
+      ...createBaseClassProps(props),
+      isEntityClass: () => true,
+    } as unknown as ReturnType<TStubEntityClassFunc>;
     classes.set(res.fullName, res);
     props.baseClass && props.baseClass.addDerivedClass(res);
     return res;
@@ -260,7 +300,11 @@ export function createIModelAccessStub() {
 
 export function createInstanceLabelSelectClauseFactoryStub() {
   return {
-    async createSelectClause(props: { classAlias: string; className?: string; selectorsConcatenator?: any }): Promise<string> {
+    async createSelectClause(props: {
+      classAlias: string;
+      className?: string;
+      selectorsConcatenator?: any;
+    }): Promise<string> {
       return `[${props.classAlias}].[LabelProperty]`;
     },
   };

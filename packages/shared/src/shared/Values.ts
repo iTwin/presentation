@@ -127,7 +127,12 @@ export namespace TypedPrimitiveValue {
    * @throws Error if primitive type and value are incompatible.
    * @public
    */
-  export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue {
+  export function create(
+    value: PrimitiveValue,
+    type: PrimitiveValueType,
+    koqName?: string,
+    extendedType?: string,
+  ): TypedPrimitiveValue {
     switch (type) {
       case "Integer":
       case "Long":

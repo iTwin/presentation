@@ -37,28 +37,36 @@ describe("PresentationInstanceFilter", () => {
   });
 
   const relatedB = createTestPropertiesContentField({
-    properties: [{ property: { classInfo: createTestECClassInfo({ name: "Schema:B" }), name: "relatedB", type: "string" } }],
+    properties: [
+      { property: { classInfo: createTestECClassInfo({ name: "Schema:B" }), name: "relatedB", type: "string" } },
+    ],
     category,
     name: "relatedBPropField",
     label: "RelatedB",
   });
 
   const relatedC1 = createTestPropertiesContentField({
-    properties: [{ property: { classInfo: createTestECClassInfo({ name: "Schema:C1" }), name: "relatedC1", type: "string" } }],
+    properties: [
+      { property: { classInfo: createTestECClassInfo({ name: "Schema:C1" }), name: "relatedC1", type: "string" } },
+    ],
     category,
     name: "relatedC1PropField",
     label: "RelatedC1",
   });
 
   const relatedC2 = createTestPropertiesContentField({
-    properties: [{ property: { classInfo: createTestECClassInfo({ name: "Schema:C2" }), name: "relatedC2", type: "string" } }],
+    properties: [
+      { property: { classInfo: createTestECClassInfo({ name: "Schema:C2" }), name: "relatedC2", type: "string" } },
+    ],
     category,
     name: "relatedC2PropField",
     label: "RelatedC2",
   });
 
   const relatedE = createTestPropertiesContentField({
-    properties: [{ property: { classInfo: createTestECClassInfo({ name: "Schema:E" }), name: "relatedE", type: "string" } }],
+    properties: [
+      { property: { classInfo: createTestECClassInfo({ name: "Schema:E" }), name: "relatedE", type: "string" } },
+    ],
     category,
     name: "relatedEPropField",
     label: "RelatedE",
@@ -154,15 +162,24 @@ describe("PresentationInstanceFilter", () => {
   fieldAToB.rebuildParentship();
   fieldAToD.rebuildParentship();
 
-  const descriptor = createTestContentDescriptor({ categories: [category], fields: [propertyField1, propertyField2, fieldAToD, fieldAToB] });
+  const descriptor = createTestContentDescriptor({
+    categories: [category],
+    fields: [propertyField1, propertyField2, fieldAToD, fieldAToB],
+  });
 
   describe("fromComponentsPropertyFilter", () => {
     it("finds properties fields for property description", () => {
       const filter: PropertyFilterRuleGroup = {
         operator: "and",
         rules: [
-          { property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" }, operator: "is-null" },
-          { property: { name: getPropertyDescriptionName(propertyField2), displayLabel: "Prop2", typename: "string" }, operator: "is-null" },
+          {
+            property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
+            operator: "is-null",
+          },
+          {
+            property: { name: getPropertyDescriptionName(propertyField2), displayLabel: "Prop2", typename: "string" },
+            operator: "is-null",
+          },
         ],
       };
       expect(PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter)).to.containSubset({
@@ -175,16 +192,32 @@ describe("PresentationInstanceFilter", () => {
     });
 
     it("throws if rule properties field cannot be found", () => {
-      const property: PropertyDescription = { name: `${INSTANCE_FILTER_FIELD_SEPARATOR}invalidFieldName`, displayLabel: "Prop", typename: "string" };
-      expect(() => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, { property, operator: "is-null" })).to.throw();
+      const property: PropertyDescription = {
+        name: `${INSTANCE_FILTER_FIELD_SEPARATOR}invalidFieldName`,
+        displayLabel: "Prop",
+        typename: "string",
+      };
+      expect(() =>
+        PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, { property, operator: "is-null" }),
+      ).to.throw();
     });
 
     it("throws if group has rule with invalid property field", () => {
       const filter: PropertyFilterRuleGroup = {
         operator: "and",
         rules: [
-          { property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" }, operator: "is-null" },
-          { property: { name: `${INSTANCE_FILTER_FIELD_SEPARATOR}invalidFieldName`, displayLabel: "Prop2", typename: "string" }, operator: "is-null" },
+          {
+            property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
+            operator: "is-null",
+          },
+          {
+            property: {
+              name: `${INSTANCE_FILTER_FIELD_SEPARATOR}invalidFieldName`,
+              displayLabel: "Prop2",
+              typename: "string",
+            },
+            operator: "is-null",
+          },
         ],
       };
       expect(() => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter)).to.throw();
@@ -205,8 +238,16 @@ describe("PresentationInstanceFilter", () => {
       const filter: PropertyFilter = {
         operator: "and",
         rules: [
-          { property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" }, operator: "is-null", value: undefined },
-          { property: { name: getPropertyDescriptionName(propertyField2), displayLabel: "Prop2", typename: "string" }, operator: "is-null", value: undefined },
+          {
+            property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
+            operator: "is-null",
+            value: undefined,
+          },
+          {
+            property: { name: getPropertyDescriptionName(propertyField2), displayLabel: "Prop2", typename: "string" },
+            operator: "is-null",
+            value: undefined,
+          },
         ],
       };
 
@@ -218,7 +259,9 @@ describe("PresentationInstanceFilter", () => {
     it("converts presentation filter with nested conditions to property filter", () => {
       const presentationFilter: PresentationInstanceFilter = {
         operator: "and",
-        conditions: [{ operator: "and", conditions: [{ field: propertyField1, operator: "is-null", value: undefined }] }],
+        conditions: [
+          { operator: "and", conditions: [{ field: propertyField1, operator: "is-null", value: undefined }] },
+        ],
       };
 
       const propertyFilter: PropertyFilter = {
@@ -228,7 +271,11 @@ describe("PresentationInstanceFilter", () => {
             operator: "and",
             rules: [
               {
-                property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
+                property: {
+                  name: getPropertyDescriptionName(propertyField1),
+                  displayLabel: "Prop1",
+                  typename: "string",
+                },
                 operator: "is-null",
                 value: undefined,
               },
@@ -242,13 +289,20 @@ describe("PresentationInstanceFilter", () => {
     });
 
     it("converts presentation filter with nested fields to property filter", () => {
-      const presentationFilter: PresentationInstanceFilter = { operator: "and", conditions: [{ field: relatedC1, operator: "is-null", value: undefined }] };
+      const presentationFilter: PresentationInstanceFilter = {
+        operator: "and",
+        conditions: [{ field: relatedC1, operator: "is-null", value: undefined }],
+      };
 
       const propertyFilter: PropertyFilter = {
         operator: "and",
         rules: [
           {
-            property: { name: `${getPropertyDescriptionName(fieldAToB)}$${fieldBToC1.name}$${relatedC1.name}`, displayLabel: "RelatedC1", typename: "string" },
+            property: {
+              name: `${getPropertyDescriptionName(fieldAToB)}$${fieldBToC1.name}$${relatedC1.name}`,
+              displayLabel: "RelatedC1",
+              typename: "string",
+            },
             operator: "is-null",
             value: undefined,
           },
@@ -267,7 +321,10 @@ describe("PresentationInstanceFilter", () => {
         label: "Prop",
       });
 
-      const presentationFilter: PresentationInstanceFilter = { operator: "and", conditions: [{ field: propertyField, operator: "is-null", value: undefined }] };
+      const presentationFilter: PresentationInstanceFilter = {
+        operator: "and",
+        conditions: [{ field: propertyField, operator: "is-null", value: undefined }],
+      };
 
       expect(() => PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, presentationFilter)).to.throw();
     });
@@ -280,7 +337,9 @@ describe("PresentationInstanceFilter", () => {
         field: propertyField1,
         value: { valueFormat: PropertyValueFormat.Primitive, value: "val", displayValue: "Value" },
       };
-      const actual = PresentationInstanceFilter.toGenericInstanceFilter(filter, [propertyField1.properties[0].property.classInfo]);
+      const actual = PresentationInstanceFilter.toGenericInstanceFilter(filter, [
+        propertyField1.properties[0].property.classInfo,
+      ]);
       const expectedFilter: GenericInstanceFilter = {
         rules: {
           operator: "is-equal",
@@ -300,7 +359,11 @@ describe("PresentationInstanceFilter", () => {
       const filter: PresentationInstanceFilter = {
         operator: "is-equal",
         field: propertyField1,
-        value: { valueFormat: PropertyValueFormat.Primitive, value: { x: 1, y: 2, z: 3 }, displayValue: "X: 1 Y: 2 Z: 3" },
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: { x: 1, y: 2, z: 3 },
+          displayValue: "X: 1 Y: 2 Z: 3",
+        },
       };
       const actual = PresentationInstanceFilter.toGenericInstanceFilter(filter);
       const expectedFilter: GenericInstanceFilter = {
@@ -364,7 +427,9 @@ describe("PresentationInstanceFilter", () => {
     });
 
     it("converts string unique value condition", () => {
-      const { displayValues, groupedRawValues } = serializeUniqueValues([{ displayValue: "10", groupedRawValues: ["10"] }]);
+      const { displayValues, groupedRawValues } = serializeUniqueValues([
+        { displayValue: "10", groupedRawValues: ["10"] },
+      ]);
       const filter: PresentationInstanceFilter = {
         operator: "is-equal",
         field: propertyField1,
@@ -451,8 +516,18 @@ describe("PresentationInstanceFilter", () => {
           {
             alias: "rel_C2_0",
             path: [
-              { sourceClassName: "Schema:A", targetClassName: "Schema:B", relationshipClassName: "Schema:AToB", isForwardRelationship: true },
-              { sourceClassName: "Schema:B", targetClassName: "Schema:C2", relationshipClassName: "Schema:BToC2", isForwardRelationship: true },
+              {
+                sourceClassName: "Schema:A",
+                targetClassName: "Schema:B",
+                relationshipClassName: "Schema:AToB",
+                isForwardRelationship: true,
+              },
+              {
+                sourceClassName: "Schema:B",
+                targetClassName: "Schema:C2",
+                relationshipClassName: "Schema:BToC2",
+                isForwardRelationship: true,
+              },
             ],
           },
         ],
@@ -481,10 +556,30 @@ describe("PresentationInstanceFilter", () => {
           {
             alias: "rel_E_0",
             path: [
-              { sourceClassName: "Schema:A", targetClassName: "Schema:B1", relationshipClassName: "Schema:AToB1", isForwardRelationship: true },
-              { sourceClassName: "Schema:B1", targetClassName: "Schema:C1", relationshipClassName: "Schema:B1ToC1", isForwardRelationship: true },
-              { sourceClassName: "Schema:C1", targetClassName: "Schema:D", relationshipClassName: "Schema:C1ToD", isForwardRelationship: true },
-              { sourceClassName: "Schema:D", targetClassName: "Schema:E", relationshipClassName: "Schema:DToE", isForwardRelationship: true },
+              {
+                sourceClassName: "Schema:A",
+                targetClassName: "Schema:B1",
+                relationshipClassName: "Schema:AToB1",
+                isForwardRelationship: true,
+              },
+              {
+                sourceClassName: "Schema:B1",
+                targetClassName: "Schema:C1",
+                relationshipClassName: "Schema:B1ToC1",
+                isForwardRelationship: true,
+              },
+              {
+                sourceClassName: "Schema:C1",
+                targetClassName: "Schema:D",
+                relationshipClassName: "Schema:C1ToD",
+                isForwardRelationship: true,
+              },
+              {
+                sourceClassName: "Schema:D",
+                targetClassName: "Schema:E",
+                relationshipClassName: "Schema:DToE",
+                isForwardRelationship: true,
+              },
             ],
           },
         ],
@@ -566,7 +661,11 @@ describe("PresentationInstanceFilter", () => {
             field: propertyField1,
             value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "1", value: 1, roundingError: 0.5 },
           },
-          { operator: "is-equal", field: propertyField2, value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "Value", value: "val" } },
+          {
+            operator: "is-equal",
+            field: propertyField2,
+            value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "Value", value: "val" },
+          },
         ],
       };
       expect(actual).to.be.deep.eq(expected);
@@ -643,7 +742,14 @@ describe("PresentationInstanceFilter", () => {
         relatedInstances: [
           {
             alias: "rel_B_0",
-            path: [{ sourceClassName: "Schema:A", targetClassName: "Schema:B", relationshipClassName: "Schema:AToB", isForwardRelationship: true }],
+            path: [
+              {
+                sourceClassName: "Schema:A",
+                targetClassName: "Schema:B",
+                relationshipClassName: "Schema:AToB",
+                isForwardRelationship: true,
+              },
+            ],
           },
         ],
         filteredClassNames: undefined,
@@ -653,7 +759,11 @@ describe("PresentationInstanceFilter", () => {
       const expected: PresentationInstanceFilter = {
         operator: "and",
         conditions: [
-          { operator: "is-equal", field: relatedB, value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "Value", value: "val" } },
+          {
+            operator: "is-equal",
+            field: relatedB,
+            value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "Value", value: "val" },
+          },
           { operator: "is-not-null", field: relatedB, value: undefined },
         ],
       };
@@ -685,15 +795,35 @@ describe("PresentationInstanceFilter", () => {
           {
             alias: "rel_C1_0",
             path: [
-              { sourceClassName: "Schema:A", targetClassName: "Schema:B", relationshipClassName: "Schema:AToB", isForwardRelationship: true },
-              { sourceClassName: "Schema:B", targetClassName: "Schema:C1", relationshipClassName: "Schema:BToC1", isForwardRelationship: true },
+              {
+                sourceClassName: "Schema:A",
+                targetClassName: "Schema:B",
+                relationshipClassName: "Schema:AToB",
+                isForwardRelationship: true,
+              },
+              {
+                sourceClassName: "Schema:B",
+                targetClassName: "Schema:C1",
+                relationshipClassName: "Schema:BToC1",
+                isForwardRelationship: true,
+              },
             ],
           },
           {
             alias: "rel_C2_0",
             path: [
-              { sourceClassName: "Schema:A", targetClassName: "Schema:B", relationshipClassName: "Schema:AToB", isForwardRelationship: true },
-              { sourceClassName: "Schema:B", targetClassName: "Schema:C2", relationshipClassName: "Schema:BToC2", isForwardRelationship: true },
+              {
+                sourceClassName: "Schema:A",
+                targetClassName: "Schema:B",
+                relationshipClassName: "Schema:AToB",
+                isForwardRelationship: true,
+              },
+              {
+                sourceClassName: "Schema:B",
+                targetClassName: "Schema:C2",
+                relationshipClassName: "Schema:BToC2",
+                isForwardRelationship: true,
+              },
             ],
           },
         ],
@@ -704,7 +834,11 @@ describe("PresentationInstanceFilter", () => {
       const expected: PresentationInstanceFilter = {
         operator: "and",
         conditions: [
-          { operator: "is-equal", field: relatedC1, value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "Value", value: "val" } },
+          {
+            operator: "is-equal",
+            field: relatedC1,
+            value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "Value", value: "val" },
+          },
           { operator: "is-not-null", field: relatedC2, value: undefined },
         ],
       };
@@ -725,10 +859,30 @@ describe("PresentationInstanceFilter", () => {
           {
             alias: "rel_E_0",
             path: [
-              { sourceClassName: "Schema:A", targetClassName: "Schema:B1", relationshipClassName: "Schema:AToB1", isForwardRelationship: true },
-              { sourceClassName: "Schema:B1", targetClassName: "Schema:C1", relationshipClassName: "Schema:B1ToC1", isForwardRelationship: true },
-              { sourceClassName: "Schema:C1", targetClassName: "Schema:D", relationshipClassName: "Schema:C1ToD", isForwardRelationship: true },
-              { sourceClassName: "Schema:D", targetClassName: "Schema:E", relationshipClassName: "Schema:DToE", isForwardRelationship: true },
+              {
+                sourceClassName: "Schema:A",
+                targetClassName: "Schema:B1",
+                relationshipClassName: "Schema:AToB1",
+                isForwardRelationship: true,
+              },
+              {
+                sourceClassName: "Schema:B1",
+                targetClassName: "Schema:C1",
+                relationshipClassName: "Schema:B1ToC1",
+                isForwardRelationship: true,
+              },
+              {
+                sourceClassName: "Schema:C1",
+                targetClassName: "Schema:D",
+                relationshipClassName: "Schema:C1ToD",
+                isForwardRelationship: true,
+              },
+              {
+                sourceClassName: "Schema:D",
+                targetClassName: "Schema:E",
+                relationshipClassName: "Schema:DToE",
+                isForwardRelationship: true,
+              },
             ],
           },
         ],
@@ -751,7 +905,9 @@ describe("PresentationInstanceFilter", () => {
         relatedInstances: [],
       };
 
-      expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).to.throw("Failed to find field for property - this.invalidProp");
+      expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).to.throw(
+        "Failed to find field for property - this.invalidProp",
+      );
     });
 
     it("throws when related property field is not found", () => {
@@ -761,7 +917,14 @@ describe("PresentationInstanceFilter", () => {
         relatedInstances: [
           {
             alias: "rel_B_0",
-            path: [{ sourceClassName: "Schema:A", targetClassName: "Schema:B", relationshipClassName: "Schema:AToB", isForwardRelationship: true }],
+            path: [
+              {
+                sourceClassName: "Schema:A",
+                targetClassName: "Schema:B",
+                relationshipClassName: "Schema:AToB",
+                isForwardRelationship: true,
+              },
+            ],
           },
         ],
       };
@@ -783,7 +946,14 @@ describe("PresentationInstanceFilter", () => {
         relatedInstances: [
           {
             alias: "rel_B_0",
-            path: [{ sourceClassName: "Schema:A", targetClassName: "Schema:Invalid", relationshipClassName: "Schema:AToInvalid", isForwardRelationship: true }],
+            path: [
+              {
+                sourceClassName: "Schema:A",
+                targetClassName: "Schema:Invalid",
+                relationshipClassName: "Schema:AToInvalid",
+                isForwardRelationship: true,
+              },
+            ],
           },
         ],
       };
@@ -809,7 +979,11 @@ describe("PresentationInstanceFilter", () => {
   describe("createPrimitiveValueEqualityCondition", () => {
     it("serializes value into unique value", () => {
       const value: PrimitiveValue = { valueFormat: PropertyValueFormat.Primitive, value: 1.456, displayValue: "1.46" };
-      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(propertyField1, "is-equal", value);
+      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(
+        propertyField1,
+        "is-equal",
+        value,
+      );
       const uniqueValue = serializeUniqueValues([{ displayValue: "1.46", groupedRawValues: [1.456] }]);
       expect(condition.operator).to.be.eq("is-equal");
       expect(condition.value?.value).to.be.eq(uniqueValue.groupedRawValues);
@@ -818,13 +992,21 @@ describe("PresentationInstanceFilter", () => {
 
     it("creates `is-null` condition for 'is-equal` operator with `undefined` value", () => {
       const value: PrimitiveValue = { valueFormat: PropertyValueFormat.Primitive };
-      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(propertyField1, "is-equal", value);
+      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(
+        propertyField1,
+        "is-equal",
+        value,
+      );
       expect(condition.operator).to.be.eq("is-null");
     });
 
     it("creates `is-not-null` condition for 'is-not-equal` operator with `undefined` value", () => {
       const value: PrimitiveValue = { valueFormat: PropertyValueFormat.Primitive };
-      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(propertyField1, "is-not-equal", value);
+      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(
+        propertyField1,
+        "is-not-equal",
+        value,
+      );
       expect(condition.operator).to.be.eq("is-not-null");
     });
   });

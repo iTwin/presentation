@@ -33,7 +33,9 @@ export class IModelSelector extends Component<Props, State> {
   public override async componentDidMount() {
     const imodels = await MyAppFrontend.getSampleImodels();
     imodels.splice(0, 0, "");
-    this.setState({ availableImodels: imodels.map((path: string) => ({ label: path.split(/[\\/]/).pop() ?? "", value: path })) });
+    this.setState({
+      availableImodels: imodels.map((path: string) => ({ label: path.split(/[\\/]/).pop() ?? "", value: path })),
+    });
     if (this.props.activeIModelPath && imodels.includes(this.props.activeIModelPath)) {
       await this.doOpenIModel(this.props.activeIModelPath);
     }

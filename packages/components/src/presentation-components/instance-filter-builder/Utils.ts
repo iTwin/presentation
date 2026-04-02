@@ -8,15 +8,30 @@
 
 import { useMemo } from "react";
 import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
-import { defaultPropertyFilterBuilderRuleValidator, isUnaryPropertyFilterBuilderOperator, PropertyFilterBuilderRuleRangeValue } from "@itwin/components-react";
+import {
+  defaultPropertyFilterBuilderRuleValidator,
+  isUnaryPropertyFilterBuilderOperator,
+  PropertyFilterBuilderRuleRangeValue,
+} from "@itwin/components-react";
 import { combineFieldNames } from "@itwin/presentation-common";
 import { createFieldInfo, createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder.js";
 import { translate } from "../common/Utils.js";
 
 import type { PrimitiveValue, PropertyDescription } from "@itwin/appui-abstract";
-import type { PropertyFilterBuilderRule, PropertyFilterBuilderRuleGroup, PropertyFilterBuilderRuleOperator } from "@itwin/components-react";
+import type {
+  PropertyFilterBuilderRule,
+  PropertyFilterBuilderRuleGroup,
+  PropertyFilterBuilderRuleOperator,
+} from "@itwin/components-react";
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { CategoryDescription, ClassInfo, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
+import type {
+  CategoryDescription,
+  ClassInfo,
+  Descriptor,
+  Field,
+  NestedContentField,
+  PropertiesField,
+} from "@itwin/presentation-common";
 import type { NavigationPropertyEditorContextProviderProps } from "../properties/editors/NavigationPropertyEditorContext.js";
 import type { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder.js";
 
@@ -97,7 +112,10 @@ function getParentNames(field: Field, name: string): string {
 export function createPropertyInfoFromPropertiesField(field: PropertiesField): PresentationInstanceFilterPropertyInfo {
   const categoryInfo = getCategoryInfo(field.category, { name: undefined, label: undefined });
   const name = field.parent ? getParentNames(field.parent, field.name) : field.name;
-  const propertyDescription = createPropertyDescriptionFromFieldInfo({ ...createFieldInfo(field), name: getCategorizedFieldName(name, categoryInfo.name) });
+  const propertyDescription = createPropertyDescriptionFromFieldInfo({
+    ...createFieldInfo(field),
+    name: getCategorizedFieldName(name, categoryInfo.name),
+  });
   const sourceClassIds = getPropertySourceClassInfos(field).map((classInfo) => classInfo.id);
   return {
     field,
@@ -121,7 +139,10 @@ function getCategorizedFieldName(fieldName: string, categoryName?: string) {
 }
 
 /** @internal */
-export function useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel: IModelConnection, descriptor: Descriptor) {
+export function useFilterBuilderNavigationPropertyEditorContextProviderProps(
+  imodel: IModelConnection,
+  descriptor: Descriptor,
+) {
   return useMemo<NavigationPropertyEditorContextProviderProps>(
     () => ({
       imodel,
@@ -141,7 +162,11 @@ export function useFilterBuilderNavigationPropertyEditorContextProviderProps(imo
 /** @internal */
 export function filterRuleValidator(item: PropertyFilterBuilderRule) {
   // skip empty rules and rules that do not require value
-  if (item.property === undefined || item.operator === undefined || isUnaryPropertyFilterBuilderOperator(item.operator)) {
+  if (
+    item.property === undefined ||
+    item.operator === undefined ||
+    isUnaryPropertyFilterBuilderOperator(item.operator)
+  ) {
     return undefined;
   }
 
@@ -198,7 +223,10 @@ function isEqualityOperator(operator: PropertyFilterBuilderRuleOperator) {
 
 function isPropertyNumeric(typename: string) {
   return (
-    typename === StandardTypeNames.Number || typename === StandardTypeNames.Int || typename === StandardTypeNames.Float || typename === StandardTypeNames.Double
+    typename === StandardTypeNames.Number ||
+    typename === StandardTypeNames.Int ||
+    typename === StandardTypeNames.Float ||
+    typename === StandardTypeNames.Double
   );
 }
 

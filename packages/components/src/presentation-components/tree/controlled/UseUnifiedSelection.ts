@@ -174,7 +174,10 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
     }
 
     // ... or if it's an ECInstances node and any of instance keys is in selection
-    if (NodeKey.isInstancesNodeKey(node.key) && node.key.instanceKeys.some((instanceKey) => selection.has(instanceKey))) {
+    if (
+      NodeKey.isInstancesNodeKey(node.key) &&
+      node.key.instanceKeys.some((instanceKey) => selection.has(instanceKey))
+    ) {
       return true;
     }
 
@@ -231,7 +234,10 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
       return;
     }
 
-    if (evt.source !== this.#selectionSourceName && (evt.changeType === SelectionChangeType.Clear || evt.changeType === SelectionChangeType.Replace)) {
+    if (
+      evt.source !== this.#selectionSourceName &&
+      (evt.changeType === SelectionChangeType.Clear || evt.changeType === SelectionChangeType.Replace)
+    ) {
       this.#cancelled.next();
     }
 
@@ -287,7 +293,9 @@ export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeE
   return useDisposable(
     useCallback(
       () => new UnifiedSelectionTreeEventHandler(props),
-      Object.values(props) /* eslint-disable-line react-hooks/exhaustive-deps */ /* want to re-create the handler whenever any prop changes */,
+      Object.values(
+        props,
+      ) /* eslint-disable-line react-hooks/exhaustive-deps */ /* want to re-create the handler whenever any prop changes */,
     ),
   );
 }

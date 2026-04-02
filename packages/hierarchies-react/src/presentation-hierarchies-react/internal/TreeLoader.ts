@@ -7,12 +7,20 @@ import { catchError, EMPTY, expand, filter, from, map, mergeMap, of, toArray } f
 import { createNodeId } from "./Utils.js";
 
 import type { Observable } from "rxjs";
-import type { GenericInstanceFilter, HierarchyNode, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
+import type {
+  GenericInstanceFilter,
+  HierarchyNode,
+  HierarchyProvider,
+  RowsLimitExceededError,
+} from "@itwin/presentation-hierarchies";
 import type { ErrorInfo } from "../TreeNode.js";
 import type { TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
 
 /** @internal */
-export type LoadedTreePart = { parent: TreeModelHierarchyNode | TreeModelRootNode } & ({ loadedNodes: TreeModelHierarchyNode[] } | { error: ErrorInfo });
+export type LoadedTreePart = { parent: TreeModelHierarchyNode | TreeModelRootNode } & (
+  | { loadedNodes: TreeModelHierarchyNode[] }
+  | { error: ErrorInfo }
+);
 
 /** @internal */
 export interface HierarchyLevelOptions {
@@ -40,18 +48,37 @@ export class TreeLoader implements ITreeLoader {
 
   constructor(
     private _hierarchyProvider: HierarchyProvider,
-    private _onHierarchyLimitExceeded: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void,
+    private _onHierarchyLimitExceeded: (props: {
+      parentId?: string;
+      filter?: GenericInstanceFilter;
+      limit?: number | "unbounded";
+    }) => void,
     private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void,
     treeNodeIdFactory?: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string,
   ) {
     this._treeNodeIdFactory = treeNodeIdFactory ?? /* c8 ignore next */ createNodeId;
   }
 
-  private loadChildren({ parent, getHierarchyLevelOptions, buildNode, ignoreCache }: Omit<LoadNodesOptions, "shouldLoadChildren">) {
+  private loadChildren({
+    parent,
+    getHierarchyLevelOptions,
+    buildNode,
+    ignoreCache,
+  }: Omit<LoadNodesOptions, "shouldLoadChildren">) {
     const { instanceFilter, hierarchyLevelSizeLimit } = getHierarchyLevelOptions(parent);
     const infoNodeIdBase = `${parent.id ?? "<root>"}`;
-    const treeModelNodesFactory = createTreeModelNodesFactory({ buildNode, treeNodeIdFactory: this._treeNodeIdFactory });
-    return from(this._hierarchyProvider.getNodes({ parentNode: parent.nodeData, hierarchyLevelSizeLimit, instanceFilter, ignoreCache })).pipe(
+    const treeModelNodesFactory = createTreeModelNodesFactory({
+      buildNode,
+      treeNodeIdFactory: this._treeNodeIdFactory,
+    });
+    return from(
+      this._hierarchyProvider.getNodes({
+        parentNode: parent.nodeData,
+        hierarchyLevelSizeLimit,
+        instanceFilter,
+        ignoreCache,
+      }),
+    ).pipe(
       toArray(),
       map((childNodes): LoadedTreePart => {
         return instanceFilter && childNodes.length === 0
@@ -63,7 +90,14 @@ export class TreeLoader implements ITreeLoader {
         if (err instanceof Error) {
           if (isRowsLimitError(err)) {
             this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: err.limit });
-            return of({ parent, error: { id: `${infoNodeIdBase}-${err.message}`, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit } });
+            return of({
+              parent,
+              error: {
+                id: `${infoNodeIdBase}-${err.message}`,
+                type: "ResultSetTooLarge" as const,
+                resultSetSizeLimit: err.limit,
+              },
+            });
           }
           if (isTimeoutError(err)) {
             hierarchyLoadErrorType = "timeout";
@@ -71,7 +105,14 @@ export class TreeLoader implements ITreeLoader {
         }
 
         this._onHierarchyLoadError({ parentId: parent.id, type: hierarchyLoadErrorType, error: err });
-        return of({ parent, error: { id: `${infoNodeIdBase}-ChildrenLoad`, type: "ChildrenLoad" as const, message: "Failed to create hierarchy level" } });
+        return of({
+          parent,
+          error: {
+            id: `${infoNodeIdBase}-ChildrenLoad`,
+            type: "ChildrenLoad" as const,
+            message: "Failed to create hierarchy level",
+          },
+        });
       }),
     );
   }
@@ -98,7 +139,12 @@ function createTreeModelNodesFactory({
   treeNodeIdFactory: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string;
 }): (node: HierarchyNode) => TreeModelHierarchyNode {
   return (node: HierarchyNode) => {
-    const modelNode: TreeModelHierarchyNode = { id: treeNodeIdFactory(node), children: node.children, label: node.label, nodeData: node };
+    const modelNode: TreeModelHierarchyNode = {
+      id: treeNodeIdFactory(node),
+      children: node.children,
+      label: node.label,
+      nodeData: node,
+    };
     return buildNode ? buildNode(modelNode) : modelNode;
   };
 }

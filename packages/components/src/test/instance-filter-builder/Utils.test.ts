@@ -78,9 +78,21 @@ describe("createInstanceFilterPropertyInfos", () => {
 
   it("creates property infos when fields are in different categories category", () => {
     const rootCategory = createTestCategoryDescription({ name: "root", label: "Root Category" });
-    const nestedCategory1 = createTestCategoryDescription({ name: "nested1", label: "Nested Category 1", parent: rootCategory });
-    const nestedCategory2 = createTestCategoryDescription({ name: "nested2", label: "Nested Category 2", parent: rootCategory });
-    const nestedCategory21 = createTestCategoryDescription({ name: "nested21", label: "Nested Category 2 1", parent: nestedCategory2 });
+    const nestedCategory1 = createTestCategoryDescription({
+      name: "nested1",
+      label: "Nested Category 1",
+      parent: rootCategory,
+    });
+    const nestedCategory2 = createTestCategoryDescription({
+      name: "nested2",
+      label: "Nested Category 2",
+      parent: rootCategory,
+    });
+    const nestedCategory21 = createTestCategoryDescription({
+      name: "nested21",
+      label: "Nested Category 2 1",
+      parent: nestedCategory2,
+    });
     const descriptor = createTestContentDescriptor({
       categories: [rootCategory, nestedCategory1, nestedCategory2, nestedCategory21],
       fields: [
@@ -125,7 +137,11 @@ describe("createInstanceFilterPropertyInfos", () => {
   it("creates property info with nested field content class name", () => {
     const rootCategory = createTestCategoryDescription({ name: "root", label: "Root Category" });
     const propertyField = createTestPropertiesContentField({
-      properties: [{ property: { classInfo: createTestECClassInfo({ name: "Schema:PropClass " }), name: "prop1", type: "string" } }],
+      properties: [
+        {
+          property: { classInfo: createTestECClassInfo({ name: "Schema:PropClass " }), name: "prop1", type: "string" },
+        },
+      ],
       category: rootCategory,
     });
 
@@ -146,7 +162,11 @@ describe("createInstanceFilterPropertyInfos", () => {
 });
 
 describe("filterRuleValidator", () => {
-  const numericProperty: PropertyDescription = { displayLabel: "Numeric Prop", name: "numeric-prop", typename: StandardTypeNames.Double };
+  const numericProperty: PropertyDescription = {
+    displayLabel: "Numeric Prop",
+    name: "numeric-prop",
+    typename: StandardTypeNames.Double,
+  };
   const quantityProperty: PropertyDescription = {
     displayLabel: "Quantity Prop",
     name: "quantity-prop",
@@ -307,9 +327,11 @@ describe("useFilterBuilderNavigationPropertyEditorContextProviderProps", () => {
       typename: "navigation",
     };
 
-    const { result } = renderHook(({ imodel, descriptor }: Props) => useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor), {
-      initialProps: { imodel: testImodel, descriptor: testDescriptor },
-    });
+    const { result } = renderHook(
+      ({ imodel, descriptor }: Props) =>
+        useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor),
+      { initialProps: { imodel: testImodel, descriptor: testDescriptor } },
+    );
 
     const info = await result.current.getNavigationPropertyInfo(propertyDescription);
     expect(info).to.be.deep.eq(navigationPropertyInfo);
@@ -324,9 +346,11 @@ describe("useFilterBuilderNavigationPropertyEditorContextProviderProps", () => {
       typename: "navigation",
     };
 
-    const { result } = renderHook(({ imodel, descriptor }: Props) => useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor), {
-      initialProps: { imodel: testImodel, descriptor: testDescriptor },
-    });
+    const { result } = renderHook(
+      ({ imodel, descriptor }: Props) =>
+        useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor),
+      { initialProps: { imodel: testImodel, descriptor: testDescriptor } },
+    );
 
     const info = await result.current.getNavigationPropertyInfo(propertyDescription);
     expect(info).to.be.undefined;

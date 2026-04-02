@@ -62,7 +62,11 @@ export async function createRelationshipPathJoinClause(props: CreateRelationship
   if (props.path.length === 0) {
     return "";
   }
-  let prev = { alias: props.path[0].sourceAlias, joinPropertyName: "ECInstanceId", className: props.path[0].sourceClassName };
+  let prev = {
+    alias: props.path[0].sourceAlias,
+    joinPropertyName: "ECInstanceId",
+    className: props.path[0].sourceClassName,
+  };
   let clause = "";
   for (const stepDef of props.path) {
     const step = await getRelationshipPathStepClasses(props.schemaProvider, stepDef);
@@ -118,13 +122,15 @@ export async function createRelationshipPathJoinClause(props: CreateRelationship
   return clause;
 }
 
-type ResolvedRelationshipPathStep = Omit<JoinRelationshipPathStep, "sourceClassName" | "relationshipName" | "targetClassName"> & {
-  source: EC.Class;
-  relationship: EC.RelationshipClass;
-  target: EC.Class;
-};
+type ResolvedRelationshipPathStep = Omit<
+  JoinRelationshipPathStep,
+  "sourceClassName" | "relationshipName" | "targetClassName"
+> & { source: EC.Class; relationship: EC.RelationshipClass; target: EC.Class };
 
-async function getRelationshipPathStepClasses(schemaProvider: ECSchemaProvider, step: JoinRelationshipPathStep): Promise<ResolvedRelationshipPathStep> {
+async function getRelationshipPathStepClasses(
+  schemaProvider: ECSchemaProvider,
+  step: JoinRelationshipPathStep,
+): Promise<ResolvedRelationshipPathStep> {
   const { sourceClassName, relationshipName, targetClassName, ...rest } = step;
   return {
     ...rest,
@@ -138,12 +144,20 @@ async function getNavigationProperty(step: ResolvedRelationshipPathStep): Promis
   const source = !step.relationshipReverse ? step.source : step.target;
   const target = !step.relationshipReverse ? step.target : step.source;
   for (const prop of await source.getProperties()) {
-    if (prop.isNavigation() && prop.direction === "Forward" && (await prop.relationshipClass).fullName === step.relationship.fullName) {
+    if (
+      prop.isNavigation() &&
+      prop.direction === "Forward" &&
+      (await prop.relationshipClass).fullName === step.relationship.fullName
+    ) {
       return prop;
     }
   }
   for (const prop of await target.getProperties()) {
-    if (prop.isNavigation() && prop.direction === "Backward" && (await prop.relationshipClass).fullName === step.relationship.fullName) {
+    if (
+      prop.isNavigation() &&
+      prop.direction === "Backward" &&
+      (await prop.relationshipClass).fullName === step.relationship.fullName
+    ) {
       return prop;
     }
   }

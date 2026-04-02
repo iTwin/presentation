@@ -10,7 +10,14 @@ import { TestIModelBuilderImpl } from "../presentation-testing/IModelBuilderImpl
 import { createStub } from "./Utils.js";
 
 import type { CodeSpecs, IModelDb, Relationships } from "@itwin/core-backend";
-import type { CodeScopeProps, CodeSpec, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
+import type {
+  CodeScopeProps,
+  CodeSpec,
+  ElementAspectProps,
+  ElementProps,
+  ModelProps,
+  RelationshipProps,
+} from "@itwin/core-common";
 
 describe("TestIModelBuilderImpl", () => {
   it("insertModel calls iModel.models.insertModel", async () => {
@@ -50,7 +57,11 @@ describe("TestIModelBuilderImpl", () => {
   });
 
   it("createCode calls iModel.codeSpecs.getByName", () => {
-    const imodel = { codeSpecs: { getByName: createStub<CodeSpecs["getByName"]>().callsFake((name) => ({ id: "code_spec_id", name }) as CodeSpec) } };
+    const imodel = {
+      codeSpecs: {
+        getByName: createStub<CodeSpecs["getByName"]>().callsFake((name) => ({ id: "code_spec_id", name }) as CodeSpec),
+      },
+    };
 
     const builder = new TestIModelBuilderImpl(imodel as unknown as IModelDb);
     const result = builder.createCode({} as CodeScopeProps, BisCodeSpec.drawing, "codeValue");
