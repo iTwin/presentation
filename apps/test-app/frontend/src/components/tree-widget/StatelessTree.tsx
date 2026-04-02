@@ -109,8 +109,21 @@ function Tree({
     imodelChanged,
     getSearchPaths,
     getHierarchyDefinition,
-    getTreeNodeError: (node) => {
-      return { type: "Unknown", id: node.label, message: `test error node`, isNodeExpandable: true };
+    getTreeNodeErrors: (node) => {
+      return [
+        {
+          type: "Unknown",
+          id: `${node.label}-error-1`,
+          message: `test error node`,
+          isNodeExpandable: true,
+        },
+        {
+          type: "Unknown",
+          id: `${node.label}-error-2`,
+          message: `test error node 2`,
+          isNodeExpandable: true,
+        },
+      ];
     },
     onPerformanceMeasured: (action, duration) => {
       // eslint-disable-next-line no-console
@@ -292,7 +305,16 @@ function DebouncedSearchBox({ onChange, ...props }: Omit<SearchBoxProps, "onChan
     return debounced(onChange, 500);
   }, [onChange]);
 
-  return <SearchBox {...props} inputProps={{ ...props.inputProps, value: undefined, onChange: (e) => handleChange(e.currentTarget.value) }} />;
+  return (
+    <SearchBox
+      {...props}
+      inputProps={{
+        ...props.inputProps,
+        value: undefined,
+        onChange: (e) => handleChange(e.currentTarget.value),
+      }}
+    />
+  );
 }
 
 function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
@@ -388,7 +410,9 @@ async function removeSelectedElements(imodel: IModelConnection) {
 }
 
 function getSelectedElementIds(imodel: IModelConnection) {
-  const selection = MyAppFrontend.selectionStorage.getSelection({ imodelKey: createIModelKey(imodel) });
+  const selection = MyAppFrontend.selectionStorage.getSelection({
+    imodelKey: createIModelKey(imodel),
+  });
   const keys: InstanceKey[] = [];
   Selectables.forEach(selection, (selectable) => {
     if (Selectable.isInstanceKey(selectable)) {

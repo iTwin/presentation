@@ -55,12 +55,13 @@ export function ErrorItemRenderer(input: ErrorItemRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
-    errorNode: ReturnType<typeof useErrorNodes>[number];
+    error: ErrorInfo;
     filterHierarchyLevel?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
     reloadTree: (options: {
         parentNodeId: string | undefined;
     }) => void;
-    scrollToNode: (errorNode: TreeNode) => void;
+    scrollToNode: (treeNode: Omit<TreeNode, "errors">) => void;
+    treeNode: Omit<TreeNode, "errors">;
 }
 
 // @alpha
@@ -194,9 +195,7 @@ export { setLogger }
 export function StrataKitRootErrorRenderer(input: StrataKitRootErrorRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
-type StrataKitRootErrorRendererProps = {
-    error: ErrorInfo;
-} & RootErrorRendererProps;
+type StrataKitRootErrorRendererProps = RootErrorRendererProps;
 
 // @alpha (undocumented)
 type StrataKitTreeItemProps = Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "actions" | "inlineActions" | "expanded" | "onExpandedChange" | "icon" | "unstable_decorations" | "error"> & {
@@ -237,13 +236,13 @@ interface TreeErrorRendererOwnProps {
 }
 
 // @alpha (undocumented)
-type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemRendererProps, "errorNode">;
+type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemRendererProps, "treeNode" | "error">;
 
 // @public
 export interface TreeNode {
     // (undocumented)
     children: true | Array<TreeNode>;
-    error?: ErrorInfo;
+    errors: ErrorInfo[];
     // (undocumented)
     id: string;
     // (undocumented)
@@ -316,7 +315,7 @@ export type TreeRendererProps = {
 } & CommonRendererProps;
 
 // @alpha
-export function useErrorNodes(rootNodes: TreeNode[]): Array<TreeNode & Pick<Required<TreeNode>, "error">>;
+export function useErrorNodes(rootNodes: TreeNode[]): TreeNode[];
 
 // @alpha
 export function useFlatTreeItems(rootNodes: TreeNode[]): FlatTreeItem[];
@@ -360,7 +359,7 @@ interface UseTreeProps {
     getSearchPaths?: (input: {
         abortSignal: AbortSignal;
     }) => Promise<HierarchySearchTree[] | undefined>;
-    getTreeNodeError?: (node: HierarchyNode) => ErrorInfo | undefined;
+    getTreeNodeErrors?: (node: HierarchyNode) => ErrorInfo[];
     onHierarchyLimitExceeded?: (props: {
         parentId?: string;
         filter?: GenericInstanceFilter;

@@ -144,7 +144,14 @@ export class TreeActions {
 
     return {
       complete: new Promise<void>((resolve) => {
-        this._nodeLoader.next({ loadOptions: options, onComplete: resolve, timeTracker, parentId: options.parent.id, initialRootNode, discardState });
+        this._nodeLoader.next({
+          loadOptions: options,
+          onComplete: resolve,
+          timeTracker,
+          parentId: options.parent.id,
+          initialRootNode,
+          discardState,
+        });
       }),
     };
   }
@@ -169,7 +176,10 @@ export class TreeActions {
     const collapsedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === false);
     const getHierarchyLevelOptions = (node: TreeModelRootNode | TreeModelHierarchyNode) => {
       if (!!options?.discardState) {
-        return { instanceFilter: undefined, hierarchyLevelSizeLimit: undefined };
+        return {
+          instanceFilter: undefined,
+          hierarchyLevelSizeLimit: undefined,
+        };
       }
       const filteredNodeId = getNonGroupedParentId(node, this._nodeIdFactory);
       return createHierarchyLevelOptions(filteredNodeId === parentId ? currModel : oldModel, filteredNodeId);
@@ -197,7 +207,13 @@ export class TreeActions {
     }
 
     return this.loadSubTree(
-      { parent: rootNode, getHierarchyLevelOptions, shouldLoadChildren, buildNode, ignoreCache: options?.ignoreCache },
+      {
+        parent: rootNode,
+        getHierarchyLevelOptions,
+        shouldLoadChildren,
+        buildNode,
+        ignoreCache: options?.ignoreCache,
+      },
       !!options?.discardState ? undefined : { ...currModel.rootNode },
       options?.discardState,
     );
@@ -286,7 +302,10 @@ export class TreeActions {
 
     const discardState = options?.state === "discard" || options?.state === "reset";
     const ignoreCache = options?.state === "reset";
-    return this.reloadSubTree(options?.parentNodeId, oldModel, { discardState, ignoreCache });
+    return this.reloadSubTree(options?.parentNodeId, oldModel, {
+      discardState,
+      ignoreCache,
+    });
   }
 }
 
@@ -316,15 +335,30 @@ function addTreePartToModel(treeModel: TreeModel, loadedPart: LoadedTreePart) {
   }
 }
 
-function addErrorToModel(model: TreeModel, loadedPart: { parent: TreeModelHierarchyNode | TreeModelRootNode; error: ErrorInfo }) {
+function addErrorToModel(
+  model: TreeModel,
+  loadedPart: {
+    parent: TreeModelHierarchyNode | TreeModelRootNode;
+    error: ErrorInfo;
+  },
+) {
   if (loadedPart.parent.id === undefined) {
     model.rootNode.error = loadedPart.error;
   } else {
-    model.idToNode.set(loadedPart.parent.id, { ...loadedPart.parent, error: loadedPart.error });
+    model.idToNode.set(loadedPart.parent.id, {
+      ...loadedPart.parent,
+      error: loadedPart.error,
+    });
   }
 }
 
-function addNodesToModel(model: TreeModel, loadedPart: { parent: TreeModelHierarchyNode | TreeModelRootNode; loadedNodes: TreeModelHierarchyNode[] }) {
+function addNodesToModel(
+  model: TreeModel,
+  loadedPart: {
+    parent: TreeModelHierarchyNode | TreeModelRootNode;
+    loadedNodes: TreeModelHierarchyNode[];
+  },
+) {
   model.parentChildMap.set(
     loadedPart.parent.id,
     loadedPart.loadedNodes.map((node) => node.id),
@@ -380,14 +414,20 @@ function getNonGroupedParentId(node: TreeModelHierarchyNode | TreeModelRootNode,
 
 function createHierarchyLevelOptions(model: TreeModel, nodeId: string | undefined): HierarchyLevelOptions {
   if (nodeId === undefined) {
-    return { instanceFilter: model.rootNode.instanceFilter, hierarchyLevelSizeLimit: model.rootNode.hierarchyLimit };
+    return {
+      instanceFilter: model.rootNode.instanceFilter,
+      hierarchyLevelSizeLimit: model.rootNode.hierarchyLimit,
+    };
   }
 
   const modelNode = model.idToNode.get(nodeId);
   if (!modelNode) {
     return { instanceFilter: undefined, hierarchyLevelSizeLimit: undefined };
   }
-  return { instanceFilter: modelNode.instanceFilter, hierarchyLevelSizeLimit: modelNode.hierarchyLimit };
+  return {
+    instanceFilter: modelNode.instanceFilter,
+    hierarchyLevelSizeLimit: modelNode.hierarchyLimit,
+  };
 }
 
 /* c8 ignore start */
