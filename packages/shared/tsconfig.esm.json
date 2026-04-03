@@ -3,6 +3,7 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "outDir": "lib/esm"
-  }
+    "outDir": "lib/esm",
+  },
+  "include": ["src/shared", "src/presentation-shared.ts"],
 }
