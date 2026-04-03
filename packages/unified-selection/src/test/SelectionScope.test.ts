@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
 import { SelectableInstanceKey } from "../unified-selection/Selectable.js";
 import { computeSelection, SelectionScope } from "../unified-selection/SelectionScope.js";
@@ -12,7 +11,7 @@ import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
 describe("SelectionScope", () => {
   const queryExecutor = {
-    createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
+    createQueryReader: vi.fn<(query: ECSqlQueryDef, options?: ECSqlQueryReaderOptions) => ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
   };
 
   describe("computeSelection", () => {
@@ -25,10 +24,13 @@ describe("SelectionScope", () => {
     }
 
     function mockQuery(targetECSqlContent: string, result: SelectableInstanceKey[]) {
-      queryExecutor.createQueryReader
-        .withArgs(sinon.match((query: ECSqlQueryDef) => query.ecsql.includes(targetECSqlContent)))
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        .returns(createFakeQueryReader<ECSqlQueryRow>(result.map((key) => ({ ECInstanceId: key.id, ClassName: key.className }))));
+      queryExecutor.createQueryReader.mockImplementation((query: ECSqlQueryDef) => {
+        if (query.ecsql.includes(targetECSqlContent)) {
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          return createFakeQueryReader<ECSqlQueryRow>(result.map((key) => ({ ECInstanceId: key.id, ClassName: key.className })));
+        }
+        return createFakeQueryReader([]);
+      });
     }
 
     async function getSelection(keys: SelectableInstanceKey[], scope: SelectionScope): Promise<SelectableInstanceKey[]> {
@@ -49,8 +51,8 @@ describe("SelectionScope", () => {
         mockQuery(query, keys);
 
         const result = await getSelection(keys, scope);
-        expect(result.length).to.eq(2);
-        expect(result).to.have.deep.members(keys);
+        expect(result).toHaveLength(2);
+        expect(result).toEqual(expect.arrayContaining(keys));
       });
 
       it("skips transient element ids", async () => {
@@ -58,8 +60,8 @@ describe("SelectionScope", () => {
         mockQuery(query, keys);
 
         const result = await getSelection(keys, scope);
-        expect(result.length).to.eq(2);
-        expect(result).to.deep.contain(keys[0]);
+        expect(result).toHaveLength(2);
+        expect(result).toEqual(expect.arrayContaining([keys[0]]));
       });
     }
 
