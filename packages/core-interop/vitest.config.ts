@@ -7,6 +7,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
+    name: "Core-interop tests",
     include: ["src/**/*.test.ts"],
     testTimeout: 60000,
     restoreMocks: true,
