@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
-import sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { omit } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -40,27 +39,24 @@ import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
 import { render, waitFor } from "../../TestUtils.js";
 
 describe("UniquePropertyValuesSelector", () => {
-  let presentationManagerStub: sinon.SinonStub;
-  const getDistinctValuesIteratorStub = sinon.stub<
-    Parameters<PresentationManager["getDistinctValuesIterator"]>,
-    ReturnType<PresentationManager["getDistinctValuesIterator"]>
-  >();
+  let presentationManagerStub: ReturnType<typeof vi.spyOn>;
+  const getDistinctValuesIteratorStub = vi.fn<PresentationManager["getDistinctValuesIterator"]>();
 
   stubVirtualization();
   beforeEach(async () => {
     window.innerHeight = 1000;
     const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "localization").get(() => localization);
-    presentationManagerStub = sinon.stub(Presentation, "presentation").get(() => ({
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
+    presentationManagerStub = vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
       getDistinctValuesIterator: getDistinctValuesIteratorStub,
-    }));
+    } as unknown as PresentationManager);
+    getDistinctValuesIteratorStub.mockResolvedValue({ total: 0, items: createAsyncIterator([]) });
   });
 
   afterEach(async () => {
-    getDistinctValuesIteratorStub.reset();
-    sinon.restore();
+    getDistinctValuesIteratorStub.mockReset();
   });
 
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
@@ -99,8 +95,8 @@ describe("UniquePropertyValuesSelector", () => {
   const testImodel = {} as IModelConnection;
 
   it("loads values using `getPagedDistinctValues` when `getDistinctValuesIterator` is not available", async () => {
-    presentationManagerStub.resetBehavior();
-    presentationManagerStub.get(() => ({
+    presentationManagerStub.mockReset();
+    presentationManagerStub.mockReturnValue({
       getPagedDistinctValues: async () => ({
         total: 2,
         items: [
@@ -108,7 +104,7 @@ describe("UniquePropertyValuesSelector", () => {
           { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
         ],
       }),
-    }));
+    });
 
     const { getByText, getByPlaceholderText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
@@ -125,7 +121,7 @@ describe("UniquePropertyValuesSelector", () => {
 
   it("opens menu upwards when not enough space below", async () => {
     window.innerHeight = 0;
-    getDistinctValuesIteratorStub.resolves({
+    getDistinctValuesIteratorStub.mockResolvedValue({
       total: 2,
       items: createAsyncIterator([
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
@@ -149,9 +145,9 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("invokes `onChange` when item from the menu is selected", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
 
-    getDistinctValuesIteratorStub.resolves({
+    getDistinctValuesIteratorStub.mockResolvedValue({
       total: 2,
       items: createAsyncIterator([
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
@@ -177,13 +173,13 @@ describe("UniquePropertyValuesSelector", () => {
         groupedRawValues: ["TestValue1"],
       },
     ]);
-    expect(spy).to.be.calledWith(expectedValue);
+    expect(spy).toHaveBeenCalledWith(expectedValue);
   });
 
   it("invokes `onChange` with multiple values when additional item is selected", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
 
-    getDistinctValuesIteratorStub.resolves({
+    getDistinctValuesIteratorStub.mockResolvedValue({
       total: 2,
       items: createAsyncIterator([
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
@@ -220,13 +216,13 @@ describe("UniquePropertyValuesSelector", () => {
         groupedRawValues: ["TestValue2"],
       },
     ]);
-    expect(spy).to.be.calledWith(expectedValue);
+    expect(spy).toHaveBeenCalledWith(expectedValue);
   });
 
   it("invokes `onChange` when item from the menu is deselected", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
 
-    getDistinctValuesIteratorStub.resolves({
+    getDistinctValuesIteratorStub.mockResolvedValue({
       total: 2,
       items: createAsyncIterator([
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
@@ -256,7 +252,7 @@ describe("UniquePropertyValuesSelector", () => {
     await user.click(menuItem[1]);
 
     await waitFor(() =>
-      expect(spy).to.be.calledWith({
+      expect(spy).toHaveBeenCalledWith({
         valueFormat: PropertyValueFormat.Primitive,
         displayValue: undefined,
         value: undefined,
@@ -265,7 +261,7 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("menu shows `No values` message when there is no `fieldDescriptor`", async () => {
-    getDistinctValuesIteratorStub.resolves({
+    getDistinctValuesIteratorStub.mockResolvedValue({
       total: 2,
       items: createAsyncIterator([
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
@@ -297,7 +293,7 @@ describe("UniquePropertyValuesSelector", () => {
       },
     ];
 
-    getDistinctValuesIteratorStub.resolves({
+    getDistinctValuesIteratorStub.mockResolvedValue({
       total: 1,
       items: createAsyncIterator(value),
     });
@@ -328,7 +324,7 @@ describe("UniquePropertyValuesSelector", () => {
       },
     ];
 
-    getDistinctValuesIteratorStub.resolves({
+    getDistinctValuesIteratorStub.mockResolvedValue({
       total: 2,
       items: createAsyncIterator(values),
     });
@@ -357,7 +353,7 @@ describe("UniquePropertyValuesSelector", () => {
       },
     ];
 
-    getDistinctValuesIteratorStub.resolves({
+    getDistinctValuesIteratorStub.mockResolvedValue({
       total: 1,
       items: createAsyncIterator(initialValue),
     });
@@ -377,7 +373,7 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("does not load a row with undefined values", async () => {
-    getDistinctValuesIteratorStub.resolves({
+    getDistinctValuesIteratorStub.mockResolvedValue({
       total: 1,
       items: createAsyncIterator([{ displayValue: undefined, groupedRawValues: [undefined] }]),
     });
@@ -396,7 +392,7 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("does not load a row with a displayLabel but no defined groupedRawValues", async () => {
-    getDistinctValuesIteratorStub.resolves({
+    getDistinctValuesIteratorStub.mockResolvedValue({
       total: 1,
       items: createAsyncIterator([{ displayValue: "TestValue", groupedRawValues: [undefined] }]),
     });
@@ -415,7 +411,7 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("loads row with empty string as displayValue and sets it to an 'Empty Value' string", async () => {
-    getDistinctValuesIteratorStub.resolves({
+    getDistinctValuesIteratorStub.mockResolvedValue({
       total: 1,
       items: createAsyncIterator([{ displayValue: "", groupedRawValues: [""] }]),
     });
@@ -435,7 +431,7 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("loads row even if one of the groupedRawValues is undefined ", async () => {
-    getDistinctValuesIteratorStub.resolves({
+    getDistinctValuesIteratorStub.mockResolvedValue({
       total: 1,
       items: createAsyncIterator([{ displayValue: "TestValue", groupedRawValues: [undefined, ""] }]),
     });
@@ -455,7 +451,7 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("menu shows `No values` message when an error occurs loading values", async () => {
-    getDistinctValuesIteratorStub.rejects();
+    getDistinctValuesIteratorStub.mockRejectedValue(new Error("test error"));
 
     const { getByPlaceholderText, getByText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
@@ -469,16 +465,12 @@ describe("UniquePropertyValuesSelector", () => {
     await waitFor(() => {
       getByText("unique-values-property-editor.no-values");
     });
-    expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+    expect(getDistinctValuesIteratorStub).toHaveBeenCalledOnce();
   });
 
   describe("search", () => {
-    function matchPageStart(start: number) {
-      return sinon.match((options: { paging: { start: number } }) => options.paging.start === start);
-    }
-
     it("filters values based on search input", async () => {
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
+      getDistinctValuesIteratorStub.mockResolvedValue({
         total: 2,
         items: createAsyncIterator([
           { displayValue: "Value1", groupedRawValues: ["TestValue1"] },
@@ -499,11 +491,11 @@ describe("UniquePropertyValuesSelector", () => {
         getByText("TestValue2");
         expect(queryByText("Value1")).to.be.null;
       });
-      expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+      expect(getDistinctValuesIteratorStub).toHaveBeenCalledOnce();
     });
 
     it("changes filter when search input changes", async () => {
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
+      getDistinctValuesIteratorStub.mockResolvedValue({
         total: 2,
         items: createAsyncIterator([
           { displayValue: "Value1", groupedRawValues: ["TestValue1"] },
@@ -533,11 +525,11 @@ describe("UniquePropertyValuesSelector", () => {
         getByText("Value1");
         expect(queryByText("TestValue2")).to.be.null;
       });
-      expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+      expect(getDistinctValuesIteratorStub).toHaveBeenCalledOnce();
     });
 
     it("resets loaded options when field changes", async () => {
-      getDistinctValuesIteratorStub.onFirstCall().callsFake(async () => {
+      getDistinctValuesIteratorStub.mockImplementationOnce(async () => {
         return {
           total: 2,
           items: createAsyncIterator([
@@ -576,7 +568,7 @@ describe("UniquePropertyValuesSelector", () => {
         editor: undefined,
       };
 
-      getDistinctValuesIteratorStub.callsFake(async () => {
+      getDistinctValuesIteratorStub.mockImplementation(async () => {
         return {
           total: 2,
           items: createAsyncIterator([
@@ -614,16 +606,20 @@ describe("UniquePropertyValuesSelector", () => {
         pageItems.push({ displayValue: name, groupedRawValues: [name] });
       }
 
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
-        total: VALUE_BATCH_SIZE,
-        items: createAsyncIterator(pageItems),
-      });
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(VALUE_BATCH_SIZE)).resolves({
-        total: 2,
-        items: createAsyncIterator([
-          { displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] },
-          { displayValue: "SearchedValue3", groupedRawValues: ["SearchedValue3"] },
-        ]),
+      getDistinctValuesIteratorStub.mockImplementation(async ({ paging }) => {
+        if (paging?.start === 0) {
+          return {
+            total: VALUE_BATCH_SIZE,
+            items: createAsyncIterator(pageItems),
+          };
+        }
+        return {
+          total: 2,
+          items: createAsyncIterator([
+            { displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] },
+            { displayValue: "SearchedValue3", groupedRawValues: ["SearchedValue3"] },
+          ]),
+        };
       });
 
       const { getByText, getByPlaceholderText, queryAllByText, user } = render(
@@ -636,7 +632,7 @@ describe("UniquePropertyValuesSelector", () => {
 
       // wait for first page to be loaded
       await waitFor(() => {
-        expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+        expect(getDistinctValuesIteratorStub).toHaveBeenCalledOnce();
       });
 
       // type in search
@@ -650,32 +646,31 @@ describe("UniquePropertyValuesSelector", () => {
         getByText("SearchedValue3");
         expect(queryAllByText(/SkippedValue/)).to.be.empty;
       });
-      expect(getDistinctValuesIteratorStub).to.be.calledTwice;
+      expect(getDistinctValuesIteratorStub).toHaveBeenCalledTimes(2);
     });
 
     it("loads second page when first page is already loaded and contains no matches", async () => {
-      const pageItems = [];
+      const pageItems: Array<{ displayValue: string; groupedRawValues: string[] }> = [];
       for (let i = 0; i < VALUE_BATCH_SIZE; i++) {
         const name = `SkippedValue${i}`;
         pageItems.push({ displayValue: name, groupedRawValues: [name] });
       }
       // single page of values loaded before search filter is applied
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
-        total: VALUE_BATCH_SIZE,
-        items: createAsyncIterator(pageItems),
-      });
-      // next page with search filter applied
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(VALUE_BATCH_SIZE)).resolves({
-        total: VALUE_BATCH_SIZE,
-        items: createAsyncIterator(pageItems),
-      });
-      // last page with search filter applied
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(2 * VALUE_BATCH_SIZE)).resolves({
-        total: 2,
-        items: createAsyncIterator([
-          { displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] },
-          { displayValue: "SearchedValue", groupedRawValues: ["SearchedValue"] },
-        ]),
+      getDistinctValuesIteratorStub.mockImplementation(async ({ paging }) => {
+        if (paging?.start === 0) {
+          return { total: VALUE_BATCH_SIZE, items: createAsyncIterator(pageItems) };
+        }
+        if (paging?.start === VALUE_BATCH_SIZE) {
+          return { total: VALUE_BATCH_SIZE, items: createAsyncIterator(pageItems) };
+        }
+        // last page with search filter applied
+        return {
+          total: 2,
+          items: createAsyncIterator([
+            { displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] },
+            { displayValue: "SearchedValue", groupedRawValues: ["SearchedValue"] },
+          ]),
+        };
       });
 
       const { getByText, queryAllByText, getByPlaceholderText, user } = render(
@@ -688,7 +683,7 @@ describe("UniquePropertyValuesSelector", () => {
 
       // wait for first page to be loaded
       await waitFor(() => {
-        expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+        expect(getDistinctValuesIteratorStub).toHaveBeenCalledOnce();
       });
 
       // type in search
@@ -700,12 +695,12 @@ describe("UniquePropertyValuesSelector", () => {
         getByText("SearchedValue");
         expect(queryAllByText(/SkippedValue/)).to.be.empty;
       });
-      expect(getDistinctValuesIteratorStub).to.be.calledThrice;
+      expect(getDistinctValuesIteratorStub).toHaveBeenCalledTimes(3);
     });
 
     it("does not load second page when first page is empty and `hasMore` is false", async () => {
       // single page of values loaded before search filter is applied
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
+      getDistinctValuesIteratorStub.mockResolvedValue({
         total: 1,
         items: createAsyncIterator([{ displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] }]),
       });
@@ -720,7 +715,7 @@ describe("UniquePropertyValuesSelector", () => {
 
       // wait for first page to be loaded
       await waitFor(() => {
-        expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+        expect(getDistinctValuesIteratorStub).toHaveBeenCalledOnce();
       });
 
       // type in search
@@ -731,37 +726,43 @@ describe("UniquePropertyValuesSelector", () => {
       await waitFor(() => {
         expect(queryAllByText(/SkippedValue/)).to.be.empty;
       });
-      expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+      expect(getDistinctValuesIteratorStub).toHaveBeenCalledOnce();
     });
 
     it("correctly determines `hasMore` value when fetched display value is undefined", async () => {
-      const pageItems = [];
+      const pageItems: Array<{ displayValue: string | undefined; groupedRawValues: string[] }> = [];
       for (let i = 0; i < VALUE_BATCH_SIZE - 2; i++) {
         const name = `SkippedValue${i}`;
         pageItems.push({ displayValue: name, groupedRawValues: [name] });
       }
       // single page of values loaded before search filter is applied
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
-        total: VALUE_BATCH_SIZE,
-        items: createAsyncIterator([
-          ...pageItems,
-          { displayValue: "SearchedValue1", groupedRawValues: ["SearchedValue1"] },
-          { displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] },
-        ]),
-      });
-      // next page with search filter applied and an undefined value
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(VALUE_BATCH_SIZE)).resolves({
-        total: VALUE_BATCH_SIZE,
-        items: createAsyncIterator([
-          ...pageItems,
-          { displayValue: "SearchedValue2", groupedRawValues: ["SearchedValue2"] },
-          { displayValue: undefined, groupedRawValues: [] },
-        ]),
-      });
-      // last page with search filter applied
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(2 * VALUE_BATCH_SIZE)).resolves({
-        total: 1,
-        items: createAsyncIterator([{ displayValue: "SearchedValue3", groupedRawValues: ["SearchedValue3"] }]),
+      getDistinctValuesIteratorStub.mockImplementation(async ({ paging }) => {
+        if (paging?.start === 0) {
+          return {
+            total: VALUE_BATCH_SIZE,
+            items: createAsyncIterator([
+              ...pageItems,
+              { displayValue: "SearchedValue1", groupedRawValues: ["SearchedValue1"] },
+              { displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] },
+            ]),
+          };
+        }
+        // next page with search filter applied and an undefined value
+        if (paging?.start === VALUE_BATCH_SIZE) {
+          return {
+            total: VALUE_BATCH_SIZE,
+            items: createAsyncIterator([
+              ...pageItems,
+              { displayValue: "SearchedValue2", groupedRawValues: ["SearchedValue2"] },
+              { displayValue: undefined, groupedRawValues: [] },
+            ]),
+          };
+        }
+        // last page with search filter applied
+        return {
+          total: 1,
+          items: createAsyncIterator([{ displayValue: "SearchedValue3", groupedRawValues: ["SearchedValue3"] }]),
+        };
       });
 
       const { getByText, getByPlaceholderText, queryAllByText, user } = render(
@@ -774,7 +775,7 @@ describe("UniquePropertyValuesSelector", () => {
 
       // wait for first page to be loaded
       await waitFor(() => {
-        expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+        expect(getDistinctValuesIteratorStub).toHaveBeenCalledOnce();
       });
 
       // type in search
@@ -784,7 +785,7 @@ describe("UniquePropertyValuesSelector", () => {
       // ensure all searched for values are shown
       await waitFor(
         () => {
-          expect(getDistinctValuesIteratorStub).to.be.calledThrice;
+          expect(getDistinctValuesIteratorStub).toHaveBeenCalledTimes(3);
           getByText("SearchedValue1");
           getByText("SearchedValue2");
           getByText("SearchedValue3");
@@ -797,7 +798,7 @@ describe("UniquePropertyValuesSelector", () => {
 
   describe("Date formatting", () => {
     it(`displays date in valid format when typename is 'shortDate'`, async () => {
-      getDistinctValuesIteratorStub.resolves({
+      getDistinctValuesIteratorStub.mockResolvedValue({
         total: 1,
         items: createAsyncIterator([{ displayValue: "1410-07-15", groupedRawValues: [""] }]),
       });
@@ -823,7 +824,7 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     it(`displays empty value string when typename is 'dateTime' but date is set as empty string`, async () => {
-      getDistinctValuesIteratorStub.resolves({
+      getDistinctValuesIteratorStub.mockResolvedValue({
         total: 1,
         items: createAsyncIterator([{ displayValue: "", groupedRawValues: [""] }]),
       });
@@ -849,7 +850,7 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     it(`displays date in valid format when typename is 'dateTime'`, async () => {
-      getDistinctValuesIteratorStub.resolves({
+      getDistinctValuesIteratorStub.mockResolvedValue({
         total: 1,
         items: createAsyncIterator([{ displayValue: "1410-07-15T12:34:00Z", groupedRawValues: [""] }]),
       });
@@ -926,7 +927,7 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(selector);
 
-      const getPagedDistinctValuesCallArguments = getDistinctValuesIteratorStub.firstCall.args[0];
+      const getPagedDistinctValuesCallArguments = getDistinctValuesIteratorStub.mock.calls[0][0];
       const ruleset = getPagedDistinctValuesCallArguments.rulesetOrId as Ruleset;
       const expectedKeySet = new KeySet([descriptorInputKeys]);
 
@@ -965,7 +966,7 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(selector);
 
       const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
-      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
+      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId as Ruleset)).to.deep.eq({
         schemaName: expectedSchemaName,
         classNames: [expectedClassName],
       });
@@ -1005,10 +1006,10 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(selector);
 
-      const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
-      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
-        schemaName: expectedSchemaName,
-        classNames: [expectedClassName],
+      const [expectedSchemaName2, expectedClassName2] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
+      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId as Ruleset)).to.deep.eq({
+        schemaName: expectedSchemaName2,
+        classNames: [expectedClassName2],
       });
     });
 
@@ -1037,10 +1038,10 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(selector);
 
-      const [expectedSchemaName, expectedClassName] = testClassInfo.name.split(":");
-      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
-        schemaName: expectedSchemaName,
-        classNames: [expectedClassName],
+      const [expectedSchemaName3, expectedClassName3] = testClassInfo.name.split(":");
+      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId as Ruleset)).to.deep.eq({
+        schemaName: expectedSchemaName3,
+        classNames: [expectedClassName3],
       });
     });
 
@@ -1074,7 +1075,7 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(selector);
 
-      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq([
+      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId as Ruleset)).to.deep.eq([
         {
           schemaName: "testSchema1",
           classNames: ["testClass1", "testClass2"],
@@ -1112,7 +1113,7 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(selector);
 
-      expect(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId).to.containSubset({
+      expect(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId).to.containSubset({
         rules: [
           {
             ruleType: "Content",
@@ -1152,7 +1153,7 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(selector);
 
-      expect(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId).to.containSubset({
+      expect(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId).to.containSubset({
         rules: [
           {
             ruleType: "Content",
@@ -1185,7 +1186,7 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(selector);
 
-      expect(getDistinctValuesIteratorStub).to.not.be.called;
+      expect(getDistinctValuesIteratorStub).not.toHaveBeenCalled();
     });
 
     it("calls 'getDistinctValuesIterator' with ruleset containing `SelectedNodeInstances` specification with accepted class names when selected classes are provided", async () => {
@@ -1233,7 +1234,7 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(selector);
 
-      expect(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId).to.containSubset({
+      expect(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId).to.containSubset({
         rules: [
           {
             ruleType: "Content",
@@ -1251,8 +1252,8 @@ describe("UniquePropertyValuesSelector", () => {
   });
   describe("ItemsLoader", () => {
     it("does not load items when filter is empty and there are items loaded", async () => {
-      const getItemsStub = sinon.stub();
-      const setItemsSpy = sinon.spy();
+      const getItemsStub = vi.fn();
+      const setItemsSpy = vi.fn();
       const itemsLoader = new ItemsLoader<string>(
         () => {},
         setItemsSpy,
@@ -1260,7 +1261,7 @@ describe("UniquePropertyValuesSelector", () => {
         (option) => option,
       );
 
-      getItemsStub.callsFake(() => {
+      getItemsStub.mockImplementation(() => {
         return {
           options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
           length: VALUE_BATCH_SIZE,
@@ -1269,13 +1270,13 @@ describe("UniquePropertyValuesSelector", () => {
       });
       await itemsLoader.loadMatchingItems();
       await itemsLoader.loadItems("");
-      expect(getItemsStub.calledOnce);
-      expect(setItemsSpy.calledOnce);
+      expect(getItemsStub).toHaveBeenCalledOnce();
+      expect(setItemsSpy).toHaveBeenCalledOnce();
     });
 
     it("does not load items when loaded options matches the filter", async () => {
-      const getItemsStub = sinon.stub();
-      const setItemsSpy = sinon.spy();
+      const getItemsStub = vi.fn();
+      const setItemsSpy = vi.fn();
       const itemsLoader = new ItemsLoader<string>(
         () => {},
         setItemsSpy,
@@ -1283,7 +1284,7 @@ describe("UniquePropertyValuesSelector", () => {
         (option) => option,
       );
 
-      getItemsStub.callsFake(() => {
+      getItemsStub.mockImplementation(() => {
         return {
           options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
           length: VALUE_BATCH_SIZE,
@@ -1293,12 +1294,12 @@ describe("UniquePropertyValuesSelector", () => {
       await itemsLoader.loadMatchingItems();
       await itemsLoader.loadItems("filterText");
       // loaded only matching items
-      expect(setItemsSpy.calledOnce);
+      expect(setItemsSpy).toHaveBeenCalledOnce();
     });
 
     it("does not load items when hasMore is set to false", async () => {
-      const getItemsStub = sinon.stub();
-      const setItemsSpy = sinon.spy();
+      const getItemsStub = vi.fn();
+      const setItemsSpy = vi.fn();
       const itemsLoader = new ItemsLoader<string>(
         () => {},
         setItemsSpy,
@@ -1306,7 +1307,7 @@ describe("UniquePropertyValuesSelector", () => {
         (option) => option,
       );
 
-      getItemsStub.callsFake(() => {
+      getItemsStub.mockImplementation(() => {
         return {
           options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
           length: VALUE_BATCH_SIZE,
@@ -1315,12 +1316,12 @@ describe("UniquePropertyValuesSelector", () => {
       });
       await itemsLoader.loadMatchingItems();
       await itemsLoader.loadItems("filterText");
-      expect(getItemsStub.calledOnce);
+      expect(getItemsStub).toHaveBeenCalledOnce();
     });
 
     it("does not load items when items loader is disposed", async () => {
-      const getItemsStub = sinon.stub();
-      const setItemsSpy = sinon.spy();
+      const getItemsStub = vi.fn();
+      const setItemsSpy = vi.fn();
       const itemsLoader = new ItemsLoader<string>(
         () => {},
         setItemsSpy,
@@ -1328,7 +1329,7 @@ describe("UniquePropertyValuesSelector", () => {
         (option) => option,
       );
 
-      getItemsStub.callsFake(() => {
+      getItemsStub.mockImplementation(() => {
         return {
           options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
           length: VALUE_BATCH_SIZE,
@@ -1337,12 +1338,12 @@ describe("UniquePropertyValuesSelector", () => {
       });
       itemsLoader[Symbol.dispose]();
       await itemsLoader.loadItems("filterText");
-      expect(setItemsSpy.notCalled);
+      expect(setItemsSpy).not.toHaveBeenCalled();
     });
 
     it("does not load matching items when load items was called and correct items are loaded", async () => {
-      const getItemsStub = sinon.stub();
-      const setItemsSpy = sinon.spy();
+      const getItemsStub = vi.fn();
+      const setItemsSpy = vi.fn();
       const itemsLoader = new ItemsLoader<string>(
         () => {},
         setItemsSpy,
@@ -1350,7 +1351,7 @@ describe("UniquePropertyValuesSelector", () => {
         (option) => option,
       );
 
-      getItemsStub.callsFake(() => {
+      getItemsStub.mockImplementation(() => {
         return {
           options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
           length: VALUE_BATCH_SIZE,
@@ -1359,7 +1360,7 @@ describe("UniquePropertyValuesSelector", () => {
       });
       await itemsLoader.loadItems("filterText");
       await itemsLoader.loadMatchingItems(["filterText"]);
-      expect(setItemsSpy.calledOnce);
+      expect(setItemsSpy).toHaveBeenCalledOnce();
     });
   });
 });

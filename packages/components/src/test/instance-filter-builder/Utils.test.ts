@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyFilterBuilderRuleRangeValue } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -55,7 +54,7 @@ describe("createInstanceFilterPropertyInfos", () => {
     });
 
     const input = createInstanceFilterPropertyInfos(descriptor);
-    expect(input).to.matchSnapshot();
+    expect(input).toMatchSnapshot();
   });
 
   it("creates property info with default root category name and does not assign a label to it", () => {
@@ -94,7 +93,7 @@ describe("createInstanceFilterPropertyInfos", () => {
     });
 
     const input = createInstanceFilterPropertyInfos(descriptor);
-    expect(input).to.matchSnapshot();
+    expect(input).toMatchSnapshot();
   });
 
   it("creates property infos when property fields are in nested fields", () => {
@@ -117,7 +116,7 @@ describe("createInstanceFilterPropertyInfos", () => {
     });
 
     const input = createInstanceFilterPropertyInfos(descriptor);
-    expect(input).to.matchSnapshot();
+    expect(input).toMatchSnapshot();
   });
 
   it("creates property info with nested field content class name", () => {
@@ -157,12 +156,8 @@ describe("filterRuleValidator", () => {
     quantityType: "TestKOQ",
   };
 
-  before(() => {
-    sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
-  });
-
-  after(() => {
-    sinon.restore();
+  beforeEach(() => {
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization());
   });
 
   it("returns error message for invalid numeric rule", () => {

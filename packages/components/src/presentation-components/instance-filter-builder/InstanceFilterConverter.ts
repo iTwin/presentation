@@ -31,7 +31,7 @@ export async function findBaseExpressionClassName(imodel: IModelConnection, prop
   const metadataProvider = getIModelMetadataProvider(imodel);
   const [firstClassName, ...restClassNames] = propertyClassNames;
   let currentBaseClassInfo = await metadataProvider.getECClassInfo(firstClassName);
-  /* c8 ignore next 3 */
+  /* v8 ignore next 3 -- @preserve */
   if (!currentBaseClassInfo) {
     return firstClassName;
   }

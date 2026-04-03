@@ -4,9 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
 import { Observable } from "rxjs/internal/Observable";
-import * as sinon from "sinon";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem, MutableTreeModel, RenderedItemsRange, TreeModelNodeInput, TreeModelSource, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -17,11 +16,11 @@ import { IPresentationTreeDataProvider } from "../../../presentation-components/
 describe("reloadTree", () => {
   let dataProvider: IPresentationTreeDataProvider;
 
-  before(async () => {
+  beforeAll(async () => {
     await UiComponents.initialize(new EmptyLocalization());
   });
 
-  after(() => {
+  afterAll(() => {
     UiComponents.terminate();
   });
 
@@ -191,7 +190,7 @@ describe("reloadTree", () => {
   });
 
   it("does not search for expanded nodes if parent no longer has any children", async () => {
-    const getNodesFake = sinon.fake(async () => [
+    const getNodesFake = vi.fn(async () => [
       {
         ...createTreeModelNodeInput("root-0"),
         item: { ...createDelayLoadedTreeNodeItem("root-0"), hasChildren: false },
