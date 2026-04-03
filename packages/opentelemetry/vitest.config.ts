@@ -11,6 +11,7 @@ export default defineConfig({
     include: ["src/**/*.test.ts"],
     testTimeout: 60000,
     clearMocks: true,
+    restoreMocks: true,
     coverage: {
       provider: "v8",
       include: ["src/presentation-opentelemetry/**/*"],
