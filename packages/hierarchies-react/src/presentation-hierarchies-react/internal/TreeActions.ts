@@ -369,13 +369,13 @@ function createHierarchyLevelOptions(model: TreeModel, nodeId: string | undefine
   return { instanceFilter: modelNode.instanceFilter, hierarchyLevelSizeLimit: modelNode.hierarchyLimit };
 }
 
-/* v8 ignore start -- @preserve */
+/* v8 ignore start */
 class NoopTreeLoader implements ITreeLoader {
   public loadNodes(): Observable<LoadedTreePart> {
     return EMPTY;
   }
 }
-/* v8 ignore stop -- @preserve*/
+/* v8 ignore stop */
 
 class TimeTracker {
   private _start: number;

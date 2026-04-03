@@ -495,7 +495,7 @@ function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | undefin
   return useCallback(
     (instance: T | null) => {
       refs.forEach((ref) => {
-        /** v8 ignore else -- @preserve  */
+        /* v8 ignore else -- @preserve  */
         if (typeof ref === "function") {
           ref(instance);
         } else if (ref) {
