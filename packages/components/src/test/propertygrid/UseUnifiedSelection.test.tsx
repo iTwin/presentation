@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { PropsWithChildren } from "react";
-import { afterEach, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
+import { beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { ISelectionProvider, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
@@ -181,8 +181,6 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     beforeEach(() => {
       selectionStorage = createStorage();
     });
-
-    afterEach(() => {});
 
     it("doesn't set provider keys when selection storage has no selection", () => {
       vi.spyOn(selectionStorage, "getSelectionLevels").mockReturnValue([]);

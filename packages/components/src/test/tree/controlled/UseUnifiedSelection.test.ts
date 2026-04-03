@@ -9,7 +9,7 @@ import { Subject } from "rxjs";
 import { from } from "rxjs/internal/observable/from";
 import { finalize } from "rxjs/internal/operators/finalize";
 import { ObservableInput } from "rxjs/internal/types";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import {
   AbstractTreeNodeLoaderWithProvider,
   TreeModelNodeInput,
@@ -589,8 +589,6 @@ describe("useUnifiedSelectionTreeEventHandler", () => {
     Object.assign(selectionManager, { selectionChange: new SelectionChangeEvent() });
     vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager);
   });
-
-  afterEach(() => {});
 
   it("creates and disposes UnifiedSelectionTreeEventHandler", () => {
     configure({ reactStrictMode: false });

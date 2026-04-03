@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResolvablePromise } from "presentation-test-utilities";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BeDuration } from "@itwin/core-bentley";
 import { RegisteredRuleset } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
@@ -20,8 +20,6 @@ describe("RulesetRegistrationHelper", () => {
   beforeEach(() => {
     vi.spyOn(Presentation, "presentation", "get").mockReturnValue({ rulesets: () => rulesetManager } as unknown as PresentationManager);
   });
-
-  afterEach(() => {});
 
   it("does nothing when helper is created with ruleset id", () => {
     const rulesetId = "test";
