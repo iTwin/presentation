@@ -3,7 +3,7 @@
   "compilerOptions": {
     "module": "CommonJS",
     "moduleResolution": "Node",
-    "outDir": "lib/cjs",
+    "outDir": "lib/cjs"
   },
-  "include": ["src/shared", "src/presentation-shared.ts"],
+  "include": ["src/shared", "src/presentation-shared.ts"]
 }
