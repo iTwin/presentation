@@ -31,7 +31,7 @@ describe("FavoritePropertiesDataProvider", () => {
   let favoritePropertiesManager: Mocked<FavoritePropertiesManager>;
 
   beforeEach(() => {
-    presentationManager = createMocked(PresentationManager as any);
+    presentationManager = createMocked(PresentationManager);
     presentationPropertyDataProvider = {
       getData: vi.fn<() => PropertyData>(),
       [Symbol.dispose]: vi.fn<() => void>(),

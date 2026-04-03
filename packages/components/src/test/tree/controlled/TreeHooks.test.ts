@@ -50,7 +50,7 @@ describe("usePresentationNodeLoader", () => {
   };
 
   beforeEach(async () => {
-    const presentationManager = createMocked<PresentationManager>(PresentationManager as any);
+    const presentationManager = createMocked(PresentationManager);
     Object.assign(presentationManager, { onIModelHierarchyChanged });
 
     presentationManager.rulesets.mockReturnValue({

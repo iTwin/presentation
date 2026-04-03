@@ -70,7 +70,7 @@ export function createStub<T extends (...args: any[]) => any>() {
  * the prototype chain is replaced with a `vi.fn()`.
  * Equivalent to sinon.createStubInstance().
  */
-export function createMocked<T extends object>(target: abstract new (...args: any[]) => T): Mocked<T> {
+export function createMocked<T extends object>(target: { prototype: T }): Mocked<T> {
   const instance = {} as Mocked<T>;
   let proto: object | null = target.prototype as object;
   while (proto && proto !== Object.prototype) {

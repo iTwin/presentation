@@ -68,7 +68,7 @@ describe("TreeDataProvider", () => {
   const imodel = {} as IModelConnection;
 
   beforeEach(() => {
-    presentationManager = createMocked(PresentationManager as any);
+    presentationManager = createMocked(PresentationManager);
     presentationManager.vars.mockReturnValue({
       onVariableChanged,
     } as RulesetVariablesManager);

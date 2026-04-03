@@ -23,7 +23,7 @@ describe("useColumns", () => {
   let presentationManager: Mocked<PresentationManager>;
 
   beforeEach(() => {
-    presentationManager = createMocked(PresentationManager as any);
+    presentationManager = createMocked(PresentationManager);
     vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
   });
 

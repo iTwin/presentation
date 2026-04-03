@@ -69,7 +69,7 @@ describe("usePresentationTreeState", () => {
   };
 
   beforeEach(async () => {
-    presentationManager = createMocked(PresentationManager as any);
+    presentationManager = createMocked(PresentationManager);
     Object.assign(presentationManager, { onIModelHierarchyChanged });
 
     presentationManager.rulesets.mockReturnValue({

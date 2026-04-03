@@ -40,7 +40,7 @@ describe("usePresentationTable", () => {
   let presentationManager: Mocked<PresentationManager>;
 
   beforeEach(() => {
-    presentationManager = createMocked(PresentationManager as any);
+    presentationManager = createMocked(PresentationManager);
     vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
     vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
@@ -103,7 +103,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
   let presentationManager: Mocked<PresentationManager>;
 
   beforeEach(() => {
-    presentationManager = createMocked(PresentationManager as any);
+    presentationManager = createMocked(PresentationManager);
     vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
     vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),

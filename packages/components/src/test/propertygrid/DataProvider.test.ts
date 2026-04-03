@@ -99,7 +99,7 @@ describe("PropertyDataProvider", () => {
   } as unknown as IModelConnection;
 
   beforeEach(async () => {
-    presentationManager = createMocked(PresentationManager as any);
+    presentationManager = createMocked(PresentationManager);
     Object.assign(presentationManager, {
       onIModelContentChanged: new BeUiEvent(),
     });

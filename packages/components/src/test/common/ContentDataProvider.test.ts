@@ -85,7 +85,7 @@ describe("ContentDataProvider", () => {
   } as IModelConnection;
 
   beforeEach(() => {
-    presentationManager = createMocked(PresentationManager as any);
+    presentationManager = createMocked(PresentationManager);
     Object.assign(presentationManager, { onIModelContentChanged });
 
     presentationManager.rulesets.mockReturnValue(rulesetManager as RulesetManager);

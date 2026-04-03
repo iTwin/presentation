@@ -19,7 +19,7 @@ describe("PresentationLabelsProvider", () => {
   const imodel = {} as IModelConnection;
 
   beforeEach(() => {
-    presentationManager = createMocked(PresentationManager as any);
+    presentationManager = createMocked(PresentationManager);
     const localization = new EmptyLocalization();
     vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
     vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
