@@ -573,7 +573,7 @@ describe("TreeActions", () => {
 
       await actions.setInstanceFilter("root-1", filter)?.complete;
 
-      () => expect(onModelChangedStub).toHaveBeenCalledTimes(2);
+      expect(onModelChangedStub).toHaveBeenCalledTimes(2);
       const newModel = onModelChangedStub.mock.calls[0][0];
       expect(getHierarchyNode(newModel, "root-1")?.instanceFilter).toBe(filter);
       expect(getHierarchyNode(newModel, "child-1")).toBeUndefined();
@@ -874,8 +874,11 @@ describe("TreeActions", () => {
       await actions.reloadTree(undefined)?.complete;
 
       expect(provider.getNodes).toHaveBeenCalledTimes(2);
-      expect(provider.getNodes).toHaveBeenCalledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData, ignoreCache: false }));
-      expect(provider.getNodes).toHaveBeenCalledWith(createGetNodesProps({ parentNode: getHierarchyNode(model, "root-1")?.nodeData, ignoreCache: false }));
+      expect(provider.getNodes).toHaveBeenNthCalledWith(1, createGetNodesProps({ parentNode: model.rootNode.nodeData, ignoreCache: false }));
+      expect(provider.getNodes).toHaveBeenNthCalledWith(
+        2,
+        createGetNodesProps({ parentNode: getHierarchyNode(model, "root-1")?.nodeData, ignoreCache: false }),
+      );
       // one call is made before reloading to set `rootNode.isLoading`
       expect(onModelChangedStub).toHaveBeenCalledTimes(2);
 
@@ -964,8 +967,11 @@ describe("TreeActions", () => {
       await actions.reloadTree(undefined)?.complete;
 
       expect(provider.getNodes).toHaveBeenCalledTimes(2);
-      expect(provider.getNodes).toHaveBeenCalledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData, ignoreCache: false }));
-      expect(provider.getNodes).toHaveBeenCalledWith(createGetNodesProps({ parentNode: getHierarchyNode(model, "root-1")?.nodeData, ignoreCache: false }));
+      expect(provider.getNodes).toHaveBeenNthCalledWith(1, createGetNodesProps({ parentNode: model.rootNode.nodeData, ignoreCache: false }));
+      expect(provider.getNodes).toHaveBeenNthCalledWith(
+        2,
+        createGetNodesProps({ parentNode: getHierarchyNode(model, "root-1")?.nodeData, ignoreCache: false }),
+      );
       // one call is made before reloading to set `rootNode.isLoading`
       expect(onModelChangedStub).toHaveBeenCalledTimes(2);
 
@@ -1008,8 +1014,7 @@ describe("TreeActions", () => {
 
       await actions.reloadTree(undefined)?.complete;
 
-      expect(provider.getNodes).toHaveBeenCalledOnce();
-      expect(provider.getNodes).toHaveBeenCalledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData, ignoreCache: false }));
+      expect(provider.getNodes).toHaveBeenCalledExactlyOnceWith(createGetNodesProps({ parentNode: model.rootNode.nodeData, ignoreCache: false }));
       // one call is made before reloading to set `rootNode.isLoading`
       expect(onModelChangedStub).toHaveBeenCalledTimes(2);
 
@@ -1049,8 +1054,7 @@ describe("TreeActions", () => {
 
       await actions.reloadTree(undefined)?.complete;
 
-      expect(provider.getNodes).toHaveBeenCalledOnce();
-      expect(provider.getNodes).toHaveBeenCalledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData, ignoreCache: false }));
+      expect(provider.getNodes).toHaveBeenCalledExactlyOnceWith(createGetNodesProps({ parentNode: model.rootNode.nodeData, ignoreCache: false }));
       // one call is made before reloading to set `rootNode.isLoading`
       expect(onModelChangedStub).toHaveBeenCalledTimes(2);
 
@@ -1090,8 +1094,9 @@ describe("TreeActions", () => {
 
       await actions.reloadTree({ parentNodeId: "root-1", state: "reset" })?.complete;
 
-      expect(provider.getNodes).toHaveBeenCalledOnce();
-      expect(provider.getNodes).toHaveBeenCalledWith(createGetNodesProps({ parentNode: getHierarchyNode(model, "root-1")?.nodeData, ignoreCache: true }));
+      expect(provider.getNodes).toHaveBeenCalledExactlyOnceWith(
+        createGetNodesProps({ parentNode: getHierarchyNode(model, "root-1")?.nodeData, ignoreCache: true }),
+      );
       // one call is made before reloading to set `rootNode.isLoading` and remove sub tree
       expect(onModelChangedStub).toHaveBeenCalledTimes(2);
 
