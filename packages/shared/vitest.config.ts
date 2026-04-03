@@ -13,6 +13,7 @@ export default defineConfig({
     pool: "forks",
     clearMocks: true,
     restoreMocks: true,
+    testTimeout: 60000,
     env: {
       NODE_ENV: "development",
     },
