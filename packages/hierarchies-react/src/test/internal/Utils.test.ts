@@ -3,15 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { createNodeId, safeDispose, sameNodes } from "../../presentation-hierarchies-react/internal/Utils.js";
 import { createTestGroupingNode, createTestHierarchyNode } from "../TestUtils.js";
 
 describe("createNodeId", () => {
   it("creates id for `generic` node", () => {
     const node = createTestHierarchyNode({ id: "custom", key: { type: "generic", id: "custom", source: "s" } });
-    expect(createNodeId(node)).to.be.eq("generic,custom,s");
+    expect(createNodeId(node)).toBe("generic,custom,s");
   });
 
   it("creates id for `instances` node", () => {
@@ -25,7 +24,7 @@ describe("createNodeId", () => {
         ],
       },
     });
-    expect(createNodeId(node)).to.be.eq("instances,0x1,Schema:Class,0x2,Schema:Class");
+    expect(createNodeId(node)).toBe("instances,0x1,Schema:Class,0x2,Schema:Class");
   });
 
   it("creates id for `class-grouping` node", () => {
@@ -37,7 +36,7 @@ describe("createNodeId", () => {
       },
       groupedInstanceKeys: [{ id: "0x1", className: "Schema:Class" }],
     });
-    expect(createNodeId(node)).to.be.eq("class-grouping,Schema:Class");
+    expect(createNodeId(node)).toBe("class-grouping,Schema:Class");
   });
 
   it("creates id for `label-grouping` node", () => {
@@ -49,7 +48,7 @@ describe("createNodeId", () => {
       },
       groupedInstanceKeys: [{ id: "0x1", className: "Schema:Class" }],
     });
-    expect(createNodeId(node)).to.be.eq("label-grouping,TestLabel");
+    expect(createNodeId(node)).toBe("label-grouping,TestLabel");
   });
 
   it("creates id for `property-grouping:value` node", () => {
@@ -63,7 +62,7 @@ describe("createNodeId", () => {
       },
       groupedInstanceKeys: [{ id: "0x1", className: "Schema:Class" }],
     });
-    expect(createNodeId(node)).to.be.eq("property-grouping:value,test-value,TestClass,TestProp");
+    expect(createNodeId(node)).toBe("property-grouping:value,test-value,TestClass,TestProp");
   });
 
   it("creates id for `instances` node child node", () => {
@@ -78,7 +77,7 @@ describe("createNodeId", () => {
         { type: "class-grouping", className: "Schema:OtherClass" },
       ],
     });
-    expect(createNodeId(node)).to.be.eq("instances,0x1,Schema:Class;class-grouping,Schema:OtherClass;instances,0x3,Schema:Class");
+    expect(createNodeId(node)).toBe("instances,0x1,Schema:Class;class-grouping,Schema:OtherClass;instances,0x3,Schema:Class");
   });
 });
 
@@ -86,19 +85,19 @@ describe("sameNodes", () => {
   it("compares same `generic` nodes", () => {
     const lhs = createTestHierarchyNode({ id: "lhs", key: { type: "generic", id: "custom", source: "s" } });
     const rhs = createTestHierarchyNode({ id: "rhs", key: { type: "generic", id: "custom", source: "s" } });
-    expect(sameNodes(lhs, rhs)).to.be.true;
+    expect(sameNodes(lhs, rhs)).toBe(true);
   });
 
   it("compares same `instance` nodes", () => {
     const lhs = createTestHierarchyNode({ id: "lhs", key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] } });
     const rhs = createTestHierarchyNode({ id: "rhs", key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] } });
-    expect(sameNodes(lhs, rhs)).to.be.true;
+    expect(sameNodes(lhs, rhs)).toBe(true);
   });
 
   it("compares same `class-grouping` nodes", () => {
     const lhs = createTestGroupingNode({ id: "lhs", key: { type: "class-grouping", className: "Schema:Class" } });
     const rhs = createTestGroupingNode({ id: "rhs", key: { type: "class-grouping", className: "Schema:Class" } });
-    expect(sameNodes(lhs, rhs)).to.be.true;
+    expect(sameNodes(lhs, rhs)).toBe(true);
   });
 
   it("compares same child nodes", () => {
@@ -112,13 +111,13 @@ describe("sameNodes", () => {
       key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
       parentKeys: [{ type: "instances", instanceKeys: [{ id: "0x2", className: "Schema:Class" }] }],
     });
-    expect(sameNodes(lhs, rhs)).to.be.true;
+    expect(sameNodes(lhs, rhs)).toBe(true);
   });
 
   it("compares different `instance` nodes", () => {
     const lhs = createTestHierarchyNode({ id: "lhs", key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] } });
     const rhs = createTestHierarchyNode({ id: "rhs", key: { type: "instances", instanceKeys: [{ id: "0x2", className: "Schema:Class" }] } });
-    expect(sameNodes(lhs, rhs)).to.be.false;
+    expect(sameNodes(lhs, rhs)).toBe(false);
   });
 
   it("compares child nodes from different levels", () => {
@@ -132,7 +131,7 @@ describe("sameNodes", () => {
       key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
       parentKeys: [{ type: "instances", instanceKeys: [{ id: "0x3", className: "Schema:Class" }] }],
     });
-    expect(sameNodes(lhs, rhs)).to.be.false;
+    expect(sameNodes(lhs, rhs)).toBe(false);
   });
 
   it("compares child nodes from different depths", () => {
@@ -149,25 +148,25 @@ describe("sameNodes", () => {
         { type: "instances", instanceKeys: [{ id: "0x3", className: "Schema:Class" }] },
       ],
     });
-    expect(sameNodes(lhs, rhs)).to.be.false;
+    expect(sameNodes(lhs, rhs)).toBe(false);
   });
 });
 
 describe("safeDispose", () => {
   it("disposes object with `Symbol.dispose` method", () => {
-    const disposable = { [Symbol.dispose]: sinon.stub() };
+    const disposable = { [Symbol.dispose]: vi.fn() };
     safeDispose(disposable);
-    expect(disposable[Symbol.dispose]).to.be.calledOnce;
+    expect(disposable[Symbol.dispose]).toHaveBeenCalledOnce();
   });
 
   it("disposes object with `dispose` method", () => {
-    const disposable = { dispose: sinon.stub() };
+    const disposable = { dispose: vi.fn() };
     safeDispose(disposable);
-    expect(disposable.dispose).to.be.calledOnce;
+    expect(disposable.dispose).toHaveBeenCalledOnce();
   });
 
   it("does nothing with non-disposable object", () => {
     const disposable = { x: 123 };
-    expect(() => safeDispose(disposable)).to.not.throw();
+    expect(() => safeDispose(disposable)).not.toThrow();
   });
 });

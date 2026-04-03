@@ -3,41 +3,22 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import { mock } from "node:test";
 import { createAsyncIterator } from "presentation-test-utilities";
-import sinon from "sinon";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import * as presentationHierarchiesModule from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
+import { useIModelTree, useIModelUnifiedSelectionTree } from "../presentation-hierarchies-react/UseIModelTree.js";
 import { createHierarchyProviderStub, renderHook, waitFor } from "./TestUtils.js";
 
-import type {
-  useIModelTree as originalUseIModelTree,
-  useIModelUnifiedSelectionTree as originalUseIModelUnifiedSelectionTree,
-} from "../presentation-hierarchies-react/UseIModelTree.js";
+vi.mock("@itwin/presentation-hierarchies", async (importOriginal) => {
+  const original = await importOriginal<typeof presentationHierarchiesModule>();
+  return { ...original, createIModelHierarchyProvider: vi.fn() };
+});
 
 describe("useIModelTree hooks", () => {
-  let stubs: Awaited<ReturnType<typeof stubIModelHierarchyProviderFactory>>;
-  let useIModelTree: typeof originalUseIModelTree;
-  let useIModelUnifiedSelectionTree: typeof originalUseIModelUnifiedSelectionTree;
-
-  before(async () => {
-    stubs = await stubIModelHierarchyProviderFactory();
-    const testedModule = await import("../presentation-hierarchies-react/UseIModelTree.js");
-    useIModelTree = testedModule.useIModelTree;
-    useIModelUnifiedSelectionTree = testedModule.useIModelUnifiedSelectionTree;
-  });
-
-  after(() => {
-    stubs.restore();
-  });
-
-  afterEach(() => {
-    stubs.createIModelHierarchyProvider.resetHistory();
-  });
-
   describe("useIModelTree", () => {
-    type UseIModelTreeProps = Props<typeof originalUseIModelTree>;
+    type UseIModelTreeProps = Props<typeof useIModelTree>;
     const hierarchyDefinition = {} as presentationHierarchiesModule.HierarchyDefinition;
     const initialProps: UseIModelTreeProps = {
       imodelAccess: {} as UseIModelTreeProps["imodelAccess"],
@@ -45,35 +26,44 @@ describe("useIModelTree hooks", () => {
       localizedStrings: {} as UseIModelTreeProps["localizedStrings"],
     };
 
+    beforeAll(() => {
+      const hierarchyProvider = createHierarchyProviderStub();
+      vi.mocked(createIModelHierarchyProvider).mockImplementation(() => hierarchyProvider as any);
+    });
+
     it("creates imodel hierarchy provider using given imodel and hierarchy definition", async () => {
-      stubs.hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
+      const hierarchyProvider = createHierarchyProviderStub();
+      hierarchyProvider.getNodes.mockImplementation(() => createAsyncIterator([]));
+      vi.mocked(createIModelHierarchyProvider).mockImplementation(() => hierarchyProvider as any);
+
       const { result } = renderHook(useIModelTree, { initialProps });
       await waitFor(() => {
-        expect(result.current.isLoading).to.be.false;
+        expect(result.current.isLoading).toBe(false);
       });
-      expect(stubs.createIModelHierarchyProvider).to.be.calledWith(
-        sinon.match((props: Props<typeof stubs.createIModelHierarchyProvider>) => {
-          return (
-            props.imodelAccess === initialProps.imodelAccess &&
-            props.hierarchyDefinition === hierarchyDefinition &&
-            props.localizedStrings === initialProps.localizedStrings
-          );
+      expect(vi.mocked(createIModelHierarchyProvider)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          imodelAccess: initialProps.imodelAccess,
+          hierarchyDefinition,
+          localizedStrings: initialProps.localizedStrings,
         }),
       );
     });
 
     it("forwards `getFilteredPaths` call", async () => {
-      stubs.hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
+      const hierarchyProvider = createHierarchyProviderStub();
+      hierarchyProvider.getNodes.mockImplementation(() => createAsyncIterator([]));
+      vi.mocked(createIModelHierarchyProvider).mockImplementation(() => hierarchyProvider as any);
+
       let signal;
-      const getFilteredPaths = sinon.stub().callsFake(async ({ abortSignal }) => {
+      const getFilteredPaths = vi.fn().mockImplementation(async ({ abortSignal }: { abortSignal: AbortSignal }) => {
         signal = abortSignal;
         return undefined;
       });
       const { result } = renderHook(useIModelTree, { initialProps: { ...initialProps, getFilteredPaths } });
       await waitFor(() => {
-        expect(result.current.isLoading).to.be.false;
+        expect(result.current.isLoading).toBe(false);
       });
-      expect(getFilteredPaths).to.be.calledWith({ imodelAccess: initialProps.imodelAccess, abortSignal: signal });
+      expect(getFilteredPaths).toHaveBeenCalledWith({ imodelAccess: initialProps.imodelAccess, abortSignal: signal });
     });
   });
 
@@ -87,57 +77,44 @@ describe("useIModelTree hooks", () => {
       sourceName: "test-component",
     };
 
+    beforeAll(() => {
+      const hierarchyProvider = createHierarchyProviderStub();
+      vi.mocked(createIModelHierarchyProvider).mockImplementation(() => hierarchyProvider as any);
+    });
+
     it("creates imodel hierarchy provider using given imodel and hierarchy definition", async () => {
-      stubs.hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
+      const hierarchyProvider = createHierarchyProviderStub();
+      hierarchyProvider.getNodes.mockImplementation(() => createAsyncIterator([]));
+      vi.mocked(createIModelHierarchyProvider).mockImplementation(() => hierarchyProvider as any);
+
       const { result } = renderHook(useIModelUnifiedSelectionTree, { initialProps });
       await waitFor(() => {
-        expect(result.current.isLoading).to.be.false;
+        expect(result.current.isLoading).toBe(false);
       });
-      expect(stubs.createIModelHierarchyProvider).to.be.calledWith(
-        sinon.match((props: Props<typeof stubs.createIModelHierarchyProvider>) => {
-          return (
-            props.imodelAccess === initialProps.imodelAccess &&
-            props.hierarchyDefinition === hierarchyDefinition &&
-            props.localizedStrings === initialProps.localizedStrings
-          );
+      expect(vi.mocked(createIModelHierarchyProvider)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          imodelAccess: initialProps.imodelAccess,
+          hierarchyDefinition,
+          localizedStrings: initialProps.localizedStrings,
         }),
       );
     });
 
     it("forwards `getFilteredPaths` call", async () => {
-      stubs.hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
+      const hierarchyProvider = createHierarchyProviderStub();
+      hierarchyProvider.getNodes.mockImplementation(() => createAsyncIterator([]));
+      vi.mocked(createIModelHierarchyProvider).mockImplementation(() => hierarchyProvider as any);
+
       let signal;
-      const getFilteredPaths = sinon.stub().callsFake(async ({ abortSignal }) => {
+      const getFilteredPaths = vi.fn().mockImplementation(async ({ abortSignal }: { abortSignal: AbortSignal }) => {
         signal = abortSignal;
         return undefined;
       });
       const { result } = renderHook(useIModelUnifiedSelectionTree, { initialProps: { ...initialProps, getFilteredPaths } });
       await waitFor(() => {
-        expect(result.current.isLoading).to.be.false;
+        expect(result.current.isLoading).toBe(false);
       });
-      expect(getFilteredPaths).to.be.calledWith({ imodelAccess: initialProps.imodelAccess, abortSignal: signal });
+      expect(getFilteredPaths).toHaveBeenCalledWith({ imodelAccess: initialProps.imodelAccess, abortSignal: signal });
     });
   });
-
-  async function stubIModelHierarchyProviderFactory() {
-    const hierarchyProvider = createHierarchyProviderStub();
-    const factory = sinon.fake<Parameters<typeof presentationHierarchiesModule.createIModelHierarchyProvider>, typeof hierarchyProvider>(() => {
-      return hierarchyProvider;
-    });
-
-    const presentationHierarchiesMock = mock.module("@itwin/presentation-hierarchies", {
-      namedExports: {
-        ...presentationHierarchiesModule,
-        createIModelHierarchyProvider: factory,
-      },
-    });
-
-    return {
-      hierarchyProvider,
-      createIModelHierarchyProvider: factory,
-      restore: () => {
-        presentationHierarchiesMock.restore();
-      },
-    };
-  }
 });

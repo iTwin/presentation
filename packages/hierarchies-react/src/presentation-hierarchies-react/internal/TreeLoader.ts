@@ -44,7 +44,8 @@ export class TreeLoader implements ITreeLoader {
     private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void,
     treeNodeIdFactory?: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string,
   ) {
-    this._treeNodeIdFactory = treeNodeIdFactory ?? /* c8 ignore next */ createNodeId;
+    /* v8 ignore next -- @preserve */
+    this._treeNodeIdFactory = treeNodeIdFactory ?? createNodeId;
   }
 
   private loadChildren({ parent, getHierarchyLevelOptions, buildNode, ignoreCache }: Omit<LoadNodesOptions, "shouldLoadChildren">) {
