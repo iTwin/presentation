@@ -41,7 +41,6 @@ describe("<NumericPropertyEditor />", () => {
     await user.tab();
 
     await waitFor(() => expect(queryByDisplayValue("1")).to.not.be.null);
-    expect(spy).toHaveBeenCalledOnce();
-    expect(spy).toHaveBeenCalledWith({ propertyRecord: record, newValue: { valueFormat: 0, value: 1, displayValue: "1", roundingError: 0.5 } });
+    expect(spy).toHaveBeenCalledExactlyOnceWith({ propertyRecord: record, newValue: { valueFormat: 0, value: 1, displayValue: "1", roundingError: 0.5 } });
   });
 });

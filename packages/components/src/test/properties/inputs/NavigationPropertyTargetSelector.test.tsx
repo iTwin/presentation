@@ -91,8 +91,7 @@ describe("NavigationPropertyTargetSelector", () => {
 
     const target = await waitFor(() => getByText(contentItem.label.displayValue));
     await user.click(target);
-    expect(spy).toHaveBeenCalledOnce();
-    expect(spy).toHaveBeenCalledWith({
+    expect(spy).toHaveBeenCalledExactlyOnceWith({
       propertyRecord: testRecord,
       newValue: {
         valueFormat: PropertyValueFormat.Primitive,

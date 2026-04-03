@@ -91,8 +91,7 @@ describe("useHierarchyLevelFiltering", () => {
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.applyFilter(node.item.id, filterInfo);
-    expect(nodeLoader.loadNode).toHaveBeenCalledOnce();
-    expect(nodeLoader.loadNode).toHaveBeenCalledWith(expect.objectContaining({ id: node.id }), expect.anything());
+    expect(nodeLoader.loadNode).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: node.id }), expect.anything());
   });
 
   it("clears children from tree model when filter applied", () => {
@@ -175,8 +174,7 @@ describe("useHierarchyLevelFiltering", () => {
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.clearFilter(node.item.id);
-    expect(nodeLoader.loadNode).toHaveBeenCalledOnce();
-    expect(nodeLoader.loadNode).toHaveBeenCalledWith(expect.objectContaining({ id: node.id }), expect.anything());
+    expect(nodeLoader.loadNode).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: node.id }), expect.anything());
   });
 
   it("clears children from tree model when filter cleared", () => {

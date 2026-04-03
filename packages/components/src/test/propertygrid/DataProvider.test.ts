@@ -112,7 +112,7 @@ describe("PropertyDataProvider", () => {
 
     favoritePropertiesManager = createMocked(FavoritePropertiesManager);
     favoritePropertiesManager.hasAsync.mockImplementation(async () => false);
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
+
     favoritePropertiesManager.has.mockImplementation(() => false);
     Object.assign(favoritePropertiesManager, {
       onFavoritesChanged,
@@ -225,17 +225,14 @@ describe("PropertyDataProvider", () => {
 
     it("calls `FavoritePropertiesManager.hasAsync` when it's available", async () => {
       await provider.isFieldFavoriteAsync(field);
-      expect(favoritePropertiesManager.hasAsync).toHaveBeenCalledOnce();
-      expect(favoritePropertiesManager.hasAsync).toHaveBeenCalledWith(field, imodel, FavoritePropertiesScope.IModel);
+      expect(favoritePropertiesManager.hasAsync).toHaveBeenCalledExactlyOnceWith(field, imodel, FavoritePropertiesScope.IModel);
     });
 
     it("calls `FavoritePropertiesManager.has` when `hasAsync` is not available", async () => {
       Object.assign(favoritePropertiesManager, { hasAsync: undefined });
       await provider.isFieldFavoriteAsync(field);
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      expect(favoritePropertiesManager.has).toHaveBeenCalledOnce();
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      expect(favoritePropertiesManager.has).toHaveBeenCalledWith(field, imodel, FavoritePropertiesScope.IModel);
+
+      expect(favoritePropertiesManager.has).toHaveBeenCalledExactlyOnceWith(field, imodel, FavoritePropertiesScope.IModel);
     });
 
     it("calls deprecated `isFieldFavorite` when it's overridden by a subclass", async () => {
@@ -249,10 +246,7 @@ describe("PropertyDataProvider", () => {
       const spy = vi.spyOn(subclassProvider, "isFieldFavorite");
       await subclassProvider.isFieldFavoriteAsync(field);
       expect(spy).toHaveBeenCalledOnce();
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      expect(favoritePropertiesManager.has).toHaveBeenCalledOnce();
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      expect(favoritePropertiesManager.has).toHaveBeenCalledWith(field, imodel, FavoritePropertiesScope.IModel);
+      expect(favoritePropertiesManager.has).toHaveBeenCalledExactlyOnceWith(field, imodel, FavoritePropertiesScope.IModel);
     });
   });
 

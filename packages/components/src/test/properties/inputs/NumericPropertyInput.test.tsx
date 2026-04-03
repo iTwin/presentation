@@ -59,8 +59,7 @@ describe("<NumericPropertyInput />", () => {
       await user.tab();
 
       await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(testCase.expectedResult));
-      expect(spy).toHaveBeenCalledOnce();
-      expect(spy).toHaveBeenCalledWith(testCase.expectedResult);
+      expect(spy).toHaveBeenCalledExactlyOnceWith(testCase.expectedResult);
     }),
   );
 
@@ -86,8 +85,7 @@ describe("<NumericPropertyInput />", () => {
     await user.tab();
 
     await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(3));
-    expect(spy).toHaveBeenCalledOnce();
-    expect(spy).toHaveBeenCalledWith(3);
+    expect(spy).toHaveBeenCalledExactlyOnceWith(3);
   });
 
   it("get value from NumericPropertyInput reference", async () => {

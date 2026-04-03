@@ -65,9 +65,7 @@ describe("createDiagnosticsOptions", () => {
       ],
     };
     result!.handler(diagnostics);
-    expect(handler1).toHaveBeenCalledOnce();
-    expect(handler1).toHaveBeenCalledWith(diagnostics);
-    expect(handler2).toHaveBeenCalledOnce();
-    expect(handler2).toHaveBeenCalledWith(diagnostics);
+    expect(handler1).toHaveBeenCalledExactlyOnceWith(diagnostics);
+    expect(handler2).toHaveBeenCalledExactlyOnceWith(diagnostics);
   });
 });

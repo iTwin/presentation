@@ -227,8 +227,7 @@ describe("PresentationInstanceFilterDialog", () => {
     await user.click(applyButton);
 
     await waitFor(() => {
-      expect(spy).toHaveBeenCalledOnce();
-      expect(spy).toHaveBeenCalledWith({
+      expect(spy).toHaveBeenCalledExactlyOnceWith({
         filter: {
           field: stringField,
           operator: "like",

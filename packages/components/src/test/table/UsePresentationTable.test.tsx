@@ -220,8 +220,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         act(() => {
           result.current.onSelect(stringifiedKeys);
         });
-        expect(replaceSpy).toHaveBeenCalledOnce();
-        expect(replaceSpy).toHaveBeenCalledWith(expect.stringContaining("UnifiedSelectionTable"), imodel, expectedKeys, 1);
+        expect(replaceSpy).toHaveBeenCalledExactlyOnceWith(expect.stringContaining("UnifiedSelectionTable"), imodel, expectedKeys, 1);
       });
 
       it("gets invalid keys and does not pass any to `SelectionManager`", async () => {
@@ -234,8 +233,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           result.current.onSelect(keys);
         });
 
-        expect(replaceSpy).toHaveBeenCalledOnce();
-        expect(replaceSpy).toHaveBeenCalledWith(expect.stringContaining("UnifiedSelectionTable"), imodel, [], 1);
+        expect(replaceSpy).toHaveBeenCalledExactlyOnceWith(expect.stringContaining("UnifiedSelectionTable"), imodel, [], 1);
       });
 
       it("gets valid keys for rows that are not loaded and does not pass any to `SelectionManager`", async () => {
@@ -250,8 +248,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
 
         await waitFor(() => {
-          expect(replaceSpy).toHaveBeenCalledOnce();
-          expect(replaceSpy).toHaveBeenCalledWith(expect.stringContaining("UnifiedSelectionTable"), imodel, [], 1);
+          expect(replaceSpy).toHaveBeenCalledExactlyOnceWith(expect.stringContaining("UnifiedSelectionTable"), imodel, [], 1);
         });
       });
     });
