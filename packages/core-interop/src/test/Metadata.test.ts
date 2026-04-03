@@ -129,8 +129,7 @@ describe("createECSchema", () => {
       const result = await schema.getClass("c");
       assert(result !== undefined);
 
-      expect(coreSchema.getItem).toHaveBeenCalledOnce();
-      expect(coreSchema.getItem).toHaveBeenCalledWith("c");
+      expect(coreSchema.getItem).toHaveBeenCalledExactlyOnceWith("c");
       expect(result.schema.name).toBe("s");
       expect(result.fullName).toBe("s.c");
       expect(result.name).toBe("c");
@@ -147,8 +146,7 @@ describe("createECSchema", () => {
       const schema = createECSchema(coreSchema as unknown as CoreSchema);
       const result = await schema.getClass("c");
 
-      expect(coreSchema.getItem).toHaveBeenCalledOnce();
-      expect(coreSchema.getItem).toHaveBeenCalledWith("c");
+      expect(coreSchema.getItem).toHaveBeenCalledExactlyOnceWith("c");
       expect(result).toBeUndefined();
     });
   });
@@ -286,8 +284,7 @@ describe("createECClass", () => {
       );
       const result = await class1.is(class2);
 
-      expect(coreClass.is).toHaveBeenCalledOnce();
-      expect(coreClass.is).toHaveBeenCalledWith("c2", "s");
+      expect(coreClass.is).toHaveBeenCalledExactlyOnceWith("c2", "s");
       expect(result).toBe(true);
     });
 
@@ -295,8 +292,7 @@ describe("createECClass", () => {
       const class1 = createECClass(coreClass as unknown as CoreClass, schema);
       const result = await class1.is("a", "b");
 
-      expect(coreClass.is).toHaveBeenCalledOnce();
-      expect(coreClass.is).toHaveBeenCalledWith("a", "b");
+      expect(coreClass.is).toHaveBeenCalledExactlyOnceWith("a", "b");
       expect(result).toBe(true);
     });
   });
@@ -345,8 +341,7 @@ describe("createECClass", () => {
       const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
       const prop = await ecClass.getProperty("p");
 
-      expect(coreClass.getProperty).toHaveBeenCalledOnce();
-      expect(coreClass.getProperty).toHaveBeenCalledWith("p", false);
+      expect(coreClass.getProperty).toHaveBeenCalledExactlyOnceWith("p", false);
       expect(prop).toBeDefined();
     });
 
@@ -361,8 +356,7 @@ describe("createECClass", () => {
       const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
       const prop = await ecClass.getProperty("p");
 
-      expect(coreClass.getProperty).toHaveBeenCalledOnce();
-      expect(coreClass.getProperty).toHaveBeenCalledWith("p", false);
+      expect(coreClass.getProperty).toHaveBeenCalledExactlyOnceWith("p", false);
       expect(prop).toBeUndefined();
     });
   });

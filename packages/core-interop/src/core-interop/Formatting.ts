@@ -109,7 +109,6 @@ interface FormattingProps {
 
 async function getFormattingProps(koq: KindOfQuantity, unitSystem?: UnitSystemKey): Promise<FormattingProps | undefined> {
   const persistenceUnit = await koq.persistenceUnit;
-  /* v8 ignore next 3 */
   if (!persistenceUnit) {
     return undefined;
   }

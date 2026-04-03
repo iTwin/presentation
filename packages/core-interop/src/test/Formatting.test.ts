@@ -52,8 +52,7 @@ describe("createValueFormatter", () => {
       value: 1.23,
     };
     expect(await formatter(prop)).toBe("DEFAULT");
-    expect(defaultFormatter).toHaveBeenCalledOnce();
-    expect(defaultFormatter).toHaveBeenCalledWith(prop);
+    expect(defaultFormatter).toHaveBeenCalledExactlyOnceWith(prop);
   });
 
   it("throws when property references non-existing schema in KoQ", async () => {
@@ -97,8 +96,7 @@ describe("createValueFormatter", () => {
       koqName: "X.Y",
     };
     expect(await formatter(prop)).toBe("DEFAULT");
-    expect(defaultFormatter).toHaveBeenCalledOnce();
-    expect(defaultFormatter).toHaveBeenCalledWith(prop);
+    expect(defaultFormatter).toHaveBeenCalledExactlyOnceWith(prop);
   });
 
   it("returns default formatter result when KoQ doesn't specify presentation format", async () => {
@@ -127,8 +125,7 @@ describe("createValueFormatter", () => {
       koqName: "X.Y",
     };
     expect(await formatter(prop)).toBe("DEFAULT");
-    expect(defaultFormatter).toHaveBeenCalledOnce();
-    expect(defaultFormatter).toHaveBeenCalledWith(prop);
+    expect(defaultFormatter).toHaveBeenCalledExactlyOnceWith(prop);
   });
 
   it("returns koq formatter result when presentation format is found in koq formats list", async () => {
@@ -185,8 +182,7 @@ describe("createValueFormatter", () => {
     expect(createFormatSpecStub.mock.calls[0][1]).toBe(quantityFormat);
     expect(createFormatSpecStub.mock.calls[0][2]).toBeInstanceOf(SchemaUnitProvider);
     expect(createFormatSpecStub.mock.calls[0][3]!.name).toBe(persistenceUnit.fullName);
-    expect(koqFormatterStub).toHaveBeenCalledOnce();
-    expect(koqFormatterStub).toHaveBeenCalledWith(1.23);
+    expect(koqFormatterStub).toHaveBeenCalledExactlyOnceWith(1.23);
   });
 
   it("returns koq formatter result when presentation override format is found in koq formats list", async () => {
@@ -241,8 +237,7 @@ describe("createValueFormatter", () => {
     expect(createFormatSpecStub.mock.calls[0][1]).toBe(quantityFormat);
     expect(createFormatSpecStub.mock.calls[0][2]).toBeInstanceOf(SchemaUnitProvider);
     expect(createFormatSpecStub.mock.calls[0][3]?.name).toBe(persistenceUnit.fullName);
-    expect(koqFormatterStub).toHaveBeenCalledOnce();
-    expect(koqFormatterStub).toHaveBeenCalledWith(1.23);
+    expect(koqFormatterStub).toHaveBeenCalledExactlyOnceWith(1.23);
   });
 
   it("returns koq formatter result when persistence unit system matches requested unit system", async () => {
@@ -290,8 +285,7 @@ describe("createValueFormatter", () => {
     expect(createFormatSpecStub.mock.calls[0][1]).toBe(quantityFormat);
     expect(createFormatSpecStub.mock.calls[0][2]).toBeInstanceOf(SchemaUnitProvider);
     expect(createFormatSpecStub.mock.calls[0][3]!.name).toBe(persistenceUnit.fullName);
-    expect(koqFormatterStub).toHaveBeenCalledOnce();
-    expect(koqFormatterStub).toHaveBeenCalledWith(1.23);
+    expect(koqFormatterStub).toHaveBeenCalledExactlyOnceWith(1.23);
   });
 
   it("returns koq formatter result when default presentation unit is of requested unit system", async () => {
@@ -347,8 +341,7 @@ describe("createValueFormatter", () => {
     expect(createFormatSpecStub.mock.calls[0][1]).toBe(quantityFormat);
     expect(createFormatSpecStub.mock.calls[0][2]).toBeInstanceOf(SchemaUnitProvider);
     expect(createFormatSpecStub.mock.calls[0][3]!.name).toBe(persistenceUnit.fullName);
-    expect(koqFormatterStub).toHaveBeenCalledOnce();
-    expect(koqFormatterStub).toHaveBeenCalledWith(1.23);
+    expect(koqFormatterStub).toHaveBeenCalledExactlyOnceWith(1.23);
   });
 
   it("returns koq formatter result when koq uses override format as default presentation format", async () => {
@@ -404,8 +397,7 @@ describe("createValueFormatter", () => {
     expect(createFormatSpecStub.mock.calls[0][1]).toBe(quantityFormat);
     expect(createFormatSpecStub.mock.calls[0][2]).toBeInstanceOf(SchemaUnitProvider);
     expect(createFormatSpecStub.mock.calls[0][3]?.name).toBe(persistenceUnit.fullName);
-    expect(koqFormatterStub).toHaveBeenCalledOnce();
-    expect(koqFormatterStub).toHaveBeenCalledWith(1.23);
+    expect(koqFormatterStub).toHaveBeenCalledExactlyOnceWith(1.23);
   });
 });
 

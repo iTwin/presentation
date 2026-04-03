@@ -12,32 +12,28 @@ describe("createLogger", () => {
     const spy = vi.spyOn(Logger, "isEnabled").mockReturnValue(true);
     const logger = createLogger(Logger);
     expect(logger.isEnabled("test category", "error")).toBe(true);
-    expect(spy).toHaveBeenCalledOnce();
-    expect(spy).toHaveBeenCalledWith("test category", LogLevel.Error);
+    expect(spy).toHaveBeenCalledExactlyOnceWith("test category", LogLevel.Error);
   });
 
   it("checks warning severity using core `Logger`", async () => {
     const spy = vi.spyOn(Logger, "isEnabled").mockReturnValue(true);
     const logger = createLogger(Logger);
     expect(logger.isEnabled("test category", "warning")).toBe(true);
-    expect(spy).toHaveBeenCalledOnce();
-    expect(spy).toHaveBeenCalledWith("test category", LogLevel.Warning);
+    expect(spy).toHaveBeenCalledExactlyOnceWith("test category", LogLevel.Warning);
   });
 
   it("checks info severity using core `Logger`", async () => {
     const spy = vi.spyOn(Logger, "isEnabled").mockReturnValue(true);
     const logger = createLogger(Logger);
     expect(logger.isEnabled("test category", "info")).toBe(true);
-    expect(spy).toHaveBeenCalledOnce();
-    expect(spy).toHaveBeenCalledWith("test category", LogLevel.Info);
+    expect(spy).toHaveBeenCalledExactlyOnceWith("test category", LogLevel.Info);
   });
 
   it("checks trace severity using core `Logger`", async () => {
     const spy = vi.spyOn(Logger, "isEnabled").mockReturnValue(true);
     const logger = createLogger(Logger);
     expect(logger.isEnabled("test category", "trace")).toBe(true);
-    expect(spy).toHaveBeenCalledOnce();
-    expect(spy).toHaveBeenCalledWith("test category", LogLevel.Trace);
+    expect(spy).toHaveBeenCalledExactlyOnceWith("test category", LogLevel.Trace);
   });
 
   it("logs messages using core `Logger`", async () => {
@@ -54,13 +50,9 @@ describe("createLogger", () => {
     logger.logInfo("c3", "m3");
     logger.logTrace("c4", "m4");
 
-    expect(spies.error).toHaveBeenCalledOnce();
-    expect(spies.error).toHaveBeenCalledWith("c1", "m1");
-    expect(spies.warn).toHaveBeenCalledOnce();
-    expect(spies.warn).toHaveBeenCalledWith("c2", "m2");
-    expect(spies.info).toHaveBeenCalledOnce();
-    expect(spies.info).toHaveBeenCalledWith("c3", "m3");
-    expect(spies.trace).toHaveBeenCalledOnce();
-    expect(spies.trace).toHaveBeenCalledWith("c4", "m4");
+    expect(spies.error).toHaveBeenCalledExactlyOnceWith("c1", "m1");
+    expect(spies.warn).toHaveBeenCalledExactlyOnceWith("c2", "m2");
+    expect(spies.info).toHaveBeenCalledExactlyOnceWith("c3", "m3");
+    expect(spies.trace).toHaveBeenCalledExactlyOnceWith("c4", "m4");
   });
 });
