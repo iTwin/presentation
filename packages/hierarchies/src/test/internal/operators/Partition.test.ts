@@ -3,17 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { from, Observable } from "rxjs";
-import * as sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { partition } from "../../../hierarchies/internal/operators/Partition.js";
 
 describe("partition", () => {
   it("partitions items based on predicate", async () => {
     const [matches, nonMatches] = partition(from([1, 2, 3]), (x) => x % 2 === 0);
-    expect(await collect(matches)).to.deep.eq([2]);
-    expect(await collect(nonMatches)).to.deep.eq([1, 3]);
+    expect(await collect(matches)).toEqual([2]);
+    expect(await collect(nonMatches)).toEqual([1, 3]);
   });
 
   it("emits error if source errors", async () => {
@@ -23,28 +22,28 @@ describe("partition", () => {
       }),
       (x) => x % 2 === 0,
     );
-    await expect(collect(matches)).to.eventually.be.rejectedWith(Error);
-    await expect(collect(nonMatches)).to.eventually.be.rejectedWith(Error);
+    await expect(collect(matches)).rejects.toThrow(Error);
+    await expect(collect(nonMatches)).rejects.toThrow(Error);
   });
 
   it("subscribes to source observable once", async () => {
     const source = new Observable<number>();
-    const subscribe = sinon.spy(source, "subscribe");
+    const subscribe = vi.spyOn(source, "subscribe");
     const [matches, nonMatches] = partition(source, (x) => x % 2 === 0);
     matches.subscribe();
     nonMatches.subscribe();
-    expect(subscribe).to.be.calledOnce;
+    expect(subscribe).toHaveBeenCalledOnce();
   });
 
   it("unsubscribes from source observable when matches and non-matches are unsubscribed", async () => {
-    const unsubscribeSpy = sinon.spy();
+    const unsubscribeSpy = vi.fn();
     const source = new Observable<number>(() => unsubscribeSpy);
     const result = partition(source, (x) => x % 2 === 0);
     const subscriptions = result.map((obs) => obs.subscribe());
-    expect(unsubscribeSpy).to.not.be.called;
+    expect(unsubscribeSpy).not.toHaveBeenCalled();
     subscriptions[0].unsubscribe();
-    expect(unsubscribeSpy).to.not.be.called;
+    expect(unsubscribeSpy).not.toHaveBeenCalled();
     subscriptions[1].unsubscribe();
-    expect(unsubscribeSpy).to.be.calledOnce;
+    expect(unsubscribeSpy).toHaveBeenCalledOnce();
   });
 });

@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { from, of } from "rxjs";
+import { describe, expect, it } from "vitest";
 import { reduceToMergeMapItem, reduceToMergeMapList } from "../../../hierarchies/internal/operators/ReduceToMergeMap.js";
 
 describe("reduceToMergeMapItem", () => {
@@ -18,10 +18,10 @@ describe("reduceToMergeMapItem", () => {
         ),
       ),
     );
-    expect(res).to.have.lengthOf(1);
-    expect(res[0].size).to.eq(2);
-    expect(res[0].get("1")).to.eq(1);
-    expect(res[0].get("2")).to.eq(2);
+    expect(res).toHaveLength(1);
+    expect(res[0].size).toBe(2);
+    expect(res[0].get("1")).toBe(1);
+    expect(res[0].get("2")).toBe(2);
   });
 
   it("merges items with the same key", async () => {
@@ -33,9 +33,9 @@ describe("reduceToMergeMapItem", () => {
         ),
       ),
     );
-    expect(res).to.have.lengthOf(1);
-    expect(res[0].size).to.eq(1);
-    expect(res[0].get("x")).to.eq(3);
+    expect(res).toHaveLength(1);
+    expect(res[0].size).toBe(1);
+    expect(res[0].get("x")).toBe(3);
   });
 });
 
@@ -49,10 +49,10 @@ describe("reduceToMergeMapList", () => {
         ),
       ),
     );
-    expect(res).to.have.lengthOf(1);
-    expect(res[0].size).to.eq(2);
-    expect(res[0].get("1")).to.deep.eq([1]);
-    expect(res[0].get("2")).to.deep.eq([2]);
+    expect(res).toHaveLength(1);
+    expect(res[0].size).toBe(2);
+    expect(res[0].get("1")).toEqual([1]);
+    expect(res[0].get("2")).toEqual([2]);
   });
 
   it("puts items with the same key into the same list", async () => {
@@ -64,9 +64,9 @@ describe("reduceToMergeMapList", () => {
         ),
       ),
     );
-    expect(res).to.have.lengthOf(1);
-    expect(res[0].size).to.eq(1);
-    expect(res[0].get("x")).to.deep.eq([1, 2]);
+    expect(res).toHaveLength(1);
+    expect(res[0].size).toBe(1);
+    expect(res[0].get("x")).toEqual([1, 2]);
   });
 
   it("uses value function to map entry value", async () => {
@@ -78,8 +78,8 @@ describe("reduceToMergeMapList", () => {
         ),
       ),
     );
-    expect(res).to.have.lengthOf(1);
-    expect(res[0].size).to.eq(1);
-    expect(res[0].get("x")).to.deep.eq([2]);
+    expect(res).toHaveLength(1);
+    expect(res[0].size).toBe(1);
+    expect(res[0].get("x")).toEqual([2]);
   });
 });

@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it } from "vitest";
 import { EC } from "@itwin/presentation-shared";
 import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
 import * as baseClassGrouping from "../../../../hierarchies/imodel/operators/grouping/BaseClassGrouping.js";
@@ -14,10 +13,6 @@ describe("BaseClassGrouping", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub>;
   beforeEach(() => {
     imodelAccess = createIModelAccessStub();
-  });
-
-  afterEach(() => {
-    sinon.restore();
   });
 
   describe("getBaseClassGroupingECClasses", () => {
@@ -49,10 +44,10 @@ describe("BaseClassGrouping", () => {
         is: async () => true,
       });
       const result = await baseClassGrouping.getBaseClassGroupingECClasses(imodelAccess, undefined, nodes);
-      expect(result.length).to.eq(3);
-      expect(result[0].fullName).to.eq("TestSchema.Class1");
-      expect(result[1].fullName).to.eq("TestSchema.Class2");
-      expect(result[2].fullName).to.eq("TestSchema.Class3");
+      expect(result.length).toBe(3);
+      expect(result[0].fullName).toBe("TestSchema.Class1");
+      expect(result[1].fullName).toBe("TestSchema.Class2");
+      expect(result[2].fullName).toBe("TestSchema.Class3");
     });
 
     it("returns classes that are deeper in class hierarchy than the class of parent class grouping node", async () => {
@@ -92,9 +87,9 @@ describe("BaseClassGrouping", () => {
         is: async () => true,
       });
       const result = await baseClassGrouping.getBaseClassGroupingECClasses(imodelAccess, parentNode, nodes);
-      expect(result.length).to.eq(2);
-      expect(result[0].fullName).to.eq("TestSchema.Class3");
-      expect(result[1].fullName).to.eq("TestSchema.Class4");
+      expect(result.length).toBe(2);
+      expect(result[0].fullName).toBe("TestSchema.Class3");
+      expect(result[1].fullName).toBe("TestSchema.Class4");
     });
 
     it("returns empty classes list when the class of parent class grouping node matches grouping class", async () => {
@@ -124,7 +119,7 @@ describe("BaseClassGrouping", () => {
         is: async (className) => className === "TestSchema.Class1",
       });
       const result = await baseClassGrouping.getBaseClassGroupingECClasses(imodelAccess, parentNode, nodes);
-      expect(result.length).to.eq(0);
+      expect(result.length).toBe(0);
     });
 
     it("returns empty classes list when the class of parent class grouping node doesn't match any of the grouping class ancestors", async () => {
@@ -154,7 +149,7 @@ describe("BaseClassGrouping", () => {
         is: async (className) => className === "TestSchema.Class1",
       });
       const result = await baseClassGrouping.getBaseClassGroupingECClasses(imodelAccess, parentNode, nodes);
-      expect(result.length).to.eq(0);
+      expect(result.length).toBe(0);
     });
 
     it("doesn't extract ECClasses that are not of entity or relationship type", async () => {
@@ -175,7 +170,7 @@ describe("BaseClassGrouping", () => {
         className: "Class",
       });
       const result = await baseClassGrouping.getBaseClassGroupingECClasses(imodelAccess, undefined, nodes);
-      expect(result).to.deep.eq([]);
+      expect(result).toEqual([]);
     });
 
     it("returns empty array if base classes aren't provided", async () => {
@@ -185,7 +180,7 @@ describe("BaseClassGrouping", () => {
         }),
       ];
       const result = await baseClassGrouping.getBaseClassGroupingECClasses(imodelAccess, undefined, nodes);
-      expect(result).to.deep.eq([]);
+      expect(result).toEqual([]);
     });
   });
 
@@ -205,7 +200,7 @@ describe("BaseClassGrouping", () => {
         }),
       ];
       const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as EC.Class;
-      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, imodelAccess)).to.deep.eq({
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, imodelAccess)).toEqual({
         groupingType: "base-class",
         grouped: [],
         ungrouped: nodes,
@@ -234,7 +229,7 @@ describe("BaseClassGrouping", () => {
         type: "class-grouping",
         className: eCClass.fullName,
       };
-      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, eCClass, imodelAccess)).to.deep.eq({
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, eCClass, imodelAccess)).toEqual({
         groupingType: "base-class",
         grouped: [
           createTestProcessedGroupingNode({
@@ -286,7 +281,7 @@ describe("BaseClassGrouping", () => {
         className: ecClass.fullName,
       };
 
-      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, imodelAccess)).to.deep.eq({
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, imodelAccess)).toEqual({
         groupingType: "base-class",
         grouped: [
           createTestProcessedGroupingNode({
@@ -337,7 +332,7 @@ describe("BaseClassGrouping", () => {
         className: ecClass.fullName,
       };
 
-      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, imodelAccess)).to.deep.eq({
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, imodelAccess)).toEqual({
         groupingType: "base-class",
         grouped: [
           createTestProcessedGroupingNode({
@@ -374,9 +369,9 @@ describe("BaseClassGrouping", () => {
       imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "TestClass", is: async () => true });
 
       const result = await baseClassGrouping.createBaseClassGroupingHandlers(imodelAccess, undefined, nodes);
-      expect(result.length).to.eq(1);
+      expect(result.length).toBe(1);
       const handlerResult = await result[0](nodes, []);
-      expect(handlerResult.groupingType).to.eq("base-class");
+      expect(handlerResult.groupingType).toBe("base-class");
     });
   });
 });
