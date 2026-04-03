@@ -59,8 +59,8 @@ export function useUnifiedTreeSelection({
   createSelectableForGenericNode,
 }: UseUnifiedTreeSelectionProps & { getTreeModelNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined }): TreeSelectionOptions {
   const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
-    isNodeSelected: /* c8 ignore next */ () => false,
-    selectNodes: /* c8 ignore next */ () => {},
+    isNodeSelected: /* v8 ignore next */ () => false,
+    selectNodes: /* v8 ignore next */ () => {},
   }));
 
   const deprecatedSelectionStorage = useUnifiedSelectionStorage();
@@ -126,6 +126,7 @@ function createOptions(
         }
         Object.entries(groupNodeSelectablesByIModelKey(node, createSelectableForGenericNode)).forEach(([imodelKey, nodeSelectables]) => {
           let selectablesList = imodelSelectables[imodelKey];
+          /** v8 ignore else -- @preserve */
           if (!selectablesList) {
             selectablesList = [];
             imodelSelectables[imodelKey] = selectablesList;
@@ -190,6 +191,7 @@ function groupIModelInstanceKeys(instanceKeys: InstancesNodeKey["instanceKeys"])
     (imodelSelectables, key) => {
       const imodelKey = key.imodelKey ?? "";
       let selectablesList = imodelSelectables[imodelKey];
+      /** v8 ignore else -- @preserve */
       if (!selectablesList) {
         selectablesList = [];
         imodelSelectables[imodelKey] = selectablesList;

@@ -10,10 +10,15 @@ module.exports = {
       outputs: ["lib/**"],
       inputs: ["src/**", "tsconfig*.json"],
     },
-    cover: {
-      dependsOn: ["build"],
+    test: {
+      dependsOn: ["^build"],
       outputs: [],
-      inputs: ["lib/**", ".mocharc.json", "vitest.config.ts", ".nycrc"],
+      inputs: ["src/**", "vitest.config.ts"],
+    },
+    cover: {
+      dependsOn: ["^build"],
+      outputs: [],
+      inputs: ["src/**", "vitest.config.ts"],
     },
     lint: {
       dependsOn: ["build"],
