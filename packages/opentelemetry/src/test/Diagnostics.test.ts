@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { context, Span, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import { exportDiagnostics } from "../presentation-opentelemetry/Diagnostics.js";
 
@@ -28,7 +28,7 @@ describe("exportDiagnostics", () => {
   };
   let currentSpanContext: TestSpanContext;
 
-  beforeAll(() => {
+  beforeEach(() => {
     vi.spyOn(context, "active").mockImplementation(() => currentSpanContext as any);
     vi.spyOn(trace, "getTracer").mockReturnValue({
       startActiveSpan: startActiveSpanStub,
@@ -38,9 +38,6 @@ describe("exportDiagnostics", () => {
       currentSpanContext = { parentSpanName: spanName };
       return cb(spanStub);
     });
-  });
-
-  beforeEach(() => {
     currentSpanContext = { parentSpanName: undefined };
   });
 
