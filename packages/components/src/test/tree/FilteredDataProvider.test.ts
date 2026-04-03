@@ -79,7 +79,7 @@ describe("FilteredTreeDataProvider", () => {
 
   beforeEach(() => {
     const onVariableChanged = new BeEvent();
-    const presentationManager = createMocked(PresentationManager as unknown as abstract new (...args: any[]) => PresentationManager);
+    const presentationManager = createMocked<PresentationManager>(PresentationManager as any);
     presentationManager.vars.mockReturnValue({
       onVariableChanged,
     } as RulesetVariablesManager);

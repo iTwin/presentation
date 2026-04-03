@@ -92,7 +92,7 @@ describe("UnifiedSelectionContext", () => {
     );
 
     await waitFor(() => expect(spy).toHaveBeenCalled());
-    const firstResult = spy.mock.calls.at(-1)![0] as UnifiedSelectionContext;
+    const firstResult = spy.mock.calls[spy.mock.calls.length - 1][0] as UnifiedSelectionContext;
 
     spy.mockReset();
     const newImodel = {} as IModelConnection;
@@ -103,7 +103,7 @@ describe("UnifiedSelectionContext", () => {
     );
 
     await waitFor(() => expect(spy).toHaveBeenCalled());
-    const secondResult = spy.mock.calls.at(-1)![0] as UnifiedSelectionContext;
+    const secondResult = spy.mock.calls[spy.mock.calls.length - 1][0] as UnifiedSelectionContext;
 
     expect(firstResult).not.to.be.equal(secondResult);
     expect(firstResult.getSelection).not.to.be.equal(secondResult.getSelection);

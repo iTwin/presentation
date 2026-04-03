@@ -76,7 +76,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       expect(result.current.isOverLimit).to.be.false;
       expect(result.current.numSelectedElements).to.be.equal(0);
 
-      expect(setKeysSpy.mock.calls.at(-1)![0].isEmpty).toBe(true);
+      expect(setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0].isEmpty).toBe(true);
     });
 
     it("sets keyset when handler returns a selection", () => {
@@ -93,7 +93,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       expect(result.current.isOverLimit).to.be.false;
       expect(result.current.numSelectedElements).to.be.equal(2);
 
-      expect(equalKeySets(setKeys, setKeysSpy.mock.calls.at(-1)![0])).toBe(true);
+      expect(equalKeySets(setKeys, setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
     });
 
     it("sets empty keyset when handler returns selection containing more keys than set limit", () => {
@@ -112,7 +112,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       expect(result.current.isOverLimit).to.be.true;
       expect(result.current.numSelectedElements).to.be.equal(2);
 
-      expect(setKeysSpy.mock.calls.at(-1)![0].isEmpty).toBe(true);
+      expect(setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0].isEmpty).toBe(true);
     });
 
     it("changes KeySet according to selection", () => {
@@ -145,7 +145,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         wrapper: SelectionHandlerWrapper,
       });
 
-      expect(equalKeySets(keys0, setKeysSpy.mock.calls.at(-1)![0])).toBe(true);
+      expect(equalKeySets(keys0, setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
 
       expect(selectionHandler.onSelect).to.not.be.undefined;
       expect(result.current).to.not.be.undefined;
@@ -156,7 +156,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         selectionHandler.onSelect!(selectionEvent, selectionProvider);
       });
 
-      expect(equalKeySets(keys2, setKeysSpy.mock.calls.at(-1)![0])).toBe(true);
+      expect(equalKeySets(keys2, setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
     });
 
     it("disposes selection handler when unmounts", () => {
@@ -204,7 +204,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         expect(result.current).to.not.be.undefined;
         expect(result.current.isOverLimit).to.be.false;
         expect(result.current.numSelectedElements).to.be.equal(0);
-        expect(setKeysSpy.mock.calls.at(-1)![0].isEmpty).toBe(true);
+        expect(setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0].isEmpty).toBe(true);
       });
     });
 
@@ -219,7 +219,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         expect(result.current).to.not.be.undefined;
         expect(result.current.isOverLimit).to.be.false;
         expect(result.current.numSelectedElements).to.be.equal(2);
-        expect(equalKeySets(new KeySet(selectedInstances), setKeysSpy.mock.calls.at(-1)![0])).toBe(true);
+        expect(equalKeySets(new KeySet(selectedInstances), setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
       });
     });
 
@@ -234,7 +234,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         expect(result.current).to.not.be.undefined;
         expect(result.current.isOverLimit).to.be.true;
         expect(result.current.numSelectedElements).to.be.equal(2);
-        expect(setKeysSpy.mock.calls.at(-1)![0].isEmpty).toBe(true);
+        expect(setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0].isEmpty).toBe(true);
       });
     });
 
@@ -248,7 +248,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         initialProps: { selectionStorage, dataProvider: getProvider() },
       });
       await waitFor(async () => {
-        expect(equalKeySets(new KeySet(selectedInstances1), setKeysSpy.mock.calls.at(-1)![0])).toBe(true);
+        expect(equalKeySets(new KeySet(selectedInstances1), setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
         expect(result.current).to.not.be.undefined;
         expect(result.current.isOverLimit).to.be.false;
         expect(result.current.numSelectedElements).to.be.equal(2);
@@ -258,7 +258,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         selectionStorage.replaceSelection({ imodelKey, source: "test", selectables: selectedInstances2 });
       });
       await waitFor(async () => {
-        expect(equalKeySets(new KeySet(selectedInstances2), setKeysSpy.mock.calls.at(-1)![0])).toBe(true);
+        expect(equalKeySets(new KeySet(selectedInstances2), setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
       });
     });
   });

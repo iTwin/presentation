@@ -112,7 +112,7 @@ describe("PropertyDataProvider", () => {
 
     favoritePropertiesManager = createMocked(FavoritePropertiesManager);
     favoritePropertiesManager.hasAsync.mockImplementation(async () => false);
-
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     favoritePropertiesManager.has.mockImplementation(() => false);
     Object.assign(favoritePropertiesManager, {
       onFavoritesChanged,
@@ -231,7 +231,7 @@ describe("PropertyDataProvider", () => {
     it("calls `FavoritePropertiesManager.has` when `hasAsync` is not available", async () => {
       Object.assign(favoritePropertiesManager, { hasAsync: undefined });
       await provider.isFieldFavoriteAsync(field);
-
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       expect(favoritePropertiesManager.has).toHaveBeenCalledExactlyOnceWith(field, imodel, FavoritePropertiesScope.IModel);
     });
 
@@ -246,6 +246,7 @@ describe("PropertyDataProvider", () => {
       const spy = vi.spyOn(subclassProvider, "isFieldFavorite");
       await subclassProvider.isFieldFavoriteAsync(field);
       expect(spy).toHaveBeenCalledOnce();
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       expect(favoritePropertiesManager.has).toHaveBeenCalledExactlyOnceWith(field, imodel, FavoritePropertiesScope.IModel);
     });
   });
