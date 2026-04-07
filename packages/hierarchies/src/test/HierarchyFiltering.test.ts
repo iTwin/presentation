@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../hierarchies/HierarchyFiltering.js";
 
 describe("HierarchyFilteringPath", () => {
@@ -41,7 +41,7 @@ describe("HierarchyFilteringPath", () => {
       it("returns correct result for different autoExpand options", () => {
         for (let i = 0; i < optionsInOrderOfPriority.length; ++i) {
           for (let j = 0; j < optionsInOrderOfPriority.length; ++j) {
-            expect(HierarchyFilteringPath.mergeOptions(optionsInOrderOfPriority[i], optionsInOrderOfPriority[j])).to.deep.eq(
+            expect(HierarchyFilteringPath.mergeOptions(optionsInOrderOfPriority[i], optionsInOrderOfPriority[j])).toEqual(
               i < j ? optionsInOrderOfPriority[i] : optionsInOrderOfPriority[j],
             );
           }

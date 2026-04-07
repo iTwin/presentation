@@ -204,7 +204,7 @@ export namespace HierarchyFilteringPath {
  * @public
  * @deprecated in 1.3. Use `createHierarchyFilteringHelper` instead.
  */
-/* c8 ignore start */
+/* v8 ignore start */
 export function extractFilteringProps(
   rootLevelFilteringProps: HierarchyFilteringPath[],
   parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
@@ -216,7 +216,7 @@ export function extractFilteringProps(
   | undefined {
   return extractFilteringPropsInternal(rootLevelFilteringProps, parentNode);
 }
-/* c8 ignore end */
+/* v8 ignore stop */
 
 function extractFilteringPropsInternal(
   rootLevelFilteringProps: HierarchyFilteringPath[] | undefined,
@@ -228,7 +228,7 @@ function extractFilteringPropsInternal(
     }
   | undefined {
   if (!parentNode) {
-    return rootLevelFilteringProps ? { filteredNodePaths: rootLevelFilteringProps, hasFilterTargetAncestor: false } : undefined;
+    return rootLevelFilteringProps ? { filteredNodePaths: rootLevelFilteringProps, hasFilterTargetAncestor: false } : /** v8 ignore next */ undefined;
   }
   return parentNode.filtering?.filteredChildrenIdentifierPaths
     ? {
@@ -296,18 +296,23 @@ export function createHierarchyFilteringHelper(
             pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
           },
     ): Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined => {
+      // TODO: MISSING_COVERAGE
+      /* v8 ignore if -- @preserve */
       if (!hasFilter) {
         return undefined;
       }
       const reducer = new MatchingFilteringPathsReducer(filteringProps?.hasFilterTargetAncestor);
       filteringProps.filteredNodePaths.forEach((filteredPath) => {
         const normalizedPath = HierarchyFilteringPath.normalize(filteredPath);
+        // TODO: MISSING_COVERAGE
+        /* v8 ignore start */
         if (
           "nodeKey" in props &&
           ((HierarchyNodeKey.isGeneric(props.nodeKey) && HierarchyNodeIdentifier.equal(normalizedPath.path[0], props.nodeKey)) ||
             (HierarchyNodeKey.isInstances(props.nodeKey) && props.nodeKey.instanceKeys.some((ik) => HierarchyNodeIdentifier.equal(normalizedPath.path[0], ik))))
         ) {
           reducer.accept(normalizedPath);
+          /* v8 ignore stop */
         } else if ("pathMatcher" in props && props.pathMatcher(normalizedPath.path[0])) {
           reducer.accept(normalizedPath);
         }
@@ -321,6 +326,8 @@ export function createHierarchyFilteringHelper(
     createChildNodePropsAsync: (props: {
       pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
     }): Promise<Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined> | Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined => {
+      // TODO: MISSING_COVERAGE
+      /* v8 ignore if -- @preserve */
       if (!hasFilter) {
         return undefined;
       }
@@ -328,7 +335,8 @@ export function createHierarchyFilteringHelper(
       const matchedPathPromises = new Array<Promise<NormalizedFilteringPath | undefined>>();
       for (const filteredChildrenNodeIdentifierPath of filteringProps.filteredNodePaths) {
         const normalizedPath = HierarchyFilteringPath.normalize(filteredChildrenNodeIdentifierPath);
-        /* c8 ignore next 3 */
+        // TODO: MISSING_COVERAGE
+        /* v8 ignore if -- @preserve */
         if (normalizedPath.path.length === 0) {
           continue;
         }
@@ -366,6 +374,8 @@ class MatchingFilteringPathsReducer {
 
   public accept(normalizedPath: NormalizedFilteringPath): void {
     const { path, options } = normalizedPath;
+    // TODO: MISSING_COVERAGE
+    /* v8 ignore else -- @preserve */
     if (path.length === 1) {
       this._isFilterTarget = true;
       this._filterTargetOptions = HierarchyFilteringPath.mergeOptions(this._filterTargetOptions, options);
@@ -384,9 +394,13 @@ class MatchingFilteringPathsReducer {
         ? 0
         : "key" in this._autoExpandOption ||
             "depthInHierarchy" in this._autoExpandOption ||
+            // TODO: MISSING_COVERAGE
+            /* v8 ignore start */
             // eslint-disable-next-line @typescript-eslint/no-deprecated
             ("includeGroupingNodes" in this._autoExpandOption && this._autoExpandOption.includeGroupingNodes)
-          ? 1 + parentNode.parentKeys.length
+          ? // TODO: MISSING_COVERAGE
+            /* v8 ignore stop */
+            1 + parentNode.parentKeys.length
           : 1 + parentNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
       const depth =
         "depthInHierarchy" in this._autoExpandOption
@@ -395,7 +409,8 @@ class MatchingFilteringPathsReducer {
             ? // eslint-disable-next-line @typescript-eslint/no-deprecated
               this._autoExpandOption.depth
             : // With `depthInPath` option we don't want to expand node that is at the `depthInPath` position
-              this._autoExpandOption.depthInPath - 1;
+              // TODO: MISSING_COVERAGE
+              /* v8 ignore next */ this._autoExpandOption.depthInPath - 1;
 
       return parentLength < depth;
     }

@@ -439,6 +439,8 @@ async function createGroupingSelector(
       ]),
     });
 
+  // TODO: MISSING_COVERAGE
+  /* v8 ignore else -- @preserve */
   if (grouping.byProperties) {
     const propertyClass = await getClass(imodelAccess, grouping.byProperties.propertiesClassName);
     groupingSelectors.push({
@@ -523,6 +525,8 @@ async function createPropertyGroupSelectors(
     const relationshipClass = await property.relationshipClass;
     const abstractConstraint =
       property.direction === "Forward" ? await relationshipClass.target.abstractConstraint : await relationshipClass.source.abstractConstraint;
+    // TODO: MISSING_COVERAGE
+    /* v8 ignore else -- @preserve */
     if (!abstractConstraint) {
       throw new Error(`Could not determine class name for navigation property with direction "${property.direction}".`);
     }

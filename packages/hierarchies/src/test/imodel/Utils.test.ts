@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { InstanceHierarchyNodeProcessingParams } from "../../hierarchies/imodel/IModelHierarchyNode.js";
 import { mergeInstanceNodes } from "../../hierarchies/imodel/Utils.js";
 import { createTestGenericNodeKey, createTestProcessedInstanceNode } from "../Utils.js";
@@ -16,75 +16,80 @@ describe("mergeInstanceNodes", () => {
     const rhs = createTestProcessedInstanceNode({
       label: "custom2",
     });
-    expect(mergeInstanceNodes(lhs, rhs).label).to.eq("custom1");
+    expect(mergeInstanceNodes(lhs, rhs).label).toBe("custom1");
   });
 
   it("merges auto-expand flag", () => {
     expect(
       mergeInstanceNodes(createTestProcessedInstanceNode({ autoExpand: undefined }), createTestProcessedInstanceNode({ autoExpand: undefined })).autoExpand,
-    ).to.be.undefined;
-    expect(mergeInstanceNodes(createTestProcessedInstanceNode({ autoExpand: false }), createTestProcessedInstanceNode({ autoExpand: false })).autoExpand).to.be
-      .undefined;
-    expect(mergeInstanceNodes(createTestProcessedInstanceNode({ autoExpand: false }), createTestProcessedInstanceNode({ autoExpand: true })).autoExpand).to.be
-      .true;
-    expect(mergeInstanceNodes(createTestProcessedInstanceNode({ autoExpand: true }), createTestProcessedInstanceNode({ autoExpand: true })).autoExpand).to.be
-      .true;
-    expect(mergeInstanceNodes(createTestProcessedInstanceNode({ autoExpand: true }), createTestProcessedInstanceNode({ autoExpand: false })).autoExpand).to.be
-      .true;
-    expect(mergeInstanceNodes(createTestProcessedInstanceNode({ autoExpand: true }), createTestProcessedInstanceNode({ autoExpand: undefined })).autoExpand).to
-      .be.true;
+    ).toBeUndefined();
+    expect(
+      mergeInstanceNodes(createTestProcessedInstanceNode({ autoExpand: false }), createTestProcessedInstanceNode({ autoExpand: false })).autoExpand,
+    ).toBeUndefined();
+    expect(mergeInstanceNodes(createTestProcessedInstanceNode({ autoExpand: false }), createTestProcessedInstanceNode({ autoExpand: true })).autoExpand).toBe(
+      true,
+    );
+    expect(mergeInstanceNodes(createTestProcessedInstanceNode({ autoExpand: true }), createTestProcessedInstanceNode({ autoExpand: true })).autoExpand).toBe(
+      true,
+    );
+    expect(mergeInstanceNodes(createTestProcessedInstanceNode({ autoExpand: true }), createTestProcessedInstanceNode({ autoExpand: false })).autoExpand).toBe(
+      true,
+    );
+    expect(
+      mergeInstanceNodes(createTestProcessedInstanceNode({ autoExpand: true }), createTestProcessedInstanceNode({ autoExpand: undefined })).autoExpand,
+    ).toBe(true);
   });
 
   it("merges supports-filtering flag", () => {
     expect(
       mergeInstanceNodes(createTestProcessedInstanceNode({ supportsFiltering: undefined }), createTestProcessedInstanceNode({ supportsFiltering: undefined }))
         .supportsFiltering,
-    ).to.be.undefined;
+    ).toBeUndefined();
     expect(
       mergeInstanceNodes(createTestProcessedInstanceNode({ supportsFiltering: false }), createTestProcessedInstanceNode({ supportsFiltering: false }))
         .supportsFiltering,
-    ).to.be.undefined;
+    ).toBeUndefined();
     expect(
       mergeInstanceNodes(createTestProcessedInstanceNode({ supportsFiltering: false }), createTestProcessedInstanceNode({ supportsFiltering: true }))
         .supportsFiltering,
-    ).to.be.undefined;
+    ).toBeUndefined();
     expect(
       mergeInstanceNodes(createTestProcessedInstanceNode({ supportsFiltering: true }), createTestProcessedInstanceNode({ supportsFiltering: true }))
         .supportsFiltering,
-    ).to.be.true;
+    ).toBe(true);
     expect(
       mergeInstanceNodes(createTestProcessedInstanceNode({ supportsFiltering: true }), createTestProcessedInstanceNode({ supportsFiltering: false }))
         .supportsFiltering,
-    ).to.be.undefined;
+    ).toBeUndefined();
     expect(
       mergeInstanceNodes(createTestProcessedInstanceNode({ supportsFiltering: true }), createTestProcessedInstanceNode({ supportsFiltering: undefined }))
         .supportsFiltering,
-    ).to.be.undefined;
+    ).toBeUndefined();
   });
 
   it("merges extended data", () => {
     expect(
       mergeInstanceNodes(createTestProcessedInstanceNode({ extendedData: undefined }), createTestProcessedInstanceNode({ extendedData: undefined }))
         .extendedData,
-    ).to.be.undefined;
+    ).toBeUndefined();
     expect(
       mergeInstanceNodes(createTestProcessedInstanceNode({ extendedData: undefined }), createTestProcessedInstanceNode({ extendedData: { x: 123 } }))
         .extendedData,
-    ).to.deep.eq({ x: 123 });
+    ).toEqual({ x: 123 });
     expect(
       mergeInstanceNodes(createTestProcessedInstanceNode({ extendedData: { x: 123 } }), createTestProcessedInstanceNode({ extendedData: { y: 456 } }))
         .extendedData,
-    ).to.deep.eq({ x: 123, y: 456 });
+    ).toEqual({ x: 123, y: 456 });
     expect(
       mergeInstanceNodes(createTestProcessedInstanceNode({ extendedData: { x: 123 } }), createTestProcessedInstanceNode({ extendedData: { x: 456 } }))
         .extendedData,
-    ).to.deep.eq({ x: 456 });
+    ).toEqual({ x: 456 });
   });
 
   it("merges instance node keys", () => {
     const lhs = createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1" }] } });
     const rhs = createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ className: "c.d", id: "0x2" }] } });
-    expect(mergeInstanceNodes(lhs, rhs).key).to.deep.eq({
+    expect(mergeInstanceNodes(lhs, rhs).key).toEqual({
       type: "instances",
       instanceKeys: [
         { className: "a.b", id: "0x1" },
@@ -100,7 +105,7 @@ describe("mergeInstanceNodes", () => {
       expect(
         mergeInstanceNodes(createTestProcessedInstanceNode({ parentKeys: lhsParentKeys }), createTestProcessedInstanceNode({ parentKeys: rhsParentKeys }))
           .parentKeys,
-      ).to.deep.eq([createTestGenericNodeKey({ id: "1" })]);
+      ).toEqual([createTestGenericNodeKey({ id: "1" })]);
     });
 
     it("takes from rhs when lhs starts with rhs", () => {
@@ -109,7 +114,7 @@ describe("mergeInstanceNodes", () => {
       expect(
         mergeInstanceNodes(createTestProcessedInstanceNode({ parentKeys: lhsParentKeys }), createTestProcessedInstanceNode({ parentKeys: rhsParentKeys }))
           .parentKeys,
-      ).to.deep.eq([createTestGenericNodeKey({ id: "1" })]);
+      ).toEqual([createTestGenericNodeKey({ id: "1" })]);
     });
 
     it("takes common part from the two lists", () => {
@@ -118,7 +123,7 @@ describe("mergeInstanceNodes", () => {
       expect(
         mergeInstanceNodes(createTestProcessedInstanceNode({ parentKeys: lhsParentKeys }), createTestProcessedInstanceNode({ parentKeys: rhsParentKeys }))
           .parentKeys,
-      ).to.deep.eq([createTestGenericNodeKey({ id: "1" })]);
+      ).toEqual([createTestGenericNodeKey({ id: "1" })]);
     });
   });
 
@@ -127,7 +132,7 @@ describe("mergeInstanceNodes", () => {
       expect(
         mergeInstanceNodes(createTestProcessedInstanceNode({ processingParams: undefined }), createTestProcessedInstanceNode({ processingParams: undefined }))
           .processingParams,
-      ).to.be.undefined;
+      ).toBeUndefined();
     });
 
     it("merges hide if no children flag", () => testProcessingParamsFlagMerging("hideIfNoChildren"));
@@ -153,26 +158,26 @@ describe("mergeInstanceNodes", () => {
           createTestProcessedInstanceNode({ processingParams: { [flag]: rhs } }),
         ).processingParams;
         const actualValue = mergedParams ? mergedParams[flag] : undefined;
-        expect(actualValue).to.eq(expectedMergedValue);
+        expect(actualValue).toBe(expectedMergedValue);
       });
       expect(
         mergeInstanceNodes(
           createTestProcessedInstanceNode({ processingParams: { [flag]: undefined } }),
           createTestProcessedInstanceNode({ processingParams: undefined }),
         ).processingParams,
-      ).to.be.undefined;
+      ).toBeUndefined();
       expect(
         mergeInstanceNodes(
           createTestProcessedInstanceNode({ processingParams: { [flag]: false } }),
           createTestProcessedInstanceNode({ processingParams: undefined }),
         ).processingParams,
-      ).to.be.undefined;
+      ).toBeUndefined();
       expect(
         mergeInstanceNodes(
           createTestProcessedInstanceNode({ processingParams: { [flag]: true } }),
           createTestProcessedInstanceNode({ processingParams: undefined }),
         ).processingParams![flag],
-      ).to.be.true;
+      ).toBe(true);
     }
 
     it("merges 'byLabel' params only when they match", () => {
@@ -181,43 +186,43 @@ describe("mergeInstanceNodes", () => {
           createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "merge", groupId: "y" } } } }),
           createTestProcessedInstanceNode({ processingParams: undefined }),
         ).processingParams,
-      ).to.be.undefined;
+      ).toBeUndefined();
       expect(
         mergeInstanceNodes(
           createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "merge", groupId: "y" } } } }),
           createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "merge", groupId: "x" } } } }),
         ).processingParams,
-      ).to.be.undefined;
+      ).toBeUndefined();
       expect(
         mergeInstanceNodes(
           createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "merge", groupId: "x" } } } }),
           createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "group", groupId: "x" } } } }),
         ).processingParams,
-      ).to.be.undefined;
+      ).toBeUndefined();
       expect(
         mergeInstanceNodes(
           createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { groupId: "x" } } } }),
           createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { groupId: "x" } } } }),
         ).processingParams,
-      ).to.be.undefined;
+      ).toBeUndefined();
       expect(
         mergeInstanceNodes(
           createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: {} } } }),
           createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: {} } } }),
         ).processingParams,
-      ).to.be.undefined;
+      ).toBeUndefined();
       expect(
         mergeInstanceNodes(
           createTestProcessedInstanceNode({ processingParams: undefined }),
           createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "merge", groupId: "x" } } } }),
         ).processingParams,
-      ).to.be.undefined;
+      ).toBeUndefined();
       expect(
         mergeInstanceNodes(
           createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "merge", groupId: "x" } } } }),
           createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "merge", groupId: "x" } } } }),
         ).processingParams,
-      ).to.deep.eq({ grouping: { byLabel: { action: "merge", groupId: "x" } } });
+      ).toEqual({ grouping: { byLabel: { action: "merge", groupId: "x" } } });
     });
 
     describe("merging grouping params", () => {
@@ -227,34 +232,40 @@ describe("mergeInstanceNodes", () => {
             createTestProcessedInstanceNode({ processingParams: { grouping: undefined } }),
             createTestProcessedInstanceNode({ processingParams: { grouping: undefined } }),
           ).processingParams?.grouping,
-        ).to.be.undefined;
+        ).toBeUndefined();
       });
     });
   });
 
   describe("merging children", () => {
     it("returns `true` if at least one node has `true`", () => {
-      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: true }), createTestProcessedInstanceNode({ children: true })).children).to.be.true;
-      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: true }), createTestProcessedInstanceNode({ children: false })).children).to.be.true;
-      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: false }), createTestProcessedInstanceNode({ children: true })).children).to.be.true;
-      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: true }), createTestProcessedInstanceNode({ children: undefined })).children).to.be
-        .true;
-      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: undefined }), createTestProcessedInstanceNode({ children: true })).children).to.be
-        .true;
+      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: true }), createTestProcessedInstanceNode({ children: true })).children).toBe(true);
+      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: true }), createTestProcessedInstanceNode({ children: false })).children).toBe(true);
+      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: false }), createTestProcessedInstanceNode({ children: true })).children).toBe(true);
+      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: true }), createTestProcessedInstanceNode({ children: undefined })).children).toBe(
+        true,
+      );
+      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: undefined }), createTestProcessedInstanceNode({ children: true })).children).toBe(
+        true,
+      );
     });
 
     it("returns `false` if both nodes have `false`", () => {
-      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: false }), createTestProcessedInstanceNode({ children: false })).children).to.be
-        .false;
+      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: false }), createTestProcessedInstanceNode({ children: false })).children).toBe(
+        false,
+      );
     });
 
     it("returns `undefined` if neither node has truthy value", () => {
-      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: undefined }), createTestProcessedInstanceNode({ children: undefined })).children).to
-        .be.undefined;
-      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: false }), createTestProcessedInstanceNode({ children: undefined })).children).to.be
-        .undefined;
-      expect(mergeInstanceNodes(createTestProcessedInstanceNode({ children: undefined }), createTestProcessedInstanceNode({ children: false })).children).to.be
-        .undefined;
+      expect(
+        mergeInstanceNodes(createTestProcessedInstanceNode({ children: undefined }), createTestProcessedInstanceNode({ children: undefined })).children,
+      ).toBeUndefined();
+      expect(
+        mergeInstanceNodes(createTestProcessedInstanceNode({ children: false }), createTestProcessedInstanceNode({ children: undefined })).children,
+      ).toBeUndefined();
+      expect(
+        mergeInstanceNodes(createTestProcessedInstanceNode({ children: undefined }), createTestProcessedInstanceNode({ children: false })).children,
+      ).toBeUndefined();
     });
   });
 });

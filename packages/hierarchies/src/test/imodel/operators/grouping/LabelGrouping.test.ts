@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
 import { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping.js";
 import { createLabelGroups } from "../../../../hierarchies/imodel/operators/grouping/LabelGrouping.js";
@@ -24,7 +24,7 @@ describe("LabelGrouping", () => {
       label: "1",
       groupId: undefined,
     };
-    expect(await createLabelGroups(nodes)).to.deep.eq({
+    expect(await createLabelGroups(nodes)).toEqual({
       groupingType: "label",
       grouped: [
         createTestProcessedGroupingNode({
@@ -53,7 +53,7 @@ describe("LabelGrouping", () => {
       label: "1",
       groupId: undefined,
     };
-    expect(await createLabelGroups(nodes)).to.deep.eq({
+    expect(await createLabelGroups(nodes)).toEqual({
       groupingType: "label",
       grouped: [
         createTestProcessedGroupingNode({
@@ -82,7 +82,7 @@ describe("LabelGrouping", () => {
       label: "1",
       groupId: undefined,
     };
-    expect(await createLabelGroups(nodes)).to.deep.eq({
+    expect(await createLabelGroups(nodes)).toEqual({
       groupingType: "label",
       grouped: [
         createTestProcessedGroupingNode({
@@ -122,7 +122,7 @@ describe("LabelGrouping", () => {
       label: "1",
       groupId: "groupId2",
     };
-    expect(await createLabelGroups(nodes)).to.deep.eq({
+    expect(await createLabelGroups(nodes)).toEqual({
       groupingType: "label",
       grouped: [
         createTestProcessedGroupingNode({
@@ -164,7 +164,7 @@ describe("LabelGrouping", () => {
       label: "1",
       groupId: "groupId1",
     };
-    expect(await createLabelGroups(nodes)).to.deep.eq({
+    expect(await createLabelGroups(nodes)).toEqual({
       groupingType: "label",
       grouped: [
         createTestProcessedGroupingNode({
@@ -199,7 +199,7 @@ describe("LabelGrouping", () => {
       label: "1",
       groupId: undefined,
     };
-    expect(await createLabelGroups(nodes)).to.deep.eq({
+    expect(await createLabelGroups(nodes)).toEqual({
       groupingType: "label",
       grouped: [
         createTestProcessedGroupingNode({
@@ -239,7 +239,7 @@ describe("LabelGrouping", () => {
       label: "2",
       groupId: undefined,
     };
-    expect(await createLabelGroups(nodes)).to.deep.eq({
+    expect(await createLabelGroups(nodes)).toEqual({
       groupingType: "label",
       grouped: [
         createTestProcessedGroupingNode({
@@ -269,8 +269,8 @@ describe("LabelGrouping", () => {
       }),
     ];
     const result = await createLabelGroups(nodes);
-    expect(result.ungrouped).to.deep.eq(nodes);
-    expect(result.grouped).to.deep.eq([]);
+    expect(result.ungrouped).toEqual(nodes);
+    expect(result.grouped).toEqual([]);
   });
 
   it("doesn't merge nodes that don't have `mergeId` set", async () => {
@@ -279,8 +279,8 @@ describe("LabelGrouping", () => {
       createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] } }),
     ];
     const result = await createLabelGroups(nodes);
-    expect(result.ungrouped).to.deep.eq(nodes);
-    expect(result.grouped).to.deep.eq([]);
+    expect(result.ungrouped).toEqual(nodes);
+    expect(result.grouped).toEqual([]);
   });
 
   it("doesn't merge nodes that have different `groupId`", async () => {
@@ -295,11 +295,11 @@ describe("LabelGrouping", () => {
       }),
     ];
     const result = await createLabelGroups(nodes);
-    expect(result.ungrouped).to.deep.eq([
+    expect(result.ungrouped).toEqual([
       { ...nodes[0], processingParams: { grouping: { byLabel: { action: "merge", groupId: "a" } } } },
       { ...nodes[1], processingParams: { grouping: { byLabel: { action: "merge", groupId: "b" } } } },
     ]);
-    expect(result.grouped).to.deep.eq([]);
+    expect(result.grouped).toEqual([]);
   });
 
   it("doesn't merge nodes that have different labels", async () => {
@@ -316,11 +316,11 @@ describe("LabelGrouping", () => {
       }),
     ];
     const result = await createLabelGroups(nodes);
-    expect(result.ungrouped).to.deep.eq([
+    expect(result.ungrouped).toEqual([
       { ...nodes[0], processingParams: { grouping: { byLabel: { action: "merge", groupId: "x" } } } },
       { ...nodes[1], processingParams: { grouping: { byLabel: { action: "merge", groupId: "x" } } } },
     ]);
-    expect(result.grouped).to.deep.eq([]);
+    expect(result.grouped).toEqual([]);
   });
 
   it("merges nodes that have `grouping.byLabel.action` set to `merge` and that have the same `groupId` and label", async () => {
@@ -347,7 +347,7 @@ describe("LabelGrouping", () => {
       }),
     ];
     const result = await createLabelGroups(nodes);
-    expect(result.ungrouped).to.deep.eq([
+    expect(result.ungrouped).toEqual([
       createTestProcessedInstanceNode({
         key: {
           type: "instances",
@@ -369,6 +369,6 @@ describe("LabelGrouping", () => {
         },
       }),
     ]);
-    expect(result.grouped).to.deep.eq([]);
+    expect(result.grouped).toEqual([]);
   });
 });

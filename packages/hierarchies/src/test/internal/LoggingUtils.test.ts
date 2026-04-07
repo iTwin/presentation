@@ -3,28 +3,26 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { of } from "rxjs";
-import sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { ILogger, LogLevel } from "@itwin/presentation-shared";
 import { doLog, log } from "../../hierarchies/internal/LoggingUtils.js";
 import { setLogger } from "../../hierarchies/Logging.js";
 
 describe("LoggingUtils", () => {
-  let logger: sinon.SinonStubbedInstance<ILogger>;
+  let logger: { [K in keyof ILogger]: ILogger[K] extends (...args: any[]) => any ? Mock : ILogger[K] };
   beforeEach(() => {
     logger = {
-      isEnabled: sinon.stub(),
-      logError: sinon.stub(),
-      logWarning: sinon.stub(),
-      logInfo: sinon.stub(),
-      logTrace: sinon.stub(),
+      isEnabled: vi.fn(),
+      logError: vi.fn(),
+      logWarning: vi.fn(),
+      logInfo: vi.fn(),
+      logTrace: vi.fn(),
     };
-    setLogger(logger);
+    setLogger(logger as unknown as ILogger);
   });
 
   afterEach(() => {
-    sinon.restore();
     setLogger(undefined);
   });
 
@@ -32,87 +30,87 @@ describe("LoggingUtils", () => {
     const severities: LogLevel[] = ["error", "warning", "info", "trace"];
 
     it("doesn't call log func if severity is disabled", () => {
-      logger.isEnabled.returns(false);
-      const messageFunc = sinon.stub().returns("test message");
+      logger.isEnabled.mockReturnValue(false);
+      const messageFunc = vi.fn().mockReturnValue("test message");
 
       severities.forEach((severity) => doLog({ category: "test category", message: messageFunc, severity }));
 
-      expect(logger.isEnabled.callCount).to.eq(4);
-      severities.forEach((severity) => expect(logger.isEnabled).to.be.calledWith("test category", severity));
+      expect(logger.isEnabled.mock.calls.length).toBe(4);
+      severities.forEach((severity) => expect(logger.isEnabled).toHaveBeenCalledWith("test category", severity));
 
-      expect(messageFunc).to.not.be.called;
-      expect(logger.logError).to.not.be.called;
-      expect(logger.logWarning).to.not.be.called;
-      expect(logger.logInfo).to.not.be.called;
-      expect(logger.logTrace).to.not.be.called;
+      expect(messageFunc).not.toHaveBeenCalled();
+      expect(logger.logError).not.toHaveBeenCalled();
+      expect(logger.logWarning).not.toHaveBeenCalled();
+      expect(logger.logInfo).not.toHaveBeenCalled();
+      expect(logger.logTrace).not.toHaveBeenCalled();
     });
 
     it("calls error log func", () => {
-      logger.isEnabled.returns(true);
-      const messageFunc = sinon.stub().returns("test message");
+      logger.isEnabled.mockReturnValue(true);
+      const messageFunc = vi.fn().mockReturnValue("test message");
 
       doLog({ category: "test category", message: messageFunc, severity: "error" });
 
-      expect(logger.isEnabled).to.be.calledOnceWith("test category", "error");
-      expect(messageFunc).to.be.calledOnce;
-      expect(logger.logError).to.be.calledOnceWith("test category", "test message");
+      expect(logger.isEnabled).toHaveBeenCalledExactlyOnceWith("test category", "error");
+      expect(messageFunc).toHaveBeenCalledOnce();
+      expect(logger.logError).toHaveBeenCalledExactlyOnceWith("test category", "test message");
     });
 
     it("calls warning log func", () => {
-      logger.isEnabled.returns(true);
-      const messageFunc = sinon.stub().returns("test message");
+      logger.isEnabled.mockReturnValue(true);
+      const messageFunc = vi.fn().mockReturnValue("test message");
 
       doLog({ category: "test category", message: messageFunc, severity: "warning" });
 
-      expect(logger.isEnabled).to.be.calledOnceWith("test category", "warning");
-      expect(messageFunc).to.be.calledOnce;
-      expect(logger.logWarning).to.be.calledOnceWith("test category", "test message");
+      expect(logger.isEnabled).toHaveBeenCalledExactlyOnceWith("test category", "warning");
+      expect(messageFunc).toHaveBeenCalledOnce();
+      expect(logger.logWarning).toHaveBeenCalledExactlyOnceWith("test category", "test message");
     });
 
     it("calls info log func", () => {
-      logger.isEnabled.returns(true);
-      const messageFunc = sinon.stub().returns("test message");
+      logger.isEnabled.mockReturnValue(true);
+      const messageFunc = vi.fn().mockReturnValue("test message");
 
       doLog({ category: "test category", message: messageFunc, severity: "info" });
 
-      expect(logger.isEnabled).to.be.calledOnceWith("test category", "info");
-      expect(messageFunc).to.be.calledOnce;
-      expect(logger.logInfo).to.be.calledOnceWith("test category", "test message");
+      expect(logger.isEnabled).toHaveBeenCalledExactlyOnceWith("test category", "info");
+      expect(messageFunc).toHaveBeenCalledOnce();
+      expect(logger.logInfo).toHaveBeenCalledExactlyOnceWith("test category", "test message");
     });
 
     it("calls trace log func", () => {
-      logger.isEnabled.returns(true);
-      const messageFunc = sinon.stub().returns("test message");
+      logger.isEnabled.mockReturnValue(true);
+      const messageFunc = vi.fn().mockReturnValue("test message");
 
       doLog({ category: "test category", message: messageFunc, severity: "trace" });
 
-      expect(logger.isEnabled).to.be.calledOnceWith("test category", "trace");
-      expect(messageFunc).to.be.calledOnce;
-      expect(logger.logTrace).to.be.calledOnceWith("test category", "test message");
+      expect(logger.isEnabled).toHaveBeenCalledExactlyOnceWith("test category", "trace");
+      expect(messageFunc).toHaveBeenCalledOnce();
+      expect(logger.logTrace).toHaveBeenCalledExactlyOnceWith("test category", "test message");
     });
 
     it("calls trace log func when no severity is provided", () => {
-      logger.isEnabled.returns(true);
-      const messageFunc = sinon.stub().returns("test message");
+      logger.isEnabled.mockReturnValue(true);
+      const messageFunc = vi.fn().mockReturnValue("test message");
 
       doLog({ category: "test category", message: messageFunc });
 
-      expect(logger.isEnabled).to.be.calledOnceWith("test category", "trace");
-      expect(messageFunc).to.be.calledOnce;
-      expect(logger.logTrace).to.be.calledOnceWith("test category", "test message");
+      expect(logger.isEnabled).toHaveBeenCalledExactlyOnceWith("test category", "trace");
+      expect(messageFunc).toHaveBeenCalledOnce();
+      expect(logger.logTrace).toHaveBeenCalledExactlyOnceWith("test category", "test message");
     });
   });
 
   describe("log", () => {
     it("calls logger function with correct arguments", () => {
-      logger.isEnabled.returns(true);
-      const messageFunc = sinon.stub().returns("test message");
+      logger.isEnabled.mockReturnValue(true);
+      const messageFunc = vi.fn().mockReturnValue("test message");
       const input = {};
       of(input)
         .pipe(log({ category: "test category", message: messageFunc, severity: "info" }))
         .subscribe();
-      expect(messageFunc).to.be.calledOnceWith(input);
-      expect(logger.logInfo).to.be.calledOnceWith("test category", "test message");
+      expect(messageFunc).toHaveBeenCalledExactlyOnceWith(input);
+      expect(logger.logInfo).toHaveBeenCalledExactlyOnceWith("test category", "test message");
     });
   });
 });

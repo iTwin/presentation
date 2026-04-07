@@ -5,5 +5,5 @@
     "moduleResolution": "Node",
     "outDir": "lib/cjs"
   },
-  "exclude": ["src/test/**/*"]
+  "include": ["src/hierarchies", "src/presentation-hierarchies.ts"]
 }
