@@ -293,9 +293,9 @@ export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeE
   return useDisposable(
     useCallback(
       () => new UnifiedSelectionTreeEventHandler(props),
-      Object.values(
-        props,
-      ) /* eslint-disable-line react-hooks/exhaustive-deps */ /* want to re-create the handler whenever any prop changes */,
+      /* want to re-create the handler whenever any prop changes */
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      Object.values(props),
     ),
   );
 }

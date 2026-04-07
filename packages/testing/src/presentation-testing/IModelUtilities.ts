@@ -67,9 +67,9 @@ export async function buildTestIModel(
  * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
  * @beta
  */
-// eslint-disable-next-line @typescript-eslint/unified-signatures
 export async function buildTestIModel(
   name: string,
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
   cb: (builder: TestIModelBuilder) => Promise<void>,
 ): Promise<IModelConnection>;
 /**
@@ -79,8 +79,8 @@ export async function buildTestIModel(
  * @beta
  * @deprecated in 4.x. Use an overload with `cb` returning a promise.
  */
-// eslint-disable-next-line @typescript-eslint/unified-signatures
 export async function buildTestIModel(
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
   mochaContext: Mocha.Context,
   cb: (builder: TestIModelBuilder) => void,
 ): Promise<IModelConnection>;
@@ -90,9 +90,10 @@ export async function buildTestIModel(
  * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
  * @beta
  */
-// eslint-disable-next-line @typescript-eslint/unified-signatures
 export async function buildTestIModel(
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
   mochaContext: Mocha.Context,
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
   cb: (builder: TestIModelBuilder) => Promise<void>,
 ): Promise<IModelConnection>;
 export async function buildTestIModel(

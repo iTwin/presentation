@@ -86,8 +86,9 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
                 })),
               );
             }
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
+
             return from(
+              // eslint-disable-next-line @typescript-eslint/no-deprecated
               Presentation.presentation.getDisplayLabelDefinitions({ imodel: this.imodel, keys: keysBatch }),
             ).pipe(
               mergeAll(),

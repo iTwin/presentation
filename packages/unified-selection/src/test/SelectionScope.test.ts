@@ -39,9 +39,9 @@ describe("SelectionScope", () => {
     function mockQuery(targetECSqlContent: string, result: SelectableInstanceKey[]) {
       queryExecutor.createQueryReader
         .withArgs(sinon.match((query: ECSqlQueryDef) => query.ecsql.includes(targetECSqlContent)))
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         .returns(
           createFakeQueryReader<ECSqlQueryRow>(
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             result.map((key) => ({ ECInstanceId: key.id, ClassName: key.className })),
           ),
         );

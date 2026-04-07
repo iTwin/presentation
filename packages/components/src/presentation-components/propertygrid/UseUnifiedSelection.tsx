@@ -63,10 +63,10 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
 const SelectionHandlerContext = createContext<SelectionHandler | undefined>(undefined);
 
 /** @internal */
-// eslint-disable-next-line @typescript-eslint/no-deprecated
 export function SelectionHandlerContextProvider({
   selectionHandler,
   children,
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
 }: PropsWithChildren<{ selectionHandler: SelectionHandler }>) {
   return <SelectionHandlerContext.Provider value={selectionHandler}>{children}</SelectionHandlerContext.Provider>;
 }

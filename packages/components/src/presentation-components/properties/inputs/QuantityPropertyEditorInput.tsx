@@ -26,14 +26,14 @@ export const QuantityPropertyEditorInput = forwardRef<PropertyEditorAttributes, 
   (props, ref) => {
     const schemaMetadataContext = useSchemaMetadataContext();
 
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
     if (
+      /* eslint-disable-next-line @typescript-eslint/no-deprecated */
       (!props.propertyRecord.property.kindOfQuantityName && !props.propertyRecord.property.quantityType) ||
       !schemaMetadataContext
     ) {
       return <NumericPropertyInput {...props} ref={ref} />;
     }
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    /* eslint-disable-next-line @typescript-eslint/no-deprecated */
     const koqName = props.propertyRecord.property.kindOfQuantityName ?? props.propertyRecord.property.quantityType;
     assert(koqName !== undefined);
 
