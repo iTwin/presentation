@@ -166,9 +166,6 @@ catalogs:
     '@types/chai-as-promised':
       specifier: ^8.0.2
       version: 8.0.2
-    '@types/chai-jest-snapshot':
-      specifier: ^1.3.8
-      version: 1.3.8
     '@types/jsdom':
       specifier: ^21.1.7
       version: 21.1.7
@@ -193,9 +190,6 @@ catalogs:
     chai-as-promised:
       specifier: ^8.0.2
       version: 8.0.2
-    chai-jest-snapshot:
-      specifier: ^2.0.0
-      version: 2.0.0
     global-jsdom:
       specifier: ^26.0.0
       version: 26.0.0
@@ -1492,7 +1486,7 @@ importers:
         version: 24.12.0
       '@vitest/coverage-v8':
         specifier: catalog:test-tools
-        version: 4.1.1(vitest@4.1.1(@opentelemetry/api@1.9.0)(@types/node@24.12.0)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@6.4.1(@types/node@24.12.0)(sass@1.98.0)(yaml@2.8.3)))
+        version: 4.1.1(vitest@4.1.1(@opentelemetry/api@1.9.0)(@types/node@24.12.0)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@6.4.2(@types/node@24.12.0)(sass@1.98.0)(yaml@2.8.3)))
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2
@@ -1513,7 +1507,7 @@ importers:
         version: 5.7.3
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.1(@opentelemetry/api@1.9.0)(@types/node@24.12.0)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@6.4.1(@types/node@24.12.0)(sass@1.98.0)(yaml@2.8.3))
+        version: 4.1.1(@opentelemetry/api@1.9.0)(@types/node@24.12.0)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@6.4.2(@types/node@24.12.0)(sass@1.98.0)(yaml@2.8.3))
 
   packages/unified-selection:
     dependencies:
@@ -4288,9 +4282,6 @@ packages:
   '@types/chai-as-promised@8.0.2':
     resolution: {integrity: sha512-meQ1wDr1K5KRCSvG2lX7n7/5wf70BeptTKst0axGvnN6zqaVpRqegoIbugiAPSqOW9K9aL8gDVrm7a2LXOtn2Q==}
 
-  '@types/chai-jest-snapshot@1.3.8':
-    resolution: {integrity: sha512-1t0qP5/Gjy8eGXVAJjtJ4heNyWaxISnXdPa54OatwuCHb0H4ypZuvnCvCoVCYvk/gFEyg9leJpBzPA7LtAKd/Q==}
-
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
 
@@ -4596,10 +4587,6 @@ packages:
   ansi-escapes@7.3.0:
     resolution: {integrity: sha512-BvU8nYgGQBxcmMuEeUEmNTvrMVjJNSH7RgW24vXexN4Ven6qCvy4TntnvlnwnMLTVlcRQQdbRY8NKnaIoeWDNg==}
     engines: {node: '>=18'}
-
-  ansi-regex@3.0.1:
-    resolution: {integrity: sha512-+O9Jct8wf++lXxxFc4hc8LsjaSq0HFzzL7cVsw8pRDIPdjKD2mT4ytDZlLuSBZ4cLKZFXIrMGO7DbQCtMJJMKw==}
-    engines: {node: '>=4'}
 
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -4917,11 +4904,6 @@ packages:
     resolution: {integrity: sha512-1GadL+sEJVLzDjcawPM4kjfnL+p/9vrxiEUonowKOAzvVg0PixJUdtuDzdkDeQhK3zfOE76GqGkZIQ7/Adcrqw==}
     peerDependencies:
       chai: '>= 2.1.2 < 7'
-
-  chai-jest-snapshot@2.0.0:
-    resolution: {integrity: sha512-u8jZZjw/0G1t5A8wDfH6K7DAVfMg3g0dsw9wKQURNUyrZX96VojHNrFMmLirq1m0kOvC5icgL/Qh/fu1MZyvUw==}
-    peerDependencies:
-      chai: '>=1.9.0'
 
   chai@5.3.3:
     resolution: {integrity: sha512-4zNhdJD/iOjSH0A05ea+Ke6MU5mmpQcbQsSOkgdaUMJ9zTlDTD/GYlwohmIE2u0gaxHYiVHEn1Fw9mZ/ktJWgw==}
@@ -5401,10 +5383,6 @@ packages:
 
   devlop@1.1.0:
     resolution: {integrity: sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA==}
-
-  diff@3.5.1:
-    resolution: {integrity: sha512-Z3u54A8qGyqFOSr2pk0ijYs8mOE9Qz8kTvtKeBI+upoG9j04Sq+oI7W8zAJiQybDcESET8/uIdHzs0p3k4fZlw==}
-    engines: {node: '>=0.3.1'}
 
   diff@7.0.0:
     resolution: {integrity: sha512-PJWHUb1RFevKCwaFA9RlG5tCd+FO5iRh9A8HEtkmBH2Li03iJriB6m6JIN4rGz3K3JLawI7/veA1xzRKP6ISBw==}
@@ -6608,18 +6586,6 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  jest-diff@21.2.1:
-    resolution: {integrity: sha512-E5fu6r7PvvPr5qAWE1RaUwIh/k6Zx/3OOkZ4rk5dBJkEWRrUuSgbMt2EO8IUTPTd6DOqU3LW6uTIwX5FRvXoFA==}
-
-  jest-get-type@21.2.0:
-    resolution: {integrity: sha512-y2fFw3C+D0yjNSDp7ab1kcd6NUYfy3waPTlD8yWkAtiocJdBRQqNoRqVfMNxgj+IjT0V5cBIHJO0z9vuSSZ43Q==}
-
-  jest-matcher-utils@21.2.1:
-    resolution: {integrity: sha512-kn56My+sekD43dwQPrXBl9Zn9tAqwoy25xxe7/iY4u+mG8P3ALj5IK7MLHZ4Mi3xW7uWVCjGY8cm4PqgbsqMCg==}
-
-  jest-snapshot@21.2.1:
-    resolution: {integrity: sha512-bpaeBnDpdqaRTzN8tWg0DqOTo2DvD3StOemxn67CUd1p1Po+BUpvePAp44jdJ7Pxcjfg+42o4NHw1SxdCA2rvg==}
-
   jju@1.4.0:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}
 
@@ -6812,9 +6778,6 @@ packages:
 
   lodash.startcase@4.4.0:
     resolution: {integrity: sha512-+WKqsK294HMSc2jEbNgpHpd0JfIBhp7rEV4aqXWqFr6AlXov+SlcgB1Fv01y2kGe3Gc8nMW7VA0SrGuSkRfIEg==}
-
-  lodash.values@4.3.0:
-    resolution: {integrity: sha512-r0RwvdCv8id9TUblb/O7rYPwVy6lerCbcawrfdo9iC/1t1wsNMJknO79WNBgwkH0hIeJ08jmvvESbFpNb4jH0Q==}
 
   lodash@4.17.23:
     resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
@@ -7029,10 +6992,6 @@ packages:
   mixpanel@0.13.0:
     resolution: {integrity: sha512-YOWmpr/o4+zJ8LPjuLUkWLc2ImFeIkX6hF1t62Wlvq6loC6e8EK8qieYO4gYPTPxxtjAryl7xmIvf/7qnPwjrQ==}
     engines: {node: '>=10.0'}
-
-  mkdirp@0.5.6:
-    resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
-    hasBin: true
 
   mkdirp@3.0.1:
     resolution: {integrity: sha512-+NsyUUAZDmo6YVHzL/stxSu3t9YS1iljliy3BSDrXJ/dkn1KYdmtZODGGjLcc9XLgVVpH4KshHB8XmZgMhaBXg==}
@@ -7506,9 +7465,6 @@ packages:
     resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
     engines: {node: '>=10.13.0'}
     hasBin: true
-
-  pretty-format@21.2.1:
-    resolution: {integrity: sha512-ZdWPGYAnYfcVP8yKA3zFjCn8s4/17TeYH28MXuC8vTp0o21eXjbFGcOAXZEaDaOFJjc3h2qa7HQNHNshhvoh2A==}
 
   pretty-format@27.5.1:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
@@ -12593,11 +12549,6 @@ snapshots:
     dependencies:
       '@types/chai': 5.2.3
 
-  '@types/chai-jest-snapshot@1.3.8':
-    dependencies:
-      '@types/chai': 5.2.3
-      '@types/mocha': 10.0.10
-
   '@types/chai@5.2.3':
     dependencies:
       '@types/deep-eql': 4.0.2
@@ -13001,8 +12952,6 @@ snapshots:
   ansi-escapes@7.3.0:
     dependencies:
       environment: 1.1.0
-
-  ansi-regex@3.0.1: {}
 
   ansi-regex@5.0.1: {}
 
@@ -13456,12 +13405,6 @@ snapshots:
     dependencies:
       chai: 5.3.3
       check-error: 2.1.3
-
-  chai-jest-snapshot@2.0.0(chai@5.3.3):
-    dependencies:
-      chai: 5.3.3
-      jest-snapshot: 21.2.1
-      lodash.values: 4.3.0
 
   chai@5.3.3:
     dependencies:
@@ -14019,8 +13962,6 @@ snapshots:
   devlop@1.1.0:
     dependencies:
       dequal: 2.0.3
-
-  diff@3.5.1: {}
 
   diff@7.0.0: {}
 
@@ -15437,30 +15378,6 @@ snapshots:
       filelist: 1.0.6
       picocolors: 1.1.1
 
-  jest-diff@21.2.1:
-    dependencies:
-      chalk: 2.4.2
-      diff: 3.5.1
-      jest-get-type: 21.2.0
-      pretty-format: 21.2.1
-
-  jest-get-type@21.2.0: {}
-
-  jest-matcher-utils@21.2.1:
-    dependencies:
-      chalk: 2.4.2
-      jest-get-type: 21.2.0
-      pretty-format: 21.2.1
-
-  jest-snapshot@21.2.1:
-    dependencies:
-      chalk: 2.4.2
-      jest-diff: 21.2.1
-      jest-matcher-utils: 21.2.1
-      mkdirp: 0.5.6
-      natural-compare: 1.4.0
-      pretty-format: 21.2.1
-
   jju@1.4.0: {}
 
   jmespath@0.16.0: {}
@@ -15698,8 +15615,6 @@ snapshots:
 
   lodash.startcase@4.4.0: {}
 
-  lodash.values@4.3.0: {}
-
   lodash@4.17.23: {}
 
   log-symbols@3.0.0:
@@ -15911,10 +15826,6 @@ snapshots:
       https-proxy-agent: 5.0.0
     transitivePeerDependencies:
       - supports-color
-
-  mkdirp@0.5.6:
-    dependencies:
-      minimist: 1.2.8
 
   mkdirp@3.0.1: {}
 
@@ -16419,11 +16330,6 @@ snapshots:
   present@0.0.3: {}
 
   prettier@2.8.8: {}
-
-  pretty-format@21.2.1:
-    dependencies:
-      ansi-regex: 3.0.1
-      ansi-styles: 3.2.1
 
   pretty-format@27.5.1:
     dependencies:
