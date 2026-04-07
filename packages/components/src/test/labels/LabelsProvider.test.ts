@@ -3,31 +3,27 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { DEFAULT_KEYS_BATCH_SIZE, InstanceKey } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { PresentationLabelsProvider } from "../../presentation-components/labels/LabelsProvider.js";
 import { createTestECInstanceKey } from "../_helpers/Common.js";
+import { createMocked } from "../TestUtils.js";
 
 describe("PresentationLabelsProvider", () => {
   let provider: PresentationLabelsProvider;
-  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
+  let presentationManager: Mocked<PresentationManager>;
   const imodel = {} as IModelConnection;
 
   beforeEach(() => {
-    presentationManager = sinon.createStubInstance(PresentationManager);
+    presentationManager = createMocked(PresentationManager);
     const localization = new EmptyLocalization();
-    sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(Presentation, "localization").get(() => localization);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
     provider = new PresentationLabelsProvider({ imodel });
-  });
-
-  afterEach(() => {
-    sinon.restore();
   });
 
   describe("getLabel", () => {
@@ -35,18 +31,18 @@ describe("PresentationLabelsProvider", () => {
       const key = createTestECInstanceKey();
       const result = "Label";
 
-      presentationManager.getDisplayLabelDefinition.resolves({ displayValue: result, rawValue: result, typeName: "string" });
+      presentationManager.getDisplayLabelDefinition.mockResolvedValue({ displayValue: result, rawValue: result, typeName: "string" });
       expect(await provider.getLabel(key)).to.eq(result);
     });
 
     it("calls manager only once for the same key", async () => {
       const key = createTestECInstanceKey();
       const result = "Label";
-      presentationManager.getDisplayLabelDefinition.resolves({ displayValue: result, rawValue: result, typeName: "string" });
+      presentationManager.getDisplayLabelDefinition.mockResolvedValue({ displayValue: result, rawValue: result, typeName: "string" });
 
       expect(await provider.getLabel(key)).to.eq(result);
       expect(await provider.getLabel(key)).to.eq(result);
-      expect(presentationManager.getDisplayLabelDefinition).to.be.calledOnce;
+      expect(presentationManager.getDisplayLabelDefinition).toHaveBeenCalledOnce();
     });
 
     it("calls manager for every different key", async () => {
@@ -55,7 +51,7 @@ describe("PresentationLabelsProvider", () => {
       const result1 = "Label 1";
       const result2 = "Label 2";
 
-      presentationManager.getDisplayLabelDefinition.callsFake(async ({ key }) => {
+      presentationManager.getDisplayLabelDefinition.mockImplementation(async ({ key }) => {
         if (key === key1) {
           return { displayValue: result1, rawValue: result1, typeName: "string" };
         }
@@ -76,7 +72,7 @@ describe("PresentationLabelsProvider", () => {
         const keys = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
         const result = ["Label 1", "Label 2"];
 
-        presentationManager.getDisplayLabelDefinitionsIterator.resolves({
+        presentationManager.getDisplayLabelDefinitionsIterator.mockResolvedValue({
           total: result.length,
           items: createAsyncIterator(result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" }))),
         });
@@ -87,13 +83,13 @@ describe("PresentationLabelsProvider", () => {
         const keys = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
         const result = ["Label 1", "Label 2"];
 
-        presentationManager.getDisplayLabelDefinitionsIterator.resolves({
+        presentationManager.getDisplayLabelDefinitionsIterator.mockResolvedValue({
           total: result.length,
           items: createAsyncIterator(result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" }))),
         });
         expect(await provider.getLabels(keys)).to.deep.eq(result);
         expect(await provider.getLabels(keys)).to.deep.eq(result);
-        expect(presentationManager.getDisplayLabelDefinitionsIterator).to.be.calledOnce;
+        expect(presentationManager.getDisplayLabelDefinitionsIterator).toHaveBeenCalledOnce();
       });
 
       it("calls manager for every different list of keys", async () => {
@@ -102,7 +98,7 @@ describe("PresentationLabelsProvider", () => {
         const result1 = ["Label 1", "Label 2"];
         const result2 = ["Label 3", "Label 4"];
 
-        presentationManager.getDisplayLabelDefinitionsIterator.callsFake(async ({ keys }) => {
+        presentationManager.getDisplayLabelDefinitionsIterator.mockImplementation(async ({ keys }) => {
           if (sameKeys(keys, keys1)) {
             return {
               total: result1.length,
@@ -138,7 +134,7 @@ describe("PresentationLabelsProvider", () => {
         const result2 = results.slice(DEFAULT_KEYS_BATCH_SIZE, 2 * DEFAULT_KEYS_BATCH_SIZE);
         const result3 = results.slice(2 * DEFAULT_KEYS_BATCH_SIZE, 2 * DEFAULT_KEYS_BATCH_SIZE + 1);
 
-        presentationManager.getDisplayLabelDefinitionsIterator.callsFake(async ({ keys }) => {
+        presentationManager.getDisplayLabelDefinitionsIterator.mockImplementation(async ({ keys }) => {
           if (sameKeys(keys, keys1)) {
             return {
               total: result1.length,
@@ -177,7 +173,7 @@ describe("PresentationLabelsProvider", () => {
         const keys = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
         const result = ["Label 1", "Label 2"];
 
-        presentationManager.getDisplayLabelDefinitions.resolves(result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })));
+        presentationManager.getDisplayLabelDefinitions.mockResolvedValue(result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })));
         expect(await provider.getLabels(keys)).to.deep.eq(result);
       });
 
@@ -185,10 +181,10 @@ describe("PresentationLabelsProvider", () => {
         const keys = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
         const result = ["Label 1", "Label 2"];
 
-        presentationManager.getDisplayLabelDefinitions.resolves(result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })));
+        presentationManager.getDisplayLabelDefinitions.mockResolvedValue(result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })));
         expect(await provider.getLabels(keys)).to.deep.eq(result);
         expect(await provider.getLabels(keys)).to.deep.eq(result);
-        expect(presentationManager.getDisplayLabelDefinitions).to.be.calledOnce;
+        expect(presentationManager.getDisplayLabelDefinitions).toHaveBeenCalledOnce();
       });
 
       it("calls manager for every different list of keys", async () => {
@@ -197,7 +193,7 @@ describe("PresentationLabelsProvider", () => {
         const result1 = ["Label 1", "Label 2"];
         const result2 = ["Label 3", "Label 4"];
 
-        presentationManager.getDisplayLabelDefinitions.callsFake(async ({ keys }) => {
+        presentationManager.getDisplayLabelDefinitions.mockImplementation(async ({ keys }) => {
           if (sameKeys(keys, keys1)) {
             return result1.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" }));
           }
@@ -227,7 +223,7 @@ describe("PresentationLabelsProvider", () => {
         const result2 = results.slice(DEFAULT_KEYS_BATCH_SIZE, 2 * DEFAULT_KEYS_BATCH_SIZE);
         const result3 = results.slice(2 * DEFAULT_KEYS_BATCH_SIZE, 2 * DEFAULT_KEYS_BATCH_SIZE + 1);
 
-        presentationManager.getDisplayLabelDefinitions.callsFake(async ({ keys }) => {
+        presentationManager.getDisplayLabelDefinitions.mockImplementation(async ({ keys }) => {
           if (sameKeys(keys, keys1)) {
             return result1.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" }));
           }

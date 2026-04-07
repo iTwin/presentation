@@ -44,9 +44,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     quantityValue: QuantityValue;
     placeholder: string;
   }
-  const { highPrecisionFormatter, parser, defaultFormatter } = useFormatterAndParser(koqName, schemaContext);
   const initialRawValueRef = useRef(initialRawValue);
-
   const [{ quantityValue, placeholder }, setState] = useState<State>(() => ({
     quantityValue: {
       rawValue: initialRawValueRef.current,
@@ -57,35 +55,35 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     placeholder: "",
   }));
 
-  useEffect(() => {
-    if (!highPrecisionFormatter || !parser || !defaultFormatter) {
-      return;
-    }
+  const onFormatterLoad = useRef<(props: { newDefaultFormatter: FormatterSpec; newHighPrecisionFormatter: FormatterSpec; newParser: ParserSpec }) => void>(
+    ({ newHighPrecisionFormatter, newParser, newDefaultFormatter }) => {
+      setState((prev): State => {
+        /* v8 ignore next 1 -- @preserve */
+        const defaultValue = initialRawValueRef.current
+          ? newDefaultFormatter.applyFormatting(initialRawValueRef.current)
+          : newHighPrecisionFormatter.unitConversions[0].label;
+        const newFormattedValue =
+          prev.quantityValue.rawValue !== undefined
+            ? newHighPrecisionFormatter.applyFormatting(prev.quantityValue.rawValue)
+            : newHighPrecisionFormatter.unitConversions[0].label;
+        const placeholderUnit = newHighPrecisionFormatter.unitConversions[0].label;
+        const roundingError = getPersistenceUnitRoundingError(newFormattedValue, newParser);
 
-    setState((prev): State => {
-      /* c8 ignore next 1 */
-      const defaultValue = initialRawValueRef.current
-        ? defaultFormatter.applyFormatting(initialRawValueRef.current)
-        : highPrecisionFormatter.unitConversions[0].label;
-      const newFormattedValue =
-        prev.quantityValue.rawValue !== undefined
-          ? highPrecisionFormatter.applyFormatting(prev.quantityValue.rawValue)
-          : highPrecisionFormatter.unitConversions[0].label;
-      const placeholderUnit = highPrecisionFormatter.unitConversions[0].label;
-      const roundingError = getPersistenceUnitRoundingError(newFormattedValue, parser);
+        return {
+          ...prev,
+          quantityValue: {
+            ...prev.quantityValue,
+            highPrecisionFormattedValue: newFormattedValue,
+            defaultFormattedValue: defaultValue,
+            roundingError,
+          },
+          placeholder: placeholderUnit,
+        };
+      });
+    },
+  );
 
-      return {
-        ...prev,
-        quantityValue: {
-          ...prev.quantityValue,
-          highPrecisionFormattedValue: newFormattedValue,
-          defaultFormattedValue: defaultValue,
-          roundingError,
-        },
-        placeholder: placeholderUnit,
-      };
-    });
-  }, [highPrecisionFormatter, parser, defaultFormatter]);
+  const { highPrecisionFormatter, parser, defaultFormatter } = useFormatterAndParser(koqName, schemaContext, onFormatterLoad.current);
 
   const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     assert(parser !== undefined); // input should be disabled if parser is `undefined`
@@ -117,7 +115,11 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
   };
 }
 
-function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
+function useFormatterAndParser(
+  koqName: string,
+  schemaContext: SchemaContext,
+  onChange: (props: { newDefaultFormatter: FormatterSpec; newHighPrecisionFormatter: FormatterSpec; newParser: ParserSpec }) => void,
+) {
   interface State {
     defaultFormatter: FormatterSpec;
     highPrecisionFormatter: FormatterSpec;
@@ -143,6 +145,7 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
         if (highPrecisionFormatter.format.type === FormatType.Decimal) {
           highPrecisionFormatter.format.precision = 12;
         }
+        onChange({ newHighPrecisionFormatter: highPrecisionFormatter, newParser: parserSpec, newDefaultFormatter: defaultFormatter });
         setState({ highPrecisionFormatter, parserSpec, defaultFormatter });
         return;
       }
@@ -159,7 +162,7 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
     return () => {
       listeners.forEach((listener) => listener());
     };
-  }, [koqName, schemaContext]);
+  }, [koqName, schemaContext, onChange]);
 
   return {
     highPrecisionFormatter: state?.highPrecisionFormatter,

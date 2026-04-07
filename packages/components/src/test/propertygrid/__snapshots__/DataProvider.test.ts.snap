@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PropertyDataProvider getData with flat categories assigns category renderer 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > assigns category renderer 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -60,7 +60,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories handles records with no values 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > handles records with no values 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -117,7 +117,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories nested content handling merges parent field when child field's category is different and parent is merged 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > merges parent field when child field's category is different and parent is merged 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -172,7 +172,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories nested content handling moves all nested fields into separate category and hides nested content field when all nested fields are categorized 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > moves all nested fields into separate category and hides nested content field when all nested fields are categorized 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -249,7 +249,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories nested content handling moves field into separate category with its grandparent when both are categorized with the same category 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > moves field into separate category with its grandparent when both are categorized with the same category 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -393,7 +393,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories nested content handling moves fields into separate category under common ancestor when both are categorized with the same category 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > moves fields into separate category under common ancestor when both are categorized with the same category 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -699,7 +699,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories nested content handling moves nested field into separate category and hides nested content field when there's only 1 nested field 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > moves nested field into separate category and hides nested content field when there's only 1 nested field 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -756,7 +756,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories nested content handling moves nested field into separate category and keeps nested content field with remaining nested fields when there are more than 1 nested fields and no sibling fields 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > moves nested field into separate category and keeps nested content field with remaining nested fields when there are more than 1 nested fields and no sibling fields 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -840,7 +840,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories nested content handling moves nested field into separate category and keeps nested content field with remaining nested fields when there are more than 1 nested fields and sibling fields 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > moves nested field into separate category and keeps nested content field with remaining nested fields when there are more than 1 nested fields and sibling fields 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -964,7 +964,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories nested content handling returns nested content with deeply nested content as structs array when there are multiple nested content items 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > returns nested content with deeply nested content as structs array when there are multiple nested content items 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -1162,7 +1162,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories nested content handling returns nested content with destructured deeply nested content 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > returns nested content with destructured deeply nested content 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -1279,7 +1279,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories nested content handling returns nested content with multiple nested records as struct array 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > returns nested content with multiple nested records as struct array 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -1418,7 +1418,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories nested content handling returns nested content with single nested record as individual properties when are no sibling fields 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > returns nested content with single nested record as individual properties when are no sibling fields 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -1475,7 +1475,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories nested content handling returns nested content with single nested record as struct when there're sibling fields 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > returns nested content with single nested record as struct when there're sibling fields 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -1572,7 +1572,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories nested content handling returns nothing for deeply nested content with no values 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > returns nothing for deeply nested content with no values 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -1669,7 +1669,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories returns array property data 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > returns array property data 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -1767,7 +1767,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories returns primitive property data 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > returns primitive property data 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -1824,7 +1824,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with flat categories returns struct property data 1`] = `
+exports[`PropertyDataProvider > getData > with flat categories > returns struct property data 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -1901,7 +1901,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories assigns category renderer 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > assigns category renderer 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -1961,7 +1961,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories handles records with no values 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > handles records with no values 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -2018,7 +2018,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories nested content handling merges parent field when child field's category is different and parent is merged 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > merges parent field when child field's category is different and parent is merged 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -2073,7 +2073,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories nested content handling moves all nested fields into separate category and hides nested content field when all nested fields are categorized 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > moves all nested fields into separate category and hides nested content field when all nested fields are categorized 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -2150,7 +2150,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories nested content handling moves field into separate category with its grandparent when both are categorized with the same category 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > moves field into separate category with its grandparent when both are categorized with the same category 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -2294,7 +2294,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories nested content handling moves fields into separate category under common ancestor when both are categorized with the same category 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > moves fields into separate category under common ancestor when both are categorized with the same category 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -2600,7 +2600,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories nested content handling moves nested field into separate category and hides nested content field when there's only 1 nested field 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > moves nested field into separate category and hides nested content field when there's only 1 nested field 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -2657,7 +2657,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories nested content handling moves nested field into separate category and keeps nested content field with remaining nested fields when there are more than 1 nested fields and no sibling fields 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > moves nested field into separate category and keeps nested content field with remaining nested fields when there are more than 1 nested fields and no sibling fields 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -2741,7 +2741,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories nested content handling moves nested field into separate category and keeps nested content field with remaining nested fields when there are more than 1 nested fields and sibling fields 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > moves nested field into separate category and keeps nested content field with remaining nested fields when there are more than 1 nested fields and sibling fields 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -2865,7 +2865,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories nested content handling returns nested content with deeply nested content as structs array when there are multiple nested content items 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > returns nested content with deeply nested content as structs array when there are multiple nested content items 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -3063,7 +3063,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories nested content handling returns nested content with destructured deeply nested content 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > returns nested content with destructured deeply nested content 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -3180,7 +3180,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories nested content handling returns nested content with multiple nested records as struct array 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > returns nested content with multiple nested records as struct array 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -3319,7 +3319,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories nested content handling returns nested content with single nested record as individual properties when are no sibling fields 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > returns nested content with single nested record as individual properties when are no sibling fields 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -3376,7 +3376,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories nested content handling returns nested content with single nested record as struct when there're sibling fields 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > returns nested content with single nested record as struct when there're sibling fields 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -3473,7 +3473,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories nested content handling returns nothing for deeply nested content with no values 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > returns nothing for deeply nested content with no values 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -3570,7 +3570,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories returns array property data 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > returns array property data 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -3668,7 +3668,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories returns primitive property data 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > returns primitive property data 1`] = `
 Object {
   "categories": Array [
     Object {
@@ -3725,7 +3725,7 @@ Object {
 }
 `;
 
-exports[`PropertyDataProvider getData with nested categories returns struct property data 1`] = `
+exports[`PropertyDataProvider > getData > with nested categories > returns struct property data 1`] = `
 Object {
   "categories": Array [
     Object {
