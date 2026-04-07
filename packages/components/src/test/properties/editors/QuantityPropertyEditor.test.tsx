@@ -3,11 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { StandardTypeNames } from "@itwin/appui-abstract";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import { Format, FormatterSpec, ParserSpec } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
@@ -24,7 +23,7 @@ const createRecord = ({ initialValue, kindOfQuantityName, quantityType }: { init
 };
 
 describe("<QuantityPropertyEditor />", () => {
-  before(() => {
+  beforeEach(() => {
     const format = new Format("test format");
     const formatterSpec = {
       applyFormatting: (raw: number) => `${raw} unit`,
@@ -36,16 +35,12 @@ describe("<QuantityPropertyEditor />", () => {
       format,
     };
 
-    sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec").resolves(formatterSpec as unknown as FormatterSpec);
-    sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec").resolves(parserSpec as unknown as ParserSpec);
+    vi.spyOn(KoqPropertyValueFormatter.prototype, "getFormatterSpec").mockResolvedValue(formatterSpec as unknown as FormatterSpec);
+    vi.spyOn(KoqPropertyValueFormatter.prototype, "getParserSpec").mockResolvedValue(parserSpec as unknown as ParserSpec);
 
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+    vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    }));
-  });
-
-  after(() => {
-    sinon.restore();
+    } as unknown as QuantityFormatter);
   });
 
   it("renders nothing if property record is not provided", async () => {

@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ConcatenatedValue } from "../shared/ConcatenatedValue.js";
 import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } from "../shared/ecsql-snippets/ECSqlValueSelectorSnippets.js";
 import {
@@ -18,11 +17,11 @@ import { trimWhitespace } from "../shared/Utils.js";
 
 describe("parseInstanceLabel", () => {
   it("parses empty value", () => {
-    expect(parseInstanceLabel("")).to.eq("");
+    expect(parseInstanceLabel("")).toBe("");
   });
 
   it("parses plain string", () => {
-    expect(parseInstanceLabel("test")).to.eq("test");
+    expect(parseInstanceLabel("test")).toBe("test");
   });
 
   it("parses complex value of one part", () => {
@@ -32,7 +31,7 @@ describe("parseInstanceLabel", () => {
         value: true,
       },
     ];
-    expect(parseInstanceLabel(JSON.stringify(labelPart))).to.deep.eq(labelPart);
+    expect(parseInstanceLabel(JSON.stringify(labelPart))).toEqual(labelPart);
   });
 
   it("parses complex value of multiple parts", () => {
@@ -47,15 +46,15 @@ describe("parseInstanceLabel", () => {
         extendedType: "Url",
       },
     ];
-    expect(parseInstanceLabel(JSON.stringify(labelParts))).to.deep.eq(labelParts);
+    expect(parseInstanceLabel(JSON.stringify(labelParts))).toEqual(labelParts);
   });
 
   it("parses string label that looks like JSON object but is not", () => {
-    expect(parseInstanceLabel("{x}")).to.eq("{x}");
+    expect(parseInstanceLabel("{x}")).toBe("{x}");
   });
 
   it("parses string label that looks like JSON array but is not", () => {
-    expect(parseInstanceLabel("[y]")).to.eq("[y]");
+    expect(parseInstanceLabel("[y]")).toBe("[y]");
   });
 });
 
@@ -69,7 +68,7 @@ describe("createDefaultInstanceLabelSelectClauseFactory", () => {
     const result = await factory.createSelectClause({
       classAlias: "test",
     });
-    expect(trimWhitespace(result)).to.eq(
+    expect(trimWhitespace(result)).toBe(
       trimWhitespace(`(
         SELECT ${createConcatenatedValueJsonSelector([
           {
@@ -98,10 +97,10 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
     },
   };
   const classHierarchyInspector = {
-    classDerivesFrom: sinon.stub(),
+    classDerivesFrom: vi.fn(),
   };
   beforeEach(() => {
-    classHierarchyInspector.classDerivesFrom.reset();
+    classHierarchyInspector.classDerivesFrom.mockReset();
   });
 
   it("returns default clause when given an empty list of clauses", async () => {
@@ -113,7 +112,7 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
     const result = await factory.createSelectClause({
       classAlias: "class-alias",
     });
-    expect(result).to.eq("default selector");
+    expect(result).toBe("default selector");
   });
 
   it("returns default clause when none of given clause classes match query class", async () => {
@@ -131,12 +130,12 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
         },
       ],
     });
-    classHierarchyInspector.classDerivesFrom.resolves(false);
+    classHierarchyInspector.classDerivesFrom.mockResolvedValue(false);
     const result = await factory.createSelectClause({
       classAlias: "class-alias",
       className: "Schema.QueryClass",
     });
-    expect(result).to.eq("default selector");
+    expect(result).toBe("default selector");
   });
 
   it("returns combination of all clauses if class name prop is not set", async () => {
@@ -157,7 +156,7 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
     const result = await factory.createSelectClause({
       classAlias: "class-alias",
     });
-    expect(trimWhitespace(result)).to.eq(
+    expect(trimWhitespace(result)).toBe(
       trimWhitespace(`
       COALESCE(
         IIF(
@@ -191,12 +190,12 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
         },
       ],
     });
-    classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => derived === "Schema.ClassA" && base === "Schema.QueryClass");
+    classHierarchyInspector.classDerivesFrom.mockImplementation(async (derived, base) => derived === "Schema.ClassA" && base === "Schema.QueryClass");
     const result = await factory.createSelectClause({
       classAlias: "class-alias",
       className: "Schema.QueryClass",
     });
-    expect(trimWhitespace(result)).to.eq(
+    expect(trimWhitespace(result)).toBe(
       trimWhitespace(`
       COALESCE(
         IIF(
@@ -225,12 +224,12 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
         },
       ],
     });
-    classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => derived === "Schema.QueryClass" && base === "Schema.ClassB");
+    classHierarchyInspector.classDerivesFrom.mockImplementation(async (derived, base) => derived === "Schema.QueryClass" && base === "Schema.ClassB");
     const result = await factory.createSelectClause({
       classAlias: "class-alias",
       className: "Schema.QueryClass",
     });
-    expect(trimWhitespace(result)).to.eq(
+    expect(trimWhitespace(result)).toBe(
       trimWhitespace(`
       COALESCE(
         IIF(
@@ -247,13 +246,13 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
 
 describe("BisInstanceLabelSelectClauseFactory", () => {
   const classHierarchyInspector = {
-    classDerivesFrom: sinon.stub(),
+    classDerivesFrom: vi.fn(),
   };
   let factory: IInstanceLabelSelectClauseFactory;
   beforeEach(() => {
     factory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector });
-    classHierarchyInspector.classDerivesFrom.reset();
-    classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => {
+    classHierarchyInspector.classDerivesFrom.mockReset();
+    classHierarchyInspector.classDerivesFrom.mockImplementation(async (derived, base) => {
       if (derived === "BisCore.GeometricElement") {
         return base === "BisCore.Element" || base === "BisCore.GeometricElement";
       }
@@ -267,16 +266,12 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
     });
   });
 
-  afterEach(() => {
-    sinon.restore();
-  });
-
   it("returns valid clause for geometric elements", async () => {
     const result = await factory.createSelectClause({
       classAlias: "test",
       className: "BisCore.GeometricElement",
     });
-    expect(trimWhitespace(result)).to.eq(
+    expect(trimWhitespace(result)).toBe(
       trimWhitespace(`
         COALESCE(
           IIF(
@@ -316,7 +311,7 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
       classAlias: "test",
       className: "BisCore.Element",
     });
-    expect(trimWhitespace(result)).to.eq(
+    expect(trimWhitespace(result)).toBe(
       trimWhitespace(`
         COALESCE(
           IIF(
@@ -356,7 +351,7 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
       classAlias: "test",
       className: "BisCore.Model",
     });
-    expect(trimWhitespace(result)).to.eq(
+    expect(trimWhitespace(result)).toBe(
       trimWhitespace(`
         COALESCE(
           IIF(

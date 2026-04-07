@@ -3,25 +3,25 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { InstanceKey, TypedPrimitiveValue } from "../shared/Values.js";
 
 describe("InstanceKey", () => {
   describe("equals", () => {
     it("compares two keys", () => {
-      expect(InstanceKey.equals({ className: "a", id: "1" }, { className: "a", id: "1" })).to.be.true;
-      expect(InstanceKey.equals({ className: "a", id: "1" }, { className: "b", id: "2" })).to.be.false;
-      expect(InstanceKey.equals({ className: "a", id: "1" }, { className: "b", id: "1" })).to.be.false;
-      expect(InstanceKey.equals({ className: "a", id: "1" }, { className: "a", id: "2" })).to.be.false;
+      expect(InstanceKey.equals({ className: "a", id: "1" }, { className: "a", id: "1" })).toBe(true);
+      expect(InstanceKey.equals({ className: "a", id: "1" }, { className: "b", id: "2" })).toBe(false);
+      expect(InstanceKey.equals({ className: "a", id: "1" }, { className: "b", id: "1" })).toBe(false);
+      expect(InstanceKey.equals({ className: "a", id: "1" }, { className: "a", id: "2" })).toBe(false);
     });
   });
 
   describe("compare", () => {
     it("compares two keys", () => {
-      expect(InstanceKey.compare({ className: "a", id: "1" }, { className: "a", id: "1" })).to.eq(0);
-      expect(InstanceKey.compare({ className: "a", id: "1" }, { className: "b", id: "2" })).to.be.lessThan(0);
-      expect(InstanceKey.compare({ className: "a", id: "1" }, { className: "b", id: "1" })).to.be.lessThan(0);
-      expect(InstanceKey.compare({ className: "a", id: "1" }, { className: "a", id: "2" })).to.be.lessThan(0);
+      expect(InstanceKey.compare({ className: "a", id: "1" }, { className: "a", id: "1" })).toBe(0);
+      expect(InstanceKey.compare({ className: "a", id: "1" }, { className: "b", id: "2" })).toBeLessThan(0);
+      expect(InstanceKey.compare({ className: "a", id: "1" }, { className: "b", id: "1" })).toBeLessThan(0);
+      expect(InstanceKey.compare({ className: "a", id: "1" }, { className: "a", id: "2" })).toBeLessThan(0);
     });
   });
 });
@@ -29,16 +29,16 @@ describe("InstanceKey", () => {
 describe("TypedPrimitiveValue", () => {
   describe("create", () => {
     it("returns correct result when primitiveType is compatible with primitiveValue", () => {
-      expect(TypedPrimitiveValue.create(1, "Long")).to.deep.eq({ value: 1, type: "Long", extendedType: undefined });
-      expect(TypedPrimitiveValue.create(1, "Integer")).to.deep.eq({ value: 1, type: "Integer", extendedType: undefined });
-      expect(TypedPrimitiveValue.create(1, "Double")).to.deep.eq({ value: 1, type: "Double", extendedType: undefined, koqName: undefined });
-      expect(TypedPrimitiveValue.create("0x11", "Id")).to.deep.eq({ value: "0x11", type: "Id", extendedType: undefined });
-      expect(TypedPrimitiveValue.create(true, "Boolean")).to.deep.eq({ value: true, type: "Boolean", extendedType: undefined });
-      expect(TypedPrimitiveValue.create("someValue", "String")).to.deep.eq({ value: "someValue", type: "String", extendedType: undefined });
-      expect(TypedPrimitiveValue.create("someValue", "DateTime")).to.deep.eq({ value: "someValue", type: "DateTime", extendedType: undefined });
-      expect(TypedPrimitiveValue.create(1, "DateTime")).to.deep.eq({ value: 1, type: "DateTime", extendedType: undefined });
+      expect(TypedPrimitiveValue.create(1, "Long")).toEqual({ value: 1, type: "Long", extendedType: undefined });
+      expect(TypedPrimitiveValue.create(1, "Integer")).toEqual({ value: 1, type: "Integer", extendedType: undefined });
+      expect(TypedPrimitiveValue.create(1, "Double")).toEqual({ value: 1, type: "Double", extendedType: undefined, koqName: undefined });
+      expect(TypedPrimitiveValue.create("0x11", "Id")).toEqual({ value: "0x11", type: "Id", extendedType: undefined });
+      expect(TypedPrimitiveValue.create(true, "Boolean")).toEqual({ value: true, type: "Boolean", extendedType: undefined });
+      expect(TypedPrimitiveValue.create("someValue", "String")).toEqual({ value: "someValue", type: "String", extendedType: undefined });
+      expect(TypedPrimitiveValue.create("someValue", "DateTime")).toEqual({ value: "someValue", type: "DateTime", extendedType: undefined });
+      expect(TypedPrimitiveValue.create(1, "DateTime")).toEqual({ value: 1, type: "DateTime", extendedType: undefined });
       const date = new Date();
-      expect(TypedPrimitiveValue.create(date, "DateTime")).to.deep.eq({ value: date, type: "DateTime", extendedType: undefined });
+      expect(TypedPrimitiveValue.create(date, "DateTime")).toEqual({ value: date, type: "DateTime", extendedType: undefined });
       expect(
         TypedPrimitiveValue.create(
           {
@@ -47,7 +47,7 @@ describe("TypedPrimitiveValue", () => {
           },
           "Point2d",
         ),
-      ).to.deep.eq({
+      ).toEqual({
         value: {
           x: 1,
           y: 2,
@@ -64,7 +64,7 @@ describe("TypedPrimitiveValue", () => {
           },
           "Point3d",
         ),
-      ).to.deep.eq({
+      ).toEqual({
         value: {
           x: 1,
           y: 2,
@@ -76,15 +76,15 @@ describe("TypedPrimitiveValue", () => {
     });
 
     it("throws an error when primitiveType isn't compatible with primitiveValue", () => {
-      expect(() => TypedPrimitiveValue.create("someValue", "Long")).to.throw();
-      expect(() => TypedPrimitiveValue.create("someValue", "Integer")).to.throw();
-      expect(() => TypedPrimitiveValue.create("someValue", "Double")).to.throw();
-      expect(() => TypedPrimitiveValue.create("someValue", "Id")).to.throw();
-      expect(() => TypedPrimitiveValue.create("someValue", "Boolean")).to.throw();
-      expect(() => TypedPrimitiveValue.create(1, "String")).to.throw();
-      expect(() => TypedPrimitiveValue.create(true, "DateTime")).to.throw();
-      expect(() => TypedPrimitiveValue.create("someValue", "Point2d")).to.throw();
-      expect(() => TypedPrimitiveValue.create("someValue", "Point3d")).to.throw();
+      expect(() => TypedPrimitiveValue.create("someValue", "Long")).toThrow();
+      expect(() => TypedPrimitiveValue.create("someValue", "Integer")).toThrow();
+      expect(() => TypedPrimitiveValue.create("someValue", "Double")).toThrow();
+      expect(() => TypedPrimitiveValue.create("someValue", "Id")).toThrow();
+      expect(() => TypedPrimitiveValue.create("someValue", "Boolean")).toThrow();
+      expect(() => TypedPrimitiveValue.create(1, "String")).toThrow();
+      expect(() => TypedPrimitiveValue.create(true, "DateTime")).toThrow();
+      expect(() => TypedPrimitiveValue.create("someValue", "Point2d")).toThrow();
+      expect(() => TypedPrimitiveValue.create("someValue", "Point3d")).toThrow();
     });
   });
 });

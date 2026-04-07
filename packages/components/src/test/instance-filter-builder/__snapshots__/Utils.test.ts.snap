@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createInstanceFilterPropertyInfos creates property infos when fields are in different categories category 1`] = `
+exports[`createInstanceFilterPropertyInfos > creates property infos when fields are in different categories category 1`] = `
 Array [
   Object {
     "categoryLabel": "Root Category | Nested Category 1",
@@ -79,7 +79,7 @@ Array [
 ]
 `;
 
-exports[`createInstanceFilterPropertyInfos creates property infos when fields are in root category 1`] = `
+exports[`createInstanceFilterPropertyInfos > creates property infos when fields are in root category 1`] = `
 Array [
   Object {
     "categoryLabel": "Root Category",
@@ -168,7 +168,7 @@ Array [
 ]
 `;
 
-exports[`createInstanceFilterPropertyInfos creates property infos when property fields are in nested fields 1`] = `
+exports[`createInstanceFilterPropertyInfos > creates property infos when property fields are in nested fields 1`] = `
 Array [
   Object {
     "categoryLabel": "Root Category",

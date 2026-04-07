@@ -4,9 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
 import { PropsWithChildren, useEffect } from "react";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, MockInstance, vi } from "vitest";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionManager } from "@itwin/presentation-frontend";
@@ -36,12 +35,8 @@ describe("UnifiedSelectionContext", () => {
 
   beforeEach(() => {
     const selectionManager = new SelectionManager({ scopes: undefined as any });
-    sinon.stub(Presentation, "selection").get(() => selectionManager);
+    vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager);
     IModelConnection.onOpen.raiseEvent(testIModel);
-  });
-
-  afterEach(() => {
-    sinon.restore();
   });
 
   it("uses selection level 0 by default", () => {
@@ -89,17 +84,17 @@ describe("UnifiedSelectionContext", () => {
       return <></>;
     }
 
-    const spy = sinon.stub<[UnifiedSelectionContext | undefined], void>();
+    const spy = vi.fn<(context: UnifiedSelectionContext | undefined) => void>();
     const { rerender } = render(
       <UnifiedSelectionContextProvider imodel={testIModel}>
         <TestComponent onChange={spy} />
       </UnifiedSelectionContextProvider>,
     );
 
-    await waitFor(() => expect(spy).to.be.called);
-    const firstResult = spy.args[spy.args.length - 1][0] as UnifiedSelectionContext;
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+    const firstResult = spy.mock.calls[spy.mock.calls.length - 1][0] as UnifiedSelectionContext;
 
-    spy.resetHistory();
+    spy.mockReset();
     const newImodel = {} as IModelConnection;
     rerender(
       <UnifiedSelectionContextProvider imodel={newImodel}>
@@ -107,8 +102,8 @@ describe("UnifiedSelectionContext", () => {
       </UnifiedSelectionContextProvider>,
     );
 
-    await waitFor(() => expect(spy).to.be.called);
-    const secondResult = spy.args[spy.args.length - 1][0] as UnifiedSelectionContext;
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+    const secondResult = spy.mock.calls[spy.mock.calls.length - 1][0] as UnifiedSelectionContext;
 
     expect(firstResult).not.to.be.equal(secondResult);
     expect(firstResult.getSelection).not.to.be.equal(secondResult.getSelection);
@@ -122,16 +117,16 @@ describe("UnifiedSelectionContext", () => {
     const keys = new KeySet();
 
     describe("getSelection", () => {
-      let stubGetSelection: sinon.SinonStub<[IModelConnection, number?], Readonly<KeySet>>;
+      let stubGetSelection: MockInstance;
 
       beforeEach(() => {
-        stubGetSelection = sinon.stub(Presentation.selection, "getSelection").returns(keys);
+        stubGetSelection = vi.spyOn(Presentation.selection, "getSelection").mockReturnValue(keys);
       });
 
       it("gets current selection", () => {
         const { result } = renderUnifiedSelectionContextHook(testIModel);
         result.current.getSelection(10);
-        expect(stubGetSelection).to.have.been.calledOnceWithExactly(testIModel, 10);
+        expect(stubGetSelection).toHaveBeenCalledExactlyOnceWith(testIModel, 10);
       });
 
       it("makes KeySet reference be different from global KeySet", () => {
@@ -167,7 +162,7 @@ describe("UnifiedSelectionContext", () => {
       });
 
       it("returns a working KeySet", async () => {
-        stubGetSelection.restore();
+        stubGetSelection.mockRestore();
         const { result } = renderUnifiedSelectionContextHook(testIModel);
 
         const key = { className: "schema:test", id: "1" };
@@ -182,54 +177,54 @@ describe("UnifiedSelectionContext", () => {
 
     it("replaces current selection", () => {
       const { result } = renderUnifiedSelectionContextHook(testIModel);
-      const stub = sinon.stub(Presentation.selection, "replaceSelection").returns();
+      const stub = vi.spyOn(Presentation.selection, "replaceSelection").mockReturnValue();
       result.current.replaceSelection(keys, 10);
-      expect(stub).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", testIModel, keys, 10);
+      expect(stub).toHaveBeenCalledExactlyOnceWith("UnifiedSelectionContext", testIModel, keys, 10);
     });
 
     it("adds to current selection", () => {
       const { result } = renderUnifiedSelectionContextHook(testIModel);
-      const stub = sinon.stub(Presentation.selection, "addToSelection").returns();
+      const stub = vi.spyOn(Presentation.selection, "addToSelection").mockReturnValue();
       result.current.addToSelection(keys, 10);
-      expect(stub).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", testIModel, keys, 10);
+      expect(stub).toHaveBeenCalledExactlyOnceWith("UnifiedSelectionContext", testIModel, keys, 10);
     });
 
     it("clears current selection", () => {
       const { result } = renderUnifiedSelectionContextHook(testIModel);
-      const stub = sinon.stub(Presentation.selection, "clearSelection").returns();
+      const stub = vi.spyOn(Presentation.selection, "clearSelection").mockReturnValue();
       result.current.clearSelection(10);
-      expect(stub).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", testIModel, 10);
+      expect(stub).toHaveBeenCalledExactlyOnceWith("UnifiedSelectionContext", testIModel, 10);
     });
 
     it("removes from current selection", () => {
       const { result } = renderUnifiedSelectionContextHook(testIModel);
-      const stub = sinon.stub(Presentation.selection, "removeFromSelection").returns();
+      const stub = vi.spyOn(Presentation.selection, "removeFromSelection").mockReturnValue();
       result.current.removeFromSelection(keys, 10);
-      expect(stub).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", testIModel, keys, 10);
+      expect(stub).toHaveBeenCalledExactlyOnceWith("UnifiedSelectionContext", testIModel, keys, 10);
     });
 
     it("uses default selection level when one is not specified", () => {
       const { result } = renderUnifiedSelectionContextHook(testIModel, 4);
 
-      const stubGetSelection = sinon.stub(Presentation.selection, "getSelection").returns(keys);
+      const stubGetSelection = vi.spyOn(Presentation.selection, "getSelection").mockReturnValue(keys);
       result.current.getSelection();
-      expect(stubGetSelection).to.have.been.calledOnceWithExactly(testIModel, 4);
+      expect(stubGetSelection).toHaveBeenCalledExactlyOnceWith(testIModel, 4);
 
-      const stubReplaceSelection = sinon.stub(Presentation.selection, "replaceSelection").returns();
+      const stubReplaceSelection = vi.spyOn(Presentation.selection, "replaceSelection").mockReturnValue();
       result.current.replaceSelection(keys);
-      expect(stubReplaceSelection).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", testIModel, keys, 4);
+      expect(stubReplaceSelection).toHaveBeenCalledExactlyOnceWith("UnifiedSelectionContext", testIModel, keys, 4);
 
-      const stubAddToSelection = sinon.stub(Presentation.selection, "addToSelection").returns();
+      const stubAddToSelection = vi.spyOn(Presentation.selection, "addToSelection").mockReturnValue();
       result.current.addToSelection(keys);
-      expect(stubAddToSelection).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", testIModel, keys, 4);
+      expect(stubAddToSelection).toHaveBeenCalledExactlyOnceWith("UnifiedSelectionContext", testIModel, keys, 4);
 
-      const stubClearSelection = sinon.stub(Presentation.selection, "clearSelection").returns();
+      const stubClearSelection = vi.spyOn(Presentation.selection, "clearSelection").mockReturnValue();
       result.current.clearSelection();
-      expect(stubClearSelection).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", testIModel, 4);
+      expect(stubClearSelection).toHaveBeenCalledExactlyOnceWith("UnifiedSelectionContext", testIModel, 4);
 
-      const stubRemoveFromSelection = sinon.stub(Presentation.selection, "removeFromSelection").returns();
+      const stubRemoveFromSelection = vi.spyOn(Presentation.selection, "removeFromSelection").mockReturnValue();
       result.current.removeFromSelection(keys);
-      expect(stubRemoveFromSelection).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", testIModel, keys, 4);
+      expect(stubRemoveFromSelection).toHaveBeenCalledExactlyOnceWith("UnifiedSelectionContext", testIModel, keys, 4);
     });
   });
 
