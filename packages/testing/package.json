@@ -76,7 +76,6 @@
     "@itwin/presentation-backend": "catalog:itwinjs-core-dev",
     "@itwin/presentation-common": "catalog:itwinjs-core-dev",
     "@itwin/presentation-frontend": "catalog:itwinjs-core-dev",
-    "@types/mocha": "catalog:test-tools",
     "@types/node": "catalog:build-tools",
     "@vitest/coverage-v8": "catalog:test-tools",
     "cpx2": "catalog:build-tools",

@@ -96,14 +96,13 @@ describe("buildTestIModel", () => {
 
   it("calls `SnapshotDb.createEmpty` with correct parameters when using overload with mocha context", async () => {
     // Construct a fake Mocha.Context-shaped object with a deterministic title.
-    // (Vitest does not provide Mocha's `this` binding; we pass a compatible fake instead.)
-    const fakeContext = {
+    const testContext = {
       test: { fullTitle: () => "calls `SnapshotDb.createEmpty` with correct parameters when using overload with mocha context" },
-    } as unknown as Mocha.Context;
-    const fileName = createFileNameFromString(fakeContext.test!.fullTitle());
+    };
+    const fileName = createFileNameFromString(testContext.test.fullTitle());
 
     // eslint-disable-next-line @typescript-eslint/no-deprecated
-    await buildTestIModel(fakeContext, async () => {});
+    await buildTestIModel(testContext, async () => {});
 
     expect(createSnapshotDb.mock.calls[0][0]).toContain(fileName);
     expect(createSnapshotDb.mock.calls[0][1]).toEqual({ rootSubject: { name: fileName } });
