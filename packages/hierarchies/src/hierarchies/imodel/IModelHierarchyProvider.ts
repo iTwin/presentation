@@ -718,6 +718,7 @@ function filterQueryByInstanceKeys(query: ECSqlQueryDef, filteredInstanceKeys: I
     return query;
   }
   const MAX_ALLOWED_BINDINGS = 1000;
+  // TODO: MISSING_COVERAGE
   /* v8 ignore else -- @preserve */
   if (filteredInstanceKeys.length < MAX_ALLOWED_BINDINGS) {
     return {

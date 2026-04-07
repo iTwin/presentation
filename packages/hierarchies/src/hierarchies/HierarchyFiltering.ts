@@ -296,21 +296,23 @@ export function createHierarchyFilteringHelper(
             pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
           },
     ): Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined => {
-      /** v8 ignore if -- @preserve */
+      // TODO: MISSING_COVERAGE
+      /* v8 ignore if -- @preserve */
       if (!hasFilter) {
         return undefined;
       }
       const reducer = new MatchingFilteringPathsReducer(filteringProps?.hasFilterTargetAncestor);
       filteringProps.filteredNodePaths.forEach((filteredPath) => {
         const normalizedPath = HierarchyFilteringPath.normalize(filteredPath);
-        /** v8 ignore start */
+        // TODO: MISSING_COVERAGE
+        /* v8 ignore start */
         if (
           "nodeKey" in props &&
           ((HierarchyNodeKey.isGeneric(props.nodeKey) && HierarchyNodeIdentifier.equal(normalizedPath.path[0], props.nodeKey)) ||
             (HierarchyNodeKey.isInstances(props.nodeKey) && props.nodeKey.instanceKeys.some((ik) => HierarchyNodeIdentifier.equal(normalizedPath.path[0], ik))))
         ) {
           reducer.accept(normalizedPath);
-          /** v8 ignore stop */
+          /* v8 ignore stop */
         } else if ("pathMatcher" in props && props.pathMatcher(normalizedPath.path[0])) {
           reducer.accept(normalizedPath);
         }
@@ -324,7 +326,8 @@ export function createHierarchyFilteringHelper(
     createChildNodePropsAsync: (props: {
       pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
     }): Promise<Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined> | Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined => {
-      /** v8 ignore if -- @preserve */
+      // TODO: MISSING_COVERAGE
+      /* v8 ignore if -- @preserve */
       if (!hasFilter) {
         return undefined;
       }
@@ -332,7 +335,8 @@ export function createHierarchyFilteringHelper(
       const matchedPathPromises = new Array<Promise<NormalizedFilteringPath | undefined>>();
       for (const filteredChildrenNodeIdentifierPath of filteringProps.filteredNodePaths) {
         const normalizedPath = HierarchyFilteringPath.normalize(filteredChildrenNodeIdentifierPath);
-        /** v8 ignore if -- @preserve */
+        // TODO: MISSING_COVERAGE
+        /* v8 ignore if -- @preserve */
         if (normalizedPath.path.length === 0) {
           continue;
         }
@@ -370,7 +374,8 @@ class MatchingFilteringPathsReducer {
 
   public accept(normalizedPath: NormalizedFilteringPath): void {
     const { path, options } = normalizedPath;
-    /** v8 ignore else -- @preserve */
+    // TODO: MISSING_COVERAGE
+    /* v8 ignore else -- @preserve */
     if (path.length === 1) {
       this._isFilterTarget = true;
       this._filterTargetOptions = HierarchyFilteringPath.mergeOptions(this._filterTargetOptions, options);
@@ -389,10 +394,12 @@ class MatchingFilteringPathsReducer {
         ? 0
         : "key" in this._autoExpandOption ||
             "depthInHierarchy" in this._autoExpandOption ||
-            /** v8 ignore start */
+            // TODO: MISSING_COVERAGE
+            /* v8 ignore start */
             // eslint-disable-next-line @typescript-eslint/no-deprecated
             ("includeGroupingNodes" in this._autoExpandOption && this._autoExpandOption.includeGroupingNodes)
-          ? /** v8 ignore stop */
+          ? // TODO: MISSING_COVERAGE
+            /* v8 ignore stop */
             1 + parentNode.parentKeys.length
           : 1 + parentNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
       const depth =
@@ -402,7 +409,8 @@ class MatchingFilteringPathsReducer {
             ? // eslint-disable-next-line @typescript-eslint/no-deprecated
               this._autoExpandOption.depth
             : // With `depthInPath` option we don't want to expand node that is at the `depthInPath` position
-              /** v8 ignore next */ this._autoExpandOption.depthInPath - 1;
+              // TODO: MISSING_COVERAGE
+              /* v8 ignore next */ this._autoExpandOption.depthInPath - 1;
 
       return parentLength < depth;
     }

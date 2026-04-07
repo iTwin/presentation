@@ -172,7 +172,8 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
               // are actually the same instance, so we only need to keep one of them, or otherwise the query will
               // duplicate it
               for (const entry of entries) {
-                /** v8 ignore if -- @preserve */
+                // TODO: MISSING_COVERAGE
+                /* v8 ignore if -- @preserve */
                 if (
                   entry.className === x.className ||
                   (await imodelAccess.classDerivesFrom(entry.className, x.className)) ||
