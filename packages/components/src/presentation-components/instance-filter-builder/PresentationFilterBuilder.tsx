@@ -39,7 +39,7 @@ import type { PresentationInstanceFilterConditionGroup } from "./PresentationIns
  * @beta
  * @deprecated in 5.0. Use `PresentationInstanceFilter.isConditionGroup` instead.
  */
-/* c8 ignore next 3 */
+/* c8 ignore next 5 */
 export function isPresentationInstanceFilterConditionGroup(
   filter: PresentationInstanceFilter,
 ): filter is PresentationInstanceFilterConditionGroup {
@@ -52,7 +52,7 @@ export function isPresentationInstanceFilterConditionGroup(
  * @beta
  * @deprecated in 5.0. Use `createInstanceFilterDefinition` instead.
  */
-/* c8 ignore next 3 */
+/* c8 ignore next 6 */
 export async function convertToInstanceFilterDefinition(
   filter: PresentationInstanceFilter,
   imodel: IModelConnection,
