@@ -5,5 +5,10 @@
     "moduleResolution": "Node",
     "outDir": "lib/cjs"
   },
-  "exclude": ["src/test/**/*"]
+  "include": [
+    "src/presentation-hierarchies-react",
+    "src/presentation-hierarchies-react.ts",
+    "src/presentation-hierarchies-react-core.ts",
+    "src/presentation-hierarchies-react-itwinui.ts"
+  ]
 }

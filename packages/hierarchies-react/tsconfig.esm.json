@@ -4,5 +4,11 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "lib/esm"
-  }
+  },
+  "include": [
+    "src/presentation-hierarchies-react",
+    "src/presentation-hierarchies-react.ts",
+    "src/presentation-hierarchies-react-core.ts",
+    "src/presentation-hierarchies-react-itwinui.ts"
+  ]
 }

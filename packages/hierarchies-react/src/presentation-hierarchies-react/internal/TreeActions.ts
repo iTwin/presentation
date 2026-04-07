@@ -42,7 +42,7 @@ export class TreeActions {
   ) {
     this._loader = new NoopTreeLoader();
     this._nodeIdFactory = nodeIdFactory ?? createNodeId;
-    this._currentModel = seed ?? /* c8 ignore next */ {
+    this._currentModel = seed ?? /* v8 ignore next */ {
       idToNode: new Map(),
       parentChildMap: new Map(),
       rootNode: { id: undefined, nodeData: undefined },
@@ -145,7 +145,7 @@ export class TreeActions {
 
   private loadNodes(parentId: string, ignoreCache?: boolean) {
     const parentNode = this._currentModel.idToNode.get(parentId);
-    /* c8 ignore next 3 */
+    /* v8 ignore if -- @preserve */
     if (!parentNode || !isTreeModelHierarchyNode(parentNode)) {
       return { complete: Promise.resolve() };
     }
@@ -181,7 +181,7 @@ export class TreeActions {
     const buildNode = (node: TreeModelHierarchyNode) => (!!options?.discardState || node.id === parentId ? node : addAttributes(node, oldModel));
 
     const rootNode = parentId !== undefined ? this.getNode(parentId) : currModel.rootNode;
-    /* c8 ignore next 3 */
+    /* v8 ignore if -- @preserve */
     if (!rootNode || isTreeModelInfoNode(rootNode)) {
       return { complete: Promise.resolve() };
     }
@@ -216,7 +216,7 @@ export class TreeActions {
           },
           this._nodeIdFactory,
         )
-      : /* c8 ignore next */ new NoopTreeLoader();
+      : /* v8 ignore next */ new NoopTreeLoader();
   }
 
   public getNode(nodeId: string | undefined): TreeModelNode | TreeModelRootNode | undefined {
@@ -369,13 +369,13 @@ function createHierarchyLevelOptions(model: TreeModel, nodeId: string | undefine
   return { instanceFilter: modelNode.instanceFilter, hierarchyLevelSizeLimit: modelNode.hierarchyLimit };
 }
 
-/* c8 ignore start */
+/* v8 ignore start */
 class NoopTreeLoader implements ITreeLoader {
   public loadNodes(): Observable<LoadedTreePart> {
     return EMPTY;
   }
 }
-/* c8 ignore end */
+/* v8 ignore stop */
 
 class TimeTracker {
   private _start: number;
@@ -390,7 +390,7 @@ class TimeTracker {
   }
 
   public finish() {
-    /* c8 ignore next 3 */
+    /* v8 ignore if -- @preserve */
     if (this._stopped) {
       return;
     }
