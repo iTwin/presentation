@@ -159,7 +159,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
           ref={forwardedRef}
           label={localizedStrings.noFilteredChildren}
           isDisabled={true}
-          onExpanded={/* c8 ignore next */ () => {}}
+          onExpanded={/* v8 ignore next */ () => {}}
         />
       );
     }
@@ -172,7 +172,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
         ref={forwardedRef}
         label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />}
         isDisabled={true}
-        onExpanded={/* c8 ignore next */ () => {}}
+        onExpanded={/* v8 ignore next */ () => {}}
       />
     );
   },
@@ -266,7 +266,7 @@ const PlaceholderNode = forwardRef<
           className={cx(props.className, { "stateless-tree-node-small-spinner": size === "small" })}
         />
       }
-      onExpanded={/* c8 ignore next */ () => {}}
+      onExpanded={/* v8 ignore next */ () => {}}
     />
   );
 });
@@ -280,7 +280,7 @@ const ResultSetTooLargeNode = forwardRef<HTMLDivElement, Omit<TreeNodeProps, "on
         ref={forwardedRef}
         className="stateless-tree-node"
         label={<ResultSetTooLargeNodeLabel limit={limit} onFilterClick={onFilterClick} onOverrideLimit={onOverrideLimit} />}
-        onExpanded={/* c8 ignore next */ () => {}}
+        onExpanded={/* v8 ignore next */ () => {}}
         isDisabled={true}
       />
     );
@@ -445,7 +445,7 @@ const LINK_TAG_REGEX = /<link>(.*?)<\/link>/;
 function createLocalizedMessage(message: string, limit: number, onClick?: () => void) {
   const limitStr = limit.toLocaleString(undefined, { useGrouping: true });
   const messageWithLimit = message.replace("{{limit}}", limitStr);
-  /* c8 ignore next */
+  /* v8 ignore next -- @preserve */
   const match = messageWithLimit.length <= 1000 ? messageWithLimit.match(LINK_TAG_REGEX) : undefined;
 
   if (!match) {
@@ -495,6 +495,7 @@ function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | undefin
   return useCallback(
     (instance: T | null) => {
       refs.forEach((ref) => {
+        /* v8 ignore else -- @preserve  */
         if (typeof ref === "function") {
           ref(instance);
         } else if (ref) {

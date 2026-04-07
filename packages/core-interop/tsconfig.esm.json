@@ -4,5 +4,6 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "lib/esm"
-  }
+  },
+  "include": ["src/presentation-core-interop", "src/presentation-core-interop.ts"]
 }

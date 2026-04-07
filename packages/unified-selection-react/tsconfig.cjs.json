@@ -5,5 +5,5 @@
     "moduleResolution": "Node",
     "outDir": "lib/cjs"
   },
-  "exclude": ["src/test/**/*"]
+  "include": ["src/unified-selection-react", "src/unified-selection-react.ts"]
 }

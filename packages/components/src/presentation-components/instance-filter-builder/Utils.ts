@@ -64,10 +64,11 @@ function createPropertyInfos(field: Field): PresentationInstanceFilterPropertyIn
   if (field.isNestedContentField()) {
     return field.nestedFields.flatMap((nestedField) => createPropertyInfos(nestedField));
   }
+  /* v8 ignore else -- @preserve */
   if (field.isPropertiesField()) {
     return [createPropertyInfoFromPropertiesField(field)];
   }
-  /* c8 ignore next 3 */
+  /* v8 ignore next 3 -- @preserve */
   return [];
 }
 
@@ -151,7 +152,7 @@ export function filterRuleValidator(item: PropertyFilterBuilderRule) {
     return undefined;
   }
 
-  /* c8 ignore next 3 */
+  /* v8 ignore next 3 -- @preserve */
   if (item.value !== undefined && item.value.valueFormat !== PropertyValueFormat.Primitive) {
     return undefined;
   }

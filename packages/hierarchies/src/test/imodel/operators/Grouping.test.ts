@@ -5,7 +5,7 @@
 
 import { collect } from "presentation-test-utilities";
 import { from } from "rxjs";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { LogLevel } from "@itwin/core-bentley";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/Grouping.js";

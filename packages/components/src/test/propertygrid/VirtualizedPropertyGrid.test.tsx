@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { useEffect, useState } from "react";
+import { afterEach, describe, expect, it } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import {
   CategorizedPropertyItem,
@@ -121,7 +121,7 @@ describe("Category renderer customization", () => {
           },
         },
       };
-      const { result } = renderHook(() => useInstanceKeys(stubProps as any));
+      const { result } = renderHook(() => useInstanceKeys(stubProps as unknown as PropertyCategoryRendererProps));
       await waitFor(() => {
         expect(result.current).to.not.be.undefined;
       });

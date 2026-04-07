@@ -3,30 +3,27 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { PresentationInstanceFilterProperty } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterProperty.js";
-import { createTestPresentationInstanceFilterPropertyInfo, stubRaf } from "../_helpers/Common.js";
+import { createTestPresentationInstanceFilterPropertyInfo } from "../_helpers/Common.js";
 import { render, waitFor } from "../TestUtils.js";
 
 describe("PresentationInstanceFilterProperty", () => {
-  stubRaf();
   const className = "TestClassName";
   const schemaName = "TestSchema";
 
-  before(() => {
+  beforeEach(() => {
     const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "localization").get(() => localization);
-    Element.prototype.scrollIntoView = sinon.stub();
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
   });
 
-  after(() => {
-    sinon.restore();
+  afterAll(() => {
+    vi.restoreAllMocks();
   });
 
   it("renders with badge", async () => {

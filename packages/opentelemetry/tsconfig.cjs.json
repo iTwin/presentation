@@ -5,5 +5,5 @@
     "moduleResolution": "Node",
     "outDir": "lib/cjs"
   },
-  "exclude": ["src/test/**/*"]
+  "include": ["src/presentation-opentelemetry", "src/presentation-opentelemetry.ts"]
 }

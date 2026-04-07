@@ -19,11 +19,11 @@ export const QuantityEditorName = "presentation-quantity-editor";
  * @internal
  */
 export class QuantityPropertyEditorBase extends PropertyEditorBase {
-  /* c8 ignore start */
+  /* v8 ignore start -- @preserve */
   public get reactNode(): React.ReactNode {
     return <QuantityPropertyEditor />;
   }
-  /* c8 ignore end */
+  /* v8 ignore stop -- @preserve */
 }
 
 /**
@@ -33,7 +33,7 @@ export class QuantityPropertyEditorBase extends PropertyEditorBase {
 export class QuantityPropertyEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
   private _ref = createRef<PropertyEditorAttributes>();
 
-  /* c8 ignore start */
+  /* v8 ignore start -- @preserve */
   public async getPropertyValue() {
     return this._ref.current?.getValue();
   }
@@ -48,7 +48,7 @@ export class QuantityPropertyEditor extends PureComponent<PropertyEditorProps> i
     }
     return this._ref.current.htmlElement.contains(document.activeElement);
   }
-  /* c8 ignore end */
+  /* v8 ignore stop -- @preserve */
 
   /** @internal */
   public override render() {

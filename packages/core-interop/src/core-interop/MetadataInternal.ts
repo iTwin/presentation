@@ -109,7 +109,7 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
       // `SchemaFormatsProvider` was introduced around the same time the meaning of this second argument was changed
       // from `includeInherited` to `excludeInherited` - we're using its existence to determine what we need to pass to get
       // inherited properties.
-      /* c8 ignore next */
+      /* v8 ignore next -- @preserve */
       ecschemaMetadata.SchemaFormatsProvider ? false : true,
     );
     return coreProperty ? createECProperty(coreProperty, this) : undefined;

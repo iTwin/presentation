@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { BeDuration } from "@itwin/core-bentley";
 import { ConcatenatedValue, ConcatenatedValuePart } from "../shared/ConcatenatedValue.js";
 import { TypedPrimitiveValue } from "../shared/Values.js";
@@ -11,25 +11,25 @@ import { TypedPrimitiveValue } from "../shared/Values.js";
 describe("ConcatenatedValuePart", () => {
   describe("isString", () => {
     it("returns correct result for different types of parts", () => {
-      expect(ConcatenatedValuePart.isString("str")).to.be.true;
-      expect(ConcatenatedValuePart.isString({ type: "Integer", value: 123 })).to.be.false;
-      expect(ConcatenatedValuePart.isString(["str"] satisfies ConcatenatedValue)).to.be.false;
+      expect(ConcatenatedValuePart.isString("str")).toBe(true);
+      expect(ConcatenatedValuePart.isString({ type: "Integer", value: 123 })).toBe(false);
+      expect(ConcatenatedValuePart.isString(["str"] satisfies ConcatenatedValue)).toBe(false);
     });
   });
 
   describe("isPrimitive", () => {
     it("returns correct result for different types of parts", () => {
-      expect(ConcatenatedValuePart.isPrimitive("str")).to.be.false;
-      expect(ConcatenatedValuePart.isPrimitive({ type: "Integer", value: 123 })).to.be.true;
-      expect(ConcatenatedValuePart.isPrimitive([{ type: "Integer", value: 123 }] satisfies ConcatenatedValue)).to.be.false;
+      expect(ConcatenatedValuePart.isPrimitive("str")).toBe(false);
+      expect(ConcatenatedValuePart.isPrimitive({ type: "Integer", value: 123 })).toBe(true);
+      expect(ConcatenatedValuePart.isPrimitive([{ type: "Integer", value: 123 }] satisfies ConcatenatedValue)).toBe(false);
     });
   });
 
   describe("isConcatenatedValue", () => {
     it("returns correct result for different types of parts", () => {
-      expect(ConcatenatedValuePart.isConcatenatedValue("str")).to.be.false;
-      expect(ConcatenatedValuePart.isConcatenatedValue({ type: "Integer", value: 123 })).to.be.false;
-      expect(ConcatenatedValuePart.isConcatenatedValue(["str", { type: "Integer", value: 123 }] satisfies ConcatenatedValue)).to.be.true;
+      expect(ConcatenatedValuePart.isConcatenatedValue("str")).toBe(false);
+      expect(ConcatenatedValuePart.isConcatenatedValue({ type: "Integer", value: 123 })).toBe(false);
+      expect(ConcatenatedValuePart.isConcatenatedValue(["str", { type: "Integer", value: 123 }] satisfies ConcatenatedValue)).toBe(true);
     });
   });
 });
@@ -44,7 +44,7 @@ describe("ConcatenatedValue", () => {
             return ((part as TypedPrimitiveValue).value as number).toString();
           },
         }),
-      ).to.eq("123");
+      ).toBe("123");
     });
 
     it("serializes all parts in order", async () => {
@@ -64,7 +64,7 @@ describe("ConcatenatedValue", () => {
             return `_${partIndex.toString()}_`;
           },
         }),
-      ).to.eq("_0__1__2__3_");
+      ).toBe("_0__1__2__3_");
     });
 
     it("joins parts with given separator", async () => {
@@ -74,7 +74,7 @@ describe("ConcatenatedValue", () => {
           partFormatter: async (part) => part as string,
           separator: "-",
         }),
-      ).to.eq("x-y-z");
+      ).toBe("x-y-z");
     });
   });
 });

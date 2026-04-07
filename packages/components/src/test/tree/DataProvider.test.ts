@@ -4,9 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
 import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
-import * as sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { CheckBoxState, PageOptions } from "@itwin/components-react";
 import { assert, BeEvent, Logger } from "@itwin/core-bentley";
@@ -41,6 +40,7 @@ import { createTestContentDescriptor, createTestPropertiesContentField } from ".
 import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy.js";
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
 import { createTestTreeNodeItem } from "../_helpers/UiComponents.js";
+import { createMocked } from "../TestUtils.js";
 
 function createTestECInstancesNodeKeyWithId(id?: string) {
   return createTestECInstancesNodeKey({
@@ -60,28 +60,27 @@ type GetFilteredNodePathsOptions = FilterByTextHierarchyRequestOptions<IModelCon
 describe("TreeDataProvider", () => {
   const rulesetId: string = "ruleset_id";
   const onVariableChanged: BeEvent<(variableId: string) => void> = new BeEvent();
-  const onHierarchyLimitExceededSpy = sinon.spy();
+  const onHierarchyLimitExceededSpy = vi.fn();
 
   let provider: PresentationTreeDataProvider;
-  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
+  let presentationManager: Mocked<PresentationManager>;
 
   const imodel = {} as IModelConnection;
 
   beforeEach(() => {
-    presentationManager = sinon.createStubInstance(PresentationManager);
-    presentationManager.vars.returns({
+    presentationManager = createMocked(PresentationManager);
+    presentationManager.vars.mockReturnValue({
       onVariableChanged,
     } as RulesetVariablesManager);
 
-    sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization());
     provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId, onHierarchyLimitExceeded: onHierarchyLimitExceededSpy });
   });
 
   afterEach(() => {
-    onHierarchyLimitExceededSpy.resetHistory();
+    onHierarchyLimitExceededSpy.mockClear();
     provider[Symbol.dispose]();
-    sinon.restore();
   });
 
   describe("rulesetId", () => {
@@ -121,7 +120,7 @@ describe("TreeDataProvider", () => {
       const parentKey = createTestECInstancesNodeKeyWithId("0x3");
       const parentNode = createTestTreeNodeItem(parentKey);
 
-      presentationManager.getNodesIterator.callsFake(async (options) =>
+      presentationManager.getNodesIterator.mockImplementation(async (options) =>
         options.parentKey === parentKey ? { items: createAsyncIterator(resultNodes), total: resultNodes.length } : { items: createAsyncIterator([]), total: 0 },
       );
 
@@ -137,7 +136,7 @@ describe("TreeDataProvider", () => {
         new ResolvablePromise<{ items: AsyncIterableIterator<Node>; total: number }>(),
       ];
 
-      presentationManager.getNodesIterator.callsFake(async (options) => {
+      presentationManager.getNodesIterator.mockImplementation(async (options) => {
         if (options.parentKey === parentKeys[0]) {
           return resultContainers[0].promise;
         }
@@ -156,11 +155,11 @@ describe("TreeDataProvider", () => {
       expect(results[0]).to.eq(results[1]).to.eq(0);
       expect(results[2]).to.eq(1);
 
-      expect(presentationManager.getNodesIterator).to.be.calledTwice;
-      expect(presentationManager.getNodesIterator).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledTimes(2);
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(
         matchOptions(({ parentKey }) => compareKeys(parentKey as ECInstancesNodeKey, parentKeys[0])),
       );
-      expect(presentationManager.getNodesIterator).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(
         matchOptions(({ parentKey }) => compareKeys(parentKey as ECInstancesNodeKey, parentKeys[1])),
       );
     });
@@ -169,14 +168,17 @@ describe("TreeDataProvider", () => {
       const parentKey = createTestECInstancesNodeKey();
       const parentNode = createTestTreeNodeItem(parentKey);
 
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode(), createTestECInstancesNode()]), total: 2 });
+      presentationManager.getNodesIterator.mockResolvedValue({
+        items: createAsyncIterator([createTestECInstancesNode(), createTestECInstancesNode()]),
+        total: 2,
+      });
 
       provider.pagingSize = 10;
       await provider.getNodesCount(parentNode);
       onVariableChanged.raiseEvent("testVar");
       await provider.getNodesCount(parentNode);
 
-      expect(presentationManager.getNodesIterator).to.be.calledTwice;
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledTimes(2);
     });
 
     it("passes instance filter to presentation manager", async () => {
@@ -186,11 +188,11 @@ describe("TreeDataProvider", () => {
       const { filterDefinition, filteringInfo } = createInstanceFilteringInfo("prop1");
       parentNode.filtering = filteringInfo;
 
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
 
       const actualResult = await provider.getNodesCount(parentNode);
       expect(actualResult).to.eq(1);
-      expect(presentationManager.getNodesIterator).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(
         matchOptions(({ instanceFilter }) => instanceFilter?.expression === filterDefinition?.expression),
       );
     });
@@ -202,11 +204,14 @@ describe("TreeDataProvider", () => {
       const parentNode = createTestTreeNodeItem(parentKey);
       const pageOptions: PageOptions = { start: 0, size: 5 };
 
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode(), createTestECInstancesNode()]), total: 2 });
+      presentationManager.getNodesIterator.mockResolvedValue({
+        items: createAsyncIterator([createTestECInstancesNode(), createTestECInstancesNode()]),
+        total: 2,
+      });
 
       const actualResult = await provider.getNodes(parentNode, pageOptions);
-      expect(actualResult).to.matchSnapshot();
-      expect(presentationManager.getNodesIterator).to.be.calledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 5));
+      expect(actualResult).toMatchSnapshot();
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 5));
     });
 
     it("memoizes result", async () => {
@@ -216,7 +221,7 @@ describe("TreeDataProvider", () => {
       const resultNodesFirstPageContainer1 = new ResolvablePromise<{ items: AsyncIterableIterator<Node>; total: number }>();
       const resultNodesNonFirstPageContainer = new ResolvablePromise<{ items: AsyncIterableIterator<Node>; total: number }>();
 
-      presentationManager.getNodesIterator.callsFake(async ({ paging, parentKey }) => {
+      presentationManager.getNodesIterator.mockImplementation(async ({ paging, parentKey }) => {
         if (paging === undefined && parentKey === parentKeys[0]) {
           return resultNodesFirstPageContainer0.promise;
         }
@@ -250,68 +255,68 @@ describe("TreeDataProvider", () => {
       expect(results[6]).to.eq(results[7], "results[6] should eq results[7]");
 
       expect(presentationManager.getNodesIterator).to.be.calledThrice;
-      expect(presentationManager.getNodesIterator).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(
         matchOptions(({ paging, parentKey }) => paging === undefined && compareKeys(parentKey as ECInstancesNodeKey, parentKeys[0])),
       );
-      expect(presentationManager.getNodesIterator).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(
         matchOptions(({ paging, parentKey }) => paging?.start === 1 && paging.size === 0 && compareKeys(parentKey as ECInstancesNodeKey, parentKeys[0])),
       );
-      expect(presentationManager.getNodesIterator).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(
         matchOptions(({ paging, parentKey }) => paging?.start === 0 && paging.size === 1 && compareKeys(parentKey as ECInstancesNodeKey, parentKeys[1])),
       );
     });
 
     it("uses `getNodesAndCount` data source override if supplied", async () => {
-      const override = sinon.mock().resolves({ count: 1, nodes: [createTestECInstancesNode()] });
+      const override = vi.fn().mockResolvedValue({ count: 1, nodes: [createTestECInstancesNode()] });
       provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId, dataSourceOverrides: { getNodesAndCount: override } });
       await provider.getNodes();
-      expect(override).to.be.calledOnce;
-      expect(presentationManager.getNodesIterator).to.not.be.called;
+      expect(override).toHaveBeenCalledOnce();
+      expect(presentationManager.getNodesIterator).not.toHaveBeenCalled();
     });
 
     it("uses `getNodesIterator` data source override if supplied", async () => {
-      const override = sinon.mock().resolves({ total: 1, items: createAsyncIterator([createTestECInstancesNode()]) });
+      const override = vi.fn().mockResolvedValue({ total: 1, items: createAsyncIterator([createTestECInstancesNode()]) });
       provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId, dataSourceOverrides: { getNodesIterator: override } });
       await provider.getNodes();
-      expect(override).to.be.calledOnce;
-      expect(presentationManager.getNodesIterator).to.not.be.called;
+      expect(override).toHaveBeenCalledOnce();
+      expect(presentationManager.getNodesIterator).not.toHaveBeenCalled();
     });
 
     it("uses `PresentationManager.getNodesAndCount` if `getNodesIterator` is not available", async () => {
       Object.assign(presentationManager, { getNodesIterator: undefined });
-      presentationManager.getNodesAndCount.resolves({ count: 1, nodes: [createTestECInstancesNode()] });
+      presentationManager.getNodesAndCount.mockResolvedValue({ count: 1, nodes: [createTestECInstancesNode()] });
       provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId });
       await provider.getNodes();
-      expect(presentationManager.getNodesAndCount).to.be.calledOnce;
+      expect(presentationManager.getNodesAndCount).toHaveBeenCalledOnce();
     });
 
     it("logs a warning when requesting nodes and pagingSize is not the same as passed pageOptions", async () => {
       const pageOptions: PageOptions = { start: 0, size: 10 };
-      const loggerSpy = sinon.spy(Logger, "logWarning");
+      const loggerSpy = vi.spyOn(Logger, "logWarning");
       const result = { items: createAsyncIterator([createTestECInstancesNode(), createTestECInstancesNode()]), total: 2 };
-      presentationManager.getNodesIterator.resolves(result);
+      presentationManager.getNodesIterator.mockResolvedValue(result);
 
       // Paging size is not set and pageOptions are passed
       await provider.getNodes(undefined, pageOptions);
-      expect(loggerSpy.calledOnce).to.be.true;
-      loggerSpy.resetHistory();
+      expect(loggerSpy).toHaveBeenCalledOnce();
+      loggerSpy.mockClear();
 
       // Paging size is set and no pageOptions are passed
       provider.pagingSize = 10;
       await provider.getNodes();
-      expect(loggerSpy.notCalled).to.be.true;
-      loggerSpy.resetHistory();
+      expect(loggerSpy).not.toHaveBeenCalled();
+      loggerSpy.mockClear();
 
       // Paging size is set and pageOptions are passed but not equal to paging size
       provider.pagingSize = 20;
       await provider.getNodes(undefined, pageOptions);
-      expect(loggerSpy.calledOnce).to.be.true;
-      loggerSpy.resetHistory();
+      expect(loggerSpy).toHaveBeenCalledOnce();
+      loggerSpy.mockClear();
 
       // Paging size is set and pageOptions are passed and equal to paging size
       provider.pagingSize = 10;
       await provider.getNodes(undefined, pageOptions);
-      expect(loggerSpy.notCalled).to.be.true;
+      expect(loggerSpy).not.toHaveBeenCalled();
     });
 
     it("passes instance filter to presentation manager", async () => {
@@ -321,7 +326,7 @@ describe("TreeDataProvider", () => {
       parentNode.filtering = filteringInfo0;
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
-      presentationManager.getNodesIterator.callsFake(async ({ instanceFilter }) => {
+      presentationManager.getNodesIterator.mockImplementation(async ({ instanceFilter }) => {
         if (instanceFilter?.expression === instanceFilter0?.expression) {
           return { items: createAsyncIterator([createTestECInstancesNode()]), total: 1 };
         }
@@ -333,7 +338,7 @@ describe("TreeDataProvider", () => {
 
       const actualResult0 = await provider.getNodes(parentNode, pageOptions);
       expect(actualResult0).to.have.lengthOf(1);
-      expect(presentationManager.getNodesIterator).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(
         matchOptions(({ instanceFilter }) => instanceFilter?.expression === instanceFilter0?.expression),
       );
 
@@ -343,7 +348,7 @@ describe("TreeDataProvider", () => {
       const actualResult1 = await provider.getNodes(parentNode, pageOptions);
       expect(actualResult1).to.have.lengthOf(2);
 
-      expect(presentationManager.getNodesIterator).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(
         matchOptions(({ instanceFilter }) => instanceFilter?.expression === instanceFilter1?.expression),
       );
     });
@@ -355,12 +360,12 @@ describe("TreeDataProvider", () => {
       nodeItem.filtering = filteringInfo;
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
 
       const actualResult = await provider.getNodes(nodeItem, pageOptions);
       expect(actualResult).to.have.lengthOf(1);
 
-      expect(presentationManager.getNodesIterator).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(
         matchOptions(({ instanceFilter }) => instanceFilter?.expression === filterDefinition?.expression),
       );
     });
@@ -375,15 +380,17 @@ describe("TreeDataProvider", () => {
         [createTestECClassInfo({ id: classId }), createTestECClassInfo({ id: classId })],
       );
       nodeItem.filtering = filteringInfo;
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([]), total: 0 });
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([]), total: 0 });
       await provider.getNodes(nodeItem, { start: 0, size: 2 });
-      expect(presentationManager.getNodesIterator).to.be.calledWithMatch({
-        instanceFilter: {
-          expression: `(this.filter1 = NULL AND this.filter2 = NULL) AND (this.IsOfClass(${classId}))`,
-          selectClassName: "SchemaName:ClassName",
-          relatedInstances: [],
-        },
-      });
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(
+        expect.objectContaining({
+          instanceFilter: {
+            expression: `(this.filter1 = NULL AND this.filter2 = NULL) AND (this.IsOfClass(${classId}))`,
+            selectClassName: "SchemaName:ClassName",
+            relatedInstances: [],
+          },
+        }),
+      );
     });
 
     it("passes combined parent and current node instance filter to presentation manager", async () => {
@@ -393,12 +400,12 @@ describe("TreeDataProvider", () => {
       nodeItem.filtering = filteringInfo;
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
 
       const actualResult = await provider.getNodes(nodeItem, pageOptions);
       expect(actualResult).to.have.lengthOf(1);
 
-      expect(presentationManager.getNodesIterator).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(
         matchOptions(({ instanceFilter }) => instanceFilter?.expression === filterDefinition?.expression),
       );
     });
@@ -421,12 +428,12 @@ describe("TreeDataProvider", () => {
       };
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
 
       const actualResult = await provider.getNodes(nodeItem, pageOptions);
       expect(actualResult).to.have.lengthOf(1);
 
-      expect(presentationManager.getNodesIterator).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(
         matchOptions(({ instanceFilter }) => instanceFilter?.expression === `(this.IsOfClass(0x1) OR this.IsOfClass(0x2))`),
       );
     });
@@ -438,23 +445,23 @@ describe("TreeDataProvider", () => {
       nodeItem.filtering = filteringInfo;
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
 
       const actualResult = await provider.getNodes(nodeItem, pageOptions);
       expect(actualResult).to.have.lengthOf(1);
 
-      expect(presentationManager.getNodesIterator).to.be.calledWith(matchOptions(({ instanceFilter }) => instanceFilter === undefined));
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(matchOptions(({ instanceFilter }) => instanceFilter === undefined));
     });
 
     it("passes hierarchy level size limit to presentation manager", async () => {
       const parentKey = createTestECInstancesNodeKey();
       const parentNode = createTestTreeNodeItem(parentKey);
       const limit = 999;
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
 
       provider.hierarchyLevelSizeLimit = limit;
       await provider.getNodes(parentNode);
-      expect(presentationManager.getNodesIterator).to.be.calledWith(matchOptions(({ sizeLimit }) => sizeLimit === limit));
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(matchOptions(({ sizeLimit }) => sizeLimit === limit));
     });
 
     it("returns info node if filtered hierarchy level does not have children", async () => {
@@ -464,7 +471,7 @@ describe("TreeDataProvider", () => {
       parentNode.filtering = filteringInfo;
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([]), total: 0 });
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([]), total: 0 });
 
       const actualResult = await provider.getNodes(parentNode, pageOptions);
       expect(actualResult).to.have.lengthOf(1);
@@ -472,7 +479,7 @@ describe("TreeDataProvider", () => {
     });
 
     it("returns info node if hierarchy level exceeds given limit", async () => {
-      presentationManager.getNodesIterator.callsFake(async () => {
+      presentationManager.getNodesIterator.mockImplementation(async () => {
         throw new PresentationError(PresentationStatus.ResultSetTooLarge);
       });
 
@@ -485,18 +492,18 @@ describe("TreeDataProvider", () => {
     });
 
     it("calls `onHierarchyLimitExceeded` if hierarchy level exceeds given limit", async () => {
-      presentationManager.getNodesIterator.callsFake(async () => {
+      presentationManager.getNodesIterator.mockImplementation(async () => {
         throw new PresentationError(PresentationStatus.ResultSetTooLarge);
       });
 
       provider.hierarchyLevelSizeLimit = 5;
       const actualResult = await provider.getNodes(undefined);
       expect(actualResult).to.have.lengthOf(1);
-      expect(onHierarchyLimitExceededSpy).to.be.calledOnce;
+      expect(onHierarchyLimitExceededSpy).toHaveBeenCalledOnce();
     });
 
     it("returns info node on timeout", async () => {
-      presentationManager.getNodesIterator.callsFake(async () => {
+      presentationManager.getNodesIterator.mockImplementation(async () => {
         throw new PresentationError(PresentationStatus.BackendTimeout);
       });
 
@@ -507,19 +514,19 @@ describe("TreeDataProvider", () => {
 
     it("returns info node on generic error", async () => {
       // stub console log to avoid expected error in console
-      const consoleStub = sinon.stub(console, "error").callsFake(() => {});
-      presentationManager.getNodesIterator.callsFake(async () => {
+      const consoleStub = vi.spyOn(console, "error").mockImplementation(() => {});
+      presentationManager.getNodesIterator.mockImplementation(async () => {
         throw new Error("test");
       });
 
       const actualResult = await provider.getNodes(undefined);
       expect(actualResult).to.have.lengthOf(1);
       expect((actualResult[0] as PresentationInfoTreeNodeItem).message).to.eq(translate("tree.unknown-error"));
-      consoleStub.restore();
+      consoleStub.mockRestore();
     });
 
     it("returns empty result on cancellation", async () => {
-      presentationManager.getNodesIterator.callsFake(async () => {
+      presentationManager.getNodesIterator.mockImplementation(async () => {
         throw new PresentationError(PresentationStatus.Canceled);
       });
 
@@ -531,25 +538,27 @@ describe("TreeDataProvider", () => {
   describe("getFilteredNodes", () => {
     it("returns presentation manager result", async () => {
       const filter = "test_filter";
-      presentationManager.getFilteredNodePaths.resolves([createTestNodePathElement(), createTestNodePathElement()]);
+      presentationManager.getFilteredNodePaths.mockResolvedValue([createTestNodePathElement(), createTestNodePathElement()]);
 
       const actualResult = await provider.getFilteredNodePaths(filter);
-      expect(actualResult).to.matchSnapshot();
-      expect(presentationManager.getFilteredNodePaths).to.be.calledWith(matchOptions<GetFilteredNodePathsOptions>((options) => options.filterText === filter));
+      expect(actualResult).toMatchSnapshot();
+      expect(presentationManager.getFilteredNodePaths).toHaveBeenCalledWith(
+        matchOptions<GetFilteredNodePathsOptions>((options) => options.filterText === filter),
+      );
     });
 
     it("uses `getFilteredNodePaths` data source override if supplied", async () => {
-      const override = sinon.mock().resolves([]);
+      const override = vi.fn().mockResolvedValue([]);
       provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId, dataSourceOverrides: { getFilteredNodePaths: override } });
       await provider.getFilteredNodePaths("test");
-      expect(presentationManager.getFilteredNodePaths).to.not.be.called;
-      expect(override).to.be.calledOnce;
+      expect(presentationManager.getFilteredNodePaths).not.toHaveBeenCalled();
+      expect(override).toHaveBeenCalledOnce();
     });
   });
 
   describe("diagnostics", () => {
     it("passes rule diagnostics options to presentation manager", async () => {
-      const diagnosticsHandler = sinon.stub();
+      const diagnosticsHandler = vi.fn();
 
       provider[Symbol.dispose]();
       provider = new PresentationTreeDataProvider({
@@ -558,15 +567,15 @@ describe("TreeDataProvider", () => {
         ruleDiagnostics: { severity: "error", handler: diagnosticsHandler },
       });
 
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([]), total: 0 });
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([]), total: 0 });
       await provider.getNodesCount();
-      expect(presentationManager.getNodesIterator).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(
         matchOptions(({ diagnostics }) => diagnostics?.editor === "error" && diagnostics.handler === diagnosticsHandler),
       );
     });
 
     it("passes dev diagnostics options to presentation manager", async () => {
-      const diagnosticsHandler = sinon.stub();
+      const diagnosticsHandler = vi.fn();
 
       provider[Symbol.dispose]();
       provider = new PresentationTreeDataProvider({
@@ -575,9 +584,9 @@ describe("TreeDataProvider", () => {
         devDiagnostics: { backendVersion: true, perf: true, severity: "error", handler: diagnosticsHandler },
       });
 
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([]), total: 0 });
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([]), total: 0 });
       await provider.getNodesCount();
-      expect(presentationManager.getNodesIterator).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).toHaveBeenCalledWith(
         matchOptions(
           ({ diagnostics }) =>
             diagnostics?.backendVersion === true && diagnostics.perf === true && diagnostics?.dev === "error" && diagnostics.handler === diagnosticsHandler,
@@ -598,7 +607,7 @@ describe("TreeDataProvider", () => {
     it("sets filtering info if nodes supports filtering", async () => {
       const nodes = [createTestECInstancesNode(), createTestECInstancesNode({ supportsFiltering: true })];
 
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator(nodes), total: 2 });
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator(nodes), total: 2 });
 
       const actualResult = await provider.getNodes();
       expect(actualResult).to.have.lengthOf(2);
@@ -609,8 +618,8 @@ describe("TreeDataProvider", () => {
     it("loads node descriptor for filtering", async () => {
       const nodes = [createTestECInstancesNode({ supportsFiltering: true })];
 
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator(nodes), total: 2 });
-      presentationManager.getNodesDescriptor.resolves(createTestContentDescriptor({ fields: [] }));
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator(nodes), total: 2 });
+      presentationManager.getNodesDescriptor.mockResolvedValue(createTestContentDescriptor({ fields: [] }));
 
       const actualResult = await provider.getNodes();
       expect(actualResult).to.have.lengthOf(1);
@@ -623,14 +632,14 @@ describe("TreeDataProvider", () => {
     it("throws if cannot load node descriptor for filtering", async () => {
       const nodes = [createTestECInstancesNode({ supportsFiltering: true })];
 
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator(nodes), total: 2 });
-      presentationManager.getNodesDescriptor.resolves(undefined);
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator(nodes), total: 2 });
+      presentationManager.getNodesDescriptor.mockResolvedValue(undefined);
 
       const actualResult = await provider.getNodes();
       expect(actualResult).to.have.lengthOf(1);
       const treeItem = actualResult[0] as PresentationTreeNodeItem;
       expect(treeItem.filtering).to.not.be.undefined;
-      await expect(loadDescriptor(treeItem.filtering!)).to.eventually.be.rejected;
+      await expect(loadDescriptor(treeItem.filtering!)).rejects.toThrow();
     });
 
     it("adds parent filter to grouping node filtering info", async () => {
@@ -643,7 +652,7 @@ describe("TreeDataProvider", () => {
       };
       const groupingNode = createTestECInstancesNode({ key: createTestECClassGroupingNodeKey(), supportsFiltering: true });
 
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([groupingNode]), total: 1 });
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([groupingNode]), total: 1 });
 
       const result = await provider.getNodes(parentTreeNodeItem);
       const groupingNodeItem = result[0] as PresentationTreeNodeItem;
@@ -659,7 +668,7 @@ describe("TreeDataProvider", () => {
       };
       const groupingNode = createTestECInstancesNode({ key: createTestECClassGroupingNodeKey(), supportsFiltering: true });
 
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([groupingNode]), total: 1 });
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([groupingNode]), total: 1 });
 
       const result = await provider.getNodes(parentTreeNodeItem);
       const groupingNodeItem = result[0] as PresentationTreeNodeItem;
@@ -675,7 +684,7 @@ describe("TreeDataProvider", () => {
         extendedData,
       };
 
-      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([node]), total: 1 });
+      presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([node]), total: 1 });
     }
 
     it("uses ExtendedDataRule to set tree item icon", async () => {
@@ -835,5 +844,5 @@ function compareKeys(lhs: ECInstancesNodeKey, rhs: ECInstancesNodeKey) {
 }
 
 function matchOptions<TOptions = GetNodesOptions>(pred: (options: TOptions) => boolean) {
-  return sinon.match(pred);
+  return { asymmetricMatch: (actual: unknown) => pred(actual as TOptions) };
 }
