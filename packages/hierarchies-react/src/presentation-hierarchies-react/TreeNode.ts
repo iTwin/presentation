@@ -19,7 +19,7 @@ export interface TreeNode {
   isFiltered: boolean;
   /** UI-agnostic source of this node object. */
   nodeData: HierarchyNode;
-  /** Contains errors encountered from expanding the node. */
+  /** Errors associated with this tree node. */
   errors: ErrorInfo[];
 }
 
