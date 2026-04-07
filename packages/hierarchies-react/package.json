@@ -72,9 +72,9 @@
   },
   "peerDependencies": {
     "@stratakit/bricks": "^0.5.4",
-    "@stratakit/foundations": "^0.4.5",
-    "@stratakit/icons": "^0.2.2",
-    "@stratakit/structures": "^0.5.4",
+    "@stratakit/foundations": "^0.4.7",
+    "@stratakit/icons": "^0.3.1",
+    "@stratakit/structures": "^0.5.6",
     "react": "^17.0 || ^18.0",
     "react-dom": "^17.0 || ^18.0"
   },
