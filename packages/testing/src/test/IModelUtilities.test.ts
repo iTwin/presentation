@@ -94,10 +94,10 @@ describe("buildTestIModel", () => {
     expect(createSnapshotDb.mock.calls[0][1]).toEqual({ rootSubject: { name: fileName } });
   });
 
-  it("calls `SnapshotDb.createEmpty` with correct parameters when using overload with mocha context", async () => {
-    // Construct a fake Mocha.Context-shaped object with a deterministic title.
+  it("calls `SnapshotDb.createEmpty` with correct parameters when using overload with test context", async () => {
+    // Construct a fake test context-shaped object with a deterministic title.
     const testContext = {
-      test: { fullTitle: () => "calls `SnapshotDb.createEmpty` with correct parameters when using overload with mocha context" },
+      test: { fullTitle: () => "calls `SnapshotDb.createEmpty` with correct parameters when using overload with test context" },
     };
     const fileName = createFileNameFromString(testContext.test.fullTitle());
 
