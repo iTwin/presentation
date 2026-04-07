@@ -111,21 +111,20 @@ export function ErrorItemRenderer({
       />
     );
   }
-  return <ErrorItemContainer treeNode={treeNode} error={error} message={error.message} scrollToElement={() => scrollToNode(treeNode)} />;
+  return <ErrorItemContainer treeNode={treeNode} message={error.message} scrollToElement={() => scrollToNode(treeNode)} />;
 }
 
 type ErrorItemContainerProps = {
   treeNode: Omit<TreeNode, "errors">;
-  error: ErrorInfo;
   message: string;
   actions?: { action: () => void; label: string; condition: () => boolean }[];
 } & Pick<MessageWithLinkProps, "scrollToElement">;
 
-function ErrorItemContainer({ treeNode, error, message, actions, scrollToElement }: ErrorItemContainerProps) {
+function ErrorItemContainer({ treeNode, message, actions, scrollToElement }: ErrorItemContainerProps) {
   return (
     <ErrorRegion.Item
       message={<MessageWithLink linkLabel={treeNode.label} scrollToElement={scrollToElement} message={message} />}
-      messageId={`${treeNode.id}:${error.id}`}
+      messageId={treeNode.id}
       actions={actions
         ?.filter(({ condition }) => condition())
         .map(({ label, action }) => (
