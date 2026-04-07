@@ -65,7 +65,7 @@ export interface CachingHiliteSetProvider {
  * @public
  * @deprecated in 1.5. Use `createIModelHiliteSetProvider` instead.
  */
-/* c8 ignore start */
+/* v8 ignore start */
 export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider & { [Symbol.dispose]: () => void } {
   const provider = createIModelHiliteSetProvider(props);
   return {
@@ -74,4 +74,4 @@ export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderPr
     dispose: () => provider[Symbol.dispose](),
   };
 }
-/* c8 ignore end */
+/* v8 ignore stop */

@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { HiliteSet, HiliteSetProvider, HiliteSetProviderProps } from "../unified-selection/HiliteSetProvider.js";
 import { createIModelHiliteSetProvider } from "../unified-selection/IModelHiliteSetProvider.js";
@@ -18,13 +17,13 @@ const generateSelection = (): SelectableInstanceKey[] => {
 };
 
 describe("createIModelHiliteSetProvider", () => {
-  let factory: sinon.SinonStub<[props: HiliteSetProviderProps], HiliteSetProvider>;
+  let factory: Mock<(props: HiliteSetProviderProps) => HiliteSetProvider>;
   let selectionStorage: SelectionStorage;
   let hiliteSetCache: ReturnType<typeof createIModelHiliteSetProvider>;
   const provider = {
-    getHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<HiliteSet>>(),
+    getHiliteSet: vi.fn<(props: { imodelKey: string }) => AsyncIterableIterator<HiliteSet>>(),
   };
-  const imodelProvider = sinon.stub<[string], ECClassHierarchyInspector & ECSqlQueryExecutor>();
+  const imodelProvider = vi.fn<(imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor>();
   const imodelKey = "iModelKey";
 
   async function loadHiliteSet() {
@@ -47,27 +46,26 @@ describe("createIModelHiliteSetProvider", () => {
     };
   }
 
-  function stubIModelAccess(): sinon.SinonStubbedInstance<ECClassHierarchyInspector & ECSqlQueryExecutor> {
+  function stubIModelAccess() {
     return {
-      createQueryReader: sinon.stub(),
-      classDerivesFrom: sinon.stub(),
+      createQueryReader: vi.fn(),
+      classDerivesFrom: vi.fn(),
     };
   }
 
   beforeEach(async () => {
     selectionStorage = createStorage();
 
-    factory = sinon.stub<[props: HiliteSetProviderProps], HiliteSetProvider>().returns(provider as unknown as HiliteSetProvider);
+    factory = vi.fn<(props: HiliteSetProviderProps) => HiliteSetProvider>().mockReturnValue(provider as unknown as HiliteSetProvider);
     hiliteSetCache = createIModelHiliteSetProvider({
       selectionStorage,
       imodelProvider,
       createHiliteSetProvider: factory,
     });
-    imodelProvider.returns(stubIModelAccess());
+    imodelProvider.mockReturnValue(stubIModelAccess());
     selectionStorage.addToSelection({ imodelKey, source: "test", selectables: generateSelection() });
 
-    provider.getHiliteSet.reset();
-    provider.getHiliteSet.callsFake(() =>
+    provider.getHiliteSet.mockImplementation(() =>
       createAsyncIterator([
         { models: ["0x1"], subCategories: ["0x1"], elements: ["0x1"] },
         { models: ["0x2"], subCategories: ["0x2"], elements: ["0x2"] },
@@ -80,35 +78,35 @@ describe("createIModelHiliteSetProvider", () => {
     it("creates provider once for iModel", async () => {
       const imodel1 = stubIModelAccess();
       const imodel2 = stubIModelAccess();
-      imodelProvider.returns(imodel1);
+      imodelProvider.mockReturnValue(imodel1);
 
       hiliteSetCache.getCurrentHiliteSet({ imodelKey: "model1" });
-      expect(factory).to.be.calledOnceWith({ imodelAccess: imodel1 });
-      factory.resetHistory();
+      expect(factory).toHaveBeenCalledExactlyOnceWith({ imodelAccess: imodel1 });
+      factory.mockClear();
 
       hiliteSetCache.getCurrentHiliteSet({ imodelKey: "model1" });
-      expect(factory).to.not.be.called;
+      expect(factory).not.toHaveBeenCalled();
 
-      imodelProvider.returns(imodel2);
+      imodelProvider.mockReturnValue(imodel2);
       hiliteSetCache.getCurrentHiliteSet({ imodelKey: "model2" });
-      expect(factory).to.be.calledOnceWith({ imodelAccess: imodel2 });
-      factory.resetHistory();
+      expect(factory).toHaveBeenCalledExactlyOnceWith({ imodelAccess: imodel2 });
+      factory.mockClear();
 
       hiliteSetCache.getCurrentHiliteSet({ imodelKey: "model1" });
-      expect(factory).to.not.be.called;
+      expect(factory).not.toHaveBeenCalled();
     });
 
     it("caches hilite set", async () => {
       const set1 = await loadHiliteSet();
       const set2 = await loadHiliteSet();
 
-      expect(provider.getHiliteSet).to.be.calledOnce;
-      expect(set1.models.length).to.be.eq(3);
-      expect(set1.subCategories.length).to.be.eq(3);
-      expect(set1.elements.length).to.be.eq(3);
-      expect(set2.models).to.have.members(set1.models);
-      expect(set2.subCategories).to.have.members(set1.subCategories);
-      expect(set2.elements).to.have.members(set1.elements);
+      expect(provider.getHiliteSet).toHaveBeenCalledOnce();
+      expect(set1.models.length).toBe(3);
+      expect(set1.subCategories.length).toBe(3);
+      expect(set1.elements.length).toBe(3);
+      expect(set2.models).toEqual(expect.arrayContaining(set1.models));
+      expect(set2.subCategories).toEqual(expect.arrayContaining(set1.subCategories));
+      expect(set2.elements).toEqual(expect.arrayContaining(set1.elements));
     });
 
     it("clears cache on storage selection changes", async () => {
@@ -116,40 +114,40 @@ describe("createIModelHiliteSetProvider", () => {
       selectionStorage.clearSelection({ imodelKey, source: "test" });
       const set2 = await loadHiliteSet();
 
-      expect(provider.getHiliteSet).to.be.calledTwice;
-      expect(set1.models.length).to.be.eq(3);
-      expect(set1.subCategories.length).to.be.eq(3);
-      expect(set1.elements.length).to.be.eq(3);
-      expect(set2.models).to.have.members(set1.models);
-      expect(set2.subCategories).to.have.members(set1.subCategories);
-      expect(set2.elements).to.have.members(set1.elements);
+      expect(provider.getHiliteSet).toHaveBeenCalledTimes(2);
+      expect(set1.models.length).toBe(3);
+      expect(set1.subCategories.length).toBe(3);
+      expect(set1.elements.length).toBe(3);
+      expect(set2.models).toEqual(expect.arrayContaining(set1.models));
+      expect(set2.subCategories).toEqual(expect.arrayContaining(set1.subCategories));
+      expect(set2.elements).toEqual(expect.arrayContaining(set1.elements));
     });
 
     it("clears hilite set providers when iModel is closed", async () => {
       const imodelAccess = stubIModelAccess();
-      imodelProvider.returns(imodelAccess);
+      imodelProvider.mockReturnValue(imodelAccess);
 
       hiliteSetCache.getCurrentHiliteSet({ imodelKey });
-      expect(factory).to.be.calledOnceWith({ imodelAccess });
-      factory.resetHistory();
+      expect(factory).toHaveBeenCalledExactlyOnceWith({ imodelAccess });
+      factory.mockClear();
 
       selectionStorage.clearStorage({ imodelKey });
 
       hiliteSetCache.getCurrentHiliteSet({ imodelKey });
-      expect(factory).to.be.calledOnceWith({ imodelAccess });
+      expect(factory).toHaveBeenCalledExactlyOnceWith({ imodelAccess });
     });
   });
 
   describe("dispose", () => {
     it("unregisters listener from `SelectionStorage`", async () => {
       hiliteSetCache[Symbol.dispose]();
-      provider.getHiliteSet.resetHistory();
+      provider.getHiliteSet.mockClear();
 
       hiliteSetCache.getCurrentHiliteSet({ imodelKey });
       selectionStorage.clearSelection({ imodelKey, source: "test" });
       hiliteSetCache.getCurrentHiliteSet({ imodelKey });
 
-      expect(provider.getHiliteSet).to.be.calledOnce;
+      expect(provider.getHiliteSet).toHaveBeenCalledOnce();
     });
   });
 });

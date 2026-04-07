@@ -1512,57 +1512,30 @@ importers:
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.1.0(eslint@9.39.4)(typescript@5.7.3)
-      '@types/chai':
-        specifier: catalog:test-tools
-        version: 5.2.3
-      '@types/chai-as-promised':
-        specifier: catalog:test-tools
-        version: 8.0.2
-      '@types/mocha':
-        specifier: catalog:test-tools
-        version: 10.0.10
       '@types/node':
         specifier: catalog:build-tools
         version: 24.12.0
-      '@types/sinon':
+      '@vitest/coverage-v8':
         specifier: catalog:test-tools
-        version: 17.0.4
-      '@types/sinon-chai':
-        specifier: catalog:test-tools
-        version: 4.0.0
-      c8:
-        specifier: catalog:test-tools
-        version: 10.1.3
-      chai:
-        specifier: catalog:test-tools
-        version: 5.3.3
-      chai-as-promised:
-        specifier: catalog:test-tools
-        version: 8.0.2(chai@5.3.3)
+        version: 4.1.1(vitest@4.1.1(@opentelemetry/api@1.9.0)(@types/node@24.12.0)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@6.4.2(@types/node@24.12.0)(sass@1.98.0)(yaml@2.8.3)))
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2
       eslint:
         specifier: catalog:build-tools
         version: 9.39.4
-      mocha:
-        specifier: catalog:test-tools
-        version: 11.7.5
       presentation-test-utilities:
         specifier: workspace:^
         version: link:../test-utilities
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.3
-      sinon:
-        specifier: catalog:test-tools
-        version: 19.0.5
-      sinon-chai:
-        specifier: catalog:test-tools
-        version: 4.0.1(chai@5.3.3)(sinon@19.0.5)
       typescript:
         specifier: catalog:build-tools
         version: 5.7.3
+      vitest:
+        specifier: catalog:test-tools
+        version: 4.1.1(@opentelemetry/api@1.9.0)(@types/node@24.12.0)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@6.4.2(@types/node@24.12.0)(sass@1.98.0)(yaml@2.8.3))
 
   packages/unified-selection-react:
     devDependencies:
