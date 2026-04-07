@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`HierarchyBuilder createHierarchy with data returns correct hierarchy 1`] = `
+exports[`HierarchyBuilder > createHierarchy > with data > returns correct hierarchy 1`] = `
 Array [
   Object {
     "children": Array [
@@ -71,7 +71,7 @@ Array [
 ]
 `;
 
-exports[`HierarchyBuilder createHierarchy with data returns correct hierarchy with custom node mapping function 1`] = `
+exports[`HierarchyBuilder > createHierarchy > with data > returns correct hierarchy with custom node mapping function 1`] = `
 Array [
   Object {
     "children": Array [

@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import sinon from "sinon";
+import { MockInstance, vi } from "vitest";
 
-export function createStub<T extends (...args: any) => any>() {
-  return sinon.stub<Parameters<T>, ReturnType<T>>();
+export function createStub<T extends (...args: any) => any>(): MockInstance<T> {
+  return vi.fn<T>();
 }

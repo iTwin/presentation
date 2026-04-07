@@ -3,7 +3,7 @@
   "compilerOptions": {
     "module": "CommonJS",
     "moduleResolution": "Node",
-    "outDir": "lib/cjs"
+    "outDir": "lib/cjs",
   },
-  "exclude": ["src/test/**/*"]
+  "include": ["src/presentation-testing", "src/presentation-testing.ts"],
 }

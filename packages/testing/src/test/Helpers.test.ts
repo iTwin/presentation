@@ -3,65 +3,58 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import { mock } from "node:test";
-import * as sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, MockInstance, vi } from "vitest";
 import { IModelHost } from "@itwin/core-backend";
 import { Guid } from "@itwin/core-bentley";
 import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { HierarchyCacheMode, Presentation as PresentationBackend } from "@itwin/presentation-backend";
 import { Presentation as PresentationFrontend } from "@itwin/presentation-frontend";
+import { initialize, PresentationTestingInitProps, terminate } from "../presentation-testing/Helpers.js";
 
-import type { PresentationTestingInitProps } from "../presentation-testing/Helpers.js";
+const rimrafSyncMock = vi.hoisted(() => vi.fn());
+vi.mock("rimraf", () => ({ sync: rimrafSyncMock }));
 
 describe("Helpers", () => {
-  let backendInitializationStub: sinon.SinonStub;
-  let frontendInitializationStub: sinon.SinonStub;
-  let backendTerminationStub: sinon.SinonStub;
-  let frontendTerminationStub: sinon.SinonStub;
+  let backendInitializationStub: MockInstance;
+  let frontendInitializationStub: MockInstance;
+  let backendTerminationStub: MockInstance;
+  let frontendTerminationStub: MockInstance;
 
   beforeEach(() => {
-    backendInitializationStub = sinon.stub(PresentationBackend, "initialize");
-    frontendInitializationStub = sinon.stub(PresentationFrontend, "initialize");
-    backendTerminationStub = sinon.stub(PresentationBackend, "terminate");
-    frontendTerminationStub = sinon.stub(PresentationFrontend, "terminate");
-    sinon.stub(IModelHost, "startup");
-    sinon.stub(NoRenderApp, "startup");
-    sinon.stub(IModelApp, "localization").get(() => ({ getLanguageList: () => ["en"] }));
+    backendInitializationStub = vi.spyOn(PresentationBackend, "initialize").mockImplementation(() => {});
+    frontendInitializationStub = vi.spyOn(PresentationFrontend, "initialize").mockImplementation(async () => {});
+    backendTerminationStub = vi.spyOn(PresentationBackend, "terminate").mockImplementation(() => {});
+    frontendTerminationStub = vi.spyOn(PresentationFrontend, "terminate").mockImplementation(() => {});
+    vi.spyOn(IModelHost, "startup").mockResolvedValue();
+    vi.spyOn(NoRenderApp, "startup").mockResolvedValue();
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue({ getLanguageList: () => ["en"] } as any);
   });
 
   describe("initialize", () => {
-    let initialize: (props?: PresentationTestingInitProps) => Promise<void>;
-
-    beforeEach(async () => {
-      initialize = (await import("../presentation-testing/Helpers.js")).initialize;
-    });
-
     afterEach(async () => {
-      const { terminate } = await import("../presentation-testing/Helpers.js");
       await terminate();
     });
 
     it("initializes PresentationBackend and PresentationFrontend on initialize", async () => {
       await initialize();
-      expect(backendInitializationStub).to.be.calledOnce;
-      expect(frontendInitializationStub).to.be.calledOnce;
+      expect(backendInitializationStub).toHaveBeenCalledOnce();
+      expect(frontendInitializationStub).toHaveBeenCalledOnce();
     });
 
     it("does not initialize PresentationBackend and PresentationFrontend on second call to initialize", async () => {
       await initialize();
-      expect(backendInitializationStub).to.be.calledOnce;
-      expect(frontendInitializationStub).to.be.calledOnce;
+      expect(backendInitializationStub).toHaveBeenCalledOnce();
+      expect(frontendInitializationStub).toHaveBeenCalledOnce();
 
-      sinon.resetHistory();
+      vi.clearAllMocks();
 
       await initialize();
-      expect(backendInitializationStub).to.not.be.called;
-      expect(frontendInitializationStub).to.not.be.called;
+      expect(backendInitializationStub).not.toHaveBeenCalled();
+      expect(frontendInitializationStub).not.toHaveBeenCalled();
     });
 
     it("initializes PresentationBackend and PresentationFrontend with provided props", async () => {
-      const frontendAppStartupSpy = sinon.spy();
+      const frontendAppStartupSpy = vi.fn();
       const props: PresentationTestingInitProps = {
         backendProps: { id: Guid.createValue() },
         frontendApp: { startup: frontendAppStartupSpy },
@@ -69,78 +62,56 @@ describe("Helpers", () => {
       };
 
       await initialize(props);
-      expect(backendInitializationStub).to.be.calledOnceWith(props.backendProps);
-      expect(frontendInitializationStub).to.be.calledOnceWith(props.frontendProps);
-      expect(frontendAppStartupSpy).to.be.calledOnce;
+      expect(backendInitializationStub).toHaveBeenCalledExactlyOnceWith(props.backendProps);
+      expect(frontendInitializationStub).toHaveBeenCalledExactlyOnceWith(props.frontendProps);
+      expect(frontendAppStartupSpy).toHaveBeenCalledOnce();
     });
   });
 
   describe("terminate", () => {
-    let rimrafSyncStub: sinon.SinonStub;
-    let initialize: (props?: PresentationTestingInitProps) => Promise<void>;
-    let terminate: () => Promise<void>;
-
-    before(async () => {
-      rimrafSyncStub = sinon.stub();
-      mock.module("rimraf", {
-        namedExports: {
-          sync: rimrafSyncStub,
-        },
-      });
-      const helpers = await import("../presentation-testing/Helpers.js");
-      initialize = helpers.initialize;
-      terminate = helpers.terminate;
-    });
-
-    after(() => {
-      mock.reset();
-    });
-
-    afterEach(() => {
-      rimrafSyncStub.reset();
-    });
-
     it("terminates PresentationBackend and PresentationFrontend on terminate", async () => {
       await initialize();
       await terminate();
-      expect(backendTerminationStub).to.be.calledOnce;
-      expect(frontendTerminationStub).to.be.calledOnce;
+      expect(backendTerminationStub).toHaveBeenCalledOnce();
+      expect(frontendTerminationStub).toHaveBeenCalledOnce();
     });
 
     it("does not terminate PresentationBackend and PresentationFrontend on second call to terminate", async () => {
       await initialize();
 
       await terminate();
-      expect(backendTerminationStub).to.be.calledOnce;
-      expect(frontendTerminationStub).to.be.calledOnce;
+      expect(backendTerminationStub).toHaveBeenCalledOnce();
+      expect(frontendTerminationStub).toHaveBeenCalledOnce();
 
-      sinon.resetHistory();
+      vi.clearAllMocks();
 
       await terminate();
-      expect(backendTerminationStub).to.not.be.called;
-      expect(frontendTerminationStub).to.not.be.called;
+      expect(backendTerminationStub).not.toHaveBeenCalled();
+      expect(frontendTerminationStub).not.toHaveBeenCalled();
     });
 
     it("clears cache directory when PresentationBackend has DiskHierarchyCacheConfig in initProps", async () => {
       const testDirectory = "/test/directory/";
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      sinon.stub(PresentationBackend, "initProps").get(() => ({ caching: { hierarchies: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } }));
+      vi.spyOn(PresentationBackend, "initProps", "get").mockReturnValue({
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        caching: { hierarchies: { mode: HierarchyCacheMode.Disk, directory: testDirectory } },
+      });
       await initialize();
 
       await terminate();
-      expect(rimrafSyncStub).to.be.calledOnceWith(testDirectory);
+      expect(rimrafSyncMock).toHaveBeenCalledExactlyOnceWith(testDirectory);
     });
 
     it("clears cache directory when PresentationBackend has HybridCacheConfig in initProps", async () => {
       const testDirectory = "/test/directory/";
-      sinon.stub(PresentationBackend, "initProps").get(() => ({
+      vi.spyOn(PresentationBackend, "initProps", "get").mockReturnValue({
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         caching: { hierarchies: { mode: HierarchyCacheMode.Hybrid, disk: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } },
-      }));
+      });
       await initialize();
 
       await terminate();
-      expect(rimrafSyncStub).to.be.calledOnceWith(testDirectory);
+      expect(rimrafSyncMock).toHaveBeenCalledExactlyOnceWith(testDirectory);
     });
   });
 });

@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import * as path from "path";
+import { describe, expect, it } from "vitest";
 import { FILE_PATH_RESERVED_CHARACTERS, limitFilePathLength } from "../presentation-testing/FilenameUtils.js";
 
 describe("limitFilePathLength", () => {
@@ -15,8 +15,8 @@ describe("limitFilePathLength", () => {
       name: inputFileName,
       ext: ".ext",
     });
-    expect(inputFilePath.length).to.eq(260 - FILE_PATH_RESERVED_CHARACTERS);
-    expect(limitFilePathLength(inputFilePath)).to.eq(inputFilePath);
+    expect(inputFilePath.length).toBe(260 - FILE_PATH_RESERVED_CHARACTERS);
+    expect(limitFilePathLength(inputFilePath)).toBe(inputFilePath);
   });
 
   it("returns shortened file path when length exceeds limits by 1 character, and shortened file name fits into path", async () => {
@@ -26,17 +26,17 @@ describe("limitFilePathLength", () => {
       name: inputFileName,
       ext: ".ext",
     });
-    expect(inputFilePath.length).to.eq(260 - FILE_PATH_RESERVED_CHARACTERS + 1);
+    expect(inputFilePath.length).toBe(260 - FILE_PATH_RESERVED_CHARACTERS + 1);
 
     const result = limitFilePathLength(inputFilePath);
-    expect(result).to.eq(
+    expect(result).toBe(
       path.format({
         dir: path.join("x", "y"),
         name: `${new Array(118).fill("a").join("")}...${new Array(118).fill("a").join("")}`,
         ext: ".ext",
       }),
     );
-    expect(result.length).to.eq(260 - FILE_PATH_RESERVED_CHARACTERS);
+    expect(result.length).toBe(260 - FILE_PATH_RESERVED_CHARACTERS);
   });
 
   it("returns shortened file path when length exceeds limits by 2 characters, and shortened file name fits into path", async () => {
@@ -46,17 +46,17 @@ describe("limitFilePathLength", () => {
       name: inputFileName,
       ext: ".ext",
     });
-    expect(inputFilePath.length).to.eq(260 - FILE_PATH_RESERVED_CHARACTERS + 2);
+    expect(inputFilePath.length).toBe(260 - FILE_PATH_RESERVED_CHARACTERS + 2);
 
     const result = limitFilePathLength(inputFilePath);
-    expect(result).to.eq(
+    expect(result).toBe(
       path.format({
         dir: path.join("x", "y"),
         name: `${new Array(118).fill("a").join("")}...${new Array(118).fill("a").join("")}`,
         ext: ".ext",
       }),
     );
-    expect(result.length).to.eq(260 - FILE_PATH_RESERVED_CHARACTERS);
+    expect(result.length).toBe(260 - FILE_PATH_RESERVED_CHARACTERS);
   });
 
   it("throws when file path without name exceeds allowed length", async () => {
@@ -65,7 +65,7 @@ describe("limitFilePathLength", () => {
       name: "a",
       ext: ".ext",
     });
-    expect(inputFilePath.length).to.eq(260 - FILE_PATH_RESERVED_CHARACTERS + 1);
-    expect(() => limitFilePathLength(inputFilePath)).to.throw(Error);
+    expect(inputFilePath.length).toBe(260 - FILE_PATH_RESERVED_CHARACTERS + 1);
+    expect(() => limitFilePathLength(inputFilePath)).toThrow(Error);
   });
 });
