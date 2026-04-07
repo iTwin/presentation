@@ -42,11 +42,7 @@ describe("Unified selection sync with iModel", () => {
   let selectionStorage: SelectionStorage;
 
   before(async () => {
-    await initialize({
-      backendHostProps: {
-        cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`),
-      },
-    });
+    await initialize({ backendHostProps: { cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`) } });
     RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);
     RpcConfiguration.developmentMode = true;
     RpcManager.initializeInterface(ECSchemaRpcInterface);
@@ -88,9 +84,7 @@ describe("Unified selection sync with iModel", () => {
       selectionStorage,
       activeScopeProvider: () => props?.selectionScope ?? "element",
     });
-    return {
-      [Symbol.dispose]: dispose,
-    };
+    return { [Symbol.dispose]: dispose };
   }
 
   describe("Subject", () => {
@@ -110,7 +104,11 @@ describe("Unified selection sync with iModel", () => {
       });
       using _ = enableSync();
 
-      selectionStorage.addToSelection({ imodelKey: createIModelKey(imodel), source: "test", selectables: [subjectKey!] });
+      selectionStorage.addToSelection({
+        imodelKey: createIModelKey(imodel),
+        source: "test",
+        selectables: [subjectKey!],
+      });
 
       await waitFor(() => {
         expect(getHiliteSet(imodel)).to.deep.eq({
@@ -120,14 +118,8 @@ describe("Unified selection sync with iModel", () => {
         });
         expect(getSelectionSet(imodel)).to.deep.eq(
           is5xSelectionSet(imodel.selectionSet)
-            ? {
-                models: modelKeys.map(({ id }) => id),
-                subCategories: [],
-                elements: [],
-              }
-            : {
-                elements: [],
-              },
+            ? { models: modelKeys.map(({ id }) => id), subCategories: [], elements: [] }
+            : { elements: [] },
         );
       });
 
@@ -153,21 +145,11 @@ describe("Unified selection sync with iModel", () => {
       selectionStorage.addToSelection({ imodelKey: createIModelKey(imodel), source: "test", selectables: [modelKey!] });
 
       await waitFor(() => {
-        expect(getHiliteSet(imodel)).to.deep.eq({
-          models: [modelKey!.id],
-          subCategories: [],
-          elements: [],
-        });
+        expect(getHiliteSet(imodel)).to.deep.eq({ models: [modelKey!.id], subCategories: [], elements: [] });
         expect(getSelectionSet(imodel)).to.deep.eq(
           is5xSelectionSet(imodel.selectionSet)
-            ? {
-                models: [modelKey!.id],
-                subCategories: [],
-                elements: [],
-              }
-            : {
-                elements: [],
-              },
+            ? { models: [modelKey!.id], subCategories: [], elements: [] }
+            : { elements: [] },
         );
       });
 
@@ -196,7 +178,11 @@ describe("Unified selection sync with iModel", () => {
       });
       using _ = enableSync();
 
-      selectionStorage.addToSelection({ imodelKey: createIModelKey(imodel), source: "test", selectables: [categoryKey!] });
+      selectionStorage.addToSelection({
+        imodelKey: createIModelKey(imodel),
+        source: "test",
+        selectables: [categoryKey!],
+      });
 
       await waitFor(() => {
         expect(getHiliteSet(imodel)).to.deep.eq({
@@ -206,14 +192,8 @@ describe("Unified selection sync with iModel", () => {
         });
         expect(getSelectionSet(imodel)).to.deep.eq(
           is5xSelectionSet(imodel.selectionSet)
-            ? {
-                models: [],
-                subCategories: subCategoryKeys.map(({ id }) => id),
-                elements: [],
-              }
-            : {
-                elements: [],
-              },
+            ? { models: [], subCategories: subCategoryKeys.map(({ id }) => id), elements: [] }
+            : { elements: [] },
         );
       });
 
@@ -236,24 +216,18 @@ describe("Unified selection sync with iModel", () => {
 
       using _ = enableSync();
 
-      selectionStorage.addToSelection({ imodelKey: createIModelKey(imodel), source: "test", selectables: [subCategoryKey] });
+      selectionStorage.addToSelection({
+        imodelKey: createIModelKey(imodel),
+        source: "test",
+        selectables: [subCategoryKey],
+      });
 
       await waitFor(() => {
-        expect(getHiliteSet(imodel)).to.deep.eq({
-          models: [],
-          subCategories: [subCategoryKey.id],
-          elements: [],
-        });
+        expect(getHiliteSet(imodel)).to.deep.eq({ models: [], subCategories: [subCategoryKey.id], elements: [] });
         expect(getSelectionSet(imodel)).to.deep.eq(
           is5xSelectionSet(imodel.selectionSet)
-            ? {
-                models: [],
-                subCategories: [subCategoryKey.id],
-                elements: [],
-              }
-            : {
-                elements: [],
-              },
+            ? { models: [], subCategories: [subCategoryKey.id], elements: [] }
+            : { elements: [] },
         );
       });
 
@@ -280,7 +254,11 @@ describe("Unified selection sync with iModel", () => {
       });
       using _ = enableSync();
 
-      selectionStorage.addToSelection({ imodelKey: createIModelKey(imodel), source: "test", selectables: [categoryKey!, subCategoryKeys![0]] });
+      selectionStorage.addToSelection({
+        imodelKey: createIModelKey(imodel),
+        source: "test",
+        selectables: [categoryKey!, subCategoryKeys![0]],
+      });
 
       await waitFor(() => {
         expect(getHiliteSet(imodel)).to.deep.eq({
@@ -290,14 +268,8 @@ describe("Unified selection sync with iModel", () => {
         });
         expect(getSelectionSet(imodel)).to.deep.eq(
           is5xSelectionSet(imodel.selectionSet)
-            ? {
-                models: [],
-                subCategories: subCategoryKeys.map(({ id }) => id),
-                elements: [],
-              }
-            : {
-                elements: [],
-              },
+            ? { models: [], subCategories: subCategoryKeys.map(({ id }) => id), elements: [] }
+            : { elements: [] },
         );
       });
 
@@ -319,7 +291,12 @@ describe("Unified selection sync with iModel", () => {
       imodel = await buildTestIModel(this, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-        assemblyKey = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id });
+        assemblyKey = insertPhysicalElement({
+          builder,
+          userLabel: "element 1",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+        });
         const element2 = insertPhysicalElement({
           builder,
           userLabel: "element 2",
@@ -334,13 +311,29 @@ describe("Unified selection sync with iModel", () => {
           categoryId: categoryKey.id,
           parentId: assemblyKey.id,
         });
-        const element4 = insertPhysicalElement({ builder, userLabel: "element 4", modelId: modelKey.id, categoryId: categoryKey.id, parentId: element3.id });
-        const element5 = insertPhysicalElement({ builder, userLabel: "element 5", modelId: modelKey.id, categoryId: categoryKey.id, parentId: element3.id });
+        const element4 = insertPhysicalElement({
+          builder,
+          userLabel: "element 4",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+          parentId: element3.id,
+        });
+        const element5 = insertPhysicalElement({
+          builder,
+          userLabel: "element 5",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+          parentId: element3.id,
+        });
         childElementKeys = [element2, element3, element4, element5];
       });
       using _ = enableSync();
 
-      selectionStorage.addToSelection({ imodelKey: createIModelKey(imodel), source: "test", selectables: [assemblyKey!] });
+      selectionStorage.addToSelection({
+        imodelKey: createIModelKey(imodel),
+        source: "test",
+        selectables: [assemblyKey!],
+      });
 
       await waitFor(() => {
         expect(getHiliteSet(imodel)).to.deep.eq({
@@ -350,14 +343,8 @@ describe("Unified selection sync with iModel", () => {
         });
         expect(getSelectionSet(imodel)).to.deep.eq(
           is5xSelectionSet(imodel.selectionSet)
-            ? {
-                models: [],
-                subCategories: [],
-                elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
-              }
-            : {
-                elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
-              },
+            ? { models: [], subCategories: [], elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)] }
+            : { elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)] },
         );
       });
 
@@ -384,7 +371,11 @@ describe("Unified selection sync with iModel", () => {
       });
       using _ = enableSync();
 
-      selectionStorage.addToSelection({ imodelKey: createIModelKey(imodel), source: "test", selectables: elementKeys! });
+      selectionStorage.addToSelection({
+        imodelKey: createIModelKey(imodel),
+        source: "test",
+        selectables: elementKeys!,
+      });
 
       await waitFor(() => {
         expect(getHiliteSet(imodel)).to.deep.eq({
@@ -394,14 +385,8 @@ describe("Unified selection sync with iModel", () => {
         });
         expect(getSelectionSet(imodel)).to.deep.eq(
           is5xSelectionSet(imodel.selectionSet)
-            ? {
-                models: [],
-                subCategories: [],
-                elements: elementKeys.map(({ id }) => id),
-              }
-            : {
-                elements: elementKeys.map(({ id }) => id),
-              },
+            ? { models: [], subCategories: [], elements: elementKeys.map(({ id }) => id) }
+            : { elements: elementKeys.map(({ id }) => id) },
         );
       });
 
@@ -419,7 +404,12 @@ describe("Unified selection sync with iModel", () => {
       imodel = await buildTestIModel(this, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-        assemblyKey = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id });
+        assemblyKey = insertPhysicalElement({
+          builder,
+          userLabel: "element 1",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+        });
         const element2 = insertPhysicalElement({
           builder,
           userLabel: "element 2",
@@ -434,8 +424,20 @@ describe("Unified selection sync with iModel", () => {
           categoryId: categoryKey.id,
           parentId: assemblyKey.id,
         });
-        const element4 = insertPhysicalElement({ builder, userLabel: "element 4", modelId: modelKey.id, categoryId: categoryKey.id, parentId: element3.id });
-        const element5 = insertPhysicalElement({ builder, userLabel: "element 5", modelId: modelKey.id, categoryId: categoryKey.id, parentId: element3.id });
+        const element4 = insertPhysicalElement({
+          builder,
+          userLabel: "element 4",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+          parentId: element3.id,
+        });
+        const element5 = insertPhysicalElement({
+          builder,
+          userLabel: "element 5",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+          parentId: element3.id,
+        });
         childElementKeys = [element2, element3, element4, element5];
       });
       using _ = enableSync({ selectionScope: { id: "element", ancestorLevel: -1 } });
@@ -449,14 +451,8 @@ describe("Unified selection sync with iModel", () => {
         });
         expect(getSelectionSet(imodel)).to.deep.eq(
           is5xSelectionSet(imodel.selectionSet)
-            ? {
-                models: [],
-                subCategories: [],
-                elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
-              }
-            : {
-                elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
-              },
+            ? { models: [], subCategories: [], elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)] }
+            : { elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)] },
         );
         expect(getStorageSelection()).to.deep.eq(Selectables.create([assemblyKey!]));
       });
@@ -470,14 +466,8 @@ describe("Unified selection sync with iModel", () => {
         });
         expect(getSelectionSet(imodel)).to.deep.eq(
           is5xSelectionSet(imodel.selectionSet)
-            ? {
-                models: [],
-                subCategories: [],
-                elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
-              }
-            : {
-                elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
-              },
+            ? { models: [], subCategories: [], elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)] }
+            : { elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)] },
         );
         expect(getStorageSelection()).to.deep.eq(Selectables.create([assemblyKey!]));
       });
@@ -496,7 +486,12 @@ describe("Unified selection sync with iModel", () => {
         const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
         const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-        physicalElement = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
+        physicalElement = insertPhysicalElement({
+          builder,
+          userLabel: "element",
+          modelId: physicalModelKey.id,
+          categoryId: categoryKey.id,
+        });
         const physicalElementChild = insertPhysicalElement({
           builder,
           userLabel: "child element 1",
@@ -528,7 +523,11 @@ describe("Unified selection sync with iModel", () => {
       });
       using _ = enableSync();
 
-      selectionStorage.addToSelection({ imodelKey: createIModelKey(imodel), source: "test", selectables: [functionalElement!] });
+      selectionStorage.addToSelection({
+        imodelKey: createIModelKey(imodel),
+        source: "test",
+        selectables: [functionalElement!],
+      });
 
       await waitFor(() => {
         expect(getHiliteSet(imodel)).to.deep.eq({
@@ -538,14 +537,8 @@ describe("Unified selection sync with iModel", () => {
         });
         expect(getSelectionSet(imodel)).to.deep.eq(
           is5xSelectionSet(imodel.selectionSet)
-            ? {
-                models: [],
-                subCategories: [],
-                elements: expectedElements.map(({ id }) => id),
-              }
-            : {
-                elements: expectedElements.map(({ id }) => id),
-              },
+            ? { models: [], subCategories: [], elements: expectedElements.map(({ id }) => id) }
+            : { elements: expectedElements.map(({ id }) => id) },
         );
       });
 
@@ -568,7 +561,12 @@ describe("Unified selection sync with iModel", () => {
         const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
         const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
         graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-        const graphicsElementChild = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElement.id });
+        const graphicsElementChild = insertDrawingGraphic({
+          builder,
+          modelId: drawingModelKey.id,
+          categoryId: categoryKey.id,
+          parentId: graphicsElement.id,
+        });
         const graphicsElementChild2 = insertDrawingGraphic({
           builder,
           modelId: drawingModelKey.id,
@@ -591,7 +589,11 @@ describe("Unified selection sync with iModel", () => {
       });
       using _ = enableSync();
 
-      selectionStorage.addToSelection({ imodelKey: createIModelKey(imodel), source: "test", selectables: [functionalElement!] });
+      selectionStorage.addToSelection({
+        imodelKey: createIModelKey(imodel),
+        source: "test",
+        selectables: [functionalElement!],
+      });
 
       await waitFor(() => {
         expect(getHiliteSet(imodel)).to.deep.eq({
@@ -601,14 +603,8 @@ describe("Unified selection sync with iModel", () => {
         });
         expect(getSelectionSet(imodel)).to.deep.eq(
           is5xSelectionSet(imodel.selectionSet)
-            ? {
-                models: [],
-                subCategories: [],
-                elements: expectedElements.map(({ id }) => id),
-              }
-            : {
-                elements: expectedElements.map(({ id }) => id),
-              },
+            ? { models: [], subCategories: [], elements: expectedElements.map(({ id }) => id) }
+            : { elements: expectedElements.map(({ id }) => id) },
         );
       });
 
@@ -631,10 +627,7 @@ describe("Unified selection sync with iModel", () => {
         await builder.importSchema(schema);
         const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-        groupInformationElement = insertGroupInformationElement({
-          builder,
-          modelId: groupModel.id,
-        });
+        groupInformationElement = insertGroupInformationElement({ builder, modelId: groupModel.id });
         const physicalElementGroupMember = insertPhysicalElement({
           builder,
           userLabel: "child element 1",
@@ -668,7 +661,11 @@ describe("Unified selection sync with iModel", () => {
       });
       using _ = enableSync();
 
-      selectionStorage.addToSelection({ imodelKey: createIModelKey(imodel), source: "test", selectables: [groupInformationElement!] });
+      selectionStorage.addToSelection({
+        imodelKey: createIModelKey(imodel),
+        source: "test",
+        selectables: [groupInformationElement!],
+      });
 
       await waitFor(() => {
         expect(getHiliteSet(imodel)).to.deep.eq({
@@ -678,14 +675,8 @@ describe("Unified selection sync with iModel", () => {
         });
         expect(getSelectionSet(imodel)).to.deep.eq(
           is5xSelectionSet(imodel.selectionSet)
-            ? {
-                models: [],
-                subCategories: [],
-                elements: expectedElements.map(({ id }) => id),
-              }
-            : {
-                elements: expectedElements.map(({ id }) => id),
-              },
+            ? { models: [], subCategories: [], elements: expectedElements.map(({ id }) => id) }
+            : { elements: expectedElements.map(({ id }) => id) },
         );
       });
 
@@ -714,9 +705,7 @@ function getSelectionSet(imodel: IModelConnection): HiliteSet | Pick<HiliteSet, 
       elements: [...ss.active.elements].sort(),
     };
   }
-  return {
-    elements: [...ss.elements].sort(),
-  };
+  return { elements: [...ss.elements].sort() };
 }
 
 interface CoreSelectableIds {
@@ -725,7 +714,9 @@ interface CoreSelectableIds {
   subcategories?: Id64Arg;
 }
 type CoreIModelSelectionSet = Props<typeof enableUnifiedSelectionSyncWithIModel>["imodelAccess"]["selectionSet"];
-function is5xSelectionSet(selectionSet: CoreIModelSelectionSet): selectionSet is Omit<CoreIModelSelectionSet, "add" | "remove"> & {
+function is5xSelectionSet(
+  selectionSet: CoreIModelSelectionSet,
+): selectionSet is Omit<CoreIModelSelectionSet, "add" | "remove"> & {
   readonly active: { [P in keyof CoreSelectableIds]-?: Id64Set };
   add: (ids: Id64Arg | CoreSelectableIds) => boolean;
   remove: (ids: Id64Arg | CoreSelectableIds) => boolean;

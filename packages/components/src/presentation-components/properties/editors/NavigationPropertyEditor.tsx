@@ -5,7 +5,10 @@
 
 import { createRef, forwardRef, PureComponent } from "react";
 import { PropertyEditorBase } from "@itwin/components-react";
-import { NavigationPropertyTargetSelector, ReadonlyNavigationPropertyTarget } from "../inputs/NavigationPropertyTargetSelector.js";
+import {
+  NavigationPropertyTargetSelector,
+  ReadonlyNavigationPropertyTarget,
+} from "../inputs/NavigationPropertyTargetSelector.js";
 import { useNavigationPropertyEditorContext } from "./NavigationPropertyEditorContext.js";
 
 import type { PropertyEditorProps, TypeEditor } from "@itwin/components-react";

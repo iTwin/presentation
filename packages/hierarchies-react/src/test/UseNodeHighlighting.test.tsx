@@ -14,9 +14,7 @@ describe("useNodeHighlighting", () => {
   it("does not highlight when highlight is undefined", () => {
     const rootNodes = [createdSearchTargetTreeNode({ id: "node", label: "node" })];
 
-    const { result } = renderHook(useNodeHighlighting, {
-      initialProps: {},
-    });
+    const { result } = renderHook(useNodeHighlighting, { initialProps: {} });
 
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
@@ -26,9 +24,7 @@ describe("useNodeHighlighting", () => {
   it("does not highlight text when no matches found", () => {
     const rootNodes = [createdSearchTargetTreeNode({ id: "node", label: "node" })];
 
-    const { result } = renderHook(useNodeHighlighting, {
-      initialProps: { highlightText: "test" },
-    });
+    const { result } = renderHook(useNodeHighlighting, { initialProps: { highlightText: "test" } });
 
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
@@ -38,9 +34,7 @@ describe("useNodeHighlighting", () => {
   it("does not highlight text when node is not filter target", () => {
     const rootNodes = [createTreeNode({ id: "node", label: "node" })];
 
-    const { result } = renderHook(useNodeHighlighting, {
-      initialProps: { highlightText: "node" },
-    });
+    const { result } = renderHook(useNodeHighlighting, { initialProps: { highlightText: "node" } });
 
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
@@ -50,9 +44,7 @@ describe("useNodeHighlighting", () => {
   it("highlights text when match found", () => {
     const rootNodes = [createdSearchTargetTreeNode({ id: "node", label: "node" })];
 
-    const { result } = renderHook(useNodeHighlighting, {
-      initialProps: { highlightText: "node" },
-    });
+    const { result } = renderHook(useNodeHighlighting, { initialProps: { highlightText: "node" } });
 
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
@@ -62,9 +54,7 @@ describe("useNodeHighlighting", () => {
   it("highlights text with special characters", () => {
     const rootNodes = [createdSearchTargetTreeNode({ id: "node", label: "[1-x]node" })];
 
-    const { result } = renderHook(useNodeHighlighting, {
-      initialProps: { highlightText: "[1-x]node" },
-    });
+    const { result } = renderHook(useNodeHighlighting, { initialProps: { highlightText: "[1-x]node" } });
 
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
@@ -74,9 +64,7 @@ describe("useNodeHighlighting", () => {
   it("highlights text in the middle", () => {
     const rootNodes = [createdSearchTargetTreeNode({ id: "node", label: "1 test 2" })];
 
-    const { result } = renderHook(useNodeHighlighting, {
-      initialProps: { highlightText: "test" },
-    });
+    const { result } = renderHook(useNodeHighlighting, { initialProps: { highlightText: "test" } });
 
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
@@ -93,9 +81,7 @@ describe("useNodeHighlighting", () => {
   it("highlights edges of text", () => {
     const rootNodes = [createdSearchTargetTreeNode({ id: "node", label: "test node test" })];
 
-    const { result } = renderHook(useNodeHighlighting, {
-      initialProps: { highlightText: "test" },
-    });
+    const { result } = renderHook(useNodeHighlighting, { initialProps: { highlightText: "test" } });
 
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
@@ -137,13 +123,5 @@ function createNonGroupingHierarchyNode(partial?: Partial<NonGroupingHierarchyNo
 
 function createdSearchTargetTreeNode(partial?: Partial<TreeNode>): TreeNode {
   const node = createTreeNode(partial);
-  return {
-    ...node,
-    nodeData: {
-      ...node.nodeData,
-      search: {
-        isSearchTarget: true,
-      },
-    },
-  };
+  return { ...node, nodeData: { ...node.nodeData, search: { isSearchTarget: true } } };
 }

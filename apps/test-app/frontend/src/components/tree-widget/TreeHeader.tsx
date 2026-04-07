@@ -30,7 +30,10 @@ interface HeaderProps {
   onDiagnosticsOptionsChange?: (options: DiagnosticsProps) => void;
 }
 
-export const TreeWidgetHeader = forwardRef(function TreeWidgetHeader(props: HeaderProps, ref: React.ForwardedRef<HTMLDivElement>) {
+export const TreeWidgetHeader = forwardRef(function TreeWidgetHeader(
+  props: HeaderProps,
+  ref: React.ForwardedRef<HTMLDivElement>,
+) {
   const { onFilterChange, filteringStatus, showFilteringInput } = props;
   return (
     <div ref={ref} className="tree-widget-header">
@@ -49,14 +52,17 @@ export const TreeWidgetHeader = forwardRef(function TreeWidgetHeader(props: Head
           resultSelectorProps={
             props.onActiveMatchIndexChange || props.matchesCount
               ? {
-                  onSelectedChanged: (index) => (props.onActiveMatchIndexChange ? props.onActiveMatchIndexChange(index) : {}),
+                  onSelectedChanged: (index) =>
+                    props.onActiveMatchIndexChange ? props.onActiveMatchIndexChange(index) : {},
                   resultCount: props.matchesCount || 0,
                 }
               : undefined
           }
         />
       )}
-      {props.onDiagnosticsOptionsChange && <DiagnosticsSelector onDiagnosticsOptionsChanged={props.onDiagnosticsOptionsChange} />}
+      {props.onDiagnosticsOptionsChange && (
+        <DiagnosticsSelector onDiagnosticsOptionsChanged={props.onDiagnosticsOptionsChange} />
+      )}
     </div>
   );
 });

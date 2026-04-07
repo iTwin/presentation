@@ -7,7 +7,16 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { BeEvent, BeUiEvent, Guid } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
-import { Content, Descriptor, Field, Item, KeySet, LabelDefinition, PropertyValueFormat, RegisteredRuleset } from "@itwin/presentation-common";
+import {
+  Content,
+  Descriptor,
+  Field,
+  Item,
+  KeySet,
+  LabelDefinition,
+  PropertyValueFormat,
+  RegisteredRuleset,
+} from "@itwin/presentation-common";
 import { ContentDataProvider } from "@itwin/presentation-components";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { ContentBuilder } from "../presentation-testing/ContentBuilder.js";
@@ -59,10 +68,7 @@ interface ItemValues {
 }
 
 function createItemValues(rawValuesArr: ValuesMap[]): ItemValues[] {
-  return rawValuesArr.map((rawValues) => ({
-    rawValues,
-    displayValues: {},
-  }));
+  return rawValuesArr.map((rawValues) => ({ rawValues, displayValues: {} }));
 }
 
 function createItem({ rawValues, displayValues }: ItemValues) {
@@ -198,48 +204,34 @@ function createThrowingQueryReader(): IModelConnection["createQueryReader"] {
         },
       } as unknown as ECSqlReader;
     }
-    return {
-      toArray: async () => [],
-    } as unknown as ECSqlReader;
+    return { toArray: async () => [] } as unknown as ECSqlReader;
   };
 }
 
 function createFakeQueryReaders(instances: TestInstance[]): IModelConnection["createQueryReader"] {
   return (query) => {
     if (query.includes("SELECT s.Name")) {
-      return {
-        toArray: async () => instances,
-      } as ECSqlReader;
+      return { toArray: async () => instances } as ECSqlReader;
     }
 
     for (const entry of instances) {
       if (query.includes(`"${entry.schemaName}"."${entry.className}"`)) {
-        return {
-          toArray: async () => entry.ids.map((e) => e.id),
-        } as ECSqlReader;
+        return { toArray: async () => entry.ids.map((e) => e.id) } as ECSqlReader;
       }
     }
 
-    return {
-      toArray: async () => [],
-    } as unknown as ECSqlReader;
+    return { toArray: async () => [] } as unknown as ECSqlReader;
   };
 }
 
 describe("ContentBuilder", () => {
-  const imodel = {
-    createQueryReader: createStub<IModelConnection["createQueryReader"]>(),
-  };
+  const imodel = { createQueryReader: createStub<IModelConnection["createQueryReader"]>() };
 
-  const initialProps = {
-    imodel: imodel as unknown as IModelConnection,
-  };
+  const initialProps = { imodel: imodel as unknown as IModelConnection };
 
   describe("createContent", () => {
     let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
-    const rulesetManager = {
-      add: createStub<RulesetManager["add"]>(),
-    };
+    const rulesetManager = { add: createStub<RulesetManager["add"]>() };
 
     beforeEach(() => {
       rulesetManager.add.callsFake(async (ruleset) => new RegisteredRuleset(ruleset, Guid.createValue(), () => {}));
@@ -256,10 +248,7 @@ describe("ContentBuilder", () => {
     });
 
     it("registers ruleset when creating content", async () => {
-      const ruleset: Ruleset = {
-        id: "test-ruleset",
-        rules: [],
-      };
+      const ruleset: Ruleset = { id: "test-ruleset", rules: [] };
       const builder = new ContentBuilder({ ...initialProps, dataProvider: new EmptyDataProvider() });
       const content = await builder.createContent(ruleset, []);
       expect(content).to.be.empty;
@@ -267,10 +256,12 @@ describe("ContentBuilder", () => {
     });
 
     it("uses `ContentDataProvider` if data provider was not supplied", async () => {
-      sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-        onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-      }));
-      const getContentStub = sinon.stub(ContentDataProvider.prototype, "getContent").resolves(new Content(createContentDescriptor(), []));
+      sinon
+        .stub(IModelApp, "quantityFormatter")
+        .get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
+      const getContentStub = sinon
+        .stub(ContentDataProvider.prototype, "getContent")
+        .resolves(new Content(createContentDescriptor(), []));
       const builder = new ContentBuilder({ ...initialProps });
 
       const content = await builder.createContent("1", []);
@@ -304,9 +295,19 @@ describe("ContentBuilder", () => {
           displayValue: ["1.2", "4.6", "7.9"],
           type: createArrayTypeDescription(createDoubleTypeDescription()),
         },
-        { name: "doublesStruct", value: { a: 1.234 }, displayValue: { a: "1.2" }, type: createStructTypeDescription({ a: createDoubleTypeDescription() }) },
+        {
+          name: "doublesStruct",
+          value: { a: 1.234 },
+          displayValue: { a: "1.2" },
+          type: createStructTypeDescription({ a: createDoubleTypeDescription() }),
+        },
         { name: "point2d", value: [1.456, 4.789], displayValue: ["1.5", "4.8"], type: createPoint2dTypeDescription() },
-        { name: "point3d", value: { x: 1.234, y: 4.567, z: 7.89 }, displayValue: { x: "1.2", y: "4.6", z: "7.9" }, type: createPoint3dTypeDescription() },
+        {
+          name: "point3d",
+          value: { x: 1.234, y: 4.567, z: 7.89 },
+          displayValue: { x: "1.2", y: "4.6", z: "7.9" },
+          type: createPoint3dTypeDescription(),
+        },
       ];
       const category = createCategoryDescription();
       const descriptor = new Descriptor({
@@ -314,15 +315,7 @@ describe("ContentBuilder", () => {
         selectClasses: [],
         categories: [category],
         fields: testValues.map(
-          (v) =>
-            new Field({
-              category,
-              name: v.name,
-              label: v.name,
-              type: v.type,
-              isReadonly: false,
-              priority: 1,
-            }),
+          (v) => new Field({ category, name: v.name, label: v.name, type: v.type, isReadonly: false, priority: 1 }),
         ),
         contentFlags: 1,
       });
@@ -350,7 +343,9 @@ describe("ContentBuilder", () => {
       expect((content[2].value as PrimitiveValue).value).to.eq(1.9);
       expect((content[3].value as PrimitiveValue).value).to.eq(1.23);
       expect((content[4].value as PrimitiveValue).value).to.eq(4.57);
-      expect((content[5].value as ArrayValue).items.map((item) => (item.value as PrimitiveValue).value)).to.deep.eq([1.23, 4.57, 7.89]);
+      expect((content[5].value as ArrayValue).items.map((item) => (item.value as PrimitiveValue).value)).to.deep.eq([
+        1.23, 4.57, 7.89,
+      ]);
       expect(((content[6].value as StructValue).members.a.value as PrimitiveValue).value).to.deep.eq(1.23);
       expect((content[7].value as PrimitiveValue).value).to.deep.eq([1.46, 4.79]);
       expect((content[8].value as PrimitiveValue).value).to.deep.eq({ x: 1.23, y: 4.57, z: 7.89 });
@@ -359,16 +354,8 @@ describe("ContentBuilder", () => {
 
   describe("[deprecated] createContentForAllClasses", () => {
     const testInstances: TestInstance[] = [
-      {
-        className: "Class1",
-        schemaName: "Schema1",
-        ids: [{ id: "0x2" }, { id: "0x3" }],
-      },
-      {
-        className: "Class2",
-        schemaName: "Schema2",
-        ids: [{ id: "0x5" }, { id: "0x6" }],
-      },
+      { className: "Class1", schemaName: "Schema1", ids: [{ id: "0x2" }, { id: "0x3" }] },
+      { className: "Class2", schemaName: "Schema2", ids: [{ id: "0x5" }, { id: "0x6" }] },
     ];
 
     before(() => {
@@ -402,16 +389,8 @@ describe("ContentBuilder", () => {
   describe("[deprecated] createContentForInstancePerClass", () => {
     context("test instances have ids", () => {
       const testInstances: TestInstance[] = [
-        {
-          className: "Class1",
-          schemaName: "Schema1",
-          ids: [{ id: "0x1" }],
-        },
-        {
-          className: "Class2",
-          schemaName: "Schema2",
-          ids: [{ id: "0x9" }],
-        },
+        { className: "Class1", schemaName: "Schema1", ids: [{ id: "0x1" }] },
+        { className: "Class2", schemaName: "Schema2", ids: [{ id: "0x9" }] },
       ];
 
       it("returns all required instances with empty records", async () => {

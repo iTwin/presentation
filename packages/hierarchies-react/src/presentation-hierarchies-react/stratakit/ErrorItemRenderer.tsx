@@ -100,18 +100,16 @@ export function ErrorItemRenderer({
         treeNode={treeNode}
         error={error}
         actions={[
-          {
-            action: () => reloadTree({ parentNodeId: treeNode.id }),
-            label: translate("retry"),
-            condition: () => true,
-          },
+          { action: () => reloadTree({ parentNodeId: treeNode.id }), label: translate("retry"), condition: () => true },
         ]}
         message={translate("failedToCreateHierarchy")}
         scrollToElement={() => scrollToNode(treeNode)}
       />
     );
   }
-  return <ErrorItemContainer treeNode={treeNode} message={error.message} scrollToElement={() => scrollToNode(treeNode)} />;
+  return (
+    <ErrorItemContainer treeNode={treeNode} message={error.message} scrollToElement={() => scrollToNode(treeNode)} />
+  );
 }
 
 type ErrorItemContainerProps = {

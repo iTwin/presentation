@@ -38,11 +38,10 @@ export function normalizeFullClassName(fullClassName: string): EC.FullClassNameD
  * @public
  */
 export function compareFullClassNames(lhs: EC.FullClassName, rhs: EC.FullClassName): number {
-  const parsed = {
-    lhs: parseFullClassName(lhs),
-    rhs: parseFullClassName(rhs),
-  };
-  const schemaCompare = parsed.lhs.schemaName.toLocaleLowerCase().localeCompare(parsed.rhs.schemaName.toLocaleLowerCase());
+  const parsed = { lhs: parseFullClassName(lhs), rhs: parseFullClassName(rhs) };
+  const schemaCompare = parsed.lhs.schemaName
+    .toLocaleLowerCase()
+    .localeCompare(parsed.rhs.schemaName.toLocaleLowerCase());
   if (schemaCompare !== 0) {
     return schemaCompare;
   }

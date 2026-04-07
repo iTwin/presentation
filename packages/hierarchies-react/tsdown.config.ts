@@ -8,17 +8,15 @@ import babel from "@rolldown/plugin-babel";
 import { reactCompilerPreset } from "@vitejs/plugin-react";
 
 export default defineConfig({
-  entry: ["./src/presentation-hierarchies-react.ts", "./src/presentation-hierarchies-react-stratakit.ts", "./src/presentation-hierarchies-react-extract.ts"],
+  entry: [
+    "./src/presentation-hierarchies-react.ts",
+    "./src/presentation-hierarchies-react-stratakit.ts",
+    "./src/presentation-hierarchies-react-extract.ts",
+  ],
   outDir: "./lib",
   format: ["esm"],
   fixedExtension: false,
   unbundle: true,
-  deps: {
-    neverBundle: [/\.css$/],
-  },
-  plugins: [
-    babel({
-      presets: [reactCompilerPreset({ target: "18" })],
-    }),
-  ],
+  deps: { neverBundle: [/\.css$/] },
+  plugins: [babel({ presets: [reactCompilerPreset({ target: "18" })] })],
 });

@@ -58,13 +58,7 @@ export function useFlatTreeItems(rootNodes: TreeNode[]) {
 function getFlatItems(nodes: TreeNode[], level: number) {
   const flatItems: FlatTreeItem[] = [];
   nodes.forEach((node, index) => {
-    flatItems.push({
-      node,
-      id: node.id,
-      level,
-      levelSize: nodes.length,
-      posInLevel: index + 1,
-    });
+    flatItems.push({ node, id: node.id, level, levelSize: nodes.length, posInLevel: index + 1 });
     if (!node.isExpanded) {
       return;
     }

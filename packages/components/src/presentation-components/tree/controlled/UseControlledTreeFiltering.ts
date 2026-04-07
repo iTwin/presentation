@@ -6,13 +6,21 @@
 
 import { useCallback, useMemo } from "react";
 import { of } from "rxjs";
-import { AbstractTreeNodeLoaderWithProvider, PagedTreeNodeLoader, TreeModelSource, useDebouncedAsyncValue } from "@itwin/components-react";
+import {
+  AbstractTreeNodeLoaderWithProvider,
+  PagedTreeNodeLoader,
+  TreeModelSource,
+  useDebouncedAsyncValue,
+} from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { FilteredPresentationTreeDataProvider } from "../FilteredDataProvider.js";
 
 import type { Observable } from "rxjs/internal/Observable";
 import type { HighlightableTreeProps, LoadedNodeHierarchy } from "@itwin/components-react";
-import type { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import type {
+  IFilteredPresentationTreeDataProvider,
+  IPresentationTreeDataProvider,
+} from "../IPresentationTreeDataProvider.js";
 
 const FILTERED_DATA_PAGE_SIZE = 20;
 
@@ -22,11 +30,7 @@ class FilteringInProgressNodeLoader extends AbstractTreeNodeLoaderWithProvider<I
   }
 
   protected load(): Observable<LoadedNodeHierarchy> {
-    const loadedNodeHierarchy: LoadedNodeHierarchy = {
-      hierarchyItems: [],
-      offset: 0,
-      parentId: "",
-    };
+    const loadedNodeHierarchy: LoadedNodeHierarchy = { hierarchyItems: [], offset: 0, parentId: "" };
     return of(loadedNodeHierarchy);
   }
 }
@@ -54,11 +58,7 @@ export function useFilteredNodeLoader({ dataProvider, filter }: UseFilteredNodeL
     return new PagedTreeNodeLoader(value.filteredProvider, new TreeModelSource(), FILTERED_DATA_PAGE_SIZE);
   }, [dataProvider, inProgress, value]);
 
-  return {
-    isFiltering: inProgress,
-    filteredNodeLoader,
-    ...value,
-  };
+  return { isFiltering: inProgress, filteredNodeLoader, ...value };
 }
 
 /** @internal */
@@ -73,10 +73,7 @@ export function useNodeHighlightingProps(
     }
 
     const activeMatch = undefined !== activeMatchIndex ? dataProvider.getActiveMatch(activeMatchIndex) : undefined;
-    return {
-      searchText: filter,
-      activeMatch,
-    };
+    return { searchText: filter, activeMatch };
   }, [filter, dataProvider, activeMatchIndex]);
 }
 

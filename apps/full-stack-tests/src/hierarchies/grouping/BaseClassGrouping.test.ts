@@ -37,7 +37,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(emptyIModel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
@@ -52,9 +54,7 @@ describe("Hierarchies", () => {
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },
                       grouping: {
-                        byBaseClasses: {
-                          fullClassNames: ["BisCore.GraphicalPartition3d", "BisCore.LinkElement"],
-                        },
+                        byBaseClasses: { fullClassNames: ["BisCore.GraphicalPartition3d", "BisCore.LinkElement"] },
                       },
                     })}
                     FROM (
@@ -85,7 +85,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(emptyIModel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
@@ -100,9 +102,7 @@ describe("Hierarchies", () => {
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },
                       grouping: {
-                        byBaseClasses: {
-                          fullClassNames: ["BisCore.IParentElement", "BisCore.ISubModeledElement"],
-                        },
+                        byBaseClasses: { fullClassNames: ["BisCore.IParentElement", "BisCore.ISubModeledElement"] },
                       },
                     })}
                     FROM (
@@ -134,7 +134,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(emptyIModel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
@@ -148,11 +150,7 @@ describe("Hierarchies", () => {
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
-                        grouping: {
-                          byBaseClasses: {
-                            fullClassNames: [baseClassName],
-                          },
-                        },
+                        grouping: { byBaseClasses: { fullClassNames: [baseClassName] } },
                       })}
                       FROM (
                         SELECT ECClassId, ECInstanceId, UserLabel, Parent
@@ -197,7 +195,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
@@ -250,10 +250,7 @@ describe("Hierarchies", () => {
                     label: "Information Partition",
                     className: `${baseSchemaName}.${baseClassName3}`,
                     children: [
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childPartition1],
-                        children: false,
-                      }),
+                      NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition1], children: false }),
                     ],
                   }),
                 ],
@@ -278,7 +275,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
@@ -321,7 +320,10 @@ describe("Hierarchies", () => {
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
                           byBaseClasses: {
-                            fullClassNames: [`${baseSchemaName}.${baseClassName2}`, `${baseSchemaName}.${baseClassName3}`],
+                            fullClassNames: [
+                              `${baseSchemaName}.${baseClassName2}`,
+                              `${baseSchemaName}.${baseClassName3}`,
+                            ],
                           },
                         },
                       })}
@@ -352,10 +354,7 @@ describe("Hierarchies", () => {
                     label: "Information Partition",
                     className: `${baseSchemaName}.${baseClassName3}`,
                     children: [
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childPartition1],
-                        children: false,
-                      }),
+                      NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition1], children: false }),
                     ],
                   }),
                 ],
@@ -370,10 +369,7 @@ describe("Hierarchies", () => {
                 label: "Information Partition",
                 className: `${baseSchemaName}.${baseClassName3}`,
                 children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childPartition2],
-                    children: false,
-                  }),
+                  NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2], children: false }),
                 ],
               }),
             ],
@@ -392,7 +388,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
@@ -406,11 +404,7 @@ describe("Hierarchies", () => {
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.CodeValue` },
-                        grouping: {
-                          byBaseClasses: {
-                            fullClassNames: ["BisCore.Element"],
-                          },
-                        },
+                        grouping: { byBaseClasses: { fullClassNames: ["BisCore.Element"] } },
                       })}
                       FROM (
                         SELECT ECClassId, ECInstanceId, Parent, CodeValue
@@ -436,14 +430,8 @@ describe("Hierarchies", () => {
             label: "Element",
             className: "BisCore.Element",
             children: [
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject1],
-                children: false,
-              }),
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childPartition2],
-                children: false,
-              }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2], children: false }),
             ],
           }),
         ],

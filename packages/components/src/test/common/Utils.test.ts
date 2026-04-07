@@ -6,7 +6,13 @@
 import { expect } from "chai";
 import { Component } from "react";
 import { combineFieldNames } from "@itwin/presentation-common";
-import { AsyncTasksTracker, createLabelRecord, deserializeUniqueValues, findField, getDisplayName } from "../../presentation-components/common/Utils.js";
+import {
+  AsyncTasksTracker,
+  createLabelRecord,
+  deserializeUniqueValues,
+  findField,
+  getDisplayName,
+} from "../../presentation-components/common/Utils.js";
 import { createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestContentDescriptor,
@@ -53,9 +59,7 @@ describe("Utils", () => {
     });
 
     it("returns undefined for invalid name when there are nested fields", () => {
-      const nestedField = createTestPropertiesContentField({
-        properties: [{ property: createTestPropertyInfo() }],
-      });
+      const nestedField = createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo() }] });
       const nestingField = createTestNestedContentField({ nestedFields: [nestedField] });
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
       const result = findField(descriptor, combineFieldNames(nestedField.name, "doesn't exist"));
@@ -70,18 +74,14 @@ describe("Utils", () => {
     });
 
     it("finds field in Descriptor.fields list", () => {
-      const descriptor = createTestContentDescriptor({
-        fields: [createTestSimpleContentField()],
-      });
+      const descriptor = createTestContentDescriptor({ fields: [createTestSimpleContentField()] });
       const field = descriptor.fields[0];
       const result = findField(descriptor, field.name);
       expect(result).to.eq(field);
     });
 
     it("finds nested field", () => {
-      const nestedField = createTestPropertiesContentField({
-        properties: [{ property: createTestPropertyInfo() }],
-      });
+      const nestedField = createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo() }] });
       const nestingField = createTestNestedContentField({ nestedFields: [nestedField] });
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
       const result = findField(descriptor, combineFieldNames(nestedField.name, nestingField.name));
@@ -126,7 +126,10 @@ describe("Utils", () => {
     });
 
     it("creates PropertyRecord for label with composite value", () => {
-      const definition = createTestLabelDefinition({ rawValue: createTestLabelCompositeValue(), typeName: "composite" });
+      const definition = createTestLabelDefinition({
+        rawValue: createTestLabelCompositeValue(),
+        typeName: "composite",
+      });
       const record = createLabelRecord(definition, "test");
       const primitiveValue = record.value as PrimitiveValue;
       validateCompositeValue(primitiveValue.value as Primitives.Composite, definition.rawValue as LabelCompositeValue);

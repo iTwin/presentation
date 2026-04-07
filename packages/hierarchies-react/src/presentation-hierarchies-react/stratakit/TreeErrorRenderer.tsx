@@ -38,21 +38,28 @@ export type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemR
  *
  * @alpha
  */
-export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...errorItemRendererProps }: TreeErrorRendererProps): JSX.Element {
+export function TreeErrorRenderer({
+  treeLabel,
+  errorNodes,
+  renderError,
+  ...errorItemRendererProps
+}: TreeErrorRendererProps): JSX.Element {
   const translate = useTranslation();
   const errorItems = errorNodes.flatMap((errorNode) =>
     errorNode.errors.map((error) => {
       if (renderError) {
-        return cloneElement(
-          renderError({
-            treeNode: errorNode,
-            error,
-            ...errorItemRendererProps,
-          }),
-          { key: `${errorNode.id}:${error.id}` },
-        );
+        return cloneElement(renderError({ treeNode: errorNode, error, ...errorItemRendererProps }), {
+          key: `${errorNode.id}:${error.id}`,
+        });
       }
-      return <ErrorItemRenderer key={`${errorNode.id}:${error.id}`} treeNode={errorNode} error={error} {...errorItemRendererProps} />;
+      return (
+        <ErrorItemRenderer
+          key={`${errorNode.id}:${error.id}`}
+          treeNode={errorNode}
+          error={error}
+          {...errorItemRendererProps}
+        />
+      );
     }),
   );
 
@@ -62,7 +69,11 @@ export function TreeErrorRenderer({ treeLabel, errorNodes, renderError, ...error
     <ErrorRegion.Root
       style={{ width: "100%" }}
       aria-label={translate("issuesForTree").replace("{{tree_label}}", treeLabel)}
-      label={totalErrorCount === 0 ? translate("noIssuesFound") : translate("issuesFound").replace("{{number_of_issues}}", totalErrorCount.toString())}
+      label={
+        totalErrorCount === 0
+          ? translate("noIssuesFound")
+          : translate("issuesFound").replace("{{number_of_issues}}", totalErrorCount.toString())
+      }
       items={errorItems}
     />
   );

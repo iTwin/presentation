@@ -22,7 +22,11 @@ export type StrataKitRootErrorRendererProps = RootErrorRendererProps;
  *
  * @alpha
  */
-export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): JSX.Element {
+export function StrataKitRootErrorRenderer({
+  error,
+  getHierarchyLevelDetails,
+  reloadTree,
+}: StrataKitRootErrorRendererProps): JSX.Element {
   const translate = useTranslation();
 
   if (error.type === "ResultSetTooLarge") {
@@ -31,11 +35,7 @@ export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, re
       <RootErrorContainer
         message={translate("rootResultLimitExceeded").replace("{{limit}}", error.resultSetSizeLimit.toString())}
         actions={[
-          {
-            action: onOverrideLimit,
-            label: translate("increaseHierarchyLimitToUnlimited"),
-            condition: () => true,
-          },
+          { action: onOverrideLimit, label: translate("increaseHierarchyLimitToUnlimited"), condition: () => true },
         ]}
       />
     );

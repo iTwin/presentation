@@ -22,7 +22,9 @@ interface ModelInfo {
   elementCount: number;
 }
 
-type ModelsTreeHierarchyConfiguration = NonNullable<ConstructorParameters<typeof ModelsTreeDefinition>[0]["hierarchyConfig"]>;
+type ModelsTreeHierarchyConfiguration = NonNullable<
+  ConstructorParameters<typeof ModelsTreeDefinition>[0]["hierarchyConfig"]
+>;
 
 /** @internal */
 export class ModelsTreeIdsCache {
@@ -47,7 +49,12 @@ export class ModelsTreeIdsCache {
     this._categoryKeyPaths = new Map();
   }
 
-  private async *querySubjects(): AsyncIterableIterator<{ id: Id64String; parentId?: Id64String; targetPartitionId?: Id64String; hideInHierarchy: boolean }> {
+  private async *querySubjects(): AsyncIterableIterator<{
+    id: Id64String;
+    parentId?: Id64String;
+    targetPartitionId?: Id64String;
+    hideInHierarchy: boolean;
+  }> {
     const subjectsQuery = `
       SELECT
         s.ECInstanceId id,
@@ -70,9 +77,18 @@ export class ModelsTreeIdsCache {
     `;
     for await (const row of this._queryExecutor.createQueryReader(
       { ecsql: subjectsQuery },
-      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `${this.#componentName}/${this.#componentId}/subjects` },
+      {
+        rowFormat: "ECSqlPropertyNames",
+        limit: "unbounded",
+        restartToken: `${this.#componentName}/${this.#componentId}/subjects`,
+      },
     )) {
-      yield { id: row.id, parentId: row.parentId, targetPartitionId: row.targetPartitionId, hideInHierarchy: !!row.hideInHierarchy };
+      yield {
+        id: row.id,
+        parentId: row.parentId,
+        targetPartitionId: row.targetPartitionId,
+        hideInHierarchy: !!row.hideInHierarchy,
+      };
     }
   }
 
@@ -87,7 +103,11 @@ export class ModelsTreeIdsCache {
     `;
     for await (const row of this._queryExecutor.createQueryReader(
       { ecsql: modelsQuery },
-      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `${this.#componentName}/${this.#componentId}/models` },
+      {
+        rowFormat: "ECSqlPropertyNames",
+        limit: "unbounded",
+        restartToken: `${this.#componentName}/${this.#componentId}/models`,
+      },
     )) {
       yield { id: row.id, parentId: row.parentId };
     }
@@ -253,7 +273,11 @@ export class ModelsTreeIdsCache {
     `;
     for await (const row of this._queryExecutor.createQueryReader(
       { ecsql: query },
-      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `${this.#componentName}/${this.#componentId}/model-elements-count` },
+      {
+        rowFormat: "ECSqlPropertyNames",
+        limit: "unbounded",
+        restartToken: `${this.#componentName}/${this.#componentId}/model-elements-count`,
+      },
     )) {
       yield { modelId: row.modelId, elementCount: row.elementCount };
     }
@@ -268,7 +292,11 @@ export class ModelsTreeIdsCache {
     `;
     for await (const row of this._queryExecutor.createQueryReader(
       { ecsql: query },
-      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `${this.#componentName}/${this.#componentId}/model-categories` },
+      {
+        rowFormat: "ECSqlPropertyNames",
+        limit: "unbounded",
+        restartToken: `${this.#componentName}/${this.#componentId}/model-categories`,
+      },
     )) {
       yield { modelId: row.modelId, categoryId: row.categoryId };
     }
@@ -362,7 +390,11 @@ export class ModelsTreeIdsCache {
           { type: "id", value: categoryId },
         ],
       },
-      { rowFormat: "Indexes", limit: "unbounded", restartToken: `${this.#componentName}/${this.#componentId}/category-elements-count` },
+      {
+        rowFormat: "Indexes",
+        limit: "unbounded",
+        restartToken: `${this.#componentName}/${this.#componentId}/category-elements-count`,
+      },
     );
 
     return (await reader.next()).value[0];

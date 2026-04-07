@@ -109,7 +109,10 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
   const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
 
   // Create a factory for building nodes SELECT query clauses in a format understood by the provider
-  const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsQueryFactory });
+  const nodesQueryFactory = createNodesQueryClauseFactory({
+    imodelAccess,
+    instanceLabelSelectClauseFactory: labelsQueryFactory,
+  });
 
   // Then, define the hierarchy
   const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
@@ -126,7 +129,10 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: {
-                    selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.GeometricModel3d" }),
+                    selector: await labelsQueryFactory.createSelectClause({
+                      classAlias: "this",
+                      className: "BisCore.GeometricModel3d",
+                    }),
                   },
                 })}
               FROM BisCore.GeometricModel3d this
@@ -138,7 +144,9 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
         {
           // For BisCore.Model parent nodes, select all BisCore.Element instances contained in corresponding model
           parentInstancesNodePredicate: "BisCore.Model",
-          definitions: async ({ parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
+          definitions: async ({
+            parentNodeInstanceIds,
+          }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
             {
               fullClassName: "BisCore.Element",
               query: {
@@ -148,11 +156,12 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: {
-                        selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.Element" }),
+                        selector: await labelsQueryFactory.createSelectClause({
+                          classAlias: "this",
+                          className: "BisCore.Element",
+                        }),
                       },
-                      grouping: {
-                        byClass: true,
-                      },
+                      grouping: { byClass: true },
                     })}
                   FROM BisCore.Element this
                   WHERE this.Model.Id IN (${parentNodeInstanceIds.map(() => "?").join(",")})

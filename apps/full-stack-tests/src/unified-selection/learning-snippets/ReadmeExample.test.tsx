@@ -6,7 +6,11 @@
 /* eslint-disable no-console */
 
 import { expect } from "chai";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { useEffect, useState } from "react";
 import { KeySet } from "@itwin/presentation-common";
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.Imports
@@ -85,7 +89,11 @@ describe("Unified selection", () => {
         // An interactive component that allows selecting elements, representing something in an iModel, may want to
         // add that something to unified selection. For example:
         const elementKey = { className: "BisCore.PhysicalElement", id: "0x1" };
-        unifiedSelection.addToSelection({ imodelKey: createIModelKey(imodel), source: "MyComponent", selectables: [elementKey] });
+        unifiedSelection.addToSelection({
+          imodelKey: createIModelKey(imodel),
+          source: "MyComponent",
+          selectables: [elementKey],
+        });
         // __PUBLISH_EXTRACT_END__
 
         // Verify selection was added
@@ -99,7 +107,12 @@ describe("Unified selection", () => {
         } = await buildIModel(this, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
+          const elementKey = insertPhysicalElement({
+            builder,
+            userLabel: "root element",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          });
           return { modelKey, categoryKey, elementKey };
         });
         function useActiveIModelConnection() {
@@ -138,7 +151,9 @@ describe("Unified selection", () => {
                 // selection and hilite sets
                 imodelAccess: {
                   ...createECSqlQueryExecutor(iModelConnection),
-                  ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(iModelConnection.schemaContext) }),
+                  ...createCachingECClassHierarchyInspector({
+                    schemaProvider: createECSchemaProvider(iModelConnection.schemaContext),
+                  }),
                   key: createIModelKey(iModelConnection),
                   hiliteSet: iModelConnection.hilited,
                   selectionSet: iModelConnection.selectionSet,
@@ -160,7 +175,9 @@ describe("Unified selection", () => {
             return Selectables.size(storage.getSelection({ imodelKey: createIModelKey(imodel) }));
           }
 
-          const [selectedElementsCount, setSelectedElementsCount] = useState(() => getSelectedElementsCount(selectionStorage));
+          const [selectedElementsCount, setSelectedElementsCount] = useState(() =>
+            getSelectedElementsCount(selectionStorage),
+          );
           useEffect(() => {
             return selectionStorage.selectionChangeEvent.addListener(() => {
               setSelectedElementsCount(getSelectedElementsCount(selectionStorage));
@@ -183,7 +200,12 @@ describe("Unified selection", () => {
           const { imodel, ...keys } = await buildIModel(this, async (builder) => {
             const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
             const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-            const elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
+            const elementKey = insertPhysicalElement({
+              builder,
+              userLabel: "root element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
             return { modelKey, categoryKey, elementKey };
           });
 
@@ -192,11 +214,7 @@ describe("Unified selection", () => {
 
           // Initialize Presentation with our selection storage, to make sure that any components, using `Presentation.selection`,
           // use the same underlying selection store.
-          await Presentation.initialize({
-            selection: {
-              selectionStorage,
-            },
-          });
+          await Presentation.initialize({ selection: { selectionStorage } });
           // __PUBLISH_EXTRACT_END__
 
           expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key }))).to.be.true;

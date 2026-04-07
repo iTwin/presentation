@@ -11,7 +11,10 @@ import { IModelApp } from "@itwin/core-frontend";
 import { Format } from "@itwin/core-quantity";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext.js";
-import { QuantityEditorName, QuantityPropertyEditor } from "../../../presentation-components/properties/editors/QuantityPropertyEditor.js";
+import {
+  QuantityEditorName,
+  QuantityPropertyEditor,
+} from "../../../presentation-components/properties/editors/QuantityPropertyEditor.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 
@@ -19,7 +22,15 @@ import type { FormattingUnitSystemChangedArgs, IModelConnection } from "@itwin/c
 import type { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
 import type { SchemaContext } from "@itwin/ecschema-metadata";
 
-const createRecord = ({ initialValue, kindOfQuantityName, quantityType }: { initialValue?: number; kindOfQuantityName?: string; quantityType?: string }) => {
+const createRecord = ({
+  initialValue,
+  kindOfQuantityName,
+  quantityType,
+}: {
+  initialValue?: number;
+  kindOfQuantityName?: string;
+  quantityType?: string;
+}) => {
   return createTestPropertyRecord(
     { value: initialValue, displayValue: undefined },
     { typename: StandardTypeNames.Double, kindOfQuantityName, quantityType, editor: { name: QuantityEditorName } },
@@ -39,12 +50,14 @@ describe("<QuantityPropertyEditor />", () => {
       format,
     };
 
-    sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec").resolves(formatterSpec as unknown as FormatterSpec);
+    sinon
+      .stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec")
+      .resolves(formatterSpec as unknown as FormatterSpec);
     sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec").resolves(parserSpec as unknown as ParserSpec);
 
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    }));
+    sinon
+      .stub(IModelApp, "quantityFormatter")
+      .get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
   });
 
   after(() => {
@@ -66,7 +79,10 @@ describe("<QuantityPropertyEditor />", () => {
   it("renders quantity input if schema context is available and kindOfQuantityName is provided", async () => {
     const record = createRecord({ initialValue: 10, kindOfQuantityName: "TestKOQ" });
     const { getByDisplayValue } = render(
-      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => ({}) as SchemaContext}>
+      <SchemaMetadataContextProvider
+        imodel={{} as IModelConnection}
+        schemaContextProvider={() => ({}) as SchemaContext}
+      >
         <QuantityPropertyEditor propertyRecord={record} />
       </SchemaMetadataContextProvider>,
     );
@@ -79,7 +95,10 @@ describe("<QuantityPropertyEditor />", () => {
   it("renders quantity input if schema context is available and quantityType is provided", async () => {
     const record = createRecord({ initialValue: 10, quantityType: "TestKOQ" });
     const { getByDisplayValue } = render(
-      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => ({}) as SchemaContext}>
+      <SchemaMetadataContextProvider
+        imodel={{} as IModelConnection}
+        schemaContextProvider={() => ({}) as SchemaContext}
+      >
         <QuantityPropertyEditor propertyRecord={record} />
       </SchemaMetadataContextProvider>,
     );

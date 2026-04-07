@@ -49,7 +49,9 @@ export interface BaseInstanceInsertProps {
 }
 
 export function insertSubject(
-  props: BaseInstanceInsertProps & { codeValue: string; parentId?: Id64String } & Partial<Omit<SubjectProps, "id" | "parent" | "code" | "model">>,
+  props: BaseInstanceInsertProps & { codeValue: string; parentId?: Id64String } & Partial<
+      Omit<SubjectProps, "id" | "parent" | "code" | "model">
+    >,
 ) {
   const { builder, classFullName, codeValue, parentId, ...subjectProps } = props;
   const defaultClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}Subject`;
@@ -58,23 +60,28 @@ export function insertSubject(
     classFullName: className,
     model: IModel.repositoryModelId,
     code: builder.createCode(parentId ?? IModel.rootSubjectId, BisCodeSpec.subject, codeValue),
-    parent: {
-      id: parentId ?? IModel.rootSubjectId,
-      relClassName: "BisCore.SubjectOwnsSubjects",
-    },
+    parent: { id: parentId ?? IModel.rootSubjectId, relClassName: "BisCore.SubjectOwnsSubjects" },
     ...subjectProps,
   });
   return { className, id };
 }
 
-export function insertPhysicalModelWithPartition(props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String }) {
+export function insertPhysicalModelWithPartition(
+  props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String },
+) {
   const { codeValue, partitionParentId, ...baseProps } = props;
-  const partitionKey = insertPhysicalPartition({ ...baseProps, codeValue, parentId: partitionParentId ?? IModel.rootSubjectId });
+  const partitionKey = insertPhysicalPartition({
+    ...baseProps,
+    codeValue,
+    parentId: partitionParentId ?? IModel.rootSubjectId,
+  });
   return insertPhysicalSubModel({ ...baseProps, modeledElementId: partitionKey.id });
 }
 
 export function insertPhysicalPartition(
-  props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<Omit<InformationPartitionElementProps, "id" | "parent" | "code">>,
+  props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<
+      Omit<InformationPartitionElementProps, "id" | "parent" | "code">
+    >,
 ) {
   const { builder, classFullName, codeValue, parentId, ...partitionProps } = props;
   const defaultModelClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}PhysicalPartition`;
@@ -83,17 +90,16 @@ export function insertPhysicalPartition(
     classFullName: className,
     model: IModel.repositoryModelId,
     code: builder.createCode(parentId, BisCodeSpec.informationPartitionElement, codeValue),
-    parent: {
-      id: parentId,
-      relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements`,
-    },
+    parent: { id: parentId, relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements` },
     ...partitionProps,
   });
   return { className, id: partitionId };
 }
 
 export function insertPhysicalSubModel(
-  props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<Omit<GeometricModel3dProps, "id" | "modeledElement" | "parentModel">>,
+  props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<
+      Omit<GeometricModel3dProps, "id" | "modeledElement" | "parentModel">
+    >,
 ) {
   const { builder, classFullName, modeledElementId, ...modelProps } = props;
   const defaultModelClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}PhysicalModel`;
@@ -106,9 +112,15 @@ export function insertPhysicalSubModel(
   return { className, id: modelId };
 }
 
-export function insertDrawingModelWithPartition(props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String }) {
+export function insertDrawingModelWithPartition(
+  props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String },
+) {
   const { codeValue, partitionParentId, ...baseProps } = props;
-  const partitionKey = insertDrawingPartition({ ...baseProps, codeValue, parentId: partitionParentId ?? IModel.rootSubjectId });
+  const partitionKey = insertDrawingPartition({
+    ...baseProps,
+    codeValue,
+    parentId: partitionParentId ?? IModel.rootSubjectId,
+  });
   return insertDrawingSubModel({ ...baseProps, modeledElementId: partitionKey.id });
 }
 
@@ -124,17 +136,16 @@ export function insertDrawingPartition(
     classFullName: className,
     model: IModel.repositoryModelId,
     code: builder.createCode(parentId, BisCodeSpec.informationPartitionElement, codeValue),
-    parent: {
-      id: parentId,
-      relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements`,
-    },
+    parent: { id: parentId, relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements` },
     ...partitionProps,
   });
   return { className, id: partitionId };
 }
 
 export function insertDrawingSubModel(
-  props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<Omit<GeometricModel2dProps, "id" | "modeledElement" | "parentModel">>,
+  props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<
+      Omit<GeometricModel2dProps, "id" | "modeledElement" | "parentModel">
+    >,
 ) {
   const { builder, classFullName, modeledElementId, ...modelProps } = props;
   const defaultModelClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}DrawingModel`;
@@ -148,7 +159,9 @@ export function insertDrawingSubModel(
 }
 
 export function insertSpatialCategory(
-  props: BaseInstanceInsertProps & { codeValue: string; modelId?: Id64String } & Partial<Omit<CategoryProps, "id" | "model" | "parent" | "code">>,
+  props: BaseInstanceInsertProps & { codeValue: string; modelId?: Id64String } & Partial<
+      Omit<CategoryProps, "id" | "model" | "parent" | "code">
+    >,
 ) {
   const { builder, classFullName, modelId, codeValue, ...categoryProps } = props;
   const defaultClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}SpatialCategory`;
@@ -164,7 +177,9 @@ export function insertSpatialCategory(
 }
 
 export function insertDrawingCategory(
-  props: BaseInstanceInsertProps & { codeValue: string; modelId?: Id64String } & Partial<Omit<CategoryProps, "id" | "model" | "parent" | "code">>,
+  props: BaseInstanceInsertProps & { codeValue: string; modelId?: Id64String } & Partial<
+      Omit<CategoryProps, "id" | "model" | "parent" | "code">
+    >,
 ) {
   const { builder, classFullName, modelId, codeValue, ...categoryProps } = props;
   const defaultClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}DrawingCategory`;
@@ -182,10 +197,7 @@ export function insertDrawingCategory(
 export function getDefaultSubcategoryKey(categoryId: Id64String, fullClassNameSeparator?: string) {
   const pair = Id64.getUint32Pair(categoryId);
   pair.lower++; // id of default subcategory is always `category id + 1`
-  return {
-    className: `BisCore${fullClassNameSeparator ?? "."}SubCategory`,
-    id: Id64.fromUint32PairObject(pair),
-  };
+  return { className: `BisCore${fullClassNameSeparator ?? "."}SubCategory`, id: Id64.fromUint32PairObject(pair) };
 }
 
 export function insertSubCategory(
@@ -250,7 +262,8 @@ export function insertPhysicalElement<TAdditionalProps extends {}>(
 }
 
 export function insertPhysicalType<TAdditionalProps extends {}>(
-  props: BaseInstanceInsertProps & { modelId?: Id64String } & Partial<Omit<DefinitionElementProps, "id" | "model">> & TAdditionalProps,
+  props: BaseInstanceInsertProps & { modelId?: Id64String } & Partial<Omit<DefinitionElementProps, "id" | "model">> &
+    TAdditionalProps,
 ) {
   const { builder, classFullName, modelId, ...elementProps } = props;
   const defaultClassName: FullClassName = `Generic${props.fullClassNameSeparator ?? "."}PhysicalType`;
@@ -265,7 +278,8 @@ export function insertPhysicalType<TAdditionalProps extends {}>(
 }
 
 export function insertPhysicalMaterial<TAdditionalProps extends {}>(
-  props: BaseInstanceInsertProps & { modelId?: Id64String } & Partial<Omit<DefinitionElementProps, "id" | "model">> & TAdditionalProps,
+  props: BaseInstanceInsertProps & { modelId?: Id64String } & Partial<Omit<DefinitionElementProps, "id" | "model">> &
+    TAdditionalProps,
 ) {
   const { builder, classFullName, modelId, ...elementProps } = props;
   const defaultClassName: FullClassName = `Generic${props.fullClassNameSeparator ?? "."}PhysicalMaterial`;
@@ -335,26 +349,16 @@ export function insertExternalSourceAspect(
     classFullName: `BisCore${props.fullClassNameSeparator ?? "."}ExternalSource`,
     model: IModel.repositoryModelId,
     code: Code.createEmpty(),
-    repository: repositoryId
-      ? {
-          id: repositoryId,
-        }
-      : undefined,
+    repository: repositoryId ? { id: repositoryId } : undefined,
   } satisfies ExternalSourceProps);
 
   const className = `BisCore${props.fullClassNameSeparator ?? "."}ExternalSourceAspect`;
   const id = builder.insertAspect({
     classFullName: className,
     kind: "ExternalSource",
-    element: {
-      id: elementId,
-    },
-    source: {
-      id: externalSourceId,
-    },
-    scope: {
-      id: elementId,
-    },
+    element: { id: elementId },
+    source: { id: externalSourceId },
+    scope: { id: elementId },
     identifier,
     ...externalSourceAspectProps,
   } satisfies ExternalSourceAspectProps);
@@ -362,14 +366,22 @@ export function insertExternalSourceAspect(
   return { className, id };
 }
 
-export function insertFunctionalModelWithPartition(props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String }) {
+export function insertFunctionalModelWithPartition(
+  props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String },
+) {
   const { codeValue, partitionParentId, ...baseProps } = props;
-  const partitionKey = insertFunctionalPartition({ ...baseProps, codeValue, parentId: partitionParentId ?? IModel.rootSubjectId });
+  const partitionKey = insertFunctionalPartition({
+    ...baseProps,
+    codeValue,
+    parentId: partitionParentId ?? IModel.rootSubjectId,
+  });
   return insertFunctionalSubModel({ ...baseProps, modeledElementId: partitionKey.id });
 }
 
 export function insertFunctionalPartition(
-  props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<Omit<InformationPartitionElementProps, "id" | "parent" | "code">>,
+  props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<
+      Omit<InformationPartitionElementProps, "id" | "parent" | "code">
+    >,
 ) {
   const { builder, classFullName, codeValue, parentId, ...partitionProps } = props;
   const defaultModelClassName: FullClassName = `Functional${props.fullClassNameSeparator ?? "."}FunctionalPartition`;
@@ -378,17 +390,16 @@ export function insertFunctionalPartition(
     classFullName: className,
     model: IModel.repositoryModelId,
     code: builder.createCode(parentId, BisCodeSpec.informationPartitionElement, codeValue),
-    parent: {
-      id: parentId,
-      relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements`,
-    },
+    parent: { id: parentId, relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements` },
     ...partitionProps,
   });
   return { className, id: partitionId };
 }
 
 export function insertFunctionalSubModel(
-  props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<Omit<GeometricModel3dProps, "id" | "modeledElement" | "parentModel">>,
+  props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<
+      Omit<GeometricModel3dProps, "id" | "modeledElement" | "parentModel">
+    >,
 ) {
   const { builder, classFullName, modeledElementId, ...modelProps } = props;
   const defaultModelClassName: FullClassName = `Functional${props.fullClassNameSeparator ?? "."}FunctionalModel`;
@@ -416,10 +427,7 @@ export function insertFunctionalElement(
     model: modelId,
     code: Code.createEmpty(),
     parent: parentId
-      ? {
-          id: parentId,
-          relClassName: `BisCore${props.fullClassNameSeparator ?? "."}ElementOwnsChildElements`,
-        }
+      ? { id: parentId, relClassName: `BisCore${props.fullClassNameSeparator ?? "."}ElementOwnsChildElements` }
       : undefined,
     ...elementProps,
   } satisfies FunctionalElementProps);
@@ -431,14 +439,22 @@ export function insertFunctionalElement(
   return { className, id };
 }
 
-export function insertGroupInformationModelWithPartition(props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String }) {
+export function insertGroupInformationModelWithPartition(
+  props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String },
+) {
   const { codeValue, partitionParentId, ...baseProps } = props;
-  const partitionKey = insertGroupInformationPartition({ ...baseProps, codeValue, parentId: partitionParentId ?? IModel.rootSubjectId });
+  const partitionKey = insertGroupInformationPartition({
+    ...baseProps,
+    codeValue,
+    parentId: partitionParentId ?? IModel.rootSubjectId,
+  });
   return insertGroupInformationSubModel({ ...baseProps, modeledElementId: partitionKey.id });
 }
 
 export function insertGroupInformationPartition(
-  props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<Omit<InformationPartitionElementProps, "id" | "parent" | "code">>,
+  props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<
+      Omit<InformationPartitionElementProps, "id" | "parent" | "code">
+    >,
 ) {
   const { builder, classFullName, codeValue, parentId, ...partitionProps } = props;
   const defaultModelClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}GroupInformationPartition`;
@@ -447,17 +463,16 @@ export function insertGroupInformationPartition(
     classFullName: className,
     model: IModel.repositoryModelId,
     code: builder.createCode(parentId, BisCodeSpec.informationPartitionElement, codeValue),
-    parent: {
-      id: parentId,
-      relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements`,
-    },
+    parent: { id: parentId, relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements` },
     ...partitionProps,
   });
   return { className, id: partitionId };
 }
 
 export function insertGroupInformationSubModel(
-  props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<Omit<GeometricModel3dProps, "id" | "modeledElement" | "parentModel">>,
+  props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<
+      Omit<GeometricModel3dProps, "id" | "modeledElement" | "parentModel">
+    >,
 ) {
   const { builder, classFullName, modeledElementId, ...modelProps } = props;
   const defaultModelClassName: FullClassName = `Generic${props.fullClassNameSeparator ?? "."}GroupModel`;
@@ -471,9 +486,9 @@ export function insertGroupInformationSubModel(
 }
 
 export function insertGroupInformationElement(
-  props: BaseInstanceInsertProps & {
-    modelId: Id64String;
-  } & Partial<Omit<FunctionalElementProps, "id" | "parent" | "code" | "model">>,
+  props: BaseInstanceInsertProps & { modelId: Id64String } & Partial<
+      Omit<FunctionalElementProps, "id" | "parent" | "code" | "model">
+    >,
 ) {
   const { builder, modelId, ...elementProps } = props;
   const className = `Generic${props.fullClassNameSeparator ?? "."}Group`;
@@ -486,7 +501,9 @@ export function insertGroupInformationElement(
   return { className, id };
 }
 
-export function insertSheetIndexFolder(props: BaseInstanceInsertProps & Partial<Omit<SheetIndexFolderProps, "id" | "parent" | "code" | "model">>) {
+export function insertSheetIndexFolder(
+  props: BaseInstanceInsertProps & Partial<Omit<SheetIndexFolderProps, "id" | "parent" | "code" | "model">>,
+) {
   const { builder, ...elementProps } = props;
   const className: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}SheetIndexFolder`;
   const id = builder.insertElement({

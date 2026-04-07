@@ -17,10 +17,7 @@ import type { SinonStub } from "sinon";
 import type { CreateEmptySnapshotIModelProps } from "@itwin/core-common";
 
 describe("buildTestIModel", () => {
-  const snapshotDb = {
-    saveChanges: createStub<SnapshotDb["saveChanges"]>(),
-    close: createStub<SnapshotDb["close"]>(),
-  };
+  const snapshotDb = { saveChanges: createStub<SnapshotDb["saveChanges"]>(), close: createStub<SnapshotDb["close"]>() };
   const testIModelConnection = Object.create(TestIModelConnection.prototype);
   testIModelConnection._db = snapshotDb;
   testIModelConnection.onClose = new BeEvent();

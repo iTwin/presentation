@@ -43,7 +43,10 @@ export interface NavigationPropertyEditorContextProviderProps {
  * Creates context that supplies necessary navigation property-related information for [[NavigationPropertyEditor]].
  * @public
  */
-export function NavigationPropertyEditorContextProvider({ children, ...props }: PropsWithChildren<NavigationPropertyEditorContextProviderProps>) {
+export function NavigationPropertyEditorContextProvider({
+  children,
+  ...props
+}: PropsWithChildren<NavigationPropertyEditorContextProviderProps>) {
   return <navigationPropertyEditorContext.Provider value={props}>{children}</navigationPropertyEditorContext.Provider>;
 }
 

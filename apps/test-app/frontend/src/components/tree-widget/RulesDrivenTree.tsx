@@ -8,7 +8,12 @@ import "./TreeWidget.css";
 
 import { useCallback, useEffect, useState } from "react";
 import { FilteringInputStatus, SelectionMode } from "@itwin/components-react";
-import { PresentationTree, PresentationTreeRenderer, UnifiedSelectionTreeEventHandler, usePresentationTreeState } from "@itwin/presentation-components";
+import {
+  PresentationTree,
+  PresentationTreeRenderer,
+  UnifiedSelectionTreeEventHandler,
+  usePresentationTreeState,
+} from "@itwin/presentation-components";
 import { TreeWidgetHeader, useTreeHeight } from "./TreeHeader";
 
 import type { IModelConnection } from "@itwin/core-frontend";
@@ -25,7 +30,10 @@ interface RulesDrivenTreeWidgetProps {
 
 export function RulesDrivenTreeWidget(props: RulesDrivenTreeWidgetProps) {
   const { rulesetId, imodel, width, height } = props;
-  const [diagnosticsOptions, setDiagnosticsOptions] = useState<DiagnosticsProps>({ ruleDiagnostics: undefined, devDiagnostics: undefined });
+  const [diagnosticsOptions, setDiagnosticsOptions] = useState<DiagnosticsProps>({
+    ruleDiagnostics: undefined,
+    devDiagnostics: undefined,
+  });
   const [filter, setFilter] = useState("");
   const [filteringStatus, setFilteringStatus] = useState(FilteringInputStatus.ReadyToFilter);
   const [matchesCount, setMatchesCount] = useState<number>();
@@ -64,7 +72,9 @@ export function RulesDrivenTreeWidget(props: RulesDrivenTreeWidgetProps) {
               width={width}
               height={treeHeight}
             />
-            {filteringStatus === FilteringInputStatus.FilteringInProgress ? <div className="filtered-tree-overlay" /> : null}
+            {filteringStatus === FilteringInputStatus.FilteringInProgress ? (
+              <div className="filtered-tree-overlay" />
+            ) : null}
           </>
         ) : null}
       </div>
@@ -93,13 +103,14 @@ function Tree(props: Props) {
     pagingSize: PAGING_SIZE,
     eventHandlerFactory: useCallback(
       (handlerProps: PresentationTreeEventHandlerProps) =>
-        new UnifiedSelectionTreeEventHandler({ nodeLoader: handlerProps.nodeLoader, collapsedChildrenDisposalEnabled: false, name: "TestAppTree" }),
+        new UnifiedSelectionTreeEventHandler({
+          nodeLoader: handlerProps.nodeLoader,
+          collapsedChildrenDisposalEnabled: false,
+          name: "TestAppTree",
+        }),
       [],
     ),
-    filteringParams: {
-      filter,
-      activeMatchIndex,
-    },
+    filteringParams: { filter, activeMatchIndex },
     ...props.diagnostics,
   });
 

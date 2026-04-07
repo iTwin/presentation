@@ -31,10 +31,7 @@ describe("createNodeId", () => {
   it("creates id for `class-grouping` node", () => {
     const node = createTestGroupingNode({
       id: "custom",
-      key: {
-        type: "class-grouping",
-        className: "Schema:Class",
-      },
+      key: { type: "class-grouping", className: "Schema:Class" },
       groupedInstanceKeys: [{ id: "0x1", className: "Schema:Class" }],
     });
     expect(createNodeId(node)).to.be.eq("class-grouping,Schema:Class");
@@ -43,10 +40,7 @@ describe("createNodeId", () => {
   it("creates id for `label-grouping` node", () => {
     const node = createTestGroupingNode({
       id: "custom",
-      key: {
-        type: "label-grouping",
-        label: "TestLabel",
-      },
+      key: { type: "label-grouping", label: "TestLabel" },
       groupedInstanceKeys: [{ id: "0x1", className: "Schema:Class" }],
     });
     expect(createNodeId(node)).to.be.eq("label-grouping,TestLabel");
@@ -69,16 +63,15 @@ describe("createNodeId", () => {
   it("creates id for `instances` node child node", () => {
     const node = createTestHierarchyNode({
       id: "custom",
-      key: {
-        type: "instances",
-        instanceKeys: [{ id: "0x3", className: "Schema:Class" }],
-      },
+      key: { type: "instances", instanceKeys: [{ id: "0x3", className: "Schema:Class" }] },
       parentKeys: [
         { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
         { type: "class-grouping", className: "Schema:OtherClass" },
       ],
     });
-    expect(createNodeId(node)).to.be.eq("instances,0x1,Schema:Class;class-grouping,Schema:OtherClass;instances,0x3,Schema:Class");
+    expect(createNodeId(node)).to.be.eq(
+      "instances,0x1,Schema:Class;class-grouping,Schema:OtherClass;instances,0x3,Schema:Class",
+    );
   });
 });
 
@@ -90,8 +83,14 @@ describe("sameNodes", () => {
   });
 
   it("compares same `instance` nodes", () => {
-    const lhs = createTestHierarchyNode({ id: "lhs", key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] } });
-    const rhs = createTestHierarchyNode({ id: "rhs", key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] } });
+    const lhs = createTestHierarchyNode({
+      id: "lhs",
+      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
+    });
+    const rhs = createTestHierarchyNode({
+      id: "rhs",
+      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
+    });
     expect(sameNodes(lhs, rhs)).to.be.true;
   });
 
@@ -116,8 +115,14 @@ describe("sameNodes", () => {
   });
 
   it("compares different `instance` nodes", () => {
-    const lhs = createTestHierarchyNode({ id: "lhs", key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] } });
-    const rhs = createTestHierarchyNode({ id: "rhs", key: { type: "instances", instanceKeys: [{ id: "0x2", className: "Schema:Class" }] } });
+    const lhs = createTestHierarchyNode({
+      id: "lhs",
+      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
+    });
+    const rhs = createTestHierarchyNode({
+      id: "rhs",
+      key: { type: "instances", instanceKeys: [{ id: "0x2", className: "Schema:Class" }] },
+    });
     expect(sameNodes(lhs, rhs)).to.be.false;
   });
 

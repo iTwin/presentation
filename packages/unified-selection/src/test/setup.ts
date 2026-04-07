@@ -11,9 +11,4 @@ import sinonChai from "sinon-chai";
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
 
-export const mochaHooks = {
-  beforeAll() {},
-  beforeEach() {},
-  afterEach() {},
-  afterAll() {},
-};
+export const mochaHooks = { beforeAll() {}, beforeEach() {}, afterEach() {}, afterAll() {} };

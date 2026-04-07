@@ -41,7 +41,9 @@ interface TreeRendererOwnProps {
   treeRootProps?: Partial<Omit<ComponentProps<typeof Tree.Root>, "style">>;
 
   /** A callback that returns tree item props for specific node. */
-  getTreeItemProps?: (node: TreeNode) => Partial<Omit<StrataKitTreeItemProps, "selected" | "aria-level" | "aria-posinset" | "aria-setsize">>;
+  getTreeItemProps?: (
+    node: TreeNode,
+  ) => Partial<Omit<StrataKitTreeItemProps, "selected" | "aria-level" | "aria-posinset" | "aria-setsize">>;
 
   /**
    * Callback that returns menu actions for tree item.
@@ -73,138 +75,148 @@ export interface StrataKitTreeRendererAttributes {
 }
 
 /** @alpha */
-type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "filterHierarchyLevel"> & TreeRendererOwnProps;
+type StrataKitTreeRendererProps = TreeRendererProps &
+  Pick<TreeErrorRendererProps, "filterHierarchyLevel"> &
+  TreeRendererOwnProps;
 
 /**
  * A component that renders a tree using the `Tree` component from `@stratakit/structures`.
  *
  * @alpha
  */
-export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProps> & RefAttributes<StrataKitTreeRendererAttributes>> = forwardRef<
-  StrataKitTreeRendererAttributes,
-  StrataKitTreeRendererProps
->(function StrataKitTreeRenderer(props, forwardedRef) {
-  const {
-    id,
-    rootNodes,
-    selectNodes,
-    selectionMode,
-    expandNode,
-    treeLabel,
-    getHierarchyLevelDetails,
-    filterHierarchyLevel,
-    reloadTree,
-    isNodeSelected,
-    errorRenderer,
-    treeRootProps,
-    getContextMenuActions,
-    getEditingProps,
-    getInlineActions,
-    getMenuActions,
-    getTreeItemProps,
-  } = props;
-  const { handleNodeSelect } = useSelectionHandler({
-    rootNodes,
-    selectNodes,
-    selectionMode: selectionMode ?? "single",
-  });
-  const flatItems = useFlatTreeItems(rootNodes);
-  const errorNodes = useErrorNodes(rootNodes);
+export const StrataKitTreeRenderer: FC<
+  PropsWithoutRef<StrataKitTreeRendererProps> & RefAttributes<StrataKitTreeRendererAttributes>
+> = forwardRef<StrataKitTreeRendererAttributes, StrataKitTreeRendererProps>(
+  function StrataKitTreeRenderer(props, forwardedRef) {
+    const {
+      id,
+      rootNodes,
+      selectNodes,
+      selectionMode,
+      expandNode,
+      treeLabel,
+      getHierarchyLevelDetails,
+      filterHierarchyLevel,
+      reloadTree,
+      isNodeSelected,
+      errorRenderer,
+      treeRootProps,
+      getContextMenuActions,
+      getEditingProps,
+      getInlineActions,
+      getMenuActions,
+      getTreeItemProps,
+    } = props;
+    const { handleNodeSelect } = useSelectionHandler({
+      rootNodes,
+      selectNodes,
+      selectionMode: selectionMode ?? "single",
+    });
+    const flatItems = useFlatTreeItems(rootNodes);
+    const errorNodes = useErrorNodes(rootNodes);
 
-  const parentRef = useRef<HTMLDivElement>(null);
+    const parentRef = useRef<HTMLDivElement>(null);
 
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const virtualizer = useVirtualizer({
-    count: flatItems.length,
-    getScrollElement: () => parentRef.current,
-    getItemKey: useCallback((index: number) => flatItems[index].id, [flatItems]),
-    estimateSize: () => 28,
-    overscan: 10,
-  });
-  const items = virtualizer.getVirtualItems();
-  const expandAndScrollToNode = useExpandAndScrollToNode({ rootNodes, flatItems, expandNode, virtualizer });
+    // eslint-disable-next-line react-hooks/incompatible-library
+    const virtualizer = useVirtualizer({
+      count: flatItems.length,
+      getScrollElement: () => parentRef.current,
+      getItemKey: useCallback((index: number) => flatItems[index].id, [flatItems]),
+      estimateSize: () => 28,
+      overscan: 10,
+    });
+    const items = virtualizer.getVirtualItems();
+    const expandAndScrollToNode = useExpandAndScrollToNode({ rootNodes, flatItems, expandNode, virtualizer });
 
-  const renameContext = useTreeNodeRenameContextValue({
-    getEditingProps,
-  });
-  useImperativeHandle(forwardedRef, () => ({
-    renameNode: (nodePredicate) =>
-      expandAndScrollToNode({
-        nodePredicate,
-        onComplete: (targetNode) => {
-          // give time to scroll node into view before starting rename
-          requestAnimationFrame(() => renameContext.startRename(targetNode));
-        },
-      }),
-  }));
+    const renameContext = useTreeNodeRenameContextValue({ getEditingProps });
+    useImperativeHandle(forwardedRef, () => ({
+      renameNode: (nodePredicate) =>
+        expandAndScrollToNode({
+          nodePredicate,
+          onComplete: (targetNode) => {
+            // give time to scroll node into view before starting rename
+            requestAnimationFrame(() => renameContext.startRename(targetNode));
+          },
+        }),
+    }));
 
-  const cancelRename = renameContext.cancelRename;
-  const isScrolling = virtualizer.isScrolling;
-  useEffect(() => {
-    if (isScrolling) {
-      // cancel rename when scroll is initiated
-      cancelRename();
-    }
-  }, [isScrolling, cancelRename]);
-
-  const errorRendererProps: TreeErrorRendererProps = {
-    treeLabel,
-    errorNodes,
-    scrollToNode: (node) => expandAndScrollToNode({ nodePredicate: (n) => n.id === node.id }),
-    getHierarchyLevelDetails,
-    filterHierarchyLevel,
-    reloadTree: useCallback<TreeErrorRendererProps["reloadTree"]>(({ parentNodeId }) => reloadTree({ parentNodeId, state: "reset" }), [reloadTree]),
-  };
-
-  const getSelectedNodes = useMemo(() => {
-    let calculatedSelectedNodes: TreeNode[] | undefined;
-    return () => {
-      if (calculatedSelectedNodes === undefined) {
-        calculatedSelectedNodes = flatItems
-          .filter((item): item is FlatTreeNodeItem => !isPlaceholderItem(item) && isNodeSelected(item.id))
-          .map((item) => item.node);
+    const cancelRename = renameContext.cancelRename;
+    const isScrolling = virtualizer.isScrolling;
+    useEffect(() => {
+      if (isScrolling) {
+        // cancel rename when scroll is initiated
+        cancelRename();
       }
-      return calculatedSelectedNodes;
-    };
-  }, [flatItems, isNodeSelected]);
+    }, [isScrolling, cancelRename]);
 
-  return (
-    <>
-      {errorRenderer ? errorRenderer(errorRendererProps) : <TreeErrorRenderer {...errorRendererProps} />}
-      <div id={id} style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
-        <Tree.Root
-          {...treeRootProps}
-          style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative", overflow: "hidden" }}
-        >
-          <TreeNodeRenameContextProvider value={renameContext}>
-            {items.map((virtualizedItem) => {
-              const item = flatItems[virtualizedItem.index];
-              const selected = isNodeSelected(item.id);
-              return (
-                <VirtualTreeItem
-                  ref={virtualizer.measureElement}
-                  key={virtualizedItem.key}
-                  data-index={virtualizedItem.index}
-                  start={virtualizedItem.start}
-                  item={item}
-                  selected={selected}
-                  expandNode={expandNode}
-                  reloadTree={reloadTree}
-                  handleNodeSelect={handleNodeSelect}
-                  getSelectedNodes={getSelectedNodes}
-                  getContextMenuActions={getContextMenuActions}
-                  getInlineActions={getInlineActions}
-                  getMenuActions={getMenuActions}
-                  getTreeItemProps={getTreeItemProps}
-                />
-              );
-            })}
-          </TreeNodeRenameContextProvider>
-        </Tree.Root>
-      </div>
-    </>
-  );
-});
+    const errorRendererProps: TreeErrorRendererProps = {
+      treeLabel,
+      errorNodes,
+      scrollToNode: (node) => expandAndScrollToNode({ nodePredicate: (n) => n.id === node.id }),
+      getHierarchyLevelDetails,
+      filterHierarchyLevel,
+      reloadTree: useCallback<TreeErrorRendererProps["reloadTree"]>(
+        ({ parentNodeId }) => reloadTree({ parentNodeId, state: "reset" }),
+        [reloadTree],
+      ),
+    };
+
+    const getSelectedNodes = useMemo(() => {
+      let calculatedSelectedNodes: TreeNode[] | undefined;
+      return () => {
+        if (calculatedSelectedNodes === undefined) {
+          calculatedSelectedNodes = flatItems
+            .filter((item): item is FlatTreeNodeItem => !isPlaceholderItem(item) && isNodeSelected(item.id))
+            .map((item) => item.node);
+        }
+        return calculatedSelectedNodes;
+      };
+    }, [flatItems, isNodeSelected]);
+
+    return (
+      <>
+        {errorRenderer ? errorRenderer(errorRendererProps) : <TreeErrorRenderer {...errorRendererProps} />}
+        <div id={id} style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
+          <Tree.Root
+            {...treeRootProps}
+            style={{
+              height: virtualizer.getTotalSize(),
+              minHeight: "100%",
+              width: "100%",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <TreeNodeRenameContextProvider value={renameContext}>
+              {items.map((virtualizedItem) => {
+                const item = flatItems[virtualizedItem.index];
+                const selected = isNodeSelected(item.id);
+                return (
+                  <VirtualTreeItem
+                    ref={virtualizer.measureElement}
+                    key={virtualizedItem.key}
+                    data-index={virtualizedItem.index}
+                    start={virtualizedItem.start}
+                    item={item}
+                    selected={selected}
+                    expandNode={expandNode}
+                    reloadTree={reloadTree}
+                    handleNodeSelect={handleNodeSelect}
+                    getSelectedNodes={getSelectedNodes}
+                    getContextMenuActions={getContextMenuActions}
+                    getInlineActions={getInlineActions}
+                    getMenuActions={getMenuActions}
+                    getTreeItemProps={getTreeItemProps}
+                  />
+                );
+              })}
+            </TreeNodeRenameContextProvider>
+          </Tree.Root>
+        </div>
+      </>
+    );
+  },
+);
 
 function useExpandAndScrollToNode({
   rootNodes,
@@ -241,7 +253,13 @@ function useExpandAndScrollToNode({
     scrollToNode.current = undefined;
   }, [flatItems, virtualizer]);
 
-  return ({ nodePredicate, onComplete }: { nodePredicate: (node: TreeNode) => boolean; onComplete?: (targetNode: TreeNode) => void }) => {
+  return ({
+    nodePredicate,
+    onComplete,
+  }: {
+    nodePredicate: (node: TreeNode) => boolean;
+    onComplete?: (targetNode: TreeNode) => void;
+  }) => {
     const expandResult = expandToNode(nodePredicate);
     if (!expandResult) {
       return "node-not-found";
@@ -298,7 +316,16 @@ const VirtualTreeItem = memo(
     );
 
     if (isPlaceholderItem(item)) {
-      return <PlaceholderNode ref={forwardedRef} data-index={props["data-index"]} style={style} aria-level={item.level} aria-posinset={1} aria-setsize={1} />;
+      return (
+        <PlaceholderNode
+          ref={forwardedRef}
+          data-index={props["data-index"]}
+          style={style}
+          aria-level={item.level}
+          aria-posinset={1}
+          aria-setsize={1}
+        />
+      );
     }
 
     return <HierarchyNodeItem {...props} ref={forwardedRef} style={style} item={item} />;
@@ -315,7 +342,17 @@ type HierarchyNodeItemProps = {
 
 const HierarchyNodeItem = memo(
   forwardRef<HTMLElement, HierarchyNodeItemProps>(function HierarchyNodeItem(
-    { item, selected, getTreeItemProps, handleNodeSelect, getSelectedNodes, getMenuActions, getInlineActions, getContextMenuActions, ...rest },
+    {
+      item,
+      selected,
+      getTreeItemProps,
+      handleNodeSelect,
+      getSelectedNodes,
+      getMenuActions,
+      getInlineActions,
+      getContextMenuActions,
+      ...rest
+    },
     forwardedRef,
   ) {
     const nodeRef = useRef<HTMLElement>(null);
@@ -325,9 +362,15 @@ const HierarchyNodeItem = memo(
     const isDisabled = treeItemProps?.["aria-disabled"] === true;
     const nodeActions = useMemo(
       () => ({
-        menuActions: getMenuActions ? getMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
-        inlineActions: getInlineActions ? getInlineActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
-        contextMenuActions: getContextMenuActions ? getContextMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
+        menuActions: getMenuActions
+          ? getMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() })
+          : undefined,
+        inlineActions: getInlineActions
+          ? getInlineActions({ targetNode: node, selectedNodes: getSelectedNodes() })
+          : undefined,
+        contextMenuActions: getContextMenuActions
+          ? getContextMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() })
+          : undefined,
       }),
       [node, getMenuActions, getInlineActions, getContextMenuActions, getSelectedNodes],
     );

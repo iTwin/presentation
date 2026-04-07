@@ -61,10 +61,7 @@ interface FlatTreeState {
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult {
   const { rootNodes, selectionMode, selectNodes } = props;
   const previousSelectionRef = useRef<string | undefined>(undefined);
-  const state = useRef<FlatTreeState>({
-    flatNodeList: [],
-    nodeIdToIndexMap: new Map(),
-  });
+  const state = useRef<FlatTreeState>({ flatNodeList: [], nodeIdToIndexMap: new Map() });
 
   useEffect(() => {
     state.current = computeFlatNodeList(rootNodes);
@@ -111,7 +108,12 @@ interface SelectionAction {
   type: SelectionChangeType | "disabled";
 }
 
-function getSelectionAction(selectionMode: SelectionMode, isSelected: boolean, shiftDown: boolean, ctrlDown: boolean): SelectionAction {
+function getSelectionAction(
+  selectionMode: SelectionMode,
+  isSelected: boolean,
+  shiftDown: boolean,
+  ctrlDown: boolean,
+): SelectionAction {
   switch (selectionMode) {
     case "none":
       return { select: "node", type: "disabled" };

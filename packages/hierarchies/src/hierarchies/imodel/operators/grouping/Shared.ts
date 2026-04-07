@@ -3,7 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { HierarchyNodeGroupingParamsBase, InstanceHierarchyNodeProcessingParams } from "../../IModelHierarchyNode.js";
+import type {
+  HierarchyNodeGroupingParamsBase,
+  InstanceHierarchyNodeProcessingParams,
+} from "../../IModelHierarchyNode.js";
 import type { GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
 
 /** @internal */
@@ -19,7 +22,9 @@ export function iterateChildNodeGroupingParams(
       case "class":
         return typeof params?.grouping?.byClass === "object" ? params.grouping.byClass : undefined;
       case "label":
-        return typeof params?.grouping?.byLabel === "object" && params.grouping.byLabel.action !== "merge" ? params.grouping.byLabel : undefined;
+        return typeof params?.grouping?.byLabel === "object" && params.grouping.byLabel.action !== "merge"
+          ? params.grouping.byLabel
+          : undefined;
       case "property":
         return params?.grouping?.byProperties;
     }

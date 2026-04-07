@@ -46,9 +46,7 @@ async function getChildrenNodes(opts: HierarchyRequestOptions<IModelConnection, 
 
 describe("HierarchyBuilder", () => {
   let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
-  const rulesetManager = {
-    add: createStub<RulesetManager["add"]>(),
-  };
+  const rulesetManager = { add: createStub<RulesetManager["add"]>() };
 
   const ruleset = { id: "1" } as Ruleset;
   const imodel = {} as IModelConnection;
@@ -58,9 +56,7 @@ describe("HierarchyBuilder", () => {
 
     presentationManager = sinon.createStubInstance(PresentationManager);
     presentationManager.rulesets.returns(rulesetManager as unknown as RulesetManager);
-    presentationManager.vars.returns({
-      onVariableChanged: new BeEvent(),
-    } as RulesetVariablesManager);
+    presentationManager.vars.returns({ onVariableChanged: new BeEvent() } as RulesetVariablesManager);
   });
 
   afterEach(() => {
@@ -94,7 +90,9 @@ describe("HierarchyBuilder", () => {
     context("with data", () => {
       beforeEach(() => {
         sinon.stub(Presentation, "presentation").get(() => presentationManager);
-        presentationManager.getNodesIterator.callsFake(async (opts) => (opts.parentKey === undefined ? getRootNodes() : getChildrenNodes(opts)));
+        presentationManager.getNodesIterator.callsFake(async (opts) =>
+          opts.parentKey === undefined ? getRootNodes() : getChildrenNodes(opts),
+        );
       });
 
       afterEach(() => {

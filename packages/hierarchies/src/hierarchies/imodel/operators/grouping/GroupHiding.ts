@@ -34,11 +34,7 @@ export function applyGroupHidingParams(props: GroupingHandlerResult, extraSiblin
     }
     filteredGrouped.push(node);
   }
-  return {
-    groupingType,
-    grouped: filteredGrouped,
-    ungrouped,
-  };
+  return { groupingType, grouped: filteredGrouped, ungrouped };
 }
 
 function getHideOptionsFromNodeProcessingParams(

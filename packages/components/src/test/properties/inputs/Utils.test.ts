@@ -6,7 +6,10 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { Format, FormatType } from "@itwin/core-quantity";
-import { getDecimalRoundingError, getPersistenceUnitRoundingError } from "../../../presentation-components/properties/inputs/Utils.js";
+import {
+  getDecimalRoundingError,
+  getPersistenceUnitRoundingError,
+} from "../../../presentation-components/properties/inputs/Utils.js";
 
 import type { ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 
@@ -21,10 +24,7 @@ describe("getDecimalRoundingError", () => {
 
 describe("getPersistenceUnitRoundingError", () => {
   const format = new Format("test format");
-  const parserSpec = {
-    parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(),
-    format,
-  };
+  const parserSpec = { parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(), format };
 
   beforeEach(() => {
     sinon.restore();

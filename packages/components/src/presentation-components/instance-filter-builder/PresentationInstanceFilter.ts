@@ -29,7 +29,14 @@ import type {
   GenericInstanceFilterRuleGroup,
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import type { ClassInfo, Descriptor, Field, NestedContentField, PropertiesField, Value } from "@itwin/presentation-common";
+import type {
+  ClassInfo,
+  Descriptor,
+  Field,
+  NestedContentField,
+  PropertiesField,
+  Value,
+} from "@itwin/presentation-common";
 import type { UniqueValue } from "../common/Utils.js";
 
 /**
@@ -70,7 +77,10 @@ export namespace PresentationInstanceFilter {
    * Converts filter built by [usePropertyFilterBuilder]($components-react) into presentation specific format.
    * @throws if presentation data cannot be found for properties used in `filter`.
    */
-  export function fromComponentsPropertyFilter(descriptor: Descriptor, filter: PropertyFilter): PresentationInstanceFilter {
+  export function fromComponentsPropertyFilter(
+    descriptor: Descriptor,
+    filter: PropertyFilter,
+  ): PresentationInstanceFilter {
     if (isPropertyFilterRuleGroup(filter)) {
       return createPresentationInstanceFilterConditionGroup(descriptor, filter);
     }
@@ -81,7 +91,10 @@ export namespace PresentationInstanceFilter {
    * Converts [[PresentationInstanceFilter]] into format used by [usePropertyFilterBuilder]($components-react).
    * @throws if fields used in filter cannot be found in `descriptor`.
    */
-  export function toComponentsPropertyFilter(descriptor: Descriptor, filter: PresentationInstanceFilter): PropertyFilter {
+  export function toComponentsPropertyFilter(
+    descriptor: Descriptor,
+    filter: PresentationInstanceFilter,
+  ): PropertyFilter {
     if (PresentationInstanceFilter.isConditionGroup(filter)) {
       return createPropertyFilterRuleGroup(filter, descriptor);
     }
@@ -91,13 +104,23 @@ export namespace PresentationInstanceFilter {
   /**
    * Extracts information from [[PresentationInstanceFilter]] and creates a [GenericInstanceFilter]($common) for building queries.
    */
-  export function toGenericInstanceFilter(filter: PresentationInstanceFilter, filteredClasses?: ClassInfo[]): GenericInstanceFilter {
-    const context: ConvertContext = { relatedInstances: [], propertyClasses: [], usedRelatedAliases: new Map<string, number>() };
+  export function toGenericInstanceFilter(
+    filter: PresentationInstanceFilter,
+    filteredClasses?: ClassInfo[],
+  ): GenericInstanceFilter {
+    const context: ConvertContext = {
+      relatedInstances: [],
+      propertyClasses: [],
+      usedRelatedAliases: new Map<string, number>(),
+    };
 
     const rules = createGenericInstanceFilter(filter, context);
     return {
       rules,
-      relatedInstances: context.relatedInstances.map((instance) => ({ path: toRelationshipStep(instance.path), alias: instance.alias })),
+      relatedInstances: context.relatedInstances.map((instance) => ({
+        path: toRelationshipStep(instance.path),
+        alias: instance.alias,
+      })),
       propertyClassNames: context.propertyClasses.map((classInfo) => classInfo.name),
       filteredClassNames: filteredClasses?.map((classInfo) => classInfo.name),
     };
@@ -107,14 +130,19 @@ export namespace PresentationInstanceFilter {
    * Creates [[PresentationInstanceFilter]] from given [GenericInstanceFilter]($common).
    * @throws if fields used in `filter` cannot be found in `descriptor`.
    */
-  export function fromGenericInstanceFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilter {
+  export function fromGenericInstanceFilter(
+    descriptor: Descriptor,
+    filter: GenericInstanceFilter,
+  ): PresentationInstanceFilter {
     return parseGenericFilter(filter, descriptor);
   }
 
   /**
    * Function that checks if supplied [[PresentationInstanceFilter]] is [[PresentationInstanceFilterConditionGroup]].
    */
-  export function isConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup {
+  export function isConditionGroup(
+    filter: PresentationInstanceFilter,
+  ): filter is PresentationInstanceFilterConditionGroup {
     return (filter as any).conditions !== undefined;
   }
 
@@ -129,45 +157,52 @@ export namespace PresentationInstanceFilter {
     value: PrimitiveValue,
   ): PresentationInstanceFilterCondition {
     if (!isValidPrimitiveValue(value)) {
-      return {
-        field,
-        operator: operator === "is-equal" ? "is-null" : "is-not-null",
-      };
+      return { field, operator: operator === "is-equal" ? "is-null" : "is-not-null" };
     }
-    return {
-      field,
-      operator,
-      value: createUniqueValue(value),
-    };
+    return { field, operator, value: createUniqueValue(value) };
   }
 }
 
-function createPresentationInstanceFilterConditionGroup(descriptor: Descriptor, group: PropertyFilterRuleGroup): PresentationInstanceFilterConditionGroup {
+function createPresentationInstanceFilterConditionGroup(
+  descriptor: Descriptor,
+  group: PropertyFilterRuleGroup,
+): PresentationInstanceFilterConditionGroup {
   return {
     operator: group.operator,
     conditions: group.rules.map((rule) => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, rule)),
   };
 }
 
-function createPresentationInstanceFilterCondition(descriptor: Descriptor, condition: PropertyFilterRule): PresentationInstanceFilterCondition {
+function createPresentationInstanceFilterCondition(
+  descriptor: Descriptor,
+  condition: PropertyFilterRule,
+): PresentationInstanceFilterCondition {
   const field = findField(descriptor, getInstanceFilterFieldName(condition.property));
   if (!field || !field.isPropertiesField()) {
-    throw new PresentationError(PresentationStatus.Error, `Failed to find properties field for property - ${condition.property.name}`);
+    throw new PresentationError(
+      PresentationStatus.Error,
+      `Failed to find properties field for property - ${condition.property.name}`,
+    );
   }
   if (condition.value && condition.value.valueFormat !== PropertyValueFormat.Primitive) {
-    throw new PresentationError(PresentationStatus.Error, `Property '${condition.property.name}' cannot be compared with non primitive value.`);
+    throw new PresentationError(
+      PresentationStatus.Error,
+      `Property '${condition.property.name}' cannot be compared with non primitive value.`,
+    );
   }
-  return {
-    operator: condition.operator,
-    field,
-    value: condition.value,
-  };
+  return { operator: condition.operator, field, value: condition.value };
 }
 
-function createPropertyFilterRule(condition: PresentationInstanceFilterCondition, descriptor: Descriptor): PropertyFilterRule {
+function createPropertyFilterRule(
+  condition: PresentationInstanceFilterCondition,
+  descriptor: Descriptor,
+): PropertyFilterRule {
   const field = descriptor.getFieldByName(condition.field.name, true);
   if (!field || !field.isPropertiesField()) {
-    throw new PresentationError(PresentationStatus.Error, `Failed to find properties field - ${condition.field.name} in descriptor`);
+    throw new PresentationError(
+      PresentationStatus.Error,
+      `Failed to find properties field - ${condition.field.name} in descriptor`,
+    );
   }
   return {
     property: createPropertyInfoFromPropertiesField(field).propertyDescription,
@@ -176,10 +211,15 @@ function createPropertyFilterRule(condition: PresentationInstanceFilterCondition
   };
 }
 
-function createPropertyFilterRuleGroup(group: PresentationInstanceFilterConditionGroup, descriptor: Descriptor): PropertyFilterRuleGroup {
+function createPropertyFilterRuleGroup(
+  group: PresentationInstanceFilterConditionGroup,
+  descriptor: Descriptor,
+): PropertyFilterRuleGroup {
   return {
     operator: group.operator,
-    rules: group.conditions.map((condition) => PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, condition)),
+    rules: group.conditions.map((condition) =>
+      PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, condition),
+    ),
   };
 }
 
@@ -220,20 +260,28 @@ function createGenericInstanceFilterUniqueValueRules(filter: PresentationInstanc
   return createGenericInstanceFilterRuleGroup(result, ctx);
 }
 
-function createGenericInstanceFilterRuleGroup(group: PresentationInstanceFilterConditionGroup, ctx: ConvertContext): GenericInstanceFilterRuleGroup {
+function createGenericInstanceFilterRuleGroup(
+  group: PresentationInstanceFilterConditionGroup,
+  ctx: ConvertContext,
+): GenericInstanceFilterRuleGroup {
   const convertedConditions = group.conditions.map((condition) => createGenericInstanceFilter(condition, ctx));
-  return {
-    operator: group.operator,
-    rules: convertedConditions,
-  };
+  return { operator: group.operator, rules: convertedConditions };
 }
 
-function createGenericInstanceFilterRule(condition: PresentationInstanceFilterCondition, ctx: ConvertContext): GenericInstanceFilterRule {
+function createGenericInstanceFilterRule(
+  condition: PresentationInstanceFilterCondition,
+  ctx: ConvertContext,
+): GenericInstanceFilterRule {
   const { field, operator, value } = condition;
   // we can use first property when creating `GenericInstanceFilterRule` because all properties in this field will have same name.
   const property = field.properties[0].property;
   const relatedInstance = getRelatedInstanceDescription(field, property.classInfo.name, ctx);
-  addClassInfoToContext(relatedInstance ? [relatedInstance.path[0].sourceClassInfo] : field.properties.map((prop) => prop.property.classInfo), ctx);
+  addClassInfoToContext(
+    relatedInstance
+      ? [relatedInstance.path[0].sourceClassInfo]
+      : field.properties.map((prop) => prop.property.classInfo),
+    ctx,
+  );
   const propertyAlias = relatedInstance?.alias ?? "this";
 
   return {
@@ -245,7 +293,11 @@ function createGenericInstanceFilterRule(condition: PresentationInstanceFilterCo
   };
 }
 
-function createUniqueValueConditions(filter: PresentationInstanceFilterCondition, serializedDisplayValues: string, serializedGroupedRawValues: string) {
+function createUniqueValueConditions(
+  filter: PresentationInstanceFilterCondition,
+  serializedDisplayValues: string,
+  serializedGroupedRawValues: string,
+) {
   const { field, operator } = filter;
 
   const uniqueValues = deserializeUniqueValues(serializedDisplayValues, serializedGroupedRawValues);
@@ -269,7 +321,11 @@ function createUniqueValueConditions(filter: PresentationInstanceFilterCondition
   return conditionGroup;
 }
 
-function getRelatedInstanceDescription(field: PropertiesField, propClassName: string, ctx: ConvertContext): RelatedInstance | undefined {
+function getRelatedInstanceDescription(
+  field: PropertiesField,
+  propClassName: string,
+  ctx: ConvertContext,
+): RelatedInstance | undefined {
   if (!field.parent) {
     return undefined;
   }
@@ -282,10 +338,7 @@ function getRelatedInstanceDescription(field: PropertiesField, propClassName: st
 
   const baseAlias = `rel_${propClassName.split(":")[1]}`;
   const index = getAliasIndex(baseAlias, ctx.usedRelatedAliases);
-  const newRelated = {
-    path: pathToProperty,
-    alias: `${baseAlias}_${index}`,
-  };
+  const newRelated = { path: pathToProperty, alias: `${baseAlias}_${index}` };
 
   ctx.relatedInstances.push(newRelated);
   return newRelated;
@@ -322,9 +375,14 @@ function parseGenericFilter(filter: GenericInstanceFilter, descriptor: Descripto
   const ctx: GenericFilterParsingContext = {
     findField: (propName, alias) => {
       const field =
-        alias === "this" ? findDirectField(descriptor.fields, propName) : findRelatedField(descriptor.fields, propName, alias, filter.relatedInstances);
+        alias === "this"
+          ? findDirectField(descriptor.fields, propName)
+          : findRelatedField(descriptor.fields, propName, alias, filter.relatedInstances);
       if (!field) {
-        throw new PresentationError(PresentationStatus.Error, `Failed to find field for property - ${alias}.${propName}`);
+        throw new PresentationError(
+          PresentationStatus.Error,
+          `Failed to find field for property - ${alias}.${propName}`,
+        );
       }
 
       return field;
@@ -349,20 +407,26 @@ function parseGenericFilterRuleGroup(
   group: GenericInstanceFilterRuleGroup,
   ctx: GenericFilterParsingContext,
 ): PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition {
-  if (group.rules.every((rule) => !GenericInstanceFilter.isFilterRuleGroup(rule) && (rule.operator === "is-equal" || rule.operator === "is-not-equal"))) {
+  if (
+    group.rules.every(
+      (rule) =>
+        !GenericInstanceFilter.isFilterRuleGroup(rule) &&
+        (rule.operator === "is-equal" || rule.operator === "is-not-equal"),
+    )
+  ) {
     const uniqueValueRule = parseUniqueValuesRule(group.rules as GenericInstanceFilterRule[], ctx);
     if (uniqueValueRule) {
       return uniqueValueRule;
     }
   }
 
-  return {
-    operator: group.operator,
-    conditions: group.rules.map((rule) => parseGenericFilterRules(rule, ctx)),
-  };
+  return { operator: group.operator, conditions: group.rules.map((rule) => parseGenericFilterRules(rule, ctx)) };
 }
 
-function parseGenericFilterRule(rule: GenericInstanceFilterRule, ctx: GenericFilterParsingContext): PresentationInstanceFilterCondition {
+function parseGenericFilterRule(
+  rule: GenericInstanceFilterRule,
+  ctx: GenericFilterParsingContext,
+): PresentationInstanceFilterCondition {
   const field = ctx.findField(rule.propertyName, rule.sourceAlias);
 
   return {
@@ -379,14 +443,24 @@ function parseGenericFilterRule(rule: GenericInstanceFilterRule, ctx: GenericFil
   };
 }
 
-function parseUniqueValuesRule(rules: GenericInstanceFilterRule[], ctx: GenericFilterParsingContext): PresentationInstanceFilterCondition | undefined {
+function parseUniqueValuesRule(
+  rules: GenericInstanceFilterRule[],
+  ctx: GenericFilterParsingContext,
+): PresentationInstanceFilterCondition | undefined {
   if (rules.length === 0) {
     return undefined;
   }
 
   // check if all rules in group use same property and operator
   const ruleInfo = { propName: rules[0].propertyName, alias: rules[0].sourceAlias, operator: rules[0].operator };
-  if (!rules.every((rule) => rule.operator === ruleInfo.operator && rule.propertyName === ruleInfo.propName && rule.sourceAlias === ruleInfo.alias)) {
+  if (
+    !rules.every(
+      (rule) =>
+        rule.operator === ruleInfo.operator &&
+        rule.propertyName === ruleInfo.propName &&
+        rule.sourceAlias === ruleInfo.alias,
+    )
+  ) {
     return undefined;
   }
 
@@ -402,10 +476,7 @@ function parseUniqueValuesRule(rules: GenericInstanceFilterRule[], ctx: GenericF
     if (currentValue) {
       currentValue.groupedRawValues.push(value);
     } else {
-      uniqueValues.push({
-        displayValue,
-        groupedRawValues: [value],
-      });
+      uniqueValues.push({ displayValue, groupedRawValues: [value] });
     }
   }
 
@@ -446,7 +517,10 @@ function findRelatedField(
   return relatedField ? findDirectField(relatedField.nestedFields, propName) : undefined;
 }
 
-function findFieldByPath(fields: Field[], pathToField: GenericInstanceFilterRelationshipStep[]): NestedContentField | undefined {
+function findFieldByPath(
+  fields: Field[],
+  pathToField: GenericInstanceFilterRelationshipStep[],
+): NestedContentField | undefined {
   for (const field of fields) {
     if (!field.isNestedContentField()) {
       continue;
@@ -473,14 +547,7 @@ function findFieldByPath(fields: Field[], pathToField: GenericInstanceFilterRela
 function pathStartsWith(
   prefix: GenericInstanceFilterRelationshipStep[],
   path: RelationshipPath,
-):
-  | {
-      matches: false;
-    }
-  | {
-      matches: true;
-      leftOver: GenericInstanceFilterRelationshipStep[];
-    } {
+): { matches: false } | { matches: true; leftOver: GenericInstanceFilterRelationshipStep[] } {
   if (prefix.length < path.length) {
     return { matches: false };
   }
@@ -500,10 +567,7 @@ function pathStartsWith(
   }
 
   const leftOver = prefix.slice(path.length);
-  return {
-    matches: true,
-    leftOver,
-  };
+  return { matches: true, leftOver };
 }
 
 function toRelationshipStep(path: RelationshipPath): GenericInstanceFilterRelationshipStep[] {
@@ -563,14 +627,7 @@ function isValidPrimitiveValue(val: PrimitiveValue): val is Required<PrimitiveVa
 
 function createUniqueValue(value: Required<PrimitiveValue>): PrimitiveValue | undefined {
   const { displayValues, groupedRawValues } = serializeUniqueValues([
-    {
-      displayValue: value.displayValue,
-      groupedRawValues: [value.value as Value],
-    },
+    { displayValue: value.displayValue, groupedRawValues: [value.value as Value] },
   ]);
-  return {
-    displayValue: displayValues,
-    value: groupedRawValues,
-    valueFormat: PropertyValueFormat.Primitive,
-  };
+  return { displayValue: displayValues, value: groupedRawValues, valueFormat: PropertyValueFormat.Primitive };
 }

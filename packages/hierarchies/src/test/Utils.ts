@@ -35,73 +35,39 @@ export function setupLogging(levels: Array<{ namespace: string; level: LogLevel 
 }
 
 export function createTestGenericNodeKey(src?: Partial<GenericNodeKey>): GenericNodeKey {
-  return {
-    type: "generic",
-    id: "test",
-    ...src,
-  };
+  return { type: "generic", id: "test", ...src };
 }
 
 export function createTestGenericNode(src?: Partial<NonGroupingHierarchyNode>): NonGroupingHierarchyNode {
-  return {
-    label: "test",
-    key: createTestGenericNodeKey(),
-    children: false,
-    parentKeys: [],
-    ...src,
-  };
+  return { label: "test", key: createTestGenericNodeKey(), children: false, parentKeys: [], ...src };
 }
 
 export function createTestSourceGenericNode(src?: Partial<SourceGenericHierarchyNode>): SourceGenericHierarchyNode {
-  return {
-    label: "test",
-    key: "test",
-    ...src,
-  };
+  return { label: "test", key: "test", ...src };
 }
 
-export function createTestProcessedGenericNode(src?: Partial<ProcessedGenericHierarchyNode>): ProcessedGenericHierarchyNode {
-  return {
-    label: "test",
-    key: createTestGenericNodeKey(),
-    parentKeys: [],
-    ...src,
-  };
+export function createTestProcessedGenericNode(
+  src?: Partial<ProcessedGenericHierarchyNode>,
+): ProcessedGenericHierarchyNode {
+  return { label: "test", key: createTestGenericNodeKey(), parentKeys: [], ...src };
 }
 
 export function createTestInstanceNodeKey(src?: Partial<InstancesNodeKey>): InstancesNodeKey {
-  return {
-    type: "instances",
-    instanceKeys: [],
-    ...src,
-  };
+  return { type: "instances", instanceKeys: [], ...src };
 }
 
 export function createTestInstanceNode(src?: Partial<NonGroupingHierarchyNode>): NonGroupingHierarchyNode {
-  return {
-    label: "test",
-    key: createTestInstanceNodeKey(),
-    children: false,
-    parentKeys: [],
-    ...src,
-  };
+  return { label: "test", key: createTestInstanceNodeKey(), children: false, parentKeys: [], ...src };
 }
 
 export function createTestSourceInstanceNode(src?: Partial<SourceInstanceHierarchyNode>): SourceInstanceHierarchyNode {
-  return {
-    label: "test",
-    key: createTestInstanceNodeKey(),
-    ...src,
-  };
+  return { label: "test", key: createTestInstanceNodeKey(), ...src };
 }
 
-export function createTestProcessedInstanceNode(src?: Partial<ProcessedInstanceHierarchyNode>): ProcessedInstanceHierarchyNode {
-  return {
-    label: "test",
-    key: createTestInstanceNodeKey(),
-    parentKeys: [],
-    ...src,
-  };
+export function createTestProcessedInstanceNode(
+  src?: Partial<ProcessedInstanceHierarchyNode>,
+): ProcessedInstanceHierarchyNode {
+  return { label: "test", key: createTestInstanceNodeKey(), parentKeys: [], ...src };
 }
 
 export function createTestGroupingNode(src?: Partial<GroupingHierarchyNode>): GroupingHierarchyNode {
@@ -115,15 +81,14 @@ export function createTestGroupingNode(src?: Partial<GroupingHierarchyNode>): Gr
   };
 }
 
-export function createTestProcessedGroupingNode<TChild = ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>(
+export function createTestProcessedGroupingNode<
+  TChild = ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode,
+>(
   src?: Partial<Omit<ProcessedGroupingHierarchyNode, "children">> & { children?: TChild[] },
 ): Omit<ProcessedGroupingHierarchyNode, "children"> & { children: TChild[] } {
   return {
     label: "test",
-    key: {
-      type: "class-grouping",
-      className: normalizeFullClassName("TestSchema.TestClass"),
-    },
+    key: { type: "class-grouping", className: normalizeFullClassName("TestSchema.TestClass") },
     parentKeys: [],
     groupedInstanceKeys: [],
     children: new Array<TChild>(),
@@ -132,14 +97,12 @@ export function createTestProcessedGroupingNode<TChild = ProcessedGroupingHierar
 }
 
 export function createTestClassGroupingNodeKey(src?: Partial<ClassGroupingNodeKey>): ClassGroupingNodeKey {
-  return {
-    type: "class-grouping",
-    className: "TestSchema.TestClass",
-    ...src,
-  };
+  return { type: "class-grouping", className: "TestSchema.TestClass", ...src };
 }
 
-export function createTestPropertyValueGroupingNodeKey(src?: Partial<PropertyValueGroupingNodeKey>): PropertyValueGroupingNodeKey {
+export function createTestPropertyValueGroupingNodeKey(
+  src?: Partial<PropertyValueGroupingNodeKey>,
+): PropertyValueGroupingNodeKey {
   return {
     type: "property-grouping:value",
     propertyClassName: "TestSchema.TestClass",
@@ -149,7 +112,9 @@ export function createTestPropertyValueGroupingNodeKey(src?: Partial<PropertyVal
   };
 }
 
-export function createTestPropertyValueRangeGroupingNodeKey(src?: Partial<PropertyValueRangeGroupingNodeKey>): PropertyValueRangeGroupingNodeKey {
+export function createTestPropertyValueRangeGroupingNodeKey(
+  src?: Partial<PropertyValueRangeGroupingNodeKey>,
+): PropertyValueRangeGroupingNodeKey {
   return {
     type: "property-grouping:range",
     propertyClassName: "TestSchema.TestClass",
@@ -160,7 +125,9 @@ export function createTestPropertyValueRangeGroupingNodeKey(src?: Partial<Proper
   };
 }
 
-export function createTestPropertyOtherValueGroupingNodeKey(src?: Partial<PropertyOtherValuesGroupingNodeKey>): PropertyOtherValuesGroupingNodeKey {
+export function createTestPropertyOtherValueGroupingNodeKey(
+  src?: Partial<PropertyOtherValuesGroupingNodeKey>,
+): PropertyOtherValuesGroupingNodeKey {
   return {
     type: "property-grouping:other",
     properties: [{ className: "TestSchema.TestClass", propertyName: "TestProperty" }],
@@ -169,11 +136,7 @@ export function createTestPropertyOtherValueGroupingNodeKey(src?: Partial<Proper
 }
 
 export function createTestInstanceKey(src?: Partial<IModelInstanceKey>): IModelInstanceKey {
-  return {
-    className: "TestSchema.TestClass",
-    id: "0x1",
-    ...src,
-  };
+  return { className: "TestSchema.TestClass", id: "0x1", ...src };
 }
 
 export function createTestNodeKey(): HierarchyNodeKey {
@@ -199,24 +162,30 @@ export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
 }
 export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class & ECClassExtraMembers;
 export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass & ECClassExtraMembers;
-export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass & ECClassExtraMembers;
+export type TStubRelationshipClassFunc = (
+  props: StubRelationshipClassFuncProps,
+) => EC.RelationshipClass & ECClassExtraMembers;
 
 export function createECSchemaProviderStub() {
   const schemaStubs = new Map<string, sinon.SinonStubbedInstance<EC.Schema>>();
   const classes = new Dictionary<EC.FullClassName, EC.Class>(compareFullClassNames); // className -> class
   const classHierarchy = new Dictionary<EC.FullClassName, EC.FullClassName>(compareFullClassNames); // className -> baseClassName
-  const getSchemaStub = sinon.stub<[string], sinon.SinonStubbedInstance<EC.Schema>>().callsFake((schemaName: string) => {
-    let schemaStub = schemaStubs.get(schemaName);
-    if (!schemaStub) {
-      schemaStub = {
-        name: schemaName,
-        getClass: sinon.stub<[string], Promise<EC.Class | undefined>>().callsFake(async (className) => classes.get(`${schemaName}.${className}`)),
-        getCustomAttributes: sinon.stub<[], Promise<EC.CustomAttributeSet>>().callsFake(async () => new Map()),
-      };
-      schemaStubs.set(schemaName, schemaStub);
-    }
-    return schemaStub;
-  });
+  const getSchemaStub = sinon
+    .stub<[string], sinon.SinonStubbedInstance<EC.Schema>>()
+    .callsFake((schemaName: string) => {
+      let schemaStub = schemaStubs.get(schemaName);
+      if (!schemaStub) {
+        schemaStub = {
+          name: schemaName,
+          getClass: sinon
+            .stub<[string], Promise<EC.Class | undefined>>()
+            .callsFake(async (className) => classes.get(`${schemaName}.${className}`)),
+          getCustomAttributes: sinon.stub<[], Promise<EC.CustomAttributeSet>>().callsFake(async () => new Map()),
+        };
+        schemaStubs.set(schemaName, schemaStub);
+      }
+      return schemaStub;
+    });
   const getDerivedClasses = (classFullName: EC.FullClassName): EC.Class[] => {
     const derivedClasses = new Array<EC.Class>();
     for (const { key: derivedClassName, value: baseClassName } of classHierarchy) {
@@ -256,7 +225,9 @@ export function createECSchemaProviderStub() {
     is: async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
       const myName: EC.FullClassName = `${props.schemaName}.${props.className}`;
       const targetName: EC.FullClassName =
-        typeof targetClassOrClassName === "string" ? `${schemaName!}.${targetClassOrClassName}` : targetClassOrClassName.fullName;
+        typeof targetClassOrClassName === "string"
+          ? `${schemaName!}.${targetClassOrClassName}`
+          : targetClassOrClassName.fullName;
       return (
         compareFullClassNames(targetName, myName) === 0 ||
         getBaseClasses(myName).some((baseClass) => compareFullClassNames(baseClass.fullName, targetName) === 0)
@@ -295,9 +266,7 @@ export function createECSchemaProviderStub() {
     return res;
   };
   const stubOtherClass: TStubClassFunc = (props) => {
-    const res = {
-      ...createBaseClassProps(props),
-    } as unknown as ReturnType<TStubClassFunc>;
+    const res = { ...createBaseClassProps(props) } as unknown as ReturnType<TStubClassFunc>;
     classes.set(res.fullName, res);
     props.baseClass && props.baseClass.addDerivedClass(res);
     return res;
@@ -326,21 +295,19 @@ export function createClassHierarchyInspectorStub(schemaProvider = createECSchem
 
 export function createIModelAccessStub() {
   const schemaProvider = createECSchemaProviderStub();
-  return {
-    ...schemaProvider,
-    ...createClassHierarchyInspectorStub(schemaProvider),
-  };
+  return { ...schemaProvider, ...createClassHierarchyInspectorStub(schemaProvider) };
 }
 
 export function createInstanceLabelSelectClauseFactoryStub() {
   return {
-    async createSelectClause(props: { classAlias: string; className?: string; selectorsConcatenator?: any }): Promise<string> {
+    async createSelectClause(props: {
+      classAlias: string;
+      className?: string;
+      selectorsConcatenator?: any;
+    }): Promise<string> {
       return `[${props.classAlias}].[LabelProperty]`;
     },
   };
 }
 
-export const testLocalizedStrings = {
-  other: "_Other_",
-  unspecified: "_Unspecified_",
-};
+export const testLocalizedStrings = { other: "_Other_", unspecified: "_Unspecified_" };

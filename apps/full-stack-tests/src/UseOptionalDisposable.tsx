@@ -5,7 +5,9 @@
 
 import { useEffect, useState } from "react";
 
-export function useOptionalDisposable<TDisposable extends Disposable>(createDisposable: () => TDisposable | undefined): TDisposable | undefined {
+export function useOptionalDisposable<TDisposable extends Disposable>(
+  createDisposable: () => TDisposable | undefined,
+): TDisposable | undefined {
   const [value, setValue] = useState<TDisposable | undefined>();
 
   useEffect(() => {

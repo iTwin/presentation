@@ -8,7 +8,11 @@ import { Selectables } from "./Selectable.js";
 
 import type { Event } from "@itwin/presentation-shared";
 import type { Selectable } from "./Selectable.js";
-import type { StorageSelectionChangeEventArgs, StorageSelectionChangesListener, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
+import type {
+  StorageSelectionChangeEventArgs,
+  StorageSelectionChangesListener,
+  StorageSelectionChangeType,
+} from "./SelectionChangeEvent.js";
 
 /** @public */
 type IModelKeyProp =
@@ -141,7 +145,9 @@ class SelectionStorageImpl implements SelectionStorage {
     this.handleChange({ ...props, changeType: "add" });
   }
 
-  public removeFromSelection(props: IModelKeyProp & { source: string; selectables: Selectable[]; level?: number }): void {
+  public removeFromSelection(
+    props: IModelKeyProp & { source: string; selectables: Selectable[]; level?: number },
+  ): void {
     this.handleChange({ ...props, changeType: "remove" });
   }
 
@@ -168,7 +174,14 @@ class SelectionStorageImpl implements SelectionStorage {
     return selectionContainer;
   }
 
-  private handleChange(props: IModelKeyProp & { source: string; level?: number; changeType: StorageSelectionChangeType; selectables: Selectable[] }) {
+  private handleChange(
+    props: IModelKeyProp & {
+      source: string;
+      level?: number;
+      changeType: StorageSelectionChangeType;
+      selectables: Selectable[];
+    },
+  ) {
     const { source, level: inLevel, changeType, selectables: change } = props;
     const imodelKey = getIModelKey(props);
     const container = this.getContainer(imodelKey);

@@ -35,11 +35,7 @@ describe("HiliteSet", () => {
   let iModel: IModelConnection;
 
   before(async () => {
-    await initialize({
-      backendHostProps: {
-        cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`),
-      },
-    });
+    await initialize({ backendHostProps: { cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`) } });
     RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);
     RpcConfiguration.developmentMode = true;
     RpcManager.initializeInterface(ECSchemaRpcInterface);
@@ -63,11 +59,7 @@ describe("HiliteSet", () => {
       elements.push(...set.elements);
     }
 
-    return {
-      models,
-      subCategories,
-      elements,
-    };
+    return { models, subCategories, elements };
   }
 
   describe("Hiliting selection", () => {
@@ -206,7 +198,12 @@ describe("HiliteSet", () => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          assemblyKey = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id });
+          assemblyKey = insertPhysicalElement({
+            builder,
+            userLabel: "element 1",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          });
           const element2 = insertPhysicalElement({
             builder,
             userLabel: "element 2",
@@ -221,8 +218,20 @@ describe("HiliteSet", () => {
             categoryId: categoryKey.id,
             parentId: assemblyKey.id,
           });
-          const element4 = insertPhysicalElement({ builder, userLabel: "element 4", modelId: modelKey.id, categoryId: categoryKey.id, parentId: element3.id });
-          const element5 = insertPhysicalElement({ builder, userLabel: "element 5", modelId: modelKey.id, categoryId: categoryKey.id, parentId: element3.id });
+          const element4 = insertPhysicalElement({
+            builder,
+            userLabel: "element 4",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            parentId: element3.id,
+          });
+          const element5 = insertPhysicalElement({
+            builder,
+            userLabel: "element 5",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            parentId: element3.id,
+          });
           expectedHighlightedElementKeys = [assemblyKey, element2, element3, element4, element5];
         });
 
@@ -243,7 +252,12 @@ describe("HiliteSet", () => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          elementKey = insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id });
+          elementKey = insertPhysicalElement({
+            builder,
+            userLabel: "element",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          });
         });
 
         const hiliteSet = await loadHiliteSet(Selectables.create([elementKey!]));
@@ -288,9 +302,17 @@ describe("HiliteSet", () => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+          const functionalModelKey = insertFunctionalModelWithPartition({
+            builder,
+            codeValue: "test functional model",
+          });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          physicalElement = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
+          physicalElement = insertPhysicalElement({
+            builder,
+            userLabel: "element",
+            modelId: physicalModelKey.id,
+            categoryId: categoryKey.id,
+          });
           const physicalElementChild = insertPhysicalElement({
             builder,
             userLabel: "child element 1",
@@ -339,10 +361,18 @@ describe("HiliteSet", () => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+          const functionalModelKey = insertFunctionalModelWithPartition({
+            builder,
+            codeValue: "test functional model",
+          });
           const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
           graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-          const graphicsElementChild = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElement.id });
+          const graphicsElementChild = insertDrawingGraphic({
+            builder,
+            modelId: drawingModelKey.id,
+            categoryId: categoryKey.id,
+            parentId: graphicsElement.id,
+          });
           const graphicsElementChild2 = insertDrawingGraphic({
             builder,
             modelId: drawingModelKey.id,
@@ -380,15 +410,15 @@ describe("HiliteSet", () => {
         let expectedElements: SelectableInstanceKey[];
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
-          const groupModel = insertGroupInformationModelWithPartition({ builder, codeValue: "group information model" });
+          const groupModel = insertGroupInformationModelWithPartition({
+            builder,
+            codeValue: "group information model",
+          });
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          groupInformationElement = insertGroupInformationElement({
-            builder,
-            modelId: groupModel.id,
-          });
+          groupInformationElement = insertGroupInformationElement({ builder, modelId: groupModel.id });
           const physicalElementGroupMember = insertPhysicalElement({
             builder,
             userLabel: "child element 1",

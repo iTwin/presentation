@@ -4,7 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory, waitFor } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+  waitFor,
+} from "presentation-test-utilities";
 import sinon from "sinon";
 import { UiComponents } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
@@ -99,16 +104,7 @@ describe("Presentation filter builder value renderer", () => {
       imodel: imodel.imodel,
       rulesetOrId: {
         id: `Test descriptor ruleset`,
-        rules: [
-          {
-            ruleType: "Content",
-            specifications: [
-              {
-                specType: "SelectedNodeInstances",
-              },
-            ],
-          },
-        ],
+        rules: [{ ruleType: "Content", specifications: [{ specType: "SelectedNodeInstances" }] }],
       },
       displayType: DefaultContentDisplayTypes.PropertyPane,
       keys,
@@ -120,11 +116,7 @@ describe("Presentation filter builder value renderer", () => {
     }
 
     const selectedClasses: ClassInfo[] = [
-      {
-        id: imodel.element1.id,
-        name: imodel.element1.className,
-        label: "Test Class",
-      },
+      { id: imodel.element1.id, name: imodel.element1.className, label: "Test Class" },
     ];
 
     const { baseElement, findByRole, user } = render(
@@ -215,16 +207,7 @@ describe("Presentation filter builder value renderer", () => {
       imodel: imodel.imodel,
       rulesetOrId: {
         id: `Test descriptor ruleset`,
-        rules: [
-          {
-            ruleType: "Content",
-            specifications: [
-              {
-                specType: "SelectedNodeInstances",
-              },
-            ],
-          },
-        ],
+        rules: [{ ruleType: "Content", specifications: [{ specType: "SelectedNodeInstances" }] }],
       },
       displayType: DefaultContentDisplayTypes.PropertyPane,
       keys,
@@ -236,11 +219,7 @@ describe("Presentation filter builder value renderer", () => {
     }
 
     const selectedClasses: ClassInfo[] = [
-      {
-        id: imodel.element1.id,
-        name: imodel.element1.className,
-        label: "Test Class",
-      },
+      { id: imodel.element1.id, name: imodel.element1.className, label: "Test Class" },
     ];
 
     const { baseElement, findByRole, user } = render(

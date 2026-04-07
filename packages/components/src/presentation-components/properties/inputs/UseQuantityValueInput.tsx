@@ -110,14 +110,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     );
   };
 
-  return {
-    quantityValue,
-    inputProps: {
-      onChange,
-      placeholder,
-      disabled: !highPrecisionFormatter || !parser,
-    },
-  };
+  return { quantityValue, inputProps: { onChange, placeholder, disabled: !highPrecisionFormatter || !parser } };
 }
 
 function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
@@ -141,7 +134,10 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
         koqName,
         unitSystem: IModelApp.quantityFormatter.activeUnitSystem,
       });
-      const parserSpec = await koqFormatter.getParserSpec({ koqName, unitSystem: IModelApp.quantityFormatter.activeUnitSystem });
+      const parserSpec = await koqFormatter.getParserSpec({
+        koqName,
+        unitSystem: IModelApp.quantityFormatter.activeUnitSystem,
+      });
       if (highPrecisionFormatter && parserSpec && defaultFormatter) {
         if (highPrecisionFormatter.format.type === FormatType.Decimal) {
           highPrecisionFormatter.format.precision = 12;
@@ -154,7 +150,9 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
     };
     void findFormatterAndParser();
 
-    const listeners = [IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(findFormatterAndParser)];
+    const listeners = [
+      IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(findFormatterAndParser),
+    ];
     // note: `IModelApp.formatsProvider` may not be available in older versions of core
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (IModelApp.formatsProvider) {

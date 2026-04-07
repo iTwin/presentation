@@ -135,7 +135,11 @@ describe("FavoritePropertiesDataFilterer", () => {
   });
 
   describe("when filtering is enabled", () => {
-    const recordsToTest: PropertyRecord[] = [createPrimitiveStringProperty("Property", "value1"), createArrayProperty("Array"), createStructProperty("Struct")];
+    const recordsToTest: PropertyRecord[] = [
+      createPrimitiveStringProperty("Property", "value1"),
+      createArrayProperty("Array"),
+      createStructProperty("Struct"),
+    ];
 
     const isFavoriteStub = sinon.stub();
     let filterer: FavoritePropertiesDataFilterer;
@@ -168,7 +172,10 @@ describe("FavoritePropertiesDataFilterer", () => {
       it(`should not match \`propertyRecord\` when record is not favorite and has non favorite parents (type: ${recordType})`, async () => {
         isFavoriteStub.returns(false);
         dataProvider.getFieldByPropertyDescription.resolves(createTestSimpleContentField());
-        const matchResult = await filterer.recordMatchesFilter(record, [createStructProperty("Struct"), createArrayProperty("Array")]);
+        const matchResult = await filterer.recordMatchesFilter(record, [
+          createStructProperty("Struct"),
+          createArrayProperty("Array"),
+        ]);
         expect(matchResult).to.deep.eq({ matchesFilter: false });
       });
 

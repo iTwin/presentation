@@ -12,7 +12,10 @@ import { ComboBox } from "@itwin/itwinui-react";
 import { LabelDefinition } from "@itwin/presentation-common";
 import { translate } from "../../common/Utils.js";
 import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader.js";
-import { useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader.js";
+import {
+  useNavigationPropertyTargetsLoader,
+  useNavigationPropertyTargetsRuleset,
+} from "./UseNavigationPropertyTargetsLoader.js";
 
 import type { PropertyDescription, PropertyRecord, PropertyValue } from "@itwin/appui-abstract";
 import type { PropertyEditorProps } from "@itwin/components-react";
@@ -30,7 +33,10 @@ export interface NavigationPropertyTargetSelectorProps extends PropertyEditorPro
 }
 
 /** @internal */
-export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttributes, NavigationPropertyTargetSelectorProps>((props, ref) => {
+export const NavigationPropertyTargetSelector = forwardRef<
+  PropertyEditorAttributes,
+  NavigationPropertyTargetSelectorProps
+>((props, ref) => {
   const { imodel, getNavigationPropertyInfo, propertyRecord, onCommit } = props;
   const [selectedTarget, setSelectedTarget] = useState(() => getNavigationTargetFromPropertyRecord(propertyRecord));
   const [searchInput, setSearchInput] = useState<string | undefined>();
@@ -44,7 +50,9 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
   const divRef = useRef<HTMLDivElement>(null);
 
   const emptyContent = useMemo(() => {
-    return isLoading ? translate("navigation-property-editor.loading-target-instances") : translate("navigation-property-editor.no-target-instances");
+    return isLoading
+      ? translate("navigation-property-editor.loading-target-instances")
+      : translate("navigation-property-editor.no-target-instances");
   }, [isLoading]);
 
   const onChange = useCallback(
@@ -56,14 +64,9 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
     [loadedOptions, onCommit, propertyRecord],
   );
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      getValue: () => getPropertyValue(selectedTarget),
-      htmlElement: divRef.current,
-    }),
-    [selectedTarget],
-  );
+  useImperativeHandle(ref, () => ({ getValue: () => getPropertyValue(selectedTarget), htmlElement: divRef.current }), [
+    selectedTarget,
+  ]);
 
   useEffect(() => {
     setSelectedTarget(getNavigationTargetFromPropertyRecord(propertyRecord));
@@ -81,7 +84,11 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
       onChange={onChange}
       filterFunction={(options: SelectOption<string>[], inputValue: string) => {
         const filteredOptions = options
-          .filter((option) => option.label.toLowerCase().includes(inputValue.toLowerCase()) && option.value !== FILTER_WARNING_OPTION.value)
+          .filter(
+            (option) =>
+              option.label.toLowerCase().includes(inputValue.toLowerCase()) &&
+              option.value !== FILTER_WARNING_OPTION.value,
+          )
           .slice(0, VALUE_BATCH_SIZE);
 
         if (filteredOptions.length >= VALUE_BATCH_SIZE) {

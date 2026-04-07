@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Localization.Imports
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
@@ -91,7 +95,9 @@ describe("Hierarchies", () => {
                       ecsql: `
                         SELECT ${await createNodesQueryClauseFactory({
                           imodelAccess,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                            classHierarchyInspector: imodelAccess,
+                          }),
                         }).createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },
@@ -120,10 +126,7 @@ describe("Hierarchies", () => {
               return [];
             },
           },
-          localizedStrings: {
-            other: "Kita",
-            unspecified: "Nenurodyta",
-          },
+          localizedStrings: { other: "Kita", unspecified: "Nenurodyta" },
         });
 
         // The iModel has four elements of `myPhysicalObjectClassName` type:

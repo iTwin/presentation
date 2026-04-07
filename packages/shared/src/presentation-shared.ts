@@ -8,7 +8,13 @@ import * as ECSql from "./shared/ecsql-snippets/index.js";
 export { ECSql };
 
 export { ConcatenatedValue, ConcatenatedValuePart } from "./shared/ConcatenatedValue.js";
-export type { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "./shared/ECSqlCore.js";
+export type {
+  ECSqlBinding,
+  ECSqlQueryDef,
+  ECSqlQueryExecutor,
+  ECSqlQueryReaderOptions,
+  ECSqlQueryRow,
+} from "./shared/ECSqlCore.js";
 export type { IPrimitiveValueFormatter } from "./shared/Formatting.js";
 export { createDefaultValueFormatter, formatConcatenatedValue } from "./shared/Formatting.js";
 export type { IInstanceLabelSelectClauseFactory } from "./shared/InstanceLabelSelectClauseFactory.js";

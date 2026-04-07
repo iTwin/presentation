@@ -83,4 +83,8 @@ export interface GenericErrorInfo {
  *
  * @public
  */
-export type ErrorInfo = GenericErrorInfo | ResultSetTooLargeErrorInfo | NoFilterMatchesErrorInfo | ChildrenLoadErrorInfo;
+export type ErrorInfo =
+  | GenericErrorInfo
+  | ResultSetTooLargeErrorInfo
+  | NoFilterMatchesErrorInfo
+  | ChildrenLoadErrorInfo;

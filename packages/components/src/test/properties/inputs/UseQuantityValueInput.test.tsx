@@ -16,9 +16,15 @@ import { render, waitFor } from "../../TestUtils.js";
 import type { FormattingUnitSystemChangedArgs } from "@itwin/core-frontend";
 import type { FormatterSpec, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import type { SchemaContext } from "@itwin/ecschema-metadata";
-import type { QuantityValue, UseQuantityValueInputProps } from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
+import type {
+  QuantityValue,
+  UseQuantityValueInputProps,
+} from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
 
-function TestInput({ onChange, ...restProps }: UseQuantityValueInputProps & { onChange?: (value: QuantityValue) => void }) {
+function TestInput({
+  onChange,
+  ...restProps
+}: UseQuantityValueInputProps & { onChange?: (value: QuantityValue) => void }) {
   const { quantityValue, inputProps } = useQuantityValueInput(restProps);
 
   useEffect(() => {
@@ -36,23 +42,19 @@ describe("UseQuantityValueInput", () => {
     unitConversions: [{ name: "test unit", label: "unit" }],
     format,
   };
-  const parserSpec = {
-    parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(),
-    format,
-  };
-  const quantityFormatter = {
-    onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-  };
+  const parserSpec = { parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(), format };
+  const quantityFormatter = { onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() };
 
-  const formatProvider = {
-    onFormatsChanged: new BeUiEvent<void>(),
-  };
+  const formatProvider = { onFormatsChanged: new BeUiEvent<void>() };
 
   let getFormatterSpecStub: sinon.SinonStub<
     Parameters<KoqPropertyValueFormatter["getFormatterSpec"]>,
     ReturnType<KoqPropertyValueFormatter["getFormatterSpec"]>
   >;
-  let getParserSpecStub: sinon.SinonStub<Parameters<KoqPropertyValueFormatter["getParserSpec"]>, ReturnType<KoqPropertyValueFormatter["getParserSpec"]>>;
+  let getParserSpecStub: sinon.SinonStub<
+    Parameters<KoqPropertyValueFormatter["getParserSpec"]>,
+    ReturnType<KoqPropertyValueFormatter["getParserSpec"]>
+  >;
 
   before(() => {
     getFormatterSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec");
@@ -93,7 +95,9 @@ describe("UseQuantityValueInput", () => {
   });
 
   it("renders with formatted initial raw value", async () => {
-    const { queryByDisplayValue } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />);
+    const { queryByDisplayValue } = render(
+      <TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />,
+    );
     await waitFor(() => expect(queryByDisplayValue("2.5 unit")).to.not.be.null);
   });
 
@@ -111,7 +115,9 @@ describe("UseQuantityValueInput", () => {
 
   it("parses entered value", async () => {
     const spy = sinon.stub<[QuantityValue], void>();
-    const { user, getByRole, queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" onChange={spy} />);
+    const { user, getByRole, queryByPlaceholderText } = render(
+      <TestInput schemaContext={schemaContext} koqName="testKOQ" onChange={spy} />,
+    );
     await waitFor(() => expect(queryByPlaceholderText("unit")).to.not.be.null);
 
     const input = getByRole("textbox");
@@ -153,10 +159,7 @@ describe("UseQuantityValueInput", () => {
   });
 
   it("sets precision to 12 for Decimal format types", async () => {
-    const decimalFormat = {
-      type: FormatType.Decimal,
-      precision: 6,
-    };
+    const decimalFormat = { type: FormatType.Decimal, precision: 6 };
     const decimalFormatterSpec = {
       applyFormatting: sinon.stub<[number], string>(),
       unitConversions: [{ name: "test unit", label: "unit" }],
@@ -174,10 +177,7 @@ describe("UseQuantityValueInput", () => {
   });
 
   it("does not set precision to 12 for Fractional format types", async () => {
-    const fractionalFormat = {
-      type: FormatType.Fractional,
-      precision: 6,
-    };
+    const fractionalFormat = { type: FormatType.Fractional, precision: 6 };
     const fractionalFormatterSpec = {
       applyFormatting: sinon.stub<[number], string>(),
       unitConversions: [{ name: "test unit", label: "unit" }],

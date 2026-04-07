@@ -9,7 +9,11 @@ import { KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { useColumns } from "../../presentation-components/table/UseColumns.js";
 import { createTestECInstanceKey, TestErrorBoundary } from "../_helpers/Common.js";
-import { createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content.js";
+import {
+  createTestContentDescriptor,
+  createTestNestedContentField,
+  createTestPropertiesContentField,
+} from "../_helpers/Content.js";
 import { render, renderHook, waitFor } from "../TestUtils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
@@ -35,7 +39,11 @@ describe("useColumns", () => {
   });
 
   it("loads columns", async () => {
-    const contentField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [] });
+    const contentField = createTestPropertiesContentField({
+      name: "first_field",
+      label: "First Field",
+      properties: [],
+    });
     presentationManager.getContentDescriptor.resolves(createTestContentDescriptor({ fields: [contentField] }));
 
     const { result } = renderHook((props) => useColumns(props), { initialProps });
@@ -43,42 +51,50 @@ describe("useColumns", () => {
     await waitFor(() =>
       expect(result.current)
         .to.have.lengthOf(1)
-        .and.containSubset([
-          {
-            name: contentField.name,
-            label: contentField.label,
-            field: contentField,
-          },
-        ]),
+        .and.containSubset([{ name: contentField.name, label: contentField.label, field: contentField }]),
     );
   });
 
   it("loads columns only for properties fields", async () => {
-    const propertyField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [] });
-    const nestedField = createTestPropertiesContentField({ name: "nested_field", label: "Nested Field", properties: [] });
-    const nestingField = createTestNestedContentField({ name: "nesting_field", label: "Nesting Field", nestedFields: [nestedField] });
-    presentationManager.getContentDescriptor.resolves(createTestContentDescriptor({ fields: [propertyField, nestingField] }));
+    const propertyField = createTestPropertiesContentField({
+      name: "first_field",
+      label: "First Field",
+      properties: [],
+    });
+    const nestedField = createTestPropertiesContentField({
+      name: "nested_field",
+      label: "Nested Field",
+      properties: [],
+    });
+    const nestingField = createTestNestedContentField({
+      name: "nesting_field",
+      label: "Nesting Field",
+      nestedFields: [nestedField],
+    });
+    presentationManager.getContentDescriptor.resolves(
+      createTestContentDescriptor({ fields: [propertyField, nestingField] }),
+    );
 
     const { result } = renderHook((props) => useColumns(props), { initialProps });
 
     await waitFor(() =>
       expect(result.current)
         .to.have.lengthOf(1)
-        .and.containSubset([
-          {
-            name: propertyField.name,
-            label: propertyField.label,
-            field: propertyField,
-          },
-        ]),
+        .and.containSubset([{ name: propertyField.name, label: propertyField.label, field: propertyField }]),
     );
   });
 
   it("returns empty column list if no keys provided", async () => {
-    const propertyField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [] });
+    const propertyField = createTestPropertiesContentField({
+      name: "first_field",
+      label: "First Field",
+      properties: [],
+    });
     presentationManager.getContentDescriptor.resolves(createTestContentDescriptor({ fields: [propertyField] }));
 
-    const { result } = renderHook((props) => useColumns(props), { initialProps: { ...initialProps, keys: new KeySet() } });
+    const { result } = renderHook((props) => useColumns(props), {
+      initialProps: { ...initialProps, keys: new KeySet() },
+    });
 
     await waitFor(() => expect(result.current).to.have.lengthOf(0));
   });

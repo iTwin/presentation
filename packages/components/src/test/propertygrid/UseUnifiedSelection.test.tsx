@@ -31,9 +31,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       setKeysSpy(newKeys);
     },
     rulesetId: "test_ruleset_id",
-    imodel: {
-      key: imodelKey,
-    } as IModelConnection,
+    imodel: { key: imodelKey } as IModelConnection,
   };
 
   beforeEach(() => {
@@ -47,7 +45,11 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
   describe("with deprecated SelectionHandler", () => {
     let selectionHandler: sinon.SinonStubbedInstance<SelectionHandler>;
     function SelectionHandlerWrapper({ children }: PropsWithChildren) {
-      return <SelectionHandlerContextProvider selectionHandler={selectionHandler}>{children}</SelectionHandlerContextProvider>;
+      return (
+        <SelectionHandlerContextProvider selectionHandler={selectionHandler}>
+          {children}
+        </SelectionHandlerContextProvider>
+      );
     }
 
     beforeEach(() => {
@@ -227,7 +229,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         expect(result.current).to.not.be.undefined;
         expect(result.current.isOverLimit).to.be.false;
         expect(result.current.numSelectedElements).to.be.equal(2);
-        expect(setKeysSpy).to.be.calledWith(sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances), keys)));
+        expect(setKeysSpy).to.be.calledWith(
+          sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances), keys)),
+        );
       });
     });
 
@@ -256,7 +260,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         initialProps: { selectionStorage, dataProvider: getProvider() },
       });
       await waitFor(async () => {
-        expect(setKeysSpy).to.be.calledWith(sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances1), keys)));
+        expect(setKeysSpy).to.be.calledWith(
+          sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances1), keys)),
+        );
         expect(result.current).to.not.be.undefined;
         expect(result.current.isOverLimit).to.be.false;
         expect(result.current.numSelectedElements).to.be.equal(2);
@@ -266,7 +272,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         selectionStorage.replaceSelection({ imodelKey, source: "test", selectables: selectedInstances2 });
       });
       await waitFor(async () => {
-        expect(setKeysSpy).to.be.calledWith(sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances2), keys)));
+        expect(setKeysSpy).to.be.calledWith(
+          sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances2), keys)),
+        );
       });
     });
   });

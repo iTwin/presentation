@@ -82,11 +82,7 @@ describe("Helpers", () => {
 
     before(async () => {
       rimrafSyncStub = sinon.stub();
-      mock.module("rimraf", {
-        namedExports: {
-          sync: rimrafSyncStub,
-        },
-      });
+      mock.module("rimraf", { namedExports: { sync: rimrafSyncStub } });
       const helpers = await import("../presentation-testing/Helpers.js");
       initialize = helpers.initialize;
       terminate = helpers.terminate;
@@ -123,8 +119,10 @@ describe("Helpers", () => {
 
     it("clears cache directory when PresentationBackend has DiskHierarchyCacheConfig in initProps", async () => {
       const testDirectory = "/test/directory/";
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      sinon.stub(PresentationBackend, "initProps").get(() => ({ caching: { hierarchies: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } }));
+      sinon
+        .stub(PresentationBackend, "initProps")
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        .get(() => ({ caching: { hierarchies: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } }));
       await initialize();
 
       await terminate();
@@ -134,8 +132,14 @@ describe("Helpers", () => {
     it("clears cache directory when PresentationBackend has HybridCacheConfig in initProps", async () => {
       const testDirectory = "/test/directory/";
       sinon.stub(PresentationBackend, "initProps").get(() => ({
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        caching: { hierarchies: { mode: HierarchyCacheMode.Hybrid, disk: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } },
+        caching: {
+          hierarchies: {
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
+            mode: HierarchyCacheMode.Hybrid,
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
+            disk: { mode: HierarchyCacheMode.Disk, directory: testDirectory },
+          },
+        },
       }));
       await initialize();
 

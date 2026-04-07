@@ -243,10 +243,7 @@ describe("HierarchyNode", () => {
 
     it("counts generic parent keys as non-grouping", () => {
       expect(
-        HierarchyNode.getGroupingNodeLevel({
-          key: classGroupingNode.key,
-          parentKeys: [{ type: "generic", id: "x" }],
-        }),
+        HierarchyNode.getGroupingNodeLevel({ key: classGroupingNode.key, parentKeys: [{ type: "generic", id: "x" }] }),
       ).to.eq(1);
     });
 

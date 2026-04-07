@@ -15,7 +15,11 @@ import { TreeNode } from "@itwin/core-react";
 import { SvgCloseSmall, SvgFilter, SvgFilterHollow } from "@itwin/itwinui-icons-react";
 import { Anchor, ButtonGroup, IconButton, Text } from "@itwin/itwinui-react";
 import { translate } from "../../common/Utils.js";
-import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, isPresentationTreeNodeItem } from "../PresentationTreeNodeItem.js";
+import {
+  InfoTreeNodeItemType,
+  isPresentationInfoTreeNodeItem,
+  isPresentationTreeNodeItem,
+} from "../PresentationTreeNodeItem.js";
 
 import type { TreeNodeRendererProps } from "@itwin/components-react";
 
@@ -78,7 +82,8 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
 
   if (isPresentationTreeNodeItem(nodeItem)) {
     // hide filtering buttons if filtering is disabled explicitly or node is not filtered and has no children
-    const filteringDisabled = nodeItem.filtering === undefined || (nodeItem.filtering.active === undefined && props.node.numChildren === 0);
+    const filteringDisabled =
+      nodeItem.filtering === undefined || (nodeItem.filtering.active === undefined && props.node.numChildren === 0);
     return (
       <TreeNodeRenderer {...restProps} className={classnames("presentation-components-node", restProps.className)}>
         <PresentationTreeNodeActions

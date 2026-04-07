@@ -26,16 +26,12 @@ describe("shareReplayWithErrors", () => {
     const shared = source.pipe(shareReplayWithErrors());
 
     const errorListener1 = sinon.spy();
-    shared.subscribe({
-      error: errorListener1,
-    });
+    shared.subscribe({ error: errorListener1 });
     expect(impl).to.be.calledOnce;
     expect(errorListener1).to.be.calledOnce;
 
     const errorListener2 = sinon.spy();
-    shared.subscribe({
-      error: errorListener2,
-    });
+    shared.subscribe({ error: errorListener2 });
     expect(impl).to.be.calledOnce;
     expect(errorListener2).to.be.calledOnce;
   });

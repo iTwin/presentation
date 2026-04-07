@@ -12,7 +12,11 @@ import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
-import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationBackendNativeLoggerCategory } from "@itwin/presentation-backend";
+import {
+  HierarchyCacheMode,
+  Presentation as PresentationBackend,
+  PresentationBackendNativeLoggerCategory,
+} from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { initialize as initializePresentation, terminate as terminatePresentation } from "@itwin/presentation-testing";
 
@@ -47,15 +51,9 @@ export async function initialize(props?: { backendTimeout?: number }) {
       },
     },
   };
-  const frontendInitProps: PresentationFrontendProps = {
-    presentation: {
-      activeLocale: "en-PSEUDO",
-    },
-  };
+  const frontendInitProps: PresentationFrontendProps = { presentation: { activeLocale: "en-PSEUDO" } };
 
-  const frontendAppOptions: IModelAppOptions = {
-    localization: createTestLocalization(),
-  };
+  const frontendAppOptions: IModelAppOptions = { localization: createTestLocalization() };
 
   const presentationTestingInitProps: PresentationTestingInitProps = {
     rpcs: [IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
@@ -85,9 +83,7 @@ export async function resetBackend() {
 function createTestLocalization(): ITwinLocalization {
   return new ITwinLocalization({
     urlTemplate: `file://${path.join(path.resolve("lib/public/locales"), "{{lng}}/{{ns}}.json").replace(/\\/g, "/")}`,
-    initOptions: {
-      preload: ["test"],
-    },
+    initOptions: { preload: ["test"] },
     backendHttpOptions: {
       request: (options, url, payload, callback) => {
         /**

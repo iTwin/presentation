@@ -14,7 +14,10 @@ import {
 import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 
 import type { TreeNodeItem } from "@itwin/components-react";
-import type { PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "../../presentation-components/tree/PresentationTreeNodeItem.js";
+import type {
+  PresentationInfoTreeNodeItem,
+  PresentationTreeNodeItem,
+} from "../../presentation-components/tree/PresentationTreeNodeItem.js";
 
 describe("isPresentationTreeNodeItem", () => {
   it("returns correct values", () => {
@@ -23,10 +26,7 @@ describe("isPresentationTreeNodeItem", () => {
       key: createTestECInstancesNodeKey(),
       label: PropertyRecord.fromString("Presentation Item"),
     };
-    const simpleItem: TreeNodeItem = {
-      id: "simple_item_id",
-      label: PropertyRecord.fromString("Simple Item"),
-    };
+    const simpleItem: TreeNodeItem = { id: "simple_item_id", label: PropertyRecord.fromString("Simple Item") };
     expect(isPresentationTreeNodeItem(presentationItem)).to.be.true;
     expect(isPresentationTreeNodeItem(simpleItem)).to.be.false;
   });
@@ -47,10 +47,7 @@ describe("isPresentationInfoTreeNodeItem", () => {
       key: createTestECInstancesNodeKey(),
       label: PropertyRecord.fromString("Presentation Item"),
     };
-    const simpleItem: TreeNodeItem = {
-      id: "simple_item_id",
-      label: PropertyRecord.fromString("Simple Item"),
-    };
+    const simpleItem: TreeNodeItem = { id: "simple_item_id", label: PropertyRecord.fromString("Simple Item") };
     expect(isPresentationInfoTreeNodeItem(presentationInfoItem)).to.be.true;
     expect(isPresentationInfoTreeNodeItem(presentationItem)).to.be.false;
     expect(isPresentationInfoTreeNodeItem(simpleItem)).to.be.false;

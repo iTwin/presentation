@@ -41,7 +41,13 @@ export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProp
       ongoingSubscriptions.current.get(nodeId)!.unsubscribe();
       ongoingSubscriptions.current.delete(nodeId);
     }
-    const subscription = applyHierarchyLevelFilter(nodeLoader, modelSource, nodeId, () => ongoingSubscriptions.current.delete(nodeId), info);
+    const subscription = applyHierarchyLevelFilter(
+      nodeLoader,
+      modelSource,
+      nodeId,
+      () => ongoingSubscriptions.current.delete(nodeId),
+      info,
+    );
     if (subscription) {
       ongoingSubscriptions.current.set(nodeId, subscription);
     }
@@ -62,7 +68,12 @@ function applyHierarchyLevelFilter(
 ) {
   modelSource.modifyModel((model) => {
     const modelNode = model.getNode(nodeId);
-    if (!modelNode || !isTreeModelNode(modelNode) || !isPresentationTreeNodeItem(modelNode.item) || !modelNode.item.filtering) {
+    if (
+      !modelNode ||
+      !isTreeModelNode(modelNode) ||
+      !isPresentationTreeNodeItem(modelNode.item) ||
+      !modelNode.item.filtering
+    ) {
       return;
     }
 
@@ -78,5 +89,7 @@ function applyHierarchyLevelFilter(
   if (updatedNode === undefined || !updatedNode.isExpanded || updatedNode.numChildren !== undefined) {
     return;
   }
-  return nodeLoader.loadNode(updatedNode, 0).subscribe({ complete: () => onComplete(nodeId), error: () => onComplete(nodeId) });
+  return nodeLoader
+    .loadNode(updatedNode, 0)
+    .subscribe({ complete: () => onComplete(nodeId), error: () => onComplete(nodeId) });
 }

@@ -19,10 +19,7 @@ export interface UseTableOptionsProps {
 
 /** @internal */
 export interface TableOptions {
-  sorting?: {
-    field: FieldDescriptor;
-    direction: SortDirection;
-  };
+  sorting?: { field: FieldDescriptor; direction: SortDirection };
   fieldsFilterExpression?: string;
 }
 

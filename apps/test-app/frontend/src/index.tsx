@@ -15,7 +15,11 @@ import { ElectronApp } from "@itwin/core-electron/lib/cjs/ElectronFrontend";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 // __PUBLISH_EXTRACT_START__ Presentation.Frontend.Imports
-import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, Presentation } from "@itwin/presentation-frontend";
+import {
+  createFavoritePropertiesStorage,
+  DefaultFavoritePropertiesStorageTypes,
+  Presentation,
+} from "@itwin/presentation-frontend";
 // __PUBLISH_EXTRACT_END__
 import { LOCALIZATION_NAMESPACES } from "@itwin/presentation-hierarchies-react";
 import { rpcInterfaces } from "@test-app/common";
@@ -29,11 +33,7 @@ Logger.initializeToConsole();
 Logger.setLevelDefault(LogLevel.Warning);
 
 async function initializeApp() {
-  const iModelAppOpts: IModelAppOptions = {
-    localization: new ITwinLocalization({
-      initOptions: { lng: "en" },
-    }),
-  };
+  const iModelAppOpts: IModelAppOptions = { localization: new ITwinLocalization({ initOptions: { lng: "en" } }) };
 
   if (ProcessDetector.isElectronAppFrontend) {
     await ElectronApp.startup({

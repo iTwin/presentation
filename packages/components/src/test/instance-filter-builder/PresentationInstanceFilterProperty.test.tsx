@@ -58,7 +58,10 @@ describe("PresentationInstanceFilterProperty", () => {
       className: `${schemaName}:${className}`,
     });
     const { container, queryByTitle } = render(
-      <PresentationInstanceFilterProperty propertyDescription={testPropertyInfo.propertyDescription} fullClassName={testPropertyInfo.className} />,
+      <PresentationInstanceFilterProperty
+        propertyDescription={testPropertyInfo.propertyDescription}
+        fullClassName={testPropertyInfo.className}
+      />,
     );
 
     expect(queryByTitle(testPropertyInfo.propertyDescription.displayLabel)).to.not.be.null;
