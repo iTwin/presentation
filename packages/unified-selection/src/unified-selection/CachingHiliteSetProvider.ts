@@ -67,7 +67,9 @@ export interface CachingHiliteSetProvider {
  * @deprecated in 1.5. Use `createIModelHiliteSetProvider` instead.
  */
 /* c8 ignore start */
-export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider & { [Symbol.dispose]: () => void } {
+export function createCachingHiliteSetProvider(
+  props: CachingHiliteSetProviderProps,
+): CachingHiliteSetProvider & { [Symbol.dispose]: () => void } {
   const provider = createIModelHiliteSetProvider(props);
   return {
     getHiliteSet: (hiliteSetProps: { imodelKey: string }) => provider.getCurrentHiliteSet(hiliteSetProps),

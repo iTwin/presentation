@@ -101,11 +101,7 @@ function runHiliteTest(
     },
     test: async (props) => {
       const iterator = props.provider.getHiliteSet({ selectables: props.selection });
-      const counts = {
-        elements: 0,
-        subCategories: 0,
-        models: 0,
-      };
+      const counts = { elements: 0, subCategories: 0, models: 0 };
 
       for await (const set of iterator) {
         counts.elements += set.elements.length;

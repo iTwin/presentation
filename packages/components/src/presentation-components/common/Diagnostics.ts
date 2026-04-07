@@ -8,7 +8,12 @@
 
 import { createCombinedDiagnosticsHandler } from "@itwin/presentation-frontend";
 
-import type { ClientDiagnosticsHandler, ClientDiagnosticsOptions, DiagnosticsLoggerSeverity, DiagnosticsOptions } from "@itwin/presentation-common";
+import type {
+  ClientDiagnosticsHandler,
+  ClientDiagnosticsOptions,
+  DiagnosticsLoggerSeverity,
+  DiagnosticsOptions,
+} from "@itwin/presentation-common";
 
 /**
  * Settings for capturing diagnostics data.

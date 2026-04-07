@@ -29,7 +29,10 @@ import { createBisInstanceLabelSelectClauseFactory, EC } from "@itwin/presentati
 // Each version of the iModel already has an open `IModelConnection`. Create iModel access objects for
 // both versions - `base` and `changeset1`. The order is important - we want the changesets to be from oldest to
 // newest.
-const imodels = [{ imodelAccess: createIModelAccess(changesets.base.imodel) }, { imodelAccess: createIModelAccess(changesets.changeset1.imodel) }];
+const imodels = [
+  { imodelAccess: createIModelAccess(changesets.base.imodel) },
+  { imodelAccess: createIModelAccess(changesets.changeset1.imodel) },
+];
 
 // Define an utility for creating instance nodes query definitions, that we'll use in our hierarchy definition.
 async function createInstanceNodesQueryDefinition({
@@ -54,7 +57,9 @@ async function createInstanceNodesQueryDefinition({
         SELECT ${await queryClauseFactory.createSelectClause({
           ecClassId: { selector: "this.ECClassId" },
           ecInstanceId: { selector: "this.ECInstanceId" },
-          nodeLabel: { selector: await labelsFactory.createSelectClause({ classAlias: "this", className: fullClassName }) },
+          nodeLabel: {
+            selector: await labelsFactory.createSelectClause({ classAlias: "this", className: fullClassName }),
+          },
         })}
         FROM ${fullClassName} AS this
         ${whereClause ? `WHERE ${whereClause}` : ""}
@@ -70,7 +75,9 @@ const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
   // ensures we can find all classes even if they were not present in the base iModel
   classHierarchyInspector: imodels[imodels.length - 1].imodelAccess,
   hierarchy: {
-    rootNodes: async ({ imodelAccess }) => [await createInstanceNodesQueryDefinition({ imodelAccess, fullClassName: "BisCore.PhysicalModel" })],
+    rootNodes: async ({ imodelAccess }) => [
+      await createInstanceNodesQueryDefinition({ imodelAccess, fullClassName: "BisCore.PhysicalModel" }),
+    ],
     childNodes: [
       {
         parentInstancesNodePredicate: "BisCore.PhysicalModel",
@@ -96,12 +103,7 @@ The above hierarchy definition creates the following hierarchy for each of the i
 
 ```ts
 // The first iModel version has 3 elements in "Model 1". The resulting hierarchy:
-[
-  {
-    label: "Model 1",
-    children: [{ label: "Element 1" }, { label: "Element 2" }, { label: "Element 3" }],
-  },
-],
+[{ label: "Model 1", children: [{ label: "Element 1" }, { label: "Element 2" }, { label: "Element 3" }] }],
 
 // The second iModel version has the following changes:
 // - "Element 2" was deleted
@@ -115,10 +117,7 @@ The above hierarchy definition creates the following hierarchy for each of the i
     label: "Model 1",
     children: [{ label: "Element 1" }, { label: "Element 4" }, { label: "Updated element 3" }],
   },
-  {
-    label: "Model 2",
-    children: [{ label: "Element 5" }],
-  },
+  { label: "Model 2", children: [{ label: "Element 5" }] },
 ],
 ```
 
@@ -130,10 +129,7 @@ To merge the hierarchies, we create a hierarchy provider using `createMergedIMod
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-const mergedHierarchyProvider = createMergedIModelHierarchyProvider({
-  imodels,
-  hierarchyDefinition,
-});
+const mergedHierarchyProvider = createMergedIModelHierarchyProvider({ imodels, hierarchyDefinition });
 ```
 
 <!-- END EXTRACTION -->
@@ -161,10 +157,7 @@ The resulting merged hierarchy looks like this:
     ],
   },
   // "Model 2" and its "Element 5" come from the 2nd iModel version
-  {
-    label: "Model 2",
-    children: [{ label: "Element 5" }],
-  },
+  { label: "Model 2", children: [{ label: "Element 5" }] },
 ],
 ```
 

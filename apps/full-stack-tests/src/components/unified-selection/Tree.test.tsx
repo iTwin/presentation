@@ -5,12 +5,20 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 import { expect } from "chai";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { useCallback, useState } from "react";
 import { SelectionMode, UiComponents } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
 import { KeySet, RuleTypes } from "@itwin/presentation-common";
-import { PresentationTree, UnifiedSelectionTreeEventHandler, usePresentationTreeState } from "@itwin/presentation-components";
+import {
+  PresentationTree,
+  UnifiedSelectionTreeEventHandler,
+  usePresentationTreeState,
+} from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -43,7 +51,8 @@ describe("Learning snippets", async () => {
           pagingSize: 10,
           // create a tree events handler that synchronizes tree nodes' selection with unified selection
           eventHandlerFactory: useCallback(
-            (eventHandlerProps: PresentationTreeEventHandlerProps) => new UnifiedSelectionTreeEventHandler({ nodeLoader: eventHandlerProps.nodeLoader }),
+            (eventHandlerProps: PresentationTreeEventHandlerProps) =>
+              new UnifiedSelectionTreeEventHandler({ nodeLoader: eventHandlerProps.nodeLoader }),
             [],
           ),
         });
@@ -66,7 +75,13 @@ describe("Learning snippets", async () => {
       const imodel = await buildTestIModel(this, async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
-        elementKey = insertPhysicalElement({ builder, fullClassNameSeparator: ":", userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });
+        elementKey = insertPhysicalElement({
+          builder,
+          fullClassNameSeparator: ":",
+          userLabel: "My Element",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+        });
       });
 
       // render the component
@@ -132,10 +147,7 @@ const ruleset: Ruleset = {
         {
           specType: "RelatedInstanceNodes",
           relationshipPaths: [
-            {
-              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-              direction: "Forward",
-            },
+            { relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" },
           ],
           groupByClass: false,
           groupByLabel: false,

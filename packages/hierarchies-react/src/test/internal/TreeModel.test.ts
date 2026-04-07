@@ -20,18 +20,9 @@ describe("TreeModel", () => {
   describe("expandNode", () => {
     it("expands node", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1", "root-2"],
-        },
-        {
-          id: "root-1",
-          isExpanded: false,
-        },
-        {
-          id: "root-2",
-          isExpanded: false,
-        },
+        { id: undefined, children: ["root-1", "root-2"] },
+        { id: "root-1", isExpanded: false },
+        { id: "root-2", isExpanded: false },
       ]);
 
       expect(getHierarchyNode(model, "root-1")!.isExpanded).to.be.false;
@@ -45,18 +36,9 @@ describe("TreeModel", () => {
 
     it("collapses node", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1", "root-2"],
-        },
-        {
-          id: "root-1",
-          isExpanded: true,
-        },
-        {
-          id: "root-2",
-          isExpanded: true,
-        },
+        { id: undefined, children: ["root-1", "root-2"] },
+        { id: "root-1", isExpanded: true },
+        { id: "root-2", isExpanded: true },
       ]);
 
       expect(getHierarchyNode(model, "root-1")!.isExpanded).to.be.true;
@@ -70,15 +52,8 @@ describe("TreeModel", () => {
 
     it("returns `loadChildren` if expanded node has unloaded children", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1", "root-2"],
-        },
-        {
-          id: "root-1",
-          isExpanded: false,
-          children: undefined,
-        },
+        { id: undefined, children: ["root-1", "root-2"] },
+        { id: "root-1", isExpanded: false, children: undefined },
       ]);
 
       expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("loadChildren");
@@ -87,15 +62,8 @@ describe("TreeModel", () => {
 
     it("returns `none` if expanded node has loaded children", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1", "root-2"],
-        },
-        {
-          id: "root-1",
-          isExpanded: false,
-          children: ["child-1", "child-2"],
-        },
+        { id: undefined, children: ["root-1", "root-2"] },
+        { id: "root-1", isExpanded: false, children: ["child-1", "child-2"] },
       ]);
 
       expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("none");
@@ -103,15 +71,8 @@ describe("TreeModel", () => {
 
     it("returns `none` if expanded node has no children", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1", "root-2"],
-        },
-        {
-          id: "root-1",
-          isExpanded: false,
-          children: [],
-        },
+        { id: undefined, children: ["root-1", "root-2"] },
+        { id: "root-1", isExpanded: false, children: [] },
       ]);
 
       expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("none");
@@ -119,16 +80,8 @@ describe("TreeModel", () => {
 
     it("returns `reloadChildren` and removes child `ChildrenLoad` error info node when expanding node", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1", "root-2"],
-        },
-        {
-          id: "root-1",
-          isExpanded: false,
-          children: [],
-          error: createTestChildrenLoadErrorInfo({ id: "info-1" }),
-        },
+        { id: undefined, children: ["root-1", "root-2"] },
+        { id: "root-1", isExpanded: false, children: [], error: createTestChildrenLoadErrorInfo({ id: "info-1" }) },
       ]);
 
       expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("reloadChildren");
@@ -138,16 +91,8 @@ describe("TreeModel", () => {
 
     it("returns `none` and does not remove child info node when expanding node", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1", "root-2"],
-        },
-        {
-          id: "root-1",
-          isExpanded: false,
-          children: [],
-          error: createTestNoFilterMatchesErrorInfo({ id: "info-1" }),
-        },
+        { id: undefined, children: ["root-1", "root-2"] },
+        { id: "root-1", isExpanded: false, children: [], error: createTestNoFilterMatchesErrorInfo({ id: "info-1" }) },
       ]);
 
       expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("none");
@@ -156,14 +101,8 @@ describe("TreeModel", () => {
 
     it("does nothing if node does not exist", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          isExpanded: true,
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", isExpanded: true },
       ]);
 
       TreeModel.expandNode(model, "invalid", false);
@@ -174,21 +113,10 @@ describe("TreeModel", () => {
   describe("removeSubTree", () => {
     it("removes child level", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          children: ["child-1", "child-2"],
-        },
-        {
-          id: "child-1",
-          children: ["child-1-1"],
-        },
-        {
-          id: "child-2",
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", children: ["child-1", "child-2"] },
+        { id: "child-1", children: ["child-1-1"] },
+        { id: "child-2" },
       ]);
 
       expect(getHierarchyNode(model, "child-1")).to.not.be.undefined;
@@ -203,31 +131,13 @@ describe("TreeModel", () => {
 
     it("removes child and grandchild levels", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          children: ["child-1", "child-2"],
-        },
-        {
-          id: "child-1",
-          children: ["child-1-1", "child-1-2"],
-        },
-        {
-          id: "child-2",
-          children: ["child-2-1"],
-        },
-        {
-          id: "child-1-1",
-        },
-        {
-          id: "child-1-2",
-        },
-        {
-          id: "child-2-1",
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", children: ["child-1", "child-2"] },
+        { id: "child-1", children: ["child-1-1", "child-1-2"] },
+        { id: "child-2", children: ["child-2-1"] },
+        { id: "child-1-1" },
+        { id: "child-1-2" },
+        { id: "child-2-1" },
       ]);
 
       expect(getHierarchyNode(model, "child-1")).to.not.be.undefined;
@@ -248,20 +158,10 @@ describe("TreeModel", () => {
 
     it("removes all levels", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          children: ["child-1", "child-2"],
-        },
-        {
-          id: "child-1",
-        },
-        {
-          id: "child-2",
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", children: ["child-1", "child-2"] },
+        { id: "child-1" },
+        { id: "child-2" },
       ]);
 
       expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
@@ -280,22 +180,10 @@ describe("TreeModel", () => {
     it("adds hierarchy part to empty model", () => {
       const model = createTreeModel([]);
       const hierarchyPart = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1", "root-2"],
-        },
-        {
-          id: "root-1",
-          children: ["child-1"],
-        },
-        {
-          id: "root-2",
-          children: [],
-        },
-        {
-          id: "child-1",
-          children: undefined,
-        },
+        { id: undefined, children: ["root-1", "root-2"] },
+        { id: "root-1", children: ["child-1"] },
+        { id: "root-2", children: [] },
+        { id: "child-1", children: undefined },
       ]);
 
       TreeModel.addHierarchyPart(model, undefined, hierarchyPart);
@@ -307,31 +195,14 @@ describe("TreeModel", () => {
 
     it("adds hierarchy part at specific level", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1", "root-2"],
-        },
-        {
-          id: "root-1",
-          children: ["child-1"],
-        },
-        {
-          id: "root-2",
-          children: [],
-        },
-        {
-          id: "child-1",
-        },
+        { id: undefined, children: ["root-1", "root-2"] },
+        { id: "root-1", children: ["child-1"] },
+        { id: "root-2", children: [] },
+        { id: "child-1" },
       ]);
       const hierarchyPart = createTreeModel([
-        {
-          id: "root-2",
-          children: ["child-2"],
-        },
-        {
-          id: "child-2",
-          children: undefined,
-        },
+        { id: "root-2", children: ["child-2"] },
+        { id: "child-2", children: undefined },
       ]);
 
       expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
@@ -349,27 +220,11 @@ describe("TreeModel", () => {
 
     it("overrides existing hierarchy part", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          children: ["child-1"],
-        },
-        {
-          id: "child-1",
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", children: ["child-1"] },
+        { id: "child-1" },
       ]);
-      const hierarchyPart = createTreeModel([
-        {
-          id: "root-1",
-          children: ["child-2"],
-        },
-        {
-          id: "child-2",
-        },
-      ]);
+      const hierarchyPart = createTreeModel([{ id: "root-1", children: ["child-2"] }, { id: "child-2" }]);
 
       expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
       expect(getHierarchyNode(model, "child-1")).to.not.be.undefined;
@@ -384,25 +239,10 @@ describe("TreeModel", () => {
 
     it("sets `isLoading` = `false` for root of added hierarchy", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          children: undefined,
-          isLoading: true,
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", children: undefined, isLoading: true },
       ]);
-      const hierarchyPart = createTreeModel([
-        {
-          id: "root-1",
-          children: ["child-1"],
-        },
-        {
-          id: "child-1",
-        },
-      ]);
+      const hierarchyPart = createTreeModel([{ id: "root-1", children: ["child-1"] }, { id: "child-1" }]);
 
       expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
       expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.true;
@@ -427,15 +267,7 @@ describe("TreeModel", () => {
     });
 
     it("sets limit on specified node", () => {
-      const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-        },
-      ]);
+      const model = createTreeModel([{ id: undefined, children: ["root-1"] }, { id: "root-1" }]);
 
       expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).to.be.undefined;
 
@@ -444,15 +276,7 @@ describe("TreeModel", () => {
     });
 
     it("sets `unbounded` limit", () => {
-      const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-        },
-      ]);
+      const model = createTreeModel([{ id: undefined, children: ["root-1"] }, { id: "root-1" }]);
 
       expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).to.be.undefined;
 
@@ -462,14 +286,8 @@ describe("TreeModel", () => {
 
     it("removes limit", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          hierarchyLimit: 100,
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", hierarchyLimit: 100 },
       ]);
 
       expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).to.be.eq(100);
@@ -480,15 +298,8 @@ describe("TreeModel", () => {
 
     it("sets `isLoading` = `true` when new limit is set on expanded node", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          isExpanded: true,
-          isLoading: false,
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", isExpanded: true, isLoading: false },
       ]);
 
       expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).to.be.undefined;
@@ -501,21 +312,10 @@ describe("TreeModel", () => {
 
     it("removes subtree when limit is set", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          children: ["child-1"],
-        },
-        {
-          id: "child-1",
-          children: ["child-1-1"],
-        },
-        {
-          id: "child-1-1",
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", children: ["child-1"] },
+        { id: "child-1", children: ["child-1-1"] },
+        { id: "child-1-1" },
       ]);
 
       expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
@@ -530,14 +330,8 @@ describe("TreeModel", () => {
 
     it("does nothing if node does not exist", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          hierarchyLimit: undefined,
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", hierarchyLimit: undefined },
       ]);
 
       TreeModel.setHierarchyLimit(model, "invalid", 100);
@@ -546,7 +340,11 @@ describe("TreeModel", () => {
   });
 
   describe("setInstanceFilter", () => {
-    const filter: GenericInstanceFilter = { rules: { operator: "and", rules: [] }, propertyClassNames: [], relatedInstances: [] };
+    const filter: GenericInstanceFilter = {
+      rules: { operator: "and", rules: [] },
+      propertyClassNames: [],
+      relatedInstances: [],
+    };
 
     it("sets filter on tree root", () => {
       const model = createTreeModel([]);
@@ -558,15 +356,7 @@ describe("TreeModel", () => {
     });
 
     it("sets filter on specified node", () => {
-      const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-        },
-      ]);
+      const model = createTreeModel([{ id: undefined, children: ["root-1"] }, { id: "root-1" }]);
 
       expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.undefined;
 
@@ -576,14 +366,8 @@ describe("TreeModel", () => {
 
     it("removes filter", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          instanceFilter: filter,
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", instanceFilter: filter },
       ]);
 
       expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.eq(filter);
@@ -594,15 +378,8 @@ describe("TreeModel", () => {
 
     it("does not set `isExpanded` = `true` when filter is cleared", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          isExpanded: false,
-          instanceFilter: filter,
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", isExpanded: false, instanceFilter: filter },
       ]);
 
       expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.not.be.undefined;
@@ -615,14 +392,8 @@ describe("TreeModel", () => {
 
     it("sets `isExpanded` = `true` when filter is set", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          isExpanded: false,
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", isExpanded: false },
       ]);
 
       expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.undefined;
@@ -635,15 +406,8 @@ describe("TreeModel", () => {
 
     it("sets `isLoading` = `true` when new filter is set on expanded node", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          isExpanded: true,
-          isLoading: false,
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", isExpanded: true, isLoading: false },
       ]);
 
       expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.undefined;
@@ -656,21 +420,10 @@ describe("TreeModel", () => {
 
     it("removes subtree when filter is set", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          children: ["child-1"],
-        },
-        {
-          id: "child-1",
-          children: ["child-1-1"],
-        },
-        {
-          id: "child-1-1",
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", children: ["child-1"] },
+        { id: "child-1", children: ["child-1-1"] },
+        { id: "child-1-1" },
       ]);
 
       expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
@@ -686,14 +439,8 @@ describe("TreeModel", () => {
 
     it("does nothing if node does not exist", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          instanceFilter: undefined,
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", instanceFilter: undefined },
       ]);
 
       TreeModel.setInstanceFilter(model, "invalid", filter);
@@ -704,18 +451,9 @@ describe("TreeModel", () => {
   describe("selectNodes", () => {
     it("selects node", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          isSelected: false,
-        },
-        {
-          id: "root-2",
-          isSelected: false,
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", isSelected: false },
+        { id: "root-2", isSelected: false },
       ]);
 
       TreeModel.selectNodes(model, ["root-1"], "add");
@@ -725,18 +463,9 @@ describe("TreeModel", () => {
 
     it("deselects node", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1", "root-2"],
-        },
-        {
-          id: "root-1",
-          isSelected: true,
-        },
-        {
-          id: "root-2",
-          isSelected: true,
-        },
+        { id: undefined, children: ["root-1", "root-2"] },
+        { id: "root-1", isSelected: true },
+        { id: "root-2", isSelected: true },
       ]);
 
       TreeModel.selectNodes(model, ["root-1"], "remove");
@@ -746,22 +475,10 @@ describe("TreeModel", () => {
 
     it("replaces selected nodes", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1", "root-2", "root-3", "root-4"],
-        },
-        {
-          id: "root-1",
-          isSelected: true,
-        },
-        {
-          id: "root-2",
-          isSelected: true,
-        },
-        {
-          id: "root-3",
-          isSelected: false,
-        },
+        { id: undefined, children: ["root-1", "root-2", "root-3", "root-4"] },
+        { id: "root-1", isSelected: true },
+        { id: "root-2", isSelected: true },
+        { id: "root-3", isSelected: false },
       ]);
 
       TreeModel.selectNodes(model, ["root-2", "root-3"], "replace");
@@ -772,14 +489,8 @@ describe("TreeModel", () => {
 
     it("does nothing if node does not exist", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          isSelected: true,
-        },
+        { id: undefined, children: ["root-1"] },
+        { id: "root-1", isSelected: true },
       ]);
 
       TreeModel.selectNodes(model, ["invalid"], "remove");
@@ -790,18 +501,9 @@ describe("TreeModel", () => {
   describe("isNodeSelected", () => {
     it("returns correct results", () => {
       const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1", "root-2"],
-        },
-        {
-          id: "root-1",
-          isSelected: false,
-        },
-        {
-          id: "root-2",
-          isSelected: true,
-        },
+        { id: undefined, children: ["root-1", "root-2"] },
+        { id: "root-1", isSelected: false },
+        { id: "root-2", isSelected: true },
       ]);
 
       expect(TreeModel.isNodeSelected(model, "root-1")).to.be.false;
@@ -811,29 +513,13 @@ describe("TreeModel", () => {
 
   describe("getNode", () => {
     it("returns tree root", () => {
-      const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-        },
-      ]);
+      const model = createTreeModel([{ id: undefined, children: ["root-1"] }, { id: "root-1" }]);
 
       expect(TreeModel.getNode(model, undefined)).to.be.eq(model.rootNode);
     });
 
     it("returns specific node", () => {
-      const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-        },
-      ]);
+      const model = createTreeModel([{ id: undefined, children: ["root-1"] }, { id: "root-1" }]);
 
       expect(TreeModel.getNode(model, "root-1")).to.not.be.undefined;
     });
@@ -844,7 +530,13 @@ describe("isTreeModelHierarchyNode", () => {
   it("returns correct result", () => {
     expect(isTreeModelHierarchyNode({ id: undefined, nodeData: undefined })).to.be.false;
     expect(isTreeModelHierarchyNode({ id: "info-node", type: "Unknown", message: "info" })).to.be.false;
-    expect(isTreeModelHierarchyNode({ id: "hierarchy-node", label: "Node", children: false, nodeData: createTestHierarchyNode({ id: "hierarchy-node" }) })).to
-      .be.true;
+    expect(
+      isTreeModelHierarchyNode({
+        id: "hierarchy-node",
+        label: "Node",
+        children: false,
+        nodeData: createTestHierarchyNode({ id: "hierarchy-node" }),
+      }),
+    ).to.be.true;
   });
 });

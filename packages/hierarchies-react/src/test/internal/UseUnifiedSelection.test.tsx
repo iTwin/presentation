@@ -9,11 +9,22 @@ import { collect, createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { createStorage, Selectables } from "@itwin/unified-selection";
 import { useUnifiedTreeSelection } from "../../presentation-hierarchies-react/internal/UseUnifiedSelection.js";
-import { act, createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModelNode, renderHook } from "../TestUtils.js";
+import {
+  act,
+  createStub,
+  createTestGroupingNode,
+  createTestHierarchyNode,
+  createTreeModelNode,
+  renderHook,
+} from "../TestUtils.js";
 
 import type { GenericNodeKey, InstancesNodeKey, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
 import type { Props } from "@itwin/presentation-shared";
-import type { SelectionStorage, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
+import type {
+  SelectionStorage,
+  StorageSelectionChangeEventArgs,
+  StorageSelectionChangesListener,
+} from "@itwin/unified-selection";
 import type { TreeModelHierarchyNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
 
 describe("useUnifiedSelection", () => {
@@ -59,17 +70,25 @@ describe("useUnifiedSelection", () => {
         ],
       };
       const nodes = [
-        createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: selectedInstancesNodesKey }) }),
-        createTreeModelNode({ id: "node-2", nodeData: createTestHierarchyNode({ id: "node-2", key: noIModelInstancesNodesKey }) }),
-        createTreeModelNode({ id: "node-3", nodeData: createTestHierarchyNode({ id: "node-3", key: differentIModelInstancesNodesKey }) }),
-        createTreeModelNode({ id: "node-4", nodeData: createTestHierarchyNode({ id: "node-4", key: mergedInstancesNodesKey }) }),
+        createTreeModelNode({
+          id: "node-1",
+          nodeData: createTestHierarchyNode({ id: "node-1", key: selectedInstancesNodesKey }),
+        }),
+        createTreeModelNode({
+          id: "node-2",
+          nodeData: createTestHierarchyNode({ id: "node-2", key: noIModelInstancesNodesKey }),
+        }),
+        createTreeModelNode({
+          id: "node-3",
+          nodeData: createTestHierarchyNode({ id: "node-3", key: differentIModelInstancesNodesKey }),
+        }),
+        createTreeModelNode({
+          id: "node-4",
+          nodeData: createTestHierarchyNode({ id: "node-4", key: mergedInstancesNodesKey }),
+        }),
       ];
 
-      storage.addToSelection({
-        imodelKey,
-        source,
-        selectables: [selectedInstanceKey],
-      });
+      storage.addToSelection({ imodelKey, source, selectables: [selectedInstanceKey] });
 
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
@@ -88,17 +107,29 @@ describe("useUnifiedSelection", () => {
       };
       const selectedInstanceKey = { id: "0x2", className: "Schema:Name" };
       const nodes = [
-        createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) }),
+        createTreeModelNode({
+          id: "node-1",
+          nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }),
+        }),
         createTreeModelNode({
           id: "grouping-node",
-          nodeData: createTestGroupingNode({ id: "grouping-node", groupedInstanceKeys: [{ ...selectedInstanceKey, imodelKey }] }),
+          nodeData: createTestGroupingNode({
+            id: "grouping-node",
+            groupedInstanceKeys: [{ ...selectedInstanceKey, imodelKey }],
+          }),
         }),
       ];
 
       storage.addToSelection({
         imodelKey,
         source,
-        selectables: [{ identifier: "grouping-node", loadInstanceKeys: () => createAsyncIterator([selectedInstanceKey]), data: nodes[1] }],
+        selectables: [
+          {
+            identifier: "grouping-node",
+            loadInstanceKeys: () => createAsyncIterator([selectedInstanceKey]),
+            data: nodes[1],
+          },
+        ],
       });
 
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
@@ -114,10 +145,7 @@ describe("useUnifiedSelection", () => {
         type: "instances",
         instanceKeys: [{ id: "0x1", className: "Schema:Name" }],
       };
-      const genericNodeKey: GenericNodeKey = {
-        type: "generic",
-        id: "generic-node",
-      };
+      const genericNodeKey: GenericNodeKey = { type: "generic", id: "generic-node" };
       const instancesNode = createTestHierarchyNode({ id: "instances-node", key: instancesNodesKey });
       const genericNode = createTestHierarchyNode({ id: genericNodeKey.id, key: genericNodeKey });
 
@@ -146,12 +174,12 @@ describe("useUnifiedSelection", () => {
         type: "instances",
         instanceKeys: [{ id: "0x1", className: "Schema:Name" }],
       };
-      const genericNodeKey: GenericNodeKey = {
-        type: "generic",
-        id: "generic-node",
-      };
+      const genericNodeKey: GenericNodeKey = { type: "generic", id: "generic-node" };
       const instancesNode = createTestHierarchyNode({ id: "instances-node", key: instancesNodesKey });
-      const genericNode = createTestHierarchyNode({ id: genericNodeKey.id, key: genericNodeKey }) as NonGroupingHierarchyNode & { key: GenericNodeKey };
+      const genericNode = createTestHierarchyNode({
+        id: genericNodeKey.id,
+        key: genericNodeKey,
+      }) as NonGroupingHierarchyNode & { key: GenericNodeKey };
 
       const modelNodes = [
         createTreeModelNode({ id: "node-1", nodeData: instancesNode }),
@@ -160,11 +188,9 @@ describe("useUnifiedSelection", () => {
       ];
       getTreeModelNode.callsFake((id) => modelNodes.find((modelNode) => modelNode.id === id));
 
-      const createSelectableForGenericNode: NonNullable<Props<typeof useUnifiedTreeSelection>["createSelectableForGenericNode"]> = (node) => ({
-        identifier: node.key.id,
-        loadInstanceKeys: () => createAsyncIterator([]),
-        data: node,
-      });
+      const createSelectableForGenericNode: NonNullable<
+        Props<typeof useUnifiedTreeSelection>["createSelectableForGenericNode"]
+      > = (node) => ({ identifier: node.key.id, loadInstanceKeys: () => createAsyncIterator([]), data: node });
 
       storage.addToSelection({
         imodelKey: "",
@@ -172,7 +198,9 @@ describe("useUnifiedSelection", () => {
         selectables: [createSelectableForGenericNode(genericNode, "node-2")],
       });
 
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps: { ...initialProps, createSelectableForGenericNode } });
+      const { result } = renderHook(useUnifiedTreeSelection, {
+        initialProps: { ...initialProps, createSelectableForGenericNode },
+      });
       expect(result.current.isNodeSelected("node-1")).to.be.false;
       expect(result.current.isNodeSelected("node-2")).to.be.true;
       expect(result.current.isNodeSelected("node-3")).to.be.true;
@@ -201,7 +229,12 @@ describe("useUnifiedSelection", () => {
           { ...instanceKey, imodelKey: "another-imodel" },
         ],
       };
-      const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
+      const nodes = [
+        createTreeModelNode({
+          id: "node-1",
+          nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }),
+        }),
+      ];
 
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
@@ -263,7 +296,12 @@ describe("useUnifiedSelection", () => {
       async function validateChangeInvocation(call: ReturnType<typeof changeListener.getCall>, callIModelKey: string) {
         expect(call).be.calledWith(
           sinon.match((args: StorageSelectionChangeEventArgs) => {
-            return args.changeType === "add" && args.source === source && args.imodelKey === callIModelKey && Selectables.size(args.selectables) === 1;
+            return (
+              args.changeType === "add" &&
+              args.source === source &&
+              args.imodelKey === callIModelKey &&
+              Selectables.size(args.selectables) === 1
+            );
           }),
         );
         const selectable = call.args[0].selectables.custom.get("grouping-node");
@@ -283,7 +321,10 @@ describe("useUnifiedSelection", () => {
 
     it("adds generic node to selection with default `createSelectableForGenericNode` handler", async () => {
       const hierarchyNode = createTestHierarchyNode({ id: "generic-node" });
-      const nodes = [createTreeModelNode({ id: "node-1", nodeData: hierarchyNode }), createTreeModelNode({ id: "node-2", nodeData: hierarchyNode })];
+      const nodes = [
+        createTreeModelNode({ id: "node-1", nodeData: hierarchyNode }),
+        createTreeModelNode({ id: "node-2", nodeData: hierarchyNode }),
+      ];
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
@@ -294,7 +335,12 @@ describe("useUnifiedSelection", () => {
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
         sinon.match((args: StorageSelectionChangeEventArgs) => {
-          return args.changeType === "add" && args.source === source && args.imodelKey === "" && Selectables.size(args.selectables) === 1;
+          return (
+            args.changeType === "add" &&
+            args.source === source &&
+            args.imodelKey === "" &&
+            Selectables.size(args.selectables) === 1
+          );
         }),
       );
       const selectable = changeListener.firstCall.args[0].selectables.custom.get("node-2");
@@ -305,16 +351,19 @@ describe("useUnifiedSelection", () => {
 
     it("adds generic node to selection with custom `createSelectableForGenericNode` handler", async () => {
       const hierarchyNode = createTestHierarchyNode({ id: "generic-node" });
-      const nodes = [createTreeModelNode({ id: "node-1", nodeData: hierarchyNode }), createTreeModelNode({ id: "node-2", nodeData: hierarchyNode })];
+      const nodes = [
+        createTreeModelNode({ id: "node-1", nodeData: hierarchyNode }),
+        createTreeModelNode({ id: "node-2", nodeData: hierarchyNode }),
+      ];
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
-      const createSelectableForGenericNode: NonNullable<Props<typeof useUnifiedTreeSelection>["createSelectableForGenericNode"]> = (node) => ({
-        identifier: node.key.id,
-        loadInstanceKeys: () => createAsyncIterator([]),
-        data: node,
-      });
+      const createSelectableForGenericNode: NonNullable<
+        Props<typeof useUnifiedTreeSelection>["createSelectableForGenericNode"]
+      > = (node) => ({ identifier: node.key.id, loadInstanceKeys: () => createAsyncIterator([]), data: node });
 
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps: { ...initialProps, createSelectableForGenericNode } });
+      const { result } = renderHook(useUnifiedTreeSelection, {
+        initialProps: { ...initialProps, createSelectableForGenericNode },
+      });
 
       act(() => {
         result.current.selectNodes(["node-2"], "add");
@@ -322,7 +371,12 @@ describe("useUnifiedSelection", () => {
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
         sinon.match((args: StorageSelectionChangeEventArgs) => {
-          return args.changeType === "add" && args.source === source && args.imodelKey === "" && Selectables.size(args.selectables) === 1;
+          return (
+            args.changeType === "add" &&
+            args.source === source &&
+            args.imodelKey === "" &&
+            Selectables.size(args.selectables) === 1
+          );
         }),
       );
       const selectable = changeListener.firstCall.args[0].selectables.custom.get("generic-node");
@@ -340,7 +394,12 @@ describe("useUnifiedSelection", () => {
           { ...instanceKey, imodelKey: "another-imodel" },
         ],
       };
-      const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
+      const nodes = [
+        createTreeModelNode({
+          id: "node-1",
+          nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }),
+        }),
+      ];
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
       instancesNodesKey.instanceKeys.forEach((k) => {
@@ -400,7 +459,9 @@ describe("useUnifiedSelection", () => {
         storage.addToSelection({
           imodelKey: key.imodelKey ?? "",
           source,
-          selectables: [{ identifier: "grouping-node", loadInstanceKeys: () => createAsyncIterator([]), data: groupingNode }],
+          selectables: [
+            { identifier: "grouping-node", loadInstanceKeys: () => createAsyncIterator([]), data: groupingNode },
+          ],
         });
       });
       changeListener.reset();
@@ -414,7 +475,12 @@ describe("useUnifiedSelection", () => {
       async function validateChangeInvocation(call: ReturnType<typeof changeListener.getCall>, callIModelKey: string) {
         expect(call).be.calledWith(
           sinon.match((args: StorageSelectionChangeEventArgs) => {
-            return args.changeType === "remove" && args.source === source && args.imodelKey === callIModelKey && Selectables.size(args.selectables) === 1;
+            return (
+              args.changeType === "remove" &&
+              args.source === source &&
+              args.imodelKey === callIModelKey &&
+              Selectables.size(args.selectables) === 1
+            );
           }),
         );
         const selectable = call.args[0].selectables.custom.get("grouping-node");
@@ -428,7 +494,10 @@ describe("useUnifiedSelection", () => {
 
     it("removes generic node from selection with default `createSelectableForGenericNode` handler", async () => {
       const hierarchyNode = createTestHierarchyNode({ id: "generic-node" });
-      const nodes = [createTreeModelNode({ id: "node-1", nodeData: hierarchyNode }), createTreeModelNode({ id: "node-2", nodeData: hierarchyNode })];
+      const nodes = [
+        createTreeModelNode({ id: "node-1", nodeData: hierarchyNode }),
+        createTreeModelNode({ id: "node-2", nodeData: hierarchyNode }),
+      ];
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
       storage.addToSelection({
@@ -446,7 +515,12 @@ describe("useUnifiedSelection", () => {
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
         sinon.match((args: StorageSelectionChangeEventArgs) => {
-          return args.changeType === "remove" && args.source === source && args.imodelKey === "" && Selectables.size(args.selectables) === 1;
+          return (
+            args.changeType === "remove" &&
+            args.source === source &&
+            args.imodelKey === "" &&
+            Selectables.size(args.selectables) === 1
+          );
         }),
       );
       const selectable = changeListener.firstCall.args[0].selectables.custom.get("node-2");
@@ -456,15 +530,18 @@ describe("useUnifiedSelection", () => {
     });
 
     it("removes generic node from selection with custom `createSelectableForGenericNode` handler", async () => {
-      const hierarchyNode = createTestHierarchyNode({ id: "generic-node" }) as NonGroupingHierarchyNode & { key: GenericNodeKey };
-      const nodes = [createTreeModelNode({ id: "node-1", nodeData: hierarchyNode }), createTreeModelNode({ id: "node-2", nodeData: hierarchyNode })];
+      const hierarchyNode = createTestHierarchyNode({ id: "generic-node" }) as NonGroupingHierarchyNode & {
+        key: GenericNodeKey;
+      };
+      const nodes = [
+        createTreeModelNode({ id: "node-1", nodeData: hierarchyNode }),
+        createTreeModelNode({ id: "node-2", nodeData: hierarchyNode }),
+      ];
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
-      const createSelectableForGenericNode: NonNullable<Props<typeof useUnifiedTreeSelection>["createSelectableForGenericNode"]> = (node) => ({
-        identifier: node.key.id,
-        loadInstanceKeys: () => createAsyncIterator([]),
-        data: node,
-      });
+      const createSelectableForGenericNode: NonNullable<
+        Props<typeof useUnifiedTreeSelection>["createSelectableForGenericNode"]
+      > = (node) => ({ identifier: node.key.id, loadInstanceKeys: () => createAsyncIterator([]), data: node });
 
       storage.addToSelection({
         imodelKey: "",
@@ -473,7 +550,9 @@ describe("useUnifiedSelection", () => {
       });
       changeListener.reset();
 
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps: { ...initialProps, createSelectableForGenericNode } });
+      const { result } = renderHook(useUnifiedTreeSelection, {
+        initialProps: { ...initialProps, createSelectableForGenericNode },
+      });
 
       act(() => {
         result.current.selectNodes(["node-2"], "remove");
@@ -481,7 +560,12 @@ describe("useUnifiedSelection", () => {
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
         sinon.match((args: StorageSelectionChangeEventArgs) => {
-          return args.changeType === "remove" && args.source === source && args.imodelKey === "" && Selectables.size(args.selectables) === 1;
+          return (
+            args.changeType === "remove" &&
+            args.source === source &&
+            args.imodelKey === "" &&
+            Selectables.size(args.selectables) === 1
+          );
         }),
       );
       const selectable = changeListener.firstCall.args[0].selectables.custom.get("generic-node");
@@ -492,11 +576,13 @@ describe("useUnifiedSelection", () => {
 
     it("replaces selection with node", () => {
       const instanceKey = { id: "0x1", className: "Schema:Name" };
-      const instancesNodesKey: InstancesNodeKey = {
-        type: "instances",
-        instanceKeys: [{ ...instanceKey, imodelKey }],
-      };
-      const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
+      const instancesNodesKey: InstancesNodeKey = { type: "instances", instanceKeys: [{ ...instanceKey, imodelKey }] };
+      const nodes = [
+        createTreeModelNode({
+          id: "node-1",
+          nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }),
+        }),
+      ];
 
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
@@ -527,7 +613,11 @@ describe("useUnifiedSelection", () => {
       const selectNodes = result.current.selectNodes;
 
       act(() => {
-        storage.addToSelection({ imodelKey, source: "some-source", selectables: [{ id: "0x1", className: "Schema:Class" }] });
+        storage.addToSelection({
+          imodelKey,
+          source: "some-source",
+          selectables: [{ id: "0x1", className: "Schema:Class" }],
+        });
       });
 
       expect(isSelected).to.not.be.eq(result.current.isNodeSelected);
@@ -540,7 +630,12 @@ describe("useUnifiedSelection", () => {
       const selectNodes = result.current.selectNodes;
 
       act(() => {
-        storage.addToSelection({ imodelKey, source: "some-source", selectables: [{ id: "0x1", className: "Schema:Class" }], level: 1 });
+        storage.addToSelection({
+          imodelKey,
+          source: "some-source",
+          selectables: [{ id: "0x1", className: "Schema:Class" }],
+          level: 1,
+        });
       });
 
       expect(isSelected).to.be.eq(result.current.isNodeSelected);

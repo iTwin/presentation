@@ -6,17 +6,28 @@
 import { expect } from "chai";
 import { SnapshotDb } from "@itwin/core-backend";
 import { HierarchySearchTree } from "@itwin/presentation-hierarchies";
-import { defaultHierarchyConfiguration, ModelsTreeDefinition, ModelsTreeIdsCache } from "@itwin/presentation-models-tree";
+import {
+  defaultHierarchyConfiguration,
+  ModelsTreeDefinition,
+  ModelsTreeIdsCache,
+} from "@itwin/presentation-models-tree";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 
 import type { IModelDb } from "@itwin/core-backend";
-import type { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, InstanceKey } from "@itwin/presentation-shared";
+import type {
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+  ECSqlQueryDef,
+  ECSqlQueryExecutor,
+  InstanceKey,
+} from "@itwin/presentation-shared";
 import type { IModelAccess } from "./StatelessHierarchyProvider";
 
 describe("models tree", () => {
-  const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & ECSqlQueryExecutor) => new ModelsTreeDefinition({ imodelAccess });
+  const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & ECSqlQueryExecutor) =>
+    new ModelsTreeDefinition({ imodelAccess });
   const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("baytown"));
   const cleanup = (iModel: IModelDb) => iModel.close();
 

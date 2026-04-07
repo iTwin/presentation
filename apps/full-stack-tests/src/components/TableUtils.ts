@@ -6,7 +6,11 @@
 import { expect } from "chai";
 import { getByText, waitFor } from "@testing-library/react";
 
-export async function ensureTableHasRowsWithCellValues(container: HTMLElement, propertyLabel: string, cellValues: string[]) {
+export async function ensureTableHasRowsWithCellValues(
+  container: HTMLElement,
+  propertyLabel: string,
+  cellValues: string[],
+) {
   await waitFor(() => {
     const table = container.querySelector("table");
     expect(table).is.not.null;

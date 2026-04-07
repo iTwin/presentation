@@ -10,9 +10,7 @@ import { LOGGER } from "./util/Logging";
 
 before(async () => {
   setLogger(LOGGER);
-  await IModelHost.startup({
-    profileName: "presentation-performance-tests",
-  });
+  await IModelHost.startup({ profileName: "presentation-performance-tests" });
   await Datasets.initialize("./datasets");
 });
 

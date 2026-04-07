@@ -20,9 +20,7 @@ interface TestInfo {
 const Base = Mocha.reporters.Base;
 const { EVENT_TEST_BEGIN, EVENT_TEST_END, EVENT_SUITE_BEGIN, EVENT_SUITE_END, EVENT_RUN_END } = Mocha.Runner.constants;
 
-const tableFormatter = asTable.configure({
-  delimiter: " | ",
-});
+const tableFormatter = asTable.configure({ delimiter: " | " });
 
 /**
  * Measures test time and the amounts of time when the main thread was blocked.
@@ -88,11 +86,7 @@ export class TestReporter extends Base {
     await this._blockHandler.stop();
 
     const blockingSummary = this._blockHandler.getSummary();
-    this._testInfo.set(fullTitle, {
-      test,
-      duration,
-      blockingSummary,
-    });
+    this._testInfo.set(fullTitle, { test, duration, blockingSummary });
     this._testStartTimes.delete(fullTitle);
   }
 
@@ -134,11 +128,7 @@ export class TestReporter extends Base {
   /** Saves performance results in a format that is compatible with Github benchmark action. */
   private saveResults() {
     const data = [...this._testInfo.entries()].flatMap(([fullTitle, { duration, blockingSummary }]) => {
-      const durationEntry = {
-        name: fullTitle,
-        unit: "ms",
-        value: duration,
-      };
+      const durationEntry = { name: fullTitle, unit: "ms", value: duration };
 
       const blockingEntry = {
         name: `${fullTitle} (P95 of main thread blocks)`,

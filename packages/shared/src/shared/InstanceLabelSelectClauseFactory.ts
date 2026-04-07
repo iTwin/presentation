@@ -3,7 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } from "./ecsql-snippets/ECSqlValueSelectorSnippets.js";
+import {
+  createConcatenatedValueJsonSelector,
+  createRawPropertyValueSelector,
+} from "./ecsql-snippets/ECSqlValueSelectorSnippets.js";
 
 import type { ConcatenatedValue } from "./ConcatenatedValue.js";
 import type { TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets.js";
@@ -165,7 +168,9 @@ interface ClassBasedInstanceLabelSelectClauseFactoryProps {
  * Creates an instance label select clause based on its class.
  * @public
  */
-export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory {
+export function createClassBasedInstanceLabelSelectClauseFactory(
+  props: ClassBasedInstanceLabelSelectClauseFactoryProps,
+): IInstanceLabelSelectClauseFactory {
   const { classHierarchyInspector, clauses: labelClausesByClass } = props;
   const defaultClauseFactory = props.defaultClauseFactory ?? createDefaultInstanceLabelSelectClauseFactory();
   async function getLabelClausesForClass(queryClassName: EC.FullClassName) {
@@ -195,16 +200,15 @@ export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBas
         return defaultClauseFactory.createSelectClause(clauseProps);
       }
 
-      const labelClausePromises = clauseProps.className ? await getLabelClausesForClass(clauseProps.className) : labelClausesByClass;
+      const labelClausePromises = clauseProps.className
+        ? await getLabelClausesForClass(clauseProps.className)
+        : labelClausesByClass;
       if (labelClausePromises.length === 0) {
         return defaultClauseFactory.createSelectClause(clauseProps);
       }
 
       const labelClauses = await Promise.all(
-        labelClausePromises.map(async ({ className, clause }) => ({
-          className,
-          clause: await clause(clauseProps),
-        })),
+        labelClausePromises.map(async ({ className, clause }) => ({ className, clause: await clause(clauseProps) })),
       );
 
       return `COALESCE(
@@ -238,7 +242,9 @@ interface BisInstanceLabelSelectClauseFactoryProps {
  * @see https://www.itwinjs.org/presentation/advanced/defaultbisrules/#label-overrides
  * @public
  */
-export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory {
+export function createBisInstanceLabelSelectClauseFactory(
+  props: BisInstanceLabelSelectClauseFactoryProps,
+): IInstanceLabelSelectClauseFactory {
   const clauses: ClassBasedLabelSelectClause[] = [];
   const factory = createClassBasedInstanceLabelSelectClauseFactory({
     classHierarchyInspector: props.classHierarchyInspector,
@@ -252,7 +258,10 @@ export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabe
           ${createRawPropertyValueSelector(classAlias, "CodeValue")},
           ${concatenate(
             rest,
-            [{ selector: createRawPropertyValueSelector(classAlias, "UserLabel") }, ...createECInstanceIdSuffixSelectors(classAlias)],
+            [
+              { selector: createRawPropertyValueSelector(classAlias, "UserLabel") },
+              ...createECInstanceIdSuffixSelectors(classAlias),
+            ],
             `${createRawPropertyValueSelector(classAlias, "UserLabel")} IS NOT NULL`,
           )}
         )
@@ -284,7 +293,9 @@ function createECInstanceIdSuffixSelectors(classAlias: string): TypedValueSelect
     { value: ` [`, type: "String" },
     { selector: `CAST(base36(${createRawPropertyValueSelector(classAlias, "ECInstanceId")} >> 40) AS TEXT)` },
     { value: `-`, type: "String" },
-    { selector: `CAST(base36(${createRawPropertyValueSelector(classAlias, "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
+    {
+      selector: `CAST(base36(${createRawPropertyValueSelector(classAlias, "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)`,
+    },
     { value: `]`, type: "String" },
   ];
 }

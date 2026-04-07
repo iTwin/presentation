@@ -7,7 +7,10 @@ import { expect } from "chai";
 import { describe } from "mocha";
 import { createStorage } from "@itwin/unified-selection";
 import { renderHook } from "@testing-library/react";
-import { UnifiedSelectionContextProvider, useUnifiedSelectionContext } from "../unified-selection-react/UnifiedSelectionContext.js";
+import {
+  UnifiedSelectionContextProvider,
+  useUnifiedSelectionContext,
+} from "../unified-selection-react/UnifiedSelectionContext.js";
 
 describe("useUnifiedSelectionContext", () => {
   const storage = createStorage();
@@ -19,7 +22,9 @@ describe("useUnifiedSelectionContext", () => {
 
   it("returns provided context", () => {
     const { result } = renderHook(useUnifiedSelectionContext, {
-      wrapper: (props) => <UnifiedSelectionContextProvider storage={storage}>{props.children}</UnifiedSelectionContextProvider>,
+      wrapper: (props) => (
+        <UnifiedSelectionContextProvider storage={storage}>{props.children}</UnifiedSelectionContextProvider>
+      ),
     });
     expect(result.current?.storage).to.eq(storage);
   });

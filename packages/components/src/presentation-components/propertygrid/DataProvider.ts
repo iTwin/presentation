@@ -63,17 +63,7 @@ const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).com
  */
 export const DEFAULT_PROPERTY_GRID_RULESET: Ruleset = {
   id: "presentation-components/DefaultPropertyGridContent",
-  rules: [
-    {
-      ruleType: "Content",
-      onlyIfNotHandled: true,
-      specifications: [
-        {
-          specType: "SelectedNodeInstances",
-        },
-      ],
-    },
-  ],
+  rules: [{ ruleType: "Content", onlyIfNotHandled: true, specifications: [{ specType: "SelectedNodeInstances" }] }],
 };
 
 /**
@@ -237,7 +227,10 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    * @deprecated in 5.2. Use `isFieldFavoriteAsync` instead.
    */
   protected isFieldFavorite(field: Field): boolean {
-    return this._shouldCreateFavoritesCategory && Presentation.favoriteProperties.has(field, this.imodel, FavoritePropertiesScope.IModel);
+    return (
+      this._shouldCreateFavoritesCategory &&
+      Presentation.favoriteProperties.has(field, this.imodel, FavoritePropertiesScope.IModel)
+    );
   }
   /** Should the specified field be included in the favorites category. */
   protected async isFieldFavoriteAsync(field: Field): Promise<boolean> {
@@ -360,10 +353,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
         nc.push(...currItemValue);
         return nc;
       }, new Array<NestedContentValue>());
-      contentItems = nestedContent.map((nc) => ({
-        primaryKeys: nc.primaryKeys,
-        values: nc.values,
-      }));
+      contentItems = nestedContent.map((nc) => ({ primaryKeys: nc.primaryKeys, values: nc.values }));
     });
 
     return contentItems.reduce((keys, curr) => {
@@ -377,7 +367,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     if (this._onFavoritesChangedRemoveListener) {
       return;
     }
-    this._onFavoritesChangedRemoveListener = Presentation.favoriteProperties.onFavoritesChanged.addListener(() => this.invalidateCache({}));
+    this._onFavoritesChangedRemoveListener = Presentation.favoriteProperties.onFavoritesChanged.addListener(() =>
+      this.invalidateCache({}),
+    );
   }
 }
 
@@ -485,7 +477,9 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
           (async () => {
             const sortedFields = recs.map((r) => r.fieldHierarchy.field);
             await this._props.callbacks.sortFields(this._categoriesCache.getEntry(categoryName)!, sortedFields);
-            categorizedRecords[categoryName] = sortedFields.map((field) => recs.find((r) => r.fieldHierarchy.field === field)!.record);
+            categorizedRecords[categoryName] = sortedFields.map(
+              (field) => recs.find((r) => r.fieldHierarchy.field === field)!.record,
+            );
           })(),
         );
       }
@@ -503,7 +497,11 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
     };
   }
 
-  private createPropertyCategories(): Array<{ category: PropertyCategory; source: CategoryDescription; categoryHasParent: boolean }> {
+  private createPropertyCategories(): Array<{
+    category: PropertyCategory;
+    source: CategoryDescription;
+    categoryHasParent: boolean;
+  }> {
     // determine which categories are actually used
     const usedCategoryNames = new Set();
     this._categorizedRecords.forEach((records, categoryName) => {
@@ -663,7 +661,10 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
       return true;
     }
 
-    if (field.type.valueFormat !== PresentationPropertyValueFormat.Primitive && !this._props.includeWithCompositeValues) {
+    if (
+      field.type.valueFormat !== PresentationPropertyValueFormat.Primitive &&
+      !this._props.includeWithCompositeValues
+    ) {
       // skip composite fields if requested
       return true;
     }
@@ -725,10 +726,16 @@ class PropertyCategoriesCache {
       return this.getRootFavoritesCategory();
     }
 
-    const fieldCategoryRenameStatus = this.getRenamedCategory(`${FAVORITES_CATEGORY_NAME}-${sourceCategory.name}`, sourceCategory);
+    const fieldCategoryRenameStatus = this.getRenamedCategory(
+      `${FAVORITES_CATEGORY_NAME}-${sourceCategory.name}`,
+      sourceCategory,
+    );
     let curr = fieldCategoryRenameStatus;
     while (!curr.fromCache && curr.category.parent) {
-      const parentCategoryRenameStatus = this.getRenamedCategory(`${FAVORITES_CATEGORY_NAME}-${curr.category.parent.name}`, curr.category.parent);
+      const parentCategoryRenameStatus = this.getRenamedCategory(
+        `${FAVORITES_CATEGORY_NAME}-${curr.category.parent.name}`,
+        curr.category.parent,
+      );
       curr.category.parent = parentCategoryRenameStatus.category;
       curr = parentCategoryRenameStatus;
     }
@@ -767,7 +774,10 @@ function shouldDestructureStructField(field: Field, totalRecordsCount: number | 
   // destructure structs if they're based on nested content and:
   // - if relationship meaning is 'same instance' - always destructure
   // - if relationship meaning is 'related instance' - only if it's the only record in the list
-  return field.isNestedContentField() && (field.relationshipMeaning === RelationshipMeaning.SameInstance || totalRecordsCount === 1);
+  return (
+    field.isNestedContentField() &&
+    (field.relationshipMeaning === RelationshipMeaning.SameInstance || totalRecordsCount === 1)
+  );
 }
 
 function destructureStructMember(member: FieldHierarchyRecord): Array<FieldHierarchyRecord> {
@@ -846,7 +856,10 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
   while (i < records.length) {
     const entry = records[i];
 
-    if (entry.record.value.valueFormat === UiPropertyValueFormat.Array && shouldDestructureArrayField(entry.fieldHierarchy.field)) {
+    if (
+      entry.record.value.valueFormat === UiPropertyValueFormat.Array &&
+      shouldDestructureArrayField(entry.fieldHierarchy.field)
+    ) {
       if (shouldDestructureStructField(entry.fieldHierarchy.field, 1)) {
         // destructure individual array items
         destructureStructArrayItems(entry.record.value.items, entry.fieldHierarchy);
@@ -863,7 +876,10 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
       }
     }
 
-    if (entry.record.value.valueFormat === UiPropertyValueFormat.Struct && shouldDestructureStructField(entry.fieldHierarchy.field, records.length)) {
+    if (
+      entry.record.value.valueFormat === UiPropertyValueFormat.Struct &&
+      shouldDestructureStructField(entry.fieldHierarchy.field, records.length)
+    ) {
       // destructure structs by replacing them with their member records
       const members = entry.fieldHierarchy.childFields.reduce((list, nestedFieldHierarchy) => {
         assert(entry.record.value.valueFormat === UiPropertyValueFormat.Struct);

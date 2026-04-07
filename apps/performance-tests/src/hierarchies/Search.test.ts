@@ -29,15 +29,16 @@ describe("search", () => {
     testName: `searches with ${totalNumberOfSearchPaths} paths`,
     setup: () => {
       const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
-      const search = {
-        paths: new Array<HierarchySearchPath>(),
-      };
+      const search = { paths: new Array<HierarchySearchPath>() };
       const parentIdsArr = new Array<number>();
       for (let i = 1; i <= totalNumberOfSearchPaths / numberOfPathsForASingleParent; ++i) {
         parentIdsArr.push(i + physicalElementsSmallestDecimalId);
         for (let j = (i - 1) * numberOfPathsForASingleParent; j < i * numberOfPathsForASingleParent; ++j) {
           search.paths.push([
-            { className: `${schemaName}.${defaultClassName}_0`, id: `0x${physicalElementsSmallestDecimalId.toString(16)}` },
+            {
+              className: `${schemaName}.${defaultClassName}_0`,
+              id: `0x${physicalElementsSmallestDecimalId.toString(16)}`,
+            },
             {
               className: `${schemaName}.${defaultClassName}_${Math.floor(i / itemsPerGroup)}`,
               id: `0x${(i + physicalElementsSmallestDecimalId).toString(16)}`,
@@ -52,10 +53,15 @@ describe("search", () => {
 
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
       const fullClassName = normalizeFullClassName(PhysicalElement.classFullName);
-      const createHierarchyLevelDefinition = async (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector, whereClause: (alias: string) => string) => {
+      const createHierarchyLevelDefinition = async (
+        imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
+        whereClause: (alias: string) => string,
+      ) => {
         const query = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         return [
           {
@@ -89,13 +95,21 @@ describe("search", () => {
             // We need to split the hierarchy in 50 parts to reduce the time of the test.
 
             if (!props.parentNode) {
-              return createHierarchyLevelDefinition(imodelAccess, (alias) => `WHERE ${alias}.ECInstanceId = ${physicalElementsSmallestDecimalId}`);
+              return createHierarchyLevelDefinition(
+                imodelAccess,
+                (alias) => `WHERE ${alias}.ECInstanceId = ${physicalElementsSmallestDecimalId}`,
+              );
             }
             if (
               HierarchyNode.isInstancesNode(props.parentNode) &&
-              props.parentNode.key.instanceKeys.some(({ id }) => Id64.getLocalId(id) === physicalElementsSmallestDecimalId)
+              props.parentNode.key.instanceKeys.some(
+                ({ id }) => Id64.getLocalId(id) === physicalElementsSmallestDecimalId,
+              )
             ) {
-              return createHierarchyLevelDefinition(imodelAccess, (alias) => `WHERE ${alias}.ECInstanceId IN (${parentIdsArr.join(", ")})`);
+              return createHierarchyLevelDefinition(
+                imodelAccess,
+                (alias) => `WHERE ${alias}.ECInstanceId IN (${parentIdsArr.join(", ")})`,
+              );
             }
 
             if (
@@ -104,7 +118,8 @@ describe("search", () => {
             ) {
               return createHierarchyLevelDefinition(
                 imodelAccess,
-                (alias) => `WHERE ${alias}.ECInstanceId NOT IN (${physicalElementsSmallestDecimalId}, ${parentIdsArr.join(", ")})`,
+                (alias) =>
+                  `WHERE ${alias}.ECInstanceId NOT IN (${physicalElementsSmallestDecimalId}, ${parentIdsArr.join(", ")})`,
               );
             }
 

@@ -27,9 +27,9 @@ interface MergeHierarchyProvidersProps {
  * Creates a single, merged, hierarchy provider from multiple given providers.
  * @public
  */
-export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & {
-  [Symbol.dispose]: () => void;
-} {
+export function mergeProviders({
+  providers,
+}: MergeHierarchyProvidersProps): HierarchyProvider & { [Symbol.dispose]: () => void } {
   const hierarchyChanged = new BeEvent<(args: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>();
   providers.forEach((p) => {
     p.hierarchyChanged.addListener((args) => hierarchyChanged.raiseEvent(args));

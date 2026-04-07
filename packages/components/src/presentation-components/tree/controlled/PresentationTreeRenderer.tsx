@@ -18,7 +18,11 @@ import { isFilterablePresentationTreeNodeItem, isPresentationTreeNodeItem } from
 import { PresentationTreeNodeRenderer } from "./PresentationTreeNodeRenderer.js";
 import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering.js";
 
-import type { AbstractTreeNodeLoaderWithProvider, TreeNodeRendererProps, TreeRendererProps } from "@itwin/components-react";
+import type {
+  AbstractTreeNodeLoaderWithProvider,
+  TreeNodeRendererProps,
+  TreeRendererProps,
+} from "@itwin/components-react";
 import type { NodeKey } from "@itwin/presentation-common";
 import type { PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationFilterBuilder.js";
 import type { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
@@ -64,7 +68,10 @@ export interface useFilterablePresentationTreeProps {
  * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
  * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
-export function useFilterablePresentationTree({ nodeLoader, onFilterApplied }: useFilterablePresentationTreeProps): FilterableTreeProps {
+export function useFilterablePresentationTree({
+  nodeLoader,
+  onFilterApplied,
+}: useFilterablePresentationTreeProps): FilterableTreeProps {
   const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
   const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
 
@@ -114,7 +121,13 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
     onFilterApplied: props.onFilterApplied,
   });
   const filterableNodeRenderer = (nodeProps: TreeNodeRendererProps) => {
-    return <PresentationTreeNodeRenderer {...nodeProps} onFilterClick={onFilterClick} onClearFilterClick={onClearFilterClick} />;
+    return (
+      <PresentationTreeNodeRenderer
+        {...nodeProps}
+        onFilterClick={onFilterClick}
+        onClearFilterClick={onClearFilterClick}
+      />
+    );
   };
 
   return (
@@ -142,17 +155,11 @@ function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
       const descriptorGetter = filteringInfo.descriptor;
       return async () => {
         const descriptor = await descriptorGetter();
-        return {
-          descriptor,
-          inputKeys: [filterNode.key],
-        };
+        return { descriptor, inputKeys: [filterNode.key] };
       };
     }
 
-    return {
-      descriptor: filteringInfo.descriptor,
-      inputKeys: [filterNode.key],
-    };
+    return { descriptor: filteringInfo.descriptor, inputKeys: [filterNode.key] };
   }, [filteringInfo.descriptor, filterNode.key]);
 
   return (
@@ -162,7 +169,9 @@ function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
       imodel={imodel}
       propertiesSource={propertiesSource}
       initialFilter={filteringInfo.active}
-      filterResultsCountRenderer={(filter) => <MatchingInstancesCount dataProvider={dataProvider} filter={filter} parentKey={filterNode.key} />}
+      filterResultsCountRenderer={(filter) => (
+        <MatchingInstancesCount dataProvider={dataProvider} filter={filter} parentKey={filterNode.key} />
+      )}
     />
   );
 }
@@ -185,7 +194,9 @@ function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingIns
       } catch (e) {
         if (e instanceof PresentationError && e.errorNumber === PresentationStatus.ResultSetTooLarge) {
           // ResultSetTooLarge error can't occur if sizeLimit is undefined.
-          return translate("tree.filter-dialog.result-limit-exceeded", { itemCount: requestOptions.sizeLimit!.toString() });
+          return translate("tree.filter-dialog.result-limit-exceeded", {
+            itemCount: requestOptions.sizeLimit!.toString(),
+          });
         }
       }
 

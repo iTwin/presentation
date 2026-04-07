@@ -50,7 +50,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(db);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ parentNode }) {
@@ -72,7 +74,10 @@ describe("Hierarchies", () => {
                   },
                 ];
               }
-              if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((k) => k.className === schema.items.X.fullName)) {
+              if (
+                HierarchyNode.isInstancesNode(parentNode) &&
+                parentNode.key.instanceKeys.some((k) => k.className === schema.items.X.fullName)
+              ) {
                 return [
                   {
                     fullClassName: schema.items.Y.fullName,
@@ -82,9 +87,7 @@ describe("Hierarchies", () => {
                           ecClassId: { selector: `this.ECClassId` },
                           ecInstanceId: { selector: `this.ECInstanceId` },
                           nodeLabel: { selector: `'y: ' || CAST(this.ECInstanceId AS TEXT)` },
-                          grouping: {
-                            byClass: true,
-                          },
+                          grouping: { byClass: true },
                         })}
                         FROM ${schema.items.Y.fullName} AS this
                       `,

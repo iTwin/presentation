@@ -5,14 +5,21 @@
 
 import { expect } from "chai";
 import { SnapshotDb } from "@itwin/core-backend";
-import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
+} from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 
 import type { IModelDb } from "@itwin/core-backend";
-import type { DefineInstanceNodeChildHierarchyLevelProps, HierarchyLevelDefinition, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import type {
+  DefineInstanceNodeChildHierarchyLevelProps,
+  HierarchyLevelDefinition,
+  NodesQueryClauseFactory,
+} from "@itwin/presentation-hierarchies";
 
 describe("hide if no children", () => {
   const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
@@ -28,7 +35,9 @@ describe("hide if no children", () => {
         getHierarchyFactory: (imodelAccess) => {
           const queryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           return createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
@@ -68,7 +77,9 @@ describe("hide if no children", () => {
         getHierarchyFactory: (imodelAccess) => {
           const queryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           return createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,

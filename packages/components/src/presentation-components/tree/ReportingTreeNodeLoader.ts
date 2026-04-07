@@ -11,25 +11,39 @@ import { share, Subject, tap } from "rxjs";
 import { PagedTreeNodeLoader } from "@itwin/components-react";
 import { toRxjsObservable } from "./Utils.js";
 
-import type { Observable, TreeDataProvider, TreeModelNode, TreeModelRootNode, TreeNodeLoadResult } from "@itwin/components-react";
+import type {
+  Observable,
+  TreeDataProvider,
+  TreeModelNode,
+  TreeModelRootNode,
+  TreeNodeLoadResult,
+} from "@itwin/components-react";
 
 /**
  * Wrapper for `PagedTreeNodeLoader` that reports load times of nodes.
  * @internal
  */
-export class ReportingTreeNodeLoader<IPresentationTreeDataProvider extends TreeDataProvider> extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
+export class ReportingTreeNodeLoader<
+  IPresentationTreeDataProvider extends TreeDataProvider,
+> extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
   private _nodeLoader: PagedTreeNodeLoader<IPresentationTreeDataProvider>;
   private _onNodeLoaded: (props: { node: string; duration: number }) => void;
   private _trackedRequests: Map<string, Observable<TreeNodeLoadResult>>;
 
-  constructor(nodeLoader: PagedTreeNodeLoader<IPresentationTreeDataProvider>, onNodeLoaded: (props: { node: string; duration: number }) => void) {
+  constructor(
+    nodeLoader: PagedTreeNodeLoader<IPresentationTreeDataProvider>,
+    onNodeLoaded: (props: { node: string; duration: number }) => void,
+  ) {
     super(nodeLoader.dataProvider, nodeLoader.modelSource, nodeLoader.pageSize);
     this._nodeLoader = nodeLoader;
     this._onNodeLoaded = onNodeLoaded;
     this._trackedRequests = new Map();
   }
 
-  public override loadNode(parent: TreeModelNode | TreeModelRootNode, childIndex: number): Observable<TreeNodeLoadResult> {
+  public override loadNode(
+    parent: TreeModelNode | TreeModelRootNode,
+    childIndex: number,
+  ): Observable<TreeNodeLoadResult> {
     const observable = this._nodeLoader.loadNode(parent, childIndex);
     const parentId = parent.id ?? "root";
 

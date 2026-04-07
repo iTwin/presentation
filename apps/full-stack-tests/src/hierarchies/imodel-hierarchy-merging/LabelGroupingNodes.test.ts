@@ -8,7 +8,13 @@ import { omit } from "@itwin/core-bentley";
 import { createChangedDbs } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { createHierarchyDefinitionFactory, createMergedHierarchyProvider, importQSchema, importXYZSchema, pickAndTransform } from "./HierarchiesMerging.js";
+import {
+  createHierarchyDefinitionFactory,
+  createMergedHierarchyProvider,
+  importQSchema,
+  importXYZSchema,
+  pickAndTransform,
+} from "./HierarchiesMerging.js";
 
 import type { createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 
@@ -62,7 +68,10 @@ describe("Hierarchies", () => {
           dbs = await setupDbs(this);
           keys = {
             base: pickAndTransform(dbs.base, ["x", "y1", "y2", "y3"], (_, value) => ({ ...value, imodelKey: "base" })),
-            changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y2", "y3", "w", "q1", "q2"], (_, value) => ({ ...value, imodelKey: "changeset1" })),
+            changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y2", "y3", "w", "q1", "q2"], (_, value) => ({
+              ...value,
+              imodelKey: "changeset1",
+            })),
           };
         });
 
@@ -94,10 +103,7 @@ describe("Hierarchies", () => {
                     label: "q-group",
                     groupedInstanceKeys: [keys.changeset1.q2],
                     childrenUnordered: [
-                      NodeValidators.createForInstanceNode({
-                        label: "q-group",
-                        instanceKeys: [keys.changeset1.q2],
-                      }),
+                      NodeValidators.createForInstanceNode({ label: "q-group", instanceKeys: [keys.changeset1.q2] }),
                     ],
                   }),
                 ],
@@ -164,11 +170,7 @@ describe("Hierarchies", () => {
                     { identifier: keys.changeset1.q1 },
                   ],
                 },
-                {
-                  identifier: keys.changeset1.w,
-                  isTarget: true,
-                  children: [{ identifier: keys.changeset1.q2 }],
-                },
+                { identifier: keys.changeset1.w, isTarget: true, children: [{ identifier: keys.changeset1.q2 }] },
               ],
             });
             await validateHierarchy({
@@ -242,18 +244,9 @@ describe("Hierarchies", () => {
           it("creates hierarchy when targeting instances from different imodels", async () => {
             provider.setHierarchySearch({
               paths: [
-                {
-                  identifier: keys.base.x,
-                  children: [{ identifier: keys.base.y2 }],
-                },
-                {
-                  identifier: keys.changeset1.x,
-                  children: [{ identifier: keys.changeset1.q1 }],
-                },
-                {
-                  identifier: keys.changeset1.w,
-                  children: [{ identifier: keys.changeset1.q2 }],
-                },
+                { identifier: keys.base.x, children: [{ identifier: keys.base.y2 }] },
+                { identifier: keys.changeset1.x, children: [{ identifier: keys.changeset1.q1 }] },
+                { identifier: keys.changeset1.w, children: [{ identifier: keys.changeset1.q2 }] },
               ],
             });
             await validateHierarchy({
@@ -327,7 +320,10 @@ describe("Hierarchies", () => {
         );
         const keys = {
           base: pickAndTransform(dbs.base, ["x", "y1"], (_, value) => ({ ...value, imodelKey: "base" })),
-          changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y2"], (_, value) => ({ ...value, imodelKey: "changeset1" })),
+          changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y2"], (_, value) => ({
+            ...value,
+            imodelKey: "changeset1",
+          })),
         };
 
         await validateHierarchy({
@@ -353,10 +349,7 @@ describe("Hierarchies", () => {
                       label: "y",
                       instanceKeys: [keys.base.y1, keys.changeset1.y1],
                     }),
-                    NodeValidators.createForInstanceNode({
-                      label: "y",
-                      instanceKeys: [keys.changeset1.y2],
-                    }),
+                    NodeValidators.createForInstanceNode({ label: "y", instanceKeys: [keys.changeset1.y2] }),
                   ],
                 }),
               ],
@@ -385,7 +378,10 @@ describe("Hierarchies", () => {
         );
         const keys = {
           base: pickAndTransform(dbs.base, ["x", "y"], (_, value) => ({ ...value, imodelKey: "base" })),
-          changeset1: pickAndTransform(dbs.changeset1, ["x", "z"], (_, value) => ({ ...value, imodelKey: "changeset1" })),
+          changeset1: pickAndTransform(dbs.changeset1, ["x", "z"], (_, value) => ({
+            ...value,
+            imodelKey: "changeset1",
+          })),
         };
 
         await validateHierarchy({
@@ -415,16 +411,10 @@ describe("Hierarchies", () => {
                   label: "y",
                   groupedInstanceKeys: [keys.base.y],
                   childrenUnordered: [
-                    NodeValidators.createForInstanceNode({
-                      label: "y",
-                      instanceKeys: [keys.base.y],
-                    }),
+                    NodeValidators.createForInstanceNode({ label: "y", instanceKeys: [keys.base.y] }),
                   ],
                 }),
-                NodeValidators.createForInstanceNode({
-                  label: "z",
-                  instanceKeys: [keys.changeset1.z],
-                }),
+                NodeValidators.createForInstanceNode({ label: "z", instanceKeys: [keys.changeset1.z] }),
               ],
             }),
           ],
@@ -451,7 +441,10 @@ describe("Hierarchies", () => {
         );
         const keys = {
           base: pickAndTransform(dbs.base, ["x", "y1", "y2"], (_, value) => ({ ...value, imodelKey: "base" })),
-          changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y2"], (_, value) => ({ ...value, imodelKey: "changeset1" })),
+          changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y2"], (_, value) => ({
+            ...value,
+            imodelKey: "changeset1",
+          })),
         };
 
         await validateHierarchy({
@@ -516,7 +509,10 @@ describe("Hierarchies", () => {
         );
         const keys = {
           base: pickAndTransform(dbs.base, ["x", "y1"], (_, value) => ({ ...value, imodelKey: "base" })),
-          changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y2"], (_, value) => ({ ...value, imodelKey: "changeset1" })),
+          changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y2"], (_, value) => ({
+            ...value,
+            imodelKey: "changeset1",
+          })),
         };
 
         await validateHierarchy({

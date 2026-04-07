@@ -18,4 +18,8 @@ export { createIModelHiliteSetProvider } from "./unified-selection/IModelHiliteS
 export type { SelectionScope } from "./unified-selection/SelectionScope.js";
 export { computeSelection } from "./unified-selection/SelectionScope.js";
 export { enableUnifiedSelectionSyncWithIModel } from "./unified-selection/EnableUnifiedSelectionSyncWithIModel.js";
-export type { StorageSelectionChangeType, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "./unified-selection/SelectionChangeEvent.js";
+export type {
+  StorageSelectionChangeType,
+  StorageSelectionChangeEventArgs,
+  StorageSelectionChangesListener,
+} from "./unified-selection/SelectionChangeEvent.js";

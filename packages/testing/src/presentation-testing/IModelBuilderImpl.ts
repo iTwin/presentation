@@ -10,7 +10,15 @@ import { Code } from "@itwin/core-common";
 
 import type { IModelDb } from "@itwin/core-backend";
 import type { Id64String } from "@itwin/core-bentley";
-import type { BisCodeSpec, CodeScopeProps, CodeSpec, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
+import type {
+  BisCodeSpec,
+  CodeScopeProps,
+  CodeSpec,
+  ElementAspectProps,
+  ElementProps,
+  ModelProps,
+  RelationshipProps,
+} from "@itwin/core-common";
 import type { TestIModelBuilder } from "./IModelUtilities.js";
 
 /**

@@ -6,7 +6,14 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { FormatterSpec, Format as QuantityFormat } from "@itwin/core-quantity";
-import { DelayedPromiseWithProps, OverrideFormat, SchemaItemKey, SchemaItemType, SchemaKey, SchemaUnitProvider } from "@itwin/ecschema-metadata";
+import {
+  DelayedPromiseWithProps,
+  OverrideFormat,
+  SchemaItemKey,
+  SchemaItemType,
+  SchemaKey,
+  SchemaUnitProvider,
+} from "@itwin/ecschema-metadata";
 import { parseFullClassName } from "@itwin/presentation-shared";
 import { createValueFormatter } from "../core-interop/Formatting.js";
 
@@ -26,9 +33,7 @@ import type {
 import type { IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-shared";
 
 describe("createValueFormatter", () => {
-  const schemaContext = {
-    getSchema: sinon.stub<[SchemaKey], Schema>(),
-  };
+  const schemaContext = { getSchema: sinon.stub<[SchemaKey], Schema>() };
   const defaultFormatter = sinon.fake(async () => Promise.resolve("DEFAULT"));
   let formatter: IPrimitiveValueFormatter;
 
@@ -46,34 +51,20 @@ describe("createValueFormatter", () => {
   });
 
   it("returns default formatter result when property doesn't have a KoQ", async () => {
-    const prop: TypedPrimitiveValue = {
-      type: "Double",
-      value: 1.23,
-    };
+    const prop: TypedPrimitiveValue = { type: "Double", value: 1.23 };
     expect(await formatter(prop)).to.eq("DEFAULT");
     expect(defaultFormatter).to.be.calledOnceWith(prop);
   });
 
   it("throws when property references non-existing schema in KoQ", async () => {
     schemaContext.getSchema.resolves(undefined);
-    const prop: TypedPrimitiveValue = {
-      type: "Double",
-      value: 1.23,
-      koqName: "X.Y",
-    };
+    const prop: TypedPrimitiveValue = { type: "Double", value: 1.23, koqName: "X.Y" };
     await expect(formatter(prop)).to.eventually.be.rejectedWith("Invalid schema");
   });
 
   it("throws when property references non-existing KoQ", async () => {
-    schemaContext.getSchema.resolves({
-      name: "X",
-      getItem: async () => undefined,
-    });
-    const prop: TypedPrimitiveValue = {
-      type: "Double",
-      value: 1.23,
-      koqName: "X.Y",
-    };
+    schemaContext.getSchema.resolves({ name: "X", getItem: async () => undefined });
+    const prop: TypedPrimitiveValue = { type: "Double", value: 1.23, koqName: "X.Y" };
     await expect(formatter(prop)).to.eventually.be.rejectedWith("Invalid kind of quantity");
   });
 
@@ -82,18 +73,12 @@ describe("createValueFormatter", () => {
       name: "X",
       getItem: async (name: string) => {
         if (name === "Y") {
-          return {
-            persistenceUnit: undefined,
-          } as unknown as KindOfQuantity;
+          return { persistenceUnit: undefined } as unknown as KindOfQuantity;
         }
         return undefined;
       },
     });
-    const prop: TypedPrimitiveValue = {
-      type: "Double",
-      value: 1.23,
-      koqName: "X.Y",
-    };
+    const prop: TypedPrimitiveValue = { type: "Double", value: 1.23, koqName: "X.Y" };
     expect(await formatter(prop)).to.eq("DEFAULT");
     expect(defaultFormatter).to.be.calledOnceWith(prop);
   });
@@ -118,11 +103,7 @@ describe("createValueFormatter", () => {
         return undefined;
       },
     });
-    const prop: TypedPrimitiveValue = {
-      type: "Double",
-      value: 1.23,
-      koqName: "X.Y",
-    };
+    const prop: TypedPrimitiveValue = { type: "Double", value: 1.23, koqName: "X.Y" };
     expect(await formatter(prop)).to.eq("DEFAULT");
     expect(defaultFormatter).to.be.calledOnceWith(prop);
   });
@@ -161,17 +142,11 @@ describe("createValueFormatter", () => {
     const koqFormatterStub = sinon.stub().returns("KOQ FORMAT");
     const quantityFormat = {} as unknown as QuantityFormat;
     const createQuantityFormatStub = sinon.stub(QuantityFormat, "createFromJSON").resolves(quantityFormat);
-    const createFormatSpecStub = sinon.stub(FormatterSpec, "create").resolves({
-      applyFormatting: koqFormatterStub,
-    } as unknown as FormatterSpec);
+    const createFormatSpecStub = sinon
+      .stub(FormatterSpec, "create")
+      .resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
 
-    expect(
-      await formatter({
-        type: "Double",
-        value: 1.23,
-        koqName: "schema.koq",
-      }),
-    ).to.eq("KOQ FORMAT");
+    expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).to.eq("KOQ FORMAT");
     expect(createQuantityFormatStub).to.be.calledOnceWithExactly(
       "",
       sinon.match((arg) => arg instanceof SchemaUnitProvider),
@@ -191,9 +166,11 @@ describe("createValueFormatter", () => {
     const persistenceUnit = createUnit("schema.persistence_unit", "metric");
     const presentationUnit = createUnit("schema.presentation_unit", "metric");
     // eslint-disable-next-line @itwin/no-internal
-    const overrideFormat = new OverrideFormat({ fullName: "schema.base_format", toJSON: () => ({}) } as Format, undefined, [
-      [createLazyLoaded(presentationUnit), "presentation unit"],
-    ]);
+    const overrideFormat = new OverrideFormat(
+      { fullName: "schema.base_format", toJSON: () => ({}) } as Format,
+      undefined,
+      [[createLazyLoaded(presentationUnit), "presentation unit"]],
+    );
     schemaContext.getSchema.resolves({
       name: "schema",
       getItem: async (name: string) => {
@@ -218,17 +195,11 @@ describe("createValueFormatter", () => {
     const koqFormatterStub = sinon.stub().returns("KOQ FORMAT");
     const quantityFormat = {} as unknown as QuantityFormat;
     const createQuantityFormatStub = sinon.stub(QuantityFormat, "createFromJSON").resolves(quantityFormat);
-    const createFormatSpecStub = sinon.stub(FormatterSpec, "create").resolves({
-      applyFormatting: koqFormatterStub,
-    } as unknown as FormatterSpec);
+    const createFormatSpecStub = sinon
+      .stub(FormatterSpec, "create")
+      .resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
 
-    expect(
-      await formatter({
-        type: "Double",
-        value: 1.23,
-        koqName: "schema.koq",
-      }),
-    ).to.eq("KOQ FORMAT");
+    expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).to.eq("KOQ FORMAT");
     expect(createQuantityFormatStub).to.be.calledOnceWithExactly(
       "",
       sinon.match((arg) => arg instanceof SchemaUnitProvider),
@@ -268,17 +239,11 @@ describe("createValueFormatter", () => {
     const koqFormatterStub = sinon.stub().returns("KOQ FORMAT");
     const quantityFormat = {} as unknown as QuantityFormat;
     const createQuantityFormatStub = sinon.stub(QuantityFormat, "createFromJSON").resolves(quantityFormat);
-    const createFormatSpecStub = sinon.stub(FormatterSpec, "create").resolves({
-      applyFormatting: koqFormatterStub,
-    } as unknown as FormatterSpec);
+    const createFormatSpecStub = sinon
+      .stub(FormatterSpec, "create")
+      .resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
 
-    expect(
-      await formatter({
-        type: "Double",
-        value: 1.23,
-        koqName: "schema.koq",
-      }),
-    ).to.eq("KOQ FORMAT");
+    expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).to.eq("KOQ FORMAT");
     expect(createQuantityFormatStub).to.be.calledOnceWithExactly(
       "",
       sinon.match((arg) => arg instanceof SchemaUnitProvider),
@@ -326,17 +291,11 @@ describe("createValueFormatter", () => {
     const koqFormatterStub = sinon.stub().returns("KOQ FORMAT");
     const quantityFormat = {} as unknown as QuantityFormat;
     const createQuantityFormatStub = sinon.stub(QuantityFormat, "createFromJSON").resolves(quantityFormat);
-    const createFormatSpecStub = sinon.stub(FormatterSpec, "create").resolves({
-      applyFormatting: koqFormatterStub,
-    } as unknown as FormatterSpec);
+    const createFormatSpecStub = sinon
+      .stub(FormatterSpec, "create")
+      .resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
 
-    expect(
-      await formatter({
-        type: "Double",
-        value: 1.23,
-        koqName: "schema.koq",
-      }),
-    ).to.eq("KOQ FORMAT");
+    expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).to.eq("KOQ FORMAT");
     expect(createQuantityFormatStub).to.be.calledOnceWithExactly(
       "",
       sinon.match((arg) => arg instanceof SchemaUnitProvider),
@@ -357,9 +316,11 @@ describe("createValueFormatter", () => {
     const persistenceUnit = createUnit("schema.persistence_unit", "metric");
     const presentationUnit = createUnit("schema.presentation_unit", "usSurvey");
     // eslint-disable-next-line @itwin/no-internal
-    const overrideFormat = new OverrideFormat({ fullName: "schema.base_format", toJSON: () => ({}) } as Format, undefined, [
-      [createLazyLoaded(presentationUnit), "presentation unit"],
-    ]);
+    const overrideFormat = new OverrideFormat(
+      { fullName: "schema.base_format", toJSON: () => ({}) } as Format,
+      undefined,
+      [[createLazyLoaded(presentationUnit), "presentation unit"]],
+    );
     schemaContext.getSchema.resolves({
       name: "schema",
       getItem: async (name: string) => {
@@ -384,17 +345,11 @@ describe("createValueFormatter", () => {
     const koqFormatterStub = sinon.stub().returns("KOQ FORMAT");
     const quantityFormat = {} as unknown as QuantityFormat;
     const createQuantityFormatStub = sinon.stub(QuantityFormat, "createFromJSON").resolves(quantityFormat);
-    const createFormatSpecStub = sinon.stub(FormatterSpec, "create").resolves({
-      applyFormatting: koqFormatterStub,
-    } as unknown as FormatterSpec);
+    const createFormatSpecStub = sinon
+      .stub(FormatterSpec, "create")
+      .resolves({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
 
-    expect(
-      await formatter({
-        type: "Double",
-        value: 1.23,
-        koqName: "schema.koq",
-      }),
-    ).to.eq("KOQ FORMAT");
+    expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).to.eq("KOQ FORMAT");
     expect(createQuantityFormatStub).to.be.calledOnceWithExactly(
       "",
       sinon.match((arg) => arg instanceof SchemaUnitProvider),

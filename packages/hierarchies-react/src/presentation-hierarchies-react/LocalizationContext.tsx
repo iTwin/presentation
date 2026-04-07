@@ -19,16 +19,17 @@ const localizationContext = createContext<TranslateFunc>((key) => key);
  */
 interface LocalizationContextProviderProps {
   /** Localization object compatible with `@itwin/core-common` */
-  localization: {
-    getLocalizedString: (key: string) => string;
-  };
+  localization: { getLocalizedString: (key: string) => string };
 }
 
 /**
  * Context provider for localizing components.
  * @public
  */
-export function LocalizationContextProvider({ localization, children }: PropsWithChildren<LocalizationContextProviderProps>): JSX.Element {
+export function LocalizationContextProvider({
+  localization,
+  children,
+}: PropsWithChildren<LocalizationContextProviderProps>): JSX.Element {
   const translate = useMemo<TranslateFunc>(() => {
     return (key: LocalizationKey) => localization.getLocalizedString(`${LOCALIZATION_NAMESPACE}:${key}`);
   }, [localization]);

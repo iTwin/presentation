@@ -5,7 +5,14 @@
 
 import { assert } from "@itwin/core-bentley";
 import { GenericInstanceFilter, GenericInstanceFilterRuleValue } from "@itwin/core-common";
-import { compareFullClassNames, ECSql, getClass, normalizeFullClassName, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
+import {
+  compareFullClassNames,
+  ECSql,
+  getClass,
+  normalizeFullClassName,
+  parseFullClassName,
+  PrimitiveValue,
+} from "@itwin/presentation-shared";
 
 import type { Id64String } from "@itwin/core-bentley";
 import type {
@@ -15,7 +22,13 @@ import type {
   GenericInstanceFilterRuleGroupOperator,
   GenericInstanceFilterRuleOperator,
 } from "@itwin/core-common";
-import type { EC, ECClassHierarchyInspector, ECSchemaProvider, IInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
+import type {
+  EC,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+  IInstanceLabelSelectClauseFactory,
+  Props,
+} from "@itwin/presentation-shared";
 import type { HierarchyNodeAutoExpandProp } from "./IModelHierarchyNode.js";
 
 /**
@@ -68,9 +81,7 @@ interface NodeSelectClauseProps {
   ecClassId: ECSqlValueSelector;
   ecInstanceId: ECSqlValueSelector;
   nodeLabel: string | ECSqlValueSelector;
-  extendedData?: {
-    [key: string]: Id64String | string | number | boolean | ECSqlValueSelector;
-  };
+  extendedData?: { [key: string]: Id64String | string | number | boolean | ECSqlValueSelector };
   autoExpand?: boolean | ECSqlValueSelector;
   supportsFiltering?: boolean | ECSqlValueSelector;
   hasChildren?: boolean | ECSqlValueSelector;
@@ -113,7 +124,8 @@ interface ECSqlSelectClauseLabelGroupingMergeParams extends ECSqlSelectClauseLab
  * A data structure for defining label grouping.
  * @public
  */
-interface ECSqlSelectClauseLabelGroupingGroupParams extends ECSqlSelectClauseLabelGroupingBaseParams, ECSqlSelectClauseGroupingParamsBase {
+interface ECSqlSelectClauseLabelGroupingGroupParams
+  extends ECSqlSelectClauseLabelGroupingBaseParams, ECSqlSelectClauseGroupingParamsBase {
   action?: "group";
 }
 
@@ -312,11 +324,7 @@ class NodeSelectQueryFactory {
     const { contentClass, filter } = props;
     const { from, joins, where } = filter
       ? await createInstanceFilterClauses({ imodelAccess: this._imodelAccess, contentClass, filter })
-      : {
-          from: contentClass.fullName,
-          joins: [],
-          where: [],
-        };
+      : { from: contentClass.fullName, joins: [], where: [] };
 
     const fromClass = await getClass(this._imodelAccess, normalizeFullClassName(from));
     const hiddenClasses = await getHiddenClassesTree(fromClass);
@@ -324,11 +332,7 @@ class NodeSelectQueryFactory {
     hiddenClassesWhereClause.hideClause && where.push(hiddenClassesWhereClause.hideClause);
     assert(!hiddenClassesWhereClause.showClause, "`showClause` is expected to always be empty here");
 
-    return {
-      from,
-      joins: joins.join("\n"),
-      where: where.join(" AND "),
-    };
+    return { from, joins: joins.join("\n"), where: where.join(" AND ") };
   }
 }
 
@@ -382,10 +386,12 @@ async function createInstanceFilterClauses(props: {
   if (filter.filteredClassNames && filter.filteredClassNames.length > 0) {
     filteredClassNamesInThisIModel = (
       await Promise.all(
-        filter.filteredClassNames.map(normalizeFullClassName).map(async (fullClassName) => ({
-          fullClassName,
-          filteredClass: await tryGetClass(imodelAccess, fullClassName),
-        })),
+        filter.filteredClassNames
+          .map(normalizeFullClassName)
+          .map(async (fullClassName) => ({
+            fullClassName,
+            filteredClass: await tryGetClass(imodelAccess, fullClassName),
+          })),
       )
     )
       .filter(({ filteredClass }) => !!filteredClass)
@@ -418,7 +424,8 @@ async function createInstanceFilterClauses(props: {
 
   const classAliasMap = new Map<string, EC.FullClassName>([[contentClass.alias, from]]);
   filter.relatedInstances.forEach(
-    ({ path, alias }) => path.length > 0 && classAliasMap.set(alias, normalizeFullClassName(path[path.length - 1].targetClassName)),
+    ({ path, alias }) =>
+      path.length > 0 && classAliasMap.set(alias, normalizeFullClassName(path[path.length - 1].targetClassName)),
   );
   let propertiesFilter: string | undefined;
   try {
@@ -524,7 +531,9 @@ async function createGroupingSelector(
           selector: `json_array(${(
             await Promise.all(
               grouping.byProperties.propertyGroups.map(async (propertyGroup) =>
-                serializeJsonObject(await createPropertyGroupSelectors(propertyGroup, propertyClass, instanceLabelSelectClauseFactory)),
+                serializeJsonObject(
+                  await createPropertyGroupSelectors(propertyGroup, propertyClass, instanceLabelSelectClauseFactory),
+                ),
               ),
             )
           ).join(", ")})`,
@@ -553,19 +562,15 @@ async function createGroupingSelector(
   return serializeJsonObject(groupingSelectors);
 }
 
-function createLabelGroupingBaseParamsSelectors(byLabel: ECSqlSelectClauseLabelGroupingMergeParams | ECSqlSelectClauseLabelGroupingGroupParams) {
+function createLabelGroupingBaseParamsSelectors(
+  byLabel: ECSqlSelectClauseLabelGroupingMergeParams | ECSqlSelectClauseLabelGroupingGroupParams,
+) {
   const selectors = new Array<{ key: string; selector: string }>();
   if (byLabel.action !== undefined) {
-    selectors.push({
-      key: "action",
-      selector: `${createECSqlValueSelector(byLabel.action)}`,
-    });
+    selectors.push({ key: "action", selector: `${createECSqlValueSelector(byLabel.action)}` });
   }
   if (byLabel.groupId !== undefined) {
-    selectors.push({
-      key: "groupId",
-      selector: createECSqlValueSelector(byLabel.groupId),
-    });
+    selectors.push({ key: "groupId", selector: createECSqlValueSelector(byLabel.groupId) });
   }
   if (byLabel.action !== "merge") {
     selectors.push(...createBaseGroupingParamSelectors(byLabel));
@@ -580,10 +585,7 @@ async function createPropertyGroupSelectors(
   instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory,
 ) {
   const selectors = new Array<{ key: string; selector: string }>();
-  selectors.push({
-    key: "propertyName",
-    selector: `${createECSqlValueSelector(propertyGroup.propertyName)}`,
-  });
+  selectors.push({ key: "propertyName", selector: `${createECSqlValueSelector(propertyGroup.propertyName)}` });
 
   const property = await propertyClass.getProperty(propertyGroup.propertyName);
   if (!property) {
@@ -593,7 +595,9 @@ async function createPropertyGroupSelectors(
   if (property.isNavigation()) {
     const relationshipClass = await property.relationshipClass;
     const abstractConstraint =
-      property.direction === "Forward" ? await relationshipClass.target.abstractConstraint : await relationshipClass.source.abstractConstraint;
+      property.direction === "Forward"
+        ? await relationshipClass.target.abstractConstraint
+        : await relationshipClass.source.abstractConstraint;
     if (!abstractConstraint) {
       throw new Error(`Could not determine class name for navigation property with direction "${property.direction}".`);
     }
@@ -628,21 +632,10 @@ function createRangeParamSelectors(ranges: ECSqlSelectClausePropertyValueRange[]
     selector: `json_array(${ranges
       .map((range) =>
         serializeJsonObject([
-          {
-            key: "fromValue",
-            selector: createECSqlValueSelector(range.fromValue),
-          },
-          {
-            key: "toValue",
-            selector: createECSqlValueSelector(range.toValue),
-          },
+          { key: "fromValue", selector: createECSqlValueSelector(range.fromValue) },
+          { key: "toValue", selector: createECSqlValueSelector(range.toValue) },
           ...(range.rangeLabel
-            ? [
-                {
-                  key: "rangeLabel",
-                  selector: `${createECSqlValueSelector(range.rangeLabel)}`,
-                },
-              ]
+            ? [{ key: "rangeLabel", selector: `${createECSqlValueSelector(range.rangeLabel)}` }]
             : []),
         ]),
       )
@@ -653,22 +646,13 @@ function createRangeParamSelectors(ranges: ECSqlSelectClausePropertyValueRange[]
 function createBaseGroupingParamSelectors(params: ECSqlSelectClauseGroupingParamsBase) {
   const selectors = new Array<{ key: string; selector: string }>();
   if (params.hideIfNoSiblings !== undefined) {
-    selectors.push({
-      key: "hideIfNoSiblings",
-      selector: createECSqlValueSelector(params.hideIfNoSiblings),
-    });
+    selectors.push({ key: "hideIfNoSiblings", selector: createECSqlValueSelector(params.hideIfNoSiblings) });
   }
   if (params.hideIfOneGroupedNode !== undefined) {
-    selectors.push({
-      key: "hideIfOneGroupedNode",
-      selector: createECSqlValueSelector(params.hideIfOneGroupedNode),
-    });
+    selectors.push({ key: "hideIfOneGroupedNode", selector: createECSqlValueSelector(params.hideIfOneGroupedNode) });
   }
   if (params.autoExpand !== undefined) {
-    selectors.push({
-      key: "autoExpand",
-      selector: createECSqlValueSelector(params.autoExpand),
-    });
+    selectors.push({ key: "autoExpand", selector: createECSqlValueSelector(params.autoExpand) });
   }
   return selectors;
 }
@@ -683,7 +667,9 @@ async function createWhereClause(
   rule: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup,
 ): Promise<string | undefined> {
   if (GenericInstanceFilter.isFilterRuleGroup(rule)) {
-    const clause = (await Promise.all(rule.rules.map(async (r) => createWhereClause(contentClassAlias, classLoader, r))))
+    const clause = (
+      await Promise.all(rule.rules.map(async (r) => createWhereClause(contentClassAlias, classLoader, r)))
+    )
       .filter((c) => !!c)
       .join(` ${getECSqlLogicalOperator(rule.operator)} `);
     return clause ? (rule.operator === "or" ? `(${clause})` : clause) : undefined;
@@ -769,7 +755,11 @@ async function createWhereClause(
   throw new Error("Struct and array properties are not supported for filtering");
 }
 
-function createFloatingPointEqualityClause(valueSelector: string, operator: "is-equal" | "is-not-equal", value: number) {
+function createFloatingPointEqualityClause(
+  valueSelector: string,
+  operator: "is-equal" | "is-not-equal",
+  value: number,
+) {
   const [from, to] = getFloatingPointValueRange(value);
   return `${valueSelector} ${operator === "is-not-equal" ? "NOT " : ""} BETWEEN ${from} AND ${to}`;
 }
@@ -793,7 +783,9 @@ function isUnaryRuleOperator(
   return op === "is-true" || op === "is-false" || op === "is-null" || op === "is-not-null";
 }
 
-function getECSqlComparisonOperator(op: Exclude<GenericInstanceFilterRuleOperator, "is-true" | "is-false" | "is-null" | "is-not-null">) {
+function getECSqlComparisonOperator(
+  op: Exclude<GenericInstanceFilterRuleOperator, "is-true" | "is-false" | "is-null" | "is-not-null">,
+) {
   switch (op) {
     case "is-equal":
       return `=`;
@@ -883,7 +875,10 @@ interface HiddenClassNode {
   children: HiddenClassNode[];
 }
 
-async function getHiddenClassesTree(selectClass: EC.Class, selectClassAttribute: "show" | "hide" = "show"): Promise<HiddenClassNode[]> {
+async function getHiddenClassesTree(
+  selectClass: EC.Class,
+  selectClassAttribute: "show" | "hide" = "show",
+): Promise<HiddenClassNode[]> {
   const derivedClasses = await getDirectDerivedClasses(selectClass);
 
   const derivedClassSchemas = derivedClasses.reduce(
@@ -911,13 +906,7 @@ async function getHiddenClassesTree(selectClass: EC.Class, selectClassAttribute:
         if (!attr || attr === selectClassAttribute) {
           return getHiddenClassesTree(ecClass, selectClassAttribute);
         }
-        return [
-          {
-            fullName: ecClass.fullName,
-            state: attr,
-            children: await getHiddenClassesTree(ecClass, attr),
-          },
-        ];
+        return [{ fullName: ecClass.fullName, state: attr, children: await getHiddenClassesTree(ecClass, attr) }];
       }),
     )
   ).flat();
@@ -943,7 +932,10 @@ async function getHiddenSchemaAttribute(ecSchema: EC.Schema): Promise<"hide" | "
   return hiddenSchemaAttribute ? (hiddenSchemaAttribute.ShowClasses ? "show" : "hide") : undefined;
 }
 
-function createWhereClauseForHiddenClasses(hiddenClasses: HiddenClassNode[], selectAlias: string): { showClause?: string; hideClause?: string } {
+function createWhereClauseForHiddenClasses(
+  hiddenClasses: HiddenClassNode[],
+  selectAlias: string,
+): { showClause?: string; hideClause?: string } {
   const res: { showClause?: string; hideClause?: string } = {};
 
   const show = hiddenClasses.filter(({ state }) => state === "show");
@@ -981,7 +973,10 @@ function createWhereClauseForHiddenClasses(hiddenClasses: HiddenClassNode[], sel
   return res;
 }
 
-async function tryGetClass(schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassName): Promise<EC.Class | undefined> {
+async function tryGetClass(
+  schemaProvider: ECSchemaProvider,
+  fullClassName: EC.FullClassName,
+): Promise<EC.Class | undefined> {
   try {
     return await getClass(schemaProvider, fullClassName);
   } catch (e) {
@@ -993,7 +988,10 @@ async function tryGetClass(schemaProvider: ECSchemaProvider, fullClassName: EC.F
   }
 }
 function isSchemaOrClassNotFoundError(e: unknown): e is Error {
-  return e instanceof Error && (!!e.message.match(/^Schema "[\w\d_]+" not found/) || !!e.message.match(/^Class "[\w\d_\.:]+" not found/));
+  return (
+    e instanceof Error &&
+    (!!e.message.match(/^Schema "[\w\d_]+" not found/) || !!e.message.match(/^Class "[\w\d_\.:]+" not found/))
+  );
 }
 function isPropertyNotFoundError(e: unknown): e is Error {
   return e instanceof Error && !!e.message.match(/^Property "[\w\d]+" not found in ECClass/);

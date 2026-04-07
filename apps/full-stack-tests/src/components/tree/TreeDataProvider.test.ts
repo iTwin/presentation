@@ -172,7 +172,9 @@ describe("TreeDataProvider", async () => {
       const key = (item as PresentationTreeNodeItem).key;
       assert(NodeKey.isClassGroupingNodeKey(key));
       assert(item.label.value.valueFormat === PropertyValueFormat.Primitive);
-      expect(item.label.value.displayValue).to.match(new RegExp(`^[\\w\\d_ ]+ \\(${key.groupedInstancesCount}\\)$`, "i"));
+      expect(item.label.value.displayValue).to.match(
+        new RegExp(`^[\\w\\d_ ]+ \\(${key.groupedInstancesCount}\\)$`, "i"),
+      );
     });
   });
 });

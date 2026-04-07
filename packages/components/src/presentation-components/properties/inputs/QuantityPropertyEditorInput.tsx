@@ -22,23 +22,34 @@ export interface QuantityPropertyEditorImplProps extends PropertyEditorProps {
 }
 
 /** @internal */
-export const QuantityPropertyEditorInput = forwardRef<PropertyEditorAttributes, QuantityPropertyEditorImplProps>((props, ref) => {
-  const schemaMetadataContext = useSchemaMetadataContext();
+export const QuantityPropertyEditorInput = forwardRef<PropertyEditorAttributes, QuantityPropertyEditorImplProps>(
+  (props, ref) => {
+    const schemaMetadataContext = useSchemaMetadataContext();
 
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  if ((!props.propertyRecord.property.kindOfQuantityName && !props.propertyRecord.property.quantityType) || !schemaMetadataContext) {
-    return <NumericPropertyInput {...props} ref={ref} />;
-  }
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  const koqName = props.propertyRecord.property.kindOfQuantityName ?? props.propertyRecord.property.quantityType;
-  assert(koqName !== undefined);
+    if (
+      /* eslint-disable-next-line @typescript-eslint/no-deprecated */
+      (!props.propertyRecord.property.kindOfQuantityName && !props.propertyRecord.property.quantityType) ||
+      !schemaMetadataContext
+    ) {
+      return <NumericPropertyInput {...props} ref={ref} />;
+    }
+    /* eslint-disable-next-line @typescript-eslint/no-deprecated */
+    const koqName = props.propertyRecord.property.kindOfQuantityName ?? props.propertyRecord.property.quantityType;
+    assert(koqName !== undefined);
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  const initialValue = (props.propertyRecord.value as PrimitiveValue)?.value as number | undefined;
-  return (
-    <QuantityPropertyValueInput {...props} ref={ref} koqName={koqName} schemaContext={schemaMetadataContext.schemaContext} initialRawValue={initialValue} />
-  );
-});
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    const initialValue = (props.propertyRecord.value as PrimitiveValue)?.value as number | undefined;
+    return (
+      <QuantityPropertyValueInput
+        {...props}
+        ref={ref}
+        koqName={koqName}
+        schemaContext={schemaMetadataContext.schemaContext}
+        initialRawValue={initialValue}
+      />
+    );
+  },
+);
 QuantityPropertyEditorInput.displayName = "QuantityPropertyEditorInput";
 
 type QuantityPropertyValueInputProps = QuantityPropertyEditorImplProps & UseQuantityValueInputProps;
@@ -107,7 +118,10 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         onFocus={() => {
           setEditing(true);
           requestAnimationFrame(() => {
-            const selectionEnd = quantityValue.highPrecisionFormattedValue === inputProps.placeholder ? 0 : quantityValue.highPrecisionFormattedValue.length;
+            const selectionEnd =
+              quantityValue.highPrecisionFormattedValue === inputProps.placeholder
+                ? 0
+                : quantityValue.highPrecisionFormattedValue.length;
             inputRef.current?.setSelectionRange(0, selectionEnd);
           });
         }}

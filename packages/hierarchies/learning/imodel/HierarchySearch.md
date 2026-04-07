@@ -34,7 +34,9 @@ import { ECSqlBinding } from "@itwin/presentation-shared";
 function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinition {
   const queryClauseFactory = createNodesQueryClauseFactory({
     imodelAccess,
-    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+      classHierarchyInspector: imodelAccess,
+    }),
   });
   const createHierarchyLevelDefinition = async ({
     whereClause,
@@ -125,7 +127,9 @@ Let's consider two cases - searching by label and by target element ID:
     const searchTreeBuilder = HierarchySearchTree.createBuilder();
     for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
       searchTreeBuilder.accept({
-        path: (JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })),
+        path: (JSON.parse(row.Path) as InstanceKey[])
+          .reverse()
+          .map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })),
       });
     }
     return searchTreeBuilder.getTree();
@@ -137,10 +141,7 @@ Let's consider two cases - searching by label and by target element ID:
     {
       identifier: elementKeys.a,
       children: [
-        {
-          identifier: elementKeys.b,
-          children: [{ identifier: elementKeys.c }],
-        },
+        { identifier: elementKeys.b, children: [{ identifier: elementKeys.c }] },
         { identifier: elementKeys.e },
       ],
     },
@@ -187,7 +188,11 @@ Let's consider two cases - searching by label and by target element ID:
     };
     const result: HierarchyNodeIdentifiersPath[] = [];
     for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-      result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })));
+      result.push(
+        (JSON.parse(row.Path) as InstanceKey[])
+          .reverse()
+          .map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })),
+      );
     }
     return result;
   }
@@ -227,14 +232,8 @@ expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
   {
     label: "A",
     children: [
-      {
-        label: "B",
-        children: [{ label: "C" }],
-      },
-      {
-        label: "E",
-        children: [{ label: "F" }],
-      },
+      { label: "B", children: [{ label: "C" }] },
+      { label: "E", children: [{ label: "F" }] },
     ],
   },
 ]);

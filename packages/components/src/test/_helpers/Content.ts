@@ -80,14 +80,7 @@ export function createTestPropertiesContentField(
     priority?: number;
     editor?: EditorDescription;
     renderer?: RendererDescription;
-  } & (
-    | {
-        itemsField?: PropertiesField;
-      }
-    | {
-        memberFields?: PropertiesField[];
-      }
-  ),
+  } & ({ itemsField?: PropertiesField } | { memberFields?: PropertiesField[] }),
 ) {
   const baseProps = {
     category: props.category ?? createTestCategoryDescription(),
@@ -129,11 +122,7 @@ export function createTestNestedContentField(props: {
   const nestedContentFieldType: StructTypeDescription = {
     valueFormat: PropertyValueFormat.Struct,
     typeName: "NestedContentFieldType",
-    members: props.nestedFields.map((f) => ({
-      name: f.name,
-      label: f.label,
-      type: f.type,
-    })),
+    members: props.nestedFields.map((f) => ({ name: f.name, label: f.label, type: f.type })),
   };
   const field = new NestedContentField({
     category: props.category ?? createTestCategoryDescription(),
@@ -180,7 +169,8 @@ export function createTestContentItem(props: {
   return new Item({
     ...props,
     primaryKeys: props.primaryKeys ?? [createTestECInstanceKey()],
-    label: props.label && typeof props.label !== "string" ? props.label : LabelDefinition.fromLabelString(props.label ?? ""),
+    label:
+      props.label && typeof props.label !== "string" ? props.label : LabelDefinition.fromLabelString(props.label ?? ""),
     mergedFieldNames: props.mergedFieldNames ?? [],
   });
 }

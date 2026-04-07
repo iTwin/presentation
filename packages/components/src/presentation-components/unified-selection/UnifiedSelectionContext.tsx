@@ -99,16 +99,15 @@ export function UnifiedSelectionContextProvider(props: UnifiedSelectionContextPr
         return;
       }
 
-      contextRef.current = {
-        ...currentContext,
-        getSelection: createGetSelection(props.imodel, selectionLevel),
-      };
+      contextRef.current = { ...currentContext, getSelection: createGetSelection(props.imodel, selectionLevel) };
 
       setState({});
     });
   }, [props.imodel, selectionLevel]);
 
-  return <unifiedSelectionContext.Provider value={contextRef.current}>{props.children}</unifiedSelectionContext.Provider>;
+  return (
+    <unifiedSelectionContext.Provider value={contextRef.current}>{props.children}</unifiedSelectionContext.Provider>
+  );
 }
 
 function createSelectionContext(imodel: IModelConnection, selectionLevel: number): UnifiedSelectionContext {
@@ -116,15 +115,21 @@ function createSelectionContext(imodel: IModelConnection, selectionLevel: number
     imodel,
     selectionLevel,
     getSelection: createGetSelection(imodel, selectionLevel),
-    replaceSelection: (keys, level) => Presentation.selection.replaceSelection("UnifiedSelectionContext", imodel, keys, level ?? selectionLevel),
-    addToSelection: (keys, level) => Presentation.selection.addToSelection("UnifiedSelectionContext", imodel, keys, level ?? selectionLevel),
-    clearSelection: (level) => Presentation.selection.clearSelection("UnifiedSelectionContext", imodel, level ?? selectionLevel),
-    removeFromSelection: (keys, level) => Presentation.selection.removeFromSelection("UnifiedSelectionContext", imodel, keys, level ?? selectionLevel),
+    replaceSelection: (keys, level) =>
+      Presentation.selection.replaceSelection("UnifiedSelectionContext", imodel, keys, level ?? selectionLevel),
+    addToSelection: (keys, level) =>
+      Presentation.selection.addToSelection("UnifiedSelectionContext", imodel, keys, level ?? selectionLevel),
+    clearSelection: (level) =>
+      Presentation.selection.clearSelection("UnifiedSelectionContext", imodel, level ?? selectionLevel),
+    removeFromSelection: (keys, level) =>
+      Presentation.selection.removeFromSelection("UnifiedSelectionContext", imodel, keys, level ?? selectionLevel),
   };
 }
 
 function createGetSelection(imodel: IModelConnection, selectionLevel: number): UnifiedSelectionContext["getSelection"] {
-  return memoize((level) => new Proxy(Presentation.selection.getSelection(imodel, level ?? selectionLevel), {}), { maxSize: Number.MAX_SAFE_INTEGER });
+  return memoize((level) => new Proxy(Presentation.selection.getSelection(imodel, level ?? selectionLevel), {}), {
+    maxSize: Number.MAX_SAFE_INTEGER,
+  });
 }
 
 const unifiedSelectionContext = createContext<UnifiedSelectionContext | undefined>(undefined);

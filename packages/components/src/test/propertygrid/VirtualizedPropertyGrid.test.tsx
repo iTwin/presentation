@@ -46,9 +46,7 @@ describe("Category renderer customization", () => {
           label: PropertyRecord.fromString("test_label"),
           description: "test_description",
           categories: [rootCategory1],
-          records: {
-            [rootCategory1.name]: [createPrimitiveStringProperty("rootCategory1Property", "Test", "Test")],
-          },
+          records: { [rootCategory1.name]: [createPrimitiveStringProperty("rootCategory1Property", "Test", "Test")] },
           reusePropertyDataState: true,
         }),
       };
@@ -63,7 +61,9 @@ describe("Category renderer customization", () => {
       PropertyCategoryRendererManager.defaultManager.addRenderer("my_custom_renderer", () => MyCustomRenderer);
 
       const MyCustomRenderer: React.FC<PropertyCategoryRendererProps> = (props) => {
-        const primitiveItems = props.categoryItem.getChildren().filter((item) => item.type === FlatGridItemType.Primitive) as CategorizedPropertyItem[];
+        const primitiveItems = props.categoryItem
+          .getChildren()
+          .filter((item) => item.type === FlatGridItemType.Primitive) as CategorizedPropertyItem[];
 
         return (
           <>
@@ -84,7 +84,12 @@ describe("Category renderer customization", () => {
 
       const dataProvider = setupDataProvider();
       const { queryByText } = render(
-        <VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={500} height={1200} orientation={Orientation.Horizontal} />,
+        <VirtualizedPropertyGridWithDataProvider
+          dataProvider={dataProvider}
+          width={500}
+          height={1200}
+          orientation={Orientation.Horizontal}
+        />,
       );
       await waitFor(() => expect(queryByText("rootCategory1Property")).not.to.be.null);
     });
@@ -99,7 +104,9 @@ describe("Category renderer customization", () => {
             void (async () => {
               const properties = props.categoryItem.getChildren() as CategorizedPropertyItem[];
               const dataProvider = props.gridContext.dataProvider as PresentationPropertyDataProvider;
-              const instanceKeys = properties.map(async ({ derivedRecord }) => dataProvider.getPropertyRecordInstanceKeys(derivedRecord));
+              const instanceKeys = properties.map(async ({ derivedRecord }) =>
+                dataProvider.getPropertyRecordInstanceKeys(derivedRecord),
+              );
               setInstanceKeys(await Promise.all(instanceKeys));
             })();
           },
@@ -142,18 +149,14 @@ describe("Property renderer customization", () => {
         expand: true,
       });
       const property = createPrimitiveStringProperty("rootCategoryProperty", "TestValue");
-      property.property.renderer = {
-        name: "my-renderer",
-      };
+      property.property.renderer = { name: "my-renderer" };
       return {
         onDataChanged: new PropertyDataChangeEvent(),
         getData: async (): Promise<PropertyData> => ({
           label: PropertyRecord.fromString("test_label"),
           description: "test_description",
           categories: [rootCategory],
-          records: {
-            [rootCategory.name]: [property],
-          },
+          records: { [rootCategory.name]: [property] },
           reusePropertyDataState: true,
         }),
       };
@@ -176,7 +179,9 @@ describe("Property renderer customization", () => {
       // __PUBLISH_EXTRACT_END__
 
       const dataProvider = setupDataProvider();
-      const { findAllByText } = render(<VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={500} height={1200} />);
+      const { findAllByText } = render(
+        <VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={500} height={1200} />,
+      );
       const renderedElements = await findAllByText("TestValue");
       expect(renderedElements[0].style.color).to.eq("red");
     });

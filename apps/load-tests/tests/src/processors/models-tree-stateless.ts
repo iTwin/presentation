@@ -10,7 +10,11 @@ import { StopWatch } from "@itwin/core-bentley";
 import { ECSqlReader } from "@itwin/core-common";
 import { Schema, SchemaContext } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
+import {
+  createIModelHierarchyProvider,
+  createLimitingECSqlQueryExecutor,
+  RowsLimitExceededError,
+} from "@itwin/presentation-hierarchies";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { doRequest, getCurrentIModelName, loadNodes, loadVariables, openIModelConnectionIfNeeded } from "./common";
@@ -30,7 +34,9 @@ export async function initScenario(context: VUContext, _events: VUEvents) {
 }
 
 export function terminateScenario(context: VUContext, _ee: VUEvents) {
-  console.log(`Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount as number}`);
+  console.log(
+    `Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount as number}`,
+  );
   context.vars.tooLargeHierarchyLevelsCount = 0;
   context.vars.isTestTerminated = true;
 }
@@ -45,7 +51,11 @@ export async function loadInitialHierarchy(context: VUContext, events: VUEvents)
 export async function loadFirstBranch(context: VUContext, events: VUEvents) {
   const timer = new StopWatch(undefined, true);
   await loadNodes(events, createModelsTreeProvider(context, events), (node, index) => node.children && index === 0);
-  events.emit("histogram", `Models Tree first branch load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
+  events.emit(
+    "histogram",
+    `Models Tree first branch load: ${getCurrentIModelName(context)}`,
+    timer.current.milliseconds,
+  );
 }
 
 export async function loadFullHierarchy(context: VUContext, events: VUEvents) {
@@ -67,7 +77,10 @@ function createModelsTreeProvider(context: VUContext, events: VUEvents) {
     const promise = doRequest("ECSchemaRpcInterface-2.0.0-getSchemaJSON", body, events, "schema_json")
       .then((schemaJson) => {
         if (isTestTerminated()) {
-          ENABLE_REQUESTS_LOGGING && console.log(`Received "schema json" response for ${schemaKey.name}, but the test is terminated, so skip parsing`);
+          ENABLE_REQUESTS_LOGGING &&
+            console.log(
+              `Received "schema json" response for ${schemaKey.name}, but the test is terminated, so skip parsing`,
+            );
           return undefined;
         }
         ENABLE_REQUESTS_LOGGING && console.log(`Received "schema json" response for ${schemaKey.name}`);
@@ -80,11 +93,19 @@ function createModelsTreeProvider(context: VUContext, events: VUEvents) {
     return promise;
   }
   const schedulingSchemaLocater: ISchemaLocater = {
-    getSchemaSync<T extends Schema>(_schemaKey: Readonly<SchemaKey>, _matchType: SchemaMatchType, _schemaContext: SchemaContext): T | undefined {
+    getSchemaSync<T extends Schema>(
+      _schemaKey: Readonly<SchemaKey>,
+      _matchType: SchemaMatchType,
+      _schemaContext: SchemaContext,
+    ): T | undefined {
       console.error(`getSchemaSync not implemented`);
       return undefined;
     },
-    async getSchemaInfo(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<SchemaInfo | undefined> {
+    async getSchemaInfo(
+      schemaKey: Readonly<SchemaKey>,
+      matchType: SchemaMatchType,
+      schemaContext: SchemaContext,
+    ): Promise<SchemaInfo | undefined> {
       const schemaJson = await requestSchemaJson(schemaKey);
       if (!schemaJson) {
         return undefined;
@@ -102,7 +123,11 @@ function createModelsTreeProvider(context: VUContext, events: VUEvents) {
         throw e;
       }
     },
-    async getSchema<T extends Schema>(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<T | undefined> {
+    async getSchema<T extends Schema>(
+      schemaKey: Readonly<SchemaKey>,
+      matchType: SchemaMatchType,
+      schemaContext: SchemaContext,
+    ): Promise<T | undefined> {
       await this.getSchemaInfo(schemaKey as SchemaKey, matchType, schemaContext);
       try {
         const schema = await schemaContext.getCachedSchema(schemaKey as SchemaKey, matchType);
@@ -120,7 +145,8 @@ function createModelsTreeProvider(context: VUContext, events: VUEvents) {
       const timer = new StopWatch(undefined, true);
       const body = JSON.stringify([imodelRpcProps, request]);
       return doRequest("IModelReadRpcInterface-3.7.0-queryRows", body, events, "query_rows").then((response) => {
-        ENABLE_REQUESTS_LOGGING && console.log(`Received "query rows" response for \`${request.query}\` in ${timer.current.milliseconds} ms`);
+        ENABLE_REQUESTS_LOGGING &&
+          console.log(`Received "query rows" response for \`${request.query}\` in ${timer.current.milliseconds} ms`);
         return response as DbQueryResponse;
       });
     },
@@ -142,10 +168,7 @@ function createModelsTreeProvider(context: VUContext, events: VUEvents) {
   };
   const provider = createIModelHierarchyProvider({
     imodelAccess,
-    hierarchyDefinition: new ModelsTreeDefinition({
-      imodelAccess,
-      hierarchyConfig: defaultHierarchyConfiguration,
-    }),
+    hierarchyDefinition: new ModelsTreeDefinition({ imodelAccess, hierarchyConfig: defaultHierarchyConfiguration }),
   });
 
   return async (parent: HierarchyNode | undefined) => {

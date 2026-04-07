@@ -10,9 +10,19 @@ import { IModelApp } from "@itwin/core-frontend";
 import { Button, Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
 import { DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
 import { PresentationInstanceFilter, PresentationInstanceFilterDialog } from "@itwin/presentation-components";
-import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey, registerTxnListeners } from "@itwin/presentation-core-interop";
+import {
+  createECSchemaProvider,
+  createECSqlQueryExecutor,
+  createIModelKey,
+  registerTxnListeners,
+} from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyNodeKey, HierarchySearchTree } from "@itwin/presentation-hierarchies";
+import {
+  createLimitingECSqlQueryExecutor,
+  GenericInstanceFilter,
+  HierarchyNodeKey,
+  HierarchySearchTree,
+} from "@itwin/presentation-hierarchies";
 import { LocalizationContextProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { StrataKitRootErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
@@ -26,7 +36,10 @@ import { TreeRendererWithFilterAction } from "./TreeRendererWithFilterAction";
 import type { ComponentPropsWithoutRef } from "react";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { ClassInfo, Descriptor, InstanceKey } from "@itwin/presentation-common";
-import type { PresentationInstanceFilterInfo, PresentationInstanceFilterPropertiesSource } from "@itwin/presentation-components";
+import type {
+  PresentationInstanceFilterInfo,
+  PresentationInstanceFilterPropertiesSource,
+} from "@itwin/presentation-components";
 import type { HierarchyLevelDetails, TreeNode } from "@itwin/presentation-hierarchies-react";
 import type { StrataKitTreeRendererAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
 import type { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
@@ -34,7 +47,15 @@ import type { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared
 type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;
 type IModelAccess = UseIModelTreeProps["imodelAccess"];
 
-export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number; treeLabel: string }) {
+export function StatelessTreeV2({
+  imodel,
+  ...props
+}: {
+  imodel: IModelConnection;
+  height: number;
+  width: number;
+  treeLabel: string;
+}) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
   useEffect(() => {
     const schemaProvider = createECSchemaProvider(imodel.schemaContext);
@@ -145,16 +166,7 @@ function Tree({
         imodel,
         rulesetOrId: {
           id: `Hierarchy level descriptor ruleset`,
-          rules: [
-            {
-              ruleType: "Content",
-              specifications: [
-                {
-                  specType: "SelectedNodeInstances",
-                },
-              ],
-            },
-          ],
+          rules: [{ ruleType: "Content", specifications: [{ specType: "SelectedNodeInstances" }] }],
         },
         displayType: DefaultContentDisplayTypes.PropertyPane,
         keys: new KeySet(inputKeys),
@@ -204,9 +216,7 @@ function Tree({
         filterHierarchyLevel={setFilteringOptions}
         selectionMode={"extended"}
         treeLabel={treeLabel}
-        getTreeItemProps={(node) => ({
-          decorations: <Icon href={getIcon(node)} />,
-        })}
+        getTreeItemProps={(node) => ({ decorations: <Icon href={getIcon(node)} /> })}
       />
     );
   };
@@ -248,7 +258,9 @@ function Tree({
       <Flex style={{ width: "100%", padding: "0.5rem" }}>
         <DebouncedSearchBox onChange={setSearchText} />
         <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
-        {imodel.isBriefcaseConnection() ? <Button onClick={() => void removeSelectedElements(imodel)}>Delete</Button> : null}
+        {imodel.isBriefcaseConnection() ? (
+          <Button onClick={() => void removeSelectedElements(imodel)}>Delete</Button>
+        ) : null}
         <Button
           onClick={() => {
             if (!treeRef.current) {
@@ -256,7 +268,9 @@ function Tree({
             }
             const selectedElements = getSelectedElementIds(imodel);
             treeRef.current.renameNode(
-              (node) => HierarchyNodeKey.isInstances(node.nodeData.key) && selectedElements.includes(node.nodeData.key.instanceKeys[0].id),
+              (node) =>
+                HierarchyNodeKey.isInstances(node.nodeData.key) &&
+                selectedElements.includes(node.nodeData.key.instanceKeys[0].id),
             );
           }}
         >
@@ -287,19 +301,25 @@ function Tree({
 
 type SearchBoxProps = ComponentPropsWithoutRef<typeof SearchBox>;
 
-function DebouncedSearchBox({ onChange, ...props }: Omit<SearchBoxProps, "onChange"> & { onChange: (text: string) => void }) {
+function DebouncedSearchBox({
+  onChange,
+  ...props
+}: Omit<SearchBoxProps, "onChange"> & { onChange: (text: string) => void }) {
   const handleChange = useMemo(() => {
     return debounced(onChange, 500);
   }, [onChange]);
 
-  return <SearchBox {...props} inputProps={{ ...props.inputProps, value: undefined, onChange: (e) => handleChange(e.currentTarget.value) }} />;
+  return (
+    <SearchBox
+      {...props}
+      inputProps={{ ...props.inputProps, value: undefined, onChange: (e) => handleChange(e.currentTarget.value) }}
+    />
+  );
 }
 
 function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
   const subject = new Subject<() => void>();
-  subject.pipe(debounceTime(delay)).subscribe({
-    next: (invoke) => invoke(),
-  });
+  subject.pipe(debounceTime(delay)).subscribe({ next: (invoke) => invoke() });
 
   return (args: TArgs) => {
     subject.next(() => {
@@ -324,7 +344,10 @@ function fromGenericFilter(descriptor: Descriptor, filter: GenericInstanceFilter
   return {
     filter: presentationFilter,
     usedClasses: (filter.filteredClassNames ?? [])
-      .map((name) => descriptor.selectClasses.find((selectClass) => selectClass.selectClassInfo.name === name)?.selectClassInfo)
+      .map(
+        (name) =>
+          descriptor.selectClasses.find((selectClass) => selectClass.selectClassInfo.name === name)?.selectClassInfo,
+      )
       .filter((classInfo): classInfo is ClassInfo => classInfo !== undefined),
   };
 }

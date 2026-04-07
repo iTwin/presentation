@@ -22,7 +22,10 @@ export interface ECSchemaProvider {
  * @public
  */
 export interface ECClassHierarchyInspector {
-  classDerivesFrom(derivedClassFullName: EC.FullClassName, candidateBaseClassFullName: EC.FullClassName): Promise<boolean> | boolean;
+  classDerivesFrom(
+    derivedClassFullName: EC.FullClassName,
+    candidateBaseClassFullName: EC.FullClassName,
+  ): Promise<boolean> | boolean;
 }
 
 /**
@@ -40,17 +43,21 @@ export function createCachingECClassHierarchyInspector(props: {
     return `${derivedClassName}/${baseClassName}`;
   }
   return {
-    classDerivesFrom(derivedClassFullName: EC.FullClassName, candidateBaseClassFullName: EC.FullClassName): Promise<boolean> | boolean {
+    classDerivesFrom(
+      derivedClassFullName: EC.FullClassName,
+      candidateBaseClassFullName: EC.FullClassName,
+    ): Promise<boolean> | boolean {
       const cacheKey = createCacheKey(derivedClassFullName, candidateBaseClassFullName);
       let result = map.get(cacheKey);
       if (result === undefined) {
-        result = Promise.all([getClass(props.schemaProvider, derivedClassFullName), getClass(props.schemaProvider, candidateBaseClassFullName)]).then(
-          async ([derivedClass, baseClass]) => {
-            const resolvedResult = await derivedClass.is(baseClass);
-            map.set(cacheKey, resolvedResult);
-            return resolvedResult;
-          },
-        );
+        result = Promise.all([
+          getClass(props.schemaProvider, derivedClassFullName),
+          getClass(props.schemaProvider, candidateBaseClassFullName),
+        ]).then(async ([derivedClass, baseClass]) => {
+          const resolvedResult = await derivedClass.is(baseClass);
+          map.set(cacheKey, resolvedResult);
+          return resolvedResult;
+        });
         map.set(cacheKey, result);
       }
       return result;
@@ -282,7 +289,17 @@ export namespace EC {
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/primitivetype/
    * @public
    */
-  export type PrimitiveType = "Binary" | "Boolean" | "DateTime" | "Double" | "Integer" | "Long" | "Point2d" | "Point3d" | "String" | "IGeometry";
+  export type PrimitiveType =
+    | "Binary"
+    | "Boolean"
+    | "DateTime"
+    | "Double"
+    | "Integer"
+    | "Long"
+    | "Point2d"
+    | "Point3d"
+    | "String"
+    | "IGeometry";
 
   /**
    * Defines a primitive property.

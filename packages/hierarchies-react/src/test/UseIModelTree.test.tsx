@@ -108,7 +108,9 @@ describe("useIModelTree hooks", () => {
         signal = abortSignal;
         return undefined;
       });
-      const { result } = renderHook(useIModelUnifiedSelectionTree, { initialProps: { ...initialProps, getSearchPaths } });
+      const { result } = renderHook(useIModelUnifiedSelectionTree, {
+        initialProps: { ...initialProps, getSearchPaths },
+      });
       await waitFor(() => {
         expect(getTreeRendererProps(result.current)).to.not.be.undefined;
       });
@@ -118,15 +120,15 @@ describe("useIModelTree hooks", () => {
 
   async function stubIModelHierarchyProviderFactory() {
     const hierarchyProvider = createHierarchyProviderStub();
-    const factory = sinon.fake<Parameters<typeof presentationHierarchiesModule.createIModelHierarchyProvider>, typeof hierarchyProvider>(() => {
+    const factory = sinon.fake<
+      Parameters<typeof presentationHierarchiesModule.createIModelHierarchyProvider>,
+      typeof hierarchyProvider
+    >(() => {
       return hierarchyProvider;
     });
 
     const presentationHierarchiesMock = mock.module("@itwin/presentation-hierarchies", {
-      namedExports: {
-        ...presentationHierarchiesModule,
-        createIModelHierarchyProvider: factory,
-      },
+      namedExports: { ...presentationHierarchiesModule, createIModelHierarchyProvider: factory },
     });
 
     return {

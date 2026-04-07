@@ -28,33 +28,35 @@ function exportDiagnosticsLogs(logs: DiagnosticsScopeLogs, ctx?: Context) {
     return;
   }
 
-  const span = trace.getTracer("iTwin.js Presentation").startActiveSpan(
-    logs.scope,
-    {
-      kind: SpanKind.INTERNAL,
-      attributes: { ...(logs.attributes ? logs.attributes : undefined) },
-      startTime: millisToHrTime(logs.scopeCreateTimestamp),
-    },
-    ctx ?? context.active(),
-    (thisSpan) => {
-      for (const entry of logs.logs ?? []) {
-        if (DiagnosticsLogEntry.isMessage(entry)) {
-          const eventAttributes = {
-            category: entry.category,
-            ...(entry.severity.dev ? { devSeverity: entry.severity.dev } : undefined),
-            ...(entry.severity.editor ? { editorSeverity: entry.severity.editor } : undefined),
-          };
-          thisSpan.addEvent(entry.message, eventAttributes, millisToHrTime(entry.timestamp));
-          if (entry.severity.dev === "error") {
-            thisSpan.setStatus({ code: SpanStatusCode.ERROR, message: entry.message });
+  const span = trace
+    .getTracer("iTwin.js Presentation")
+    .startActiveSpan(
+      logs.scope,
+      {
+        kind: SpanKind.INTERNAL,
+        attributes: { ...(logs.attributes ? logs.attributes : undefined) },
+        startTime: millisToHrTime(logs.scopeCreateTimestamp),
+      },
+      ctx ?? context.active(),
+      (thisSpan) => {
+        for (const entry of logs.logs ?? []) {
+          if (DiagnosticsLogEntry.isMessage(entry)) {
+            const eventAttributes = {
+              category: entry.category,
+              ...(entry.severity.dev ? { devSeverity: entry.severity.dev } : undefined),
+              ...(entry.severity.editor ? { editorSeverity: entry.severity.editor } : undefined),
+            };
+            thisSpan.addEvent(entry.message, eventAttributes, millisToHrTime(entry.timestamp));
+            if (entry.severity.dev === "error") {
+              thisSpan.setStatus({ code: SpanStatusCode.ERROR, message: entry.message });
+            }
+          } else {
+            exportDiagnosticsLogs(entry);
           }
-        } else {
-          exportDiagnosticsLogs(entry);
         }
-      }
-      return thisSpan;
-    },
-  );
+        return thisSpan;
+      },
+    );
   span.end(millisToHrTime(logs.scopeCreateTimestamp + logs.duration));
 }
 

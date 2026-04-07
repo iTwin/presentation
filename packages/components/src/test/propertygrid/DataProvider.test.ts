@@ -20,9 +20,17 @@ import {
   PropertyValueFormat,
   RelationshipMeaning,
 } from "@itwin/presentation-common";
-import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import {
+  FavoritePropertiesManager,
+  FavoritePropertiesScope,
+  Presentation,
+  PresentationManager,
+} from "@itwin/presentation-frontend";
 import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils.js";
-import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
+import {
+  DEFAULT_PROPERTY_GRID_RULESET,
+  PresentationPropertyDataProvider,
+} from "../../presentation-components/propertygrid/DataProvider.js";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -99,12 +107,8 @@ describe("PropertyDataProvider", () => {
 
   beforeEach(async () => {
     presentationManager = sinon.createStubInstance(PresentationManager, {
-      rulesets: {
-        onRulesetModified: new BeUiEvent(),
-      } as unknown as RulesetManager,
-      vars: {
-        onVariableChanged: new BeUiEvent(),
-      } as unknown as RulesetVariablesManager,
+      rulesets: { onRulesetModified: new BeUiEvent() } as unknown as RulesetManager,
+      vars: { onVariableChanged: new BeUiEvent() } as unknown as RulesetVariablesManager,
     });
     presentationManager.onIModelContentChanged = new BeUiEvent();
 
@@ -121,9 +125,9 @@ describe("PropertyDataProvider", () => {
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
     sinon.stub(Presentation, "favoriteProperties").get(() => favoritePropertiesManager);
     sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    }));
+    sinon
+      .stub(IModelApp, "quantityFormatter")
+      .get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
 
     provider = new Provider({ imodel, ruleset: rulesetId });
   });
@@ -363,17 +367,17 @@ describe("PropertyDataProvider", () => {
     it("set property data label", async () => {
       const item = createTestContentItem({ label: "test", values: {}, displayValues: {} });
       (provider as any).getContent = async () => new Content(createTestContentDescriptor({ fields: [] }), [item]);
-      expect(await provider.getData()).to.containSubset({
-        label: { value: { displayValue: "test" } },
-      });
+      expect(await provider.getData()).to.containSubset({ label: { value: { displayValue: "test" } } });
     });
 
     it("set property data description", async () => {
-      const item = createTestContentItem({ classInfo: createTestECClassInfo({ label: "test" }), values: {}, displayValues: {} });
-      (provider as any).getContent = async () => new Content(createTestContentDescriptor({ fields: [] }), [item]);
-      expect(await provider.getData()).to.containSubset({
-        description: "test",
+      const item = createTestContentItem({
+        classInfo: createTestECClassInfo({ label: "test" }),
+        values: {},
+        displayValues: {},
       });
+      (provider as any).getContent = async () => new Content(createTestContentDescriptor({ fields: [] }), [item]);
+      expect(await provider.getData()).to.containSubset({ description: "test" });
     });
 
     function runAllTestCases(name: string, setup: () => void) {
@@ -384,18 +388,11 @@ describe("PropertyDataProvider", () => {
 
         it("assigns category renderer", async () => {
           const field = createPrimitiveField({
-            category: createTestCategoryDescription({
-              name: "my-category",
-              renderer: { name: "test" },
-            }),
+            category: createTestCategoryDescription({ name: "my-category", renderer: { name: "test" } }),
           });
           const descriptor = createTestContentDescriptor({ fields: [field] });
-          const values: ValuesDictionary<any> = {
-            [field.name]: "",
-          };
-          const displayValues: ValuesDictionary<any> = {
-            [field.name]: "",
-          };
+          const values: ValuesDictionary<any> = { [field.name]: "" };
+          const displayValues: ValuesDictionary<any> = { [field.name]: "" };
           const record = createTestContentItem({ values, displayValues });
           (provider as any).getContent = async () => new Content(descriptor, [record]);
           expect(await provider.getData()).to.matchSnapshot();
@@ -413,12 +410,8 @@ describe("PropertyDataProvider", () => {
         it("returns primitive property data", async () => {
           const field = createPrimitiveField();
           const descriptor = createTestContentDescriptor({ fields: [field] });
-          const values: ValuesDictionary<any> = {
-            [field.name]: "some value",
-          };
-          const displayValues: ValuesDictionary<any> = {
-            [field.name]: "some display value",
-          };
+          const values: ValuesDictionary<any> = { [field.name]: "some value" };
+          const displayValues: ValuesDictionary<any> = { [field.name]: "some display value" };
           const record = createTestContentItem({ values, displayValues });
           (provider as any).getContent = async () => new Content(descriptor, [record]);
           expect(await provider.getData()).to.matchSnapshot();
@@ -437,12 +430,8 @@ describe("PropertyDataProvider", () => {
             ],
           });
           const descriptor = createTestContentDescriptor({ fields: [field] });
-          const values: ValuesDictionary<any> = {
-            [field.name]: 123.456789,
-          };
-          const displayValues: ValuesDictionary<any> = {
-            [field.name]: "123.5 m",
-          };
+          const values: ValuesDictionary<any> = { [field.name]: 123.456789 };
+          const displayValues: ValuesDictionary<any> = { [field.name]: "123.5 m" };
           const record = createTestContentItem({ values, displayValues });
           presentationManager.getContentIterator.resolves({
             descriptor,
@@ -454,9 +443,7 @@ describe("PropertyDataProvider", () => {
 
           // stub formats provider
           const onFormatsChanged = new BeUiEvent<FormatsChangedArgs>();
-          sinon.stub(IModelApp, "formatsProvider").get(() => ({
-            onFormatsChanged,
-          }));
+          sinon.stub(IModelApp, "formatsProvider").get(() => ({ onFormatsChanged }));
 
           // setup provider
           const dataChangedSpy = sinon.spy();
@@ -483,12 +470,8 @@ describe("PropertyDataProvider", () => {
         it("returns array property data", async () => {
           const field = createArrayField();
           const descriptor = createTestContentDescriptor({ fields: [field] });
-          const values = {
-            [field.name]: ["some value 1", "some value 2"],
-          };
-          const displayValues = {
-            [field.name]: ["some display value 1", "some display value 2"],
-          };
+          const values = { [field.name]: ["some value 1", "some value 2"] };
+          const displayValues = { [field.name]: ["some display value 1", "some display value 2"] };
           const record = createTestContentItem({ values, displayValues });
           (provider as any).getContent = async () => new Content(descriptor, [record]);
           expect(await provider.getData()).to.matchSnapshot();
@@ -497,15 +480,9 @@ describe("PropertyDataProvider", () => {
         it("returns struct property data", async () => {
           const field = createStructField();
           const descriptor = createTestContentDescriptor({ fields: [field] });
-          const values = {
-            [field.name]: {
-              [(field.type as StructTypeDescription).members[0].name]: "some value",
-            },
-          };
+          const values = { [field.name]: { [(field.type as StructTypeDescription).members[0].name]: "some value" } };
           const displayValues = {
-            [field.name]: {
-              [(field.type as StructTypeDescription).members[0].name]: "some display value",
-            },
+            [field.name]: { [(field.type as StructTypeDescription).members[0].name]: "some display value" },
           };
           const record = createTestContentItem({ values, displayValues });
           (provider as any).getContent = async () => new Content(descriptor, [record]);
@@ -521,12 +498,8 @@ describe("PropertyDataProvider", () => {
               nestedFields: [createTestSimpleContentField({ category })],
             });
             const descriptor = createTestContentDescriptor({ fields: [field] });
-            const values = {
-              [field.name]: [],
-            };
-            const displayValues = {
-              [field.name]: [],
-            };
+            const values = { [field.name]: [] };
+            const displayValues = { [field.name]: [] };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
@@ -536,29 +509,14 @@ describe("PropertyDataProvider", () => {
 
           it("returns nothing for nested content without nested fields", async () => {
             const category = createTestCategoryDescription();
-            const field = createTestNestedContentField({
-              name: "root-field",
-              category,
-              nestedFields: [],
-            });
+            const field = createTestNestedContentField({ name: "root-field", category, nestedFields: [] });
             const descriptor = createTestContentDescriptor({ fields: [field] });
             const values = {
               [field.name]: [
-                {
-                  primaryKeys: [createTestECInstanceKey()],
-                  values: {},
-                  displayValues: {},
-                  mergedFieldNames: [],
-                },
+                { primaryKeys: [createTestECInstanceKey()], values: {}, displayValues: {}, mergedFieldNames: [] },
               ],
             };
-            const displayValues = {
-              [field.name]: [
-                {
-                  displayValues: {},
-                },
-              ],
-            };
+            const displayValues = { [field.name]: [{ displayValues: {} }] };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
@@ -575,38 +533,22 @@ describe("PropertyDataProvider", () => {
               [field.name]: [
                 {
                   primaryKeys: [createTestECInstanceKey({ id: "0x1" })],
-                  values: {
-                    [nestedField.name]: "value 1",
-                  },
-                  displayValues: {
-                    [nestedField.name]: "display value 1",
-                  },
+                  values: { [nestedField.name]: "value 1" },
+                  displayValues: { [nestedField.name]: "display value 1" },
                   mergedFieldNames: [],
                 },
                 {
                   primaryKeys: [createTestECInstanceKey({ id: "0x2" })],
-                  values: {
-                    [nestedField.name]: "value 2",
-                  },
-                  displayValues: {
-                    [nestedField.name]: "display value 2",
-                  },
+                  values: { [nestedField.name]: "value 2" },
+                  displayValues: { [nestedField.name]: "display value 2" },
                   mergedFieldNames: [],
                 },
               ],
             };
             const displayValues = {
               [field.name]: [
-                {
-                  displayValues: {
-                    [nestedField.name]: "display value 1",
-                  },
-                },
-                {
-                  displayValues: {
-                    [nestedField.name]: "display value 2",
-                  },
-                },
+                { displayValues: { [nestedField.name]: "display value 1" } },
+                { displayValues: { [nestedField.name]: "display value 2" } },
               ],
             };
             const record = createTestContentItem({ values, displayValues });
@@ -625,35 +567,26 @@ describe("PropertyDataProvider", () => {
               nestedFields: [primitiveField3],
               relationshipMeaning: RelationshipMeaning.SameInstance,
             });
-            const rootField = createTestNestedContentField({ name: "root-field", category, nestedFields: [primitiveField2, middleField] });
+            const rootField = createTestNestedContentField({
+              name: "root-field",
+              category,
+              nestedFields: [primitiveField2, middleField],
+            });
             const descriptor = createTestContentDescriptor({ fields: [primitiveField1, rootField] });
             const values = {
               [primitiveField1.name]: "p1",
               [rootField.name]: [
                 {
                   primaryKeys: [createTestECInstanceKey({ id: "0x1" })],
-                  values: {
-                    [primitiveField2.name]: "p2",
-                    [middleField.name]: [],
-                  },
-                  displayValues: {
-                    [primitiveField2.name]: "p2",
-                    [middleField.name]: [],
-                  },
+                  values: { [primitiveField2.name]: "p2", [middleField.name]: [] },
+                  displayValues: { [primitiveField2.name]: "p2", [middleField.name]: [] },
                   mergedFieldNames: [],
                 },
               ],
             };
             const displayValues = {
               [primitiveField1.name]: "p1",
-              [rootField.name]: [
-                {
-                  displayValues: {
-                    [primitiveField2.name]: "p2",
-                    [middleField.name]: [],
-                  },
-                },
-              ],
+              [rootField.name]: [{ displayValues: { [primitiveField2.name]: "p2", [middleField.name]: [] } }],
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
@@ -671,7 +604,11 @@ describe("PropertyDataProvider", () => {
               nestedFields: [primitiveField3],
               relationshipMeaning: RelationshipMeaning.SameInstance,
             });
-            const rootField = createTestNestedContentField({ name: "root-field", category, nestedFields: [primitiveField2, middleField] });
+            const rootField = createTestNestedContentField({
+              name: "root-field",
+              category,
+              nestedFields: [primitiveField2, middleField],
+            });
             const descriptor = createTestContentDescriptor({ fields: [primitiveField1, rootField] });
             const values = {
               [primitiveField1.name]: "test",
@@ -683,25 +620,15 @@ describe("PropertyDataProvider", () => {
                     [middleField.name]: [
                       {
                         primaryKeys: [createTestECInstanceKey({ id: "0x2" })],
-                        values: {
-                          [primitiveField3.name]: "value 1",
-                        },
-                        displayValues: {
-                          [primitiveField3.name]: "display value 1",
-                        },
+                        values: { [primitiveField3.name]: "value 1" },
+                        displayValues: { [primitiveField3.name]: "display value 1" },
                         mergedFieldNames: [],
                       },
                     ],
                   },
                   displayValues: {
                     [primitiveField2.name]: "test",
-                    [middleField.name]: [
-                      {
-                        displayValues: {
-                          [primitiveField3.name]: "display value 1",
-                        },
-                      },
-                    ],
+                    [middleField.name]: [{ displayValues: { [primitiveField3.name]: "display value 1" } }],
                   },
                   mergedFieldNames: [],
                 },
@@ -713,13 +640,7 @@ describe("PropertyDataProvider", () => {
                 {
                   displayValues: {
                     [primitiveField2.name]: "test",
-                    [middleField.name]: [
-                      {
-                        displayValues: {
-                          [primitiveField3.name]: "display value 1",
-                        },
-                      },
-                    ],
+                    [middleField.name]: [{ displayValues: { [primitiveField3.name]: "display value 1" } }],
                   },
                 },
               ],
@@ -740,7 +661,11 @@ describe("PropertyDataProvider", () => {
               nestedFields: [primitiveField3],
               relationshipMeaning: RelationshipMeaning.SameInstance,
             });
-            const rootField = createTestNestedContentField({ name: "root-field", category, nestedFields: [primitiveField2, middleField] });
+            const rootField = createTestNestedContentField({
+              name: "root-field",
+              category,
+              nestedFields: [primitiveField2, middleField],
+            });
             const descriptor = createTestContentDescriptor({ fields: [primitiveField1, rootField] });
             const values = {
               [primitiveField1.name]: "test",
@@ -752,22 +677,14 @@ describe("PropertyDataProvider", () => {
                     [middleField.name]: [
                       {
                         primaryKeys: [createTestECInstanceKey({ id: "0x2" })],
-                        values: {
-                          [primitiveField3.name]: "value 1",
-                        },
-                        displayValues: {
-                          [primitiveField3.name]: "display value 1",
-                        },
+                        values: { [primitiveField3.name]: "value 1" },
+                        displayValues: { [primitiveField3.name]: "display value 1" },
                         mergedFieldNames: [],
                       },
                       {
                         primaryKeys: [createTestECInstanceKey({ id: "0x3" })],
-                        values: {
-                          [primitiveField3.name]: "value 2",
-                        },
-                        displayValues: {
-                          [primitiveField3.name]: "display value 2",
-                        },
+                        values: { [primitiveField3.name]: "value 2" },
+                        displayValues: { [primitiveField3.name]: "display value 2" },
                         mergedFieldNames: [],
                       },
                     ],
@@ -775,16 +692,8 @@ describe("PropertyDataProvider", () => {
                   displayValues: {
                     [primitiveField2.name]: "test",
                     [middleField.name]: [
-                      {
-                        displayValues: {
-                          [primitiveField3.name]: "display value 1",
-                        },
-                      },
-                      {
-                        displayValues: {
-                          [primitiveField3.name]: "display value 2",
-                        },
-                      },
+                      { displayValues: { [primitiveField3.name]: "display value 1" } },
+                      { displayValues: { [primitiveField3.name]: "display value 2" } },
                     ],
                   },
                   mergedFieldNames: [],
@@ -798,16 +707,8 @@ describe("PropertyDataProvider", () => {
                   displayValues: {
                     [primitiveField2.name]: "test",
                     [middleField.name]: [
-                      {
-                        displayValues: {
-                          [primitiveField3.name]: "display value 1",
-                        },
-                      },
-                      {
-                        displayValues: {
-                          [primitiveField3.name]: "display value 2",
-                        },
-                      },
+                      { displayValues: { [primitiveField3.name]: "display value 1" } },
+                      { displayValues: { [primitiveField3.name]: "display value 2" } },
                     ],
                   },
                 },
@@ -828,25 +729,15 @@ describe("PropertyDataProvider", () => {
               [field.name]: [
                 {
                   primaryKeys: [createTestECInstanceKey({ id: "0x1" })],
-                  values: {
-                    [nestedField.name]: "value 1",
-                  },
-                  displayValues: {
-                    [nestedField.name]: "display value 1",
-                  },
+                  values: { [nestedField.name]: "value 1" },
+                  displayValues: { [nestedField.name]: "display value 1" },
                   mergedFieldNames: [],
                 },
               ],
               [siblingRootField.name]: "value 3",
             };
             const displayValues = {
-              [field.name]: [
-                {
-                  displayValues: {
-                    [nestedField.name]: "display value 1",
-                  },
-                },
-              ],
+              [field.name]: [{ displayValues: { [nestedField.name]: "display value 1" } }],
               [siblingRootField.name]: "display value 3",
             };
             const record = createTestContentItem({ values, displayValues });
@@ -863,25 +754,13 @@ describe("PropertyDataProvider", () => {
               [field.name]: [
                 {
                   primaryKeys: [createTestECInstanceKey({ id: "0x1" })],
-                  values: {
-                    [nestedField.name]: "value 1",
-                  },
-                  displayValues: {
-                    [nestedField.name]: "display value 1",
-                  },
+                  values: { [nestedField.name]: "value 1" },
+                  displayValues: { [nestedField.name]: "display value 1" },
                   mergedFieldNames: [],
                 },
               ],
             };
-            const displayValues = {
-              [field.name]: [
-                {
-                  displayValues: {
-                    [nestedField.name]: "display value 1",
-                  },
-                },
-              ],
-            };
+            const displayValues = { [field.name]: [{ displayValues: { [nestedField.name]: "display value 1" } }] };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
             expect(await provider.getData()).to.matchSnapshot();
@@ -892,21 +771,19 @@ describe("PropertyDataProvider", () => {
             const category2 = createTestCategoryDescription({ name: "Category2" });
             const nestedField1 = createPrimitiveField({ name: "nested-field-1", category: category1 });
             const nestedField2 = createPrimitiveField({ name: "nested-field-2", category: category2 });
-            const field = createTestNestedContentField({ name: "root-field", category: category1, nestedFields: [nestedField1, nestedField2] });
+            const field = createTestNestedContentField({
+              name: "root-field",
+              category: category1,
+              nestedFields: [nestedField1, nestedField2],
+            });
             const siblingRootField = createPrimitiveField({ name: "sibling-root-field", category: category1 });
             const descriptor = createTestContentDescriptor({ fields: [field, siblingRootField] });
             const values = {
               [field.name]: [
                 {
                   primaryKeys: [createTestECInstanceKey({ id: "0x1" })],
-                  values: {
-                    [nestedField1.name]: "value 1",
-                    [nestedField2.name]: "value 2",
-                  },
-                  displayValues: {
-                    [nestedField1.name]: "display value 1",
-                    [nestedField2.name]: "display value 2",
-                  },
+                  values: { [nestedField1.name]: "value 1", [nestedField2.name]: "value 2" },
+                  displayValues: { [nestedField1.name]: "display value 1", [nestedField2.name]: "display value 2" },
                   mergedFieldNames: [],
                 },
               ],
@@ -914,12 +791,7 @@ describe("PropertyDataProvider", () => {
             };
             const displayValues = {
               [field.name]: [
-                {
-                  displayValues: {
-                    [nestedField1.name]: "display value 1",
-                    [nestedField2.name]: "display value 2",
-                  },
-                },
+                { displayValues: { [nestedField1.name]: "display value 1", [nestedField2.name]: "display value 2" } },
               ],
               [siblingRootField.name]: "display value 3",
             };
@@ -933,32 +805,25 @@ describe("PropertyDataProvider", () => {
             const category2 = createTestCategoryDescription({ name: "Category2" });
             const nestedField1 = createPrimitiveField({ name: "nested-field-1", category: category1 });
             const nestedField2 = createPrimitiveField({ name: "nested-field-2", category: category2 });
-            const field = createTestNestedContentField({ name: "root-field", category: category1, nestedFields: [nestedField1, nestedField2] });
+            const field = createTestNestedContentField({
+              name: "root-field",
+              category: category1,
+              nestedFields: [nestedField1, nestedField2],
+            });
             const descriptor = createTestContentDescriptor({ fields: [field] });
             const values = {
               [field.name]: [
                 {
                   primaryKeys: [createTestECInstanceKey({ id: "0x1" })],
-                  values: {
-                    [nestedField1.name]: "value 1",
-                    [nestedField2.name]: "value 2",
-                  },
-                  displayValues: {
-                    [nestedField1.name]: "display value 1",
-                    [nestedField2.name]: "display value 2",
-                  },
+                  values: { [nestedField1.name]: "value 1", [nestedField2.name]: "value 2" },
+                  displayValues: { [nestedField1.name]: "display value 1", [nestedField2.name]: "display value 2" },
                   mergedFieldNames: [],
                 },
               ],
             };
             const displayValues = {
               [field.name]: [
-                {
-                  displayValues: {
-                    [nestedField1.name]: "display value 1",
-                    [nestedField2.name]: "display value 2",
-                  },
-                },
+                { displayValues: { [nestedField1.name]: "display value 1", [nestedField2.name]: "display value 2" } },
               ],
             };
             const record = createTestContentItem({ values, displayValues });
@@ -970,31 +835,23 @@ describe("PropertyDataProvider", () => {
             const category1 = createTestCategoryDescription({ name: "Category1" });
             const category2 = createTestCategoryDescription({ name: "Category2" });
             const nestedField1 = createPrimitiveField({ name: "nested-field-1", category: category2 });
-            const field = createTestNestedContentField({ name: "root-field", category: category1, nestedFields: [nestedField1] });
+            const field = createTestNestedContentField({
+              name: "root-field",
+              category: category1,
+              nestedFields: [nestedField1],
+            });
             const descriptor = createTestContentDescriptor({ fields: [field] });
             const values = {
               [field.name]: [
                 {
                   primaryKeys: [createTestECInstanceKey({ id: "0x1" })],
-                  values: {
-                    [nestedField1.name]: "value 1",
-                  },
-                  displayValues: {
-                    [nestedField1.name]: "display value 1",
-                  },
+                  values: { [nestedField1.name]: "value 1" },
+                  displayValues: { [nestedField1.name]: "display value 1" },
                   mergedFieldNames: [],
                 },
               ],
             };
-            const displayValues = {
-              [field.name]: [
-                {
-                  displayValues: {
-                    [nestedField1.name]: "display value 1",
-                  },
-                },
-              ],
-            };
+            const displayValues = { [field.name]: [{ displayValues: { [nestedField1.name]: "display value 1" } }] };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
             expect(await provider.getData()).to.matchSnapshot();
@@ -1004,14 +861,14 @@ describe("PropertyDataProvider", () => {
             const category1 = createTestCategoryDescription({ name: "Category1" });
             const category2 = createTestCategoryDescription({ name: "Category2" });
             const nestedField1 = createPrimitiveField({ name: "nested-field-1", category: category2 });
-            const field = createTestNestedContentField({ name: "root-field", category: category1, nestedFields: [nestedField1] });
+            const field = createTestNestedContentField({
+              name: "root-field",
+              category: category1,
+              nestedFields: [nestedField1],
+            });
             const descriptor = createTestContentDescriptor({ categories: [category1, category2], fields: [field] });
-            const values = {
-              [field.name]: undefined,
-            };
-            const displayValues = {
-              [field.name]: "*** Varies ***",
-            };
+            const values = { [field.name]: undefined };
+            const displayValues = { [field.name]: "*** Varies ***" };
             const record = createTestContentItem({ values, displayValues, mergedFieldNames: [field.name] });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
             expect(await provider.getData()).to.matchSnapshot();
@@ -1022,32 +879,25 @@ describe("PropertyDataProvider", () => {
             const category2 = createTestCategoryDescription({ name: "Category2" });
             const nestedField1 = createPrimitiveField({ name: "nested-field-1", category: category2 });
             const nestedField2 = createPrimitiveField({ name: "nested-field-2", category: category2 });
-            const field = createTestNestedContentField({ name: "root-field", category: category1, nestedFields: [nestedField1, nestedField2] });
+            const field = createTestNestedContentField({
+              name: "root-field",
+              category: category1,
+              nestedFields: [nestedField1, nestedField2],
+            });
             const descriptor = createTestContentDescriptor({ fields: [field] });
             const values = {
               [field.name]: [
                 {
                   primaryKeys: [createTestECInstanceKey({ id: "0x1" })],
-                  values: {
-                    [nestedField1.name]: "value 1",
-                    [nestedField2.name]: "value 2",
-                  },
-                  displayValues: {
-                    [nestedField1.name]: "display value 1",
-                    [nestedField2.name]: "display value 2",
-                  },
+                  values: { [nestedField1.name]: "value 1", [nestedField2.name]: "value 2" },
+                  displayValues: { [nestedField1.name]: "display value 1", [nestedField2.name]: "display value 2" },
                   mergedFieldNames: [],
                 },
               ],
             };
             const displayValues = {
               [field.name]: [
-                {
-                  displayValues: {
-                    [nestedField1.name]: "display value 1",
-                    [nestedField2.name]: "display value 2",
-                  },
-                },
+                { displayValues: { [nestedField1.name]: "display value 1", [nestedField2.name]: "display value 2" } },
               ],
             };
             const record = createTestContentItem({ values, displayValues });
@@ -1062,8 +912,16 @@ describe("PropertyDataProvider", () => {
             const nestedField2 = createPrimitiveField({ name: "nested-field-2", category: category2 });
             const nestedField3 = createPrimitiveField({ name: "nested-field-3", category: category2 });
             const nestedField4 = createPrimitiveField({ name: "nested-field-4", category: category1 });
-            const middleField = createTestNestedContentField({ name: "middle-field", category: category2, nestedFields: [nestedField1, nestedField2] });
-            const rootField = createTestNestedContentField({ name: "root-field", category: category1, nestedFields: [middleField, nestedField3] });
+            const middleField = createTestNestedContentField({
+              name: "middle-field",
+              category: category2,
+              nestedFields: [nestedField1, nestedField2],
+            });
+            const rootField = createTestNestedContentField({
+              name: "root-field",
+              category: category1,
+              nestedFields: [middleField, nestedField3],
+            });
             const descriptor = createTestContentDescriptor({ fields: [rootField, nestedField4] });
             const values = {
               [rootField.name]: [
@@ -1073,10 +931,7 @@ describe("PropertyDataProvider", () => {
                     [middleField.name]: [
                       {
                         primaryKeys: [createTestECInstanceKey({ id: "0x2" })],
-                        values: {
-                          [nestedField1.name]: "value 1",
-                          [nestedField2.name]: "value 2",
-                        },
+                        values: { [nestedField1.name]: "value 1", [nestedField2.name]: "value 2" },
                         displayValues: {
                           [nestedField1.name]: "display value 1",
                           [nestedField2.name]: "display value 2",
@@ -1107,10 +962,7 @@ describe("PropertyDataProvider", () => {
                 {
                   displayValues: {
                     [middleField.name]: [
-                      {
-                        [nestedField1.name]: "display value 1",
-                        [nestedField2.name]: "display value 2",
-                      },
+                      { [nestedField1.name]: "display value 1", [nestedField2.name]: "display value 2" },
                     ],
                     [nestedField3.name]: "display value 3",
                   },
@@ -1132,13 +984,21 @@ describe("PropertyDataProvider", () => {
             const nestedField4 = createPrimitiveField({ name: "nested-field-4", category: category2 });
             const nestedField5 = createPrimitiveField({ name: "nested-field-5", category: category2 });
             const rootSiblingField = createPrimitiveField({ name: "root-sibling", category: category1 });
-            const middleField1 = createTestNestedContentField({ name: "middle-field-1", category: category1, nestedFields: [nestedField1, nestedField2] });
+            const middleField1 = createTestNestedContentField({
+              name: "middle-field-1",
+              category: category1,
+              nestedFields: [nestedField1, nestedField2],
+            });
             const middleField2 = createTestNestedContentField({
               name: "middle-field-2",
               category: category1,
               nestedFields: [nestedField3, nestedField4, nestedField5],
             });
-            const rootField = createTestNestedContentField({ name: "root-field", category: category1, nestedFields: [middleField1, middleField2] });
+            const rootField = createTestNestedContentField({
+              name: "root-field",
+              category: category1,
+              nestedFields: [middleField1, middleField2],
+            });
             const descriptor = createTestContentDescriptor({ fields: [rootField, rootSiblingField] });
             const values = {
               [rootField.name]: [
@@ -1148,10 +1008,7 @@ describe("PropertyDataProvider", () => {
                     [middleField1.name]: [
                       {
                         primaryKeys: [createTestECInstanceKey({ id: "0x2" })],
-                        values: {
-                          [nestedField1.name]: "value 1",
-                          [nestedField2.name]: "value 2",
-                        },
+                        values: { [nestedField1.name]: "value 1", [nestedField2.name]: "value 2" },
                         displayValues: {
                           [nestedField1.name]: "display value 1",
                           [nestedField2.name]: "display value 2",
@@ -1240,48 +1097,33 @@ describe("PropertyDataProvider", () => {
 
           it("doesn't include primitive fields with no values when set", async () => {
             const descriptor = createTestContentDescriptor({
-              fields: [createPrimitiveField({ name: "IncludedField" }), createPrimitiveField({ name: "ExcludedField" })],
+              fields: [
+                createPrimitiveField({ name: "IncludedField" }),
+                createPrimitiveField({ name: "ExcludedField" }),
+              ],
             });
-            const values: ValuesDictionary<any> = {
-              IncludedField: "some value",
-            };
-            const displayValues: ValuesDictionary<any> = {
-              IncludedField: "some display value",
-            };
+            const values: ValuesDictionary<any> = { IncludedField: "some value" };
+            const displayValues: ValuesDictionary<any> = { IncludedField: "some display value" };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
             expect(data.categories.length).to.eq(1);
             expect(data.records[data.categories[0].name].length).to.eq(1);
-            expect(data.records[data.categories[0].name]).to.containSubset([
-              {
-                property: { name: "IncludedField" },
-              },
-            ]);
+            expect(data.records[data.categories[0].name]).to.containSubset([{ property: { name: "IncludedField" } }]);
           });
 
           it("doesn't include array fields with no values when set", async () => {
             const descriptor = createTestContentDescriptor({
               fields: [createArrayField({ name: "WithItems" }), createArrayField({ name: "Empty" })],
             });
-            const values: ValuesDictionary<any> = {
-              WithItems: ["some value"],
-              Empty: [],
-            };
-            const displayValues: ValuesDictionary<any> = {
-              WithItems: ["some display value"],
-              Empty: [],
-            };
+            const values: ValuesDictionary<any> = { WithItems: ["some value"], Empty: [] };
+            const displayValues: ValuesDictionary<any> = { WithItems: ["some display value"], Empty: [] };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
             expect(data.categories.length).to.eq(1);
             expect(data.records[data.categories[0].name].length).to.eq(1);
-            expect(data.records[data.categories[0].name]).to.containSubset([
-              {
-                property: { name: "WithItems" },
-              },
-            ]);
+            expect(data.records[data.categories[0].name]).to.containSubset([{ property: { name: "WithItems" } }]);
           });
 
           it("doesn't include struct fields with no values when set", async () => {
@@ -1289,21 +1131,20 @@ describe("PropertyDataProvider", () => {
               fields: [
                 createStructField({
                   name: "WithMembers",
-                  members: [{ name: "TestMember", label: "Test", type: { valueFormat: PropertyValueFormat.Primitive, typeName: "string" } }],
+                  members: [
+                    {
+                      name: "TestMember",
+                      label: "Test",
+                      type: { valueFormat: PropertyValueFormat.Primitive, typeName: "string" },
+                    },
+                  ],
                 }),
                 createStructField({ name: "Empty", members: [] }),
               ],
             });
-            const values: ValuesDictionary<any> = {
-              WithMembers: {
-                TestMember: "some value",
-              },
-              Empty: {},
-            };
+            const values: ValuesDictionary<any> = { WithMembers: { TestMember: "some value" }, Empty: {} };
             const displayValues: ValuesDictionary<any> = {
-              WithMembers: {
-                TestMember: "some display value",
-              },
+              WithMembers: { TestMember: "some display value" },
               Empty: {},
             };
             const record = createTestContentItem({ values, displayValues });
@@ -1311,11 +1152,7 @@ describe("PropertyDataProvider", () => {
             const data = await provider.getData();
             expect(data.categories.length).to.eq(1);
             expect(data.records[data.categories[0].name].length).to.eq(1);
-            expect(data.records[data.categories[0].name]).to.containSubset([
-              {
-                property: { name: "WithMembers" },
-              },
-            ]);
+            expect(data.records[data.categories[0].name]).to.containSubset([{ property: { name: "WithMembers" } }]);
           });
 
           it("doesn't include nested fields with no values when set", async () => {
@@ -1324,7 +1161,10 @@ describe("PropertyDataProvider", () => {
               fields: [
                 createTestNestedContentField({
                   name: "nested",
-                  nestedFields: [createPrimitiveField({ name: "a", label: "a", category }), createPrimitiveField({ name: "b", label: "b", category })],
+                  nestedFields: [
+                    createPrimitiveField({ name: "a", label: "a", category }),
+                    createPrimitiveField({ name: "b", label: "b", category }),
+                  ],
                 }),
               ],
             });
@@ -1332,27 +1172,14 @@ describe("PropertyDataProvider", () => {
               nested: [
                 {
                   primaryKeys: [createTestECInstanceKey()],
-                  values: {
-                    a: "",
-                    b: "some value",
-                  },
-                  displayValues: {
-                    a: undefined,
-                    b: "some value",
-                  },
+                  values: { a: "", b: "some value" },
+                  displayValues: { a: undefined, b: "some value" },
                   mergedFieldNames: [],
                 },
               ],
             };
             const displayValues: ValuesDictionary<DisplayValue> = {
-              nested: [
-                {
-                  displayValues: {
-                    a: undefined,
-                    b: "some value",
-                  },
-                },
-              ],
+              nested: [{ displayValues: { a: undefined, b: "some value" } }],
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
@@ -1360,10 +1187,7 @@ describe("PropertyDataProvider", () => {
             expect(data.categories.length).to.eq(1);
             expect(data.records[data.categories[0].name].length).to.eq(1);
             expect(data.records[data.categories[0].name]).to.containSubset([
-              {
-                property: { displayLabel: "b" },
-                value: { value: "some value" },
-              },
+              { property: { displayLabel: "b" }, value: { value: "some value" } },
             ]);
           });
         });
@@ -1382,16 +1206,12 @@ describe("PropertyDataProvider", () => {
             const values = {
               Primitive: "some value",
               Array: ["some value 1", "some value 2"],
-              Struct: {
-                [(structField.type as StructTypeDescription).members[0].name]: "some value",
-              },
+              Struct: { [(structField.type as StructTypeDescription).members[0].name]: "some value" },
             };
             const displayValues = {
               Primitive: "some display value",
               Array: ["some display value 1", "some display value 2"],
-              Struct: {
-                [(structField.type as StructTypeDescription).members[0].name]: "some display value",
-              },
+              Struct: { [(structField.type as StructTypeDescription).members[0].name]: "some display value" },
             };
             const record = createTestContentItem({ values, displayValues });
             (provider as any).getContent = async () => new Content(descriptor, [record]);
@@ -1412,9 +1232,18 @@ describe("PropertyDataProvider", () => {
 
             const descriptor = createTestContentDescriptor({
               fields: [
-                createTestSimpleContentField({ name: "field1", category: createTestCategoryDescription({ name: "category1" }) }),
-                createTestSimpleContentField({ name: "field2", category: createTestCategoryDescription({ name: "category1" }) }),
-                createTestSimpleContentField({ name: "field3", category: createTestCategoryDescription({ name: "category2" }) }),
+                createTestSimpleContentField({
+                  name: "field1",
+                  category: createTestCategoryDescription({ name: "category1" }),
+                }),
+                createTestSimpleContentField({
+                  name: "field2",
+                  category: createTestCategoryDescription({ name: "category1" }),
+                }),
+                createTestSimpleContentField({
+                  name: "field3",
+                  category: createTestCategoryDescription({ name: "category2" }),
+                }),
               ],
             });
             const values: ValuesDictionary<any> = {};
@@ -1433,9 +1262,18 @@ describe("PropertyDataProvider", () => {
             (provider as any).isFieldFavorite = async (_field: Field) => true;
             const descriptor = createTestContentDescriptor({
               fields: [
-                createTestSimpleContentField({ name: "field1", category: createTestCategoryDescription({ name: "category1" }) }),
-                createTestSimpleContentField({ name: "field2", category: createTestCategoryDescription({ name: "category1" }) }),
-                createTestSimpleContentField({ name: "field3", category: createTestCategoryDescription({ name: "category2" }) }),
+                createTestSimpleContentField({
+                  name: "field1",
+                  category: createTestCategoryDescription({ name: "category1" }),
+                }),
+                createTestSimpleContentField({
+                  name: "field2",
+                  category: createTestCategoryDescription({ name: "category1" }),
+                }),
+                createTestSimpleContentField({
+                  name: "field3",
+                  category: createTestCategoryDescription({ name: "category2" }),
+                }),
               ],
             });
             const values: ValuesDictionary<any> = {};
@@ -1449,18 +1287,12 @@ describe("PropertyDataProvider", () => {
               expect(data.records[FAVORITES_CATEGORY_NAME]).to.be.undefined;
               expect(data.records[`${FAVORITES_CATEGORY_NAME}-category1`].length).to.eq(2);
               expect(data.records[`${FAVORITES_CATEGORY_NAME}-category1`]).to.containSubset([
-                {
-                  property: { name: "field1" },
-                },
-                {
-                  property: { name: "field2" },
-                },
+                { property: { name: "field1" } },
+                { property: { name: "field2" } },
               ]);
               expect(data.records[`${FAVORITES_CATEGORY_NAME}-category2`].length).to.eq(1);
               expect(data.records[`${FAVORITES_CATEGORY_NAME}-category2`]).to.containSubset([
-                {
-                  property: { name: "field3" },
-                },
+                { property: { name: "field3" } },
               ]);
             } else {
               expect(data.records[FAVORITES_CATEGORY_NAME].length).to.eq(3);
@@ -1498,15 +1330,9 @@ describe("PropertyDataProvider", () => {
             const records = data.records[category.name];
             expect(records.length).to.eq(3);
             expect(records).to.containSubset([
-              {
-                property: { displayLabel: "a" },
-              },
-              {
-                property: { displayLabel: "b" },
-              },
-              {
-                property: { displayLabel: "c" },
-              },
+              { property: { displayLabel: "a" } },
+              { property: { displayLabel: "b" } },
+              { property: { displayLabel: "c" } },
             ]);
           });
 
@@ -1543,23 +1369,25 @@ describe("PropertyDataProvider", () => {
             const records = data.records[category.name];
             expect(records.length).to.eq(3);
             expect(records).to.containSubset([
-              {
-                property: { displayLabel: "a" },
-              },
-              {
-                property: { displayLabel: "b" },
-              },
-              {
-                property: { displayLabel: "c" },
-              },
+              { property: { displayLabel: "a" } },
+              { property: { displayLabel: "b" } },
+              { property: { displayLabel: "c" } },
             ]);
           });
 
           describe("with nested content", () => {
             it("puts primitive records of nested content fields into favorite category", async () => {
               const parentCategory = createTestCategoryDescription({ name: "parent-category", label: "Parent" });
-              const childCategory = createTestCategoryDescription({ name: "child-category", label: "Child", parent: parentCategory });
-              const propertiesField = createTestSimpleContentField({ name: "primitive-property", label: "Primitive", category: childCategory });
+              const childCategory = createTestCategoryDescription({
+                name: "child-category",
+                label: "Child",
+                parent: parentCategory,
+              });
+              const propertiesField = createTestSimpleContentField({
+                name: "primitive-property",
+                label: "Primitive",
+                category: childCategory,
+              });
               const nestedContentField = createTestNestedContentField({
                 name: "nested-content-field",
                 label: "Nested Content",
@@ -1576,24 +1404,14 @@ describe("PropertyDataProvider", () => {
                 [nestedContentField.name]: [
                   {
                     primaryKeys: [createTestECInstanceKey()],
-                    values: {
-                      [propertiesField.name]: "test value",
-                    },
-                    displayValues: {
-                      [propertiesField.name]: "test display value",
-                    },
+                    values: { [propertiesField.name]: "test value" },
+                    displayValues: { [propertiesField.name]: "test display value" },
                     mergedFieldNames: [],
                   },
                 ],
               };
               const displayValues: ValuesDictionary<any> = {
-                [nestedContentField.name]: [
-                  {
-                    displayValues: {
-                      [propertiesField.name]: "test display value",
-                    },
-                  },
-                ],
+                [nestedContentField.name]: [{ displayValues: { [propertiesField.name]: "test display value" } }],
               };
               const record = createTestContentItem({ values, displayValues });
               (provider as any).getContent = async () => new Content(descriptor, [record]);
@@ -1605,36 +1423,37 @@ describe("PropertyDataProvider", () => {
                 const favoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
                 expect(favoritesCategory.childCategories!.length).to.eq(1);
                 expect(favoritesCategory.childCategories).to.containSubset([
-                  {
-                    label: "Parent",
-                    childCategories: [
-                      {
-                        label: "Child",
-                      },
-                    ],
-                  },
+                  { label: "Parent", childCategories: [{ label: "Child" }] },
                 ]);
                 expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`].length).to.eq(1);
                 expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`]).to.containSubset([
-                  {
-                    property: { displayLabel: "Primitive" },
-                  },
+                  { property: { displayLabel: "Primitive" } },
                 ]);
               } else {
                 expect(data.records[FAVORITES_CATEGORY_NAME].length).to.eq(1);
                 expect(data.records[FAVORITES_CATEGORY_NAME]).to.containSubset([
-                  {
-                    property: { displayLabel: "Primitive" },
-                  },
+                  { property: { displayLabel: "Primitive" } },
                 ]);
               }
             });
 
             it("puts the whole nested content record into favorite category when both the field and its nested fields are favorite", async () => {
               const category = createTestCategoryDescription({ label: "My Category" });
-              const propertiesField1 = createTestSimpleContentField({ name: "primitive-property-1", label: "Primitive 1", category });
-              const propertiesField2 = createTestSimpleContentField({ name: "primitive-property-2", label: "Primitive 2", category });
-              const propertiesField3 = createTestSimpleContentField({ name: "primitive-property-3", label: "Primitive 3", category });
+              const propertiesField1 = createTestSimpleContentField({
+                name: "primitive-property-1",
+                label: "Primitive 1",
+                category,
+              });
+              const propertiesField2 = createTestSimpleContentField({
+                name: "primitive-property-2",
+                label: "Primitive 2",
+                category,
+              });
+              const propertiesField3 = createTestSimpleContentField({
+                name: "primitive-property-3",
+                label: "Primitive 3",
+                category,
+              });
               const childNestedContentField = createTestNestedContentField({
                 name: "child-nested-content-field",
                 label: "Child Nested Content",
@@ -1650,7 +1469,11 @@ describe("PropertyDataProvider", () => {
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField, propertiesField2] });
 
               favoritePropertiesManager.hasAsync.callsFake(async (field) => {
-                return field.name === nestedContentField.name || field.name === propertiesField1.name || field.name === propertiesField2.name;
+                return (
+                  field.name === nestedContentField.name ||
+                  field.name === propertiesField1.name ||
+                  field.name === propertiesField2.name
+                );
               });
 
               const values: ValuesDictionary<any> = {
@@ -1662,12 +1485,8 @@ describe("PropertyDataProvider", () => {
                       [childNestedContentField.name]: [
                         {
                           primaryKeys: [createTestECInstanceKey()],
-                          values: {
-                            [propertiesField3.name]: "test value 3",
-                          },
-                          displayValues: {
-                            [propertiesField3.name]: "test display value 3",
-                          },
+                          values: { [propertiesField3.name]: "test value 3" },
+                          displayValues: { [propertiesField3.name]: "test display value 3" },
                           mergedFieldNames: [],
                         },
                       ],
@@ -1675,11 +1494,7 @@ describe("PropertyDataProvider", () => {
                     displayValues: {
                       [propertiesField1.name]: "test display value 1",
                       [childNestedContentField.name]: [
-                        {
-                          displayValues: {
-                            [propertiesField3.name]: "test display value 3",
-                          },
-                        },
+                        { displayValues: { [propertiesField3.name]: "test display value 3" } },
                       ],
                     },
                     mergedFieldNames: [],
@@ -1693,11 +1508,7 @@ describe("PropertyDataProvider", () => {
                     displayValues: {
                       [propertiesField1.name]: "test display value 1",
                       [childNestedContentField.name]: [
-                        {
-                          displayValues: {
-                            [propertiesField3.name]: "test display value 3",
-                          },
-                        },
+                        { displayValues: { [propertiesField3.name]: "test display value 3" } },
                       ],
                     },
                   },
@@ -1714,11 +1525,7 @@ describe("PropertyDataProvider", () => {
               if (provider.isNestedPropertyCategoryGroupingEnabled) {
                 const rootFavoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
                 expect(rootFavoritesCategory.childCategories!.length).to.eq(1);
-                expect(rootFavoritesCategory.childCategories).to.containSubset([
-                  {
-                    label: "My Category",
-                  },
-                ]);
+                expect(rootFavoritesCategory.childCategories).to.containSubset([{ label: "My Category" }]);
                 favoritesCategory = rootFavoritesCategory.childCategories![0];
               } else {
                 favoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
@@ -1730,20 +1537,14 @@ describe("PropertyDataProvider", () => {
                   property: { displayLabel: "Nested Content" },
                   value: {
                     members: {
-                      [propertiesField1.name]: {
-                        property: { displayLabel: "Primitive 1" },
-                      },
+                      [propertiesField1.name]: { property: { displayLabel: "Primitive 1" } },
                       [childNestedContentField.name]: {
                         property: { displayLabel: "Child Nested Content" },
                         value: {
                           items: [
                             {
                               value: {
-                                members: {
-                                  [propertiesField3.name]: {
-                                    property: { displayLabel: "Primitive 3" },
-                                  },
-                                },
+                                members: { [propertiesField3.name]: { property: { displayLabel: "Primitive 3" } } },
                               },
                             },
                           ],
@@ -1752,16 +1553,22 @@ describe("PropertyDataProvider", () => {
                     },
                   },
                 },
-                {
-                  property: { displayLabel: "Primitive 2" },
-                },
+                { property: { displayLabel: "Primitive 2" } },
               ]);
             });
 
             it("puts nested properties field into favorites category when parent field is merged", async () => {
               const parentCategory = createTestCategoryDescription({ name: "parent-category", label: "Parent" });
-              const childCategory = createTestCategoryDescription({ name: "child-category", label: "Child", parent: parentCategory });
-              const propertiesField = createTestSimpleContentField({ name: "primitive-property", label: "Primitive", category: childCategory });
+              const childCategory = createTestCategoryDescription({
+                name: "child-category",
+                label: "Child",
+                parent: parentCategory,
+              });
+              const propertiesField = createTestSimpleContentField({
+                name: "primitive-property",
+                label: "Primitive",
+                category: childCategory,
+              });
               const nestedContentField = createTestNestedContentField({
                 name: "nested-content-field",
                 label: "Nested Content",
@@ -1774,13 +1581,13 @@ describe("PropertyDataProvider", () => {
                 return field.name === propertiesField.name;
               });
 
-              const values: ValuesDictionary<any> = {
-                [nestedContentField.name]: undefined,
-              };
-              const displayValues: ValuesDictionary<any> = {
-                [nestedContentField.name]: "*** Varies ***",
-              };
-              const record = createTestContentItem({ values, displayValues, mergedFieldNames: [nestedContentField.name] });
+              const values: ValuesDictionary<any> = { [nestedContentField.name]: undefined };
+              const displayValues: ValuesDictionary<any> = { [nestedContentField.name]: "*** Varies ***" };
+              const record = createTestContentItem({
+                values,
+                displayValues,
+                mergedFieldNames: [nestedContentField.name],
+              });
               (provider as any).getContent = async () => new Content(descriptor, [record]);
 
               const data = await provider.getData();
@@ -1789,22 +1596,11 @@ describe("PropertyDataProvider", () => {
               if (provider.isNestedPropertyCategoryGroupingEnabled) {
                 const favoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
                 expect(favoritesCategory).to.containSubset({
-                  childCategories: [
-                    {
-                      label: parentCategory.label,
-                      childCategories: [
-                        {
-                          label: childCategory.label,
-                        },
-                      ],
-                    },
-                  ],
+                  childCategories: [{ label: parentCategory.label, childCategories: [{ label: childCategory.label }] }],
                 });
                 expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`].length).to.eq(1);
                 expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`]).to.containSubset([
-                  {
-                    property: { displayLabel: propertiesField.label },
-                  },
+                  { property: { displayLabel: propertiesField.label } },
                 ]);
               } else {
                 expect(data.records[FAVORITES_CATEGORY_NAME].length).to.eq(1);
@@ -1814,9 +1610,21 @@ describe("PropertyDataProvider", () => {
 
             it("doesn't put duplicate records for merged nested content fields that have multiple favorite properties", async () => {
               const parentCategory = createTestCategoryDescription({ name: "parent-category", label: "Parent" });
-              const childCategory = createTestCategoryDescription({ name: "child-category", label: "Child", parent: parentCategory });
-              const propertiesField1 = createTestSimpleContentField({ name: "primitive-property-1", label: "Primitive 1", category: childCategory });
-              const propertiesField2 = createTestSimpleContentField({ name: "primitive-property-2", label: "Primitive 2", category: childCategory });
+              const childCategory = createTestCategoryDescription({
+                name: "child-category",
+                label: "Child",
+                parent: parentCategory,
+              });
+              const propertiesField1 = createTestSimpleContentField({
+                name: "primitive-property-1",
+                label: "Primitive 1",
+                category: childCategory,
+              });
+              const propertiesField2 = createTestSimpleContentField({
+                name: "primitive-property-2",
+                label: "Primitive 2",
+                category: childCategory,
+              });
               const nestedContentField = createTestNestedContentField({
                 name: "nested-content-field",
                 label: "Nested Content",
@@ -1829,13 +1637,13 @@ describe("PropertyDataProvider", () => {
                 return field.name === propertiesField1.name || field.name === propertiesField2.name;
               });
 
-              const values: ValuesDictionary<any> = {
-                [nestedContentField.name]: undefined,
-              };
-              const displayValues: ValuesDictionary<any> = {
-                [nestedContentField.name]: "*** Varies ***",
-              };
-              const record = createTestContentItem({ values, displayValues, mergedFieldNames: [nestedContentField.name] });
+              const values: ValuesDictionary<any> = { [nestedContentField.name]: undefined };
+              const displayValues: ValuesDictionary<any> = { [nestedContentField.name]: "*** Varies ***" };
+              const record = createTestContentItem({
+                values,
+                displayValues,
+                mergedFieldNames: [nestedContentField.name],
+              });
               (provider as any).getContent = async () => new Content(descriptor, [record]);
 
               const data = await provider.getData();
@@ -1844,20 +1652,16 @@ describe("PropertyDataProvider", () => {
               if (provider.isNestedPropertyCategoryGroupingEnabled) {
                 const favoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
                 expect(favoritesCategory.childCategories!.length).to.eq(1);
-                expect(favoritesCategory.childCategories).to.containSubset([
-                  {
-                    label: "Parent",
-                  },
-                ]);
+                expect(favoritesCategory.childCategories).to.containSubset([{ label: "Parent" }]);
                 expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`].length).to.eq(1);
                 expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`]).to.containSubset([
-                  {
-                    property: { displayLabel: "Nested Content" },
-                  },
+                  { property: { displayLabel: "Nested Content" } },
                 ]);
               } else {
                 expect(data.records[FAVORITES_CATEGORY_NAME].length).to.eq(1);
-                expect(data.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.be.eq(nestedContentField.label);
+                expect(data.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.be.eq(
+                  nestedContentField.label,
+                );
               }
             });
           });
@@ -1876,34 +1680,11 @@ describe("PropertyDataProvider", () => {
             });
           };
 
-          const categoryAA = createTestCategoryDescription({
-            priority: 1,
-            name: "aa",
-            label: "aa",
-          });
-          const categoryBB = createTestCategoryDescription({
-            priority: 1,
-            name: "bb",
-            label: "bb",
-          });
-          const categoryB = createTestCategoryDescription({
-            priority: 1,
-            name: "b",
-            label: "b",
-            parent: categoryBB,
-          });
-          const categoryC = createTestCategoryDescription({
-            priority: 2,
-            name: "c",
-            label: "c",
-            parent: categoryAA,
-          });
-          const categoryA = createTestCategoryDescription({
-            priority: 3,
-            name: "a",
-            label: "a",
-            parent: categoryAA,
-          });
+          const categoryAA = createTestCategoryDescription({ priority: 1, name: "aa", label: "aa" });
+          const categoryBB = createTestCategoryDescription({ priority: 1, name: "bb", label: "bb" });
+          const categoryB = createTestCategoryDescription({ priority: 1, name: "b", label: "b", parent: categoryBB });
+          const categoryC = createTestCategoryDescription({ priority: 2, name: "c", label: "c", parent: categoryAA });
+          const categoryA = createTestCategoryDescription({ priority: 3, name: "a", label: "a", parent: categoryAA });
           const descriptor = createTestContentDescriptor({
             fields: [
               createTestSimpleContentField({ category: categoryB }),
@@ -1959,15 +1740,9 @@ describe("PropertyDataProvider", () => {
           const records = data.records[category.name];
           expect(records.length).to.eq(3);
           expect(records).to.containSubset([
-            {
-              property: { displayLabel: "a" },
-            },
-            {
-              property: { displayLabel: "b" },
-            },
-            {
-              property: { displayLabel: "c" },
-            },
+            { property: { displayLabel: "a" } },
+            { property: { displayLabel: "b" } },
+            { property: { displayLabel: "c" } },
           ]);
         });
 
@@ -2016,9 +1791,7 @@ describe("PropertyDataProvider", () => {
       const instanceKeys = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
       (provider as any).getContent = async () =>
         new Content(
-          createTestContentDescriptor({
-            fields: [createTestSimpleContentField({ name: "test-field-name" })],
-          }),
+          createTestContentDescriptor({ fields: [createTestSimpleContentField({ name: "test-field-name" })] }),
           [
             new Item({
               primaryKeys: instanceKeys,
@@ -2034,7 +1807,11 @@ describe("PropertyDataProvider", () => {
     });
 
     it("returns nested field instance keys", async () => {
-      const instanceKeys = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" }), createTestECInstanceKey({ id: "0x3" })];
+      const instanceKeys = [
+        createTestECInstanceKey({ id: "0x1" }),
+        createTestECInstanceKey({ id: "0x2" }),
+        createTestECInstanceKey({ id: "0x3" }),
+      ];
       (provider as any).getContent = async () =>
         new Content(
           createTestContentDescriptor({

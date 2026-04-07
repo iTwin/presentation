@@ -4,7 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { FormatterSpec, Format as QuantityFormat } from "@itwin/core-quantity";
-import { KindOfQuantity, OverrideFormat, SchemaKey, SchemaMatchType, SchemaUnitProvider } from "@itwin/ecschema-metadata";
+import {
+  KindOfQuantity,
+  OverrideFormat,
+  SchemaKey,
+  SchemaMatchType,
+  SchemaUnitProvider,
+} from "@itwin/ecschema-metadata";
 import { createDefaultValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
 
 import type { FormatProps, UnitsProvider, UnitSystemKey } from "@itwin/core-quantity";
@@ -77,7 +83,9 @@ async function getKindOfQuantity(schemas: SchemaContext, fullName: string) {
   }
   const koq = await schema.getItem(koqName, KindOfQuantity);
   if (!koq) {
-    throw new Error(`Invalid kind of quantity "${koqName}" specified in KoQ full name "${fullName}" - it does not exist in schema "${schemaName}"`);
+    throw new Error(
+      `Invalid kind of quantity "${koqName}" specified in KoQ full name "${fullName}" - it does not exist in schema "${schemaName}"`,
+    );
   }
   return koq;
 }
@@ -98,7 +106,10 @@ interface FormattingProps {
   persistenceUnitName: string;
 }
 
-async function getFormattingProps(koq: KindOfQuantity, unitSystem?: UnitSystemKey): Promise<FormattingProps | undefined> {
+async function getFormattingProps(
+  koq: KindOfQuantity,
+  unitSystem?: UnitSystemKey,
+): Promise<FormattingProps | undefined> {
   const persistenceUnit = await koq.persistenceUnit;
   /* c8 ignore next 3 */
   if (!persistenceUnit) {
@@ -111,7 +122,11 @@ async function getFormattingProps(koq: KindOfQuantity, unitSystem?: UnitSystemKe
   return { formatProps, persistenceUnitName: persistenceUnit.fullName };
 }
 
-async function getKoqFormatProps(koq: KindOfQuantity, persistenceUnit: Unit | InvertedUnit, unitSystem?: UnitSystemKey) {
+async function getKoqFormatProps(
+  koq: KindOfQuantity,
+  persistenceUnit: Unit | InvertedUnit,
+  unitSystem?: UnitSystemKey,
+) {
   const unitSystems = getUnitSystemGroupNames(unitSystem);
   // use one of KOQ presentation format that matches requested unit system
   const presentationFormat = await getKoqPresentationFormat(koq, unitSystems);
@@ -160,14 +175,7 @@ function getPersistenceUnitFormatProps(persistenceUnit: Unit | InvertedUnit): Fo
     type: "Decimal",
     uomSeparator: " ",
     decimalSeparator: ".",
-    composite: {
-      units: [
-        {
-          name: persistenceUnit.fullName,
-          label: persistenceUnit.label,
-        },
-      ],
-    },
+    composite: { units: [{ name: persistenceUnit.fullName, label: persistenceUnit.label }] },
   };
 }
 

@@ -22,7 +22,8 @@ describe("ConcatenatedValuePart", () => {
     it("returns correct result for different types of parts", () => {
       expect(ConcatenatedValuePart.isPrimitive("str")).to.be.false;
       expect(ConcatenatedValuePart.isPrimitive({ type: "Integer", value: 123 })).to.be.true;
-      expect(ConcatenatedValuePart.isPrimitive([{ type: "Integer", value: 123 }] satisfies ConcatenatedValue)).to.be.false;
+      expect(ConcatenatedValuePart.isPrimitive([{ type: "Integer", value: 123 }] satisfies ConcatenatedValue)).to.be
+        .false;
     });
   });
 
@@ -30,7 +31,9 @@ describe("ConcatenatedValuePart", () => {
     it("returns correct result for different types of parts", () => {
       expect(ConcatenatedValuePart.isConcatenatedValue("str")).to.be.false;
       expect(ConcatenatedValuePart.isConcatenatedValue({ type: "Integer", value: 123 })).to.be.false;
-      expect(ConcatenatedValuePart.isConcatenatedValue(["str", { type: "Integer", value: 123 }] satisfies ConcatenatedValue)).to.be.true;
+      expect(
+        ConcatenatedValuePart.isConcatenatedValue(["str", { type: "Integer", value: 123 }] satisfies ConcatenatedValue),
+      ).to.be.true;
     });
   });
 });
@@ -49,7 +52,11 @@ describe("ConcatenatedValue", () => {
     });
 
     it("serializes all parts in order", async () => {
-      const parts: ConcatenatedValuePart[] = ["str1", { type: "Integer", value: 123 }, ["str2", { type: "Integer", value: 123 }]];
+      const parts: ConcatenatedValuePart[] = [
+        "str1",
+        { type: "Integer", value: 123 },
+        ["str2", { type: "Integer", value: 123 }],
+      ];
       expect(
         await ConcatenatedValue.serialize({
           parts,

@@ -8,7 +8,10 @@ import { collect } from "presentation-test-utilities";
 import { from, of } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
-import { createDetermineChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/DetermineChildren.js";
+import {
+  createDetermineChildrenOperator,
+  LOGGING_NAMESPACE,
+} from "../../../hierarchies/imodel/operators/DetermineChildren.js";
 import { createTestProcessedGenericNode, setupLogging } from "../../Utils.js";
 
 describe("DetermineChildren", () => {
@@ -17,9 +20,7 @@ describe("DetermineChildren", () => {
   });
 
   it("doesn't check children if node has children determined", async () => {
-    const node = createTestProcessedGenericNode({
-      children: false,
-    });
+    const node = createTestProcessedGenericNode({ children: false });
     const hasNodes = sinon.spy();
     const result = await collect(from([node]).pipe(createDetermineChildrenOperator(hasNodes)));
     expect(hasNodes).to.not.be.called;
@@ -27,9 +28,7 @@ describe("DetermineChildren", () => {
   });
 
   it("determines node children", async () => {
-    const node = createTestProcessedGenericNode({
-      children: undefined,
-    });
+    const node = createTestProcessedGenericNode({ children: undefined });
     const hasNodes = sinon.stub().returns(of(true));
     const result = await collect(from([node]).pipe(createDetermineChildrenOperator(hasNodes)));
     expect(hasNodes).to.be.calledOnceWith(node);

@@ -40,7 +40,9 @@ describe("createRawPropertyValueSelector", () => {
   });
 
   it("returns selector for a property with component", () => {
-    expect(createRawPropertyValueSelector("alias", "property-name", "component")).to.eq("[alias].[property-name].[component]");
+    expect(createRawPropertyValueSelector("alias", "property-name", "component")).to.eq(
+      "[alias].[property-name].[component]",
+    );
   });
 });
 
@@ -59,7 +61,9 @@ describe("createRawPrimitiveValueSelector", () => {
   });
 
   it("returns point3d object", () => {
-    expect(createRawPrimitiveValueSelector({ x: 1.23, y: 4.56, z: 7.89 })).to.eq(`json_object('x', 1.23, 'y', 4.56, 'z', 7.89)`);
+    expect(createRawPrimitiveValueSelector({ x: 1.23, y: 4.56, z: 7.89 })).to.eq(
+      `json_object('x', 1.23, 'y', 4.56, 'z', 7.89)`,
+    );
   });
 
   it("returns string selector", () => {
@@ -100,12 +104,13 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
       ],
     });
     expect(
-      await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
-    ).to.deep.eq({
-      selector: "[a].[p]",
-      type: "String",
-      extendedType: "Json",
-    } satisfies TypedValueSelectClauseProps);
+      await createPrimitivePropertyValueSelectorProps({
+        schemaProvider,
+        propertyClassAlias: "a",
+        propertyClassName: "x.y",
+        propertyName: "p",
+      }),
+    ).to.deep.eq({ selector: "[a].[p]", type: "String", extendedType: "Json" } satisfies TypedValueSelectClauseProps);
   });
 
   it("creates selector props for Double property", async () => {
@@ -125,7 +130,12 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
       ],
     });
     expect(
-      await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
+      await createPrimitivePropertyValueSelectorProps({
+        schemaProvider,
+        propertyClassAlias: "a",
+        propertyClassName: "x.y",
+        propertyName: "p",
+      }),
     ).to.deep.eq({
       selector: "[a].[p]",
       type: "Double",
@@ -139,20 +149,16 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
     schemaProvider.stubEntityClass({
       schemaName: "x",
       className: "y",
-      properties: [
-        {
-          name: "p",
-          isPrimitive: () => false,
-          isNavigation: () => true,
-        } as EC.NavigationProperty,
-      ],
+      properties: [{ name: "p", isPrimitive: () => false, isNavigation: () => true } as EC.NavigationProperty],
     });
     expect(
-      await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
-    ).to.deep.eq({
-      selector: "[a].[p].[Id]",
-      type: "Id",
-    } satisfies TypedValueSelectClauseProps);
+      await createPrimitivePropertyValueSelectorProps({
+        schemaProvider,
+        propertyClassAlias: "a",
+        propertyClassName: "x.y",
+        propertyName: "p",
+      }),
+    ).to.deep.eq({ selector: "[a].[p].[Id]", type: "Id" } satisfies TypedValueSelectClauseProps);
   });
 
   it("creates selector props for Guid property", async () => {
@@ -171,11 +177,13 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
       ],
     });
     expect(
-      await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
-    ).to.deep.eq({
-      selector: "GuidToStr([a].[p])",
-      type: "String",
-    } satisfies TypedValueSelectClauseProps);
+      await createPrimitivePropertyValueSelectorProps({
+        schemaProvider,
+        propertyClassAlias: "a",
+        propertyClassName: "x.y",
+        propertyName: "p",
+      }),
+    ).to.deep.eq({ selector: "GuidToStr([a].[p])", type: "String" } satisfies TypedValueSelectClauseProps);
   });
 
   it("creates selector props for Point2d property", async () => {
@@ -194,7 +202,12 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
       ],
     });
     expect(
-      await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
+      await createPrimitivePropertyValueSelectorProps({
+        schemaProvider,
+        propertyClassAlias: "a",
+        propertyClassName: "x.y",
+        propertyName: "p",
+      }),
     ).to.deep.eq({
       selector: "json_object('x', [a].[p].[x], 'y', [a].[p].[y])",
       type: "Point2d",
@@ -218,7 +231,12 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
       ],
     });
     expect(
-      await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
+      await createPrimitivePropertyValueSelectorProps({
+        schemaProvider,
+        propertyClassAlias: "a",
+        propertyClassName: "x.y",
+        propertyName: "p",
+      }),
     ).to.deep.eq({
       selector: "json_object('x', [a].[p].[x], 'y', [a].[p].[y], 'z', [a].[p].[z])",
       type: "Point3d",
@@ -228,19 +246,27 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
 
   it("throws when requested class is not found", async () => {
     const schemaProvider = createECSchemaProviderStub();
-    await expect(createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).to
-      .eventually.be.rejected;
+    await expect(
+      createPrimitivePropertyValueSelectorProps({
+        schemaProvider,
+        propertyClassAlias: "a",
+        propertyClassName: "x.y",
+        propertyName: "p",
+      }),
+    ).to.eventually.be.rejected;
   });
 
   it("throws when requested property is not found", async () => {
     const schemaProvider = createECSchemaProviderStub();
-    schemaProvider.stubEntityClass({
-      schemaName: "x",
-      className: "y",
-      properties: [],
-    });
-    await expect(createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).to
-      .eventually.be.rejected;
+    schemaProvider.stubEntityClass({ schemaName: "x", className: "y", properties: [] });
+    await expect(
+      createPrimitivePropertyValueSelectorProps({
+        schemaProvider,
+        propertyClassAlias: "a",
+        propertyClassName: "x.y",
+        propertyName: "p",
+      }),
+    ).to.eventually.be.rejected;
   });
 
   it("throws when requested property is not primitive", async () => {
@@ -248,16 +274,16 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
     schemaProvider.stubEntityClass({
       schemaName: "x",
       className: "y",
-      properties: [
-        {
-          name: "p",
-          isPrimitive: () => false,
-          isNavigation: () => false,
-        } as EC.Property,
-      ],
+      properties: [{ name: "p", isPrimitive: () => false, isNavigation: () => false } as EC.Property],
     });
-    await expect(createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).to
-      .eventually.be.rejected;
+    await expect(
+      createPrimitivePropertyValueSelectorProps({
+        schemaProvider,
+        propertyClassAlias: "a",
+        propertyClassName: "x.y",
+        propertyName: "p",
+      }),
+    ).to.eventually.be.rejected;
   });
 
   it('throws when requested property is "Binary"', async () => {
@@ -274,8 +300,14 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
         } as EC.PrimitiveProperty,
       ],
     });
-    await expect(createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).to
-      .eventually.be.rejected;
+    await expect(
+      createPrimitivePropertyValueSelectorProps({
+        schemaProvider,
+        propertyClassAlias: "a",
+        propertyClassName: "x.y",
+        propertyName: "p",
+      }),
+    ).to.eventually.be.rejected;
   });
 
   it('throws when requested property is "IGeometry"', async () => {
@@ -292,29 +324,30 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
         } as EC.PrimitiveProperty,
       ],
     });
-    await expect(createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).to
-      .eventually.be.rejected;
+    await expect(
+      createPrimitivePropertyValueSelectorProps({
+        schemaProvider,
+        propertyClassAlias: "a",
+        propertyClassName: "x.y",
+        propertyName: "p",
+      }),
+    ).to.eventually.be.rejected;
   });
 });
 
 describe("createNullableSelector", () => {
   it("creates valid selector", () => {
-    expect(
-      createNullableSelector({
-        checkSelector: "CHECK",
-        valueSelector: "VALUE",
-      }),
-    ).to.deep.eq("IIF(CHECK, VALUE, NULL)");
+    expect(createNullableSelector({ checkSelector: "CHECK", valueSelector: "VALUE" })).to.deep.eq(
+      "IIF(CHECK, VALUE, NULL)",
+    );
   });
 });
 
 describe("createInstanceKeySelector", () => {
   it("creates valid selector", () => {
-    expect(
-      createInstanceKeySelector({
-        alias: "test",
-      }),
-    ).to.eq("json_object('className', ec_classname([test].[ECClassId], 's.c'), 'id', IdToHex([test].[ECInstanceId]))");
+    expect(createInstanceKeySelector({ alias: "test" })).to.eq(
+      "json_object('className', ec_classname([test].[ECClassId], 's.c'), 'id', IdToHex([test].[ECInstanceId]))",
+    );
   });
 });
 
@@ -322,65 +355,27 @@ const testDate = new Date();
 const CONCATENATED_VALUE_TEST_CASES = [
   {
     name: "adds check selector",
-    input: {
-      selectors: [],
-      checkSelector: "CHECK",
-    },
-    expectations: {
-      json: `IIF(CHECK, json_array(), NULL)`,
-      str: `IIF(CHECK, '', NULL)`,
-    },
+    input: { selectors: [], checkSelector: "CHECK" },
+    expectations: { json: `IIF(CHECK, json_array(), NULL)`, str: `IIF(CHECK, '', NULL)` },
   },
   {
     name: "concatenates selectors",
-    input: {
-      selectors: [{ selector: "a" }, { value: "b", type: "String" as const }],
-    },
-    expectations: {
-      json: `json_array(a, json_object('value', 'b', 'type', 'String'))`,
-      str: `CAST(a AS TEXT) || 'b'`,
-    },
+    input: { selectors: [{ selector: "a" }, { value: "b", type: "String" as const }] },
+    expectations: { json: `json_array(a, json_object('value', 'b', 'type', 'String'))`, str: `CAST(a AS TEXT) || 'b'` },
   },
   {
     name: "serializes primitive value selector without type",
-    input: {
-      selectors: [
-        {
-          selector: "xxx",
-        },
-      ],
-    },
-    expectations: {
-      json: `json_array(xxx)`,
-      str: `CAST(xxx AS TEXT)`,
-    },
+    input: { selectors: [{ selector: "xxx" }] },
+    expectations: { json: `json_array(xxx)`, str: `CAST(xxx AS TEXT)` },
   },
   {
     name: "serializes primitive value selector with type",
-    input: {
-      selectors: [
-        {
-          selector: "xxx",
-          type: "Integer" as const,
-        },
-      ],
-    },
-    expectations: {
-      json: `json_array(json_object('value', xxx, 'type', 'Integer'))`,
-      str: `CAST(xxx AS TEXT)`,
-    },
+    input: { selectors: [{ selector: "xxx", type: "Integer" as const }] },
+    expectations: { json: `json_array(json_object('value', xxx, 'type', 'Integer'))`, str: `CAST(xxx AS TEXT)` },
   },
   {
     name: "serializes primitive value selector with type and extended type",
-    input: {
-      selectors: [
-        {
-          selector: "xxx",
-          type: "Integer" as const,
-          extendedType: "TestExtendedType",
-        },
-      ],
-    },
+    input: { selectors: [{ selector: "xxx", type: "Integer" as const, extendedType: "TestExtendedType" }] },
     expectations: {
       json: `json_array(json_object('value', xxx, 'type', 'Integer', 'extendedType', 'TestExtendedType'))`,
       str: `CAST(xxx AS TEXT)`,
@@ -388,9 +383,7 @@ const CONCATENATED_VALUE_TEST_CASES = [
   },
   {
     name: "serializes primitive Date value",
-    input: {
-      selectors: [{ type: "DateTime" as const, value: testDate }],
-    },
+    input: { selectors: [{ type: "DateTime" as const, value: testDate }] },
     expectations: {
       json: `json_array(json_object('value', '${testDate.toISOString()}', 'type', 'DateTime'))`,
       str: `'${testDate.toLocaleString()}'`,
@@ -398,9 +391,7 @@ const CONCATENATED_VALUE_TEST_CASES = [
   },
   {
     name: "serializes primitive Point2d value",
-    input: {
-      selectors: [{ type: "Point2d" as const, value: { x: 1, y: 2 } }],
-    },
+    input: { selectors: [{ type: "Point2d" as const, value: { x: 1, y: 2 } }] },
     expectations: {
       json: `json_array(json_object('value', json_object('x', 1, 'y', 2), 'type', 'Point2d'))`,
       str: `'(1, 2)'`,
@@ -408,9 +399,7 @@ const CONCATENATED_VALUE_TEST_CASES = [
   },
   {
     name: "serializes primitive Point3d value",
-    input: {
-      selectors: [{ type: "Point3d" as const, value: { x: 1, y: 2, z: 3 } }],
-    },
+    input: { selectors: [{ type: "Point3d" as const, value: { x: 1, y: 2, z: 3 } }] },
     expectations: {
       json: `json_array(json_object('value', json_object('x', 1, 'y', 2, 'z', 3), 'type', 'Point3d'))`,
       str: `'(1, 2, 3)'`,
@@ -418,29 +407,17 @@ const CONCATENATED_VALUE_TEST_CASES = [
   },
   {
     name: "serializes primitive Id64 value",
-    input: {
-      selectors: [{ type: "Id" as const, value: "0x123" }],
-    },
-    expectations: {
-      json: `json_array(json_object('value', 0x123, 'type', 'Id'))`,
-      str: `'0x123'`,
-    },
+    input: { selectors: [{ type: "Id" as const, value: "0x123" }] },
+    expectations: { json: `json_array(json_object('value', 0x123, 'type', 'Id'))`, str: `'0x123'` },
   },
   {
     name: "serializes primitive String value",
-    input: {
-      selectors: [{ type: "String" as const, value: "test" }],
-    },
-    expectations: {
-      json: `json_array(json_object('value', 'test', 'type', 'String'))`,
-      str: `'test'`,
-    },
+    input: { selectors: [{ type: "String" as const, value: "test" }] },
+    expectations: { json: `json_array(json_object('value', 'test', 'type', 'String'))`, str: `'test'` },
   },
   {
     name: "serializes primitive Double value",
-    input: {
-      selectors: [{ type: "Double" as const, koqName: "TestKindOfQuantity", value: 456.789 }],
-    },
+    input: { selectors: [{ type: "Double" as const, koqName: "TestKindOfQuantity", value: 456.789 }] },
     expectations: {
       json: `json_array(json_object('value', 456.789, 'type', 'Double', 'koqName', 'TestKindOfQuantity'))`,
       str: `'456.789'`,
@@ -448,30 +425,22 @@ const CONCATENATED_VALUE_TEST_CASES = [
   },
   {
     name: "serializes primitive Boolean value: false",
-    input: {
-      selectors: [{ type: "Boolean" as const, value: false }],
-    },
-    expectations: {
-      json: `json_array(json_object('value', FALSE, 'type', 'Boolean'))`,
-      str: `'false'`,
-    },
+    input: { selectors: [{ type: "Boolean" as const, value: false }] },
+    expectations: { json: `json_array(json_object('value', FALSE, 'type', 'Boolean'))`, str: `'false'` },
   },
   {
     name: "serializes primitive Boolean value: true",
-    input: {
-      selectors: [{ type: "Boolean" as const, value: true }],
-    },
-    expectations: {
-      json: `json_array(json_object('value', TRUE, 'type', 'Boolean'))`,
-      str: `'true'`,
-    },
+    input: { selectors: [{ type: "Boolean" as const, value: true }] },
+    expectations: { json: `json_array(json_object('value', TRUE, 'type', 'Boolean'))`, str: `'true'` },
   },
 ];
 
 describe("createConcatenatedValueJsonSelector", () => {
   CONCATENATED_VALUE_TEST_CASES.forEach(({ name, input, expectations }) => {
     it(name, () => {
-      expect(trimWhitespace(createConcatenatedValueJsonSelector(input.selectors, input.checkSelector))).to.eq(trimWhitespace(expectations.json));
+      expect(trimWhitespace(createConcatenatedValueJsonSelector(input.selectors, input.checkSelector))).to.eq(
+        trimWhitespace(expectations.json),
+      );
     });
   });
 });
@@ -479,7 +448,9 @@ describe("createConcatenatedValueJsonSelector", () => {
 describe("createConcatenatedValueStringSelector", () => {
   CONCATENATED_VALUE_TEST_CASES.forEach(({ name, input, expectations }) => {
     it(name, () => {
-      expect(trimWhitespace(createConcatenatedValueStringSelector(input.selectors, input.checkSelector))).to.eq(trimWhitespace(expectations.str));
+      expect(trimWhitespace(createConcatenatedValueStringSelector(input.selectors, input.checkSelector))).to.eq(
+        trimWhitespace(expectations.str),
+      );
     });
   });
 });

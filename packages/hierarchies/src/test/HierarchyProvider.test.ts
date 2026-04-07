@@ -71,10 +71,7 @@ describe("createHierarchyProvider", () => {
   });
 
   it("allows providers with custom methods", async () => {
-    const provider = createHierarchyProvider(() => ({
-      async *getNodes() {},
-      customMethod: sinon.spy(),
-    }));
+    const provider = createHierarchyProvider(() => ({ async *getNodes() {}, customMethod: sinon.spy() }));
     provider.customMethod();
     expect(provider.customMethod).to.be.calledOnce;
   });

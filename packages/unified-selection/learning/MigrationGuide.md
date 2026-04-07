@@ -52,11 +52,7 @@ Before the deprecation, we made sure that migration is as smooth as possible by 
 
    // Initialize Presentation with our selection storage, to make sure that any components, using `Presentation.selection`,
    // use the same underlying selection store.
-   await Presentation.initialize({
-     selection: {
-       selectionStorage,
-     },
-   });
+   await Presentation.initialize({ selection: { selectionStorage } });
    ```
 
    <!-- END EXTRACTION -->
@@ -158,7 +154,10 @@ There is no such global "active" selection scope in the new system and in case c
 In some rare cases, consumers need to compute selection based on the picked elements and an arbitrary selection scope. To achieve that in the old system, you'd do something like this:
 
 ```ts
-const selection: KeySet = await Presentation.selection.scopes.computeSelection(iModelConnection, elementIds, { id: "element", ancestorLevel: 1 });
+const selection: KeySet = await Presentation.selection.scopes.computeSelection(iModelConnection, elementIds, {
+  id: "element",
+  ancestorLevel: 1,
+});
 ```
 
 In the new system, the `computeSelection` is a top-level function:

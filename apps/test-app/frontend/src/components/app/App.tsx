@@ -59,11 +59,7 @@ export function App() {
   const [state, setState] = useAppState();
 
   const onIModelSelected = (imodel: IModelConnection | undefined, path?: string) => {
-    setState((prev) => ({
-      ...prev,
-      imodel,
-      imodelPath: path,
-    }));
+    setState((prev) => ({ ...prev, imodel, imodelPath: path }));
   };
 
   const onRulesetSelected = (rulesetId: string | undefined) => {
@@ -75,10 +71,7 @@ export function App() {
       });
     }
 
-    setState((prev) => ({
-      ...prev,
-      rulesetId,
-    }));
+    setState((prev) => ({ ...prev, rulesetId }));
   };
 
   const onUnitSystemSelected = async (unitSystem: UnitSystemKey) => {
@@ -86,10 +79,7 @@ export function App() {
   };
 
   const onPersistSettingsValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setState((prev) => ({
-      ...prev,
-      persistSettings: e.target.checked,
-    }));
+    setState((prev) => ({ ...prev, persistSettings: e.target.checked }));
   };
 
   useEffect(() => {
@@ -98,10 +88,15 @@ export function App() {
     }
     const schemaUnitsProvider = new SchemaUnitProvider(state.imodel.schemaContext);
     IModelApp.quantityFormatter.unitsProvider = schemaUnitsProvider;
-    const schemaFormatsProvider = new SchemaFormatsProvider(state.imodel.schemaContext, IModelApp.quantityFormatter.activeUnitSystem);
-    const removeFormatterListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener((args) => {
-      schemaFormatsProvider.unitSystem = args.system;
-    });
+    const schemaFormatsProvider = new SchemaFormatsProvider(
+      state.imodel.schemaContext,
+      IModelApp.quantityFormatter.activeUnitSystem,
+    );
+    const removeFormatterListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(
+      (args) => {
+        schemaFormatsProvider.unitSystem = args.system;
+      },
+    );
     IModelApp.formatsProvider = schemaFormatsProvider;
 
     return () => {
@@ -134,10 +129,16 @@ export function App() {
       const hiliteSetProvider = createHiliteSetProvider({
         imodelAccess: {
           ...createECSqlQueryExecutor(state.imodel),
-          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(state.imodel.schemaContext) }),
+          ...createCachingECClassHierarchyInspector({
+            schemaProvider: createECSchemaProvider(state.imodel.schemaContext),
+          }),
         },
       });
-      from(hiliteSetProvider.getHiliteSet({ selectables: MyAppFrontend.selectionStorage.getSelection({ imodelKey: createIModelKey(state.imodel) }) }))
+      from(
+        hiliteSetProvider.getHiliteSet({
+          selectables: MyAppFrontend.selectionStorage.getSelection({ imodelKey: createIModelKey(state.imodel) }),
+        }),
+      )
         .pipe(
           takeUntil(cancel),
           reduce<HiliteSet, { elements: Id64String[] }>(
@@ -164,7 +165,14 @@ export function App() {
   }, [state.imodel]);
 
   return (
-    <ThemeProvider theme={"light"} future={{ themeBridge: true }} as={Root} colorScheme={"light"} synchronizeColorScheme density="dense">
+    <ThemeProvider
+      theme={"light"}
+      future={{ themeBridge: true }}
+      as={Root}
+      colorScheme={"light"}
+      synchronizeColorScheme
+      density="dense"
+    >
       <UnifiedSelectionContextProvider storage={MyAppFrontend.selectionStorage}>
         <div className="app">
           <div className="app-header">
@@ -173,8 +181,16 @@ export function App() {
           <div className="app-pickers">
             <IModelSelector onIModelSelected={onIModelSelected} activeIModelPath={state.imodelPath} />
             <RulesetSelector onRulesetSelected={onRulesetSelected} activeRulesetId={state.rulesetId} />
-            <UnitSystemSelector selectedUnitSystem={state.activeUnitSystem} onUnitSystemSelected={onUnitSystemSelected} />
-            <ToggleSwitch label="Persist settings" labelPosition="right" checked={state.persistSettings} onChange={onPersistSettingsValueChange} />
+            <UnitSystemSelector
+              selectedUnitSystem={state.activeUnitSystem}
+              onUnitSystemSelected={onUnitSystemSelected}
+            />
+            <ToggleSwitch
+              label="Persist settings"
+              labelPosition="right"
+              checked={state.persistSettings}
+              onChange={onPersistSettingsValueChange}
+            />
           </div>
           {state.imodel ? <IModelComponents imodel={state.imodel} rulesetId={state.rulesetId} /> : null}
         </div>
@@ -184,9 +200,7 @@ export function App() {
 }
 
 function updateAppSettings(state: State) {
-  const settings: MyAppSettings = {
-    persistSettings: state.persistSettings,
-  };
+  const settings: MyAppSettings = { persistSettings: state.persistSettings };
   if (state.persistSettings) {
     settings.imodelPath = state.imodelPath;
     settings.rulesetId = state.rulesetId;
@@ -226,10 +240,7 @@ function useAppState(): [State, (produceState: (prev: State) => State) => void] 
 
   useEffect(() => {
     return IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(({ system }) => {
-      updateState((prev) => ({
-        ...prev,
-        activeUnitSystem: system,
-      }));
+      updateState((prev) => ({ ...prev, activeUnitSystem: system }));
     });
   }, []);
 
@@ -258,7 +269,12 @@ function IModelComponents(props: IModelComponentsProps) {
           {
             id: "primaryContent",
             classId: "",
-            content: <ViewportContentControl imodel={imodel} onSelectionScopeChanged={(scope) => (activeSelectionScope.current = scope)} />,
+            content: (
+              <ViewportContentControl
+                imodel={imodel}
+                onSelectionScopeChanged={(scope) => (activeSelectionScope.current = scope)}
+              />
+            ),
           },
         ],
       }),
@@ -377,7 +393,12 @@ function MultiDataSourceTreePanel(props: { imodel: IModelConnection }) {
   const { width, height, ref } = useResizeDetector<HTMLDivElement>();
   return (
     <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
-      <MultiDataSourceTree treeLabel="Multi data source tree" imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
+      <MultiDataSourceTree
+        treeLabel="Multi data source tree"
+        imodel={props.imodel}
+        width={width ?? 0}
+        height={height ?? 0}
+      />
     </div>
   );
 }

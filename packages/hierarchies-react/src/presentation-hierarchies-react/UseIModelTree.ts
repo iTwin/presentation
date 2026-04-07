@@ -101,10 +101,7 @@ function useIModelTreeProps(
           imodelAccess,
           imodelChanged,
           hierarchyDefinition: getHierarchyDefinition({ imodelAccess }),
-          localizedStrings: {
-            other: translate("other"),
-            unspecified: translate("unspecified"),
-          },
+          localizedStrings: { other: translate("other"), unspecified: translate("unspecified") },
         }),
       [imodelAccess, imodelChanged, translate, getHierarchyDefinition],
     ),

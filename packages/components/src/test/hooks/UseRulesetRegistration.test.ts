@@ -20,9 +20,7 @@ describe("[deprecated] useRulesetRegistration", () => {
   interface HookProps {
     ruleset: Ruleset;
   }
-  const initialProps: HookProps = {
-    ruleset: { id: "test-ruleset", rules: [] },
-  };
+  const initialProps: HookProps = { ruleset: { id: "test-ruleset", rules: [] } };
 
   const rulesetManagerStub = {
     add: sinon.stub<Parameters<RulesetManager["add"]>, ReturnType<RulesetManager["add"]>>(),
@@ -30,9 +28,7 @@ describe("[deprecated] useRulesetRegistration", () => {
   };
 
   before(() => {
-    sinon.stub(Presentation, "presentation").get(() => ({
-      rulesets: () => rulesetManagerStub,
-    }));
+    sinon.stub(Presentation, "presentation").get(() => ({ rulesets: () => rulesetManagerStub }));
   });
 
   after(() => {
@@ -49,7 +45,9 @@ describe("[deprecated] useRulesetRegistration", () => {
     rulesetManagerStub.add.returns(registeredRulesetPromise);
     const { unmount } = renderHook((props: HookProps) => useRulesetRegistration(props.ruleset), { initialProps });
 
-    const registered = new RegisteredRuleset(initialProps.ruleset, "testId", async (r) => Presentation.presentation.rulesets().remove(r));
+    const registered = new RegisteredRuleset(initialProps.ruleset, "testId", async (r) =>
+      Presentation.presentation.rulesets().remove(r),
+    );
     await registeredRulesetPromise.resolve(registered);
 
     expect(rulesetManagerStub.add).to.be.calledWith(initialProps.ruleset);
@@ -67,7 +65,9 @@ describe("[deprecated] useRulesetRegistration", () => {
     rulesetManagerStub.add.returns(registeredRulesetPromise);
     const { unmount } = renderHook((props: HookProps) => useRulesetRegistration(props.ruleset), { initialProps });
 
-    const registered = new RegisteredRuleset(initialProps.ruleset, "testId", async (r) => Presentation.presentation.rulesets().remove(r));
+    const registered = new RegisteredRuleset(initialProps.ruleset, "testId", async (r) =>
+      Presentation.presentation.rulesets().remove(r),
+    );
     unmount();
 
     expect(rulesetManagerStub.add).to.be.calledWith(initialProps.ruleset);

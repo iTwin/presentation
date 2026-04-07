@@ -9,15 +9,24 @@ import { assert } from "@itwin/core-bentley";
 import type { ObservableInput, Subscription } from "rxjs";
 
 /** @internal */
-export function partition<T, U extends T>(source: ObservableInput<T>, predicate: (value: T) => value is U): [Observable<U>, Observable<Exclude<T, U>>];
+export function partition<T, U extends T>(
+  source: ObservableInput<T>,
+  predicate: (value: T) => value is U,
+): [Observable<U>, Observable<Exclude<T, U>>];
 /** @internal */
-export function partition<T>(source: ObservableInput<T>, predicate: (value: T) => boolean): [Observable<T>, Observable<T>];
+export function partition<T>(
+  source: ObservableInput<T>,
+  predicate: (value: T) => boolean,
+): [Observable<T>, Observable<T>];
 
 /**
  * This is similar to `rxjs` `partition` operator, but it subscribes to source observable only once.
  * @internal
  */
-export function partition<T>(source: ObservableInput<T>, predicate: (value: T) => boolean): [Observable<T>, Observable<T>] {
+export function partition<T>(
+  source: ObservableInput<T>,
+  predicate: (value: T) => boolean,
+): [Observable<T>, Observable<T>] {
   const matches = new ReplaySubject<T>();
   const nonMatches = new ReplaySubject<T>();
   let sourceSubscription: Subscription | undefined;

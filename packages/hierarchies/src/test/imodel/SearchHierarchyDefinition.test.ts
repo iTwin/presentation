@@ -15,12 +15,21 @@ import {
   ECSQL_COLUMN_NAME_SearchECInstanceId,
   SearchHierarchyDefinition,
 } from "../../hierarchies/imodel/SearchHierarchyDefinition.js";
-import { createTestInstanceKey, createTestInstanceNodeKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../Utils.js";
+import {
+  createTestInstanceKey,
+  createTestInstanceNodeKey,
+  createTestProcessedGroupingNode,
+  createTestProcessedInstanceNode,
+} from "../Utils.js";
 
 import type { ECClassHierarchyInspector } from "@itwin/presentation-shared";
 import type { HierarchyNodeIdentifier } from "../../hierarchies/HierarchyNodeIdentifier.js";
 import type { HierarchySearchTree } from "../../hierarchies/HierarchySearch.js";
-import type { DefineHierarchyLevelProps, HierarchyLevelDefinition, InstanceNodesQueryDefinition } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
+import type {
+  DefineHierarchyLevelProps,
+  HierarchyLevelDefinition,
+  InstanceNodesQueryDefinition,
+} from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
 import type {
   ProcessedGroupingHierarchyNode,
   ProcessedInstanceHierarchyNode,
@@ -33,18 +42,14 @@ describe("SearchHierarchyDefinition", () => {
     sinon.restore();
   });
 
-  function createStubECClassHierarchyInspector(overrides?: Partial<ECClassHierarchyInspector>): ECClassHierarchyInspector {
-    return {
-      classDerivesFrom: sinon.stub().resolves(false),
-      ...overrides,
-    };
+  function createStubECClassHierarchyInspector(
+    overrides?: Partial<ECClassHierarchyInspector>,
+  ): ECClassHierarchyInspector {
+    return { classDerivesFrom: sinon.stub().resolves(false), ...overrides };
   }
 
   function createStubSourceDefinition(overrides?: Partial<RxjsHierarchyDefinition>): RxjsHierarchyDefinition {
-    return {
-      defineHierarchyLevel: sinon.stub().returns(of([])),
-      ...overrides,
-    };
+    return { defineHierarchyLevel: sinon.stub().returns(of([])), ...overrides };
   }
 
   function createSearchHierarchyDefinition(props: {
@@ -101,18 +106,14 @@ describe("SearchHierarchyDefinition", () => {
 
     it("does not filter nodes without hideInHierarchy", async () => {
       const def = createSearchHierarchyDefinition({ targetPaths: [] });
-      const node = createTestProcessedInstanceNode({
-        search: { isSearchTarget: true },
-      });
+      const node = createTestProcessedInstanceNode({ search: { isSearchTarget: true } });
       const result = await firstValueFrom(def.preProcessNode({ node }));
       expect(result).to.eq(node);
     });
 
     it("does not filter nodes with hideInHierarchy but not isSearchTarget", async () => {
       const def = createSearchHierarchyDefinition({ targetPaths: [] });
-      const node = createTestProcessedInstanceNode({
-        processingParams: { hideInHierarchy: true },
-      });
+      const node = createTestProcessedInstanceNode({ processingParams: { hideInHierarchy: true } });
       const result = await firstValueFrom(def.preProcessNode({ node }));
       expect(result).to.eq(node);
     });
@@ -139,7 +140,9 @@ describe("SearchHierarchyDefinition", () => {
     it("sets autoExpand on grouping node when direct child has search.options.autoExpand = true", async () => {
       const def = createSearchHierarchyDefinition({ targetPaths: [] });
       const child = createTestProcessedInstanceNode({ search: { options: { autoExpand: true } } });
-      const groupingNode = createTestProcessedGroupingNode({ children: [child] }) as unknown as ProcessedGroupingHierarchyNode;
+      const groupingNode = createTestProcessedGroupingNode({
+        children: [child],
+      }) as unknown as ProcessedGroupingHierarchyNode;
       const result = await firstValueFrom(def.postProcessNode({ node: groupingNode }));
       expect(result.autoExpand).to.be.true;
     });
@@ -147,7 +150,9 @@ describe("SearchHierarchyDefinition", () => {
     it("sets autoExpand on grouping node when direct child has search.options.autoExpand.groupingLevel >= node level", async () => {
       const def = createSearchHierarchyDefinition({ targetPaths: [] });
       const child = createTestProcessedInstanceNode({ search: { options: { autoExpand: { groupingLevel: 1 } } } });
-      const groupingNode = createTestProcessedGroupingNode({ children: [child] }) as unknown as ProcessedGroupingHierarchyNode;
+      const groupingNode = createTestProcessedGroupingNode({
+        children: [child],
+      }) as unknown as ProcessedGroupingHierarchyNode;
       const result = await firstValueFrom(def.postProcessNode({ node: groupingNode }));
       expect(result.autoExpand).to.be.true;
     });
@@ -155,7 +160,9 @@ describe("SearchHierarchyDefinition", () => {
     it("doesn't set autoExpand on grouping node when direct child autoExpand.groupingLevel < node level", async () => {
       const def = createSearchHierarchyDefinition({ targetPaths: [] });
       const child = createTestProcessedInstanceNode({ search: { options: { autoExpand: { groupingLevel: 0 } } } });
-      const groupingNode = createTestProcessedGroupingNode({ children: [child] }) as unknown as ProcessedGroupingHierarchyNode;
+      const groupingNode = createTestProcessedGroupingNode({
+        children: [child],
+      }) as unknown as ProcessedGroupingHierarchyNode;
       const result = await firstValueFrom(def.postProcessNode({ node: groupingNode }));
       expect(result.autoExpand).to.be.undefined;
     });
@@ -163,7 +170,9 @@ describe("SearchHierarchyDefinition", () => {
     it("doesn't set autoExpand on grouping node when direct child has no search", async () => {
       const def = createSearchHierarchyDefinition({ targetPaths: [] });
       const child = createTestProcessedInstanceNode();
-      const groupingNode = createTestProcessedGroupingNode({ children: [child] }) as unknown as ProcessedGroupingHierarchyNode;
+      const groupingNode = createTestProcessedGroupingNode({
+        children: [child],
+      }) as unknown as ProcessedGroupingHierarchyNode;
       const result = await firstValueFrom(def.postProcessNode({ node: groupingNode }));
       expect(result.autoExpand).to.be.undefined;
     });
@@ -171,7 +180,9 @@ describe("SearchHierarchyDefinition", () => {
     it("doesn't set autoExpand on grouping node when direct child has search but no autoExpand option", async () => {
       const def = createSearchHierarchyDefinition({ targetPaths: [] });
       const child = createTestProcessedInstanceNode({ search: { isSearchTarget: true } });
-      const groupingNode = createTestProcessedGroupingNode({ children: [child] }) as unknown as ProcessedGroupingHierarchyNode;
+      const groupingNode = createTestProcessedGroupingNode({
+        children: [child],
+      }) as unknown as ProcessedGroupingHierarchyNode;
       const result = await firstValueFrom(def.postProcessNode({ node: groupingNode }));
       expect(result.autoExpand).to.be.undefined;
     });
@@ -195,17 +206,16 @@ describe("SearchHierarchyDefinition", () => {
     function createSourceInstanceNode(overrides?: Partial<SourceInstanceHierarchyNode>): SourceInstanceHierarchyNode {
       return {
         label: "test",
-        key: createTestInstanceNodeKey({ instanceKeys: [createTestInstanceKey({ className: "Schema:Class", id: "0x1" })] }),
+        key: createTestInstanceNodeKey({
+          instanceKeys: [createTestInstanceKey({ className: "Schema:Class", id: "0x1" })],
+        }),
         ...overrides,
       };
     }
 
     it("returns parsed node unchanged when row has no search columns", async () => {
       const parsedNode = createSourceInstanceNode();
-      const def = createSearchHierarchyDefinition({
-        targetPaths: [],
-        source: { parseNode: () => of(parsedNode) },
-      });
+      const def = createSearchHierarchyDefinition({ targetPaths: [], source: { parseNode: () => of(parsedNode) } });
       const result = await firstValueFrom(def.parseNode({ row: {}, parentNode: undefined, imodelKey: "imodel" }));
       expect(result).to.eq(parsedNode);
     });
@@ -216,16 +226,10 @@ describe("SearchHierarchyDefinition", () => {
       const parsedNode = createSourceInstanceNode({
         key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Class", id: "0x1" }] }),
       });
-      const def = createSearchHierarchyDefinition({
-        targetPaths,
-        source: { parseNode: () => of(parsedNode) },
-      });
+      const def = createSearchHierarchyDefinition({ targetPaths, source: { parseNode: () => of(parsedNode) } });
       const result = await firstValueFrom(
         def.parseNode({
-          row: {
-            [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1",
-            [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class",
-          },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -239,16 +243,10 @@ describe("SearchHierarchyDefinition", () => {
       const parsedNode = createSourceInstanceNode({
         key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Class", id: "0x1" }] }),
       });
-      const def = createSearchHierarchyDefinition({
-        targetPaths,
-        source: { parseNode: () => of(parsedNode) },
-      });
+      const def = createSearchHierarchyDefinition({ targetPaths, source: { parseNode: () => of(parsedNode) } });
       const result = await firstValueFrom(
         def.parseNode({
-          row: {
-            [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1",
-            [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class",
-          },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -261,16 +259,10 @@ describe("SearchHierarchyDefinition", () => {
       const parsedNode = createSourceInstanceNode({
         key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Class", id: "0x1" }] }),
       });
-      const def = createSearchHierarchyDefinition({
-        targetPaths,
-        source: { parseNode: () => of(parsedNode) },
-      });
+      const def = createSearchHierarchyDefinition({ targetPaths, source: { parseNode: () => of(parsedNode) } });
       const result = await firstValueFrom(
         def.parseNode({
-          row: {
-            [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1",
-            [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class",
-          },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -279,20 +271,16 @@ describe("SearchHierarchyDefinition", () => {
     });
 
     it("doesn't match when imodelKey differs", async () => {
-      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema:Class", id: "0x1", imodelKey: "other-imodel" } }];
+      const targetPaths: HierarchySearchTree[] = [
+        { identifier: { className: "Schema:Class", id: "0x1", imodelKey: "other-imodel" } },
+      ];
       const parsedNode = createSourceInstanceNode({
         key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Class", id: "0x1" }] }),
       });
-      const def = createSearchHierarchyDefinition({
-        targetPaths,
-        source: { parseNode: () => of(parsedNode) },
-      });
+      const def = createSearchHierarchyDefinition({ targetPaths, source: { parseNode: () => of(parsedNode) } });
       const result = await firstValueFrom(
         def.parseNode({
-          row: {
-            [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1",
-            [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class",
-          },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -305,16 +293,10 @@ describe("SearchHierarchyDefinition", () => {
       const parsedNode = createSourceInstanceNode({
         key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Class", id: "0x1" }] }),
       });
-      const def = createSearchHierarchyDefinition({
-        targetPaths,
-        source: { parseNode: () => of(parsedNode) },
-      });
+      const def = createSearchHierarchyDefinition({ targetPaths, source: { parseNode: () => of(parsedNode) } });
       const result = await firstValueFrom(
         def.parseNode({
-          row: {
-            [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1",
-            [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class",
-          },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -340,10 +322,7 @@ describe("SearchHierarchyDefinition", () => {
       });
       const result = await firstValueFrom(
         def.parseNode({
-          row: {
-            [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1",
-            [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Derived",
-          },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Derived" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -366,10 +345,7 @@ describe("SearchHierarchyDefinition", () => {
       });
       const result = await firstValueFrom(
         def.parseNode({
-          row: {
-            [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1",
-            [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Derived",
-          },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Derived" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -378,20 +354,16 @@ describe("SearchHierarchyDefinition", () => {
     });
 
     it("assigns autoExpand from search tree options", async () => {
-      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema:Class", id: "0x1" }, options: { autoExpand: true } }];
+      const targetPaths: HierarchySearchTree[] = [
+        { identifier: { className: "Schema:Class", id: "0x1" }, options: { autoExpand: true } },
+      ];
       const parsedNode = createSourceInstanceNode({
         key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Class", id: "0x1" }] }),
       });
-      const def = createSearchHierarchyDefinition({
-        targetPaths,
-        source: { parseNode: () => of(parsedNode) },
-      });
+      const def = createSearchHierarchyDefinition({ targetPaths, source: { parseNode: () => of(parsedNode) } });
       const result = await firstValueFrom(
         def.parseNode({
-          row: {
-            [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1",
-            [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class",
-          },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -431,7 +403,9 @@ describe("SearchHierarchyDefinition", () => {
         sourceName: "test-source",
         source: { defineHierarchyLevel: () => of([genericDef]) },
       });
-      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }));
+      const result = await firstValueFrom(
+        def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }),
+      );
       expect(result).to.have.length(1);
       expect(result[0]).to.have.nested.property("node.key", "test-key");
     });
@@ -443,19 +417,25 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths,
         source: { defineHierarchyLevel: () => of([genericDef]) },
       });
-      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }));
+      const result = await firstValueFrom(
+        def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }),
+      );
       expect(result).to.have.length(0);
     });
 
     it("filters out generic definitions when source doesn't match", async () => {
-      const targetPaths: HierarchySearchTree[] = [{ identifier: { type: "generic", id: "test-key", source: "other-source" } }];
+      const targetPaths: HierarchySearchTree[] = [
+        { identifier: { type: "generic", id: "test-key", source: "other-source" } },
+      ];
       const genericDef = { node: { key: "test-key", label: "test" } };
       const def = createSearchHierarchyDefinition({
         targetPaths,
         sourceName: "test-source",
         source: { defineHierarchyLevel: () => of([genericDef]) },
       });
-      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }));
+      const result = await firstValueFrom(
+        def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }),
+      );
       expect(result).to.have.length(0);
     });
 
@@ -471,7 +451,10 @@ describe("SearchHierarchyDefinition", () => {
         source: { defineHierarchyLevel: () => of([instanceDef]) },
         imodelAccess: { classDerivesFrom },
       });
-      const imodelAccess = { ...stubIModelAccess, classDerivesFrom } as unknown as DefineHierarchyLevelProps["imodelAccess"];
+      const imodelAccess = {
+        ...stubIModelAccess,
+        classDerivesFrom,
+      } as unknown as DefineHierarchyLevelProps["imodelAccess"];
       const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess }));
       expect(result).to.have.length(1);
       expect(result[0]).to.have.nested.property("query.ecsql");
@@ -490,7 +473,10 @@ describe("SearchHierarchyDefinition", () => {
         source: { defineHierarchyLevel: () => of([instanceDef]) },
         imodelAccess: { classDerivesFrom },
       });
-      const imodelAccess = { ...stubIModelAccess, classDerivesFrom } as unknown as DefineHierarchyLevelProps["imodelAccess"];
+      const imodelAccess = {
+        ...stubIModelAccess,
+        classDerivesFrom,
+      } as unknown as DefineHierarchyLevelProps["imodelAccess"];
       const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess }));
       expect(result).to.have.length(0);
     });
@@ -509,13 +495,18 @@ describe("SearchHierarchyDefinition", () => {
         source: { defineHierarchyLevel: () => of([instanceDef]) },
         imodelAccess: { classDerivesFrom },
       });
-      const imodelAccess = { ...stubIModelAccess, classDerivesFrom } as unknown as DefineHierarchyLevelProps["imodelAccess"];
+      const imodelAccess = {
+        ...stubIModelAccess,
+        classDerivesFrom,
+      } as unknown as DefineHierarchyLevelProps["imodelAccess"];
       const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess }));
       expect(result).to.have.length(1);
     });
 
     it("skips instance identifier with non-matching imodelKey", async () => {
-      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema:Class", id: "0x1", imodelKey: "other-imodel" } }];
+      const targetPaths: HierarchySearchTree[] = [
+        { identifier: { className: "Schema:Class", id: "0x1", imodelKey: "other-imodel" } },
+      ];
       const instanceDef: InstanceNodesQueryDefinition = {
         fullClassName: "Schema:Class",
         query: { ecsql: "SELECT * FROM Schema.Class" },
@@ -524,7 +515,9 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths,
         source: { defineHierarchyLevel: () => of([instanceDef]) },
       });
-      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }));
+      const result = await firstValueFrom(
+        def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }),
+      );
       expect(result).to.have.length(0);
     });
 
@@ -545,11 +538,16 @@ describe("SearchHierarchyDefinition", () => {
         source: { defineHierarchyLevel: () => of([instanceDef]) },
         imodelAccess: { classDerivesFrom },
       });
-      const imodelAccess = { ...stubIModelAccess, classDerivesFrom } as unknown as DefineHierarchyLevelProps["imodelAccess"];
+      const imodelAccess = {
+        ...stubIModelAccess,
+        classDerivesFrom,
+      } as unknown as DefineHierarchyLevelProps["imodelAccess"];
       const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess }));
       expect(result).to.have.length(1);
       // The search CTE should contain only one ECInstanceId, not duplicated
-      const searchCte = (result[0] as InstanceNodesQueryDefinition).query.ctes!.find((cte) => cte.includes("SearchInfo"));
+      const searchCte = (result[0] as InstanceNodesQueryDefinition).query.ctes!.find((cte) =>
+        cte.includes("SearchInfo"),
+      );
       expect(searchCte).to.not.be.undefined;
       expect(trimWhitespace(searchCte!)).to.contain("0x1");
     });
@@ -572,7 +570,10 @@ describe("SearchHierarchyDefinition", () => {
         source: { defineHierarchyLevel: () => of([instanceDef]) },
         imodelAccess: { classDerivesFrom },
       });
-      const imodelAccess = { ...stubIModelAccess, classDerivesFrom } as unknown as DefineHierarchyLevelProps["imodelAccess"];
+      const imodelAccess = {
+        ...stubIModelAccess,
+        classDerivesFrom,
+      } as unknown as DefineHierarchyLevelProps["imodelAccess"];
       const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess }));
       expect(result).to.have.length(1);
     });
@@ -587,10 +588,7 @@ describe("SearchHierarchyDefinition", () => {
         key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Parent", id: "0x2" }] }),
         label: "parent",
         parentKeys: [],
-        search: {
-          hasSearchTargetAncestor: true,
-          childrenTargetPaths: targetPaths,
-        },
+        search: { hasSearchTargetAncestor: true, childrenTargetPaths: targetPaths },
       };
       const def = createSearchHierarchyDefinition({
         targetPaths,
@@ -613,7 +611,9 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths,
         source: { defineHierarchyLevel: () => of([instanceDef]) },
       });
-      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }));
+      const result = await firstValueFrom(
+        def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }),
+      );
       expect(result).to.have.length(0);
     });
   });
@@ -624,21 +624,11 @@ describe("applyECInstanceIdsSearch", () => {
     const result = applyECInstanceIdsSearch(
       {
         fullClassName: "SchemaName.ClassName",
-        query: {
-          ctes: ["source cte"],
-          ecsql: "source query",
-          bindings: [{ type: "string", value: "source binding" }],
-        },
+        query: { ctes: ["source cte"], ecsql: "source query", bindings: [{ type: "string", value: "source binding" }] },
       },
       [
-        {
-          className: "test.class",
-          id: "0x1",
-        },
-        {
-          className: "test.class",
-          id: "0x5",
-        },
+        { className: "test.class", id: "0x1" },
+        { className: "test.class", id: "0x5" },
       ],
     );
     expect(result.fullClassName).to.eq("SchemaName.ClassName");
@@ -676,11 +666,7 @@ describe("applyECInstanceIdsSelector", () => {
   it("wraps query with search columns using IdToHex and FullClassName", () => {
     const result = applyECInstanceIdsSelector({
       fullClassName: "SchemaName.ClassName",
-      query: {
-        ctes: ["source cte"],
-        ecsql: "source query",
-        bindings: [{ type: "string", value: "source binding" }],
-      },
+      query: { ctes: ["source cte"], ecsql: "source query", bindings: [{ type: "string", value: "source binding" }] },
     });
     expect(result.fullClassName).to.eq("SchemaName.ClassName");
     expect(result.query.ctes).to.deep.eq(["source cte"]);

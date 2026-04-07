@@ -21,8 +21,12 @@ export type * from "./presentation-components/common/IPresentationDataProvider.j
 export type * from "./presentation-components/common/IUnifiedSelectionComponent.js";
 export * from "./presentation-components/common/PropertyRecordsBuilder.js";
 export * from "./presentation-components/common/SchemaMetadataContext.js";
-// eslint-disable-next-line @typescript-eslint/no-deprecated
-export { PortalTargetContextProvider, type PortalTargetContextProviderProps } from "./presentation-components/common/PortalTargetContext.js";
+export {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  PortalTargetContextProvider,
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  type PortalTargetContextProviderProps,
+} from "./presentation-components/common/PortalTargetContext.js";
 export * from "./presentation-components/hooks/UseRulesetRegistration.js";
 
 /**

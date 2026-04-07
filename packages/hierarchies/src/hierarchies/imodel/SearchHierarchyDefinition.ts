@@ -26,7 +26,12 @@ import type {
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
 } from "../imodel/IModelHierarchyDefinition.js";
-import type { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "../internal/RxjsHierarchyDefinition.js";
+import type {
+  RxjsHierarchyDefinition,
+  RxjsNodeParser,
+  RxjsNodePostProcessor,
+  RxjsNodePreProcessor,
+} from "../internal/RxjsHierarchyDefinition.js";
 import type { ProcessedGroupingHierarchyNode } from "./IModelHierarchyNode.js";
 
 interface SearchHierarchyDefinitionProps {
@@ -57,7 +62,11 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     return (props) =>
       (this._source.preProcessNode ? this._source.preProcessNode(props) : of(props.node)).pipe(
         filter((processedNode) => {
-          if (processedNode.processingParams?.hideInHierarchy && processedNode.search?.isSearchTarget && !processedNode.search.hasSearchTargetAncestor) {
+          if (
+            processedNode.processingParams?.hideInHierarchy &&
+            processedNode.search?.isSearchTarget &&
+            !processedNode.search.hasSearchTargetAncestor
+          ) {
             // we want to hide target nodes if they have `hideInHierarchy` param, but only if they're not under another search target
             return false;
           }
@@ -70,7 +79,10 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     return (props) =>
       (this._source.postProcessNode ? this._source.postProcessNode(props) : of(props.node)).pipe(
         map((processedNode) => {
-          if (ProcessedHierarchyNode.isGroupingNode(processedNode) && shouldAutoExpandGroupingNode({ node: processedNode })) {
+          if (
+            ProcessedHierarchyNode.isGroupingNode(processedNode) &&
+            shouldAutoExpandGroupingNode({ node: processedNode })
+          ) {
             Object.assign(processedNode, { autoExpand: true });
           }
           return processedNode;
@@ -86,7 +98,10 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
           if (!row[ECSQL_COLUMN_NAME_SearchECInstanceId] || !row[ECSQL_COLUMN_NAME_SearchClassName]) {
             return of(parsedNode);
           }
-          const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_SearchClassName], id: row[ECSQL_COLUMN_NAME_SearchECInstanceId] };
+          const rowInstanceKey = {
+            className: row[ECSQL_COLUMN_NAME_SearchClassName],
+            id: row[ECSQL_COLUMN_NAME_SearchECInstanceId],
+          };
           return fromPossiblyPromise(
             createHierarchySearchHelper(this._targetPaths, parentInstanceNode).createChildNodeProps({
               nodeKey: parsedNode.key,
@@ -105,8 +120,12 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
                 }
                 return firstValueFrom(
                   merge(
-                    fromPossiblyPromise(this._imodelAccess.classDerivesFrom(identifier.className, rowInstanceKey.className)),
-                    fromPossiblyPromise(this._imodelAccess.classDerivesFrom(rowInstanceKey.className, identifier.className)),
+                    fromPossiblyPromise(
+                      this._imodelAccess.classDerivesFrom(identifier.className, rowInstanceKey.className),
+                    ),
+                    fromPossiblyPromise(
+                      this._imodelAccess.classDerivesFrom(rowInstanceKey.className, identifier.className),
+                    ),
                   ).pipe(
                     filter((classDerives) => classDerives),
                     defaultIfEmpty(false),
@@ -139,7 +158,10 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
       return sourceDefinitions;
     }
 
-    const [genericNodeDefinitions, instanceNodeDefinitions] = partition(sourceDefinitions.pipe(mergeAll()), HierarchyNodesDefinition.isGenericNode);
+    const [genericNodeDefinitions, instanceNodeDefinitions] = partition(
+      sourceDefinitions.pipe(mergeAll()),
+      HierarchyNodesDefinition.isGenericNode,
+    );
     return merge(
       genericNodeDefinitions.pipe(
         map((definition) => {
@@ -257,7 +279,10 @@ function getClassECInstanceIds(targetInstanceKeys: InstanceKey[]) {
 }
 
 /** @internal */
-export function applyECInstanceIdsSearch(def: InstanceNodesQueryDefinition, targetInstanceKeys: InstanceKey[]): InstanceNodesQueryDefinition {
+export function applyECInstanceIdsSearch(
+  def: InstanceNodesQueryDefinition,
+  targetInstanceKeys: InstanceKey[],
+): InstanceNodesQueryDefinition {
   const instanceIdsByClass = getClassECInstanceIds(targetInstanceKeys);
   return {
     ...def,
@@ -308,7 +333,13 @@ export function applyECInstanceIdsSelector(def: InstanceNodesQueryDefinition): I
   };
 }
 
-function shouldAutoExpandGroupingNode({ node, nodeGroupingLevel }: { node: ProcessedGroupingHierarchyNode; nodeGroupingLevel?: number }): boolean {
+function shouldAutoExpandGroupingNode({
+  node,
+  nodeGroupingLevel,
+}: {
+  node: ProcessedGroupingHierarchyNode;
+  nodeGroupingLevel?: number;
+}): boolean {
   if (nodeGroupingLevel === undefined) {
     nodeGroupingLevel = HierarchyNode.getGroupingNodeLevel(node);
   }

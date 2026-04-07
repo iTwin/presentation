@@ -64,7 +64,11 @@ The hook takes 2 required properties:
   import { IModelConnection } from "@itwin/core-frontend";
   import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
   import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-  import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+  import {
+    createLimitingECSqlQueryExecutor,
+    createNodesQueryClauseFactory,
+    HierarchyDefinition,
+  } from "@itwin/presentation-hierarchies";
 
   function createIModelAccess(imodel: IModelConnection) {
     const schemaProvider = createECSchemaProvider(imodel.schemaContext);
@@ -103,7 +107,11 @@ The component renders a virtualized tree using the `Tree` component from `@strat
 import { IModelConnection } from "@itwin/core-frontend";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import {
+  createLimitingECSqlQueryExecutor,
+  createNodesQueryClauseFactory,
+  HierarchyDefinition,
+} from "@itwin/presentation-hierarchies";
 
 import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 
@@ -149,7 +157,10 @@ function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }
   // Create a factory for building labels SELECT query clauses according to BIS conventions
   const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
   // Create a factory for building nodes SELECT query clauses in a format understood by the provider
-  const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsQueryFactory });
+  const nodesQueryFactory = createNodesQueryClauseFactory({
+    imodelAccess,
+    instanceLabelSelectClauseFactory: labelsQueryFactory,
+  });
   return {
     defineHierarchyLevel: async () => [
       {
@@ -161,7 +172,10 @@ function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
-                  selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
+                  selector: await labelsQueryFactory.createSelectClause({
+                    classAlias: "this",
+                    className: "BisCore.PhysicalModel",
+                  }),
                 },
                 hasChildren: false,
               })}
@@ -174,7 +188,13 @@ function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }
 }
 
 /** Internal component that creates and renders tree state. */
-function MyTreeComponentInternal({ imodelAccess, selectionStorage }: { imodelAccess: IModelAccess; selectionStorage: SelectionStorage }) {
+function MyTreeComponentInternal({
+  imodelAccess,
+  selectionStorage,
+}: {
+  imodelAccess: IModelAccess;
+  selectionStorage: SelectionStorage;
+}) {
   const treeProps = useIModelUnifiedSelectionTree({
     // the unified selection storage used by all app components let them share selection state
     selectionStorage,
@@ -204,7 +224,11 @@ function MyTreeComponentInternal({ imodelAccess, selectionStorage }: { imodelAcc
 This package delivers a locale JSON file with English strings that follows the [`i18next JSON format`](https://www.i18next.com/misc/json-format). To enable localization, register `LOCALIZATION_NAMESPACES` during initialization and wrap components in `LocalizationContextProvider`:
 
 ```tsx
-import { LocalizationContextProvider, LOCALIZATION_NAMESPACES, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import {
+  LocalizationContextProvider,
+  LOCALIZATION_NAMESPACES,
+  useIModelUnifiedSelectionTree,
+} from "@itwin/presentation-hierarchies-react";
 import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 
 // Register localization namespaces with `i18next` based localization provider.

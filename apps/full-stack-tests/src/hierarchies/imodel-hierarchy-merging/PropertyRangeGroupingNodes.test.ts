@@ -8,7 +8,13 @@ import { omit } from "@itwin/core-bentley";
 import { createChangedDbs } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { createHierarchyDefinitionFactory, createMergedHierarchyProvider, importQSchema, importXYZSchema, pickAndTransform } from "./HierarchiesMerging.js";
+import {
+  createHierarchyDefinitionFactory,
+  createMergedHierarchyProvider,
+  importQSchema,
+  importXYZSchema,
+  pickAndTransform,
+} from "./HierarchiesMerging.js";
 
 describe("Hierarchies", () => {
   before(async function () {
@@ -61,7 +67,10 @@ describe("Hierarchies", () => {
           dbs = await setupDbs(this);
           keys = {
             base: pickAndTransform(dbs.base, ["x", "y1", "y2", "y3"], (_, value) => ({ ...value, imodelKey: "base" })),
-            changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y3", "w", "q1", "q2"], (_, value) => ({ ...value, imodelKey: "changeset1" })),
+            changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y3", "w", "q1", "q2"], (_, value) => ({
+              ...value,
+              imodelKey: "changeset1",
+            })),
           };
         });
 
@@ -72,14 +81,8 @@ describe("Hierarchies", () => {
         beforeEach(() => {
           provider = createMergedHierarchyProvider({
             imodels: [
-              {
-                ecdb: dbs.base.ecdb,
-                key: "base",
-              },
-              {
-                ecdb: dbs.changeset1.ecdb,
-                key: "changeset1",
-              },
+              { ecdb: dbs.base.ecdb, key: "base" },
+              { ecdb: dbs.changeset1.ecdb, key: "changeset1" },
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               xyzSchema: dbs.base.xyzSchema,
@@ -115,10 +118,7 @@ describe("Hierarchies", () => {
                     label: "20 - 30",
                     groupedInstanceKeys: [keys.changeset1.q2],
                     children: [
-                      NodeValidators.createForInstanceNode({
-                        label: "q2",
-                        instanceKeys: [keys.changeset1.q2],
-                      }),
+                      NodeValidators.createForInstanceNode({ label: "q2", instanceKeys: [keys.changeset1.q2] }),
                     ],
                   }),
                 ],
@@ -139,12 +139,7 @@ describe("Hierarchies", () => {
                   NodeValidators.createForPropertyValueRangeGroupingNode({
                     label: "20 - 30",
                     groupedInstanceKeys: [keys.base.y2],
-                    children: [
-                      NodeValidators.createForInstanceNode({
-                        label: "y2",
-                        instanceKeys: [keys.base.y2],
-                      }),
-                    ],
+                    children: [NodeValidators.createForInstanceNode({ label: "y2", instanceKeys: [keys.base.y2] })],
                   }),
                   NodeValidators.createForPropertyValueRangeGroupingNode({
                     label: "30 - 40",
@@ -160,10 +155,7 @@ describe("Hierarchies", () => {
                     label: "Other",
                     groupedInstanceKeys: [keys.changeset1.q1],
                     children: [
-                      NodeValidators.createForInstanceNode({
-                        label: "q1",
-                        instanceKeys: [keys.changeset1.q1],
-                      }),
+                      NodeValidators.createForInstanceNode({ label: "q1", instanceKeys: [keys.changeset1.q1] }),
                     ],
                   }),
                 ],
@@ -184,13 +176,13 @@ describe("Hierarchies", () => {
                 {
                   identifier: keys.changeset1.x,
                   isTarget: true,
-                  children: [{ identifier: keys.changeset1.y1 }, { identifier: keys.changeset1.y3 }, { identifier: keys.changeset1.q1 }],
+                  children: [
+                    { identifier: keys.changeset1.y1 },
+                    { identifier: keys.changeset1.y3 },
+                    { identifier: keys.changeset1.q1 },
+                  ],
                 },
-                {
-                  identifier: keys.changeset1.w,
-                  isTarget: true,
-                  children: [{ identifier: keys.changeset1.q2 }],
-                },
+                { identifier: keys.changeset1.w, isTarget: true, children: [{ identifier: keys.changeset1.q2 }] },
               ],
             });
             await validateHierarchy({
@@ -270,18 +262,9 @@ describe("Hierarchies", () => {
           it("creates hierarchy when targeting instances from different imodels", async () => {
             provider.setHierarchySearch({
               paths: [
-                {
-                  identifier: keys.base.x,
-                  children: [{ identifier: keys.base.y2 }],
-                },
-                {
-                  identifier: keys.changeset1.x,
-                  children: [{ identifier: keys.changeset1.q1 }],
-                },
-                {
-                  identifier: keys.changeset1.w,
-                  children: [{ identifier: keys.changeset1.q2 }],
-                },
+                { identifier: keys.base.x, children: [{ identifier: keys.base.y2 }] },
+                { identifier: keys.changeset1.x, children: [{ identifier: keys.changeset1.q1 }] },
+                { identifier: keys.changeset1.w, children: [{ identifier: keys.changeset1.q2 }] },
               ],
             });
             await validateHierarchy({
@@ -356,7 +339,10 @@ describe("Hierarchies", () => {
         );
         const keys = {
           base: pickAndTransform(dbs.base, ["x", "y1"], (_, value) => ({ ...value, imodelKey: "base" })),
-          changeset1: pickAndTransform(dbs.changeset1, ["x", "y2"], (_, value) => ({ ...value, imodelKey: "changeset1" })),
+          changeset1: pickAndTransform(dbs.changeset1, ["x", "y2"], (_, value) => ({
+            ...value,
+            imodelKey: "changeset1",
+          })),
         };
 
         await validateHierarchy({
@@ -378,7 +364,9 @@ describe("Hierarchies", () => {
               createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
-                  propertyGroups: [{ propertyClassAlias: alias, propertyName: "PropY", ranges: [{ fromValue: 100, toValue: 200 }] }],
+                  propertyGroups: [
+                    { propertyClassAlias: alias, propertyName: "PropY", ranges: [{ fromValue: 100, toValue: 200 }] },
+                  ],
                   hideIfOneGroupedNode: true,
                 },
               }),
@@ -392,14 +380,8 @@ describe("Hierarchies", () => {
                   label: "100 - 200",
                   groupedInstanceKeys: [keys.base.y1, keys.changeset1.y2],
                   children: [
-                    NodeValidators.createForInstanceNode({
-                      label: "y1",
-                      instanceKeys: [keys.base.y1],
-                    }),
-                    NodeValidators.createForInstanceNode({
-                      label: "y2",
-                      instanceKeys: [keys.changeset1.y2],
-                    }),
+                    NodeValidators.createForInstanceNode({ label: "y1", instanceKeys: [keys.base.y1] }),
+                    NodeValidators.createForInstanceNode({ label: "y2", instanceKeys: [keys.changeset1.y2] }),
                   ],
                 }),
               ],
@@ -428,7 +410,10 @@ describe("Hierarchies", () => {
         );
         const keys = {
           base: pickAndTransform(dbs.base, ["x", "y1"], (_, value) => ({ ...value, imodelKey: "base" })),
-          changeset1: pickAndTransform(dbs.changeset1, ["x", "z"], (_, value) => ({ ...value, imodelKey: "changeset1" })),
+          changeset1: pickAndTransform(dbs.changeset1, ["x", "z"], (_, value) => ({
+            ...value,
+            imodelKey: "changeset1",
+          })),
         };
 
         await validateHierarchy({
@@ -450,7 +435,9 @@ describe("Hierarchies", () => {
               createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
-                  propertyGroups: [{ propertyClassAlias: alias, propertyName: "PropY", ranges: [{ fromValue: 100, toValue: 200 }] }],
+                  propertyGroups: [
+                    { propertyClassAlias: alias, propertyName: "PropY", ranges: [{ fromValue: 100, toValue: 200 }] },
+                  ],
                   hideIfNoSiblings: true,
                 },
               }),
@@ -463,17 +450,9 @@ describe("Hierarchies", () => {
                 NodeValidators.createForPropertyValueRangeGroupingNode({
                   label: "100 - 200",
                   groupedInstanceKeys: [keys.base.y1],
-                  children: [
-                    NodeValidators.createForInstanceNode({
-                      label: "y1",
-                      instanceKeys: [keys.base.y1],
-                    }),
-                  ],
+                  children: [NodeValidators.createForInstanceNode({ label: "y1", instanceKeys: [keys.base.y1] })],
                 }),
-                NodeValidators.createForInstanceNode({
-                  label: "z",
-                  instanceKeys: [keys.changeset1.z],
-                }),
+                NodeValidators.createForInstanceNode({ label: "z", instanceKeys: [keys.changeset1.z] }),
               ],
             }),
           ],
