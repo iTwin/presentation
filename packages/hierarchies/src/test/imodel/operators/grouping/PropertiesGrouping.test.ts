@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it } from "vitest";
 import { createDefaultValueFormatter, EC, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { GroupingNodeKey, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
 import { HierarchyNodePropertyGroup } from "../../../../hierarchies/imodel/IModelHierarchyNode.js";
@@ -26,10 +25,6 @@ describe("PropertiesGrouping", () => {
     imodelAccess = createIModelAccessStub();
   });
 
-  afterEach(() => {
-    sinon.restore();
-  });
-
   describe("getUniquePropertiesGroupInfo", () => {
     function checkPropertyGroupInfo(
       received: propertiesGrouping.PropertyGroupInfo,
@@ -37,10 +32,10 @@ describe("PropertiesGrouping", () => {
       expectedPreviousPropertiesGroupingInfo: propertiesGrouping.PreviousPropertiesGroupingInfo,
       expectedPropertyGroup: Omit<HierarchyNodePropertyGroup, "propertyValue">,
     ) {
-      expect(received.ecClass.fullName).to.eq(expectedECClassName);
-      expect(received.previousPropertiesGroupingInfo).to.deep.eq(expectedPreviousPropertiesGroupingInfo);
-      expect(received.propertyGroup.propertyName).to.eq(expectedPropertyGroup.propertyName);
-      expect(received.propertyGroup.ranges).to.deep.eq(expectedPropertyGroup.ranges);
+      expect(received.ecClass.fullName).toBe(expectedECClassName);
+      expect(received.previousPropertiesGroupingInfo).toEqual(expectedPreviousPropertiesGroupingInfo);
+      expect(received.propertyGroup.propertyName).toBe(expectedPropertyGroup.propertyName);
+      expect(received.propertyGroup.ranges).toEqual(expectedPropertyGroup.ranges);
     }
 
     it("doesn't extract propertiesGroupInfo from node when it doesn't have grouping.byProperties set", async () => {
@@ -50,7 +45,7 @@ describe("PropertiesGrouping", () => {
         }),
       ];
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
-      expect(result).to.deep.eq([]);
+      expect(result).toEqual([]);
     });
 
     it("extracts propertiesGroupInfo without ranges when node doesn't have ranges set", async () => {
@@ -77,7 +72,7 @@ describe("PropertiesGrouping", () => {
         className: "Class",
       });
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
-      expect(result.length).to.eq(1);
+      expect(result.length).toBe(1);
       checkPropertyGroupInfo(result[0], "TestSchema.Class", [], { propertyName: "PropertyName", ranges: undefined });
     });
 
@@ -112,7 +107,7 @@ describe("PropertiesGrouping", () => {
       });
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
-      expect(result.length).to.eq(2);
+      expect(result.length).toBe(2);
       checkPropertyGroupInfo(result[0], className, [], propertyGroup1);
       checkPropertyGroupInfo(
         result[1],
@@ -164,7 +159,7 @@ describe("PropertiesGrouping", () => {
       });
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
-      expect(result.length).to.eq(2);
+      expect(result.length).toBe(2);
       checkPropertyGroupInfo(result[0], className, [], propertyGroup1);
       checkPropertyGroupInfo(result[1], className, [], propertyGroup2);
     });
@@ -218,7 +213,7 @@ describe("PropertiesGrouping", () => {
       });
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
-      expect(result.length).to.eq(5);
+      expect(result.length).toBe(5);
       checkPropertyGroupInfo(result[0], className, [], propertyGroup1);
       checkPropertyGroupInfo(
         result[1],
@@ -291,7 +286,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).to.eq(1);
+      expect(result.length).toBe(1);
       checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: false }], {
         propertyName: "PropertyName2",
       });
@@ -330,7 +325,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).to.eq(1);
+      expect(result.length).toBe(1);
       checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: true }], {
         propertyName: "PropertyName2",
         ranges: [{ fromValue: 2, toValue: 8 }],
@@ -371,7 +366,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).to.eq(1);
+      expect(result.length).toBe(1);
       checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: true }], {
         propertyName: "PropertyName2",
         ranges: [{ fromValue: 2, toValue: 8 }],
@@ -410,7 +405,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).to.eq(1);
+      expect(result.length).toBe(1);
       checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: false }], {
         propertyName: "PropertyName2",
       });
@@ -450,7 +445,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).to.eq(1);
+      expect(result.length).toBe(1);
       checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: true }], {
         propertyName: "PropertyName2",
         ranges: [{ fromValue: 2, toValue: 8 }],
@@ -488,7 +483,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).to.eq(2);
+      expect(result.length).toBe(2);
       checkPropertyGroupInfo(result[0], className, [], {
         propertyName: "PropertyName1",
       });
@@ -556,7 +551,7 @@ describe("PropertiesGrouping", () => {
       },
     ].forEach(({ ranges1, ranges2, expectedResult }) => {
       it(`returns ${expectedResult} when ranges1 is: '${JSON.stringify(ranges1)} and ranges2 is: '${JSON.stringify(ranges2)}'`, async () => {
-        expect(propertiesGrouping.doRangesMatch(ranges1, ranges2)).to.eq(expectedResult);
+        expect(propertiesGrouping.doRangesMatch(ranges1, ranges2)).toBe(expectedResult);
       });
     });
   });
@@ -642,7 +637,7 @@ describe("PropertiesGrouping", () => {
       },
     ].forEach(({ testCase, previousPropertiesGroupingInfo, nodesProperties, expectedResult }) => {
       it(`returns ${expectedResult} when ${testCase}`, async () => {
-        expect(propertiesGrouping.doPreviousPropertiesMatch(previousPropertiesGroupingInfo, nodesProperties)).to.eq(expectedResult);
+        expect(propertiesGrouping.doPreviousPropertiesMatch(previousPropertiesGroupingInfo, nodesProperties)).toBe(expectedResult);
       });
     });
   });
@@ -669,7 +664,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -696,7 +691,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [{ propertiesClassName: "TestSchema.Class", propertyName: "PropertyName2" }],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -723,7 +718,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "Other" },
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -750,7 +745,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -783,7 +778,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -818,7 +813,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [{ propertiesClassName: "TestSchema.Class", propertyName: "Other" }],
           propertyGroup: { propertyName: "PropertyName2" },
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -838,7 +833,7 @@ describe("PropertiesGrouping", () => {
         previousPropertiesGroupingInfo: [],
         propertyGroup: { propertyName: "PropertyName" },
       };
-      expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+      expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
         groupingType: "property",
         grouped: [],
         ungrouped: nodes,
@@ -872,7 +867,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -912,7 +907,7 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "propertyValue",
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -953,7 +948,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -999,7 +994,7 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "",
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1051,7 +1046,7 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1107,7 +1102,7 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "1.23",
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1164,7 +1159,7 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1227,7 +1222,7 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue2",
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1290,7 +1285,7 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1332,7 +1327,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -1375,7 +1370,7 @@ describe("PropertiesGrouping", () => {
             },
           ],
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1418,7 +1413,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -1473,7 +1468,7 @@ describe("PropertiesGrouping", () => {
             },
           ],
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1544,7 +1539,7 @@ describe("PropertiesGrouping", () => {
           testLocalizedStrings,
           imodelAccess,
         );
-        expect(res).to.deep.eq({
+        expect(res).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1588,12 +1583,12 @@ describe("PropertiesGrouping", () => {
             testLocalizedStrings,
             imodelAccess,
           ),
-        ).to.deep.eq({
+        ).toEqual({
           groupingType: "property",
           grouped: [],
           ungrouped: [],
         });
-        expect(res.grouped).to.deep.eq([
+        expect(res.grouped).toEqual([
           createTestProcessedGroupingNode({
             label: testLocalizedStrings.other,
             key: expectedGroupingNodeKey2,
@@ -1639,7 +1634,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 5,
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1686,7 +1681,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1.5,
           toValue: 5.5,
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1744,7 +1739,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 5,
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1802,7 +1797,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 5,
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1864,7 +1859,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 4,
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1953,7 +1948,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 4,
         };
-        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).toEqual({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -2001,9 +1996,9 @@ describe("PropertiesGrouping", () => {
       });
 
       const result = await propertiesGrouping.createPropertiesGroupingHandlers(imodelAccess, undefined, nodes, formatter, testLocalizedStrings);
-      expect(result.length).to.eq(1);
+      expect(result.length).toBe(1);
       const handlerResult = await result[0](nodes, []);
-      expect(handlerResult.groupingType).to.eq("property");
+      expect(handlerResult.groupingType).toBe("property");
     });
   });
 });

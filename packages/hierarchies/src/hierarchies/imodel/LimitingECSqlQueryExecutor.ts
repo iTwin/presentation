@@ -99,7 +99,7 @@ function createQueryLogger(query: ECSqlQueryDef, firstStepWarningThreshold = 300
   const queryId = Guid.createValue();
   doLog({
     category: LOGGING_NAMESPACE,
-    message: /* c8 ignore next */ () => `Executing query [${queryId}]: ${createQueryLogMessage(query)}`,
+    message: /* v8 ignore next */ () => `Executing query [${queryId}]: ${createQueryLogMessage(query)}`,
   });
 
   let firstStep = true;
@@ -108,30 +108,30 @@ function createQueryLogger(query: ECSqlQueryDef, firstStepWarningThreshold = 300
   return {
     onStep() {
       if (firstStep) {
-        /* c8 ignore start */
+        /* v8 ignore start */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE,
           severity: timer.current.milliseconds >= firstStepWarningThreshold ? "warning" : "trace",
           message: () => `[${queryId}] First step took ${timer.currentSeconds} s.`,
         });
-        /* c8 ignore end */
+        /* v8 ignore stop */
         firstStep = false;
       }
       ++rowsCount;
     },
     onComplete() {
-      /* c8 ignore start */
+      /* v8 ignore start */
       doLog({
         category: LOGGING_NAMESPACE_PERFORMANCE,
         severity: timer.current.milliseconds >= allRowsWarningThreshold ? "warning" : "trace",
         message: () => `[${queryId}] Query took ${timer.currentSeconds} s. for ${rowsCount} rows.`,
       });
-      /* c8 ignore end */
+      /* v8 ignore stop */
     },
   };
 }
 
-/* c8 ignore start */
+/* v8 ignore start */
 function createQueryLogMessage(query: ECSqlQueryDef): string {
   const ctes = query.ctes?.map((cte) => `    ${trimWhitespace(cte)}`).join(", \n");
   const bindings = query.bindings?.map((b) => JSON.stringify(b.value)).join(", ");
@@ -146,4 +146,4 @@ function createQueryLogMessage(query: ECSqlQueryDef): string {
   output += "}";
   return output;
 }
-/* c8 ignore end */
+/* v8 ignore stop */

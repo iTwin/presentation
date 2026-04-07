@@ -3,16 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { from, of } from "rxjs";
-import sinon from "sinon";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { LogLevel } from "@itwin/core-bentley";
 import { createDetermineChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/DetermineChildren.js";
 import { createTestProcessedGenericNode, setupLogging } from "../../Utils.js";
 
 describe("DetermineChildren", () => {
-  before(() => {
+  beforeAll(() => {
     setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
@@ -20,19 +19,19 @@ describe("DetermineChildren", () => {
     const node = createTestProcessedGenericNode({
       children: false,
     });
-    const hasNodes = sinon.spy();
+    const hasNodes = vi.fn();
     const result = await collect(from([node]).pipe(createDetermineChildrenOperator(hasNodes)));
-    expect(hasNodes).to.not.be.called;
-    expect(result).to.deep.eq([node]);
+    expect(hasNodes).not.toHaveBeenCalled();
+    expect(result).toEqual([node]);
   });
 
   it("determines node children", async () => {
     const node = createTestProcessedGenericNode({
       children: undefined,
     });
-    const hasNodes = sinon.stub().returns(of(true));
+    const hasNodes = vi.fn().mockReturnValue(of(true));
     const result = await collect(from([node]).pipe(createDetermineChildrenOperator(hasNodes)));
-    expect(hasNodes).to.be.calledOnceWith(node);
-    expect(result).to.deep.eq([{ ...node, children: true }]);
+    expect(hasNodes).toHaveBeenCalledExactlyOnceWith(node);
+    expect(result).toEqual([{ ...node, children: true }]);
   });
 });

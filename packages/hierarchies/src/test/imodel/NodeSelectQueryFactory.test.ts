@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   GenericInstanceFilter,
   GenericInstanceFilterRelatedInstanceDescription,
@@ -20,15 +19,12 @@ describe("createNodesQueryClauseFactory", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub>;
   let factory: NodesQueryClauseFactory;
   let instanceLabelSelectClauseFactory: ReturnType<typeof createInstanceLabelSelectClauseFactoryStub>;
+
   beforeEach(() => {
     imodelAccess = createIModelAccessStub();
     instanceLabelSelectClauseFactory = createInstanceLabelSelectClauseFactoryStub();
     factory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory });
   });
-  afterEach(() => {
-    sinon.restore();
-  });
-
   describe("createSelectClause", () => {
     it(`throws when property grouping uses non-existing class name`, async () => {
       await expect(
@@ -48,7 +44,7 @@ describe("createNodesQueryClauseFactory", () => {
             },
           },
         }),
-      ).to.eventually.be.rejected;
+      ).rejects.toBeDefined();
     });
 
     it(`throws when property class doesn't have the property`, async () => {
@@ -74,7 +70,7 @@ describe("createNodesQueryClauseFactory", () => {
             },
           },
         }),
-      ).to.eventually.be.rejected;
+      ).rejects.toBeDefined();
     });
 
     it(`throws when abstractConstraint is undefined`, async () => {
@@ -112,7 +108,7 @@ describe("createNodesQueryClauseFactory", () => {
             },
           },
         }),
-      ).to.eventually.be.rejected;
+      ).rejects.toBeDefined();
     });
 
     it("creates valid clause with value props", async () => {
@@ -166,7 +162,7 @@ describe("createNodesQueryClauseFactory", () => {
         hideIfNoChildren: true,
         hideNodeInHierarchy: true,
       });
-      expect(trimWhitespace(result)).to.eq(
+      expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
         ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
@@ -226,7 +222,7 @@ describe("createNodesQueryClauseFactory", () => {
           },
         },
       });
-      expect(trimWhitespace(result)).to.eq(
+      expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
         ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
@@ -294,7 +290,7 @@ describe("createNodesQueryClauseFactory", () => {
         hideIfNoChildren: { selector: "x.HideIfNoChildren" },
         hideNodeInHierarchy: { selector: "x.HideNodeInHierarchy" },
       });
-      expect(trimWhitespace(result)).to.eq(
+      expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
         ec_ClassName(x.ECClassId) AS ${NodeSelectClauseColumnNames.FullClassName},
         x.ECInstanceId AS ${NodeSelectClauseColumnNames.ECInstanceId},
@@ -323,7 +319,7 @@ describe("createNodesQueryClauseFactory", () => {
         ecInstanceId: { selector: "instance_id" },
         nodeLabel: "label",
       });
-      expect(trimWhitespace(result)).to.eq(
+      expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
         ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
@@ -367,7 +363,7 @@ describe("createNodesQueryClauseFactory", () => {
           },
         },
       });
-      expect(trimWhitespace(result)).to.eq(
+      expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
         ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
@@ -401,14 +397,14 @@ describe("createNodesQueryClauseFactory", () => {
           actualOrder.push(match.groups.column_name);
         }
       }
-      expect(actualOrder).to.deep.eq(expectedOrder);
+      expect(actualOrder).toEqual(expectedOrder);
     });
   });
 
   describe("createFilterClauses", () => {
     it("creates valid result when filter is undefined", async () => {
       imodelAccess.stubEntityClass({ schemaName: "x", className: "y" });
-      expect(await factory.createFilterClauses({ filter: undefined, contentClass: { fullName: "x.y", alias: "content-class" } })).to.deep.eq({
+      expect(await factory.createFilterClauses({ filter: undefined, contentClass: { fullName: "x.y", alias: "content-class" } })).toEqual({
         from: "x.y",
         joins: "",
         where: "",
@@ -426,7 +422,7 @@ describe("createNodesQueryClauseFactory", () => {
           rules: [],
         },
       };
-      expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.b", alias: "content-class" } })).to.deep.eq({
+      expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.b", alias: "content-class" } })).toEqual({
         from: "x.b",
         joins: "",
         where: "FALSE",
@@ -445,7 +441,7 @@ describe("createNodesQueryClauseFactory", () => {
             rules: [],
           },
         };
-        expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.a", alias: "content-class" } })).to.deep.eq({
+        expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.a", alias: "content-class" } })).toEqual({
           from: "x.b",
           joins: "",
           where: "",
@@ -463,7 +459,7 @@ describe("createNodesQueryClauseFactory", () => {
             rules: [],
           },
         };
-        expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.a", alias: "content-class" } })).to.deep.eq({
+        expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.a", alias: "content-class" } })).toEqual({
           from: "x.a",
           joins: "",
           where: "",
@@ -480,7 +476,7 @@ describe("createNodesQueryClauseFactory", () => {
             rules: [],
           },
         };
-        expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.a", alias: "content-class" } })).to.deep.eq({
+        expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.a", alias: "content-class" } })).toEqual({
           from: "x.a",
           joins: "",
           where: "",
@@ -500,7 +496,7 @@ describe("createNodesQueryClauseFactory", () => {
             rules: [],
           },
         };
-        expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.a", alias: "content-class" } })).to.deep.eq({
+        expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.a", alias: "content-class" } })).toEqual({
           from: "x.d",
           joins: "",
           where: "",
@@ -522,7 +518,7 @@ describe("createNodesQueryClauseFactory", () => {
             },
           };
           const clauses = await factory.createFilterClauses({ filter, contentClass: { fullName: "x.y", alias: "content-class" } });
-          expect({ ...clauses, where: trimWhitespace(clauses.where) }).to.deep.eq({
+          expect({ ...clauses, where: trimWhitespace(clauses.where) }).toEqual({
             from: "x.y",
             joins: "",
             where: "[content-class].[ECClassId] IS ([x].[a], [x].[b])",
@@ -549,7 +545,7 @@ describe("createNodesQueryClauseFactory", () => {
             rules: rule,
           };
           const res = await factory.createFilterClauses({ filter, contentClass: { fullName: "s.c", alias: classAlias } });
-          expect(trimWhitespace(res.where ?? "")).to.eq(trimWhitespace(expectedECSql));
+          expect(trimWhitespace(res.where ?? "")).toBe(trimWhitespace(expectedECSql));
         }
 
         it(`defaults to content class alias if it's not specified for property rule`, async () =>
@@ -1064,7 +1060,7 @@ describe("createNodesQueryClauseFactory", () => {
               },
               contentClass: { fullName: contentClass.fullName, alias: "x" },
             }),
-          ).to.eventually.be.rejected;
+          ).rejects.toBeDefined();
         });
 
         it(`throws when property class doesn't have the property`, async () => {
@@ -1078,7 +1074,7 @@ describe("createNodesQueryClauseFactory", () => {
               },
               contentClass: { fullName: contentClass.fullName, alias: "x" },
             }),
-          ).to.eventually.be.rejected;
+          ).rejects.toBeDefined();
         });
 
         it(`throws on struct property filters`, async () => {
@@ -1107,7 +1103,7 @@ describe("createNodesQueryClauseFactory", () => {
               },
               expectedECSql: ``,
             }),
-          ).to.eventually.be.rejected;
+          ).rejects.toBeDefined();
         });
 
         it(`throws on array property filters`, async () => {
@@ -1136,7 +1132,7 @@ describe("createNodesQueryClauseFactory", () => {
               },
               expectedECSql: ``,
             }),
-          ).to.eventually.be.rejected;
+          ).rejects.toBeDefined();
         });
 
         it(`throws on binary rules without value`, async () => {
@@ -1165,7 +1161,7 @@ describe("createNodesQueryClauseFactory", () => {
               },
               expectedECSql: ``,
             }),
-          ).to.eventually.be.rejected;
+          ).rejects.toBeDefined();
         });
       });
     });
@@ -1207,7 +1203,7 @@ describe("createNodesQueryClauseFactory", () => {
           },
         };
         const res = await factory.createFilterClauses({ filter, contentClass: { fullName: "x.y", alias: "content-class" } });
-        expect(trimWhitespace(res.joins)).to.deep.eq(
+        expect(trimWhitespace(res.joins)).toEqual(
           trimWhitespace(`
             INNER JOIN [x].[r] [rel_0_x_r_0] ON [rel_0_x_r_0].[SourceECInstanceId] = [content-class].[ECInstanceId]
             INNER JOIN [x].[t] [a] ON [a].[ECInstanceId] = [rel_0_x_r_0].[TargetECInstanceId]
@@ -1272,7 +1268,7 @@ describe("createNodesQueryClauseFactory", () => {
           },
         };
         const res = await factory.createFilterClauses({ filter, contentClass: { fullName: "x.y", alias: "content-class" } });
-        expect(trimWhitespace(res.joins)).to.deep.eq(
+        expect(trimWhitespace(res.joins)).toEqual(
           trimWhitespace(`
             INNER JOIN [x].[r1] [rel_0_x_r1_0] ON [rel_0_x_r1_0].[SourceECInstanceId] = [content-class].[ECInstanceId]
             INNER JOIN [x].[t1] [rel_0_x_t1_0] ON [rel_0_x_t1_0].[ECInstanceId] = [rel_0_x_r1_0].[TargetECInstanceId]
@@ -1344,7 +1340,7 @@ describe("createNodesQueryClauseFactory", () => {
           },
         };
         const res = await factory.createFilterClauses({ filter, contentClass: { fullName: "x.y", alias: "content-class" } });
-        expect(trimWhitespace(res.joins)).to.deep.eq(
+        expect(trimWhitespace(res.joins)).toEqual(
           trimWhitespace(`
             INNER JOIN [x].[r1] [rel_0_x_r1_0] ON [rel_0_x_r1_0].[SourceECInstanceId] = [content-class].[ECInstanceId]
             INNER JOIN [x].[t1] [a] ON [a].[ECInstanceId] = [rel_0_x_r1_0].[TargetECInstanceId]

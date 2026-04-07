@@ -172,6 +172,8 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
               // are actually the same instance, so we only need to keep one of them, or otherwise the query will
               // duplicate it
               for (const entry of entries) {
+                // TODO: MISSING_COVERAGE
+                /* v8 ignore if -- @preserve */
                 if (
                   entry.className === x.className ||
                   (await imodelAccess.classDerivesFrom(entry.className, x.className)) ||
@@ -294,7 +296,6 @@ export function applyECInstanceIdsSelector(def: InstanceNodesQueryDefinition): I
 function shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
   const numberOfNonGroupingParentNodes = node.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
   for (const child of node.children) {
-    /* c8 ignore next 3 */
     if (!child.filtering) {
       continue;
     }
@@ -307,7 +308,6 @@ function shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
     }
 
     if (!child.filtering.filteredChildrenIdentifierPaths) {
-      /* c8 ignore next */
       continue;
     }
 

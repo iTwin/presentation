@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import sinon from "sinon";
+import { vi } from "vitest";
 import { Logger, LogLevel } from "@itwin/core-bentley";
-import { EC, parseFullClassName } from "@itwin/presentation-shared";
+import { EC, ECClassHierarchyInspector, ECSchemaProvider, parseFullClassName } from "@itwin/presentation-shared";
 import { NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
 import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey } from "../hierarchies/HierarchyNodeKey.js";
 import {
@@ -127,14 +127,26 @@ export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class;
 export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass;
 export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass;
 
-export function createECSchemaProviderStub() {
-  const schemaStubs: { [schemaName: string]: sinon.SinonStubbedInstance<EC.Schema> } = {};
+export function createECSchemaProviderStub(): {
+  stubEntityClass: TStubEntityClassFunc;
+  stubRelationshipClass: TStubRelationshipClassFunc;
+  stubOtherClass: TStubClassFunc;
+} & ECSchemaProvider {
+  interface SchemaStub {
+    name: string;
+    getClass: EC.Schema["getClass"];
+    classMap: Map<string, EC.Class>;
+  }
+  const schemaStubs: { [schemaName: string]: SchemaStub } = {};
   const getSchemaStub = (schemaName: string) => {
     let schemaStub = schemaStubs[schemaName];
     if (!schemaStub) {
+      const classMap = new Map<string, EC.Class>();
+      const getClass: EC.Schema["getClass"] = vi.fn().mockImplementation(async (name: string) => classMap.get(name)) as unknown as EC.Schema["getClass"];
       schemaStub = {
         name: schemaName,
-        getClass: sinon.stub(),
+        getClass,
+        classMap,
       };
       schemaStubs[schemaName] = schemaStub;
     }
@@ -154,7 +166,7 @@ export function createECSchemaProviderStub() {
       return props.properties.find((p) => p.name === propertyName);
     },
     getProperties: async (): Promise<Array<EC.Property>> => props.properties ?? [],
-    is: sinon.fake(async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
+    is: vi.fn().mockImplementation(async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
       if (typeof targetClassOrClassName === "string") {
         return props.is ? props.is(`${schemaName!}.${targetClassOrClassName}`) : schemaName === props.schemaName && targetClassOrClassName === props.className;
       }
@@ -170,7 +182,7 @@ export function createECSchemaProviderStub() {
       ...createBaseClassProps(props),
       isEntityClass: () => true,
     } as unknown as EC.EntityClass;
-    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
+    getSchemaStub(props.schemaName).classMap.set(props.className, res);
     return res;
   };
   const stubRelationshipClass: TStubRelationshipClassFunc = (props) => {
@@ -181,32 +193,36 @@ export function createECSchemaProviderStub() {
       target: props.target ?? { polymorphic: true, abstractConstraint: async () => undefined },
       isRelationshipClass: () => true,
     } as unknown as EC.RelationshipClass;
-    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
+    getSchemaStub(props.schemaName).classMap.set(props.className, res);
     return res;
   };
   const stubOtherClass: TStubClassFunc = (props) => {
     const res = {
       ...createBaseClassProps(props),
     } as unknown as EC.Class;
-    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
+    getSchemaStub(props.schemaName).classMap.set(props.className, res);
     return res;
   };
   return {
     stubEntityClass,
     stubRelationshipClass,
     stubOtherClass,
-    getSchema: sinon.fake(async (schemaName: string): Promise<EC.Schema | undefined> => {
-      return schemaStubs[schemaName];
-    }),
+    getSchema: vi.fn().mockImplementation(async (schemaName: string): Promise<EC.Schema | undefined> => {
+      return schemaStubs[schemaName] as unknown as EC.Schema | undefined;
+    }) as unknown as ECSchemaProvider["getSchema"],
   };
 }
 
-export function createClassHierarchyInspectorStub(schemaProvider = createECSchemaProviderStub()) {
+export function createClassHierarchyInspectorStub(schemaProvider = createECSchemaProviderStub()): {
+  stubEntityClass: TStubEntityClassFunc;
+  stubRelationshipClass: TStubRelationshipClassFunc;
+  stubOtherClass: TStubClassFunc;
+} & ECClassHierarchyInspector {
   return {
     stubEntityClass: schemaProvider.stubEntityClass,
     stubRelationshipClass: schemaProvider.stubRelationshipClass,
     stubOtherClass: schemaProvider.stubOtherClass,
-    classDerivesFrom: sinon.fake(async (derived: string, base: string) => {
+    classDerivesFrom: vi.fn().mockImplementation(async (derived: string, base: string) => {
       const { schemaName: derivedSchemaName, className: derivedClassName } = parseFullClassName(derived);
       const { schemaName: baseSchemaName, className: baseClassName } = parseFullClassName(base);
       const schemaStub = await schemaProvider.getSchema(derivedSchemaName);
@@ -218,7 +234,7 @@ export function createClassHierarchyInspectorStub(schemaProvider = createECSchem
         return false;
       }
       return derivedClass.is(baseClassName, baseSchemaName);
-    }),
+    }) as unknown as ECClassHierarchyInspector["classDerivesFrom"],
   };
 }
 
