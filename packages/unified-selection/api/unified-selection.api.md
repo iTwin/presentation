@@ -172,9 +172,11 @@ interface IModelHiliteSetProviderProps {
 
 // @public (undocumented)
 type IModelKeyProp = {
-    imodelKey: string;
+    imodelKey?: string;
+    iModelKey?: never;
 } | {
-    iModelKey: string;
+    imodelKey?: never;
+    iModelKey?: string;
 };
 
 // @public
