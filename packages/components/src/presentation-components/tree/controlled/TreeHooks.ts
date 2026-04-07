@@ -99,7 +99,7 @@ export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderP
   const nodeLoader = usePagedTreeNodeLoader(dataProvider, rest.pagingSize, modelSource);
 
   const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
-  /* c8 ignore next 3 */
+  /* v8 ignore next 3 -- @preserve */
   const onItemsRendered = useCallback((items: RenderedItemsRange) => {
     renderedItems.current = items;
   }, []);

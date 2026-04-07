@@ -468,6 +468,7 @@ function findFieldByPath(fields: Field[], pathToField: GenericInstanceFilterRela
     }
 
     const nestedField = findFieldByPath(field.nestedFields, pathMatchResult.leftOver);
+    /* v8 ignore else -- @preserve */
     if (nestedField) {
       return nestedField;
     }

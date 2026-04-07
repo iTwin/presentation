@@ -4,5 +4,6 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "lib/esm"
-  }
+  },
+  "include": ["src/presentation-components", "src/presentation-components.ts"]
 }

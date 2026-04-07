@@ -157,7 +157,7 @@ function initUnifiedSelectionFromPresentationFrontend({
     selection && onSelectionChanged(selection);
   };
 
-  /* c8 ignore start */
+  /* v8 ignore start -- @preserve */
   const handler =
     suppliedSelectionHandler ??
     // eslint-disable-next-line @typescript-eslint/no-deprecated
@@ -168,7 +168,7 @@ function initUnifiedSelectionFromPresentationFrontend({
       imodel,
       rulesetId,
     });
-  /* c8 ignore end */
+  /* v8 ignore stop -- @preserve */
 
   // eslint-disable-next-line @typescript-eslint/no-deprecated
   handler.onSelect = (evt: SelectionChangeEventArgs): void => {
