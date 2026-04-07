@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775557044354,
+  "lastUpdate": 1775568628907,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -45877,6 +45877,162 @@ window.BENCHMARK_DATA = {
             "value": 151,
             "unit": "ms",
             "extra": "count: 7\nmax: 151\np95: 151\nmedian: 47"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3fb4b30078b88f364cfaada29a182ebae6e83d27",
+          "message": "[hierarchies] Migrate to `vitest` (#1282)\n\n* Hierarchies migration to vitest\n\n* Update packages/hierarchies/src/hierarchies/imodel/IModelHierarchyProvider.ts\n\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>\n\n* cleanup\n\n* Mark missing coverage\n\n---------\n\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>",
+          "timestamp": "2026-04-07T16:27:20+03:00",
+          "tree_id": "92432c1d1a7fbbf8971a40e518e03ef3df90b52a",
+          "url": "https://github.com/iTwin/presentation/commit/3fb4b30078b88f364cfaada29a182ebae6e83d27"
+        },
+        "date": 1775568627202,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 3981.65,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 60,
+            "unit": "ms",
+            "extra": "count: 11\nmax: 60\np95: 60\nmedian: 31"
+          },
+          {
+            "name": "filtering filters with 50000 paths",
+            "value": 7487.13,
+            "unit": "ms"
+          },
+          {
+            "name": "filtering filters with 50000 paths (P95 of main thread blocks)",
+            "value": 135,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 135\np95: 135\nmedian: 26"
+          },
+          {
+            "name": "grouping by label",
+            "value": 9287.9,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 43,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 43\np95: 43\nmedian: 34"
+          },
+          {
+            "name": "grouping by class",
+            "value": 9313.36,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 34,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 34\np95: 34\nmedian: 32"
+          },
+          {
+            "name": "grouping by property",
+            "value": 9701.95,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 45,
+            "unit": "ms",
+            "extra": "count: 8\nmax: 45\np95: 45\nmedian: 32.5"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 6573.28,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 55,
+            "unit": "ms",
+            "extra": "count: 17\nmax: 55\np95: 55\nmedian: 36"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 25060.39,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 52,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 52\np95: 52\nmedian: 35"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 34536.9,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 31\np95: 31\nmedian: 29"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 146.33,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 38.35,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 6302.75,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 82,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 82\np95: 82\nmedian: 70"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 2100.8,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 82,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 82\np95: 82\nmedian: 47"
           }
         ]
       }
