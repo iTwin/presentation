@@ -89,11 +89,11 @@ export interface UseTreeProps {
   }) => void;
   /** Action to perform when an error occurs while loading hierarchy. */
   onHierarchyLoadError?: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void;
-  /** Callback to set custom TreeNode errors.
-   *
-   * **Note:** Internal errors take precedence over custom ones.
+  /**
+   * Callback to set custom TreeNode errors.
+   * Errors returned from this callback are combined with internal errors when populating `TreeNode.errors`.
    */
-  getTreeNodeError?: (node: HierarchyNode) => ErrorInfo | undefined;
+  getTreeNodeErrors?: (node: HierarchyNode) => ErrorInfo[];
 }
 
 /** @public */
@@ -147,7 +147,7 @@ function useTreeInternal({
   onPerformanceMeasured,
   onHierarchyLimitExceeded,
   onHierarchyLoadError,
-  getTreeNodeError,
+  getTreeNodeErrors,
 }: UseTreeProps): UseTreeResult & {
   getTreeModelNode: (nodeId: string) => TreeModelRootNode | TreeModelHierarchyNode | undefined;
 } {
@@ -158,7 +158,7 @@ function useTreeInternal({
   const onPerformanceMeasuredRef = useLatest(onPerformanceMeasured);
   const onHierarchyLimitExceededRef = useLatest(onHierarchyLimitExceeded);
   const onHierarchyLoadErrorRef = useLatest(onHierarchyLoadError);
-  const getTreeNodeErrorRef = useLatest(getTreeNodeError);
+  const getTreeNodeErrorsRef = useLatest(getTreeNodeErrors);
 
   const [actions] = useState<TreeActions>(
     () =>
@@ -166,7 +166,7 @@ function useTreeInternal({
         (model) => {
           const rootNodes =
             model.parentChildMap.get(undefined) !== undefined
-              ? generateTreeStructure(undefined, model, getTreeNodeErrorRef.current)
+              ? generateTreeStructure(undefined, model, getTreeNodeErrorsRef.current)
               : undefined;
           setState({ model, rootNodes });
         },
@@ -242,9 +242,9 @@ function useTreeInternal({
       if (!node || node.id === undefined) {
         return undefined;
       }
-      return createTreeNode(node, state.model, getTreeNodeErrorRef.current);
+      return createTreeNode(node, state.model, getTreeNodeErrorsRef.current);
     },
-    [actions, getTreeNodeErrorRef, state.model],
+    [actions, getTreeNodeErrorsRef, state.model],
   );
 
   const expandNode = useCallback<TreeRendererProps["expandNode"]>(
@@ -346,7 +346,7 @@ function useTreeInternal({
 function generateTreeStructure(
   parentNodeId: string | undefined,
   model: TreeModel,
-  getTreeNodeError?: (node: HierarchyNode) => ErrorInfo | undefined,
+  getTreeNodeErrors?: (node: HierarchyNode) => ErrorInfo[],
 ): Array<TreeNode> | undefined {
   const currentChildren = model.parentChildMap.get(parentNodeId);
   if (!currentChildren) {
@@ -357,15 +357,22 @@ function generateTreeStructure(
     .map((childId) => model.idToNode.get(childId))
     .filter((node): node is TreeModelHierarchyNode => !!node)
     .map<TreeNode>((node) => {
-      return createTreeNode(node, model, getTreeNodeError);
+      return createTreeNode(node, model, getTreeNodeErrors);
     });
 }
 
 function createTreeNode(
   modelNode: TreeModelHierarchyNode,
   model: TreeModel,
-  getTreeNodeError?: (node: HierarchyNode) => ErrorInfo | undefined,
+  getTreeNodeErrors?: (node: HierarchyNode) => ErrorInfo[],
 ): TreeNode {
+  const allErrors = [
+    // internal errors
+    ...(modelNode.error ? [modelNode.error] : []),
+    // external errors
+    ...(getTreeNodeErrors?.(modelNode.nodeData) ?? []),
+  ];
+
   let children: Array<TreeNode> | undefined;
   return {
     id: modelNode.id,
@@ -376,10 +383,10 @@ function createTreeNode(
     isFilterable:
       !HierarchyNode.isGroupingNode(modelNode.nodeData) && !!modelNode.nodeData.supportsFiltering && modelNode.children,
     isFiltered: !!modelNode.instanceFilter,
-    error: modelNode.error ?? getTreeNodeError?.(modelNode.nodeData),
+    errors: allErrors,
     get children() {
       if (!children) {
-        children = generateTreeStructure(modelNode.id, model, getTreeNodeError);
+        children = generateTreeStructure(modelNode.id, model, getTreeNodeErrors);
       }
       return children ? children : modelNode.children === true ? true : [];
     },

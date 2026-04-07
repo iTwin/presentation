@@ -11,17 +11,11 @@ import errorSvg from "@stratakit/icons/status-error.svg";
 
 import type { JSX } from "react";
 import type { RootErrorRendererProps } from "../Renderers.js";
-import type { ErrorInfo } from "../TreeNode.js";
 
 /**
  * @alpha
  */
-export type StrataKitRootErrorRendererProps = {
-  /**
-   * Root error to be displayed
-   */
-  error: ErrorInfo;
-} & RootErrorRendererProps;
+export type StrataKitRootErrorRendererProps = RootErrorRendererProps;
 
 /**
  * A component that renders root node error state.

@@ -130,8 +130,11 @@ function Tree({
     imodelChanged,
     getSearchPaths,
     getHierarchyDefinition,
-    getTreeNodeError: (node) => {
-      return { type: "Unknown", id: node.label, message: `test error node`, isNodeExpandable: true };
+    getTreeNodeErrors: (node) => {
+      return [
+        { type: "Unknown", id: `${node.label}-error-1`, message: `test error node`, isNodeExpandable: true },
+        { type: "Unknown", id: `${node.label}-error-2`, message: `test error node 2`, isNodeExpandable: true },
+      ];
     },
     onPerformanceMeasured: (action, duration) => {
       // eslint-disable-next-line no-console

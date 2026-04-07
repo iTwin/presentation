@@ -352,14 +352,14 @@ async function collectNodes(loadObs: Observable<LoadedTreePart>) {
 }
 
 function getTreeModelHierarchyNodeArray(nodes: ErrorInfo | TreeModelHierarchyNode[] | undefined) {
-  if (nodes && "length" in nodes) {
-    return nodes;
+  if (nodes && !Array.isArray(nodes)) {
+    return undefined;
   }
-  return undefined;
+  return nodes;
 }
 
 function getErrorInfo(error: ErrorInfo | TreeModelHierarchyNode[] | undefined) {
-  if (error && "type" in error) {
+  if (error && !Array.isArray(error)) {
     return error;
   }
   return undefined;

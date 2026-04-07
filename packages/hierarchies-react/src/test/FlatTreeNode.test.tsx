@@ -20,7 +20,7 @@ describe("FlatTreeNode", () => {
       isFilterable: props.isFilterable ?? false,
       isFiltered: props.isFiltered ?? false,
       nodeData: props.nodeData ?? ({} as HierarchyNode),
-      error: props.error,
+      errors: props.errors ?? [],
       ...props,
     };
   }
@@ -33,7 +33,7 @@ describe("FlatTreeNode", () => {
       const parentNode = createTreeNode({
         id: "parent",
         isExpanded: true,
-        error: { id: "error-1", type: "Unknown", message: "Something went wrong", isNodeExpandable: true },
+        errors: [{ id: "error-1", type: "Unknown", message: "Something went wrong", isNodeExpandable: true }],
         children: [childNode1, childNode2],
       });
 
@@ -51,7 +51,7 @@ describe("FlatTreeNode", () => {
       const parentNode = createTreeNode({
         id: "parent",
         isExpanded: true,
-        error: { id: "error-1", type: "Unknown", message: "Something went wrong", isNodeExpandable: false },
+        errors: [{ id: "error-1", type: "Unknown", message: "Something went wrong", isNodeExpandable: false }],
         children: [childNode],
       });
 
@@ -66,7 +66,7 @@ describe("FlatTreeNode", () => {
       const parentNode = createTreeNode({
         id: "parent",
         isExpanded: true,
-        error: { id: "error-1", type: "Unknown", message: "Something went wrong" },
+        errors: [{ id: "error-1", type: "Unknown", message: "Something went wrong" }],
         children: [childNode],
       });
 
@@ -81,7 +81,7 @@ describe("FlatTreeNode", () => {
       const parentNode = createTreeNode({
         id: "parent",
         isExpanded: false,
-        error: { id: "error-1", type: "Unknown", message: "Something went wrong", isNodeExpandable: true },
+        errors: [{ id: "error-1", type: "Unknown", message: "Something went wrong", isNodeExpandable: true }],
         children: [childNode],
       });
 
@@ -96,18 +96,18 @@ describe("FlatTreeNode", () => {
     it("reports all errors when parent has expandable error", () => {
       const grandChildNode = createTreeNode({
         id: "grandchild-1",
-        error: { id: "error-3", type: "ChildrenLoad", message: "Grandchild error" },
+        errors: [{ id: "error-3", type: "ChildrenLoad", message: "Grandchild error" }],
         children: [],
       });
       const childNode1 = createTreeNode({
         id: "child-1",
-        error: { id: "error-2", type: "Unknown", message: "Child error", isNodeExpandable: true },
+        errors: [{ id: "error-2", type: "Unknown", message: "Child error", isNodeExpandable: true }],
         children: [grandChildNode],
       });
       const childNode2 = createTreeNode({ id: "child-2", children: [] });
       const parentNode = createTreeNode({
         id: "parent",
-        error: { id: "error-1", type: "Unknown", message: "Parent error", isNodeExpandable: true },
+        errors: [{ id: "error-1", type: "Unknown", message: "Parent error", isNodeExpandable: true }],
         children: [childNode1, childNode2],
       });
 
@@ -122,12 +122,12 @@ describe("FlatTreeNode", () => {
     it("does not traverse children when error is not expandable", () => {
       const childNode = createTreeNode({
         id: "child-1",
-        error: { id: "error-2", type: "ChildrenLoad", message: "Child error" },
+        errors: [{ id: "error-2", type: "ChildrenLoad", message: "Child error" }],
         children: [],
       });
       const parentNode = createTreeNode({
         id: "parent",
-        error: { id: "error-1", type: "Unknown", message: "Parent error", isNodeExpandable: false },
+        errors: [{ id: "error-1", type: "Unknown", message: "Parent error", isNodeExpandable: false }],
         children: [childNode],
       });
 
@@ -140,12 +140,12 @@ describe("FlatTreeNode", () => {
     it("does not traverse children when error has no isNodeExpandable property", () => {
       const childNode = createTreeNode({
         id: "child-1",
-        error: { id: "error-2", type: "ChildrenLoad", message: "Child error" },
+        errors: [{ id: "error-2", type: "ChildrenLoad", message: "Child error" }],
         children: [],
       });
       const parentNode = createTreeNode({
         id: "parent",
-        error: { id: "error-1", type: "Unknown", message: "Parent error" },
+        errors: [{ id: "error-1", type: "Unknown", message: "Parent error" }],
         children: [childNode],
       });
 
@@ -158,7 +158,7 @@ describe("FlatTreeNode", () => {
     it("counts error root node when it is not expanded", () => {
       const rootNode = createTreeNode({
         id: "root",
-        error: { id: "error-1", type: "Unknown", message: "Root error" },
+        errors: [{ id: "error-1", type: "Unknown", message: "Root error" }],
         children: true,
       });
 

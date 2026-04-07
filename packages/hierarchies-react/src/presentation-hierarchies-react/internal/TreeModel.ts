@@ -207,12 +207,8 @@ function updateForReload(
 }
 
 function clearNodeError(model: TreeModel, parentId: string | undefined) {
-  if (!parentId) {
-    return (model.rootNode.error = undefined);
+  const node = !parentId ? model.rootNode : model.idToNode.get(parentId);
+  if (node) {
+    node.error = undefined;
   }
-  const node = model.idToNode.get(parentId);
-  if (!node) {
-    return;
-  }
-  node.error = undefined;
 }

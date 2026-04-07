@@ -19,8 +19,8 @@ export interface TreeNode {
   isFiltered: boolean;
   /** UI-agnostic source of this node object. */
   nodeData: HierarchyNode;
-  /** Contains error encountered from expanding the node */
-  error?: ErrorInfo;
+  /** Errors associated with this tree node. */
+  errors: ErrorInfo[];
 }
 
 /**

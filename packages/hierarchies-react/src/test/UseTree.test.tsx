@@ -131,8 +131,8 @@ describe("useTree", () => {
 
     const customProps: UseTreeProps = {
       getHierarchyProvider: () => customHierarchyProvider,
-      getTreeNodeError: (node) => {
-        return { id: `${node.label}-error`, type: "Unknown", message: "Test error" };
+      getTreeNodeErrors: (node) => {
+        return [{ id: `${node.label}-error`, type: "Unknown", message: "Test error" }];
       },
     };
 
@@ -141,7 +141,7 @@ describe("useTree", () => {
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps!.rootNodes[0].error).to.deep.equal({
+      expect(treeRenderProps!.rootNodes[0].errors[0]).to.deep.equal({
         id: "root-1-error",
         type: "Unknown",
         message: "Test error",
@@ -952,8 +952,8 @@ describe("useTree", () => {
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps!.rootNodes[0].error).to.not.be.undefined;
-      expect(treeRenderProps!.rootNodes[0].error!.type).to.be.eq("ChildrenLoad");
+      expect(treeRenderProps!.rootNodes[0].errors).to.not.be.undefined;
+      expect(treeRenderProps!.rootNodes[0].errors[0].type).to.be.eq("ChildrenLoad");
     });
 
     hierarchyProvider.getNodes.reset();
@@ -1015,7 +1015,7 @@ describe("useTree", () => {
     });
   });
 
-  it("getTreeNodeError to does not override internal error", async () => {
+  it("getTreeNodeErrors merges errors", async () => {
     hierarchyProvider.getNodes.callsFake(({ parentNode }) => {
       if (!parentNode) {
         return createAsyncIterator([createTestHierarchyNode({ id: "root-1", children: true })]);
@@ -1026,16 +1026,18 @@ describe("useTree", () => {
     const { result } = renderHook(useTree, {
       initialProps: {
         ...initialProps,
-        getTreeNodeError: () => ({ id: "custom-error", type: "Unknown", message: "Custom error" }),
+        getTreeNodeErrors: () => [{ id: "custom-error", type: "Unknown", message: "Custom error" }],
       },
     });
 
+    // Children are not loaded yet, so only custom error is expected
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps!.rootNodes[0].error?.type).to.eq("Unknown");
+      expect(treeRenderProps!.rootNodes[0].errors[0]?.type).to.eq("Unknown");
     });
 
+    // Try loading children to trigger error
     const initialTreeRenderProps = getTreeRendererProps(result.current)!;
     await act(async () => {
       initialTreeRenderProps.expandNode(initialTreeRenderProps.rootNodes[0].id, true);
@@ -1043,7 +1045,8 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current)!;
-      expect(treeRenderProps.rootNodes[0].error?.type).to.equal("ChildrenLoad");
+      expect(treeRenderProps.rootNodes[0].errors.length).to.be.equal(2);
+      expect(treeRenderProps.rootNodes[0].errors[0]?.type).to.equal("ChildrenLoad");
     });
   });
 });

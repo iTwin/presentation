@@ -5,7 +5,7 @@
 
 import { useMemo } from "react";
 
-import type { TreeNode } from "./TreeNode.js";
+import type { ErrorInfo, TreeNode } from "./TreeNode.js";
 
 /**
  * Placeholder item that is added to hierarchy as a child for a parent item while its child items are loading.
@@ -63,7 +63,7 @@ function getFlatItems(nodes: TreeNode[], level: number) {
       return;
     }
 
-    if (node.error && (node.error.type !== "Unknown" || !node.error.isNodeExpandable)) {
+    if (node.errors.some(isErrorBlockingExpansion)) {
       return;
     }
 
@@ -87,27 +87,27 @@ function getFlatItems(nodes: TreeNode[], level: number) {
  *
  * @alpha
  */
-export function useErrorNodes(rootNodes: TreeNode[]): Array<TreeNode & Pick<Required<TreeNode>, "error">> {
+export function useErrorNodes(rootNodes: TreeNode[]): TreeNode[] {
   return useMemo(
     () =>
       rootNodes.flatMap((rootNode) => {
-        const errors = isErrorNode(rootNode) ? [rootNode] : [];
+        const errorNodes = isErrorNode(rootNode) ? [rootNode] : [];
         if (rootNode.children === true) {
-          return errors;
+          return errorNodes;
         }
 
-        if (errors.length === 1 && (rootNode.error?.type !== "Unknown" || !rootNode.error.isNodeExpandable)) {
-          return errors;
+        if (errorNodes.length === 1 && errorNodes[0].errors.some(isErrorBlockingExpansion)) {
+          return errorNodes;
         }
-        errors.push(...getErrorNodes(rootNode));
-        return errors;
+        errorNodes.push(...getErrorNodes(rootNode));
+        return errorNodes;
       }),
     [rootNodes],
   );
 }
 
 function getErrorNodes(parent: TreeNode) {
-  const errorList: ReturnType<typeof useErrorNodes> = [];
+  const errorList: TreeNode[] = [];
 
   if (parent.children === true) {
     return [];
@@ -116,7 +116,7 @@ function getErrorNodes(parent: TreeNode) {
   parent.children.forEach((node) => {
     if (isErrorNode(node)) {
       errorList.push(node);
-      if (node.error.type !== "Unknown" || !node.error.isNodeExpandable) {
+      if (node.errors.some(isErrorBlockingExpansion)) {
         return;
       }
     }
@@ -130,6 +130,10 @@ function getErrorNodes(parent: TreeNode) {
   return errorList;
 }
 
-function isErrorNode(node: TreeNode): node is TreeNode & Pick<Required<TreeNode>, "error"> {
-  return node.error !== undefined;
+function isErrorNode(node: TreeNode): boolean {
+  return node.errors.length > 0;
+}
+
+function isErrorBlockingExpansion(error: ErrorInfo): boolean {
+  return error.type !== "Unknown" || !error.isNodeExpandable;
 }
