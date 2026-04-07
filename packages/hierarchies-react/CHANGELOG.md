@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.60
+
+### Minor Changes
+
+- ce317097cb094c1c0eb15b66f7560dd54ad7893b: Updated optional `@stratakit/*` peer dependencies to their latest versions (`@stratakit/foundations@0.4.7`, `@stratakit/icons@0.3.1`, `@stratakit/structures@0.5.6`).
+
 ## 2.0.0-alpha.59
 
 ### Major Changes
