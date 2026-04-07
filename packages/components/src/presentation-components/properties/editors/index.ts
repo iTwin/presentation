@@ -23,6 +23,8 @@ export {
   useNavigationPropertyEditorContextProviderProps,
 } from "./NavigationPropertyEditorContext.js";
 
+/* v8 ignore start -- @preserve */
+
 /**
  * Editor for navigation properties.
  * @beta
@@ -55,3 +57,5 @@ PropertyEditorManager.registerEditor(StandardTypeNames.Number, NumericPropertyEd
 PropertyEditorManager.registerEditor(StandardTypeNames.Int, NumericPropertyEditorBase, NumericEditorName);
 PropertyEditorManager.registerEditor(StandardTypeNames.Float, NumericPropertyEditorBase, NumericEditorName);
 PropertyEditorManager.registerEditor(StandardTypeNames.Double, NumericPropertyEditorBase, NumericEditorName);
+
+/* v8 ignore stop -- @preserve */

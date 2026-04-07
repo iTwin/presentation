@@ -5,5 +5,5 @@
     "moduleResolution": "Node",
     "outDir": "lib/cjs"
   },
-  "exclude": ["src/test/**/*"]
+  "include": ["src/shared", "src/presentation-shared.ts"]
 }

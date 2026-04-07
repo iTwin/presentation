@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PageOptions } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -17,7 +16,7 @@ import { IPresentationTreeDataProvider } from "../../presentation-components/tre
 import { createTreeNodeItem } from "../../presentation-components/tree/Utils.js";
 import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy.js";
-import { createStub } from "../TestUtils.js";
+import { createMocked, createStub } from "../TestUtils.js";
 
 describe("FilteredTreeDataProvider", () => {
   function createTestNodePathElementWithId(id: string) {
@@ -80,11 +79,11 @@ describe("FilteredTreeDataProvider", () => {
 
   beforeEach(() => {
     const onVariableChanged = new BeEvent();
-    const presentationManager = sinon.createStubInstance(PresentationManager);
-    presentationManager.vars.returns({
+    const presentationManager = createMocked(PresentationManager);
+    presentationManager.vars.mockReturnValue({
       onVariableChanged,
     } as RulesetVariablesManager);
-    sinon.stub(Presentation, "presentation").get(() => presentationManager);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
 
     filter = "test_filter";
     paths = createPaths();
@@ -96,9 +95,8 @@ describe("FilteredTreeDataProvider", () => {
   });
 
   afterEach(() => {
-    parentProvider.getFilteredNodePaths.reset();
-    parentProvider.createRequestOptions.reset();
-    sinon.restore();
+    parentProvider.getFilteredNodePaths.mockReset();
+    parentProvider.createRequestOptions.mockReset();
   });
 
   describe("filter", () => {
@@ -128,18 +126,18 @@ describe("FilteredTreeDataProvider", () => {
   describe("getNodes", () => {
     it("returns root nodes", async () => {
       const result = await provider.getNodes(undefined, pageOptions);
-      expect(result).to.matchSnapshot();
+      expect(result).toMatchSnapshot();
     });
 
     it("returns child nodes", async () => {
       const parentNode = createTreeNodeItem(paths[1].node);
 
       const result = await provider.getNodes(parentNode, pageOptions);
-      expect(result).to.matchSnapshot();
+      expect(result).toMatchSnapshot();
     });
 
     it("applies same node customizations as parent data provider", async () => {
-      const customizeStub = sinon.stub();
+      const customizeStub = vi.fn();
       const newParentProvider = new PresentationTreeDataProvider({
         imodel,
         ruleset: "test-rules",
@@ -152,7 +150,7 @@ describe("FilteredTreeDataProvider", () => {
         paths: testPaths,
       });
       await filteredProvider.getNodes(undefined, pageOptions);
-      expect(customizeStub).to.be.calledOnce;
+      expect(customizeStub).toHaveBeenCalledOnce();
     });
   });
 
@@ -172,11 +170,11 @@ describe("FilteredTreeDataProvider", () => {
 
   describe("getFilteredNodePaths", () => {
     it("calls parent data provider", async () => {
-      parentProvider.getFilteredNodePaths.resolves(paths);
+      parentProvider.getFilteredNodePaths.mockResolvedValue(paths);
 
       const result = await provider.getFilteredNodePaths(filter);
       expect(result).to.equal(paths);
-      expect(parentProvider.getFilteredNodePaths).to.be.calledWith(filter);
+      expect(parentProvider.getFilteredNodePaths).toHaveBeenCalledWith(filter);
     });
   });
 
@@ -185,10 +183,10 @@ describe("FilteredTreeDataProvider", () => {
       const key = createTestECInstancesNodeKey();
       const filterDefinition = {} as InstanceFilterDefinition;
 
-      parentProvider.createRequestOptions.returns({ rulesetOrId: "test_ruleset", imodel: {} as IModelConnection });
+      parentProvider.createRequestOptions.mockReturnValue({ rulesetOrId: "test_ruleset", imodel: {} as IModelConnection });
       const result = provider.createRequestOptions(key, filterDefinition);
       expect(result.rulesetOrId).to.be.equal("test_ruleset");
-      expect(parentProvider.createRequestOptions).to.be.calledWith(key, filterDefinition);
+      expect(parentProvider.createRequestOptions).toHaveBeenCalledWith(key, filterDefinition);
     });
   });
 
