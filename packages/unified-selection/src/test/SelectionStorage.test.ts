@@ -31,7 +31,7 @@ describe("SelectionStorage", () => {
       selectionStorage.selectionChangeEvent.addListener(listenerSpy);
       selectionStorage.clearStorage({ imodelKey });
       expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey }))).toBe(true);
-      expect(listenerSpy, "Expected selectionChange.onSelectionChange to be called").toHaveBeenCalledTimes(1);
+      expect(listenerSpy, "Expected selectionChange.onSelectionChange to be called").toHaveBeenCalledOnce();
     });
   });
 

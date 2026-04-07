@@ -366,7 +366,7 @@ describe("Selectables", () => {
       const selectables = Selectables.create([instanceKey]);
       const callback = vi.fn().mockReturnValue(true);
       expect(Selectables.some(selectables, callback)).toBe(true);
-      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveBeenCalledWith(instanceKey);
     });
 
@@ -375,7 +375,7 @@ describe("Selectables", () => {
       const selectables = Selectables.create([customSelectable]);
       const callback = vi.fn().mockReturnValue(true);
       expect(Selectables.some(selectables, callback)).toBe(true);
-      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveBeenCalledWith(customSelectable);
     });
 

@@ -63,14 +63,14 @@ describe("enableUnifiedSelectionSyncWithIModel", () => {
       cachingHiliteSetProvider: hiliteSetProvider,
     });
 
-    expect(selectionStorage.selectionChangeEvent.addListener).toHaveBeenCalledTimes(1);
+    expect(selectionStorage.selectionChangeEvent.addListener).toHaveBeenCalledOnce();
     expect(selectionStorage.selectionChangeEvent.removeListener).not.toHaveBeenCalled();
 
     resetListeners();
     cleanup();
 
     expect(selectionStorage.selectionChangeEvent.addListener).not.toHaveBeenCalled();
-    expect(selectionStorage.selectionChangeEvent.removeListener).toHaveBeenCalledTimes(1);
+    expect(selectionStorage.selectionChangeEvent.removeListener).toHaveBeenCalledOnce();
   });
 });
 
@@ -251,7 +251,7 @@ describe("IModelSelectionHandler", () => {
       using _handler = await createHandler({
         selectionStorage: selectionStorageStub as unknown as SelectionStorage,
       });
-      expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledTimes(1);
+      expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledOnce();
       imodelHiliteSetProvider.getHiliteSetProvider.mockClear();
       imodelHiliteSetProvider.getCurrentHiliteSet.mockClear();
       hiliteSetProvider.getHiliteSet.mockClear();
@@ -270,10 +270,10 @@ describe("IModelSelectionHandler", () => {
           timestamp: new Date(),
         });
         if (selectionChangeType === "clear" || selectionChangeType === "replace") {
-          expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledTimes(1);
+          expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledOnce();
         } else {
-          expect(imodelHiliteSetProvider.getHiliteSetProvider).toHaveBeenCalledTimes(1);
-          expect(hiliteSetProvider.getHiliteSet).toHaveBeenCalledTimes(1);
+          expect(imodelHiliteSetProvider.getHiliteSetProvider).toHaveBeenCalledOnce();
+          expect(hiliteSetProvider.getHiliteSet).toHaveBeenCalledOnce();
         }
         imodelHiliteSetProvider.getHiliteSetProvider.mockClear();
         imodelHiliteSetProvider.getCurrentHiliteSet.mockClear();
@@ -575,7 +575,7 @@ describe("IModelSelectionHandler", () => {
 
       await waitFor(() => {
         expect(selectionStorageStub.replaceSelection).toHaveBeenCalledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: addedKeys });
-        expect(selectionSet.add).toHaveBeenCalledTimes(1);
+        expect(selectionSet.add).toHaveBeenCalledOnce();
         expect(selectionSet.add).toHaveBeenCalledWith({
           elements: ["0x11"],
           models: ["0x22"],
@@ -643,7 +643,7 @@ describe("IModelSelectionHandler", () => {
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
       using _handler = await createHandler({ selectionStorage, imodelAccess });
       await waitFor(() => {
-        expect(selectionSet.emptyAll).toHaveBeenCalledTimes(1);
+        expect(selectionSet.emptyAll).toHaveBeenCalledOnce();
         expect(selectionSet.add).toHaveBeenCalledExactlyOnceWith(ids);
       });
     });
@@ -693,8 +693,8 @@ describe("IModelSelectionHandler", () => {
         triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, changeType: "clear", source });
 
         await waitFor(() => {
-          expect(hiliteSet.clear).toHaveBeenCalledTimes(1);
-          expect(selectionSet.emptyAll).toHaveBeenCalledTimes(1);
+          expect(hiliteSet.clear).toHaveBeenCalledOnce();
+          expect(selectionSet.emptyAll).toHaveBeenCalledOnce();
         });
       });
 
@@ -715,7 +715,7 @@ describe("IModelSelectionHandler", () => {
         triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source });
 
         await waitFor(() => {
-          expect(hiliteSet.clear).toHaveBeenCalledTimes(1);
+          expect(hiliteSet.clear).toHaveBeenCalledOnce();
           expect(hiliteSet.models.addIds).toHaveBeenCalledExactlyOnceWith(ids.models);
           expect(hiliteSet.subcategories.addIds).toHaveBeenCalledExactlyOnceWith(ids.subCategories);
           expect(selectionSet.add).toHaveBeenCalledExactlyOnceWith(ids.elements);
@@ -937,7 +937,7 @@ describe("IModelSelectionHandler", () => {
             elements: removed.elements,
           });
           expect(selectionSet.add.mock.invocationCallOrder[0]).toBeGreaterThan(selectionSet.remove.mock.invocationCallOrder[0]);
-          expect(selectionSet.add).toHaveBeenCalledTimes(1);
+          expect(selectionSet.add).toHaveBeenCalledOnce();
           expect(selectionSet.add).toHaveBeenCalledWith({ models: readded.models, subcategories: readded.subCategories, elements: readded.elements });
         });
       });
@@ -1006,7 +1006,7 @@ describe("IModelSelectionHandler", () => {
         selectables: [{ className: "BisCore.Element", id: "0x123" }],
       });
       await waitFor(() => {
-        expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledTimes(1);
+        expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledOnce();
         expect(selectionSet.emptyAll).toHaveBeenCalled();
         expect(selectionSet.add).toHaveBeenCalledExactlyOnceWith({
           elements: initialHilited.elements,
@@ -1027,8 +1027,8 @@ describe("IModelSelectionHandler", () => {
       });
       triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source: "next", selectables: [{ className: "BisCore.Element", id: "0x456" }] });
       await waitFor(() => {
-        expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledTimes(1);
-        expect(selectionSet.emptyAll).toHaveBeenCalledTimes(1);
+        expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledOnce();
+        expect(selectionSet.emptyAll).toHaveBeenCalledOnce();
         expect(selectionSet.add).toHaveBeenCalledExactlyOnceWith({
           elements: replaceHilited.elements,
           models: replaceHilited.models,
@@ -1068,7 +1068,7 @@ describe("IModelSelectionHandler", () => {
         selectables: [{ className: "BisCore.Element", id: "0x123" }],
       });
       await waitFor(() => {
-        expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledTimes(1);
+        expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledOnce();
         expect(selectionSet.emptyAll).toHaveBeenCalled();
         expect(selectionSet.add).toHaveBeenCalledExactlyOnceWith({
           elements: initialHilited.elements,
@@ -1089,7 +1089,7 @@ describe("IModelSelectionHandler", () => {
       });
       triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source: "next", changeType: "clear", selectables: [] });
       await waitFor(() => {
-        expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledTimes(1);
+        expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledOnce();
         expect(selectionSet.emptyAll).toHaveBeenCalled();
         expect(selectionSet.add).toHaveBeenCalledExactlyOnceWith({
           elements: clearHilited.elements,
@@ -1130,7 +1130,7 @@ describe("IModelSelectionHandler", () => {
         selectables: [{ className: "BisCore.Element", id: "0x123" }],
       });
       await waitFor(() => {
-        expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledTimes(1);
+        expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledOnce();
         expect(selectionSet.emptyAll).toHaveBeenCalled();
         expect(selectionSet.add).toHaveBeenCalledExactlyOnceWith({
           elements: initialHilited.elements,
@@ -1159,7 +1159,7 @@ describe("IModelSelectionHandler", () => {
         selectables: [{ className: "BisCore.Element", id: "0x456" }],
       });
       await waitFor(() => {
-        expect(hiliteSetProvider.getHiliteSet).toHaveBeenCalledTimes(1);
+        expect(hiliteSetProvider.getHiliteSet).toHaveBeenCalledOnce();
         expect(selectionSet.emptyAll).not.toHaveBeenCalled();
         expect(selectionSet.add).toHaveBeenCalledExactlyOnceWith({
           elements: addHilited.elements,
@@ -1185,7 +1185,7 @@ describe("IModelSelectionHandler", () => {
         selectables: [{ className: "BisCore.Element", id: "0x456" }],
       });
       await waitFor(() => {
-        expect(hiliteSetProvider.getHiliteSet).toHaveBeenCalledTimes(1);
+        expect(hiliteSetProvider.getHiliteSet).toHaveBeenCalledOnce();
         expect(selectionSet.emptyAll).not.toHaveBeenCalled();
         expect(selectionSet.remove).toHaveBeenCalledExactlyOnceWith({
           elements: removeHilited.elements,
@@ -1231,7 +1231,7 @@ describe("IModelSelectionHandler", () => {
 
       await waitFor(() => {
         // verify selection set was not cleared, but resulting hilite set was added to it
-        expect(hiliteSet.clear).toHaveBeenCalledTimes(1);
+        expect(hiliteSet.clear).toHaveBeenCalledOnce();
         expect(selectionSet.emptyAll).not.toHaveBeenCalled();
         expect(hiliteSet.models.addIds).toHaveBeenCalledExactlyOnceWith(replaceHilited.models);
         expect(hiliteSet.subcategories.addIds).toHaveBeenCalledExactlyOnceWith(replaceHilited.subCategories);

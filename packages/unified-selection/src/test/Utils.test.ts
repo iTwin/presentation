@@ -10,13 +10,13 @@ describe("safeDispose", () => {
   it("disposes object with `Symbol.dispose` method", () => {
     const disposable = { [Symbol.dispose]: vi.fn() };
     safeDispose(disposable);
-    expect(disposable[Symbol.dispose]).toHaveBeenCalledTimes(1);
+    expect(disposable[Symbol.dispose]).toHaveBeenCalledOnce();
   });
 
   it("disposes object with `dispose` method", () => {
     const disposable = { dispose: vi.fn() };
     safeDispose(disposable);
-    expect(disposable.dispose).toHaveBeenCalledTimes(1);
+    expect(disposable.dispose).toHaveBeenCalledOnce();
   });
 
   it("does nothing with non-disposable object", () => {

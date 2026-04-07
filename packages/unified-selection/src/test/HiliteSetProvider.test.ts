@@ -286,7 +286,7 @@ describe("HiliteSetProvider", () => {
 
         const selection = Selectables.create(elementKeys);
         const result = await loadHiliteSet(selection);
-        expect(imodelAccess.classDerivesFrom).toHaveBeenCalledTimes(1);
+        expect(imodelAccess.classDerivesFrom).toHaveBeenCalledOnce();
         expect(result.models).toEqual([resultKey]);
         expect(result.subCategories).toHaveLength(0);
         expect(result.elements).toHaveLength(0);
@@ -301,7 +301,7 @@ describe("HiliteSetProvider", () => {
 
         const selection = Selectables.create(elementKeys);
         const result = await loadHiliteSet(selection);
-        expect(imodelAccess.classDerivesFrom).toHaveBeenCalledTimes(1);
+        expect(imodelAccess.classDerivesFrom).toHaveBeenCalledOnce();
         expect(result.models).toEqual([resultKey]);
         expect(result.subCategories).toHaveLength(0);
         expect(result.elements).toHaveLength(0);

@@ -100,7 +100,7 @@ describe("createIModelHiliteSetProvider", () => {
       const set1 = await loadHiliteSet();
       const set2 = await loadHiliteSet();
 
-      expect(provider.getHiliteSet).toHaveBeenCalledTimes(1);
+      expect(provider.getHiliteSet).toHaveBeenCalledOnce();
       expect(set1.models.length).toBe(3);
       expect(set1.subCategories.length).toBe(3);
       expect(set1.elements.length).toBe(3);
@@ -147,7 +147,7 @@ describe("createIModelHiliteSetProvider", () => {
       selectionStorage.clearSelection({ imodelKey, source: "test" });
       hiliteSetCache.getCurrentHiliteSet({ imodelKey });
 
-      expect(provider.getHiliteSet).toHaveBeenCalledTimes(1);
+      expect(provider.getHiliteSet).toHaveBeenCalledOnce();
     });
   });
 });
