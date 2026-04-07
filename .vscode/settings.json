@@ -37,7 +37,4 @@
     "NODE_ENV": "development"
   },
   "terminal.integrated.scrollback": 5000,
-  "[typescript]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  }
 }
