@@ -3,24 +3,23 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { ComponentPropsWithoutRef } from "react";
-import sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { MAX_LIMIT_OVERRIDE } from "../../presentation-hierarchies-react/internal/Utils.js";
 import { TreeRenderer } from "../../presentation-hierarchies-react/itwinui/TreeRenderer.js";
 import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../../presentation-hierarchies-react/TreeNode.js";
 import { HierarchyLevelDetails } from "../../presentation-hierarchies-react/UseTree.js";
-import { act, createStub, createTestHierarchyNode, render, stubVirtualization, waitFor, within } from "../TestUtils.js";
+import { act, createTestHierarchyNode, render, stubVirtualization, waitFor, within } from "../TestUtils.js";
 
 type RequiredTreeProps = Required<ComponentPropsWithoutRef<typeof TreeRenderer>>;
 
 describe("Tree", () => {
-  const onFilterClick = createStub<RequiredTreeProps["onFilterClick"]>();
-  const expandNode = createStub<RequiredTreeProps["expandNode"]>();
-  const selectNodes = createStub<RequiredTreeProps["selectNodes"]>();
-  const isNodeSelected = createStub<RequiredTreeProps["isNodeSelected"]>();
-  const getHierarchyLevelDetails = createStub<RequiredTreeProps["getHierarchyLevelDetails"]>();
-  const reloadTree = createStub<RequiredTreeProps["reloadTree"]>();
+  const onFilterClick = vi.fn<RequiredTreeProps["onFilterClick"]>();
+  const expandNode = vi.fn<RequiredTreeProps["expandNode"]>();
+  const selectNodes = vi.fn<RequiredTreeProps["selectNodes"]>();
+  const isNodeSelected = vi.fn<RequiredTreeProps["isNodeSelected"]>();
+  const getHierarchyLevelDetails = vi.fn<RequiredTreeProps["getHierarchyLevelDetails"]>();
+  const reloadTree = vi.fn<RequiredTreeProps["reloadTree"]>();
 
   const initialProps = {
     onFilterClick,
@@ -30,14 +29,6 @@ describe("Tree", () => {
     getHierarchyLevelDetails,
     reloadTree,
   };
-
-  beforeEach(() => {
-    onFilterClick.reset();
-    expandNode.reset();
-    selectNodes.reset();
-    isNodeSelected.reset();
-    getHierarchyLevelDetails.reset();
-  });
 
   stubVirtualization();
 
@@ -53,8 +44,8 @@ describe("Tree", () => {
 
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
-    expect(queryByText("root-2")).to.not.be.null;
+    expect(queryByText("root-1")).not.toBeNull();
+    expect(queryByText("root-2")).not.toBeNull();
   });
 
   it("expands/collapses nodes", async () => {
@@ -81,20 +72,20 @@ describe("Tree", () => {
 
     const { user, getByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
-    expect(queryByText("child-1")).to.not.be.null;
-    expect(queryByText("root-2")).to.not.be.null;
-    expect(queryByText("child-2")).to.be.null;
+    expect(queryByText("root-1")).not.toBeNull();
+    expect(queryByText("child-1")).not.toBeNull();
+    expect(queryByText("root-2")).not.toBeNull();
+    expect(queryByText("child-2")).toBeNull();
 
     const collapseButton = within(getByRole("treeitem", { expanded: true })).getByRole("button", { name: "Collapse" });
     const expandButton = within(getByRole("treeitem", { expanded: false })).getByRole("button", { name: "Expand" });
 
     await user.click(collapseButton);
-    expect(expandNode).to.be.calledOnceWith("root-1", false);
-    expandNode.reset();
+    expect(expandNode).toHaveBeenCalledExactlyOnceWith("root-1", false);
+    expandNode.mockReset();
 
     await user.click(expandButton);
-    expect(expandNode).to.be.calledOnceWith("root-2", true);
+    expect(expandNode).toHaveBeenCalledExactlyOnceWith("root-2", true);
   });
 
   it("renders unselectable nodes when selection callbacks are not provided", async () => {
@@ -107,11 +98,11 @@ describe("Tree", () => {
     const { user, getByRole } = render(<TreeRenderer rootNodes={rootNodes} expandNode={initialProps.expandNode} selectionMode={"single"} />);
 
     const node = getByRole("treeitem");
-    expect(within(node).queryByText("test node")).to.not.be.null;
-    expect(node.ariaSelected).to.eq("false");
+    expect(within(node).queryByText("test node")).not.toBeNull();
+    expect(node.getAttribute("aria-selected")).toBe("false");
 
     await user.click(node);
-    expect(node.ariaSelected).to.eq("false");
+    expect(node.getAttribute("aria-selected")).toBe("false");
   });
 
   it("selects/unselects nodes", async () => {
@@ -124,19 +115,19 @@ describe("Tree", () => {
       },
     ]);
 
-    isNodeSelected.callsFake((nodeId) => nodeId === "root-1");
+    isNodeSelected.mockImplementation((nodeId) => nodeId === "root-1");
 
     const { user, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} selectionMode={"single"} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
-    expect(queryByText("root-2")).to.not.be.null;
+    expect(queryByText("root-1")).not.toBeNull();
+    expect(queryByText("root-2")).not.toBeNull();
 
     await user.click(getByText("root-1"));
-    expect(selectNodes).to.be.calledOnceWith(["root-1"], "remove");
-    selectNodes.reset();
+    expect(selectNodes).toHaveBeenCalledExactlyOnceWith(["root-1"], "remove");
+    selectNodes.mockReset();
 
     await user.click(getByText("root-2"));
-    expect(selectNodes).to.be.calledOnceWith(["root-2"], "replace");
+    expect(selectNodes).toHaveBeenCalledExactlyOnceWith(["root-2"], "replace");
   });
 
   it("selects/deselects using keyboard", async () => {
@@ -149,27 +140,27 @@ describe("Tree", () => {
       },
     ]);
 
-    isNodeSelected.callsFake((nodeId) => nodeId === "root-1");
+    isNodeSelected.mockImplementation((nodeId) => nodeId === "root-1");
 
     const { user, getAllByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} selectionMode={"single"} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
-    expect(queryByText("root-2")).to.not.be.null;
+    expect(queryByText("root-1")).not.toBeNull();
+    expect(queryByText("root-2")).not.toBeNull();
 
     const node1 = getAllByRole("treeitem")[0];
     act(() => {
       node1.focus();
     });
     await user.keyboard("{Enter}");
-    expect(selectNodes).to.be.calledOnceWith(["root-1"], "remove");
-    selectNodes.reset();
+    expect(selectNodes).toHaveBeenCalledExactlyOnceWith(["root-1"], "remove");
+    selectNodes.mockReset();
 
     const node2 = getAllByRole("treeitem")[1];
     act(() => {
       node2.focus();
     });
     await user.keyboard("{Enter}");
-    expect(selectNodes).to.be.calledOnceWith(["root-2"], "replace");
+    expect(selectNodes).toHaveBeenCalledExactlyOnceWith(["root-2"], "replace");
   });
 
   it("does not select node when expander clicked using keyboard", async () => {
@@ -187,8 +178,8 @@ describe("Tree", () => {
 
     const { user, getByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
-    expect(queryByText("child-1")).to.be.null;
+    expect(queryByText("root-1")).not.toBeNull();
+    expect(queryByText("child-1")).toBeNull();
 
     const expandButton = within(getByRole("treeitem", { expanded: false })).getByRole("button", { name: "Expand" });
 
@@ -196,8 +187,8 @@ describe("Tree", () => {
       expandButton.focus();
     });
     await user.keyboard("{Enter}");
-    expect(expandNode).to.be.calledOnceWith("root-1", true);
-    expect(selectNodes).to.not.be.called;
+    expect(expandNode).toHaveBeenCalledExactlyOnceWith("root-1", true);
+    expect(selectNodes).not.toHaveBeenCalled();
   });
 
   it("focuses node buttons with keyboard", async () => {
@@ -216,8 +207,8 @@ describe("Tree", () => {
 
     const { user, getByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
-    expect(queryByText("child-1")).to.be.null;
+    expect(queryByText("root-1")).not.toBeNull();
+    expect(queryByText("child-1")).toBeNull();
 
     await user.tab();
 
@@ -226,11 +217,11 @@ describe("Tree", () => {
     await user.tab();
 
     const expandButton = within(rootNode).getByRole("button", { name: "Expand" });
-    expect(expandButton.matches(":focus")).to.be.true;
+    expect(expandButton.matches(":focus")).toBe(true);
 
     await user.tab();
     const applyFilterButton = within(rootNode).getByRole("button", { name: "Apply filter" });
-    expect(applyFilterButton.matches(":focus")).to.be.true;
+    expect(applyFilterButton.matches(":focus")).toBe(true);
   });
 
   it("focuses filtered node buttons with keyboard", async () => {
@@ -250,8 +241,8 @@ describe("Tree", () => {
 
     const { user, getByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
-    expect(queryByText("child-1")).to.be.null;
+    expect(queryByText("root-1")).not.toBeNull();
+    expect(queryByText("child-1")).toBeNull();
 
     await user.tab();
 
@@ -259,20 +250,20 @@ describe("Tree", () => {
 
     await user.tab();
     const expandButton = within(rootNode).getByRole("button", { name: "Expand" });
-    expect(expandButton.matches(":focus")).to.be.true;
+    expect(expandButton.matches(":focus")).toBe(true);
 
     await user.tab();
     await user.tab();
     const applyFilterButton = within(rootNode).getByRole("button", { name: "Apply filter" });
-    expect(applyFilterButton.matches(":focus")).to.be.true;
+    expect(applyFilterButton.matches(":focus")).toBe(true);
 
     await user.tab({ shift: true });
     const clearFilterButton = within(rootNode).getByRole("button", { name: "Clear active filter" });
-    expect(clearFilterButton.matches(":focus")).to.be.true;
+    expect(clearFilterButton.matches(":focus")).toBe(true);
 
     await user.keyboard("{Enter}");
-    expect(clearFilterButton.matches(":focus")).to.be.false;
-    expect(applyFilterButton.matches(":focus")).to.be.true;
+    expect(clearFilterButton.matches(":focus")).toBe(false);
+    expect(applyFilterButton.matches(":focus")).toBe(true);
   });
 
   it("focuses `Apply filter` button when node becomes filtered", async () => {
@@ -292,11 +283,11 @@ describe("Tree", () => {
 
     const { rerender, getByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
-    expect(queryByText("child-1")).to.be.null;
+    expect(queryByText("root-1")).not.toBeNull();
+    expect(queryByText("child-1")).toBeNull();
 
     const rootNode = getByRole("treeitem", { expanded: false });
-    expect(within(rootNode).getByRole("button", { name: "Apply filter" }).matches(":focus")).to.be.false;
+    expect(within(rootNode).getByRole("button", { name: "Apply filter" }).matches(":focus")).toBe(false);
 
     const filteredRootNodes = createNodes([
       {
@@ -313,11 +304,11 @@ describe("Tree", () => {
     ]);
     rerender(<TreeRenderer rootNodes={filteredRootNodes} {...initialProps} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
-    expect(queryByText("child-1")).to.be.null;
+    expect(queryByText("root-1")).not.toBeNull();
+    expect(queryByText("child-1")).toBeNull();
 
     const filteredRootNode = getByRole("treeitem", { expanded: false });
-    expect(within(filteredRootNode).getByRole("button", { name: "Apply filter" }).matches(":focus")).to.be.true;
+    expect(within(filteredRootNode).getByRole("button", { name: "Apply filter" }).matches(":focus")).toBe(true);
   });
 
   it("renders icon", async () => {
@@ -329,8 +320,8 @@ describe("Tree", () => {
 
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} getIcon={() => <div>Icon</div>} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
-    expect(queryByText("Icon")).to.not.be.null;
+    expect(queryByText("root-1")).not.toBeNull();
+    expect(queryByText("Icon")).not.toBeNull();
   });
 
   it("renders custom label", async () => {
@@ -342,8 +333,8 @@ describe("Tree", () => {
 
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} getLabel={() => <div>Label</div>} />);
 
-    expect(queryByText("root-1")).to.be.null;
-    expect(queryByText("Label")).to.not.be.null;
+    expect(queryByText("root-1")).toBeNull();
+    expect(queryByText("Label")).not.toBeNull();
   });
 
   it("renders sublabel", async () => {
@@ -355,8 +346,8 @@ describe("Tree", () => {
 
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} getSublabel={() => <div>Sublabel</div>} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
-    expect(queryByText("Sublabel")).to.not.be.null;
+    expect(queryByText("root-1")).not.toBeNull();
+    expect(queryByText("Sublabel")).not.toBeNull();
   });
 
   it("clears active filter", async () => {
@@ -368,17 +359,17 @@ describe("Tree", () => {
       },
     ]);
 
-    const setInstanceFilter = createStub();
-    getHierarchyLevelDetails.returns({
+    const setInstanceFilter = vi.fn();
+    getHierarchyLevelDetails.mockReturnValue({
       setInstanceFilter,
     } as unknown as HierarchyLevelDetails);
 
     const { user, queryByText, getByRole } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
+    expect(queryByText("root-1")).not.toBeNull();
     await user.click(getByRole("button", { name: "Clear active filter" }));
-    expect(getHierarchyLevelDetails).to.be.calledOnceWith("root-1");
-    expect(setInstanceFilter).to.be.calledOnceWith(undefined);
+    expect(getHierarchyLevelDetails).toHaveBeenCalledExactlyOnceWith("root-1");
+    expect(setInstanceFilter).toHaveBeenCalledExactlyOnceWith(undefined);
   });
 
   it("calls `onFilterClick` if node is filterable", async () => {
@@ -390,13 +381,13 @@ describe("Tree", () => {
     ]);
 
     const hierarchyLevelDetails = {} as unknown as HierarchyLevelDetails;
-    getHierarchyLevelDetails.returns(hierarchyLevelDetails);
+    getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
 
     const { user, queryByText, getByRole } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
+    expect(queryByText("root-1")).not.toBeNull();
     await user.click(getByRole("button", { name: "Apply filter" }));
-    expect(onFilterClick).to.be.calledOnceWith(hierarchyLevelDetails);
+    expect(onFilterClick).toHaveBeenCalledExactlyOnceWith(hierarchyLevelDetails);
   });
 
   it("renders filter button when filter buttons are hidden, but node is filtered", async () => {
@@ -409,13 +400,13 @@ describe("Tree", () => {
     ]);
 
     const hierarchyLevelDetails = {} as unknown as HierarchyLevelDetails;
-    getHierarchyLevelDetails.returns(hierarchyLevelDetails);
+    getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
 
     const { user, queryByText, getByRole } = render(<TreeRenderer rootNodes={rootNodes} filterButtonsVisibility={"hide"} {...initialProps} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
+    expect(queryByText("root-1")).not.toBeNull();
     await user.click(getByRole("button", { name: "Apply filter" }));
-    expect(onFilterClick).to.be.calledOnceWith(hierarchyLevelDetails);
+    expect(onFilterClick).toHaveBeenCalledExactlyOnceWith(hierarchyLevelDetails);
   });
 
   it("renders single additional action inline", async () => {
@@ -427,9 +418,9 @@ describe("Tree", () => {
     ]);
 
     const hierarchyLevelDetails = {} as unknown as HierarchyLevelDetails;
-    getHierarchyLevelDetails.returns(hierarchyLevelDetails);
+    getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
 
-    const actionSpy = sinon.spy();
+    const actionSpy = vi.fn();
     const getActions: RequiredTreeProps["getActions"] = () => [
       {
         label: "Custom action",
@@ -442,7 +433,7 @@ describe("Tree", () => {
 
     const actionButton = getByRole("button", { name: "Custom action" });
     await user.click(actionButton);
-    expect(actionSpy).to.be.calledOnce;
+    expect(actionSpy).toHaveBeenCalledOnce();
   });
 
   it("renders additional actions in dropdown menu", async () => {
@@ -454,10 +445,10 @@ describe("Tree", () => {
     ]);
 
     const hierarchyLevelDetails = {} as unknown as HierarchyLevelDetails;
-    getHierarchyLevelDetails.returns(hierarchyLevelDetails);
+    getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
 
-    const actionSpy1 = sinon.spy();
-    const actionSpy2 = sinon.spy();
+    const actionSpy1 = vi.fn();
+    const actionSpy2 = vi.fn();
     const getActions: RequiredTreeProps["getActions"] = () => [
       {
         label: "Custom action 1",
@@ -477,17 +468,17 @@ describe("Tree", () => {
     await user.click(moreButton);
     const actionButton1 = getByText("Custom action 1");
     await user.click(actionButton1);
-    expect(actionSpy1).to.be.calledOnce;
+    expect(actionSpy1).toHaveBeenCalledOnce();
     await waitFor(() => {
-      expect(queryByText("Custom action 1")).to.be.null;
+      expect(queryByText("Custom action 1")).toBeNull();
     });
 
     await user.click(moreButton);
     const actionButton2 = getByText("Custom action 2");
     await user.click(actionButton2);
-    expect(actionSpy2).to.be.calledOnce;
+    expect(actionSpy2).toHaveBeenCalledOnce();
     await waitFor(() => {
-      expect(queryByText("Custom action 2")).to.be.null;
+      expect(queryByText("Custom action 2")).toBeNull();
     });
   });
 
@@ -496,7 +487,7 @@ describe("Tree", () => {
       const hierarchyLevelDetails = {
         hierarchyNode: createTestHierarchyNode({ id: "parent-id", supportsFiltering: true }),
       } as unknown as HierarchyLevelDetails;
-      getHierarchyLevelDetails.returns(hierarchyLevelDetails);
+      getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
       const rootNodes = createNodes([
         {
           id: "info-node",
@@ -506,17 +497,17 @@ describe("Tree", () => {
         },
       ]);
       const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
-      expect(queryByText(/Please provide/)).to.not.be.null;
-      expect(queryByText(/additional filtering/)).to.not.be.null;
-      expect(queryByText(/there are more items than allowed limit of 100/)).to.not.be.null;
-      expect(queryByText(/increase the hierarchy level size limit to /)).to.not.be.null;
+      expect(queryByText(/Please provide/)).not.toBeNull();
+      expect(queryByText(/additional filtering/)).not.toBeNull();
+      expect(queryByText(/there are more items than allowed limit of 100/)).not.toBeNull();
+      expect(queryByText(/increase the hierarchy level size limit to /)).not.toBeNull();
     });
 
     it("renders `ResultSetTooLarge` node with only override support", async () => {
       const hierarchyLevelDetails = {
         hierarchyNode: createTestHierarchyNode({ id: "parent-id", supportsFiltering: true }),
       } as unknown as HierarchyLevelDetails;
-      getHierarchyLevelDetails.returns(hierarchyLevelDetails);
+      getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
       const rootNodes = createNodes([
         {
           id: "info-node",
@@ -526,10 +517,10 @@ describe("Tree", () => {
         },
       ]);
       const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} onFilterClick={undefined} />);
-      expect(queryByText(/Please provide/)).to.be.null;
-      expect(queryByText(/additional filtering/)).to.be.null;
-      expect(queryByText(/There are more items than allowed limit of 100/)).to.not.be.null;
-      expect(queryByText(/Increase the hierarchy level size limit to /)).to.not.be.null;
+      expect(queryByText(/Please provide/)).toBeNull();
+      expect(queryByText(/additional filtering/)).toBeNull();
+      expect(queryByText(/There are more items than allowed limit of 100/)).not.toBeNull();
+      expect(queryByText(/Increase the hierarchy level size limit to /)).not.toBeNull();
     });
 
     it("renders `ResultSetTooLarge` node without filtering or override support", async () => {
@@ -542,10 +533,10 @@ describe("Tree", () => {
         },
       ]);
       const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} expandNode={initialProps.expandNode} getHierarchyLevelDetails={undefined} />);
-      expect(queryByText(/Please provide/)).to.be.null;
-      expect(queryByText(/additional filtering/)).to.be.null;
-      expect(queryByText(/There are more items than allowed limit of 100/)).to.not.be.null;
-      expect(queryByText(/Increase the hierarchy level size limit to /i)).to.be.null;
+      expect(queryByText(/Please provide/)).toBeNull();
+      expect(queryByText(/additional filtering/)).toBeNull();
+      expect(queryByText(/There are more items than allowed limit of 100/)).not.toBeNull();
+      expect(queryByText(/Increase the hierarchy level size limit to /i)).toBeNull();
     });
 
     it("calls `onFilterClick` if node is `ResultSetTooLarge` info node", async () => {
@@ -561,12 +552,12 @@ describe("Tree", () => {
       const hierarchyLevelDetails = {
         hierarchyNode: createTestHierarchyNode({ id: "parent-id", supportsFiltering: true }),
       } as unknown as HierarchyLevelDetails;
-      getHierarchyLevelDetails.returns(hierarchyLevelDetails);
+      getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
       const { user, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-      expect(queryByText(/there are more items than allowed limit of 100/i)).to.not.be.null;
+      expect(queryByText(/there are more items than allowed limit of 100/i)).not.toBeNull();
       await user.click(getByText("additional filtering"));
-      expect(onFilterClick).to.be.calledOnceWith(hierarchyLevelDetails);
+      expect(onFilterClick).toHaveBeenCalledExactlyOnceWith(hierarchyLevelDetails);
     });
 
     it("overrides hierarchy level size limit", async () => {
@@ -579,17 +570,17 @@ describe("Tree", () => {
         },
       ]);
 
-      const setSizeLimit = createStub();
-      getHierarchyLevelDetails.returns({
+      const setSizeLimit = vi.fn();
+      getHierarchyLevelDetails.mockReturnValue({
         setSizeLimit,
       } as unknown as HierarchyLevelDetails);
 
       const { user, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-      expect(queryByText(/there are more items than allowed limit of/i)).to.not.be.null;
+      expect(queryByText(/there are more items than allowed limit of/i)).not.toBeNull();
       await user.click(getByText(/Increase the hierarchy level size limit/i));
-      expect(getHierarchyLevelDetails).to.be.calledWith("parent-id");
-      expect(setSizeLimit).to.be.calledOnceWith(MAX_LIMIT_OVERRIDE);
+      expect(getHierarchyLevelDetails).toHaveBeenCalledWith("parent-id");
+      expect(setSizeLimit).toHaveBeenCalledExactlyOnceWith(MAX_LIMIT_OVERRIDE);
     });
 
     it("does not allow to increase hierarchy limit past max limit override", async () => {
@@ -604,8 +595,8 @@ describe("Tree", () => {
 
       const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-      expect(queryByText(/there are more items than allowed limit of/i)).to.not.be.null;
-      expect(queryByText(/Increase the hierarchy level size limit/i)).to.be.null;
+      expect(queryByText(/there are more items than allowed limit of/i)).not.toBeNull();
+      expect(queryByText(/Increase the hierarchy level size limit/i)).toBeNull();
     });
   });
 
@@ -622,8 +613,8 @@ describe("Tree", () => {
     const { queryByText, queryByTitle } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
     await waitFor(() => {
-      expect(queryByText("root-1")).to.not.be.null;
-      expect(queryByTitle("Loading...")).to.not.be.null;
+      expect(queryByText("root-1")).not.toBeNull();
+      expect(queryByTitle("Loading...")).not.toBeNull();
     });
   });
 
@@ -639,7 +630,7 @@ describe("Tree", () => {
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
     await waitFor(() => {
-      expect(queryByText("No child nodes match current filter")).to.not.be.null;
+      expect(queryByText("No child nodes match current filter")).not.toBeNull();
     });
   });
 
@@ -656,7 +647,7 @@ describe("Tree", () => {
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
     await waitFor(() => {
-      expect(queryByText("Some Error")).to.not.be.null;
+      expect(queryByText("Some Error")).not.toBeNull();
     });
   });
 
@@ -673,13 +664,13 @@ describe("Tree", () => {
     const { queryByText, getByText, user } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
     await waitFor(() => {
-      expect(queryByText("Some Error")).to.not.be.null;
+      expect(queryByText("Some Error")).not.toBeNull();
     });
 
     await user.click(getByText("Retry"));
 
     await waitFor(() => {
-      expect(reloadTree).to.be.calledOnceWith({ parentNodeId: "parent-id", state: "reset" });
+      expect(reloadTree).toHaveBeenCalledExactlyOnceWith({ parentNodeId: "parent-id", state: "reset" });
     });
   });
 
@@ -696,8 +687,8 @@ describe("Tree", () => {
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} reloadTree={undefined} />);
 
     await waitFor(() => {
-      expect(queryByText("Some Error")).to.not.be.null;
-      expect(queryByText("Retry")).to.be.null;
+      expect(queryByText("Some Error")).not.toBeNull();
+      expect(queryByText("Retry")).toBeNull();
     });
   });
 
@@ -748,43 +739,43 @@ describe("Tree", () => {
     const hierarchyLevelDetails = {
       hierarchyNode: createTestHierarchyNode({ id: "parent-id", supportsFiltering: true }),
     } as unknown as HierarchyLevelDetails;
-    getHierarchyLevelDetails.returns(hierarchyLevelDetails);
+    getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
     const { queryByText, queryByRole, queryByTitle, rerender } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
     await waitFor(() => {
-      expect(queryByText(/Some Error/)).to.not.be.null;
-      expect(queryByText(/Loading.../)).to.not.be.null;
-      expect(queryByRole("button", { name: "Apply filter" })).to.not.be.null;
-      expect(queryByRole("button", { name: "Clear active filter" })).to.not.be.null;
-      expect(queryByText(/No child nodes match current filter/)).to.not.be.null;
-      expect(queryByText(/Please provide/)).to.not.be.null;
-      expect(queryByText(/additional filtering/)).to.not.be.null;
-      expect(queryByText(/there are more items than allowed limit of 100./)).to.not.be.null;
-      expect(queryByText(/Or,/)).to.not.be.null;
-      expect(queryByText(/increase the hierarchy level size limit to /)).to.not.be.null;
+      expect(queryByText(/Some Error/)).not.toBeNull();
+      expect(queryByText(/Loading.../)).not.toBeNull();
+      expect(queryByRole("button", { name: "Apply filter" })).not.toBeNull();
+      expect(queryByRole("button", { name: "Clear active filter" })).not.toBeNull();
+      expect(queryByText(/No child nodes match current filter/)).not.toBeNull();
+      expect(queryByText(/Please provide/)).not.toBeNull();
+      expect(queryByText(/additional filtering/)).not.toBeNull();
+      expect(queryByText(/there are more items than allowed limit of 100./)).not.toBeNull();
+      expect(queryByText(/Or,/)).not.toBeNull();
+      expect(queryByText(/increase the hierarchy level size limit to /)).not.toBeNull();
       expect(
         queryByTitle(/Please provide additional filtering - there are more items than allowed limit of 100. Or, increase the hierarchy level size limit to/),
-      ).to.not.be.null;
+      ).not.toBeNull();
     });
 
     rerender(<TreeRenderer rootNodes={rootNodes} {...initialProps} localizedStrings={localizedStrings} />);
 
     await waitFor(() => {
-      expect(queryByText(/Some Error/)).to.not.be.null;
-      expect(queryByText(/Custom loading.../)).to.not.be.null;
-      expect(queryByRole("button", { name: "Custom apply filter" })).to.not.be.null;
-      expect(queryByRole("button", { name: "Custom clear active filter" })).to.not.be.null;
-      expect(queryByText(/Custom no child nodes match current filter/)).to.not.be.null;
-      expect(queryByText(/Custom please provide/)).to.not.be.null;
-      expect(queryByText(/Custom additional filtering/)).to.not.be.null;
-      expect(queryByText(/Custom there are more items than allowed limit of 100./)).to.not.be.null;
-      expect(queryByText(/Custom or,/)).to.not.be.null;
-      expect(queryByText(/Custom increase the hierarchy level size limit to /)).to.not.be.null;
+      expect(queryByText(/Some Error/)).not.toBeNull();
+      expect(queryByText(/Custom loading.../)).not.toBeNull();
+      expect(queryByRole("button", { name: "Custom apply filter" })).not.toBeNull();
+      expect(queryByRole("button", { name: "Custom clear active filter" })).not.toBeNull();
+      expect(queryByText(/Custom no child nodes match current filter/)).not.toBeNull();
+      expect(queryByText(/Custom please provide/)).not.toBeNull();
+      expect(queryByText(/Custom additional filtering/)).not.toBeNull();
+      expect(queryByText(/Custom there are more items than allowed limit of 100./)).not.toBeNull();
+      expect(queryByText(/Custom or,/)).not.toBeNull();
+      expect(queryByText(/Custom increase the hierarchy level size limit to /)).not.toBeNull();
       expect(
         queryByTitle(
           /Custom please provide Custom additional filtering - Custom there are more items than allowed limit of 100. Custom or, Custom increase the hierarchy level size limit to/,
         ),
-      ).to.not.be.null;
+      ).not.toBeNull();
     });
   });
 });
