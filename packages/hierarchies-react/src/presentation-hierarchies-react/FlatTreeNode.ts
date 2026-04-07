@@ -69,7 +69,7 @@ function getFlatItems(nodes: TreeNode[], level: number) {
       return;
     }
 
-    if (node.errors.some(isBlockingError)) {
+    if (node.errors.some(isErrorBlockingExpansion)) {
       return;
     }
 
@@ -102,7 +102,7 @@ export function useErrorNodes(rootNodes: TreeNode[]): TreeNode[] {
           return errorNodes;
         }
 
-        if (errorNodes.length === 1 && errorNodes[0].errors.some(isBlockingError)) {
+        if (errorNodes.length === 1 && errorNodes[0].errors.some(isErrorBlockingExpansion)) {
           return errorNodes;
         }
         errorNodes.push(...getErrorNodes(rootNode));
@@ -122,7 +122,7 @@ function getErrorNodes(parent: TreeNode) {
   parent.children.forEach((node) => {
     if (isErrorNode(node)) {
       errorList.push(node);
-      if (node.errors.some(isBlockingError)) {
+      if (node.errors.some(isErrorBlockingExpansion)) {
         return;
       }
     }
@@ -140,6 +140,6 @@ function isErrorNode(node: TreeNode): boolean {
   return node.errors.length > 0;
 }
 
-function isBlockingError(error: ErrorInfo): boolean {
+function isErrorBlockingExpansion(error: ErrorInfo): boolean {
   return error.type !== "Unknown" || !error.isNodeExpandable;
 }
