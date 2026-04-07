@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { LabelDefinition, Node } from "@itwin/presentation-common";
 import { StyleHelper } from "../../presentation-components/common/StyleHelper.js";
 import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";

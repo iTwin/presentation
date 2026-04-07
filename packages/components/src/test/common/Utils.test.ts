@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { Component } from "react";
+import { beforeEach, describe, expect, it } from "vitest";
 import { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
 import { combineFieldNames, LabelCompositeValue } from "@itwin/presentation-common";
 import { AsyncTasksTracker, createLabelRecord, deserializeUniqueValues, findField, getDisplayName } from "../../presentation-components/common/Utils.js";
