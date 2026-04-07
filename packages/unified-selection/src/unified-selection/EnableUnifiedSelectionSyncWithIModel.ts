@@ -136,6 +136,8 @@ export class IModelSelectionHandler {
       if (props.imodelHiliteSetProvider) {
         return [props.imodelHiliteSetProvider, () => {}];
       }
+
+      /* v8 ignore else -- @preserve */
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       if (props.cachingHiliteSetProvider) {
         return [
@@ -149,14 +151,14 @@ export class IModelSelectionHandler {
           () => {},
         ];
       }
-      /* c8 ignore start */
+      /* v8 ignore start */
       const internalProvider = createIModelHiliteSetProvider({
         selectionStorage: this._selectionStorage,
         imodelProvider: () => this._imodelAccess,
         createHiliteSetProvider: () => props.hiliteSetProvider ?? createHiliteSetProvider({ imodelAccess: props.imodelAccess }),
       });
       return [internalProvider, () => safeDispose(internalProvider)];
-      /* c8 ignore end */
+      /* v8 ignore stop */
     })();
 
     this._unregisterIModelSelectionSetListener = this._imodelAccess.selectionSet.onChanged.addListener(this.onIModelSelectionChanged);
@@ -273,12 +275,15 @@ export class IModelSelectionHandler {
       });
     } else {
       // pre-5.0 core requires adding models and subcategories to hilite set separately
+      /* v8 ignore else -- @preserve */
       if (set.models.length) {
         this._imodelAccess.hiliteSet.models.addIds(set.models);
       }
+      /* v8 ignore else -- @preserve */
       if (set.subCategories.length) {
         this._imodelAccess.hiliteSet.subcategories.addIds(set.subCategories);
       }
+      /* v8 ignore else -- @preserve */
       if (set.elements.length) {
         this._imodelAccess.hiliteSet.elements.addIds(set.elements);
         this._imodelAccess.selectionSet.add(set.elements);
@@ -296,12 +301,15 @@ export class IModelSelectionHandler {
         elements: set.elements,
       });
     } else {
+      /* v8 ignore else -- @preserve */
       if (set.models.length) {
         this._imodelAccess.hiliteSet.models.deleteIds(set.models);
       }
+      /* v8 ignore else -- @preserve */
       if (set.subCategories.length) {
         this._imodelAccess.hiliteSet.subcategories.deleteIds(set.subCategories);
       }
+      /* v8 ignore else -- @preserve */
       if (set.elements.length) {
         this._imodelAccess.hiliteSet.elements.deleteIds(set.elements);
         this._imodelAccess.selectionSet.remove(set.elements);
@@ -330,11 +338,11 @@ export class IModelSelectionHandler {
               componentId: this.#componentId,
             }),
           )
-        : /* c8 ignore next */ EMPTY,
-      ids.models ? from(ids.models).pipe(map((id): SelectableInstanceKey => ({ className: "BisCore.Model", id }))) : /* c8 ignore next */ EMPTY,
+        : /* v8 ignore next */ EMPTY,
+      ids.models ? from(ids.models).pipe(map((id): SelectableInstanceKey => ({ className: "BisCore.Model", id }))) : /* v8 ignore next */ EMPTY,
       ids.subcategories
         ? from(ids.subcategories).pipe(map((id): SelectableInstanceKey => ({ className: "BisCore.SubCategory", id })))
-        : /* c8 ignore next */ EMPTY,
+        : /* v8 ignore next */ EMPTY,
     );
 
     const selectionStorageVersion = this._selectionStorageChangeTracker;
@@ -373,9 +381,9 @@ function getSelectionSetChangeIds(
 ): CoreSelectableIds {
   switch (event.type) {
     case CoreSelectionSetEventType.Add:
-      return event.additions ?? (event.added ? { elements: event.added } : /* c8 ignore next */ {});
+      return event.additions ?? (event.added ? { elements: event.added } : /* v8 ignore next */ {});
     case CoreSelectionSetEventType.Remove:
-      return event.removals ?? (event.removed ? { elements: event.removed } : /* c8 ignore next */ {});
+      return event.removals ?? (event.removed ? { elements: event.removed } : /* v8 ignore next */ {});
     case CoreSelectionSetEventType.Replace:
       return "active" in event.set ? event.set.active : { elements: event.set.elements };
   }
@@ -389,6 +397,7 @@ function getUnifiedSelectionChangeType(coreChangeType: CoreSelectionSetEventType
       return "remove";
     case CoreSelectionSetEventType.Replace:
       return "replace";
+    /* v8 ignore next -- @preserve */
     case CoreSelectionSetEventType.Clear:
       return "clear";
   }
@@ -402,7 +411,7 @@ function is5xSelectionSet(selectionSet: CoreIModelSelectionSet): selectionSet is
   return "active" in selectionSet;
 }
 
-/* c8 ignore start */
+/* v8 ignore start */
 function createIModelHiliteSetProviderFromCachingProvider(
   cachingHiliteSetProvider: NonNullable<EnableUnifiedSelectionSyncWithIModelProps["cachingHiliteSetProvider"]>,
   hiliteSetProvider: HiliteSetProvider,
@@ -413,4 +422,4 @@ function createIModelHiliteSetProviderFromCachingProvider(
     [Symbol.dispose]: () => {},
   };
 }
-/* c8 ignore end */
+/* v8 ignore stop */

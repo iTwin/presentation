@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
 import {
@@ -32,13 +32,13 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")!.isExpanded).to.be.false;
-      expect(getHierarchyNode(model, "root-2")!.isExpanded).to.be.false;
+      expect(getHierarchyNode(model, "root-1")!.isExpanded).toBe(false);
+      expect(getHierarchyNode(model, "root-2")!.isExpanded).toBe(false);
 
       TreeModel.expandNode(model, "root-2", true);
 
-      expect(getHierarchyNode(model, "root-1")!.isExpanded).to.be.false;
-      expect(getHierarchyNode(model, "root-2")!.isExpanded).to.be.true;
+      expect(getHierarchyNode(model, "root-1")!.isExpanded).toBe(false);
+      expect(getHierarchyNode(model, "root-2")!.isExpanded).toBe(true);
     });
 
     it("collapses node", () => {
@@ -57,13 +57,13 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")!.isExpanded).to.be.true;
-      expect(getHierarchyNode(model, "root-2")!.isExpanded).to.be.true;
+      expect(getHierarchyNode(model, "root-1")!.isExpanded).toBe(true);
+      expect(getHierarchyNode(model, "root-2")!.isExpanded).toBe(true);
 
       TreeModel.expandNode(model, "root-2", false);
 
-      expect(getHierarchyNode(model, "root-1")!.isExpanded).to.be.true;
-      expect(getHierarchyNode(model, "root-2")!.isExpanded).to.be.false;
+      expect(getHierarchyNode(model, "root-1")!.isExpanded).toBe(true);
+      expect(getHierarchyNode(model, "root-2")!.isExpanded).toBe(false);
     });
 
     it("returns `loadChildren` if expanded node has unloaded children", () => {
@@ -79,8 +79,8 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("loadChildren");
-      expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.true;
+      expect(TreeModel.expandNode(model, "root-1", true)).toBe("loadChildren");
+      expect(getHierarchyNode(model, "root-1")?.isLoading).toBe(true);
     });
 
     it("returns `none` if expanded node has loaded children", () => {
@@ -96,7 +96,7 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("none");
+      expect(TreeModel.expandNode(model, "root-1", true)).toBe("none");
     });
 
     it("returns `none` if expanded node has no children", () => {
@@ -112,7 +112,7 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("none");
+      expect(TreeModel.expandNode(model, "root-1", true)).toBe("none");
     });
 
     it("returns `reloadChildren` and removes child `Unknown` info node when expanding node", () => {
@@ -131,9 +131,9 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("reloadChildren");
-      expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.true;
-      expect(TreeModel.getNode(model, "info-1")).to.be.undefined;
+      expect(TreeModel.expandNode(model, "root-1", true)).toBe("reloadChildren");
+      expect(getHierarchyNode(model, "root-1")?.isLoading).toBe(true);
+      expect(TreeModel.getNode(model, "info-1")).toBeUndefined();
     });
 
     it("returns `none` and does not remove child info node when expanding node", () => {
@@ -152,8 +152,8 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("none");
-      expect(TreeModel.getNode(model, "info-1")).to.not.be.undefined;
+      expect(TreeModel.expandNode(model, "root-1", true)).toBe("none");
+      expect(TreeModel.getNode(model, "info-1")).toBeDefined();
     });
 
     it("does nothing if node does not exist", () => {
@@ -169,7 +169,7 @@ describe("TreeModel", () => {
       ]);
 
       TreeModel.expandNode(model, "invalid", false);
-      expect(getHierarchyNode(model, "root-1")?.isExpanded).to.be.true;
+      expect(getHierarchyNode(model, "root-1")?.isExpanded).toBe(true);
     });
   });
 
@@ -193,14 +193,14 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "child-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-2")).to.not.be.undefined;
+      expect(getHierarchyNode(model, "child-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-2")).toBeDefined();
 
       TreeModel.removeSubTree(model, "root-1");
 
-      expect(getHierarchyNode(model, "child-1")).to.be.undefined;
-      expect(getHierarchyNode(model, "child-2")).to.be.undefined;
-      expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
+      expect(getHierarchyNode(model, "child-1")).toBeUndefined();
+      expect(getHierarchyNode(model, "child-2")).toBeUndefined();
+      expect(getHierarchyNode(model, "root-1")).toBeDefined();
     });
 
     it("removes child and grandchild levels", () => {
@@ -232,20 +232,20 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "child-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-2")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-1-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-1-2")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-2-1")).to.not.be.undefined;
+      expect(getHierarchyNode(model, "child-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-2")).toBeDefined();
+      expect(getHierarchyNode(model, "child-1-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-1-2")).toBeDefined();
+      expect(getHierarchyNode(model, "child-2-1")).toBeDefined();
 
       TreeModel.removeSubTree(model, "root-1");
 
-      expect(getHierarchyNode(model, "child-1")).to.be.undefined;
-      expect(getHierarchyNode(model, "child-2")).to.be.undefined;
-      expect(getHierarchyNode(model, "child-1-1")).to.be.undefined;
-      expect(getHierarchyNode(model, "child-1-2")).to.be.undefined;
-      expect(getHierarchyNode(model, "child-2-1")).to.be.undefined;
-      expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
+      expect(getHierarchyNode(model, "child-1")).toBeUndefined();
+      expect(getHierarchyNode(model, "child-2")).toBeUndefined();
+      expect(getHierarchyNode(model, "child-1-1")).toBeUndefined();
+      expect(getHierarchyNode(model, "child-1-2")).toBeUndefined();
+      expect(getHierarchyNode(model, "child-2-1")).toBeUndefined();
+      expect(getHierarchyNode(model, "root-1")).toBeDefined();
     });
 
     it("removes all levels", () => {
@@ -266,15 +266,15 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-2")).to.not.be.undefined;
+      expect(getHierarchyNode(model, "root-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-2")).toBeDefined();
 
       TreeModel.removeSubTree(model, undefined);
 
-      expect(getHierarchyNode(model, "root-1")).to.be.undefined;
-      expect(getHierarchyNode(model, "child-1")).to.be.undefined;
-      expect(getHierarchyNode(model, "child-2")).to.be.undefined;
+      expect(getHierarchyNode(model, "root-1")).toBeUndefined();
+      expect(getHierarchyNode(model, "child-1")).toBeUndefined();
+      expect(getHierarchyNode(model, "child-2")).toBeUndefined();
     });
   });
 
@@ -302,9 +302,9 @@ describe("TreeModel", () => {
 
       TreeModel.addHierarchyPart(model, undefined, hierarchyPart);
 
-      expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "root-2")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-1")).to.not.be.undefined;
+      expect(getHierarchyNode(model, "root-1")).toBeDefined();
+      expect(getHierarchyNode(model, "root-2")).toBeDefined();
+      expect(getHierarchyNode(model, "child-1")).toBeDefined();
     });
 
     it("adds hierarchy part at specific level", () => {
@@ -336,17 +336,17 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "root-2")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-2")).to.be.undefined;
+      expect(getHierarchyNode(model, "root-1")).toBeDefined();
+      expect(getHierarchyNode(model, "root-2")).toBeDefined();
+      expect(getHierarchyNode(model, "child-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-2")).toBeUndefined();
 
       TreeModel.addHierarchyPart(model, "root-2", hierarchyPart);
 
-      expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "root-2")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-2")).to.not.be.undefined;
+      expect(getHierarchyNode(model, "root-1")).toBeDefined();
+      expect(getHierarchyNode(model, "root-2")).toBeDefined();
+      expect(getHierarchyNode(model, "child-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-2")).toBeDefined();
     });
 
     it("overrides existing hierarchy part", () => {
@@ -373,15 +373,15 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-2")).to.be.undefined;
+      expect(getHierarchyNode(model, "root-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-2")).toBeUndefined();
 
       TreeModel.addHierarchyPart(model, "root-1", hierarchyPart);
 
-      expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-1")).to.be.undefined;
-      expect(getHierarchyNode(model, "child-2")).to.not.be.undefined;
+      expect(getHierarchyNode(model, "root-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-1")).toBeUndefined();
+      expect(getHierarchyNode(model, "child-2")).toBeDefined();
     });
 
     it("sets `isLoading` = `false` for root of added hierarchy", () => {
@@ -406,15 +406,15 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.true;
-      expect(getHierarchyNode(model, "child-1")).to.be.undefined;
+      expect(getHierarchyNode(model, "root-1")).toBeDefined();
+      expect(getHierarchyNode(model, "root-1")?.isLoading).toBe(true);
+      expect(getHierarchyNode(model, "child-1")).toBeUndefined();
 
       TreeModel.addHierarchyPart(model, "root-1", hierarchyPart);
 
-      expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.false;
-      expect(getHierarchyNode(model, "child-1")).to.not.be.undefined;
+      expect(getHierarchyNode(model, "root-1")).toBeDefined();
+      expect(getHierarchyNode(model, "root-1")?.isLoading).toBe(false);
+      expect(getHierarchyNode(model, "child-1")).toBeDefined();
     });
   });
 
@@ -422,10 +422,10 @@ describe("TreeModel", () => {
     it("sets limit on tree root", () => {
       const model = createTreeModel([]);
 
-      expect(model.rootNode.hierarchyLimit).to.be.undefined;
+      expect(model.rootNode.hierarchyLimit).toBeUndefined();
 
       TreeModel.setHierarchyLimit(model, undefined, 100);
-      expect(model.rootNode.hierarchyLimit).to.be.eq(100);
+      expect(model.rootNode.hierarchyLimit).toBe(100);
     });
 
     it("sets limit on specified node", () => {
@@ -439,10 +439,10 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).to.be.undefined;
+      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).toBeUndefined();
 
       TreeModel.setHierarchyLimit(model, "root-1", 100);
-      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).to.be.eq(100);
+      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).toBe(100);
     });
 
     it("sets `unbounded` limit", () => {
@@ -456,10 +456,10 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).to.be.undefined;
+      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).toBeUndefined();
 
       TreeModel.setHierarchyLimit(model, "root-1", "unbounded");
-      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).to.be.eq("unbounded");
+      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).toBe("unbounded");
     });
 
     it("removes limit", () => {
@@ -474,10 +474,10 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).to.be.eq(100);
+      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).toBe(100);
 
       TreeModel.setHierarchyLimit(model, "root-1", undefined);
-      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).to.be.undefined;
+      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).toBeUndefined();
     });
 
     it("sets `isLoading` = `true` when new limit is set on expanded node", () => {
@@ -493,12 +493,12 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).to.be.undefined;
-      expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.false;
+      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).toBeUndefined();
+      expect(getHierarchyNode(model, "root-1")?.isLoading).toBe(false);
 
-      expect(TreeModel.setHierarchyLimit(model, "root-1", 100)).to.be.true;
-      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).to.be.eq(100);
-      expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.true;
+      expect(TreeModel.setHierarchyLimit(model, "root-1", 100)).toBe(true);
+      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).toBe(100);
+      expect(getHierarchyNode(model, "root-1")?.isLoading).toBe(true);
     });
 
     it("removes subtree when limit is set", () => {
@@ -520,14 +520,14 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-1-1")).to.not.be.undefined;
+      expect(getHierarchyNode(model, "root-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-1-1")).toBeDefined();
 
       TreeModel.setHierarchyLimit(model, "root-1", 100);
-      expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-1")).to.be.undefined;
-      expect(getHierarchyNode(model, "child-1-1")).to.be.undefined;
+      expect(getHierarchyNode(model, "root-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-1")).toBeUndefined();
+      expect(getHierarchyNode(model, "child-1-1")).toBeUndefined();
     });
 
     it("does nothing if node does not exist", () => {
@@ -543,7 +543,7 @@ describe("TreeModel", () => {
       ]);
 
       TreeModel.setHierarchyLimit(model, "invalid", 100);
-      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).to.be.undefined;
+      expect(getHierarchyNode(model, "root-1")?.hierarchyLimit).toBeUndefined();
     });
   });
 
@@ -553,10 +553,10 @@ describe("TreeModel", () => {
     it("sets filter on tree root", () => {
       const model = createTreeModel([]);
 
-      expect(model.rootNode.instanceFilter).to.be.undefined;
+      expect(model.rootNode.instanceFilter).toBeUndefined();
 
       TreeModel.setInstanceFilter(model, undefined, filter);
-      expect(model.rootNode.instanceFilter).to.be.eq(filter);
+      expect(model.rootNode.instanceFilter).toBe(filter);
     });
 
     it("sets filter on specified node", () => {
@@ -570,10 +570,10 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.undefined;
+      expect(getHierarchyNode(model, "root-1")?.instanceFilter).toBeUndefined();
 
       TreeModel.setInstanceFilter(model, "root-1", filter);
-      expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.eq(filter);
+      expect(getHierarchyNode(model, "root-1")?.instanceFilter).toBe(filter);
     });
 
     it("removes filter", () => {
@@ -588,10 +588,10 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.eq(filter);
+      expect(getHierarchyNode(model, "root-1")?.instanceFilter).toBe(filter);
 
       TreeModel.setInstanceFilter(model, "root-1", undefined);
-      expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.undefined;
+      expect(getHierarchyNode(model, "root-1")?.instanceFilter).toBeUndefined();
     });
 
     it("does not set `isExpanded` = `true` when filter is cleared", () => {
@@ -607,12 +607,12 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.not.be.undefined;
-      expect(getHierarchyNode(model, "root-1")?.isExpanded).to.be.false;
+      expect(getHierarchyNode(model, "root-1")?.instanceFilter).toBeDefined();
+      expect(getHierarchyNode(model, "root-1")?.isExpanded).toBe(false);
 
       TreeModel.setInstanceFilter(model, "root-1", undefined);
-      expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.undefined;
-      expect(getHierarchyNode(model, "root-1")?.isExpanded).to.be.false;
+      expect(getHierarchyNode(model, "root-1")?.instanceFilter).toBeUndefined();
+      expect(getHierarchyNode(model, "root-1")?.isExpanded).toBe(false);
     });
 
     it("sets `isExpanded` = `true` when filter is set", () => {
@@ -627,12 +627,12 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.undefined;
-      expect(getHierarchyNode(model, "root-1")?.isExpanded).to.be.false;
+      expect(getHierarchyNode(model, "root-1")?.instanceFilter).toBeUndefined();
+      expect(getHierarchyNode(model, "root-1")?.isExpanded).toBe(false);
 
       TreeModel.setInstanceFilter(model, "root-1", filter);
-      expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.not.be.undefined;
-      expect(getHierarchyNode(model, "root-1")?.isExpanded).to.be.true;
+      expect(getHierarchyNode(model, "root-1")?.instanceFilter).toBeDefined();
+      expect(getHierarchyNode(model, "root-1")?.isExpanded).toBe(true);
     });
 
     it("sets `isLoading` = `true` when new filter is set on expanded node", () => {
@@ -648,12 +648,12 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.undefined;
-      expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.false;
+      expect(getHierarchyNode(model, "root-1")?.instanceFilter).toBeUndefined();
+      expect(getHierarchyNode(model, "root-1")?.isLoading).toBe(false);
 
-      expect(TreeModel.setInstanceFilter(model, "root-1", filter)).to.be.true;
-      expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.eq(filter);
-      expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.true;
+      expect(TreeModel.setInstanceFilter(model, "root-1", filter)).toBe(true);
+      expect(getHierarchyNode(model, "root-1")?.instanceFilter).toBe(filter);
+      expect(getHierarchyNode(model, "root-1")?.isLoading).toBe(true);
     });
 
     it("removes subtree when filter is set", () => {
@@ -675,15 +675,15 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-1-1")).to.not.be.undefined;
+      expect(getHierarchyNode(model, "root-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-1-1")).toBeDefined();
 
       TreeModel.setInstanceFilter(model, "root-1", filter);
 
-      expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
-      expect(getHierarchyNode(model, "child-1")).to.be.undefined;
-      expect(getHierarchyNode(model, "child-1-1")).to.be.undefined;
+      expect(getHierarchyNode(model, "root-1")).toBeDefined();
+      expect(getHierarchyNode(model, "child-1")).toBeUndefined();
+      expect(getHierarchyNode(model, "child-1-1")).toBeUndefined();
     });
 
     it("does nothing if node does not exist", () => {
@@ -699,7 +699,7 @@ describe("TreeModel", () => {
       ]);
 
       TreeModel.setInstanceFilter(model, "invalid", filter);
-      expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.undefined;
+      expect(getHierarchyNode(model, "root-1")?.instanceFilter).toBeUndefined();
     });
   });
 
@@ -721,8 +721,8 @@ describe("TreeModel", () => {
       ]);
 
       TreeModel.selectNodes(model, ["root-1"], "add");
-      expect(getHierarchyNode(model, "root-1")?.isSelected).to.be.true;
-      expect(getHierarchyNode(model, "root-2")?.isSelected).to.be.false;
+      expect(getHierarchyNode(model, "root-1")?.isSelected).toBe(true);
+      expect(getHierarchyNode(model, "root-2")?.isSelected).toBe(false);
     });
 
     it("deselects node", () => {
@@ -742,8 +742,8 @@ describe("TreeModel", () => {
       ]);
 
       TreeModel.selectNodes(model, ["root-1"], "remove");
-      expect(getHierarchyNode(model, "root-1")?.isSelected).to.be.false;
-      expect(getHierarchyNode(model, "root-2")?.isSelected).to.be.true;
+      expect(getHierarchyNode(model, "root-1")?.isSelected).toBe(false);
+      expect(getHierarchyNode(model, "root-2")?.isSelected).toBe(true);
     });
 
     it("replaces selected nodes", () => {
@@ -772,9 +772,9 @@ describe("TreeModel", () => {
       ]);
 
       TreeModel.selectNodes(model, ["root-2", "root-3"], "replace");
-      expect(getHierarchyNode(model, "root-1")?.isSelected).to.be.false;
-      expect(getHierarchyNode(model, "root-2")?.isSelected).to.be.true;
-      expect(getHierarchyNode(model, "root-3")?.isSelected).to.be.true;
+      expect(getHierarchyNode(model, "root-1")?.isSelected).toBe(false);
+      expect(getHierarchyNode(model, "root-2")?.isSelected).toBe(true);
+      expect(getHierarchyNode(model, "root-3")?.isSelected).toBe(true);
     });
 
     it("does nothing if node does not exist", () => {
@@ -790,7 +790,7 @@ describe("TreeModel", () => {
       ]);
 
       TreeModel.selectNodes(model, ["invalid"], "remove");
-      expect(getHierarchyNode(model, "root-1")?.isSelected).to.be.true;
+      expect(getHierarchyNode(model, "root-1")?.isSelected).toBe(true);
     });
   });
 
@@ -811,8 +811,8 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(TreeModel.isNodeSelected(model, "root-1")).to.be.false;
-      expect(TreeModel.isNodeSelected(model, "root-2")).to.be.true;
+      expect(TreeModel.isNodeSelected(model, "root-1")).toBe(false);
+      expect(TreeModel.isNodeSelected(model, "root-2")).toBe(true);
     });
   });
 
@@ -828,7 +828,7 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(TreeModel.getNode(model, undefined)).to.be.eq(model.rootNode);
+      expect(TreeModel.getNode(model, undefined)).toBe(model.rootNode);
     });
 
     it("returns specific node", () => {
@@ -842,15 +842,15 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(TreeModel.getNode(model, "root-1")).to.not.be.undefined;
+      expect(TreeModel.getNode(model, "root-1")).toBeDefined();
     });
   });
 });
 
 describe("isTreeModelHierarchyNode", () => {
   it("returns correct result", () => {
-    expect(isTreeModelHierarchyNode({ id: undefined, nodeData: undefined })).to.be.false;
-    expect(isTreeModelHierarchyNode({ id: "info-node", parentId: undefined, type: "Unknown", message: "info" })).to.be.false;
+    expect(isTreeModelHierarchyNode({ id: undefined, nodeData: undefined })).toBe(false);
+    expect(isTreeModelHierarchyNode({ id: "info-node", parentId: undefined, type: "Unknown", message: "info" })).toBe(false);
     expect(isTreeModelHierarchyNode({ id: "hierarchy-node", label: "Node", children: false, nodeData: createTestHierarchyNode({ id: "hierarchy-node" }) })).to
       .be.true;
   });
@@ -858,8 +858,8 @@ describe("isTreeModelHierarchyNode", () => {
 
 describe("isTreeModelInfoNode", () => {
   it("returns correct result", () => {
-    expect(isTreeModelInfoNode({ id: undefined, nodeData: undefined })).to.be.false;
-    expect(isTreeModelInfoNode({ id: "info-node", parentId: undefined, type: "Unknown", message: "info" })).to.be.true;
+    expect(isTreeModelInfoNode({ id: undefined, nodeData: undefined })).toBe(false);
+    expect(isTreeModelInfoNode({ id: "info-node", parentId: undefined, type: "Unknown", message: "info" })).toBe(true);
     expect(isTreeModelInfoNode({ id: "hierarchy-node", label: "Node", children: false, nodeData: createTestHierarchyNode({ id: "hierarchy-node" }) })).to.be
       .false;
   });
