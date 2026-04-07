@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import {
   createConcatenatedValueJsonSelector,
   createConcatenatedValueStringSelector,
@@ -21,64 +21,64 @@ import { createECSchemaProviderStub } from "../MetadataProviderStub.js";
 describe("TypedValueSelectClauseProps", () => {
   describe("isPrimitiveValueSelector", () => {
     it("returns correct result for different types of props", () => {
-      expect(TypedValueSelectClauseProps.isPrimitiveValueSelector({ selector: "x" })).to.be.true;
-      expect(TypedValueSelectClauseProps.isPrimitiveValueSelector({ value: 123, type: "Integer" })).to.be.false;
+      expect(TypedValueSelectClauseProps.isPrimitiveValueSelector({ selector: "x" })).toBe(true);
+      expect(TypedValueSelectClauseProps.isPrimitiveValueSelector({ value: 123, type: "Integer" })).toBe(false);
     });
   });
   describe("isPrimitiveValue", () => {
     it("returns correct result for different types of props", () => {
-      expect(TypedValueSelectClauseProps.isPrimitiveValue({ selector: "x" })).to.be.false;
-      expect(TypedValueSelectClauseProps.isPrimitiveValue({ value: 123, type: "Integer" })).to.be.true;
+      expect(TypedValueSelectClauseProps.isPrimitiveValue({ selector: "x" })).toBe(false);
+      expect(TypedValueSelectClauseProps.isPrimitiveValue({ value: 123, type: "Integer" })).toBe(true);
     });
   });
 });
 
 describe("createRawPropertyValueSelector", () => {
   it("returns selector for a property", () => {
-    expect(createRawPropertyValueSelector("alias", "property-name")).to.eq("[alias].[property-name]");
+    expect(createRawPropertyValueSelector("alias", "property-name")).toBe("[alias].[property-name]");
   });
 
   it("returns selector for a property with component", () => {
-    expect(createRawPropertyValueSelector("alias", "property-name", "component")).to.eq("[alias].[property-name].[component]");
+    expect(createRawPropertyValueSelector("alias", "property-name", "component")).toBe("[alias].[property-name].[component]");
   });
 });
 
 describe("createRawPrimitiveValueSelector", () => {
   it("returns NULL when value is `undefined`", () => {
-    expect(createRawPrimitiveValueSelector(undefined)).to.eq("NULL");
+    expect(createRawPrimitiveValueSelector(undefined)).toBe("NULL");
   });
 
   it("returns julian day selector", () => {
     const now = new Date();
-    expect(createRawPrimitiveValueSelector(now)).to.eq(`julianday('${now.toISOString()}')`);
+    expect(createRawPrimitiveValueSelector(now)).toBe(`julianday('${now.toISOString()}')`);
   });
 
   it("returns point2d object", () => {
-    expect(createRawPrimitiveValueSelector({ x: 1.23, y: 4.56 })).to.eq(`json_object('x', 1.23, 'y', 4.56)`);
+    expect(createRawPrimitiveValueSelector({ x: 1.23, y: 4.56 })).toBe(`json_object('x', 1.23, 'y', 4.56)`);
   });
 
   it("returns point3d object", () => {
-    expect(createRawPrimitiveValueSelector({ x: 1.23, y: 4.56, z: 7.89 })).to.eq(`json_object('x', 1.23, 'y', 4.56, 'z', 7.89)`);
+    expect(createRawPrimitiveValueSelector({ x: 1.23, y: 4.56, z: 7.89 })).toBe(`json_object('x', 1.23, 'y', 4.56, 'z', 7.89)`);
   });
 
   it("returns string selector", () => {
-    expect(createRawPrimitiveValueSelector("test")).to.eq(`'test'`);
+    expect(createRawPrimitiveValueSelector("test")).toBe(`'test'`);
   });
 
   it("returns Id selector", () => {
-    expect(createRawPrimitiveValueSelector("0x123")).to.eq(`0x123`);
+    expect(createRawPrimitiveValueSelector("0x123")).toBe(`0x123`);
   });
 
   it("returns numeric selector", () => {
-    expect(createRawPrimitiveValueSelector(1.23)).to.eq(`1.23`);
+    expect(createRawPrimitiveValueSelector(1.23)).toBe(`1.23`);
   });
 
   it("returns `true` selector", () => {
-    expect(createRawPrimitiveValueSelector(true)).to.eq(`TRUE`);
+    expect(createRawPrimitiveValueSelector(true)).toBe(`TRUE`);
   });
 
   it("returns `false` selector", () => {
-    expect(createRawPrimitiveValueSelector(false)).to.eq(`FALSE`);
+    expect(createRawPrimitiveValueSelector(false)).toBe(`FALSE`);
   });
 });
 
@@ -98,9 +98,7 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
         } as EC.PrimitiveProperty,
       ],
     });
-    expect(
-      await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
-    ).to.deep.eq({
+    expect(await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).toEqual({
       selector: "[a].[p]",
       type: "String",
       extendedType: "Json",
@@ -123,9 +121,7 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
         } as EC.PrimitiveProperty,
       ],
     });
-    expect(
-      await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
-    ).to.deep.eq({
+    expect(await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).toEqual({
       selector: "[a].[p]",
       type: "Double",
       extendedType: "TestExtendedType",
@@ -146,9 +142,7 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
         } as EC.NavigationProperty,
       ],
     });
-    expect(
-      await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
-    ).to.deep.eq({
+    expect(await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).toEqual({
       selector: "[a].[p].[Id]",
       type: "Id",
     } satisfies TypedValueSelectClauseProps);
@@ -169,9 +163,7 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
         } as EC.PrimitiveProperty,
       ],
     });
-    expect(
-      await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
-    ).to.deep.eq({
+    expect(await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).toEqual({
       selector: "GuidToStr([a].[p])",
       type: "String",
     } satisfies TypedValueSelectClauseProps);
@@ -192,9 +184,7 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
         } as EC.PrimitiveProperty,
       ],
     });
-    expect(
-      await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
-    ).to.deep.eq({
+    expect(await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).toEqual({
       selector: "json_object('x', [a].[p].[x], 'y', [a].[p].[y])",
       type: "Point2d",
       extendedType: "TestExtendedType",
@@ -216,9 +206,7 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
         } as EC.PrimitiveProperty,
       ],
     });
-    expect(
-      await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
-    ).to.deep.eq({
+    expect(await createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).toEqual({
       selector: "json_object('x', [a].[p].[x], 'y', [a].[p].[y], 'z', [a].[p].[z])",
       type: "Point3d",
       extendedType: "TestExtendedType",
@@ -227,8 +215,9 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
 
   it("throws when requested class is not found", async () => {
     const schemaProvider = createECSchemaProviderStub();
-    await expect(createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).to
-      .eventually.be.rejected;
+    await expect(
+      createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
+    ).rejects.toThrow();
   });
 
   it("throws when requested property is not found", async () => {
@@ -238,8 +227,9 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
       className: "y",
       properties: [],
     });
-    await expect(createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).to
-      .eventually.be.rejected;
+    await expect(
+      createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
+    ).rejects.toThrow();
   });
 
   it("throws when requested property is not primitive", async () => {
@@ -255,8 +245,9 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
         } as EC.Property,
       ],
     });
-    await expect(createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).to
-      .eventually.be.rejected;
+    await expect(
+      createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
+    ).rejects.toThrow();
   });
 
   it('throws when requested property is "Binary"', async () => {
@@ -273,8 +264,9 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
         } as EC.PrimitiveProperty,
       ],
     });
-    await expect(createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).to
-      .eventually.be.rejected;
+    await expect(
+      createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
+    ).rejects.toThrow();
   });
 
   it('throws when requested property is "IGeometry"', async () => {
@@ -291,8 +283,9 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
         } as EC.PrimitiveProperty,
       ],
     });
-    await expect(createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" })).to
-      .eventually.be.rejected;
+    await expect(
+      createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias: "a", propertyClassName: "x.y", propertyName: "p" }),
+    ).rejects.toThrow();
   });
 });
 
@@ -303,7 +296,7 @@ describe("createNullableSelector", () => {
         checkSelector: "CHECK",
         valueSelector: "VALUE",
       }),
-    ).to.deep.eq("IIF(CHECK, VALUE, NULL)");
+    ).toEqual("IIF(CHECK, VALUE, NULL)");
   });
 });
 
@@ -313,7 +306,7 @@ describe("createInstanceKeySelector", () => {
       createInstanceKeySelector({
         alias: "test",
       }),
-    ).to.eq("json_object('className', ec_classname([test].[ECClassId], 's.c'), 'id', IdToHex([test].[ECInstanceId]))");
+    ).toBe("json_object('className', ec_classname([test].[ECClassId], 's.c'), 'id', IdToHex([test].[ECInstanceId]))");
   });
 });
 
@@ -470,7 +463,7 @@ const CONCATENATED_VALUE_TEST_CASES = [
 describe("createConcatenatedValueJsonSelector", () => {
   CONCATENATED_VALUE_TEST_CASES.forEach(({ name, input, expectations }) => {
     it(name, () => {
-      expect(trimWhitespace(createConcatenatedValueJsonSelector(input.selectors, input.checkSelector))).to.eq(trimWhitespace(expectations.json));
+      expect(trimWhitespace(createConcatenatedValueJsonSelector(input.selectors, input.checkSelector))).toBe(trimWhitespace(expectations.json));
     });
   });
 });
@@ -478,7 +471,7 @@ describe("createConcatenatedValueJsonSelector", () => {
 describe("createConcatenatedValueStringSelector", () => {
   CONCATENATED_VALUE_TEST_CASES.forEach(({ name, input, expectations }) => {
     it(name, () => {
-      expect(trimWhitespace(createConcatenatedValueStringSelector(input.selectors, input.checkSelector))).to.eq(trimWhitespace(expectations.str));
+      expect(trimWhitespace(createConcatenatedValueStringSelector(input.selectors, input.checkSelector))).toBe(trimWhitespace(expectations.str));
     });
   });
 });

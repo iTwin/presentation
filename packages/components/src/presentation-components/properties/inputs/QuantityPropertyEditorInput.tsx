@@ -107,7 +107,6 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
               inputRef.current?.setSelectionRange(0, 0);
               return;
             }
-            /* c8 ignore next 1 */
             inputRef.current?.setSelectionRange(0, 9999);
           });
         }}

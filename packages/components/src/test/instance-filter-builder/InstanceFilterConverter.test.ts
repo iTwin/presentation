@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyValue, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
@@ -596,7 +595,7 @@ describe("createInstanceFilterDefinition", () => {
     beforeEach(() => {
       // stub metadataProvider for test imodel
       const metadataProvider = getIModelMetadataProvider(imodel);
-      sinon.stub(metadataProvider, "getECClassInfo").callsFake(async (name) => {
+      vi.spyOn(metadataProvider, "getECClassInfo").mockImplementation(async (name) => {
         switch (name) {
           case classAInfo.name:
             return new ECClassInfo(classAInfo.id, classAInfo.name, classAInfo.label, new Set(), new Set([classBInfo.id, classCInfo.id]));
@@ -610,7 +609,6 @@ describe("createInstanceFilterDefinition", () => {
     });
 
     afterEach(() => {
-      sinon.resetBehavior();
       onClose.raiseEvent();
     });
 
