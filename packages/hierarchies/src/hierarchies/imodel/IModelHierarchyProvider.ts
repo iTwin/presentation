@@ -527,8 +527,9 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
         finalize(() => {
           doLog({
             category: loggingCategory,
-            message: /* v8 ignore next */ () =>
-              /* v8 ignore next 3 */ error
+            /* v8 ignore next 3 */
+            message: () =>
+              error
                 ? `[${requestContext.requestId}] Error creating child nodes for ${createNodeIdentifierForLogging(props.parentNode)}: ${error instanceof Error ? error.message : error.toString()}`
                 : `[${requestContext.requestId}] Returned ${nodesCount} child nodes for ${createNodeIdentifierForLogging(props.parentNode)} in ${timer.currentSeconds.toFixed(2)} s.`,
           });
