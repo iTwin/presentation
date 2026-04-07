@@ -214,7 +214,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this._unsubscribe?.();
   }
 
-  /* v8 ignore next 3 */
+  /* v8 ignore next 3 -- @preserve */
   public dispose() {
     this[Symbol.dispose]();
   }
