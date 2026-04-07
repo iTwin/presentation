@@ -286,7 +286,7 @@ async function computeClassesByProperty(
     )
   ).filter((propertyClass) => propertyClass !== undefined);
 
-  /* c8 ignore next 3 */
+  /* v8 ignore next 3 -- @preserve */
   if (propertyClasses.length === 0) {
     return classes;
   }

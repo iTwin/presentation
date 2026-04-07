@@ -45,7 +45,7 @@
     "@types/node": "catalog:build-tools",
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
-    "@vitejs/plugin-react": "^4.7.0",
+    "@vitejs/plugin-react": "catalog:build-tools",
     "classnames": "catalog:react",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
@@ -59,7 +59,7 @@
     "rxjs": "catalog:rxjs",
     "sass": "^1.98.0",
     "typescript": "catalog:build-tools",
-    "vite": "^6.4.2",
+    "vite": "catalog:build-tools",
     "vite-plugin-static-copy": "^2.3.2"
   }
 }

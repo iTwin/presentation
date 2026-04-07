@@ -62,6 +62,7 @@ function getLocalizedDecimalSeparator(): string {
 
   localeSpecificDecimalSeparator = ".";
   const matches = (12345.6789).toLocaleString().match(/345(.*)67/);
+  /* v8 ignore else -- @preserve */
   if (matches && matches.length > 1) {
     localeSpecificDecimalSeparator = matches[1];
   }

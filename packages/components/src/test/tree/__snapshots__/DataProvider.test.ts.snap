@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`TreeDataProvider getFilteredNodes returns presentation manager result 1`] = `
+exports[`TreeDataProvider > getFilteredNodes > returns presentation manager result 1`] = `
 Array [
   Object {
     "children": Array [],
@@ -79,7 +79,7 @@ Array [
 ]
 `;
 
-exports[`TreeDataProvider getNodes returns presentation manager result 1`] = `
+exports[`TreeDataProvider > getNodes > returns presentation manager result 1`] = `
 Array [
   Object {
     "description": "testDescription",

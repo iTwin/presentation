@@ -19,6 +19,8 @@ import {
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
 import { UsePresentationTreeStateResult } from "./UsePresentationTreeState.js";
 
+/* v8 ignore start -- @preserve */
+
 /**
  * Props for [[PresentationTree]] component.
  *
@@ -68,3 +70,5 @@ export function PresentationTree<TEventHandler extends TreeEventHandler>({ state
     />
   );
 }
+
+/* v8 ignore stop -- @preserve */

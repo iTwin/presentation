@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
-import * as sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
@@ -37,6 +36,7 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
+import { createMocked } from "../TestUtils.js";
 
 /**
  * The Provider class is used to make protected [[ContentDataProvider]]
@@ -64,9 +64,9 @@ describe("ContentDataProvider", () => {
   const rulesetId = "ruleset_id";
   const displayType = "test_display";
   let provider: Provider;
-  let invalidateCacheSpy: sinon.SinonSpy<[CacheInvalidationProps], void>;
+  let invalidateCacheSpy: ReturnType<typeof vi.spyOn>;
 
-  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
+  let presentationManager: Mocked<PresentationManager>;
   const onIModelContentChanged: PresentationManager["onIModelContentChanged"] = new BeEvent<(args: IModelContentChangeEventArgs) => void>();
   const onVariableChanged: RulesetVariablesManager["onVariableChanged"] = new BeEvent<
     (variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void
@@ -85,29 +85,28 @@ describe("ContentDataProvider", () => {
   } as IModelConnection;
 
   beforeEach(() => {
-    presentationManager = sinon.createStubInstance(PresentationManager);
+    presentationManager = createMocked(PresentationManager);
     Object.assign(presentationManager, { onIModelContentChanged });
 
-    presentationManager.rulesets.returns(rulesetManager as RulesetManager);
-    presentationManager.vars.returns({
+    presentationManager.rulesets.mockReturnValue(rulesetManager as RulesetManager);
+    presentationManager.vars.mockReturnValue({
       onVariableChanged,
     } as RulesetVariablesManager);
 
-    sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
+    vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged,
-    }));
-    sinon.stub(IModelApp, "formatsProvider").get(() => ({
+    } as QuantityFormatter);
+    vi.spyOn(IModelApp, "formatsProvider", "get").mockReturnValue({
       onFormatsChanged,
-    }));
+    } as FormatsProvider);
 
     provider = new Provider({ imodel, ruleset: rulesetId, displayType });
-    invalidateCacheSpy = sinon.spy(provider, "invalidateCache");
+    invalidateCacheSpy = vi.spyOn(provider, "invalidateCache");
   });
 
   afterEach(() => {
     provider[Symbol.dispose]();
-    sinon.restore();
   });
 
   describe("constructor", () => {
@@ -133,14 +132,14 @@ describe("ContentDataProvider", () => {
       const newId = `${rulesetId} (changed)`;
       provider.rulesetId = newId;
       expect(provider.rulesetId).to.eq(newId);
-      expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
+      expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith(CacheInvalidationProps.full());
     });
 
     it("doesn't clear caches if setting to the same rulesetId", () => {
       const newId = `${rulesetId}`;
       provider.rulesetId = newId;
       expect(provider.rulesetId).to.eq(newId);
-      expect(invalidateCacheSpy).to.not.be.called;
+      expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -153,13 +152,13 @@ describe("ContentDataProvider", () => {
       const newConnection = {} as IModelConnection;
       provider.imodel = newConnection;
       expect(provider.imodel).to.eq(newConnection);
-      expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
+      expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith(CacheInvalidationProps.full());
     });
 
     it("doesn't clear caches if setting to the same imodel", () => {
       provider.imodel = imodel;
       expect(provider.imodel).to.eq(imodel);
-      expect(invalidateCacheSpy).to.not.be.called;
+      expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -168,23 +167,23 @@ describe("ContentDataProvider", () => {
       const info1: SelectionInfo = { providerName: "a" };
       provider.selectionInfo = info1;
       expect(provider.selectionInfo).to.eq(info1);
-      invalidateCacheSpy.resetHistory();
+      invalidateCacheSpy.mockClear();
 
       const info2: SelectionInfo = { providerName: "b" };
       provider.selectionInfo = info2;
       expect(provider.selectionInfo).to.eq(info2);
-      expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
+      expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith(CacheInvalidationProps.full());
     });
 
     it("doesn't clear caches if setting to the same selectionInfo", () => {
       const info1: SelectionInfo = { providerName: "a" };
       provider.selectionInfo = info1;
       expect(provider.selectionInfo).to.eq(info1);
-      invalidateCacheSpy.resetHistory();
+      invalidateCacheSpy.mockClear();
 
       provider.selectionInfo = info1;
       expect(provider.selectionInfo).to.eq(info1);
-      expect(invalidateCacheSpy).to.not.be.called;
+      expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -193,24 +192,24 @@ describe("ContentDataProvider", () => {
       const keys = new KeySet([createTestECInstanceKey()]);
       provider.keys = keys;
       expect(provider.keys).to.eq(keys);
-      expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
+      expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith(CacheInvalidationProps.full());
     });
 
     it("doesn't clear caches if keys didn't change", () => {
       const keys = new KeySet();
       provider.keys = keys;
-      invalidateCacheSpy.resetHistory();
+      invalidateCacheSpy.mockClear();
       provider.keys = keys;
-      expect(invalidateCacheSpy).to.not.be.called;
+      expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
 
     it("sets keys and clears caches when keys change in place", () => {
       const keys = new KeySet();
       provider.keys = keys;
-      invalidateCacheSpy.resetHistory();
+      invalidateCacheSpy.mockClear();
       keys.add(createTestECInstanceKey());
       provider.keys = keys;
-      expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
+      expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith(CacheInvalidationProps.full());
     });
   });
 
@@ -223,12 +222,12 @@ describe("ContentDataProvider", () => {
 
     it("requests presentation manager for descriptor and returns its copy", async () => {
       const result = createTestContentDescriptor({ displayType, fields: [] });
-      presentationManager.getContentDescriptor.resolves(result);
+      presentationManager.getContentDescriptor.mockResolvedValue(result);
 
       provider.selectionInfo = selection;
       const descriptor = await provider.getContentDescriptor();
 
-      expect(presentationManager.getContentDescriptor).to.be.calledWith(
+      expect(presentationManager.getContentDescriptor).toHaveBeenCalledWith(
         matchOptions<ContentDescriptorOptions>(
           (options) => options.imodel === imodel && options.rulesetOrId === rulesetId && options.displayType === displayType && options.selection === selection,
         ),
@@ -240,36 +239,36 @@ describe("ContentDataProvider", () => {
     it("requests presentation manager for descriptor when keyset is empty and `shouldRequestContentForEmptyKeyset()` returns `true`", async () => {
       provider.keys = new KeySet();
       provider.shouldRequestContentForEmptyKeyset = () => true;
-      presentationManager.getContentDescriptor.resolves(undefined);
+      presentationManager.getContentDescriptor.mockResolvedValue(undefined);
       const descriptor = await provider.getContentDescriptor();
-      expect(presentationManager.getContentDescriptor).to.be.called;
+      expect(presentationManager.getContentDescriptor).toHaveBeenCalled();
       expect(descriptor).to.be.undefined;
     });
 
     it("doesn't request presentation manager for descriptor when keyset is empty and `shouldRequestContentForEmptyKeyset()` returns `false`", async () => {
       provider.keys = new KeySet();
-      presentationManager.getContentDescriptor.resolves(undefined);
+      presentationManager.getContentDescriptor.mockResolvedValue(undefined);
       const descriptor = await provider.getContentDescriptor();
-      expect(presentationManager.getContentDescriptor).to.not.be.called;
+      expect(presentationManager.getContentDescriptor).not.toHaveBeenCalled();
       expect(descriptor).to.be.undefined;
     });
 
     it("handles undefined descriptor returned by presentation manager", async () => {
-      presentationManager.getContentDescriptor.resolves(undefined);
+      presentationManager.getContentDescriptor.mockResolvedValue(undefined);
       const descriptor = await provider.getContentDescriptor();
       expect(descriptor).to.be.undefined;
     });
 
     it("memoizes result", async () => {
       const resultPromiseContainer = new ResolvablePromise<Descriptor>();
-      presentationManager.getContentDescriptor.returns(resultPromiseContainer.promise);
+      presentationManager.getContentDescriptor.mockReturnValue(resultPromiseContainer.promise);
 
       const requests = [provider.getContentDescriptor(), provider.getContentDescriptor()];
       const result = createTestContentDescriptor({ fields: [] });
       resultPromiseContainer.resolveSync(result);
       const descriptors = await Promise.all(requests);
       descriptors.forEach((descriptor) => expect(descriptor).to.deep.eq(result));
-      expect(presentationManager.getContentDescriptor).to.be.calledOnce;
+      expect(presentationManager.getContentDescriptor).toHaveBeenCalledOnce();
     });
   });
 
@@ -279,53 +278,55 @@ describe("ContentDataProvider", () => {
     });
 
     it("returns 0 when manager returns undefined descriptor", async () => {
-      presentationManager.getContentDescriptor.resolves(undefined);
+      presentationManager.getContentDescriptor.mockResolvedValue(undefined);
       const size = await provider.getContentSetSize();
-      expect(presentationManager.getContentSetSize).to.not.be.called;
+      expect(presentationManager.getContentSetSize).not.toHaveBeenCalled();
       expect(size).to.eq(0);
     });
 
     describe("when `getContentIterator` is available", () => {
       it("requests presentation manager for size", async () => {
         const result = new ResolvablePromise<{ total: number; descriptor: Descriptor; items: AsyncIterableIterator<Item> }>();
-        presentationManager.getContentIterator.returns(result.promise);
+        presentationManager.getContentIterator.mockReturnValue(result.promise);
 
         provider.pagingSize = 10;
         const contentAndContentSize = { total: 2, descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([]) };
         result.resolveSync(contentAndContentSize);
         const size = await provider.getContentSetSize();
         expect(size).to.eq(contentAndContentSize.total);
-        expect(presentationManager.getContentIterator).to.be.calledOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
+        expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
       });
 
       it("memoizes result", async () => {
         const resultPromiseContainer = new ResolvablePromise<{ total: number; descriptor: Descriptor; items: AsyncIterableIterator<Item> }>();
-        presentationManager.getContentIterator.returns(resultPromiseContainer.promise);
+        presentationManager.getContentIterator.mockReturnValue(resultPromiseContainer.promise);
         provider.pagingSize = 10;
         const requests = [provider.getContentSetSize(), provider.getContentSetSize()];
         const result = { descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([]), total: 2 };
         resultPromiseContainer.resolveSync(result);
         const sizes = await Promise.all(requests);
         sizes.forEach((size) => expect(size).to.eq(result.total));
-        expect(presentationManager.getContentIterator).to.be.calledOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
+        expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
       });
 
       it("requests size and first page when paging size is set", async () => {
         const resultPromiseContainer = new ResolvablePromise<{ total: number; descriptor: Descriptor; items: AsyncIterableIterator<Item> }>();
         const pagingSize = 20;
-        presentationManager.getContentIterator.returns(resultPromiseContainer.promise);
+        presentationManager.getContentIterator.mockReturnValue(resultPromiseContainer.promise);
 
         provider.pagingSize = pagingSize;
         const result = { descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([]), total: 2 };
         resultPromiseContainer.resolveSync(result);
         const size = await provider.getContentSetSize();
         expect(size).to.eq(result.total);
-        expect(presentationManager.getContentIterator).to.be.calledOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === pagingSize));
+        expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(
+          matchOptions(({ paging }) => paging?.start === 0 && paging.size === pagingSize),
+        );
       });
 
       it("returns content size equal to content set size when page options are undefined", async () => {
         const descriptor = createTestContentDescriptor({ fields: [] });
-        presentationManager.getContentIterator.resolves({
+        presentationManager.getContentIterator.mockResolvedValue({
           descriptor,
           items: createAsyncIterator([createTestContentItem({ values: {}, displayValues: {} })]),
           total: 1,
@@ -333,8 +334,8 @@ describe("ContentDataProvider", () => {
 
         const size = await provider.getContentSetSize();
         expect(size).to.equal(1);
-        expect(presentationManager.getContentSetSize).to.not.be.called;
-        expect(presentationManager.getContentIterator).to.be.calledOnceWith(matchOptions(({ paging }) => paging === undefined));
+        expect(presentationManager.getContentSetSize).not.toHaveBeenCalled();
+        expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging === undefined));
       });
     });
 
@@ -343,51 +344,59 @@ describe("ContentDataProvider", () => {
         Object.assign(presentationManager, { getContentIterator: undefined });
       });
 
-      /* eslint-disable @typescript-eslint/no-deprecated */
       it("requests presentation manager for size", async () => {
-        presentationManager.getContentAndSize.resolves({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 });
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        presentationManager.getContentAndSize.mockResolvedValue({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 });
         provider.pagingSize = 10;
         const size = await provider.getContentSetSize();
         expect(size).to.eq(2);
-        expect(presentationManager.getContentAndSize).to.be.calledOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
       });
 
       it("memoizes result", async () => {
         const resultPromiseContainer = new ResolvablePromise<{ content: Content; size: number }>();
-        presentationManager.getContentAndSize.returns(resultPromiseContainer.promise);
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        presentationManager.getContentAndSize.mockReturnValue(resultPromiseContainer.promise);
         provider.pagingSize = 10;
         const requests = [provider.getContentSetSize(), provider.getContentSetSize()];
         const result = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 };
         resultPromiseContainer.resolveSync(result);
         const sizes = await Promise.all(requests);
         sizes.forEach((size) => expect(size).to.eq(result.size));
-        expect(presentationManager.getContentAndSize).to.be.calledOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
       });
 
       it("requests size and first page when paging size is set", async () => {
         const resultPromiseContainer = new ResolvablePromise<{ content: Content; size: number }>();
         const pagingSize = 20;
-        presentationManager.getContentAndSize.returns(resultPromiseContainer.promise);
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        presentationManager.getContentAndSize.mockReturnValue(resultPromiseContainer.promise);
 
         provider.pagingSize = pagingSize;
         const result = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 };
         resultPromiseContainer.resolveSync(result);
         const size = await provider.getContentSetSize();
         expect(size).to.eq(result.size);
-        expect(presentationManager.getContentAndSize).to.be.calledOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === pagingSize));
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(
+          matchOptions(({ paging }) => paging?.start === 0 && paging.size === pagingSize),
+        );
       });
 
       it("returns content size equal to content set size when page options are undefined", async () => {
         const descriptor = createTestContentDescriptor({ fields: [] });
         const content = new Content(descriptor, [createTestContentItem({ values: {}, displayValues: {} })]);
-        presentationManager.getContent.resolves(content);
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        presentationManager.getContent.mockResolvedValue(content);
 
         const size = await provider.getContentSetSize();
         expect(size).to.equal(content.contentSet.length);
-        expect(presentationManager.getContentSetSize).to.not.be.called;
-        expect(presentationManager.getContent).to.be.calledOnceWith(matchOptions(({ paging }) => paging === undefined));
+        expect(presentationManager.getContentSetSize).not.toHaveBeenCalled();
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        expect(presentationManager.getContent).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging === undefined));
       });
-      /* eslint-enable @typescript-eslint/no-deprecated */
     });
   });
 
@@ -398,7 +407,7 @@ describe("ContentDataProvider", () => {
 
     describe("when `getContentIterator` is available", () => {
       it("returns undefined when manager returns undefined content", async () => {
-        presentationManager.getContentIterator.resolves(undefined);
+        presentationManager.getContentIterator.mockResolvedValue(undefined);
         const c = await provider.getContent();
         expect(c).to.be.undefined;
       });
@@ -411,9 +420,9 @@ describe("ContentDataProvider", () => {
           total: 1,
         };
 
-        presentationManager.getContentIterator.resolves(result);
+        presentationManager.getContentIterator.mockResolvedValue(result);
         const c = await provider.getContent({ start: 0, size: 10 });
-        expect(presentationManager.getContentIterator).to.be.calledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
+        expect(presentationManager.getContentIterator).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
         expect(c).to.deep.eq(new Content(result.descriptor, []));
       });
 
@@ -424,7 +433,7 @@ describe("ContentDataProvider", () => {
         const resultNoPageStartWithSize = new ResolvablePromise<{ total: number; descriptor: Descriptor; items: AsyncIterableIterator<Item> }>();
         const resultWithPageStart = new ResolvablePromise<{ total: number; descriptor: Descriptor; items: AsyncIterableIterator<Item> }>();
 
-        presentationManager.getContentIterator.callsFake(async (options) => {
+        presentationManager.getContentIterator.mockImplementation(async (options) => {
           if (!options.paging?.start && !options.paging?.size) {
             return resultNoPageOptions;
           }
@@ -470,17 +479,17 @@ describe("ContentDataProvider", () => {
         expect(responses[5]).to.deep.eq(new Content(descriptor, withPageStartResponse), "responses[5] should eq withPageStartResponse");
 
         expect(presentationManager.getContentIterator).to.be.calledThrice;
-        expect(presentationManager.getContentIterator).to.be.calledWith(matchOptions(({ paging }) => paging === undefined));
-        expect(presentationManager.getContentIterator).to.be.calledWith(matchOptions(({ paging }) => paging?.start === 1 && paging.size === 0));
-        expect(presentationManager.getContentIterator).to.be.calledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 1));
+        expect(presentationManager.getContentIterator).toHaveBeenCalledWith(matchOptions(({ paging }) => paging === undefined));
+        expect(presentationManager.getContentIterator).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 1 && paging.size === 0));
+        expect(presentationManager.getContentIterator).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 1));
       });
 
       it("doesn't request for content when keyset is empty and `shouldRequestContentForEmptyKeyset()` returns `false`", async () => {
         provider.keys = new KeySet();
         await provider.getContent();
-        expect(presentationManager.getContentDescriptor).to.not.be.called;
-        expect(presentationManager.getContentIterator).to.not.be.called;
-        expect(presentationManager.getContentIterator).to.not.be.called;
+        expect(presentationManager.getContentDescriptor).not.toHaveBeenCalled();
+        expect(presentationManager.getContentIterator).not.toHaveBeenCalled();
+        expect(presentationManager.getContentIterator).not.toHaveBeenCalled();
       });
     });
 
@@ -489,9 +498,9 @@ describe("ContentDataProvider", () => {
         Object.assign(presentationManager, { getContentIterator: undefined });
       });
 
-      /* eslint-disable @typescript-eslint/no-deprecated */
       it("returns undefined when manager returns undefined content", async () => {
-        presentationManager.getContent.resolves(undefined);
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        presentationManager.getContent.mockResolvedValue(undefined);
         const c = await provider.getContent();
         expect(c).to.be.undefined;
       });
@@ -503,9 +512,11 @@ describe("ContentDataProvider", () => {
           size: 1,
         };
 
-        presentationManager.getContentAndSize.resolves(result);
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        presentationManager.getContentAndSize.mockResolvedValue(result);
         const c = await provider.getContent({ start: 0, size: 10 });
-        expect(presentationManager.getContentAndSize).to.be.calledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        expect(presentationManager.getContentAndSize).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
         expect(c).to.deep.eq(result.content);
       });
 
@@ -514,9 +525,11 @@ describe("ContentDataProvider", () => {
         const resultContentNonFirstPagePromise = new ResolvablePromise<Content>();
 
         const resultContentFirstPagePromise1 = new ResolvablePromise<{ content: Content; size: number }>();
-        presentationManager.getContentAndSize.returns(resultContentFirstPagePromise1.promise);
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        presentationManager.getContentAndSize.mockReturnValue(resultContentFirstPagePromise1.promise);
 
-        presentationManager.getContent.callsFake(async (options) => {
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        presentationManager.getContent.mockImplementation(async (options) => {
           if (options.paging === undefined) {
             return resultContentFirstPagePromise0.promise;
           }
@@ -562,21 +575,26 @@ describe("ContentDataProvider", () => {
         expect(responses[4]).to.deep.eq(pagedContentAndSizeResponse.content, "responses[4] should eq pagedContentAndSizeResponse.content");
         expect(responses[5]).to.deep.eq(nonPagedContentStartingAt1Response, "responses[5] should eq nonPagedContentStartingAt1Response");
 
-        expect(presentationManager.getContent).to.be.calledTwice;
-        expect(presentationManager.getContent).to.be.calledWith(matchOptions(({ paging }) => paging === undefined));
-        expect(presentationManager.getContent).to.be.calledWith(matchOptions(({ paging }) => paging?.start === 1 && paging.size === 0));
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        expect(presentationManager.getContent).toHaveBeenCalledTimes(2);
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        expect(presentationManager.getContent).toHaveBeenCalledWith(matchOptions(({ paging }) => paging === undefined));
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        expect(presentationManager.getContent).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 1 && paging.size === 0));
 
-        expect(presentationManager.getContentAndSize).to.be.calledOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 1));
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 1));
       });
 
       it("doesn't request for content when keyset is empty and `shouldRequestContentForEmptyKeyset()` returns `false`", async () => {
         provider.keys = new KeySet();
         await provider.getContent();
-        expect(presentationManager.getContentDescriptor).to.not.be.called;
-        expect(presentationManager.getContent).to.not.be.called;
-        expect(presentationManager.getContentAndSize).to.not.be.called;
+        expect(presentationManager.getContentDescriptor).not.toHaveBeenCalled();
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        expect(presentationManager.getContent).not.toHaveBeenCalled();
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        expect(presentationManager.getContentAndSize).not.toHaveBeenCalled();
       });
-      /* eslint-enable @typescript-eslint/no-deprecated */
     });
   });
 
@@ -603,12 +621,12 @@ describe("ContentDataProvider", () => {
           },
         ],
       });
-      provider.getFieldByPropertyDescription = sinon.fake(async () => field);
+      provider.getFieldByPropertyDescription = vi.fn(async () => field);
 
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       const actualField = await provider.getFieldByPropertyRecord(record);
 
-      expect(provider.getFieldByPropertyDescription).to.be.calledOnceWith(record.property);
+      expect(provider.getFieldByPropertyDescription).toHaveBeenCalledExactlyOnceWith(record.property);
       expect(actualField).to.eq(field);
     });
   });
@@ -630,19 +648,19 @@ describe("ContentDataProvider", () => {
     });
 
     it("return undefined if descriptor is not set", async () => {
-      presentationManager.getContentDescriptor.resolves(undefined);
+      presentationManager.getContentDescriptor.mockResolvedValue(undefined);
 
       const field = await provider.getFieldByPropertyDescription(propertyDescription);
-      expect(presentationManager.getContentDescriptor).to.be.calledOnce;
+      expect(presentationManager.getContentDescriptor).toHaveBeenCalledOnce();
       expect(field).to.be.undefined;
     });
 
     it("return undefined when field is not found", async () => {
       const descriptor = createTestContentDescriptor({ fields: [] });
-      presentationManager.getContentDescriptor.resolves(descriptor);
+      presentationManager.getContentDescriptor.mockResolvedValue(descriptor);
 
       const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
-      expect(presentationManager.getContentDescriptor).to.be.calledOnce;
+      expect(presentationManager.getContentDescriptor).toHaveBeenCalledOnce();
       expect(resultField).to.be.undefined;
     });
 
@@ -658,10 +676,10 @@ describe("ContentDataProvider", () => {
       const descriptor = createTestContentDescriptor({ fields: [field] });
       propertyDescription.name = "test-field";
 
-      presentationManager.getContentDescriptor.resolves(descriptor);
+      presentationManager.getContentDescriptor.mockResolvedValue(descriptor);
 
       const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
-      expect(presentationManager.getContentDescriptor).to.be.calledOnce;
+      expect(presentationManager.getContentDescriptor).toHaveBeenCalledOnce();
       expect(resultField).to.eq(field);
     });
 
@@ -674,10 +692,10 @@ describe("ContentDataProvider", () => {
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
       propertyDescription.name = combineFieldNames(nestedField.name, nestingField.name);
 
-      presentationManager.getContentDescriptor.resolves(descriptor);
+      presentationManager.getContentDescriptor.mockResolvedValue(descriptor);
 
       const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
-      expect(presentationManager.getContentDescriptor).to.be.calledOnce;
+      expect(presentationManager.getContentDescriptor).toHaveBeenCalledOnce();
       expect(resultField).to.eq(nestedField);
     });
 
@@ -717,12 +735,12 @@ describe("ContentDataProvider", () => {
         memberFields: [memberField],
       });
       const descriptor = createTestContentDescriptor({ fields: [structField] });
-      presentationManager.getContentDescriptor.resolves(descriptor);
+      presentationManager.getContentDescriptor.mockResolvedValue(descriptor);
 
       propertyDescription.name = combineFieldNames(memberField.name, structField.name);
 
       const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
-      expect(presentationManager.getContentDescriptor).to.be.calledOnce;
+      expect(presentationManager.getContentDescriptor).toHaveBeenCalledOnce();
       expect(resultField).to.eq(memberField);
     });
 
@@ -756,12 +774,12 @@ describe("ContentDataProvider", () => {
         itemsField,
       });
       const descriptor = createTestContentDescriptor({ fields: [arrayField] });
-      presentationManager.getContentDescriptor.resolves(descriptor);
+      presentationManager.getContentDescriptor.mockResolvedValue(descriptor);
 
       propertyDescription.name = combineFieldNames(itemsField.name, arrayField.name);
 
       const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
-      expect(presentationManager.getContentDescriptor).to.be.calledOnce;
+      expect(presentationManager.getContentDescriptor).toHaveBeenCalledOnce();
       expect(resultField).to.eq(itemsField);
     });
   });
@@ -769,7 +787,7 @@ describe("ContentDataProvider", () => {
   describe("reacting to updates", () => {
     beforeEach(async () => {
       provider.keys = new KeySet([createTestECInstanceKey()]);
-      invalidateCacheSpy.resetHistory();
+      invalidateCacheSpy.mockClear();
 
       // make sure that provider setup event listeners
       await provider.getContent();
@@ -777,50 +795,50 @@ describe("ContentDataProvider", () => {
 
     it("doesn't react to imodel content updates to unrelated rulesets", async () => {
       onIModelContentChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey });
-      expect(invalidateCacheSpy).to.not.be.called;
+      expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
 
     it("doesn't react to imodel content updates to unrelated imodels", async () => {
       onIModelContentChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: "unrelated" });
-      expect(invalidateCacheSpy).to.not.be.called;
+      expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
 
     it("invalidates cache when imodel content change happens to related ruleset", async () => {
       onIModelContentChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey });
-      expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
+      expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith(CacheInvalidationProps.full());
     });
 
     it("doesn't react to unrelated ruleset modifications", async () => {
       const ruleset = new RegisteredRuleset(createTestRuleset(), "", () => {});
       onRulesetModified.raiseEvent(ruleset, { ...ruleset.toJSON() });
-      expect(invalidateCacheSpy).to.not.be.called;
+      expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
 
     it("invalidates cache when related ruleset is modified", async () => {
       const ruleset = new RegisteredRuleset({ ...createTestRuleset(), id: rulesetId }, "", () => {});
       onRulesetModified.raiseEvent(ruleset, { ...ruleset.toJSON() });
-      expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
+      expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith(CacheInvalidationProps.full());
     });
 
     it("invalidates cache when related ruleset variables change", async () => {
       onVariableChanged.raiseEvent("var_id", "prev", "curr");
-      expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
+      expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith(CacheInvalidationProps.full());
     });
 
     it("invalidates cache when active unit system change", async () => {
       onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
-      expect(invalidateCacheSpy).to.be.calledOnceWith({ formatting: true });
+      expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith({ formatting: true });
     });
 
     it("invalidates cache when formatting settings change", async () => {
       onFormatsChanged.raiseEvent({ formatsChanged: "all" });
-      expect(invalidateCacheSpy).to.be.calledOnceWith({ formatting: true });
+      expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith({ formatting: true });
     });
   });
 
   describe("diagnostics", () => {
     it("passes rule diagnostics options to presentation manager", async () => {
-      const diagnosticsHandler = sinon.stub();
+      const diagnosticsHandler = vi.fn();
 
       provider[Symbol.dispose]();
       provider = new Provider({
@@ -829,23 +847,23 @@ describe("ContentDataProvider", () => {
         displayType,
         ruleDiagnostics: { severity: "error", handler: diagnosticsHandler },
       });
-      sinon.stub(provider, "shouldRequestContentForEmptyKeyset").returns(true);
+      vi.spyOn(provider, "shouldRequestContentForEmptyKeyset").mockReturnValue(true);
 
       const descriptor = createTestContentDescriptor({ fields: [] });
-      presentationManager.getContentIterator.resolves({
+      presentationManager.getContentIterator.mockResolvedValue({
         descriptor,
         items: createAsyncIterator([createTestContentItem({ values: {}, displayValues: {} })]),
         total: 1,
       });
 
       await provider.getContentSetSize();
-      expect(presentationManager.getContentIterator).to.be.calledOnceWith(
+      expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(
         matchOptions((options) => options.diagnostics?.editor === "error" && options.diagnostics?.handler === diagnosticsHandler),
       );
     });
 
     it("passes dev diagnostics options to presentation manager", async () => {
-      const diagnosticsHandler = sinon.stub();
+      const diagnosticsHandler = vi.fn();
 
       provider[Symbol.dispose]();
       provider = new Provider({
@@ -859,17 +877,17 @@ describe("ContentDataProvider", () => {
           handler: diagnosticsHandler,
         },
       });
-      sinon.stub(provider, "shouldRequestContentForEmptyKeyset").returns(true);
+      vi.spyOn(provider, "shouldRequestContentForEmptyKeyset").mockReturnValue(true);
 
       const descriptor = createTestContentDescriptor({ fields: [] });
-      presentationManager.getContentIterator.resolves({
+      presentationManager.getContentIterator.mockResolvedValue({
         descriptor,
         items: createAsyncIterator([createTestContentItem({ values: {}, displayValues: {} })]),
         total: 1,
       });
 
       await provider.getContentSetSize();
-      expect(presentationManager.getContentIterator).to.be.calledOnceWith(
+      expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(
         matchOptions(
           (options) =>
             options.diagnostics?.backendVersion === true &&
@@ -883,5 +901,5 @@ describe("ContentDataProvider", () => {
 });
 
 function matchOptions<TOptions = ContentOptions>(pred: (actual: TOptions) => boolean) {
-  return sinon.match(pred);
+  return { asymmetricMatch: (actual: unknown) => pred(actual as TOptions) };
 }

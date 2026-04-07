@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { ArrayValue, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat, StructValue } from "@itwin/appui-abstract";
 import { TableCellRenderer } from "../../presentation-components/table/CellRenderer.js";
 import { render, waitFor } from "../TestUtils.js";

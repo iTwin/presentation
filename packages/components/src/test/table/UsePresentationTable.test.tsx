@@ -3,12 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { ContentDescriptorRequestOptions, InstanceKey, Item, KeySet, RulesetVariable } from "@itwin/presentation-common";
+import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
+import { InstanceKey, Item, KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
 import { createStorage, Selectables, SelectionStorage } from "@itwin/unified-selection";
 import { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types.js";
@@ -21,7 +20,7 @@ import {
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
-import { act, renderHook, waitFor } from "../TestUtils.js";
+import { act, createMocked, renderHook, waitFor } from "../TestUtils.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 
@@ -38,18 +37,14 @@ describe("usePresentationTable", () => {
     pageSize: 10,
   };
 
-  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
+  let presentationManager: Mocked<PresentationManager>;
 
   beforeEach(() => {
-    presentationManager = sinon.createStubInstance(PresentationManager);
-    sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+    presentationManager = createMocked(PresentationManager);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
+    vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    }));
-  });
-
-  afterEach(() => {
-    sinon.restore();
+    } as unknown as QuantityFormatter);
   });
 
   it("loads columns and rows", async () => {
@@ -64,8 +59,8 @@ describe("usePresentationTable", () => {
       displayValues: { [propertiesField.name]: "Test value" },
     });
 
-    presentationManager.getContentDescriptor.resolves(descriptor);
-    presentationManager.getContentIterator.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
+    presentationManager.getContentDescriptor.mockResolvedValue(descriptor);
+    presentationManager.getContentIterator.mockImplementation(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
 
     const { result } = renderHook((props: UsePresentationTableProps<TableColumnDefinition, TableRowDefinition>) => usePresentationTable(props), {
       initialProps,
@@ -105,14 +100,14 @@ describe("usePresentationTableWithUnifiedSelection", () => {
   };
   const selectionSource = "TestSource";
 
-  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
+  let presentationManager: Mocked<PresentationManager>;
 
   beforeEach(() => {
-    presentationManager = sinon.createStubInstance(PresentationManager);
-    sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+    presentationManager = createMocked(PresentationManager);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
+    vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    }));
+    } as unknown as QuantityFormatter);
     IModelConnection.onOpen.raiseEvent(imodel);
   });
 
@@ -128,8 +123,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       displayValues: { [propertiesField.name]: "Test value" },
     });
 
-    presentationManager.getContentDescriptor.resolves(descriptor);
-    presentationManager.getContentIterator.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
+    presentationManager.getContentDescriptor.mockResolvedValue(descriptor);
+    presentationManager.getContentIterator.mockImplementation(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
 
     const selectedKey = createTestECInstanceKey();
     const selectionStorage = createStorage();
@@ -156,17 +151,15 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         },
       ]);
 
-    expect(presentationManager.getContentDescriptor).to.be.calledWith(
-      sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.has(selectedKey)),
-    );
-    expect(presentationManager.getContentIterator).to.be.calledWith(
-      sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.has(selectedKey)),
-    );
+    expect(presentationManager.getContentDescriptor).toHaveBeenCalled();
+    expect(presentationManager.getContentDescriptor.mock.lastCall![0].keys.has(selectedKey)).toBe(true);
+    expect(presentationManager.getContentIterator).toHaveBeenCalled();
+    expect(presentationManager.getContentIterator.mock.lastCall![0].keys.has(selectedKey)).toBe(true);
   });
 
   it("loads columns and rows with no keys when unified selection is empty", async () => {
-    presentationManager.getContentDescriptor.resolves(undefined);
-    presentationManager.getContentIterator.callsFake(async () => undefined);
+    presentationManager.getContentDescriptor.mockResolvedValue(undefined);
+    presentationManager.getContentIterator.mockImplementation(async () => undefined);
 
     const { result } = renderHook((props) => usePresentationTableWithUnifiedSelection(props), {
       initialProps: { ...initialProps, selectionStorage: createStorage() },
@@ -181,14 +174,14 @@ describe("usePresentationTableWithUnifiedSelection", () => {
   describe("with deprecated `SelectionManager` from `presentation-frontend` package", () => {
     beforeEach(() => {
       const selectionManager = new SelectionManager({ scopes: undefined as any });
-      sinon.stub(Presentation, "selection").get(() => selectionManager);
+      vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager);
     });
 
     it("loads data when grouping node is selected", async () => {
       const groupingKey = createTestECClassGroupingNodeKey();
       const keys = new KeySet([groupingKey]);
 
-      sinon.stub(Presentation.selection, "getSelection").returns(keys);
+      vi.spyOn(Presentation.selection, "getSelection").mockReturnValue(keys);
 
       setupPresentationManager();
 
@@ -199,12 +192,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         expect(result.current.rows.length).to.be.equal(1);
       });
 
-      expect(presentationManager.getContentDescriptor).to.be.calledWith(
-        sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keys)),
-      );
-      expect(presentationManager.getContentIterator).to.be.calledWith(
-        sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keys)),
-      );
+      expect(presentationManager.getContentDescriptor).toHaveBeenCalled();
+      expect(presentationManager.getContentDescriptor.mock.lastCall![0].keys.hasAll(keys)).toBe(true);
+      expect(presentationManager.getContentIterator).toHaveBeenCalled();
+      expect(presentationManager.getContentIterator.mock.lastCall![0].keys.hasAll(keys)).toBe(true);
     });
 
     describe("updating unified selection on table selection changes (`onSelect` calls)", () => {
@@ -216,25 +207,20 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           stringifiedKeys.push(JSON.stringify(key));
         });
 
-        sinon.stub(Presentation.selection, "getSelection").returns(keys);
+        vi.spyOn(Presentation.selection, "getSelection").mockReturnValue(keys);
 
         setupPresentationManager();
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
-        const replaceSpy = sinon.stub(Presentation.selection, "replaceSelection");
+        const replaceSpy = vi.spyOn(Presentation.selection, "replaceSelection");
         await waitFor(() => expect(result.current.isLoading).to.be.false);
 
         const expectedKeys = result.current.rows.map((row) => JSON.parse(row.key));
         act(() => {
           result.current.onSelect(stringifiedKeys);
         });
-        expect(replaceSpy).to.be.calledOnceWith(
-          sinon.match((source: string) => source.includes("UnifiedSelectionTable")),
-          imodel,
-          expectedKeys,
-          1,
-        );
+        expect(replaceSpy).toHaveBeenCalledExactlyOnceWith(expect.stringContaining("UnifiedSelectionTable"), imodel, expectedKeys, 1);
       });
 
       it("gets invalid keys and does not pass any to `SelectionManager`", async () => {
@@ -242,17 +228,12 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => expect(result.current.isLoading).to.be.false);
 
-        const replaceSpy = sinon.stub(Presentation.selection, "replaceSelection");
+        const replaceSpy = vi.spyOn(Presentation.selection, "replaceSelection");
         act(() => {
           result.current.onSelect(keys);
         });
 
-        expect(replaceSpy).to.have.been.calledOnceWithExactly(
-          sinon.match((source: string) => source.includes("UnifiedSelectionTable")),
-          imodel,
-          [],
-          1,
-        );
+        expect(replaceSpy).toHaveBeenCalledExactlyOnceWith(expect.stringContaining("UnifiedSelectionTable"), imodel, [], 1);
       });
 
       it("gets valid keys for rows that are not loaded and does not pass any to `SelectionManager`", async () => {
@@ -261,18 +242,13 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => expect(result.current.isLoading).to.be.false);
 
-        const replaceSpy = sinon.stub(Presentation.selection, "replaceSelection");
+        const replaceSpy = vi.spyOn(Presentation.selection, "replaceSelection");
         act(() => {
           result.current.onSelect(stringifiedKeys);
         });
 
         await waitFor(() => {
-          expect(replaceSpy).to.have.been.calledOnceWithExactly(
-            sinon.match((source: string) => source.includes("UnifiedSelectionTable")),
-            imodel,
-            [],
-            1,
-          );
+          expect(replaceSpy).toHaveBeenCalledExactlyOnceWith(expect.stringContaining("UnifiedSelectionTable"), imodel, [], 1);
         });
       });
     });
@@ -307,12 +283,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           expect(result.current.isLoading).to.be.false;
           expect(result.current.rows.length).to.be.equal(1);
         });
-        expect(presentationManager.getContentDescriptor).to.be.calledWith(
-          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keySet)),
-        );
-        expect(presentationManager.getContentIterator).to.be.calledWith(
-          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keySet)),
-        );
+        expect(presentationManager.getContentDescriptor).toHaveBeenCalled();
+        expect(presentationManager.getContentDescriptor.mock.lastCall![0].keys.hasAll(keySet)).toBe(true);
+        expect(presentationManager.getContentIterator).toHaveBeenCalled();
+        expect(presentationManager.getContentIterator.mock.lastCall![0].keys.hasAll(keySet)).toBe(true);
       });
 
       it("ignores selection changes on different imodel", async () => {
@@ -334,7 +308,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).to.be.false;
           expect(result.current.rows.length).to.be.equal(0);
-          expect(presentationManager.getContentDescriptor).to.not.be.called;
+          expect(presentationManager.getContentDescriptor).not.toHaveBeenCalled();
         });
       });
 
@@ -643,12 +617,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           expect(result.current.isLoading).to.be.false;
           expect(result.current.rows.length).to.be.equal(1);
         });
-        expect(presentationManager.getContentDescriptor).to.be.calledWith(
-          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(selectablesInstanceKeys)),
-        );
-        expect(presentationManager.getContentIterator).to.be.calledWith(
-          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(selectablesInstanceKeys)),
-        );
+        expect(presentationManager.getContentDescriptor).toHaveBeenCalled();
+        expect(presentationManager.getContentDescriptor.mock.lastCall![0].keys.hasAll(selectablesInstanceKeys)).toBe(true);
+        expect(presentationManager.getContentIterator).toHaveBeenCalled();
+        expect(presentationManager.getContentIterator.mock.lastCall![0].keys.hasAll(selectablesInstanceKeys)).toBe(true);
       });
 
       it("ignores selection changes on different imodel", async () => {
@@ -669,7 +641,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).to.be.false;
           expect(result.current.rows.length).to.be.equal(0);
-          expect(presentationManager.getContentDescriptor).to.not.be.called;
+          expect(presentationManager.getContentDescriptor).not.toHaveBeenCalled();
         });
       });
 
@@ -874,8 +846,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
   /** Creates rows for the provided keys */
   function setupPresentationManager(keys: InstanceKey[] = [createTestECInstanceKey()]) {
-    presentationManager.getContentDescriptor.reset();
-    presentationManager.getContentIterator.reset();
+    presentationManager.getContentDescriptor.mockReset();
+    presentationManager.getContentIterator.mockReset();
 
     const propertiesField = createTestPropertiesContentField({
       name: "first_field",
@@ -895,7 +867,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       );
     });
 
-    presentationManager.getContentDescriptor.resolves(descriptor);
-    presentationManager.getContentIterator.callsFake(async () => ({ descriptor, items: createAsyncIterator(items), total: keys.length }));
+    presentationManager.getContentDescriptor.mockResolvedValue(descriptor);
+    presentationManager.getContentIterator.mockImplementation(async () => ({ descriptor, items: createAsyncIterator(items), total: keys.length }));
   }
 });

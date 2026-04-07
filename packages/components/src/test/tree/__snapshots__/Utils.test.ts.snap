@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Utils createPartialTreeNodeItem uses provided callback to customize tree node 1`] = `
+exports[`Utils > createPartialTreeNodeItem > uses provided callback to customize tree node 1`] = `
 Object {
   "description": "custom-description",
   "icon": "custom-icon",
@@ -32,7 +32,7 @@ Object {
 }
 `;
 
-exports[`Utils createTreeNodeItem appends grouped nodes count if requested 1`] = `
+exports[`Utils > createTreeNodeItem > appends grouped nodes count if requested 1`] = `
 Object {
   "id": "hash",
   "key": Object {
@@ -80,7 +80,7 @@ Object {
 }
 `;
 
-exports[`Utils createTreeNodeItem creates auto expanded tree node 1`] = `
+exports[`Utils > createTreeNodeItem > creates auto expanded tree node 1`] = `
 Object {
   "autoExpand": true,
   "description": "testDescription",
@@ -125,7 +125,7 @@ Object {
 }
 `;
 
-exports[`Utils createTreeNodeItem creates tree node 1`] = `
+exports[`Utils > createTreeNodeItem > creates tree node 1`] = `
 Object {
   "description": "testDescription",
   "id": "childHash/parentHash",
@@ -169,7 +169,7 @@ Object {
 }
 `;
 
-exports[`Utils createTreeNodeItem creates tree node with custom label styles 1`] = `
+exports[`Utils > createTreeNodeItem > creates tree node with custom label styles 1`] = `
 Object {
   "description": "testDescription",
   "id": "childHash/parentHash",
@@ -217,7 +217,7 @@ Object {
 }
 `;
 
-exports[`Utils createTreeNodeItem creates tree node with parent id 1`] = `
+exports[`Utils > createTreeNodeItem > creates tree node with parent id 1`] = `
 Object {
   "description": "testDescription",
   "id": "childHash/parentHash",
@@ -262,7 +262,7 @@ Object {
 }
 `;
 
-exports[`Utils createTreeNodeItem uses provided callback to customize tree node 1`] = `
+exports[`Utils > createTreeNodeItem > uses provided callback to customize tree node 1`] = `
 Object {
   "description": "custom-description",
   "icon": "custom-icon",
@@ -307,7 +307,7 @@ Object {
 }
 `;
 
-exports[`Utils createTreeNodeItems creates tree nodes 1`] = `
+exports[`Utils > createTreeNodeItems > creates tree nodes 1`] = `
 Array [
   Object {
     "description": "testDescription",
@@ -394,7 +394,7 @@ Array [
 ]
 `;
 
-exports[`Utils createTreeNodeItems creates tree nodes with parentId 1`] = `
+exports[`Utils > createTreeNodeItems > creates tree nodes with parentId 1`] = `
 Array [
   Object {
     "description": "testDescription",
