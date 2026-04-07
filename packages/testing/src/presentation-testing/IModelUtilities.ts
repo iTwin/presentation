@@ -41,6 +41,14 @@ export interface TestIModelBuilder {
 }
 
 /**
+ * Type definition for test context compatible with Mocha test context
+ * @beta
+ */
+interface TestContext {
+  test: { fullTitle: () => string } | undefined;
+}
+
+/**
  * Function that creates an iModel and returns a connection to it.
  * @param name Name of test IModel
  * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
@@ -58,22 +66,22 @@ export async function buildTestIModel(name: string, cb: (builder: TestIModelBuil
 export async function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => Promise<void>): Promise<IModelConnection>;
 /**
  * Function that creates an iModel and returns a connection to it.
- * @param mochaContext Mocha context to generate iModel name from
+ * @param context test context to generate iModel name from
  * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
  * @beta
  * @deprecated in 4.x. Use an overload with `cb` returning a promise.
  */
 // eslint-disable-next-line @typescript-eslint/unified-signatures
-export async function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;
+export async function buildTestIModel(context: TestContext, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;
 /**
  * Function that creates an iModel and returns a connection to it.
- * @param mochaContext Mocha context to generate iModel name from
+ * @param context test context to generate iModel name from
  * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
  * @beta
  */
 // eslint-disable-next-line @typescript-eslint/unified-signatures
-export async function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => Promise<void>): Promise<IModelConnection>;
-export async function buildTestIModel(nameParam: string | Mocha.Context, cb: (builder: TestIModelBuilder) => void | Promise<void>): Promise<IModelConnection> {
+export async function buildTestIModel(context: TestContext, cb: (builder: TestIModelBuilder) => Promise<void>): Promise<IModelConnection>;
+export async function buildTestIModel(nameParam: string | TestContext, cb: (builder: TestIModelBuilder) => void | Promise<void>): Promise<IModelConnection> {
   const name = typeof nameParam === "string" ? nameParam : createFileNameFromString(nameParam.test!.fullTitle());
   const outputFile = setupOutputFileLocation(`${name}.bim`);
   const db = SnapshotDb.createEmpty(outputFile, { rootSubject: { name } });

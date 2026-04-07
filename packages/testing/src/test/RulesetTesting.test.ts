@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import path from "path";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Id64 } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { SchemaFormatsProvider } from "@itwin/ecschema-metadata";
@@ -196,7 +195,7 @@ const MY_CONTENT_RULESET: Ruleset = {
 };
 
 describe.skip("RulesetTesting", () => {
-  before(async () => {
+  beforeAll(async () => {
     // __PUBLISH_EXTRACT_START__ Presentation.Testing.Rulesets.Setup
     // initialize presentation-testing
     await initialize();
@@ -209,7 +208,7 @@ describe.skip("RulesetTesting", () => {
     // __PUBLISH_EXTRACT_END__
   });
 
-  after(async () => {
+  afterAll(async () => {
     // __PUBLISH_EXTRACT_START__ Presentation.Testing.Rulesets.Terminate
     // close the tested iModel
     await iModel.close();
@@ -219,14 +218,8 @@ describe.skip("RulesetTesting", () => {
     // __PUBLISH_EXTRACT_END__
   });
 
-  // set up a function to create snapshot file path - we want the snapshots to be placed next
-  // to source file
-  function createSnapshotPath(currentTest: Mocha.Runnable, fileName: string) {
-    return path.join(path.dirname(currentTest.file!).replace(/(?!\\|\/)(lib)(?=\\|\/)/g, "src"), `ruleset-testing-snapshots`, `${fileName}.snap`);
-  }
-
   // __PUBLISH_EXTRACT_START__ Presentation.Testing.Rulesets.Hierarchies
-  it("generates correct hierarchy", async function () {
+  it("generates correct hierarchy", async () => {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     const builder = new HierarchyBuilder({ imodel: iModel });
 
@@ -234,12 +227,12 @@ describe.skip("RulesetTesting", () => {
     const hierarchy = await builder.createHierarchy(MY_HIERARCHY_RULESET);
 
     // verify it through snapshot
-    expect(hierarchy).to.matchSnapshot(createSnapshotPath(this.test!, MY_HIERARCHY_RULESET.id), MY_HIERARCHY_RULESET.id);
+    expect(hierarchy).toMatchSnapshot();
   });
   // __PUBLISH_EXTRACT_END__
 
   // __PUBLISH_EXTRACT_START__ Presentation.Testing.Rulesets.Content
-  it("generates correct content", async function () {
+  it("generates correct content", async () => {
     const builder = new ContentBuilder({ imodel: iModel, decimalPrecision: 8 });
 
     // generate content using our custom ruleset
@@ -247,7 +240,7 @@ describe.skip("RulesetTesting", () => {
     const records = await builder.createContent(MY_CONTENT_RULESET, [myElementKey]);
 
     // verify the records through snapshot
-    expect(records).to.matchSnapshot(createSnapshotPath(this.test!, MY_CONTENT_RULESET.id), `${myElementKey.className}-${myElementKey.id}`);
+    expect(records).toMatchSnapshot();
   });
   // __PUBLISH_EXTRACT_END__
 });

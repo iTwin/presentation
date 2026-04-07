@@ -3,12 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, MockInstance, vi } from "vitest";
 import { ArrayValue, PrimitiveValue, StructValue } from "@itwin/appui-abstract";
 import { BeEvent, BeUiEvent, Guid, Id64String } from "@itwin/core-bentley";
 import { ECSqlReader } from "@itwin/core-common";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import {
   ArrayTypeDescription,
   CategoryDescription,
@@ -184,7 +183,7 @@ function verifyInstanceKey(instanceKey: [string, Set<string>], instances: TestIn
   throw new Error(`Wrong className provided - '${className}'`);
 }
 
-function verifyKeyset(keyset: KeySet, testInstances: TestInstance[], verificationSpy: sinon.SinonSpy) {
+function verifyKeyset(keyset: KeySet, testInstances: TestInstance[], verificationSpy: () => void) {
   verificationSpy();
   for (const entry of keyset.instanceKeys.entries()) {
     verifyInstanceKey(entry, testInstances);
@@ -238,23 +237,23 @@ describe("ContentBuilder", () => {
   };
 
   describe("createContent", () => {
-    let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
+    let presentationManager: {
+      rulesets: MockInstance<() => RulesetManager>;
+      onIModelContentChanged: BeEvent<any>;
+    };
     const rulesetManager = {
       add: createStub<RulesetManager["add"]>(),
     };
 
     beforeEach(() => {
-      rulesetManager.add.callsFake(async (ruleset) => new RegisteredRuleset(ruleset, Guid.createValue(), () => {}));
+      rulesetManager.add.mockImplementation(async (ruleset) => new RegisteredRuleset(ruleset, Guid.createValue(), () => {}));
 
-      presentationManager = sinon.createStubInstance(PresentationManager);
-      presentationManager.rulesets.returns(rulesetManager as unknown as RulesetManager);
-      Object.assign(presentationManager, { onIModelContentChanged: new BeEvent() });
+      presentationManager = {
+        rulesets: vi.fn<() => RulesetManager>().mockReturnValue(rulesetManager as unknown as RulesetManager),
+        onIModelContentChanged: new BeEvent(),
+      };
 
-      sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    });
-
-    afterEach(() => {
-      sinon.restore();
+      vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as unknown as PresentationManager);
     });
 
     it("registers ruleset when creating content", async () => {
@@ -264,33 +263,33 @@ describe("ContentBuilder", () => {
       };
       const builder = new ContentBuilder({ ...initialProps, dataProvider: new EmptyDataProvider() });
       const content = await builder.createContent(ruleset, []);
-      expect(content).to.be.empty;
-      expect(rulesetManager.add).to.be.calledOnceWith(ruleset);
+      expect(content).toHaveLength(0);
+      expect(rulesetManager.add).toHaveBeenCalledExactlyOnceWith(ruleset);
     });
 
     it("uses `ContentDataProvider` if data provider was not supplied", async () => {
-      sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+      vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
         onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-      }));
-      const getContentStub = sinon.stub(ContentDataProvider.prototype, "getContent").resolves(new Content(createContentDescriptor(), []));
+      } as unknown as QuantityFormatter);
+      const getContentStub = vi.spyOn(ContentDataProvider.prototype, "getContent").mockResolvedValue(new Content(createContentDescriptor(), []));
       const builder = new ContentBuilder({ ...initialProps });
 
       const content = await builder.createContent("1", []);
-      expect(content).to.be.empty;
-      expect(getContentStub).to.be.calledOnce;
+      expect(content).toHaveLength(0);
+      expect(getContentStub).toHaveBeenCalledOnce();
     });
 
     it("returns empty records when there is no content in the supplied data provider", async () => {
       const builder = new ContentBuilder({ ...initialProps, dataProvider: new EmptyDataProvider() });
       const content = await builder.createContent("1", []);
-      expect(content).to.be.empty;
+      expect(content).toHaveLength(0);
     });
 
     it("returns correct records when there is content in the supplied data provider", async () => {
       const dataProvider = new DataProvider();
       const builder = new ContentBuilder({ ...initialProps, dataProvider });
       const content = await builder.createContent("1", []);
-      expect(content.length).to.equal(dataProvider.values.length * dataProvider.descriptor.fields.length);
+      expect(content.length).toBe(dataProvider.values.length * dataProvider.descriptor.fields.length);
     });
 
     it("rounds raw numeric values to supplied decimal precision", async () => {
@@ -346,16 +345,16 @@ describe("ContentBuilder", () => {
       const dataProvider = new TestDataProvider();
       const builder = new ContentBuilder({ ...initialProps, dataProvider, decimalPrecision: 2 });
       const content = await builder.createContent("", []);
-      expect(content.length).to.eq(testValues.length);
-      expect((content[0].value as PrimitiveValue).value).to.be.undefined;
-      expect((content[1].value as PrimitiveValue).value).to.eq(1);
-      expect((content[2].value as PrimitiveValue).value).to.eq(1.9);
-      expect((content[3].value as PrimitiveValue).value).to.eq(1.23);
-      expect((content[4].value as PrimitiveValue).value).to.eq(4.57);
-      expect((content[5].value as ArrayValue).items.map((item) => (item.value as PrimitiveValue).value)).to.deep.eq([1.23, 4.57, 7.89]);
-      expect(((content[6].value as StructValue).members.a.value as PrimitiveValue).value).to.deep.eq(1.23);
-      expect((content[7].value as PrimitiveValue).value).to.deep.eq([1.46, 4.79]);
-      expect((content[8].value as PrimitiveValue).value).to.deep.eq({ x: 1.23, y: 4.57, z: 7.89 });
+      expect(content.length).toBe(testValues.length);
+      expect((content[0].value as PrimitiveValue).value).toBeUndefined();
+      expect((content[1].value as PrimitiveValue).value).toBe(1);
+      expect((content[2].value as PrimitiveValue).value).toBe(1.9);
+      expect((content[3].value as PrimitiveValue).value).toBe(1.23);
+      expect((content[4].value as PrimitiveValue).value).toBe(4.57);
+      expect((content[5].value as ArrayValue).items.map((item) => (item.value as PrimitiveValue).value)).toEqual([1.23, 4.57, 7.89]);
+      expect(((content[6].value as StructValue).members.a.value as PrimitiveValue).value).toEqual(1.23);
+      expect((content[7].value as PrimitiveValue).value).toEqual([1.46, 4.79]);
+      expect((content[8].value as PrimitiveValue).value).toEqual({ x: 1.23, y: 4.57, z: 7.89 });
     });
   });
 
@@ -373,13 +372,12 @@ describe("ContentBuilder", () => {
       },
     ];
 
-    before(() => {
-      imodel.createQueryReader.reset();
-      imodel.createQueryReader.callsFake(createFakeQueryReaders(testInstances));
+    beforeEach(() => {
+      imodel.createQueryReader.mockImplementation(createFakeQueryReaders(testInstances));
     });
 
     it("returns all required instances with empty records", async () => {
-      const verificationSpy = sinon.spy();
+      const verificationSpy = vi.fn();
 
       const builder = new ContentBuilder({
         ...initialProps,
@@ -389,20 +387,20 @@ describe("ContentBuilder", () => {
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       const content = await builder.createContentForAllInstances("1");
 
-      expect(content.length).to.equal(2);
+      expect(content.length).toBe(2);
 
-      expect(content.find((c) => c.className === "Schema1:Class1")).to.not.be.undefined;
-      expect(content.find((c) => c.className === "Schema2:Class2")).to.not.be.undefined;
+      expect(content.find((c) => c.className === "Schema1:Class1")).toBeDefined();
+      expect(content.find((c) => c.className === "Schema2:Class2")).toBeDefined();
 
-      expect(content[0].records).to.be.empty;
-      expect(content[1].records).to.be.empty;
+      expect(content[0].records).toHaveLength(0);
+      expect(content[1].records).toHaveLength(0);
 
-      expect(verificationSpy.calledTwice).to.be.true;
+      expect(verificationSpy).toHaveBeenCalledTimes(2);
     });
   });
 
   describe("[deprecated] createContentForInstancePerClass", () => {
-    context("test instances have ids", () => {
+    describe("test instances have ids", () => {
       const testInstances: TestInstance[] = [
         {
           className: "Class1",
@@ -417,10 +415,10 @@ describe("ContentBuilder", () => {
       ];
 
       it("returns all required instances with empty records", async () => {
-        imodel.createQueryReader.reset();
-        imodel.createQueryReader.callsFake(createFakeQueryReaders(testInstances));
+        imodel.createQueryReader.mockReset();
+        imodel.createQueryReader.mockImplementation(createFakeQueryReaders(testInstances));
 
-        const verificationSpy = sinon.spy();
+        const verificationSpy = vi.fn();
 
         const builder = new ContentBuilder({
           ...initialProps,
@@ -430,22 +428,22 @@ describe("ContentBuilder", () => {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         const content = await builder.createContentForInstancePerClass("1");
 
-        expect(content.length).to.equal(2);
+        expect(content.length).toBe(2);
 
-        expect(content.find((c) => c.className === "Schema1:Class1")).to.not.be.undefined;
-        expect(content.find((c) => c.className === "Schema2:Class2")).to.not.be.undefined;
+        expect(content.find((c) => c.className === "Schema1:Class1")).toBeDefined();
+        expect(content.find((c) => c.className === "Schema2:Class2")).toBeDefined();
 
-        expect(content[0].records).to.be.empty;
-        expect(content[1].records).to.be.empty;
+        expect(content[0].records).toHaveLength(0);
+        expect(content[1].records).toHaveLength(0);
 
-        expect(verificationSpy.calledTwice).to.be.true;
+        expect(verificationSpy).toHaveBeenCalledTimes(2);
       });
 
       it("throws when id query throws an unexpected error", async () => {
-        imodel.createQueryReader.reset();
-        imodel.createQueryReader.callsFake(createThrowingQueryReader());
+        imodel.createQueryReader.mockReset();
+        imodel.createQueryReader.mockImplementation(createThrowingQueryReader());
 
-        const verificationSpy = sinon.spy();
+        const verificationSpy = vi.fn();
 
         const builder = new ContentBuilder({
           ...initialProps,
@@ -453,20 +451,19 @@ describe("ContentBuilder", () => {
         });
 
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        await expect(builder.createContentForInstancePerClass("1")).to.be.rejectedWith("Test error");
+        await expect(builder.createContentForInstancePerClass("1")).rejects.toThrow("Test error");
       });
     });
 
-    context("test instances have no ids", () => {
+    describe("test instances have no ids", () => {
       const testInstances: TestInstance[] = [{ className: "Class1", schemaName: "Schema1", ids: [] }];
 
-      before(() => {
-        imodel.createQueryReader.reset();
-        imodel.createQueryReader.callsFake(createFakeQueryReaders(testInstances));
+      beforeEach(() => {
+        imodel.createQueryReader.mockImplementation(createFakeQueryReaders(testInstances));
       });
 
       it("returns an empty list", async () => {
-        const verificationSpy = sinon.spy();
+        const verificationSpy = vi.fn();
 
         const builder = new ContentBuilder({
           ...initialProps,
@@ -476,8 +473,8 @@ describe("ContentBuilder", () => {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         const content = await builder.createContentForInstancePerClass("1");
 
-        expect(content).to.be.empty;
-        expect(verificationSpy.notCalled).to.be.true;
+        expect(content).toHaveLength(0);
+        expect(verificationSpy).not.toHaveBeenCalled();
       });
     });
   });
