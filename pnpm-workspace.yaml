@@ -92,7 +92,6 @@ hoistPattern:
   - '*babel*'
   - ignore-styles
   - global-jsdom
-  - '@vitest/coverage-v8'
 
 onlyBuiltDependencies:
   - '@bentley/imodeljs-native'

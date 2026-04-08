@@ -44,6 +44,7 @@
     "docs:extract": "betools extract --fileExt=ts --extractFrom=./src/test --recursive --out=./build/docs/extract",
     "lint": "eslint \"./src/**/*.ts\"",
     "test": "vitest run",
+    "test:watch": "vitest",
     "extract-api": "betools extract-api --entry=presentation-opentelemetry --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-opentelemetry.api.md"
   },

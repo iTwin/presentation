@@ -37,8 +37,8 @@
     "clean": "rimraf lib",
     "cover": "vitest run --coverage",
     "lint": "eslint ./src/**/*.ts",
-    "test:dev": "vitest run",
-    "test": "npm run test:dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "extract-api": "betools extract-api --entry=presentation-core-interop --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-core-interop.api.md",
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
