@@ -966,9 +966,7 @@ describe("PresentationInstanceFilter", () => {
         ],
       };
 
-      expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).toThrow(
-        "Failed to find field for property - rel_B_0.invalidProp",
-      );
+      expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).toThrow("Failed to find field for property - rel_B_0.invalidProp");
     });
 
     it("throws when related nested field is not found", () => {
@@ -1012,9 +1010,7 @@ describe("PresentationInstanceFilter", () => {
         relatedInstances: [],
       };
 
-      expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).toThrow(
-        "Failed to find field for property - rel_B_0.invalidProp",
-      );
+      expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).toThrow("Failed to find field for property - rel_B_0.invalidProp");
     });
   });
 
