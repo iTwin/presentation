@@ -72,7 +72,7 @@ describe("NavigationPropertyTargetSelector", () => {
     const inputContainer = await waitFor(() => getByRole("combobox"));
     await user.click(inputContainer);
 
-    expect(await waitFor(() => queryByText(contentItem.label.displayValue))).toBeDefined();
+    await waitFor(() => expect(queryByText(contentItem.label.displayValue)).not.toBeNull());
   });
 
   it("invokes onCommit with selected target", async () => {
