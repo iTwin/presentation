@@ -9,13 +9,13 @@ export default defineConfig({
   test: {
     name: "Unified-selection-react tests",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    testTimeout: 60000,
     environment: "happy-dom",
     setupFiles: ["src/test/setup.ts"],
-    testTimeout: 60000,
     restoreMocks: true,
     coverage: {
       provider: "v8",
-      include: ["src/unified-selection-react/**/*"],
+      include: ["src/unified-selection-react/**/*.{ts,tsx}"],
       reportsDirectory: "./lib/test/coverage",
       reporter: ["text-summary", "lcov", "cobertura"],
       thresholds: {

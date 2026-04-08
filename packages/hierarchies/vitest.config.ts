@@ -15,8 +15,7 @@ export default defineConfig({
     mockReset: true,
     coverage: {
       provider: "v8",
-      include: ["src/**"],
-      exclude: ["src/test/**"],
+      include: ["src/hierarchies/**/*.ts"],
       reportsDirectory: "./lib/test/coverage",
       reporter: ["text-summary", "lcov", "cobertura"],
       thresholds: {
