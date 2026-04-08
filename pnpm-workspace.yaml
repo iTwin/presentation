@@ -6,14 +6,14 @@ autoInstallPeers: true
 
 catalogs:
   appui:
-    '@itwin/appui-react': ^5.26.0
-    '@itwin/components-react': ^5.26.0
-    '@itwin/core-react': ^5.26.0
-    '@itwin/imodel-components-react': ^5.26.0
+    '@itwin/appui-react': ^5.27.1
+    '@itwin/components-react': ^5.27.1
+    '@itwin/core-react': ^5.27.1
+    '@itwin/imodel-components-react': ^5.27.1
   build-tools:
-    '@itwin/build-tools': ^5.7.2
+    '@itwin/build-tools': ^5.8.0
     '@itwin/eslint-plugin': 5.1.0
-    '@types/node': ^24.12.0
+    '@types/node': ^24.12.2
     '@vitejs/plugin-react': ^4.7.0
     cpx2: ^7.0.2
     cross-env: ^7.0.3
@@ -23,27 +23,27 @@ catalogs:
     typescript: ~5.7.3
     vite: ^6.4.2
   itwinjs-core:
-    '@itwin/core-bentley': ^5.7.2
-    '@itwin/core-common': ^5.7.2
-    '@itwin/core-geometry': ^5.7.2
+    '@itwin/core-bentley': ^5.8.0
+    '@itwin/core-common': ^5.8.0
+    '@itwin/core-geometry': ^5.8.0
   itwinjs-core-dev:
-    '@itwin/appui-abstract': ^5.7.2
-    '@itwin/core-backend': ^5.7.2
-    '@itwin/core-bentley': ^5.7.2
-    '@itwin/core-common': ^5.7.2
-    '@itwin/core-electron': ^5.7.2
-    '@itwin/core-frontend': ^5.7.2
-    '@itwin/core-geometry': ^5.7.2
-    '@itwin/core-i18n': ^5.7.2
-    '@itwin/core-orbitgt': ^5.7.2
-    '@itwin/core-quantity': ^5.7.2
-    '@itwin/ecschema-metadata': ^5.7.2
-    '@itwin/ecschema-rpcinterface-common': ^5.7.2
-    '@itwin/ecschema-rpcinterface-impl': ^5.7.2
-    '@itwin/express-server': ^5.7.2
-    '@itwin/presentation-backend': ^5.7.2
-    '@itwin/presentation-common': ^5.7.2
-    '@itwin/presentation-frontend': ^5.7.2
+    '@itwin/appui-abstract': ^5.8.0
+    '@itwin/core-backend': ^5.8.0
+    '@itwin/core-bentley': ^5.8.0
+    '@itwin/core-common': ^5.8.0
+    '@itwin/core-electron': ^5.8.0
+    '@itwin/core-frontend': ^5.8.0
+    '@itwin/core-geometry': ^5.8.0
+    '@itwin/core-i18n': ^5.8.0
+    '@itwin/core-orbitgt': ^5.8.0
+    '@itwin/core-quantity': ^5.8.0
+    '@itwin/ecschema-metadata': ^5.8.0
+    '@itwin/ecschema-rpcinterface-common': ^5.8.0
+    '@itwin/ecschema-rpcinterface-impl': ^5.8.0
+    '@itwin/express-server': ^5.8.0
+    '@itwin/presentation-backend': ^5.8.0
+    '@itwin/presentation-common': ^5.8.0
+    '@itwin/presentation-frontend': ^5.8.0
     inversify: ~6.0.2
     reflect-metadata: ^0.1.14
   itwinui:
@@ -71,6 +71,7 @@ catalogs:
     '@types/mocha': ^10.0.10
     '@types/sinon': ^17.0.4
     '@types/sinon-chai': ^4.0.0
+    '@vitest/coverage-v8': ^4.1.3
     c8: ^10.1.3
     chai: ^5.3.3
     chai-as-promised: ^8.0.2
@@ -82,8 +83,7 @@ catalogs:
     mocha: ^11.7.5
     sinon: ^19.0.5
     sinon-chai: ^4.0.1
-    vitest: ^4.1.1
-    '@vitest/coverage-v8': ^4.1.1
+    vitest: ^4.1.3
 
 hoistPattern:
   - '!*'

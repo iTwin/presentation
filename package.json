@@ -40,12 +40,12 @@
     "@changesets/cli": "^2.30.0",
     "@stylistic/eslint-plugin": "^5.10.0",
     "cpx2": "catalog:build-tools",
-    "cspell": "^9.7.0",
+    "cspell": "^9.8.0",
     "eslint": "catalog:build-tools",
     "eslint-config-prettier": "^9.1.2",
     "fast-glob": "^3.3.3",
     "husky": "^9.1.7",
-    "lage": "^2.15.0",
+    "lage": "^2.15.6",
     "lint-staged": "^15.5.2",
     "markdown-link-check": "^3.14.2",
     "npm-run-all": "^4.1.5",
@@ -64,6 +64,7 @@
   },
   "pnpm": {
     "overrides": {
+      "@itwin/build-tools@^5.8.0>@microsoft/api-extractor@<7.58": "^7.58.1",
       "@opentelemetry/exporter-metrics-otlp-grpc@^0.41.2": "^0.52.0",
       "@opentelemetry/exporter-metrics-otlp-http@^0.41.2": "^0.52.0",
       "@opentelemetry/exporter-metrics-otlp-proto@^0.41.2": "^0.52.0",
