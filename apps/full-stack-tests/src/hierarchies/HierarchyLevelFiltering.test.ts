@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collect } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { withECDb } from "../ECDbUtils.js";
@@ -16,20 +17,19 @@ import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
   describe("Hierarchy level filtering", () => {
-    before(async () => {
+    beforeAll(async () => {
       await initialize();
     });
 
-    after(async () => {
+    afterAll(async () => {
       await terminate();
     });
 
-    it("filters root hierarchy level", async function () {
+    it("filters root hierarchy level", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
               <ECEntityClass typeName="X">
@@ -105,12 +105,11 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters child hierarchy level", async function () {
+    it("filters child hierarchy level", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />
@@ -192,12 +191,11 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters grouped hierarchy level", async function () {
+    it("filters grouped hierarchy level", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />
@@ -283,12 +281,11 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters by property class", async function () {
+    it("filters by property class", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />
@@ -359,12 +356,11 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters by filter class", async function () {
+    it("filters by filter class", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />
@@ -436,12 +432,11 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters by direct property", async function () {
+    it("filters by direct property", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
               <ECEntityClass typeName="X">
@@ -517,12 +512,11 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters by related property", async function () {
+    it("filters by related property", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />

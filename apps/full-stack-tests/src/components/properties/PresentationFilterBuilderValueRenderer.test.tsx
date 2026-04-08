@@ -3,20 +3,19 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import {
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
   waitFor,
 } from "presentation-test-utilities";
-import sinon from "sinon";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { UiComponents } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
 import { DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
 import { PresentationFilterBuilderValueRenderer } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { buildIModel } from "../../IModelUtils.js";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { queryByText, render } from "../../RenderUtils.js";
 import { importSchema } from "../../SchemaUtils.js";
@@ -26,22 +25,22 @@ import type { ClassInfo } from "@itwin/presentation-common";
 
 describe("Presentation filter builder value renderer", () => {
   stubVirtualization();
-  before(async () => {
+  beforeAll(async () => {
     await initialize();
     await UiComponents.initialize(IModelApp.localization);
   });
 
-  after(async () => {
-    sinon.restore();
+  afterAll(async () => {
+    vi.restoreAllMocks();
     UiComponents.terminate();
     await terminate();
   });
 
-  it("renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided", async function () {
+  it("renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided", async () => {
     let schemaAlias = "";
-    const imodel = await buildIModel(this, async (builder, mochaContext) => {
+    const imodel = await buildTestIModel(async (builder, testName) => {
       const schema = await importSchema(
-        mochaContext,
+        testName,
         builder,
         `
           <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
@@ -135,16 +134,16 @@ describe("Presentation filter builder value renderer", () => {
     const combobox = await findByRole("combobox");
     await user.click(combobox);
     await waitFor(async () => {
-      expect(queryByText(baseElement, "Value1")).to.not.be.null;
-      expect(queryByText(baseElement, "Value2")).to.be.null;
+      expect(queryByText(baseElement, "Value1")).not.toBeNull();
+      expect(queryByText(baseElement, "Value2")).toBeNull();
     });
   });
 
-  it("renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided without keys", async function () {
+  it("renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided without keys", async () => {
     let schemaAlias = "";
-    const imodel = await buildIModel(this, async (builder, mochaContext) => {
+    const imodel = await buildTestIModel(async (builder, testName) => {
       const schema = await importSchema(
-        mochaContext,
+        testName,
         builder,
         `
           <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
@@ -237,8 +236,8 @@ describe("Presentation filter builder value renderer", () => {
     const combobox = await findByRole("combobox");
     await user.click(combobox);
     await waitFor(async () => {
-      expect(queryByText(baseElement, "Value1")).to.not.be.null;
-      expect(queryByText(baseElement, "Value2")).to.be.null;
+      expect(queryByText(baseElement, "Value1")).not.toBeNull();
+      expect(queryByText(baseElement, "Value2")).toBeNull();
     });
   });
 });

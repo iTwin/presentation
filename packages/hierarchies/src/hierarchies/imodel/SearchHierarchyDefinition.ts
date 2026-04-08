@@ -211,6 +211,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               // are actually the same instance, so we only need to keep one of them, or otherwise the query will
               // duplicate it
               for (const entry of entries) {
+                /* v8 ignore else -- @preserve */
                 if (
                   compareFullClassNames(entry.className, x.className) === 0 ||
                   (await imodelAccess.classDerivesFrom(entry.className, x.className)) ||

@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createPredicateBasedHierarchyDefinition } from "../../hierarchies/imodel/PredicateBasedHierarchyDefinition.js";
 import { createIModelAccessStub, createTestGenericNodeKey, createTestSourceGenericNode } from "../Utils.js";
 
@@ -22,9 +21,6 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   beforeEach(() => {
     imodelAccess = { ...createIModelAccessStub(), imodelKey };
   });
-  afterEach(() => {
-    sinon.restore();
-  });
 
   it("returns root hierarchy level definition", async () => {
     const rootHierarchyLevel: HierarchyLevelDefinition = [
@@ -36,7 +32,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       hierarchy: { rootNodes: async () => rootHierarchyLevel, childNodes: [] },
     });
     const result = await factory.defineHierarchyLevel({ imodelAccess, parentNode: undefined });
-    expect(result).to.deep.eq(rootHierarchyLevel);
+    expect(result).toEqual(rootHierarchyLevel);
   });
 
   it("returns custom node children definition", async () => {
@@ -75,7 +71,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     });
 
     const result = await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
-    expect(result).to.deep.eq([...def2, ...def4]);
+    expect(result).toEqual([...def2, ...def4]);
   });
 
   it("returns instance node children definition when parent node matches predicate", async () => {
@@ -126,7 +122,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     });
 
     const result = await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
-    expect(result).to.deep.eq([...def2, ...def5]);
+    expect(result).toEqual([...def2, ...def5]);
   });
 
   it("uses all parent instance node's instance IDs when creating child hierarchy level", async () => {
@@ -142,7 +138,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
 
     imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "ClassX" });
 
-    const spy = sinon.stub().resolves([]);
+    const spy = vi.fn().mockResolvedValue([]);
     const factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
       hierarchy: {
@@ -152,13 +148,13 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     });
 
     const result = await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
-    expect(spy).to.be.calledOnceWithExactly({
+    expect(spy).toHaveBeenCalledExactlyOnceWith({
       imodelAccess,
       parentNodeClassName: "TestSchema.ClassX",
       parentNodeInstanceIds: ["0x1", "0x2"],
       parentNode: rootNode,
     });
-    expect(result).to.deep.eq([]);
+    expect(result).toEqual([]);
   });
 
   it("doesn't apply instance node level definitions marked with `onlyIfNotHandled` flag if any of the previous ones have been applied", async () => {
@@ -175,8 +171,8 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       key: { type: "instances", instanceKeys: [{ className: classX.fullName, id: "0x1" }] },
     });
 
-    const derivedClassDefs = sinon.stub().resolves([]);
-    const baseClassDefs = sinon.stub().resolves([]);
+    const derivedClassDefs = vi.fn().mockResolvedValue([]);
+    const baseClassDefs = vi.fn().mockResolvedValue([]);
     let factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
       hierarchy: {
@@ -189,13 +185,13 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     });
 
     await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
-    expect(derivedClassDefs).to.be.calledOnceWithExactly({
+    expect(derivedClassDefs).toHaveBeenCalledExactlyOnceWith({
       imodelAccess,
       parentNodeClassName: "TestSchema.ClassX",
       parentNodeInstanceIds: ["0x1"],
       parentNode: rootNode,
     });
-    expect(baseClassDefs).not.to.be.called;
+    expect(baseClassDefs).not.toHaveBeenCalled();
 
     factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
@@ -209,7 +205,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     });
 
     await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
-    expect(baseClassDefs).to.be.calledOnceWithExactly({
+    expect(baseClassDefs).toHaveBeenCalledExactlyOnceWith({
       imodelAccess,
       parentNodeClassName: "TestSchema.ClassX",
       parentNodeInstanceIds: ["0x1"],
@@ -218,33 +214,33 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   });
 
   it("uses provided node parser", () => {
-    const parseNode = sinon.stub();
+    const parseNode = vi.fn();
     const factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
       parseNode,
       hierarchy: { rootNodes: async () => [], childNodes: [] },
     });
-    expect(factory.parseNode).to.eq(parseNode);
+    expect(factory.parseNode).toBe(parseNode);
   });
 
   it("uses provided node pre-processor", () => {
-    const preprocessor = sinon.stub();
+    const preprocessor = vi.fn();
     const factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
       preProcessNode: preprocessor,
       hierarchy: { rootNodes: async () => [], childNodes: [] },
     });
-    expect(factory.preProcessNode).to.eq(preprocessor);
+    expect(factory.preProcessNode).toBe(preprocessor);
   });
 
   it("uses provided node post-processor", () => {
-    const postprocessor = sinon.stub();
+    const postprocessor = vi.fn();
     const factory = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: imodelAccess,
       postProcessNode: postprocessor,
       hierarchy: { rootNodes: async () => [], childNodes: [] },
     });
-    expect(factory.postProcessNode).to.eq(postprocessor);
+    expect(factory.postProcessNode).toBe(postprocessor);
   });
 });
 

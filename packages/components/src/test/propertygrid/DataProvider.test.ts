@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import * as sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyRecord, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -40,11 +39,13 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
+import { createMocked } from "../TestUtils.js";
 
+import type { Mocked } from "vitest";
 import type { PrimitiveValue } from "@itwin/appui-abstract";
 import type { PropertyCategory } from "@itwin/components-react";
-import type { FormattingUnitSystemChangedArgs, IModelConnection } from "@itwin/core-frontend";
-import type { FormatsChangedArgs } from "@itwin/core-quantity";
+import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
+import type { FormatsChangedArgs, FormatsProvider } from "@itwin/core-quantity";
 import type {
   ArrayTypeDescription,
   CategoryDescription,
@@ -91,8 +92,8 @@ describe("PropertyDataProvider", () => {
   const rulesetId = "TestRulesetId";
 
   let provider: Provider;
-  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
-  let favoritePropertiesManager: sinon.SinonStubbedInstance<FavoritePropertiesManager>;
+  let presentationManager: Mocked<PresentationManager>;
+  let favoritePropertiesManager: Mocked<FavoritePropertiesManager>;
 
   const onFavoritesChanged = new BeEvent<() => void>();
 
@@ -102,39 +103,39 @@ describe("PropertyDataProvider", () => {
     iTwinId,
     imodelId,
     key: "test-imodel",
-    schemaContext: sinon.createStubInstance(SchemaContext),
+    schemaContext: createMocked(SchemaContext),
   } as unknown as IModelConnection;
 
   beforeEach(async () => {
-    presentationManager = sinon.createStubInstance(PresentationManager, {
-      rulesets: { onRulesetModified: new BeUiEvent() } as unknown as RulesetManager,
-      vars: { onVariableChanged: new BeUiEvent() } as unknown as RulesetVariablesManager,
-    });
-    presentationManager.onIModelContentChanged = new BeUiEvent();
+    presentationManager = createMocked(PresentationManager);
+    Object.assign(presentationManager, { onIModelContentChanged: new BeUiEvent() });
+    presentationManager.rulesets.mockReturnValue({ onRulesetModified: new BeUiEvent() } as unknown as RulesetManager);
+    presentationManager.vars.mockReturnValue({
+      onVariableChanged: new BeUiEvent(),
+    } as unknown as RulesetVariablesManager);
 
-    favoritePropertiesManager = sinon.createStubInstance(FavoritePropertiesManager);
-    favoritePropertiesManager.hasAsync.callsFake(async () => false);
+    favoritePropertiesManager = createMocked(FavoritePropertiesManager);
+    favoritePropertiesManager.hasAsync.mockImplementation(async () => false);
     // eslint-disable-next-line @typescript-eslint/no-deprecated
-    favoritePropertiesManager.has.callsFake(() => false);
+    favoritePropertiesManager.has.mockImplementation(() => false);
     Object.assign(favoritePropertiesManager, {
       onFavoritesChanged,
       sortFieldsAsync: async (_imodel: IModelConnection, fields: Field[]) => fields,
       sortFields: (_imodel: IModelConnection, fields: Field[]) => fields,
     });
 
-    sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(Presentation, "favoriteProperties").get(() => favoritePropertiesManager);
-    sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
-    sinon
-      .stub(IModelApp, "quantityFormatter")
-      .get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
+    vi.spyOn(Presentation, "favoriteProperties", "get").mockReturnValue(favoritePropertiesManager);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization());
+    vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
+      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
+    } as unknown as QuantityFormatter);
 
     provider = new Provider({ imodel, ruleset: rulesetId });
   });
 
   afterEach(() => {
     provider[Symbol.dispose]();
-    sinon.restore();
   });
 
   describe("constructor", () => {
@@ -157,10 +158,10 @@ describe("PropertyDataProvider", () => {
       provider = new Provider({ imodel, ruleset: rulesetId });
       await provider.getData();
 
-      const s = sinon.spy(provider, "invalidateCache");
+      const s = vi.spyOn(provider, "invalidateCache");
 
       onFavoritesChanged.raiseEvent();
-      expect(s).to.be.calledOnce;
+      expect(s).toHaveBeenCalledOnce();
     });
   });
 
@@ -177,9 +178,9 @@ describe("PropertyDataProvider", () => {
 
   describe("invalidateCache", () => {
     it("raises onDataChanged event", () => {
-      const s = sinon.spy(provider.onDataChanged, "raiseEvent");
+      const s = vi.spyOn(provider.onDataChanged, "raiseEvent");
       provider.invalidateCache({});
-      expect(s).to.be.calledOnce;
+      expect(s).toHaveBeenCalledOnce();
     });
   });
 
@@ -193,33 +194,33 @@ describe("PropertyDataProvider", () => {
 
   describe("[deprecated] includeFieldsWithNoValues", () => {
     it("invalidates cache when setting to different value", () => {
-      const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
+      const invalidateCacheSpy = vi.spyOn(provider, "invalidateCache");
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       provider.includeFieldsWithNoValues = !provider.includeFieldsWithNoValues;
-      expect(invalidateCacheSpy).to.be.calledOnce;
+      expect(invalidateCacheSpy).toHaveBeenCalledOnce();
     });
 
     it("doesn't invalidate cache when setting to same value", () => {
-      const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
+      const invalidateCacheSpy = vi.spyOn(provider, "invalidateCache");
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       provider.includeFieldsWithNoValues = provider.includeFieldsWithNoValues;
-      expect(invalidateCacheSpy).to.not.be.called;
+      expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
   });
 
   describe("[deprecated] includeFieldsWithCompositeValues", () => {
     it("invalidates cache when setting to different value", () => {
-      const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
+      const invalidateCacheSpy = vi.spyOn(provider, "invalidateCache");
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       provider.includeFieldsWithCompositeValues = !provider.includeFieldsWithCompositeValues;
-      expect(invalidateCacheSpy).to.be.calledOnce;
+      expect(invalidateCacheSpy).toHaveBeenCalledOnce();
     });
 
     it("doesn't invalidate cache when setting to same value", () => {
-      const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
+      const invalidateCacheSpy = vi.spyOn(provider, "invalidateCache");
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       provider.includeFieldsWithCompositeValues = provider.includeFieldsWithCompositeValues;
-      expect(invalidateCacheSpy).to.not.be.called;
+      expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -228,14 +229,22 @@ describe("PropertyDataProvider", () => {
 
     it("calls `FavoritePropertiesManager.hasAsync` when it's available", async () => {
       await provider.isFieldFavoriteAsync(field);
-      expect(favoritePropertiesManager.hasAsync).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
+      expect(favoritePropertiesManager.hasAsync).toHaveBeenCalledExactlyOnceWith(
+        field,
+        imodel,
+        FavoritePropertiesScope.IModel,
+      );
     });
 
     it("calls `FavoritePropertiesManager.has` when `hasAsync` is not available", async () => {
       Object.assign(favoritePropertiesManager, { hasAsync: undefined });
       await provider.isFieldFavoriteAsync(field);
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      expect(favoritePropertiesManager.has).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
+      expect(favoritePropertiesManager.has).toHaveBeenCalledExactlyOnceWith(
+        field,
+        imodel,
+        FavoritePropertiesScope.IModel,
+      );
     });
 
     it("calls deprecated `isFieldFavorite` when it's overridden by a subclass", async () => {
@@ -246,11 +255,15 @@ describe("PropertyDataProvider", () => {
         }
       }
       using subclassProvider = new Subclass({ imodel, ruleset: rulesetId });
-      const spy = sinon.spy(subclassProvider, "isFieldFavorite");
+      const spy = vi.spyOn(subclassProvider, "isFieldFavorite");
       await subclassProvider.isFieldFavoriteAsync(field);
-      expect(spy).to.be.calledOnce;
+      expect(spy).toHaveBeenCalledOnce();
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      expect(favoritePropertiesManager.has).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
+      expect(favoritePropertiesManager.has).toHaveBeenCalledExactlyOnceWith(
+        field,
+        imodel,
+        FavoritePropertiesScope.IModel,
+      );
     });
   });
 
@@ -287,12 +300,12 @@ describe("PropertyDataProvider", () => {
         }
       }
       using subclassProvider = new Subclass({ imodel, ruleset: rulesetId });
-      const spy = sinon.spy(subclassProvider, "sortFields");
+      const spy = vi.spyOn(subclassProvider, "sortFields");
       await subclassProvider.sortFieldsAsync(
         createTestCategoryDescription(),
         [0, 1, 2].map(() => createTestSimpleContentField()),
       );
-      expect(spy).to.be.calledOnce;
+      expect(spy).toHaveBeenCalledOnce();
     });
   });
 
@@ -347,7 +360,7 @@ describe("PropertyDataProvider", () => {
     };
 
     it("returns empty data object when receives undefined content", async () => {
-      (provider as any).getContent = async () => undefined;
+      provider.getContent = async () => undefined;
       expect(await provider.getData()).to.deep.eq({
         label: PropertyRecord.fromString("", "label"),
         categories: [],
@@ -356,7 +369,7 @@ describe("PropertyDataProvider", () => {
     });
 
     it("returns empty data object when receives content with no values", async () => {
-      (provider as any).getContent = async () => new Content(createTestContentDescriptor({ fields: [] }), []);
+      provider.getContent = async () => new Content(createTestContentDescriptor({ fields: [] }), []);
       expect(await provider.getData()).to.deep.eq({
         label: PropertyRecord.fromString("", "label"),
         categories: [],
@@ -366,7 +379,7 @@ describe("PropertyDataProvider", () => {
 
     it("set property data label", async () => {
       const item = createTestContentItem({ label: "test", values: {}, displayValues: {} });
-      (provider as any).getContent = async () => new Content(createTestContentDescriptor({ fields: [] }), [item]);
+      provider.getContent = async () => new Content(createTestContentDescriptor({ fields: [] }), [item]);
       expect(await provider.getData()).to.containSubset({ label: { value: { displayValue: "test" } } });
     });
 
@@ -376,6 +389,8 @@ describe("PropertyDataProvider", () => {
         values: {},
         displayValues: {},
       });
+      provider.getContent = async () => new Content(createTestContentDescriptor({ fields: [] }), [item]);
+      expect(await provider.getData()).to.containSubset({ description: "test" });
       (provider as any).getContent = async () => new Content(createTestContentDescriptor({ fields: [] }), [item]);
       expect(await provider.getData()).to.containSubset({ description: "test" });
     });
@@ -394,8 +409,8 @@ describe("PropertyDataProvider", () => {
           const values: ValuesDictionary<any> = { [field.name]: "" };
           const displayValues: ValuesDictionary<any> = { [field.name]: "" };
           const record = createTestContentItem({ values, displayValues });
-          (provider as any).getContent = async () => new Content(descriptor, [record]);
-          expect(await provider.getData()).to.matchSnapshot();
+          provider.getContent = async () => new Content(descriptor, [record]);
+          expect(await provider.getData()).toMatchSnapshot();
         });
 
         it("handles records with no values", async () => {
@@ -403,8 +418,8 @@ describe("PropertyDataProvider", () => {
           const values: ValuesDictionary<any> = {};
           const displayValues: ValuesDictionary<any> = {};
           const record = createTestContentItem({ values, displayValues });
-          (provider as any).getContent = async () => new Content(descriptor, [record]);
-          expect(await provider.getData()).to.matchSnapshot();
+          provider.getContent = async () => new Content(descriptor, [record]);
+          expect(await provider.getData()).toMatchSnapshot();
         });
 
         it("returns primitive property data", async () => {
@@ -413,8 +428,8 @@ describe("PropertyDataProvider", () => {
           const values: ValuesDictionary<any> = { [field.name]: "some value" };
           const displayValues: ValuesDictionary<any> = { [field.name]: "some display value" };
           const record = createTestContentItem({ values, displayValues });
-          (provider as any).getContent = async () => new Content(descriptor, [record]);
-          expect(await provider.getData()).to.matchSnapshot();
+          provider.getContent = async () => new Content(descriptor, [record]);
+          expect(await provider.getData()).toMatchSnapshot();
         });
 
         it("re-formats primitive property data", async () => {
@@ -433,7 +448,7 @@ describe("PropertyDataProvider", () => {
           const values: ValuesDictionary<any> = { [field.name]: 123.456789 };
           const displayValues: ValuesDictionary<any> = { [field.name]: "123.5 m" };
           const record = createTestContentItem({ values, displayValues });
-          presentationManager.getContentIterator.resolves({
+          presentationManager.getContentIterator.mockResolvedValue({
             descriptor,
             total: 1,
             items: (async function* () {
@@ -443,10 +458,12 @@ describe("PropertyDataProvider", () => {
 
           // stub formats provider
           const onFormatsChanged = new BeUiEvent<FormatsChangedArgs>();
-          sinon.stub(IModelApp, "formatsProvider").get(() => ({ onFormatsChanged }));
+          vi.spyOn(IModelApp, "formatsProvider", "get").mockReturnValue({
+            onFormatsChanged,
+          } as unknown as FormatsProvider);
 
           // setup provider
-          const dataChangedSpy = sinon.spy();
+          const dataChangedSpy = vi.fn();
           provider.onDataChanged.addListener(dataChangedSpy);
 
           // check the first (unformatted) request
@@ -457,9 +474,9 @@ describe("PropertyDataProvider", () => {
           } satisfies PrimitiveValue);
 
           // change the format and ensure the results are different
-          sinon.stub(KoqPropertyValueFormatter.prototype, "format").resolves("formatted value");
+          vi.spyOn(KoqPropertyValueFormatter.prototype, "format").mockResolvedValue("formatted value");
           onFormatsChanged.raiseEvent({ formatsChanged: "all" });
-          expect(dataChangedSpy).to.be.calledOnce;
+          expect(dataChangedSpy).toHaveBeenCalledOnce();
           expect((await provider.getData()).records[field.category.name][0].value).to.deep.eq({
             valueFormat: UiPropertyValueFormat.Primitive,
             value: 123.456789,
@@ -473,8 +490,8 @@ describe("PropertyDataProvider", () => {
           const values = { [field.name]: ["some value 1", "some value 2"] };
           const displayValues = { [field.name]: ["some display value 1", "some display value 2"] };
           const record = createTestContentItem({ values, displayValues });
-          (provider as any).getContent = async () => new Content(descriptor, [record]);
-          expect(await provider.getData()).to.matchSnapshot();
+          provider.getContent = async () => new Content(descriptor, [record]);
+          expect(await provider.getData()).toMatchSnapshot();
         });
 
         it("returns struct property data", async () => {
@@ -485,8 +502,8 @@ describe("PropertyDataProvider", () => {
             [field.name]: { [(field.type as StructTypeDescription).members[0].name]: "some display value" },
           };
           const record = createTestContentItem({ values, displayValues });
-          (provider as any).getContent = async () => new Content(descriptor, [record]);
-          expect(await provider.getData()).to.matchSnapshot();
+          provider.getContent = async () => new Content(descriptor, [record]);
+          expect(await provider.getData()).toMatchSnapshot();
         });
 
         describe("nested content handling", () => {
@@ -501,7 +518,7 @@ describe("PropertyDataProvider", () => {
             const values = { [field.name]: [] };
             const displayValues = { [field.name]: [] };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
+            provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
             expect(data.categories.length).to.eq(0);
             expect(data.records.hasOwnProperty(category.name)).to.be.false;
@@ -518,7 +535,7 @@ describe("PropertyDataProvider", () => {
             };
             const displayValues = { [field.name]: [{ displayValues: {} }] };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
+            provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
             expect(data.categories.length).to.eq(0);
             expect(data.records.hasOwnProperty(category.name)).to.be.false;
@@ -552,8 +569,8 @@ describe("PropertyDataProvider", () => {
               ],
             };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("returns nothing for deeply nested content with no values", async () => {
@@ -589,8 +606,8 @@ describe("PropertyDataProvider", () => {
               [rootField.name]: [{ displayValues: { [primitiveField2.name]: "p2", [middleField.name]: [] } }],
             };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("returns nested content with destructured deeply nested content", async () => {
@@ -646,8 +663,8 @@ describe("PropertyDataProvider", () => {
               ],
             };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("returns nested content with deeply nested content as structs array when there are multiple nested content items", async () => {
@@ -715,8 +732,8 @@ describe("PropertyDataProvider", () => {
               ],
             };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("returns nested content with single nested record as struct when there're sibling fields", async () => {
@@ -741,8 +758,8 @@ describe("PropertyDataProvider", () => {
               [siblingRootField.name]: "display value 3",
             };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("returns nested content with single nested record as individual properties when are no sibling fields", async () => {
@@ -762,8 +779,8 @@ describe("PropertyDataProvider", () => {
             };
             const displayValues = { [field.name]: [{ displayValues: { [nestedField.name]: "display value 1" } }] };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("moves nested field into separate category and keeps nested content field with remaining nested fields when there are more than 1 nested fields and sibling fields", async () => {
@@ -796,8 +813,8 @@ describe("PropertyDataProvider", () => {
               [siblingRootField.name]: "display value 3",
             };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("moves nested field into separate category and keeps nested content field with remaining nested fields when there are more than 1 nested fields and no sibling fields", async () => {
@@ -827,8 +844,8 @@ describe("PropertyDataProvider", () => {
               ],
             };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("moves nested field into separate category and hides nested content field when there's only 1 nested field", async () => {
@@ -853,8 +870,8 @@ describe("PropertyDataProvider", () => {
             };
             const displayValues = { [field.name]: [{ displayValues: { [nestedField1.name]: "display value 1" } }] };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("merges parent field when child field's category is different and parent is merged", async () => {
@@ -870,8 +887,8 @@ describe("PropertyDataProvider", () => {
             const values = { [field.name]: undefined };
             const displayValues = { [field.name]: "*** Varies ***" };
             const record = createTestContentItem({ values, displayValues, mergedFieldNames: [field.name] });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("moves all nested fields into separate category and hides nested content field when all nested fields are categorized", async () => {
@@ -901,8 +918,8 @@ describe("PropertyDataProvider", () => {
               ],
             };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("moves field into separate category with its grandparent when both are categorized with the same category", async () => {
@@ -971,8 +988,8 @@ describe("PropertyDataProvider", () => {
               [nestedField4.name]: "display value 4",
             };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
           });
 
           it("moves fields into separate category under common ancestor when both are categorized with the same category", async () => {
@@ -1084,8 +1101,8 @@ describe("PropertyDataProvider", () => {
               [rootSiblingField.name]: "display value",
             };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
-            expect(await provider.getData()).to.matchSnapshot();
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
           });
         });
 
@@ -1105,7 +1122,7 @@ describe("PropertyDataProvider", () => {
             const values: ValuesDictionary<any> = { IncludedField: "some value" };
             const displayValues: ValuesDictionary<any> = { IncludedField: "some display value" };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
+            provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
             expect(data.categories.length).to.eq(1);
             expect(data.records[data.categories[0].name].length).to.eq(1);
@@ -1119,7 +1136,7 @@ describe("PropertyDataProvider", () => {
             const values: ValuesDictionary<any> = { WithItems: ["some value"], Empty: [] };
             const displayValues: ValuesDictionary<any> = { WithItems: ["some display value"], Empty: [] };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
+            provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
             expect(data.categories.length).to.eq(1);
             expect(data.records[data.categories[0].name].length).to.eq(1);
@@ -1148,7 +1165,7 @@ describe("PropertyDataProvider", () => {
               Empty: {},
             };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
+            provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
             expect(data.categories.length).to.eq(1);
             expect(data.records[data.categories[0].name].length).to.eq(1);
@@ -1182,7 +1199,7 @@ describe("PropertyDataProvider", () => {
               nested: [{ displayValues: { a: undefined, b: "some value" } }],
             };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
+            provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
             expect(data.categories.length).to.eq(1);
             expect(data.records[data.categories[0].name].length).to.eq(1);
@@ -1214,7 +1231,7 @@ describe("PropertyDataProvider", () => {
               Struct: { [(structField.type as StructTypeDescription).members[0].name]: "some display value" },
             };
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
+            provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
             expect(data.categories.length).to.eq(1);
             expect(data.records[data.categories[0].name].length).to.eq(1);
@@ -1227,8 +1244,8 @@ describe("PropertyDataProvider", () => {
             provider[Symbol.dispose]();
             provider = new Provider({ imodel, ruleset: rulesetId, disableFavoritesCategory: true });
 
-            favoritePropertiesManager.hasAsync.resetBehavior();
-            favoritePropertiesManager.hasAsync.callsFake(async () => true);
+            favoritePropertiesManager.hasAsync.mockReset();
+            favoritePropertiesManager.hasAsync.mockImplementation(async () => true);
 
             const descriptor = createTestContentDescriptor({
               fields: [
@@ -1249,7 +1266,7 @@ describe("PropertyDataProvider", () => {
             const values: ValuesDictionary<any> = {};
             const displayValues: ValuesDictionary<any> = {};
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
+            provider.getContent = async () => new Content(descriptor, [record]);
 
             const data = await provider.getData();
             expect(data.categories.length).to.eq(2);
@@ -1279,7 +1296,7 @@ describe("PropertyDataProvider", () => {
             const values: ValuesDictionary<any> = {};
             const displayValues: ValuesDictionary<any> = {};
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
+            provider.getContent = async () => new Content(descriptor, [record]);
 
             const data = await provider.getData();
             expect(data.categories.length).to.eq(3);
@@ -1324,7 +1341,7 @@ describe("PropertyDataProvider", () => {
             const values: ValuesDictionary<any> = {};
             const displayValues: ValuesDictionary<any> = {};
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
+            provider.getContent = async () => new Content(descriptor, [record]);
 
             const data = await provider.getData();
             const records = data.records[category.name];
@@ -1363,7 +1380,7 @@ describe("PropertyDataProvider", () => {
             const values: ValuesDictionary<any> = {};
             const displayValues: ValuesDictionary<any> = {};
             const record = createTestContentItem({ values, displayValues });
-            (provider as any).getContent = async () => new Content(descriptor, [record]);
+            provider.getContent = async () => new Content(descriptor, [record]);
 
             const data = await provider.getData();
             const records = data.records[category.name];
@@ -1396,7 +1413,7 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField] });
 
-              favoritePropertiesManager.hasAsync.callsFake(async (field) => {
+              favoritePropertiesManager.hasAsync.mockImplementation(async (field) => {
                 return field.name === "primitive-property";
               });
 
@@ -1414,7 +1431,7 @@ describe("PropertyDataProvider", () => {
                 [nestedContentField.name]: [{ displayValues: { [propertiesField.name]: "test display value" } }],
               };
               const record = createTestContentItem({ values, displayValues });
-              (provider as any).getContent = async () => new Content(descriptor, [record]);
+              provider.getContent = async () => new Content(descriptor, [record]);
 
               const data = await provider.getData();
               expect(data.categories.length).to.eq(2);
@@ -1468,7 +1485,7 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField, propertiesField2] });
 
-              favoritePropertiesManager.hasAsync.callsFake(async (field) => {
+              favoritePropertiesManager.hasAsync.mockImplementation(async (field) => {
                 return (
                   field.name === nestedContentField.name ||
                   field.name === propertiesField1.name ||
@@ -1516,7 +1533,7 @@ describe("PropertyDataProvider", () => {
                 [propertiesField2.name]: "test display value 2",
               };
               const record = createTestContentItem({ values, displayValues });
-              (provider as any).getContent = async () => new Content(descriptor, [record]);
+              provider.getContent = async () => new Content(descriptor, [record]);
 
               const data = await provider.getData();
               expect(data.categories.length).to.eq(2);
@@ -1577,7 +1594,7 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField] });
 
-              favoritePropertiesManager.hasAsync.callsFake(async (field) => {
+              favoritePropertiesManager.hasAsync.mockImplementation(async (field) => {
                 return field.name === propertiesField.name;
               });
 
@@ -1588,7 +1605,7 @@ describe("PropertyDataProvider", () => {
                 displayValues,
                 mergedFieldNames: [nestedContentField.name],
               });
-              (provider as any).getContent = async () => new Content(descriptor, [record]);
+              provider.getContent = async () => new Content(descriptor, [record]);
 
               const data = await provider.getData();
               expect(data.categories.length).to.eq(2);
@@ -1633,7 +1650,7 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField] });
 
-              favoritePropertiesManager.hasAsync.callsFake(async (field) => {
+              favoritePropertiesManager.hasAsync.mockImplementation(async (field) => {
                 return field.name === propertiesField1.name || field.name === propertiesField2.name;
               });
 
@@ -1644,7 +1661,7 @@ describe("PropertyDataProvider", () => {
                 displayValues,
                 mergedFieldNames: [nestedContentField.name],
               });
-              (provider as any).getContent = async () => new Content(descriptor, [record]);
+              provider.getContent = async () => new Content(descriptor, [record]);
 
               const data = await provider.getData();
               expect(data.categories.length).to.eq(2);
@@ -1695,7 +1712,7 @@ describe("PropertyDataProvider", () => {
           const values: ValuesDictionary<any> = {};
           const displayValues: ValuesDictionary<any> = {};
           const record = createTestContentItem({ values, displayValues });
-          (provider as any).getContent = async () => new Content(descriptor, [record]);
+          provider.getContent = async () => new Content(descriptor, [record]);
 
           const data = await provider.getData();
           if (provider.isNestedPropertyCategoryGroupingEnabled) {
@@ -1734,7 +1751,7 @@ describe("PropertyDataProvider", () => {
           const values: ValuesDictionary<any> = {};
           const displayValues: ValuesDictionary<any> = {};
           const record = createTestContentItem({ values, displayValues });
-          (provider as any).getContent = async () => new Content(descriptor, [record]);
+          provider.getContent = async () => new Content(descriptor, [record]);
 
           const data = await provider.getData();
           const records = data.records[category.name];
@@ -1754,7 +1771,7 @@ describe("PropertyDataProvider", () => {
           const values: ValuesDictionary<any> = {};
           const displayValues: ValuesDictionary<any> = {};
           const record = createTestContentItem({ values, displayValues });
-          (provider as any).getContent = async () => new Content(descriptor, [record]);
+          provider.getContent = async () => new Content(descriptor, [record]);
           const data = await provider.getData();
           expect(data.categories.length).to.eq(0);
         });
@@ -1767,13 +1784,13 @@ describe("PropertyDataProvider", () => {
 
   describe("getPropertyRecordInstanceKeys", () => {
     it("returns empty list when there's no content", async () => {
-      (provider as any).getContent = async () => undefined;
+      provider.getContent = async () => undefined;
       const record = PropertyRecord.fromString("test");
       expect(await provider.getPropertyRecordInstanceKeys(record)).to.deep.eq([]);
     });
 
     it("returns empty list when record is not made from current content", async () => {
-      (provider as any).getContent = async () =>
+      provider.getContent = async () =>
         new Content(createTestContentDescriptor({ fields: [] }), [
           new Item({
             primaryKeys: [],
@@ -1789,7 +1806,7 @@ describe("PropertyDataProvider", () => {
 
     it("returns root level field instance keys", async () => {
       const instanceKeys = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
-      (provider as any).getContent = async () =>
+      provider.getContent = async () =>
         new Content(
           createTestContentDescriptor({ fields: [createTestSimpleContentField({ name: "test-field-name" })] }),
           [
@@ -1812,7 +1829,7 @@ describe("PropertyDataProvider", () => {
         createTestECInstanceKey({ id: "0x2" }),
         createTestECInstanceKey({ id: "0x3" }),
       ];
-      (provider as any).getContent = async () =>
+      provider.getContent = async () =>
         new Content(
           createTestContentDescriptor({
             fields: [

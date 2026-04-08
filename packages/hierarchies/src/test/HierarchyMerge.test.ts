@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
-import sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { BeEvent } from "@itwin/core-bentley";
 import { mergeProviders } from "../hierarchies/HierarchyMerge.js";
 import { HierarchyNode } from "../hierarchies/HierarchyNode.js";
@@ -38,7 +37,7 @@ describe("mergeProviders", () => {
       }),
     ];
     const mergedProvider = mergeProviders({ providers });
-    expect(await collect(mergedProvider.getNodes({ parentNode: undefined }))).to.deep.eq([
+    expect(await collect(mergedProvider.getNodes({ parentNode: undefined }))).toEqual([
       createTestGenericNode({ key: createTestGenericNodeKey({ id: "1", source: "s1" }), label: "1" }),
       createTestGenericNode({ key: createTestGenericNodeKey({ id: "2", source: "s2" }), label: "2" }),
       createTestGenericNode({ key: createTestGenericNodeKey({ id: "x", source: "s2" }), label: "x" }),
@@ -87,17 +86,17 @@ describe("mergeProviders", () => {
     const mergedProvider = mergeProviders({ providers });
 
     const nodes1 = await collect(mergedProvider.getNodes({ parentNode: undefined }));
-    expect(nodes1).to.deep.eq([
+    expect(nodes1).toEqual([
       createTestGenericNode({ key: createTestGenericNodeKey({ id: "1", source: "s1" }), label: "1", children: true }),
     ]);
 
     const nodes2 = await collect(mergedProvider.getNodes({ parentNode: nodes1[0] }));
-    expect(nodes2).to.deep.eq([
+    expect(nodes2).toEqual([
       createTestGenericNode({ key: createTestGenericNodeKey({ id: "2", source: "s1" }), label: "2", children: true }),
     ]);
 
     const nodes3 = await collect(mergedProvider.getNodes({ parentNode: nodes2[0] }));
-    expect(nodes3).to.deep.eq([
+    expect(nodes3).toEqual([
       createTestGenericNode({ key: createTestGenericNodeKey({ id: "3", source: "s2" }), label: "3", children: false }),
     ]);
   });
@@ -113,14 +112,16 @@ describe("mergeProviders", () => {
       createTestProvider({ instanceKeys: () => [{ className: "s.three", id: "three" }] }),
     ];
     const mergedProvider = mergeProviders({ providers });
-    expect(await collect(mergedProvider.getNodeInstanceKeys({ parentNode: undefined })))
-      .to.have.lengthOf(3)
-      .and.to.containSubset([
+    const keys = await collect(mergedProvider.getNodeInstanceKeys({ parentNode: undefined }));
+    expect(keys).toHaveLength(3);
+    expect(keys).toEqual(
+      expect.arrayContaining([
         { className: "s.one", id: "one" },
         { className: "s.two", id: "two" },
         { className: "s.three", id: "three" },
-      ]);
-    providers.forEach((provider) => expect(provider.getNodeInstanceKeys.callCount).to.eq(1));
+      ]),
+    );
+    providers.forEach((provider) => expect(provider.getNodeInstanceKeys).toHaveBeenCalledOnce());
   });
 
   it("sets formatter on all providers", async () => {
@@ -128,7 +129,7 @@ describe("mergeProviders", () => {
     const mergedProvider = mergeProviders({ providers });
     const formatter = {} as any;
     mergedProvider.setFormatter(formatter);
-    providers.forEach((provider) => expect(provider.setFormatter).to.be.calledOnceWith(formatter));
+    providers.forEach((provider) => expect(provider.setFormatter).toHaveBeenCalledExactlyOnceWith(formatter));
   });
 
   it("sets hierarchy search on all providers", async () => {
@@ -136,20 +137,20 @@ describe("mergeProviders", () => {
     const mergedProvider = mergeProviders({ providers });
     const search = {} as any;
     mergedProvider.setHierarchySearch(search);
-    providers.forEach((provider) => expect(provider.setHierarchySearch).to.be.calledOnceWith(search));
+    providers.forEach((provider) => expect(provider.setHierarchySearch).toHaveBeenCalledExactlyOnceWith(search));
   });
 
   it("raises `hierarchyChanged` event when one of the merged providers raises it", async () => {
     const providers = [createTestProvider(), createTestProvider()];
     const mergedProvider = mergeProviders({ providers });
-    const spy = sinon.spy();
+    const spy = vi.fn();
     mergedProvider.hierarchyChanged.addListener(spy);
 
     providers[0].hierarchyChanged.raiseEvent({});
-    expect(spy).to.be.calledOnce;
+    expect(spy).toHaveBeenCalledOnce();
 
     providers[1].hierarchyChanged.raiseEvent({});
-    expect(spy).to.be.calledTwice;
+    expect(spy).toHaveBeenCalledTimes(2);
   });
 
   it("disposes all disposable providers", async () => {
@@ -161,8 +162,8 @@ describe("mergeProviders", () => {
     const mergedProvider = mergeProviders({ providers });
     mergedProvider[Symbol.dispose]();
     providers.forEach((provider) => {
-      provider.dispose && expect(provider.dispose).to.be.calledOnce;
-      provider[Symbol.dispose] && expect(provider[Symbol.dispose]).to.be.calledOnce;
+      provider.dispose && expect(provider.dispose).toHaveBeenCalledOnce();
+      provider[Symbol.dispose] && expect(provider[Symbol.dispose]).toHaveBeenCalledOnce();
     });
   });
 });
@@ -182,25 +183,25 @@ function createTestProvider(
 ) {
   return {
     hierarchyChanged: new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>(),
-    getNodes: sinon
-      .stub<Parameters<HierarchyProvider["getNodes"]>>()
-      .callsFake((getNodesProps) =>
+    getNodes: vi
+      .fn<HierarchyProvider["getNodes"]>()
+      .mockImplementation((getNodesProps) =>
         createAsyncIterator(
-          "nodes" in props
+          ("nodes" in props
             ? props.nodes(getNodesProps)
             : props.rootNodes && getNodesProps.parentNode
               ? props.rootNodes(getNodesProps)
-              : [],
+              : []) as NonGroupingHierarchyNode[],
         ),
       ),
-    getNodeInstanceKeys: sinon
-      .stub<Parameters<HierarchyProvider["getNodeInstanceKeys"]>>()
-      .callsFake((getNodeInstanceKeysProps) =>
+    getNodeInstanceKeys: vi
+      .fn<HierarchyProvider["getNodeInstanceKeys"]>()
+      .mockImplementation((getNodeInstanceKeysProps) =>
         createAsyncIterator(props.instanceKeys ? props.instanceKeys(getNodeInstanceKeysProps) : []),
       ),
-    setFormatter: sinon.stub(),
-    setHierarchySearch: sinon.stub(),
-    ...(props.disposable === "yes" ? { [Symbol.dispose]: sinon.stub() } : {}),
-    ...(props.disposable === "deprecated" ? { dispose: sinon.stub() } : {}),
+    setFormatter: vi.fn(),
+    setHierarchySearch: vi.fn(),
+    ...(props.disposable === "yes" ? { [Symbol.dispose]: vi.fn() } : {}),
+    ...(props.disposable === "deprecated" ? { dispose: vi.fn() } : {}),
   };
 }

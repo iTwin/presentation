@@ -1,8 +1,0 @@
-{
-  "require": ["ignore-styles", "./lib/test/setup.js"],
-  "checkLeaks": true,
-  "global": ["IS_REACT_ACT_ENVIRONMENT"],
-  "timeout": 60000,
-  "spec": ["./lib/test/**/*.test.js"],
-  "exclude": ["./lib/test/coverage/**/*"]
-}

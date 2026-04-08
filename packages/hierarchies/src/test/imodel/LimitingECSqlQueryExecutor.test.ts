@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
-import sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { trimWhitespace } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
 import { createLimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
@@ -13,55 +12,48 @@ import { createLimitingECSqlQueryExecutor } from "../../hierarchies/imodel/Limit
 import type { ECSqlQueryExecutor } from "@itwin/presentation-shared";
 
 describe("createLimitingECSqlQueryExecutor", () => {
-  const baseExecutor = {
-    createQueryReader: sinon.stub<
-      Parameters<ECSqlQueryExecutor["createQueryReader"]>,
-      ReturnType<ECSqlQueryExecutor["createQueryReader"]>
-    >(),
-  };
-
-  beforeEach(() => {
-    baseExecutor.createQueryReader.reset();
-  });
+  const baseExecutor = { createQueryReader: vi.fn<ECSqlQueryExecutor["createQueryReader"]>() };
 
   it("returns base executor's result", async () => {
     const row = [1, 2, 3];
-    baseExecutor.createQueryReader.returns(createAsyncIterator([row]));
+    baseExecutor.createQueryReader.mockReturnValue(createAsyncIterator([row]));
     const limitingExecutor = createLimitingECSqlQueryExecutor(baseExecutor, 1);
     const rows = await collect(limitingExecutor.createQueryReader({ ecsql: "query" }));
-    expect(rows).to.deep.eq([row]);
+    expect(rows).toEqual([row]);
   });
 
   it("throws when base executor returns more rows than the limit", async () => {
-    baseExecutor.createQueryReader.returns(createAsyncIterator([{}, {}]));
+    baseExecutor.createQueryReader.mockReturnValue(createAsyncIterator([{}, {}]));
     const limitingExecutor = createLimitingECSqlQueryExecutor(baseExecutor, 1);
-    await expect(collect(limitingExecutor.createQueryReader({ ecsql: "query" }))).to.eventually.be.rejectedWith(
+    await expect(collect(limitingExecutor.createQueryReader({ ecsql: "query" }))).rejects.toBeInstanceOf(
       RowsLimitExceededError,
     );
   });
 
   it(`calls base executor with original query when limit is "unbounded"`, async () => {
-    baseExecutor.createQueryReader.returns(createAsyncIterator([{}]));
+    baseExecutor.createQueryReader.mockReturnValue(createAsyncIterator([{}]));
     await collect(createLimitingECSqlQueryExecutor(baseExecutor, "unbounded").createQueryReader({ ecsql: "query" }));
-    expect(baseExecutor.createQueryReader).to.be.calledOnceWith({ ecsql: "query" });
+    expect(baseExecutor.createQueryReader).toHaveBeenCalledOnce();
+    expect(baseExecutor.createQueryReader.mock.calls[0][0]).toEqual({ ecsql: "query" });
   });
 
   it(`calls base executor with added CTEs`, async () => {
-    baseExecutor.createQueryReader.returns(createAsyncIterator([{}]));
+    baseExecutor.createQueryReader.mockReturnValue(createAsyncIterator([{}]));
     await collect(
       createLimitingECSqlQueryExecutor(baseExecutor, "unbounded").createQueryReader({
         ecsql: "query",
         ctes: ["cte1", "cte2"],
       }),
     );
-    expect(baseExecutor.createQueryReader).to.be.calledOnceWith({ ecsql: "query", ctes: ["cte1", "cte2"] });
+    expect(baseExecutor.createQueryReader).toHaveBeenCalledOnce();
+    expect(baseExecutor.createQueryReader.mock.calls[0][0]).toEqual({ ecsql: "query", ctes: ["cte1", "cte2"] });
   });
 
   it(`calls base executor with added limits`, async () => {
-    baseExecutor.createQueryReader.returns(createAsyncIterator([{}]));
+    baseExecutor.createQueryReader.mockReturnValue(createAsyncIterator([{}]));
     await collect(createLimitingECSqlQueryExecutor(baseExecutor, 1).createQueryReader({ ecsql: "query" }));
-    expect(baseExecutor.createQueryReader).to.be.calledOnceWith(
-      sinon.match(({ ecsql }) => trimWhitespace(ecsql) === trimWhitespace("SELECT * FROM (query) LIMIT 2")),
-    );
+    expect(baseExecutor.createQueryReader).toHaveBeenCalledOnce();
+    const calledArgs = baseExecutor.createQueryReader.mock.calls[0][0];
+    expect(trimWhitespace(calledArgs.ecsql)).toBe(trimWhitespace("SELECT * FROM (query) LIMIT 2"));
   });
 });

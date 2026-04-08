@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
+import { afterAll, describe, expect, it, test } from "vitest";
 import { DictionaryModel, InformationPartitionElement, LinkModel, Model, Subject } from "@itwin/core-backend";
 import { createNodesQueryClauseFactory, HierarchyNode } from "@itwin/presentation-hierarchies";
 import {
@@ -12,7 +12,7 @@ import {
   InstanceKey,
   normalizeFullClassName,
 } from "@itwin/presentation-shared";
-import { buildTestIModel } from "@itwin/presentation-testing";
+import { buildTestIModel } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils.js";
 
@@ -23,18 +23,18 @@ describe("Hierarchies", () => {
   describe("Hierarchy level instance keys", () => {
     let imodel: IModelConnection;
 
-    before(async () => {
+    test.beforeAll(async (_, suite) => {
       await initialize();
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      imodel = await buildTestIModel("hierarchy-level-instance-keys", async () => {});
+
+      imodel = (await buildTestIModel(suite.fullTestName!)).imodel;
     });
 
-    after(async () => {
+    afterAll(async () => {
       await imodel.close();
       await terminate();
     });
 
-    it("gets instance keys for root hierarchy level", async function () {
+    it("gets instance keys for root hierarchy level", async () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
@@ -63,12 +63,11 @@ describe("Hierarchies", () => {
       };
       const provider = createProvider({ imodel, hierarchy });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
-      expect(keys)
-        .to.have.lengthOf(1)
-        .and.to.containSubset([{ className: "BisCore.Subject", id: "0x1" }]);
+      expect(keys).toHaveLength(1);
+      expect(keys).toMatchObject([{ className: "BisCore.Subject", id: "0x1" }]);
     });
 
-    it("gets instance keys for instance node's child hierarchy level", async function () {
+    it("gets instance keys for instance node's child hierarchy level", async () => {
       const rootSubjectKey: InstanceKey = { className: normalizeFullClassName(Subject.classFullName), id: "0x1" };
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
@@ -114,15 +113,14 @@ describe("Hierarchies", () => {
       };
       const provider = createProvider({ imodel, hierarchy });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: rootSubjectNode }));
-      expect(keys)
-        .to.have.lengthOf(2)
-        .and.to.containSubset([
-          { className: normalizeFullClassName(DictionaryModel.classFullName), id: "0x10" },
-          { className: normalizeFullClassName(LinkModel.classFullName), id: "0xe" },
-        ]);
+      expect(keys).toHaveLength(2);
+      expect(keys).toMatchObject([
+        { className: normalizeFullClassName(LinkModel.classFullName), id: "0xe" },
+        { className: normalizeFullClassName(DictionaryModel.classFullName), id: "0x10" },
+      ]);
     });
 
-    it("gets instance keys for generic node's child hierarchy level", async function () {
+    it("gets instance keys for generic node's child hierarchy level", async () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
@@ -160,12 +158,11 @@ describe("Hierarchies", () => {
       };
       const provider = createProvider({ imodel, hierarchy });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: testCustomNode }));
-      expect(keys)
-        .to.have.lengthOf(1)
-        .and.to.containSubset([{ className: "BisCore.Subject", id: "0x1" }]);
+      expect(keys).toHaveLength(1);
+      expect(keys).toMatchObject([{ className: "BisCore.Subject", id: "0x1" }]);
     });
 
-    it("gets instance keys for hidden instance node's child hierarchy level", async function () {
+    it("gets instance keys for hidden instance node's child hierarchy level", async () => {
       const rootSubjectKey: InstanceKey = { className: normalizeFullClassName(Subject.classFullName), id: "0x1" };
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
@@ -222,15 +219,14 @@ describe("Hierarchies", () => {
       };
       const provider = createProvider({ imodel, hierarchy });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
-      expect(keys)
-        .to.have.lengthOf(2)
-        .and.to.containSubset([
-          { className: DictionaryModel.classFullName.replace(":", "."), id: "0x10" },
-          { className: LinkModel.classFullName.replace(":", "."), id: "0xe" },
-        ]);
+      expect(keys).toHaveLength(2);
+      expect(keys).toMatchObject([
+        { className: normalizeFullClassName(LinkModel.classFullName), id: "0xe" },
+        { className: normalizeFullClassName(DictionaryModel.classFullName), id: "0x10" },
+      ]);
     });
 
-    it("gets instance keys for hidden generic node's child hierarchy level", async function () {
+    it("gets instance keys for hidden generic node's child hierarchy level", async () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
@@ -267,9 +263,8 @@ describe("Hierarchies", () => {
       };
       const provider = createProvider({ imodel, hierarchy });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
-      expect(keys)
-        .to.have.lengthOf(1)
-        .and.to.containSubset([{ className: "BisCore.Subject", id: "0x1" }]);
+      expect(keys).toHaveLength(1);
+      expect(keys).toMatchObject([{ className: "BisCore.Subject", id: "0x1" }]);
     });
   });
 });

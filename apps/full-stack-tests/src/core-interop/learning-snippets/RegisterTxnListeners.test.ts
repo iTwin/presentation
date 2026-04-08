@@ -4,8 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
 
-import { expect } from "chai";
-import sinon from "sinon";
 import { StandaloneDb } from "@itwin/core-backend";
 import { createHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.RegisterTxnListeners.Imports
@@ -13,24 +11,24 @@ import { BriefcaseDb } from "@itwin/core-backend";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
 import { HierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
-import { setupOutputFileLocation } from "@itwin/presentation-testing";
 import { getFullSchemaXml } from "presentation-test-utilities";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { getTestName, setupOutputFileLocation } from "../../FilenameUtils.js";
 
 describe("Core interop", () => {
   describe("Learning snippets", () => {
     describe("registerTxnListeners", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
-        sinon.restore();
       });
 
       it("triggers given callback on iModel changes", async function () {
-        const testIModel = StandaloneDb.createEmpty(setupOutputFileLocation(`${this.test!.fullTitle()}.bim`), {
+        const testIModel = StandaloneDb.createEmpty(setupOutputFileLocation(`${getTestName()}.bim`), {
           rootSubject: { name: "Test iModel" },
           allowEdit: JSON.stringify({ txns: true }),
         });
@@ -38,7 +36,7 @@ describe("Core interop", () => {
           return testIModel;
         }
 
-        const hierarchyChangedSpy = sinon.spy();
+        const hierarchyChangedSpy = vi.fn();
         const testHierarchyProvider = createHierarchyProvider(({ hierarchyChanged }) => ({
           async *getNodes() {},
           notifyDataSourceChanged: () => hierarchyChanged.raiseEvent({}),
@@ -64,11 +62,11 @@ describe("Core interop", () => {
         imodel.onClosed.addOnce(() => unregister());
         // __PUBLISH_EXTRACT_END__
 
-        expect(hierarchyChangedSpy).to.not.have.been.called;
+        expect(hierarchyChangedSpy).not.toHaveBeenCalled();
 
         testIModel.elements.insertAspect({ element: { id: "0x1" }, classFullName: "BisCore.ExternalSourceAspect" });
         testIModel.saveChanges();
-        expect(hierarchyChangedSpy).to.have.been.calledOnce;
+        expect(hierarchyChangedSpy).toHaveBeenCalledOnce();
         await testIModel.importSchemaStrings([
           getFullSchemaXml({
             schemaName: "TestSchema",
@@ -81,7 +79,7 @@ describe("Core interop", () => {
           }),
         ]);
         testIModel.saveChanges();
-        expect(hierarchyChangedSpy).to.have.been.calledTwice;
+        expect(hierarchyChangedSpy).toHaveBeenCalledTimes(2);
       });
     });
   });

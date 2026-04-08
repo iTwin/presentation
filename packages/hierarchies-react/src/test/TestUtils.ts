@@ -3,10 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { beforeEach, expect, vi } from "vitest";
 import { createHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { configure, render as renderRTL } from "@testing-library/react";
+import { render as renderRTL } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { TreeModel } from "../presentation-hierarchies-react/internal/TreeModel.js";
 
@@ -32,8 +31,6 @@ import type {
 } from "../presentation-hierarchies-react/TreeNode.js";
 import type { UseTreeResult } from "../presentation-hierarchies-react/UseTree.js";
 
-configure({ reactStrictMode: true });
-
 /**
  * Custom render function that wraps around `render` function from `@testing-library/react` and additionally
  * setup `userEvent` from `@testing-library/user-event`.
@@ -44,10 +41,6 @@ function customRender(ui: ReactElement, options?: RenderOptions): RenderResult &
 
 export * from "@testing-library/react";
 export { customRender as render };
-
-export function createStub<T extends (...args: any[]) => any>() {
-  return sinon.stub<Parameters<T>, ReturnType<T>>();
-}
 
 export function getHierarchyNode(model: TreeModel, id: string | undefined) {
   const node = TreeModel.getNode(model, id);
@@ -153,7 +146,7 @@ export function createTestGroupingNode({
 }: Partial<GroupingHierarchyNode> & { id: string }): GroupingHierarchyNode {
   return {
     ...props,
-    key: props.key ?? { type: "class-grouping", className: id },
+    key: props.key ?? { type: "class-grouping", className: "Schema:Class" },
     label: props.label ?? id,
     children: props.children ?? false,
     parentKeys: props.parentKeys ?? [],
@@ -162,46 +155,44 @@ export function createTestGroupingNode({
 }
 
 export function stubVirtualization() {
-  let stubs: sinon.SinonStub[] = [];
-
   beforeEach(() => {
-    stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetHeight").get(() => 800));
-    stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetWidth").get(() => 800));
-
-    stubs.push(
-      sinon
-        .stub(window.Element.prototype, "getBoundingClientRect")
-        .returns({ height: 20, width: 20, x: 0, y: 0, bottom: 0, left: 0, right: 0, top: 0, toJSON: () => {} }),
-    );
-  });
-
-  afterEach(() => {
-    stubs.forEach((stub) => stub.restore());
-    stubs = [];
+    vi.spyOn(window.HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(800);
+    vi.spyOn(window.HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(800);
+    vi.spyOn(window.Element.prototype, "getBoundingClientRect").mockReturnValue({
+      height: 20,
+      width: 20,
+      x: 0,
+      y: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      top: 0,
+      toJSON: () => {},
+    });
   });
 }
 
 export type StubbedHierarchyProvider = {
-  [P in keyof Omit<HierarchyProvider, "hierarchyChanged">]: ReturnType<typeof createStub<HierarchyProvider[P]>>;
+  [P in keyof Omit<HierarchyProvider, "hierarchyChanged">]: ReturnType<typeof vi.fn<HierarchyProvider[P]>>;
 } & {
   hierarchyChanged: RaisableEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>;
-  [Symbol.dispose]: sinon.SinonStub<[], void>;
+  [Symbol.dispose]: ReturnType<typeof vi.fn<() => void>>;
 };
 export function createHierarchyProviderStub(
   customizations?: Partial<StubbedHierarchyProvider>,
 ): StubbedHierarchyProvider {
   const provider = createHierarchyProvider(() => ({
-    getNodes: createStub<HierarchyProvider["getNodes"]>(),
-    getNodeInstanceKeys: createStub<HierarchyProvider["getNodeInstanceKeys"]>(),
-    setFormatter: createStub<HierarchyProvider["setFormatter"]>(),
-    setHierarchySearch: createStub<HierarchyProvider["setHierarchySearch"]>(),
-    [Symbol.dispose]: createStub<() => void>(),
+    getNodes: vi.fn<HierarchyProvider["getNodes"]>(),
+    getNodeInstanceKeys: vi.fn<HierarchyProvider["getNodeInstanceKeys"]>(),
+    setFormatter: vi.fn<HierarchyProvider["setFormatter"]>(),
+    setHierarchySearch: vi.fn<HierarchyProvider["setHierarchySearch"]>(),
+    [Symbol.dispose]: vi.fn<() => void>(),
     ...customizations,
   }));
-  provider.setFormatter.callsFake((arg) =>
+  provider.setFormatter.mockImplementation((arg) =>
     provider.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: arg } }),
   );
-  provider.setHierarchySearch.callsFake((arg) =>
+  provider.setHierarchySearch.mockImplementation((arg) =>
     provider.hierarchyChanged.raiseEvent({ searchChange: { newSearch: arg } }),
   );
   return provider;
@@ -209,7 +200,7 @@ export function createHierarchyProviderStub(
 
 export function getTreeRendererProps(useTreeResult: UseTreeResult) {
   if (useTreeResult.rootErrorRendererProps !== undefined) {
-    expect(false).to.be.true;
+    expect(false).toBe(true);
     return undefined;
   }
   return useTreeResult.treeRendererProps;

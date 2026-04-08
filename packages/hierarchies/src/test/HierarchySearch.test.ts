@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import {
   createHierarchySearchHelper,
   HierarchySearchPath,
@@ -32,12 +32,13 @@ describe("HierarchySearchPath", () => {
         for (let i = 0; i < optionsInOrderOfPriority.length; ++i) {
           for (let j = 0; j < optionsInOrderOfPriority.length; ++j) {
             if (!optionsInOrderOfPriority[i]?.reveal && !optionsInOrderOfPriority[j]?.reveal) {
-              expect(HierarchySearchPath.mergeOptions(optionsInOrderOfPriority[i], optionsInOrderOfPriority[j])).to.be
-                .undefined;
+              expect(
+                HierarchySearchPath.mergeOptions(optionsInOrderOfPriority[i], optionsInOrderOfPriority[j]),
+              ).toBeUndefined();
             } else {
               expect(
                 HierarchySearchPath.mergeOptions(optionsInOrderOfPriority[i], optionsInOrderOfPriority[j]),
-              ).to.deep.eq(i < j ? optionsInOrderOfPriority[i] : optionsInOrderOfPriority[j]);
+              ).toEqual(i < j ? optionsInOrderOfPriority[i] : optionsInOrderOfPriority[j]);
             }
           }
         }
@@ -46,20 +47,20 @@ describe("HierarchySearchPath", () => {
 
     describe("autoExpand", () => {
       it("returns correct result for different autoExpand options", () => {
-        expect(HierarchySearchPath.mergeOptions({ autoExpand: true }, { autoExpand: true })).to.deep.eq({
+        expect(HierarchySearchPath.mergeOptions({ autoExpand: true }, { autoExpand: true })).toEqual({
           autoExpand: true,
         });
-        expect(HierarchySearchPath.mergeOptions({ autoExpand: true }, { autoExpand: false })).to.deep.eq({
+        expect(HierarchySearchPath.mergeOptions({ autoExpand: true }, { autoExpand: false })).toEqual({
           autoExpand: true,
         });
-        expect(HierarchySearchPath.mergeOptions({ autoExpand: true }, undefined)).to.deep.eq({ autoExpand: true });
-        expect(HierarchySearchPath.mergeOptions({ autoExpand: false }, undefined)).to.eq(undefined);
-        expect(HierarchySearchPath.mergeOptions({ autoExpand: false }, { autoExpand: true })).to.deep.eq({
+        expect(HierarchySearchPath.mergeOptions({ autoExpand: true }, undefined)).toEqual({ autoExpand: true });
+        expect(HierarchySearchPath.mergeOptions({ autoExpand: false }, undefined)).toBeUndefined();
+        expect(HierarchySearchPath.mergeOptions({ autoExpand: false }, { autoExpand: true })).toEqual({
           autoExpand: true,
         });
-        expect(HierarchySearchPath.mergeOptions(undefined, { autoExpand: true })).to.deep.eq({ autoExpand: true });
-        expect(HierarchySearchPath.mergeOptions(undefined, { autoExpand: false })).to.eq(undefined);
-        expect(HierarchySearchPath.mergeOptions(undefined, undefined)).to.eq(undefined);
+        expect(HierarchySearchPath.mergeOptions(undefined, { autoExpand: true })).toEqual({ autoExpand: true });
+        expect(HierarchySearchPath.mergeOptions(undefined, { autoExpand: false })).toBeUndefined();
+        expect(HierarchySearchPath.mergeOptions(undefined, undefined)).toBeUndefined();
       });
     });
   });
@@ -72,7 +73,7 @@ describe("HierarchySearchTree", () => {
         const builder = HierarchySearchTree.createBuilder();
         builder.accept({ tree: { identifier: createTestGenericNodeKey({ id: "a" }) } });
 
-        expect(builder.getTree()).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
+        expect(builder.getTree()).toEqual([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
       });
 
       it("merges tree branches with the same root", async () => {
@@ -91,7 +92,7 @@ describe("HierarchySearchTree", () => {
           },
         });
 
-        expect(builder.getTree()).to.deep.eq([
+        expect(builder.getTree()).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             isTarget: true,
@@ -113,7 +114,7 @@ describe("HierarchySearchTree", () => {
           },
         });
 
-        expect(builder.getTree()).to.deep.eq([
+        expect(builder.getTree()).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             isTarget: true,
@@ -132,7 +133,7 @@ describe("HierarchySearchTree", () => {
         });
         builder.accept({ tree: { identifier: createTestGenericNodeKey({ id: "a" }) } });
 
-        expect(builder.getTree()).to.deep.eq([
+        expect(builder.getTree()).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             isTarget: true,
@@ -148,7 +149,7 @@ describe("HierarchySearchTree", () => {
         });
         builder.accept({ tree: { identifier: createTestGenericNodeKey({ id: "a" }), options: { autoExpand: true } } });
 
-        expect(builder.getTree()).to.deep.eq([
+        expect(builder.getTree()).toEqual([
           { identifier: createTestGenericNodeKey({ id: "a" }), options: { autoExpand: true } },
         ]);
       });
@@ -158,7 +159,7 @@ describe("HierarchySearchTree", () => {
       it("adds a single path in array form", () => {
         const builder = HierarchySearchTree.createBuilder();
         builder.accept({ path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })] });
-        expect(builder.getTree()).to.deep.eq([
+        expect(builder.getTree()).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }],
@@ -174,7 +175,7 @@ describe("HierarchySearchTree", () => {
             options: { reveal: true },
           },
         });
-        expect(builder.getTree()).to.deep.eq([
+        expect(builder.getTree()).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: true },
@@ -202,7 +203,7 @@ describe("HierarchySearchTree", () => {
             options: { reveal: true },
           },
         });
-        expect(builder.getTree()).to.deep.eq([
+        expect(builder.getTree()).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: true },
@@ -229,7 +230,7 @@ describe("HierarchySearchTree", () => {
           },
         });
         builder.accept({ path: { path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: true } } });
-        expect(builder.getTree()).to.deep.eq([
+        expect(builder.getTree()).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             isTarget: true,
@@ -250,7 +251,7 @@ describe("HierarchySearchTree", () => {
           path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })],
           handler: { onNewEntry: () => false },
         });
-        expect(builder.getTree()).to.deep.eq([]);
+        expect(builder.getTree()).toEqual([]);
       });
     });
 
@@ -356,7 +357,7 @@ describe("HierarchySearchTree", () => {
           },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree(getTreeProps)).to.deep.eq([
+        expect(builder.getTree(getTreeProps)).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: true },
@@ -380,7 +381,7 @@ describe("HierarchySearchTree", () => {
           },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree(getTreeProps)).to.deep.eq([]);
+        expect(builder.getTree(getTreeProps)).toEqual([]);
       });
 
       it("omits both trees when they only intersect above targets", () => {
@@ -405,7 +406,7 @@ describe("HierarchySearchTree", () => {
           },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree(getTreeProps)).to.deep.eq([]);
+        expect(builder.getTree(getTreeProps)).toEqual([]);
       });
 
       it("doesn't set `isTarget` flag on search-tree path when it's within a sub-tree, but not under a sub-tree target", () => {
@@ -424,7 +425,7 @@ describe("HierarchySearchTree", () => {
           },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree(getTreeProps)).to.deep.eq([
+        expect(builder.getTree(getTreeProps)).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
@@ -443,7 +444,7 @@ describe("HierarchySearchTree", () => {
           },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree(getTreeProps)).to.deep.eq([
+        expect(builder.getTree(getTreeProps)).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
@@ -467,7 +468,7 @@ describe("HierarchySearchTree", () => {
           },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree(getTreeProps)).to.deep.eq([
+        expect(builder.getTree(getTreeProps)).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: true },
@@ -503,7 +504,7 @@ describe("HierarchySearchTree", () => {
           },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree(getTreeProps)).to.deep.eq([
+        expect(builder.getTree(getTreeProps)).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: true },
@@ -547,7 +548,7 @@ describe("HierarchySearchTree", () => {
           },
           handler: searchTreeAcceptHandler,
         });
-        expect(builder.getTree(getTreeProps)).to.deep.eq([
+        expect(builder.getTree(getTreeProps)).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             isTarget: true,
@@ -573,17 +574,17 @@ describe("HierarchySearchTree", () => {
 
   describe("createFromPathsList", () => {
     it("returns empty array for empty input", async () => {
-      expect(await HierarchySearchTree.createFromPathsList([])).to.deep.eq([]);
+      expect(await HierarchySearchTree.createFromPathsList([])).toEqual([]);
     });
 
     it("skips empty paths", async () => {
       const result = await HierarchySearchTree.createFromPathsList([[], [createTestGenericNodeKey({ id: "a" })]]);
-      expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
+      expect(result).toEqual([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
     });
 
     it("creates a single root entry from a single-node path", async () => {
       const result = await HierarchySearchTree.createFromPathsList([[createTestGenericNodeKey({ id: "a" })]]);
-      expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
+      expect(result).toEqual([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
     });
 
     it("creates a nested tree from a multi-node path", async () => {
@@ -594,7 +595,7 @@ describe("HierarchySearchTree", () => {
           createTestGenericNodeKey({ id: "c" }),
         ],
       ]);
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         {
           identifier: createTestGenericNodeKey({ id: "a" }),
           children: [
@@ -611,7 +612,7 @@ describe("HierarchySearchTree", () => {
       const result = await HierarchySearchTree.createFromPathsList([
         [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })],
       ]);
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         {
           identifier: createTestGenericNodeKey({ id: "a" }),
           children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }],
@@ -623,7 +624,7 @@ describe("HierarchySearchTree", () => {
       const result = await HierarchySearchTree.createFromPathsList([
         { path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })] },
       ]);
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         {
           identifier: createTestGenericNodeKey({ id: "a" }),
           children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }],
@@ -635,7 +636,7 @@ describe("HierarchySearchTree", () => {
       const result = await HierarchySearchTree.createFromPathsList([
         [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })],
       ]);
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         {
           identifier: createTestInstanceKey({ id: "0x1" }),
           children: [{ identifier: createTestInstanceKey({ id: "0x2" }) }],
@@ -648,7 +649,7 @@ describe("HierarchySearchTree", () => {
         [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })],
         [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "c" })],
       ]);
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         {
           identifier: createTestGenericNodeKey({ id: "a" }),
           children: [
@@ -664,7 +665,7 @@ describe("HierarchySearchTree", () => {
         [createTestGenericNodeKey({ id: "a" })],
         [createTestGenericNodeKey({ id: "b" })],
       ]);
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         { identifier: createTestGenericNodeKey({ id: "a" }) },
         { identifier: createTestGenericNodeKey({ id: "b" }) },
       ]);
@@ -683,7 +684,7 @@ describe("HierarchySearchTree", () => {
           createTestGenericNodeKey({ id: "e" }),
         ],
       ]);
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         {
           identifier: createTestGenericNodeKey({ id: "a" }),
           children: [
@@ -705,7 +706,7 @@ describe("HierarchySearchTree", () => {
           [createTestGenericNodeKey({ id: "a" })],
           [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })],
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             isTarget: true,
@@ -719,7 +720,7 @@ describe("HierarchySearchTree", () => {
           [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })],
           [createTestGenericNodeKey({ id: "a" })],
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             isTarget: true,
@@ -732,7 +733,7 @@ describe("HierarchySearchTree", () => {
         const result = await HierarchySearchTree.createFromPathsList([
           [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })],
         ]);
-        expect(result[0].isTarget).to.be.undefined;
+        expect(result[0].isTarget).toBeUndefined();
       });
     });
 
@@ -744,7 +745,7 @@ describe("HierarchySearchTree", () => {
             options: { autoExpand: true },
           },
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             children: [{ identifier: createTestGenericNodeKey({ id: "b" }), options: { autoExpand: true } }],
@@ -756,14 +757,14 @@ describe("HierarchySearchTree", () => {
         const result = await HierarchySearchTree.createFromPathsList([
           { path: [createTestGenericNodeKey({ id: "a" })], options: { autoExpand: false } },
         ]);
-        expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
+        expect(result).toEqual([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
       });
 
       it("doesn't set autoExpand when options.autoExpand is undefined", async () => {
         const result = await HierarchySearchTree.createFromPathsList([
           { path: [createTestGenericNodeKey({ id: "a" })] },
         ]);
-        expect(result).to.deep.eq([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
+        expect(result).toEqual([{ identifier: createTestGenericNodeKey({ id: "a" }) }]);
       });
     });
 
@@ -779,7 +780,7 @@ describe("HierarchySearchTree", () => {
             options: { reveal: true },
           },
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: true },
@@ -803,7 +804,7 @@ describe("HierarchySearchTree", () => {
         const result = await HierarchySearchTree.createFromPathsList([
           { path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: true } },
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
@@ -820,7 +821,7 @@ describe("HierarchySearchTree", () => {
             options: { reveal: { groupingLevel: 3 } },
           },
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: true },
@@ -835,7 +836,7 @@ describe("HierarchySearchTree", () => {
         const result = await HierarchySearchTree.createFromPathsList([
           { path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: { groupingLevel: 1 } } },
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           { identifier: createTestGenericNodeKey({ id: "a" }), options: { autoExpand: { groupingLevel: 0 } } },
         ]);
       });
@@ -844,7 +845,7 @@ describe("HierarchySearchTree", () => {
         const result = await HierarchySearchTree.createFromPathsList([
           { path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: { groupingLevel: 0 } } },
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           { identifier: createTestGenericNodeKey({ id: "a" }), options: { autoExpand: { groupingLevel: 0 } } },
         ]);
       });
@@ -862,7 +863,7 @@ describe("HierarchySearchTree", () => {
             options: { reveal: { depthInPath: 1 } },
           },
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: true },
@@ -884,7 +885,7 @@ describe("HierarchySearchTree", () => {
             options: { reveal: { depthInPath: 0 } },
           },
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
@@ -900,7 +901,7 @@ describe("HierarchySearchTree", () => {
             options: { reveal: { depthInPath: 10 } },
           },
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: true },
@@ -923,7 +924,7 @@ describe("HierarchySearchTree", () => {
             options: { reveal: false },
           },
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             children: [{ identifier: createTestGenericNodeKey({ id: "b" }) }],
@@ -940,7 +941,7 @@ describe("HierarchySearchTree", () => {
             options: { autoExpand: true, reveal: { groupingLevel: 2 } },
           },
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: true },
@@ -956,7 +957,7 @@ describe("HierarchySearchTree", () => {
           { path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: { groupingLevel: 2 } } },
           { path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: { groupingLevel: 4 } } },
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           { identifier: createTestGenericNodeKey({ id: "a" }), options: { autoExpand: { groupingLevel: 3 } } },
         ]);
       });
@@ -966,9 +967,7 @@ describe("HierarchySearchTree", () => {
           { path: [createTestGenericNodeKey({ id: "a" })], options: { autoExpand: true } },
           { path: [createTestGenericNodeKey({ id: "a" })], options: { reveal: { groupingLevel: 2 } } },
         ]);
-        expect(result).to.deep.eq([
-          { identifier: createTestGenericNodeKey({ id: "a" }), options: { autoExpand: true } },
-        ]);
+        expect(result).toEqual([{ identifier: createTestGenericNodeKey({ id: "a" }), options: { autoExpand: true } }]);
       });
 
       it("merges ancestor autoExpand from multiple paths with reveal", async () => {
@@ -982,7 +981,7 @@ describe("HierarchySearchTree", () => {
             options: { reveal: true },
           },
         ]);
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             identifier: createTestGenericNodeKey({ id: "a" }),
             options: { autoExpand: true },
@@ -1001,28 +1000,28 @@ describe("HierarchySearchTree", () => {
 
   describe("mergeOptions", () => {
     it("returns rhs when lhs is undefined", () => {
-      expect(HierarchySearchTree.mergeOptions(undefined, { autoExpand: true })).to.deep.eq({ autoExpand: true });
+      expect(HierarchySearchTree.mergeOptions(undefined, { autoExpand: true })).toEqual({ autoExpand: true });
     });
 
     it("returns lhs when rhs is undefined", () => {
-      expect(HierarchySearchTree.mergeOptions({ autoExpand: true }, undefined)).to.deep.eq({ autoExpand: true });
+      expect(HierarchySearchTree.mergeOptions({ autoExpand: true }, undefined)).toEqual({ autoExpand: true });
     });
 
     it("returns undefined when both are undefined", () => {
-      expect(HierarchySearchTree.mergeOptions(undefined, undefined)).to.be.undefined;
+      expect(HierarchySearchTree.mergeOptions(undefined, undefined)).toBeUndefined();
     });
 
     it("returns { autoExpand: true } when both have autoExpand true", () => {
-      expect(HierarchySearchTree.mergeOptions({ autoExpand: true }, { autoExpand: true })).to.deep.eq({
+      expect(HierarchySearchTree.mergeOptions({ autoExpand: true }, { autoExpand: true })).toEqual({
         autoExpand: true,
       });
     });
 
     it("returns { autoExpand: true } when one has true and other has groupingLevel", () => {
-      expect(HierarchySearchTree.mergeOptions({ autoExpand: true }, { autoExpand: { groupingLevel: 1 } })).to.deep.eq({
+      expect(HierarchySearchTree.mergeOptions({ autoExpand: true }, { autoExpand: { groupingLevel: 1 } })).toEqual({
         autoExpand: true,
       });
-      expect(HierarchySearchTree.mergeOptions({ autoExpand: { groupingLevel: 1 } }, { autoExpand: true })).to.deep.eq({
+      expect(HierarchySearchTree.mergeOptions({ autoExpand: { groupingLevel: 1 } }, { autoExpand: true })).toEqual({
         autoExpand: true,
       });
     });
@@ -1030,24 +1029,24 @@ describe("HierarchySearchTree", () => {
     it("returns larger groupingLevel when both have groupingLevel", () => {
       expect(
         HierarchySearchTree.mergeOptions({ autoExpand: { groupingLevel: 1 } }, { autoExpand: { groupingLevel: 3 } }),
-      ).to.deep.eq({ autoExpand: { groupingLevel: 3 } });
+      ).toEqual({ autoExpand: { groupingLevel: 3 } });
       expect(
         HierarchySearchTree.mergeOptions({ autoExpand: { groupingLevel: 3 } }, { autoExpand: { groupingLevel: 1 } }),
-      ).to.deep.eq({ autoExpand: { groupingLevel: 3 } });
+      ).toEqual({ autoExpand: { groupingLevel: 3 } });
     });
 
     it("returns undefined when neither side has autoExpand", () => {
-      expect(HierarchySearchTree.mergeOptions({}, {})).to.be.undefined;
+      expect(HierarchySearchTree.mergeOptions({}, {})).toBeUndefined();
     });
 
     it("returns rhs autoExpand when lhs autoExpand is undefined", () => {
-      expect(HierarchySearchTree.mergeOptions({}, { autoExpand: { groupingLevel: 2 } })).to.deep.eq({
+      expect(HierarchySearchTree.mergeOptions({}, { autoExpand: { groupingLevel: 2 } })).toEqual({
         autoExpand: { groupingLevel: 2 },
       });
     });
 
     it("returns lhs autoExpand when rhs autoExpand is undefined", () => {
-      expect(HierarchySearchTree.mergeOptions({ autoExpand: { groupingLevel: 2 } }, {})).to.deep.eq({
+      expect(HierarchySearchTree.mergeOptions({ autoExpand: { groupingLevel: 2 } }, {})).toEqual({
         autoExpand: { groupingLevel: 2 },
       });
     });
@@ -1061,7 +1060,7 @@ describe("createHierarchySearchHelper", () => {
         nodeKey: createTestGenericNodeKey(),
         asyncPathMatcher: async () => true,
       });
-      expect(result).to.be.undefined;
+      expect(result).toBeUndefined();
     });
 
     it("returns undefined child node props when parent node has no search set and search paths are empty", () => {
@@ -1069,14 +1068,14 @@ describe("createHierarchySearchHelper", () => {
         nodeKey: createTestGenericNodeKey(),
         asyncPathMatcher: async () => true,
       });
-      expect(result).to.be.undefined;
+      expect(result).toBeUndefined();
     });
 
     it("returns correct child node props when parent node has no search target paths but has a search target ancestor set and search paths are empty", () => {
       const result = createHierarchySearchHelper([], {
         search: { childrenTargetPaths: undefined, hasSearchTargetAncestor: true },
       }).createChildNodeProps({ nodeKey: createTestGenericNodeKey(), asyncPathMatcher: async () => true });
-      expect(result).to.deep.eq({ search: { hasSearchTargetAncestor: true } });
+      expect(result).toEqual({ search: { hasSearchTargetAncestor: true } });
     });
 
     it("returns correct child node props when parent node has generic node target path", () => {
@@ -1087,7 +1086,7 @@ describe("createHierarchySearchHelper", () => {
         },
       }).createChildNodeProps({ nodeKey: { type: "generic", id: "test" } });
 
-      expect(result).to.deep.eq({ search: { hasSearchTargetAncestor: true, isSearchTarget: true } });
+      expect(result).toEqual({ search: { hasSearchTargetAncestor: true, isSearchTarget: true } });
     });
 
     it("returns correct child node props when parent node has instance node target path", () => {
@@ -1100,7 +1099,7 @@ describe("createHierarchySearchHelper", () => {
         nodeKey: { type: "instances", instanceKeys: [{ imodelKey: "test", className: "test:className", id: "id" }] },
       });
 
-      expect(result).to.deep.eq({ search: { hasSearchTargetAncestor: true } });
+      expect(result).toEqual({ search: { hasSearchTargetAncestor: true } });
     });
 
     it("returns empty child paths props when parent node has target paths, but has no target ancestor", () => {
@@ -1108,7 +1107,7 @@ describe("createHierarchySearchHelper", () => {
         search: { childrenTargetPaths: [{ identifier: { type: "generic", id: "x" } }], hasSearchTargetAncestor: false },
       }).createChildNodeProps({ nodeKey: createTestGenericNodeKey({ id: "y" }), pathMatcher: () => false });
 
-      expect(result).to.deep.eq({});
+      expect(result).toEqual({});
     });
 
     describe("autoExpand", () => {
@@ -1117,7 +1116,7 @@ describe("createHierarchySearchHelper", () => {
           [{ identifier: createTestGenericNodeKey({ id: "x" }), options: { autoExpand: true } }],
           undefined,
         ).createChildNodeProps({ nodeKey: createTestGenericNodeKey({ id: "x" }) });
-        expect(result?.autoExpand).to.be.true;
+        expect(result?.autoExpand).toBe(true);
       });
 
       it("doesn't set `autoExpand` when provided paths have `autoExpand = false`", () => {
@@ -1125,7 +1124,7 @@ describe("createHierarchySearchHelper", () => {
           [{ identifier: createTestGenericNodeKey({ id: "x" }), options: { autoExpand: false } }],
           undefined,
         ).createChildNodeProps({ nodeKey: createTestGenericNodeKey({ id: "x" }) });
-        expect(result?.autoExpand).to.be.undefined;
+        expect(result?.autoExpand).toBeUndefined();
       });
 
       it("doesn't set `autoExpand` when provided paths have `autoExpand.groupingLevel`", () => {
@@ -1133,7 +1132,7 @@ describe("createHierarchySearchHelper", () => {
           [{ identifier: createTestGenericNodeKey({ id: "x" }), options: { autoExpand: { groupingLevel: 1 } } }],
           undefined,
         ).createChildNodeProps({ nodeKey: createTestGenericNodeKey({ id: "x" }) });
-        expect(result?.autoExpand).to.be.undefined;
+        expect(result?.autoExpand).toBeUndefined();
       });
     });
   });

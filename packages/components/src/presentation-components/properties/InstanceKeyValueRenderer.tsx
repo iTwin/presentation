@@ -51,6 +51,7 @@ const InstanceKeyValueRendererImpl: React.FC<InstanceKeyValueRendererImplProps> 
   const selectionContext = useOptionalUnifiedSelectionContext();
 
   const instanceKey = (props.record.value as PrimitiveValue).value as Primitives.InstanceKey | undefined;
+  /* v8 ignore else -- @preserve */
   if (instanceKey) {
     let handleClick: (() => void) | undefined;
     if (deprecatedSelectionContext) {

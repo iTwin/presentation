@@ -74,13 +74,13 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
   constructor(props?: FavoritePropertiesDataProviderProps) {
     this.includeFieldsWithNoValues = true;
     this.includeFieldsWithCompositeValues = true;
-    this._customRuleset = /* c8 ignore next */ props?.ruleset;
-    /* c8 ignore start */
+    this._customRuleset = /* v8 ignore next -- @preserve */ props?.ruleset;
+    /* v8 ignore start -- @preserve */
     this._getActiveScope =
       props?.activeScopeProvider ??
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       (() => mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(Presentation.selection.scopes.activeScope));
-    /* c8 ignore end */
+    /* v8 ignore stop -- @preserve */
   }
 
   /**
@@ -118,11 +118,11 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
     return this.getData(imodel, keys);
   }
 
-  /* c8 ignore start */
+  /* v8 ignore start -- @preserve */
   private createPropertyDataProvider(imodel: IModelConnection, ruleset?: Ruleset | string) {
     const provider = new PresentationPropertyDataProvider({ imodel, ruleset });
     provider.isNestedPropertyCategoryGroupingEnabled = false;
     return provider;
   }
-  /* c8 ignore end */
+  /* v8 ignore stop -- @preserve */
 }

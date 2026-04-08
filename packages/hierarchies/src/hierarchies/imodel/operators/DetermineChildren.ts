@@ -27,28 +27,25 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME, L
 export function createDetermineChildrenOperator(hasNodes: (node: ProcessedHierarchyNode) => Observable<boolean>) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     return nodes.pipe(
-      log({
-        category: LOGGING_NAMESPACE,
-        message: /* c8 ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}`,
-      }),
+      /* v8 ignore next -- @preserve */
+      log({ category: LOGGING_NAMESPACE, message: (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
       releaseMainThreadOnItemsCount(200),
       concatMap((n: ProcessedHierarchyNode): Observable<ProcessedHierarchyNode> => {
         if (n.children !== undefined) {
           return of(n);
         }
         return hasNodes(n).pipe(
+          /* v8 ignore next -- @preserve */
           log({
             category: LOGGING_NAMESPACE,
-            message: /* c8 ignore next */ (hasChildrenFlag) =>
+            message: (hasChildrenFlag) =>
               `${createNodeIdentifierForLogging(n)}: determined children: ${hasChildrenFlag}`,
           }),
           map((hasChildrenFlag) => Object.assign(n, { children: hasChildrenFlag })),
         );
       }),
-      log({
-        category: LOGGING_NAMESPACE,
-        message: /* c8 ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}`,
-      }),
+      /* v8 ignore next -- @preserve */
+      log({ category: LOGGING_NAMESPACE, message: (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
     );
   };
 }

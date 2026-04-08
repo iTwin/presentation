@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import { describe } from "mocha";
+import { describe, expect, it } from "vitest";
 import { createStorage } from "@itwin/unified-selection";
 import { renderHook } from "@testing-library/react";
 import {
@@ -17,7 +16,7 @@ describe("useUnifiedSelectionContext", () => {
 
   it("returns `undefined` if context is not provided", () => {
     const { result } = renderHook(useUnifiedSelectionContext);
-    expect(result.current).to.be.undefined;
+    expect(result.current).toBeUndefined();
   });
 
   it("returns provided context", () => {
@@ -26,6 +25,6 @@ describe("useUnifiedSelectionContext", () => {
         <UnifiedSelectionContextProvider storage={storage}>{props.children}</UnifiedSelectionContextProvider>
       ),
     });
-    expect(result.current?.storage).to.eq(storage);
+    expect(result.current?.storage).toBe(storage);
   });
 });

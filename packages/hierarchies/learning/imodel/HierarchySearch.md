@@ -136,7 +136,7 @@ Let's consider two cases - searching by label and by target element ID:
   }
   // Find paths to elements whose label contains "C" or "E"
   const searchPaths = await createHierarchySearchTree(["C", "E"]);
-  expect(searchPaths).to.deep.eq([
+  expect(searchPaths).toEqual([
     // We expect to find two paths A -> B -> C and A -> E
     {
       identifier: elementKeys.a,
@@ -198,7 +198,7 @@ Let's consider two cases - searching by label and by target element ID:
   }
   // Find paths to target elements "C" and "E"
   const searchPaths = await createSearchTargetPaths([elementIds.c, elementIds.e]);
-  expect(searchPaths).to.deep.eq([
+  expect(searchPaths).toEqual([
     // We expect to find two paths A -> B -> C and A -> E
     [elementKeys.a, elementKeys.e],
     [elementKeys.a, elementKeys.b, elementKeys.c],
@@ -228,7 +228,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
 // Note that "E" has a child "F", even though it's not a search target. This is because subtrees under search target nodes
 // (in this case - "E") are returned fully.
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     label: "A",
     children: [

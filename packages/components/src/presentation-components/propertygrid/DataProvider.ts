@@ -137,7 +137,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
   }
 
   /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
-  /* c8 ignore next 3 */
+  /* v8 ignore next -- @preserve */
   public override dispose() {
     this.#dispose();
   }
@@ -258,13 +258,13 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    * @deprecated in 5.2. Use `sortFieldsAsync` instead.
    */
   protected sortFields(category: CategoryDescription, fields: Field[]): void {
-    /* c8 ignore start */
+    /* v8 ignore start -- @preserve */
     if (category.name === FAVORITES_CATEGORY_NAME) {
       Presentation.favoriteProperties.sortFields(this.imodel, fields);
     } else {
       inPlaceSort(fields).by([{ desc: (f) => f.priority }, { asc: (f) => f.label, comparer: labelsComparer }]);
     }
-    /* c8 ignore end */
+    /* v8 ignore stop -- @preserve */
   }
   /**
    * Sorts the specified list of fields by priority. May be overridden to supply a different sorting algorithm.
@@ -363,7 +363,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
   }
 
   private setupFavoritePropertiesListener() {
-    /* c8 ignore next 3 */
+    /* v8 ignore next -- @preserve */
     if (this._onFavoritesChangedRemoveListener) {
       return;
     }
@@ -471,6 +471,7 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
     const categorizedRecords: { [categoryName: string]: PropertyRecord[] } = {};
     this._categorizedRecords.forEach((recs, categoryName) => {
       destructureRecords(recs);
+      /* v8 ignore else -- @preserve */
       if (recs.length) {
         // note: will await on all async tasks before returning the result
         this._asyncTasks.push(
@@ -505,7 +506,7 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
     // determine which categories are actually used
     const usedCategoryNames = new Set();
     this._categorizedRecords.forEach((records, categoryName) => {
-      /* c8 ignore next 3 */
+      /* v8 ignore next -- @preserve */
       if (records.length === 0) {
         return;
       }
@@ -846,6 +847,7 @@ function destructureStructArrayItems(items: PropertyRecord[], fieldHierarchy: Fi
 
   // if we got a chance to destructure at least one item, replace old members with new ones
   // in the field hierarchy that we got
+  /* v8 ignore else -- @preserve */
   if (items.length > 0) {
     fieldHierarchy.childFields = destructuredFields;
   }
@@ -868,6 +870,7 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
       // destructure 0 or 1 sized arrays by removing the array record and putting its first item in its place (if any)
       if (entry.record.value.items.length <= 1) {
         records.splice(i, 1);
+        /* v8 ignore else -- @preserve */
         if (entry.record.value.items.length > 0) {
           const item = entry.record.value.items[0];
           records.splice(i, 0, { ...entry, fieldHierarchy: entry.fieldHierarchy, record: item });

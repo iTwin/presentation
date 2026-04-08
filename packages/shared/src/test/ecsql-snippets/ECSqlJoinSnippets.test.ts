@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
-import * as sinon from "sinon";
+import { beforeEach, describe, expect, it } from "vitest";
 import { createRelationshipPathJoinClause } from "../../shared/ecsql-snippets/ECSqlJoinSnippets.js";
 import { trimWhitespace } from "../../shared/Utils.js";
 import { createECSchemaProviderStub } from "../MetadataProviderStub.js";
@@ -20,12 +19,8 @@ describe("createRelationshipPathJoinClause", () => {
     schemaProvider = createECSchemaProviderStub();
   });
 
-  afterEach(() => {
-    sinon.restore();
-  });
-
   it("returns empty string if given empty relationship path", async () => {
-    expect(await createRelationshipPathJoinClause({ schemaProvider, path: [] })).to.eq("");
+    expect(await createRelationshipPathJoinClause({ schemaProvider, path: [] })).toBe("");
   });
 
   describe("using navigation properties", () => {
@@ -53,7 +48,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(
+      ).toBe(
         trimWhitespace(
           `INNER JOIN [${schemaName}].[PhysicalMaterial] [t] ON [t].[ECInstanceId] = [s].[PhysicalMaterial].[Id]`,
         ),
@@ -84,7 +79,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(
+      ).toBe(
         trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[ECInstanceId] = [s].[ModeledElement].[Id]`),
       );
     });
@@ -113,7 +108,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[Model].[Id] = [s].[ECInstanceId]`));
+      ).toBe(trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[Model].[Id] = [s].[ECInstanceId]`));
     });
 
     it("creates a forward join on backward navigation property with backward relationship", async () => {
@@ -140,7 +135,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(
+      ).toBe(
         trimWhitespace(
           `INNER JOIN [${schemaName}].[ExternalSourceAspect] [t] ON [t].[Scope].[Id] = [s].[ECInstanceId]`,
         ),
@@ -172,7 +167,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(
+      ).toBe(
         trimWhitespace(
           `INNER JOIN [${schemaName}].[PhysicalElement] [t] ON [t].[PhysicalMaterial].[Id] = [s].[ECInstanceId]`,
         ),
@@ -204,7 +199,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(
+      ).toBe(
         trimWhitespace(`INNER JOIN [${schemaName}].[Model] [t] ON [t].[ModeledElement].[Id] = [s].[ECInstanceId]`),
       );
     });
@@ -234,7 +229,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[Model] [t] ON [t].[ECInstanceId] = [s].[Model].[Id]`));
+      ).toBe(trimWhitespace(`INNER JOIN [${schemaName}].[Model] [t] ON [t].[ECInstanceId] = [s].[Model].[Id]`));
     });
 
     it("creates a reversed join on backward navigation property with backward relationship", async () => {
@@ -262,7 +257,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[ECInstanceId] = [s].[Scope].[Id]`));
+      ).toBe(trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[ECInstanceId] = [s].[Scope].[Id]`));
     });
   });
 
@@ -285,7 +280,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(
+      ).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${relationship.name}] [r] ON [r].[SourceECInstanceId] = [s].[ECInstanceId]
           INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId]
@@ -312,7 +307,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(
+      ).toBe(
         trimWhitespace(`
           OUTER JOIN (
             SELECT [r].*
@@ -343,7 +338,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(
+      ).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${relationship.name}] [r] ON [r].[TargetECInstanceId] = [s].[ECInstanceId]
           INNER JOIN [${schemaName}].[${sourceClass.name}] [t] ON [t].[ECInstanceId] = [r].[SourceECInstanceId]
@@ -392,7 +387,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(
+      ).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${step1.targetClass.name}] [b] ON [b].[ECInstanceId] = [a].[${step1.navigationProperty.name}].[Id]
           INNER JOIN [${schemaName}].[${step2.targetClass.name}] [c] ON [c].[${step2.navigationProperty.name}].[Id] = [b].[ECInstanceId]
@@ -427,7 +422,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(
+      ).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${step1.relationship.name}] [r1] ON [r1].[SourceECInstanceId] = [a].[ECInstanceId]
           INNER JOIN [${schemaName}].[${step1.targetClass.name}] [b] ON [b].[ECInstanceId] = [r1].[TargetECInstanceId]
@@ -470,7 +465,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(
+      ).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${step1.targetClass.name}] [b] ON [b].[ECInstanceId] = [a].[${step1.navigationProperty.name}].[Id]
           INNER JOIN [${schemaName}].[${step2.relationship.name}] [r2] ON [r2].[SourceECInstanceId] = [b].[ECInstanceId]
@@ -512,7 +507,7 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(
+      ).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${step1.relationship.name}] [r1] ON [r1].[SourceECInstanceId] = [a].[ECInstanceId]
           INNER JOIN [${schemaName}].[${step1.targetClass.name}] [b] ON [b].[ECInstanceId] = [r1].[TargetECInstanceId]

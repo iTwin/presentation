@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { useEffect } from "react";
-import sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
 import { Format, FormatType, ParseError } from "@itwin/core-quantity";
@@ -13,8 +12,8 @@ import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { useQuantityValueInput } from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
 import { render, waitFor } from "../../TestUtils.js";
 
-import type { FormattingUnitSystemChangedArgs } from "@itwin/core-frontend";
-import type { FormatterSpec, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
+import type { FormattingUnitSystemChangedArgs, QuantityFormatter } from "@itwin/core-frontend";
+import type { FormatsProvider, FormatterSpec, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import type { SchemaContext } from "@itwin/ecschema-metadata";
 import type {
   QuantityValue,
@@ -38,55 +37,43 @@ describe("UseQuantityValueInput", () => {
   const schemaContext = {} as SchemaContext;
   const format = new Format("test format");
   const formatterSpec = {
-    applyFormatting: sinon.stub<[number], string>(),
+    applyFormatting: vi.fn<(raw: number) => string>(),
     unitConversions: [{ name: "test unit", label: "unit" }],
     format,
   };
-  const parserSpec = { parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(), format };
+  const parserSpec = { parseToQuantityValue: vi.fn<(value: string) => QuantityParseResult>(), format };
   const quantityFormatter = { onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() };
 
   const formatProvider = { onFormatsChanged: new BeUiEvent<void>() };
 
-  let getFormatterSpecStub: sinon.SinonStub<
-    Parameters<KoqPropertyValueFormatter["getFormatterSpec"]>,
-    ReturnType<KoqPropertyValueFormatter["getFormatterSpec"]>
-  >;
-  let getParserSpecStub: sinon.SinonStub<
-    Parameters<KoqPropertyValueFormatter["getParserSpec"]>,
-    ReturnType<KoqPropertyValueFormatter["getParserSpec"]>
-  >;
-
-  before(() => {
-    getFormatterSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec");
-    getParserSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec");
-
-    sinon.stub(IModelApp, "quantityFormatter").get(() => quantityFormatter);
-    sinon.stub(IModelApp, "formatsProvider").get(() => formatProvider);
-  });
+  let getFormatterSpecStub: ReturnType<typeof vi.spyOn>;
+  let getParserSpecStub: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    formatterSpec.applyFormatting.callsFake((raw) => `${raw} unit`);
-    parserSpec.parseToQuantityValue.callsFake((value) => {
+    getFormatterSpecStub = vi.spyOn(KoqPropertyValueFormatter.prototype, "getFormatterSpec");
+    getParserSpecStub = vi.spyOn(KoqPropertyValueFormatter.prototype, "getParserSpec");
+
+    vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue(quantityFormatter as unknown as QuantityFormatter);
+    vi.spyOn(IModelApp, "formatsProvider", "get").mockReturnValue(formatProvider as unknown as FormatsProvider);
+
+    formatterSpec.applyFormatting.mockImplementation((raw) => `${raw} unit`);
+    parserSpec.parseToQuantityValue.mockImplementation((value) => {
       if (!value.endsWith("unit")) {
         return { ok: false, error: ParseError.UnknownUnit };
       }
       return { ok: true, value: Number(value.substring(0, value.length - 4)) };
     });
 
-    getFormatterSpecStub.resolves(formatterSpec as unknown as FormatterSpec);
-    getParserSpecStub.resolves(parserSpec as unknown as ParserSpec);
+    getFormatterSpecStub.mockResolvedValue(formatterSpec as unknown as FormatterSpec);
+    getParserSpecStub.mockResolvedValue(parserSpec as unknown as ParserSpec);
   });
 
   afterEach(() => {
-    formatterSpec.applyFormatting.reset();
-    parserSpec.parseToQuantityValue.reset();
+    formatterSpec.applyFormatting.mockReset();
+    parserSpec.parseToQuantityValue.mockReset();
 
-    getFormatterSpecStub.reset();
-    getParserSpecStub.reset();
-  });
-
-  after(() => {
-    sinon.restore();
+    getFormatterSpecStub.mockReset();
+    getParserSpecStub.mockReset();
   });
 
   it("renders with placeholder", async () => {
@@ -102,19 +89,19 @@ describe("UseQuantityValueInput", () => {
   });
 
   it("renders disabled input if cannot create formatter", async () => {
-    getFormatterSpecStub.reset();
+    getFormatterSpecStub.mockResolvedValue(undefined);
     const { getByRole } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />);
     await waitFor(() => expect((getByRole("textbox") as HTMLInputElement).disabled).to.be.true);
   });
 
   it("renders disabled input if cannot create parser", async () => {
-    getParserSpecStub.reset();
+    getParserSpecStub.mockResolvedValue(undefined);
     const { getByRole } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />);
     await waitFor(() => expect((getByRole("textbox") as HTMLInputElement).disabled).to.be.true);
   });
 
   it("parses entered value", async () => {
-    const spy = sinon.stub<[QuantityValue], void>();
+    const spy = vi.fn<(value: QuantityValue) => void>();
     const { user, getByRole, queryByPlaceholderText } = render(
       <TestInput schemaContext={schemaContext} koqName="testKOQ" onChange={spy} />,
     );
@@ -125,7 +112,7 @@ describe("UseQuantityValueInput", () => {
     await user.clear(input);
     await user.type(input, "1.23 unit");
     await waitFor(() => {
-      const value = spy.lastCall.args[0];
+      const value = spy.mock.lastCall![0];
       expect(value.rawValue).to.be.eq(1.23);
       expect(value.highPrecisionFormattedValue).to.be.eq("1.23 unit");
     });
@@ -150,8 +137,8 @@ describe("UseQuantityValueInput", () => {
       format,
     };
 
-    getFormatterSpecStub.resolves(newFormatterSpec as unknown as FormatterSpec);
-    getParserSpecStub.resolves(newParserSpec as unknown as ParserSpec);
+    getFormatterSpecStub.mockResolvedValue(newFormatterSpec as unknown as FormatterSpec);
+    getParserSpecStub.mockResolvedValue(newParserSpec as unknown as ParserSpec);
 
     formatProvider.onFormatsChanged.raiseEvent();
 
@@ -161,16 +148,16 @@ describe("UseQuantityValueInput", () => {
   it("sets precision to 12 for Decimal format types", async () => {
     const decimalFormat = { type: FormatType.Decimal, precision: 6 };
     const decimalFormatterSpec = {
-      applyFormatting: sinon.stub<[number], string>(),
+      applyFormatting: vi.fn<(raw: number) => string>(),
       unitConversions: [{ name: "test unit", label: "unit" }],
       format: decimalFormat,
     };
 
-    decimalFormatterSpec.applyFormatting.callsFake((raw) => `${raw} unit`);
-    getFormatterSpecStub.resolves(decimalFormatterSpec as unknown as FormatterSpec);
+    decimalFormatterSpec.applyFormatting.mockImplementation((raw) => `${raw} unit`);
+    getFormatterSpecStub.mockResolvedValue(decimalFormatterSpec as unknown as FormatterSpec);
 
     render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={0.123456} />);
-    await waitFor(() => expect(decimalFormatterSpec.applyFormatting).to.be.called);
+    await waitFor(() => expect(decimalFormatterSpec.applyFormatting).toHaveBeenCalled());
 
     // Verify that precision was set to 12 for Decimal format
     expect(decimalFormat.precision).to.eq(12);
@@ -179,16 +166,16 @@ describe("UseQuantityValueInput", () => {
   it("does not set precision to 12 for Fractional format types", async () => {
     const fractionalFormat = { type: FormatType.Fractional, precision: 6 };
     const fractionalFormatterSpec = {
-      applyFormatting: sinon.stub<[number], string>(),
+      applyFormatting: vi.fn<(raw: number) => string>(),
       unitConversions: [{ name: "test unit", label: "unit" }],
       format: fractionalFormat,
     };
 
-    fractionalFormatterSpec.applyFormatting.callsFake((raw) => `${raw} unit`);
-    getFormatterSpecStub.resolves(fractionalFormatterSpec as unknown as FormatterSpec);
+    fractionalFormatterSpec.applyFormatting.mockImplementation((raw) => `${raw} unit`);
+    getFormatterSpecStub.mockResolvedValue(fractionalFormatterSpec as unknown as FormatterSpec);
 
     render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={0.123456} />);
-    await waitFor(() => expect(fractionalFormatterSpec.applyFormatting).to.be.called);
+    await waitFor(() => expect(fractionalFormatterSpec.applyFormatting).toHaveBeenCalled());
 
     // Verify that precision was NOT modified for Fractional format
     expect(fractionalFormat.precision).to.eq(6);

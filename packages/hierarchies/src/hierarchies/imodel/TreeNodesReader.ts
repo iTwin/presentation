@@ -37,7 +37,8 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
   };
 
   return from(queryExecutor.createQueryReader(query, config)).pipe(
-    log({ category: LOGGING_NAMESPACE, severity: "trace", message: /* c8 ignore next */ (row) => JSON.stringify(row) }),
+    /* v8 ignore next -- @preserve */
+    log({ category: LOGGING_NAMESPACE, severity: "trace", message: (row) => JSON.stringify(row) }),
     mergeMap((row) => parser({ row })),
   );
 }

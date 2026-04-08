@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { useEffect, useRef, useState } from "react";
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelectionReact.Context.Imports
 import { createStorage, Selectables, SelectionStorage } from "@itwin/unified-selection";
@@ -17,7 +17,7 @@ describe("Unified Selection React", () => {
     describe("Readme example", () => {
       stubVirtualization();
 
-      it("Unified selection context", async function () {
+      it("Unified selection context", async () => {
         const imodelKey = "test-imodel-key";
 
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelectionReact.Context.Example
@@ -67,10 +67,10 @@ describe("Unified Selection React", () => {
         // __PUBLISH_EXTRACT_END__
 
         const { getByRole, getByText, user } = render(<App />);
-        await waitFor(() => expect(getByText("Number of selected elements: 0")).to.not.be.null);
+        await waitFor(() => expect(getByText("Number of selected elements: 0")).not.toBeNull());
 
         await user.click(getByRole("button"));
-        await waitFor(() => expect(getByText("Number of selected elements: 1")).to.not.be.null);
+        await waitFor(() => expect(getByText("Number of selected elements: 1")).not.toBeNull());
       });
     });
   });

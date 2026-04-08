@@ -105,13 +105,13 @@ const value = 1.234;
 const koqName = `${KOQ_SCHEMA_NAME}.FlowRate`;
 
 // Not passing `koqName` formats the value without units using the default formatter:
-expect(await metricFormatter({ type: "Double", value })).to.eq("1.23");
+expect(await metricFormatter({ type: "Double", value })).toBe("1.23");
 
 // Metric formatter formats the value in liters per minute:
-expect(await metricFormatter({ type: "Double", value, koqName })).to.eq("74040.0 L/min");
+expect(await metricFormatter({ type: "Double", value, koqName })).toBe("74040.0 L/min");
 
 // Imperial formatter formats the value in gallons per minute:
-expect(await imperialFormatter({ type: "Double", value, koqName })).to.eq("19559.2988 gal/min");
+expect(await imperialFormatter({ type: "Double", value, koqName })).toBe("19559.2988 gal/min");
 ```
 
 <!-- END EXTRACTION -->

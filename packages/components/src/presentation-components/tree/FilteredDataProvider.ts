@@ -58,9 +58,9 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     this._filteredDataProvider = new SimpleTreeDataProvider(hierarchy);
   }
 
-  /* c8 ignore next - only here to meet interface's requirements, nothing to test */
+  /* v8 ignore next - only here to meet interface's requirements, nothing to test -- @preserve */
   public [Symbol.dispose]() {}
-  /* c8 ignore next - only here to meet interface's requirements, nothing to test */
+  /* v8 ignore next - only here to meet interface's requirements, nothing to test -- @preserve */
   public dispose() {}
 
   public get rulesetId(): string {
@@ -159,11 +159,11 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
   }
 
   /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
-  /* c8 ignore start */
+  /* v8 ignore start -- @preserve */
   public getNodeKey(node: TreeNodeItem): NodeKey {
     return this._parentDataProvider.getNodeKey(node);
   }
-  /* c8 ignore end */
+  /* v8 ignore stop -- @preserve */
 
   /** Check if node matches currently applied filter */
   public nodeMatchesFilter(node: TreeNodeItem): boolean {

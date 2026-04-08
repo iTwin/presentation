@@ -1,0 +1,21 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    name: "Unified-selection tests",
+    include: ["src/test/**/*.test.ts"],
+    mockReset: true,
+    coverage: {
+      provider: "v8",
+      include: ["src/unified-selection/**"],
+      exclude: ["src/test/**"],
+      reportsDirectory: "./lib/test/coverage",
+      reporter: ["text-summary", "lcov", "cobertura"],
+      thresholds: { statements: 100, functions: 100, branches: 100, lines: 100 },
+    },
+  },
+});

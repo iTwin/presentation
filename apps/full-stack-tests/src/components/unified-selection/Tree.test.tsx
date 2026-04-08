@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
 import {
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import { useCallback, useState } from "react";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { SelectionMode, UiComponents } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
 import { KeySet, RuleTypes } from "@itwin/presentation-common";
@@ -20,7 +20,7 @@ import {
   usePresentationTreeState,
 } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { buildTestIModel } from "@itwin/presentation-testing";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, fireEvent, render, waitFor } from "../../RenderUtils.js";
 import { getNodeByLabel, isNodeSelectedInTree, toggleExpandNode } from "../TreeUtils.js";
@@ -31,17 +31,17 @@ import type { PresentationTreeEventHandlerProps } from "@itwin/presentation-comp
 
 describe("Learning snippets", async () => {
   describe("Tree", () => {
-    before(async () => {
+    beforeAll(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
     });
 
-    after(async () => {
+    afterAll(async () => {
       UiComponents.terminate();
       await terminate();
     });
 
-    it("renders unified selection tree", async function () {
+    it("renders unified selection tree", async () => {
       // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.Tree
       function MyTree(props: { imodel: IModelConnection }) {
         // create a node loader for given iModel and ruleset
@@ -72,7 +72,7 @@ describe("Learning snippets", async () => {
       // set up imodel for the test
       let modelKey: InstanceKey;
       let elementKey: InstanceKey;
-      const imodel = await buildTestIModel(this, async (builder) => {
+      const { imodel } = await buildTestIModel(async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
         elementKey = insertPhysicalElement({
@@ -97,23 +97,23 @@ describe("Learning snippets", async () => {
       // test Unified Selection -> Tree selection synchronization
       act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([modelKey!])));
       await waitFor(() => {
-        expect(isNodeSelectedInTree(modelNode)).to.be.true;
-        expect(isNodeSelectedInTree(elementNode)).to.be.false;
+        expect(isNodeSelectedInTree(modelNode)).toBe(true);
+        expect(isNodeSelectedInTree(elementNode)).toBe(false);
       });
       act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([elementKey!])));
       await waitFor(() => {
-        expect(isNodeSelectedInTree(modelNode)).to.be.false;
-        expect(isNodeSelectedInTree(elementNode)).to.be.true;
+        expect(isNodeSelectedInTree(modelNode)).toBe(false);
+        expect(isNodeSelectedInTree(elementNode)).toBe(true);
       });
 
       // test Tree selection -> Unified Selection synchronization
       fireEvent.click(modelNode);
       await waitFor(() => {
-        expect(getInstanceKeysInUnifiedSelection(imodel)).to.deep.eq([modelKey]);
+        expect(getInstanceKeysInUnifiedSelection(imodel)).toEqual([modelKey]);
       });
       fireEvent.click(elementNode);
       await waitFor(() => {
-        expect(getInstanceKeysInUnifiedSelection(imodel)).to.deep.eq([elementKey]);
+        expect(getInstanceKeysInUnifiedSelection(imodel)).toEqual([elementKey]);
       });
     });
   });

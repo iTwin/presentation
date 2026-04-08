@@ -276,7 +276,6 @@ function useTreeInternal({
   const setFormatter = useCallback<UseTreeResult["setFormatter"]>(
     (formatter: IPrimitiveValueFormatter | undefined) => {
       currentFormatter.current = formatter;
-      /* c8 ignore next 3 */
       if (!hierarchyProvider) {
         return;
       }

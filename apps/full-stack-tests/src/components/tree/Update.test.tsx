@@ -3,28 +3,27 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import * as sinon from "sinon";
-import { UiComponents } from "@itwin/components-react";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  type AbstractTreeNodeLoader,
+  type AbstractTreeNodeLoaderWithProvider,
+  type DelayLoadedTreeNodeItem,
+  type MutableTreeModelNode,
+  type Subscription,
+  type TreeModelNode,
+  type TreeModelRootNode,
+  type TreeModelSource,
+  UiComponents,
+} from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
 import { ChildNodeSpecificationTypes, RuleTypes } from "@itwin/presentation-common";
 import { usePresentationTreeState } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { TestIModelConnection } from "@itwin/presentation-testing";
+import { TestIModelConnection } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { renderHook, waitFor } from "../../RenderUtils.js";
 
 import type { PrimitiveValue } from "@itwin/appui-abstract";
-import type {
-  AbstractTreeNodeLoader,
-  AbstractTreeNodeLoaderWithProvider,
-  DelayLoadedTreeNodeItem,
-  MutableTreeModelNode,
-  Subscription,
-  TreeModelNode,
-  TreeModelRootNode,
-  TreeModelSource,
-} from "@itwin/components-react";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { Ruleset } from "@itwin/presentation-common";
 import type { IPresentationTreeDataProvider, UsePresentationTreeStateProps } from "@itwin/presentation-components";
@@ -34,31 +33,31 @@ import type { IPresentationTreeDataProvider, UsePresentationTreeStateProps } fro
 describe("Tree update", () => {
   let imodel: IModelConnection;
 
-  before(async () => {
+  beforeAll(async () => {
     await initialize();
     const testIModelName: string = "assets/datasets/Properties_60InstancesWithUrl2.ibim";
     imodel = TestIModelConnection.openFile(testIModelName);
-    expect(imodel).is.not.null;
+    expect(imodel).not.toBeNull();
   });
 
-  after(async () => {
+  afterAll(async () => {
     await imodel.close();
     await terminate();
   });
 
   afterEach(async () => {
-    sinon.restore();
+    vi.restoreAllMocks();
     await Presentation.presentation.rulesets().clear();
   });
 
   describe("detection", () => {
     let defaultProps: Omit<UsePresentationTreeStateProps, "ruleset">;
 
-    before(async () => {
+    beforeAll(async () => {
       await UiComponents.initialize(IModelApp.localization);
     });
 
-    after(() => {
+    afterAll(() => {
       UiComponents.terminate();
     });
 
@@ -483,7 +482,7 @@ describe("Tree update", () => {
       });
 
       await waitFor(() => {
-        expect(result.current).to.not.be.undefined;
+        expect(result.current).toBeDefined();
       });
       await expectTree(result.current!.nodeLoader, expectedTree);
 
@@ -511,7 +510,7 @@ describe("Tree update", () => {
 
       const model = nodeLoader.modelSource.getModel();
       const actualHierarchy = buildActualHierarchy(undefined);
-      expect(actualHierarchy).to.deep.equal(expectedHierarchy);
+      expect(actualHierarchy).toEqual(expectedHierarchy);
 
       function buildActualHierarchy(parentId: string | undefined): TreeHierarchy[] {
         const result: TreeHierarchy[] = [];

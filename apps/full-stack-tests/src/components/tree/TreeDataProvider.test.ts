@@ -4,14 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
-import * as sinon from "sinon";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { assert, Guid } from "@itwin/core-bentley";
 import { RpcManager } from "@itwin/core-common";
 import { ChildNodeSpecificationTypes, NodeKey, PresentationRpcInterface, RuleTypes } from "@itwin/presentation-common";
 import { isPresentationInfoTreeNodeItem, PresentationTreeDataProvider } from "@itwin/presentation-components";
-import { TestIModelConnection } from "@itwin/presentation-testing";
+import { TestIModelConnection } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
@@ -53,74 +52,74 @@ describe("TreeDataProvider", async () => {
   let imodel: IModelConnection;
   let provider: PresentationTreeDataProvider;
 
-  before(async () => {
+  beforeAll(async () => {
     await initialize();
     const testIModelName: string = "assets/datasets/Properties_60InstancesWithUrl2.ibim";
     imodel = TestIModelConnection.openFile(testIModelName);
-    expect(imodel).is.not.null;
+    expect(imodel).not.toBeNull();
     provider = new PresentationTreeDataProvider({ imodel, ruleset: RULESET });
   });
 
-  after(async () => {
+  afterAll(async () => {
     await imodel.close();
     await terminate();
   });
 
   it("returns root nodes count", async () => {
     const count = await provider.getNodesCount();
-    expect(count).to.eq(1);
+    expect(count).toBe(1);
   });
 
   it("returns root nodes", async () => {
     const nodes = await provider.getNodes();
-    expect(nodes.length).to.eq(1);
+    expect(nodes.length).toBe(1);
   });
 
   it("returns root nodes with paging", async () => {
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(undefined, { start: 0, size: 5 });
-    expect(nodes.length).to.eq(1);
+    expect(nodes.length).toBe(1);
   });
 
   it("creates error node when requesting root nodes with invalid paging", async () => {
     // stub console log to avoid expected error in console
-    const consoleStub = sinon.stub(console, "error").callsFake(() => {});
+    const consoleStub = vi.spyOn(console, "error").mockImplementation(() => {});
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(undefined, { start: 1, size: 5 });
     if (nodes.length === 1) {
       const node = nodes[0];
       assert(isPresentationInfoTreeNodeItem(node));
       // cspell:disable-next-line
-      expect(node.message).to.eq("Èrrór ¢rëätíñg thë hìérärçhý lévêl");
+      expect(node.message).toBe("Èrrór ¢rëätíñg thë hìérärçhý lévêl");
     } else {
       // presentation-frontend@3.6 returns an empty list in case of invalid page options
-      expect(nodes).to.be.empty;
+      expect(nodes).toHaveLength(0);
     }
-    consoleStub.restore();
+    consoleStub.mockRestore();
   });
 
   it("returns child nodes count", async () => {
     const rootNodes = await provider.getNodes();
     const count = await provider.getNodesCount(rootNodes[0]);
-    expect(count).to.eq(1);
+    expect(count).toBe(1);
   });
 
   it("returns child nodes", async () => {
     const rootNodes = await provider.getNodes();
     const childNodes = await provider.getNodes(rootNodes[0]);
-    expect(childNodes.length).to.eq(1);
+    expect(childNodes.length).toBe(1);
   });
 
   it("returns child nodes with paging", async () => {
     const rootNodes = await provider.getNodes();
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(rootNodes[0], { start: 0, size: 5 });
-    expect(nodes.length).to.eq(1);
+    expect(nodes.length).toBe(1);
   });
 
   it("returns error node when requesting child nodes with invalid paging", async () => {
     // stub console log to avoid expected error in console
-    const consoleStub = sinon.stub(console, "error").callsFake(() => {});
+    const consoleStub = vi.spyOn(console, "error").mockImplementation(() => {});
     const rootNodes = await provider.getNodes();
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(rootNodes[0], { start: 1, size: 5 });
@@ -128,25 +127,25 @@ describe("TreeDataProvider", async () => {
       const node = nodes[0];
       assert(isPresentationInfoTreeNodeItem(node));
       // cspell:disable-next-line
-      expect(node.message).to.eq("Èrrór ¢rëätíñg thë hìérärçhý lévêl");
+      expect(node.message).toBe("Èrrór ¢rëätíñg thë hìérärçhý lévêl");
     } else {
       // presentation-frontend@3.6 returns an empty list in case of invalid page options
-      expect(nodes).to.be.empty;
+      expect(nodes).toHaveLength(0);
     }
-    consoleStub.restore();
+    consoleStub.mockRestore();
   });
 
   it("requests backend only once to get first page", async () => {
-    const getNodesSpy = sinon.spy(RpcManager.getClientForInterface(PresentationRpcInterface), "getPagedNodes");
+    const getNodesSpy = vi.spyOn(RpcManager.getClientForInterface(PresentationRpcInterface), "getPagedNodes");
     provider.pagingSize = 10;
 
     // request count and first page
     const count = await provider.getNodesCount();
     const nodes = await provider.getNodes(undefined, { start: 0, size: 10 });
 
-    expect(count).to.not.eq(0);
-    expect(nodes).to.not.be.undefined;
-    expect(getNodesSpy).to.be.calledOnce;
+    expect(count).not.toBe(0);
+    expect(nodes).toBeDefined();
+    expect(getNodesSpy).toHaveBeenCalledOnce();
   });
 
   it("shows grouping node children counts", async () => {
@@ -167,12 +166,12 @@ describe("TreeDataProvider", async () => {
     };
     provider = new PresentationTreeDataProvider({ imodel, ruleset, appendChildrenCountForGroupingNodes: true });
     const nodes = await provider.getNodes(undefined);
-    expect(nodes).to.not.be.empty;
+    expect(nodes).not.toHaveLength(0);
     nodes.forEach((item) => {
       const key = (item as PresentationTreeNodeItem).key;
       assert(NodeKey.isClassGroupingNodeKey(key));
       assert(item.label.value.valueFormat === PropertyValueFormat.Primitive);
-      expect(item.label.value.displayValue).to.match(
+      expect(item.label.value.displayValue).toMatch(
         new RegExp(`^[\\w\\d_ ]+ \\(${key.groupedInstancesCount}\\)$`, "i"),
       );
     });

@@ -90,7 +90,8 @@ class IModelHiliteSetProviderImpl implements IModelHiliteSetProvider {
         }
       },
     );
-    this._createHiliteSetProvider = props.createHiliteSetProvider ?? /* c8 ignore next */ createHiliteSetProvider;
+    /* v8 ignore next -- @preserve */
+    this._createHiliteSetProvider = props.createHiliteSetProvider ?? createHiliteSetProvider;
   }
 
   public getHiliteSetProvider({ imodelKey }: { imodelKey: string }): HiliteSetProvider {

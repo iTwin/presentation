@@ -38,10 +38,10 @@ export function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) =
 export function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => Promise<void>): Promise<IModelConnection>;
 
 // @beta @deprecated
-export function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;
+export function buildTestIModel(context: TestContext, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;
 
 // @beta
-export function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => Promise<void>): Promise<IModelConnection>;
+export function buildTestIModel(context: TestContext, cb: (builder: TestIModelBuilder) => Promise<void>): Promise<IModelConnection>;
 
 // @public
 export class ContentBuilder {
@@ -148,6 +148,14 @@ export function setupOutputFileLocation(fileName: string): LocalFileName;
 
 // @public
 export const terminate: (frontendApp?: typeof IModelApp) => Promise<void>;
+
+// @beta
+interface TestContext {
+    // (undocumented)
+    test: {
+        fullTitle: () => string;
+    } | undefined;
+}
 
 // @beta
 export interface TestIModelBuilder {

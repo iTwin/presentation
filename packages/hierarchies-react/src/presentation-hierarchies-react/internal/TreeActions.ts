@@ -53,7 +53,7 @@ export class TreeActions {
   ) {
     this._loader = new NoopTreeLoader();
     this._nodeIdFactory = nodeIdFactory ?? createNodeId;
-    this._currentModel = seed ?? /* c8 ignore next */ {
+    this._currentModel = seed ?? {
       idToNode: new Map(),
       parentChildMap: new Map(),
       rootNode: { id: undefined, nodeData: undefined },
@@ -166,7 +166,6 @@ export class TreeActions {
 
   private loadNodes(parentId: string, ignoreCache?: boolean) {
     const parentNode = this._currentModel.idToNode.get(parentId);
-    /* c8 ignore next 3 */
     if (!parentNode) {
       return { complete: Promise.resolve() };
     }
@@ -211,7 +210,6 @@ export class TreeActions {
       !!options?.discardState || node.id === parentId ? node : addAttributes(node, oldModel);
 
     const rootNode = parentId !== undefined ? this.getNode(parentId) : currModel.rootNode;
-    /* c8 ignore next 3 */
     if (!rootNode) {
       return { complete: Promise.resolve() };
     }
@@ -246,7 +244,7 @@ export class TreeActions {
           },
           this._nodeIdFactory,
         )
-      : /* c8 ignore next */ new NoopTreeLoader();
+      : new NoopTreeLoader();
   }
 
   public getNode(nodeId: string | undefined): TreeModelHierarchyNode | TreeModelRootNode | undefined {
@@ -428,13 +426,11 @@ function createHierarchyLevelOptions(model: TreeModel, nodeId: string | undefine
   return { instanceFilter: modelNode.instanceFilter, hierarchyLevelSizeLimit: modelNode.hierarchyLimit };
 }
 
-/* c8 ignore start */
 class NoopTreeLoader implements ITreeLoader {
   public loadNodes(): Observable<LoadedTreePart> {
     return EMPTY;
   }
 }
-/* c8 ignore end */
 
 class TimeTracker {
   private _start: number;
@@ -449,7 +445,6 @@ class TimeTracker {
   }
 
   public finish() {
-    /* c8 ignore next 3 */
     if (this._stopped) {
       return;
     }

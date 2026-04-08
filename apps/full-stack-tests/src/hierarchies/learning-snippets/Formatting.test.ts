@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Formatting.BasicFormatterExample.Imports
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
@@ -12,11 +12,11 @@ import { initialize, terminate } from "../../IntegrationTests.js";
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Formatting", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
@@ -29,8 +29,8 @@ describe("Hierarchies", () => {
           }
           return defaultFormatter(value);
         };
-        expect(await myFormatter({ type: "Boolean", value: true })).to.eq("yes!");
-        expect(await myFormatter({ type: "Boolean", value: false })).to.eq("no!");
+        expect(await myFormatter({ type: "Boolean", value: true })).toBe("yes!");
+        expect(await myFormatter({ type: "Boolean", value: false })).toBe("no!");
         // __PUBLISH_EXTRACT_END__
       });
     });

@@ -18,6 +18,7 @@ import {
 } from "presentation-test-utilities";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
+import { afterAll, describe, it, test } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.HierarchyProviderImports
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
@@ -39,28 +40,28 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils.js";
-import { importSchema } from "../../SchemaUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy, validateHierarchyLevel } from "../HierarchyValidation.js";
 import { createIModelAccess } from "../Utils.js";
+import { buildTestIModel } from "../../IModelUtils.js";
+import { importSchema } from "../../SchemaUtils.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Migration from Presentation Rules", () => {
       let emptyIModel: IModelConnection;
 
-      before(async function () {
+      test.beforeAll(async (_, suite) => {
         await initialize();
-        emptyIModel = (await buildIModel(this)).imodel;
+        emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodel;
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
       describe("Basic concepts", () => {
-        it("creates a hierarchy provider", async function () {
+        it("creates a hierarchy provider", async () => {
           const imodel = emptyIModel;
           const imodelAccess = createIModelAccess(imodel);
           const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
@@ -81,7 +82,7 @@ describe("Hierarchies", () => {
       });
 
       describe("Migrating hierarchy rules", () => {
-        it("creates predicate based hierarchy definition", async function () {
+        it("creates predicate based hierarchy definition", async () => {
           const imodelAccess = createIModelAccess(emptyIModel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.PredicateBasedHierarchyDefinitionUsage
           const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
@@ -115,7 +116,7 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_END__
         });
 
-        it("creates manual hierarchy definition", async function () {
+        it("creates manual hierarchy definition", async () => {
           const imodelAccess = createIModelAccess(emptyIModel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.ManuallyCreatingHierarchyDefinition
           const hierarchyDefinition: HierarchyDefinition = {
@@ -173,8 +174,8 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("creates instance nodes of specific classes definition", async function () {
-          const { imodel } = await buildIModel(this, async (builder) => {
+        it("creates instance nodes of specific classes definition", async () => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             insertPhysicalModelWithPartition({ builder, codeValue: "Non-private physical model" });
             insertPhysicalSubModel({
               builder,
@@ -235,8 +236,8 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("creates related instance nodes definition", async function () {
-          const { imodel } = await buildIModel(this, async (builder) => {
+        it("creates related instance nodes definition", async () => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
             const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
             const type = insertPhysicalType({ builder, codeValue: "Physical type" });
@@ -322,10 +323,10 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("creates custom query instance nodes definition", async function () {
-          const { imodel, schema } = await buildIModel(this, async (builder) => {
+        it("creates custom query instance nodes definition", async () => {
+          const { imodel, schema } = await buildTestIModel(async (builder, testName) => {
             const importedSchema = await importSchema(
-              this,
+              testName,
               builder,
               `
                 <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
@@ -458,8 +459,8 @@ describe("Hierarchies", () => {
       });
 
       describe("Migrating grouping specifications", () => {
-        it("groups by base class", async function () {
-          const { imodel } = await buildIModel(this, async (builder) => {
+        it("groups by base class", async () => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
             const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
             insertPhysicalElement({
@@ -518,7 +519,7 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("groups by class", async function () {
+        it("groups by class", async () => {
           const imodelAccess = createIModelAccess(emptyIModel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.ClassGrouping
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
@@ -573,8 +574,8 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("groups by properties", async function () {
-          const { imodel } = await buildIModel(this, async (builder) => {
+        it("groups by properties", async () => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
             const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
             insertPhysicalElement({
@@ -647,8 +648,8 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("groups by label", async function () {
-          const { imodel } = await buildIModel(this, async (builder) => {
+        it("groups by label", async () => {
+          const { imodel } = await buildTestIModel(async (builder) => {
             insertRepositoryLink({ builder, repositoryLabel: "Test repository link" });
             insertRepositoryLink({ builder, repositoryLabel: "Test repository link" });
           });
@@ -703,8 +704,8 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("merges by label", async function () {
-          const { imodel, repoLinkKeys } = await buildIModel(this, async (builder) => {
+        it("merges by label", async () => {
+          const { imodel, repoLinkKeys } = await buildTestIModel(async (builder) => {
             return {
               repoLinkKeys: [
                 insertRepositoryLink({ builder, repositoryLabel: "Test repository link" }),

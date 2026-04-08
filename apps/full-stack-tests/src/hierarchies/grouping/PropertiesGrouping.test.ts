@@ -9,12 +9,13 @@ import {
   insertSpatialCategory,
   insertSubject,
 } from "presentation-test-utilities";
+import { afterAll, describe, it, test } from "vitest";
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { withECDb } from "../../ECDbUtils.js";
-import { buildIModel } from "../../IModelUtils.js";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { importSchema } from "../../SchemaUtils.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -32,13 +33,13 @@ describe("Hierarchies", () => {
     let subjectClassName: string;
     let emptyIModel: IModelConnection;
 
-    before(async function () {
+    test.beforeAll(async (_, suite) => {
       await initialize();
       subjectClassName = Subject.classFullName.replace(":", ".");
-      emptyIModel = (await buildIModel(this)).imodel;
+      emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodel;
     });
 
-    after(async () => {
+    afterAll(async () => {
       await terminate();
     });
 
@@ -79,8 +80,8 @@ describe("Hierarchies", () => {
       };
     }
 
-    it("doesn't group if provided properties class isn't base of nodes class", async function () {
-      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+    it("doesn't group if provided properties class isn't base of nodes class", async () => {
+      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
         const childSubject1 = insertSubject({
           builder,
           codeValue: "A1",
@@ -102,8 +103,8 @@ describe("Hierarchies", () => {
     });
 
     describe("unspecified values grouping", () => {
-      it("doesn't create grouping nodes if provided property values are not defined and `createGroupForUnspecifiedValues` isn't set", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("doesn't create grouping nodes if provided property values are not defined and `createGroupForUnspecifiedValues` isn't set", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           return { childSubject1 };
         });
@@ -119,8 +120,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("creates property value grouping node if provided property values are not defined and `createGroupForOutOfRangeValues` is `true`", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("creates property value grouping node if provided property values are not defined and `createGroupForOutOfRangeValues` is `true`", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           return { childSubject1 };
         });
@@ -149,7 +150,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("groups by navigation property", async function () {
+      it("groups by navigation property", async () => {
         const imodelAccess = createIModelAccess(emptyIModel);
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -203,8 +204,8 @@ describe("Hierarchies", () => {
     });
 
     describe("value grouping", () => {
-      it("creates property value grouping nodes", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("creates property value grouping nodes", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({
             builder,
             codeValue: "A1",
@@ -233,8 +234,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("creates multiple grouping nodes if nodes have different property values", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("creates multiple grouping nodes if nodes have different property values", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({
             builder,
             codeValue: "A1",
@@ -308,8 +309,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("creates multiple levels of grouping if node has multiple property groupings", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("creates multiple levels of grouping if node has multiple property groupings", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({
             builder,
             codeValue: "A1",
@@ -352,8 +353,8 @@ describe("Hierarchies", () => {
       });
 
       describe("navigation property", () => {
-        it("groups by navigation property with forward direction", async function () {
-          const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+        it("groups by navigation property with forward direction", async () => {
+          const { imodel, ...keys } = await buildTestIModel(async (builder) => {
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
             const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
             const physicalElement = insertPhysicalElement({
@@ -417,8 +418,8 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("groups by navigation property with backward direction", async function () {
-          const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+        it("groups by navigation property with backward direction", async () => {
+          const { imodel, ...keys } = await buildTestIModel(async (builder) => {
             const childSubject1 = insertSubject({
               builder,
               codeValue: "A1",
@@ -482,8 +483,8 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("creates one grouping node when navigation properties point to different nodes with same labels", async function () {
-          const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+        it("creates one grouping node when navigation properties point to different nodes with same labels", async () => {
+          const { imodel, ...keys } = await buildTestIModel(async (builder) => {
             const childSubject1 = insertSubject({
               builder,
               codeValue: "A1",
@@ -566,8 +567,8 @@ describe("Hierarchies", () => {
           });
         });
 
-        it("creates different grouping nodes when navigation properties point to different nodes with different labels", async function () {
-          const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+        it("creates different grouping nodes when navigation properties point to different nodes with different labels", async () => {
+          const { imodel, ...keys } = await buildTestIModel(async (builder) => {
             const childSubject1 = insertSubject({
               builder,
               codeValue: "A1",
@@ -661,12 +662,11 @@ describe("Hierarchies", () => {
     });
 
     describe("range grouping", () => {
-      it("creates property value range grouping nodes", async function () {
+      it("creates property value range grouping nodes", async () => {
         await withECDb(
-          this,
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              this,
+              testName,
               db,
               `
                 <ECEntityClass typeName="X">
@@ -742,12 +742,11 @@ describe("Hierarchies", () => {
         );
       });
 
-      it("creates property value range grouping nodes with custom range label", async function () {
+      it("creates property value range grouping nodes with custom range label", async () => {
         await withECDb(
-          this,
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              this,
+              testName,
               db,
               `
               <ECEntityClass typeName="X">
@@ -819,12 +818,11 @@ describe("Hierarchies", () => {
         );
       });
 
-      it("creates multiple grouping nodes when nodes' property values fit in different ranges", async function () {
+      it("creates multiple grouping nodes when nodes' property values fit in different ranges", async () => {
         await withECDb(
-          this,
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              this,
+              testName,
               db,
               `
               <ECEntityClass typeName="X">
@@ -909,12 +907,11 @@ describe("Hierarchies", () => {
         );
       });
 
-      it("doesn't create grouping nodes if provided properties don't fit in the range and `createGroupForOutOfRangeValues` isn't set", async function () {
+      it("doesn't create grouping nodes if provided properties don't fit in the range and `createGroupForOutOfRangeValues` isn't set", async () => {
         await withECDb(
-          this,
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              this,
+              testName,
               db,
               `
               <ECEntityClass typeName="X">
@@ -977,12 +974,11 @@ describe("Hierarchies", () => {
         );
       });
 
-      it("creates 'other' property value grouping node if provided properties don't fit in the range and `createGroupForOutOfRangeValues` is `true`", async function () {
+      it("creates 'other' property value grouping node if provided properties don't fit in the range and `createGroupForOutOfRangeValues` is `true`", async () => {
         await withECDb(
-          this,
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              this,
+              testName,
               db,
               `
               <ECEntityClass typeName="X">
@@ -1059,12 +1055,11 @@ describe("Hierarchies", () => {
         );
       });
 
-      it("creates a single 'other' property value grouping node for different properties", async function () {
+      it("creates a single 'other' property value grouping node for different properties", async () => {
         await withECDb(
-          this,
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              this,
+              testName,
               db,
               `
               <ECEntityClass typeName="X">

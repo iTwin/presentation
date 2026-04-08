@@ -13,7 +13,7 @@ import type { GuidString, Id64String } from "@itwin/core-bentley";
 import type { ECSqlReader, QueryOptions } from "@itwin/core-common";
 import type { IModelConnection } from "@itwin/core-frontend";
 
-/* c8 ignore start */
+/* v8 ignore start -- @preserve */
 
 /** @internal */
 export class ECClassInfo {
@@ -172,7 +172,7 @@ export function getIModelMetadataProvider(imodel: IModelConnection) {
       imodel.createQueryReader(ecsql, params, config),
     );
     metadataProviders.set(imodel.key, metadataProvider);
-    /* c8 ignore next 3 */
+    /* v8 ignore next -- @preserve */
     imodel.onClose.addOnce(() => {
       metadataProviders.delete(imodel.key);
     });

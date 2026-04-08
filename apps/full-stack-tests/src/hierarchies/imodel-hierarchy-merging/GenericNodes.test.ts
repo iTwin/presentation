@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { afterAll, beforeAll, beforeEach, describe, it, test } from "vitest";
 import { createChangedDbs } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -16,32 +17,32 @@ import {
 import type { createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
-  before(async function () {
+  beforeAll(async function () {
     await initialize();
   });
 
-  after(async () => {
+  afterAll(async () => {
     await terminate();
   });
 
   describe("Merging iModel hierarchies", () => {
     describe("Generic nodes", () => {
-      async function setupDbs(mochaContext: Mocha.Context) {
-        return createChangedDbs(
-          mochaContext,
-          async (builder) => {
+      async function setupDbs(testName: string) {
+        return createChangedDbs({
+          name: testName,
+          setupBase: async (builder) => {
             const xyzSchema = await importXYZSchema(builder);
             const x = builder.insertInstance(xyzSchema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(xyzSchema.items.Y.fullName, { ["Label"]: "y1" });
             builder.insertRelationship(xyzSchema.items.XY.fullName, x.id, y1.id);
             return { xyzSchema, x, y1 };
           },
-          async (builder, base) => {
+          setupChangeset1: async (builder, base) => {
             const y2 = builder.insertInstance(base.xyzSchema.items.Y.fullName, { ["Label"]: "y2" });
             builder.insertRelationship(base.xyzSchema.items.XY.fullName, base.x.id, y2.id);
             return { ...base, y2 };
           },
-        );
+        });
       }
 
       let dbs: Awaited<ReturnType<typeof setupDbs>>;
@@ -51,8 +52,8 @@ describe("Hierarchies", () => {
       };
       let provider: ReturnType<typeof createMergedIModelHierarchyProvider>;
 
-      before(async function () {
-        dbs = await setupDbs(this);
+      test.beforeAll(async function (_c, suite) {
+        dbs = await setupDbs(suite.fullTestName!);
         keys = {
           base: pickAndTransform(dbs.base, ["x", "y1"], (_, value) => ({ ...value, imodelKey: "base" })),
           changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y2"], (_, value) => ({
@@ -62,7 +63,7 @@ describe("Hierarchies", () => {
         };
       });
 
-      after(async () => {
+      afterAll(async () => {
         dbs[Symbol.dispose]();
       });
 

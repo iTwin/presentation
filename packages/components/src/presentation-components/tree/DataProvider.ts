@@ -192,7 +192,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   }
 
   /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
-  /* c8 ignore next 3 */
+  /* v8 ignore next -- @preserve */
   public dispose() {
     this.#dispose();
   }
@@ -396,6 +396,7 @@ async function createNodesAndCountResult(
     }
     return { nodes: await createTreeItems(items, baseOptions, treeItemFactory, parentNode), count };
   } catch (e) {
+    /* v8 ignore else -- @preserve */
     if (e instanceof Error) {
       if (hasErrorNumber(e)) {
         switch (e.errorNumber) {

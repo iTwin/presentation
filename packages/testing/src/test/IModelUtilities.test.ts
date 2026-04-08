@@ -3,87 +3,84 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { join } from "path";
-import sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { IModelJsFs, SnapshotDb } from "@itwin/core-backend";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createFileNameFromString, getTestOutputDir } from "../presentation-testing/FilenameUtils.js";
 import { buildTestIModel, TestIModelConnection } from "../presentation-testing/IModelUtilities.js";
-import { createStub } from "./Utils.js";
 
-import type { SinonStub } from "sinon";
+import type { MockInstance } from "vitest";
 import type { CreateEmptySnapshotIModelProps } from "@itwin/core-common";
 
 describe("buildTestIModel", () => {
-  const snapshotDb = { saveChanges: createStub<SnapshotDb["saveChanges"]>(), close: createStub<SnapshotDb["close"]>() };
+  const snapshotDb = { saveChanges: vi.fn<SnapshotDb["saveChanges"]>(), close: vi.fn<SnapshotDb["close"]>() };
   const testIModelConnection = Object.create(TestIModelConnection.prototype);
   testIModelConnection._db = snapshotDb;
   testIModelConnection.onClose = new BeEvent();
 
-  let createSnapshotDb: SinonStub<[filePath: string, options: CreateEmptySnapshotIModelProps], SnapshotDb>;
+  let createSnapshotDb: MockInstance<(filePath: string, options: CreateEmptySnapshotIModelProps) => SnapshotDb>;
 
   beforeEach(() => {
-    createSnapshotDb = sinon.stub(SnapshotDb, "createEmpty").returns(snapshotDb as unknown as SnapshotDb);
-    sinon.stub(TestIModelConnection, "openFile").resolves(testIModelConnection);
+    createSnapshotDb = vi.spyOn(SnapshotDb, "createEmpty").mockReturnValue(snapshotDb as unknown as SnapshotDb);
+    vi.spyOn(TestIModelConnection, "openFile").mockResolvedValue(testIModelConnection);
   });
 
   afterEach(() => {
-    snapshotDb.saveChanges.reset();
-    snapshotDb.close.reset();
-    sinon.restore();
+    snapshotDb.saveChanges.mockReset();
+    snapshotDb.close.mockReset();
   });
 
   it("calls IModelJsFs.mkdirSync if directory does not exist", async () => {
-    sinon.stub(IModelJsFs, "existsSync").returns(false);
-    const mkdirFake = sinon.fake();
-    sinon.replace(IModelJsFs, "mkdirSync", mkdirFake);
+    vi.spyOn(IModelJsFs, "existsSync").mockReturnValue(false);
+    const mkdirFake = vi.fn();
+    vi.spyOn(IModelJsFs, "mkdirSync").mockImplementation(mkdirFake);
 
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel("name", async () => {});
 
-    expect(mkdirFake.calledOnceWith(getTestOutputDir()));
+    expect(mkdirFake).toHaveBeenCalledExactlyOnceWith(getTestOutputDir());
   });
 
   it("calls IModelJsFs.unlinkSync if output file exists", async () => {
     const fileName = "fileName";
-    sinon.stub(IModelJsFs, "existsSync").returns(true);
-    const unlinkFake = sinon.fake();
-    sinon.replace(IModelJsFs, "unlinkSync", unlinkFake);
+    vi.spyOn(IModelJsFs, "existsSync").mockReturnValue(true);
+    const unlinkFake = vi.fn();
+    vi.spyOn(IModelJsFs, "unlinkSync").mockImplementation(unlinkFake);
 
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel(fileName, async () => {});
 
-    const outputFile = join(getTestOutputDir(), fileName);
-    expect(unlinkFake.calledOnceWith(outputFile));
+    const outputFile = join(getTestOutputDir(), `${fileName}.bim`);
+    expect(unlinkFake).toHaveBeenCalledExactlyOnceWith(outputFile);
   });
 
   it("does not call IModelJsFs.unlinkSync if directory does not exist", async () => {
-    sinon.stub(IModelJsFs, "existsSync").returns(false);
-    const mkdirFake = sinon.fake();
-    sinon.replace(IModelJsFs, "mkdirSync", mkdirFake);
-    const unlinkFake = sinon.fake();
-    sinon.replace(IModelJsFs, "unlinkSync", unlinkFake);
+    vi.spyOn(IModelJsFs, "existsSync").mockReturnValue(false);
+    const mkdirFake = vi.fn();
+    vi.spyOn(IModelJsFs, "mkdirSync").mockImplementation(mkdirFake);
+    const unlinkFake = vi.fn();
+    vi.spyOn(IModelJsFs, "unlinkSync").mockImplementation(unlinkFake);
 
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel("name", async () => {});
 
-    expect(unlinkFake.notCalled);
+    expect(unlinkFake).not.toHaveBeenCalled();
   });
 
   it("does not call IModelJsFs.mkdirSync if output file exists", async () => {
     const fileName = "fileName";
-    sinon.stub(IModelJsFs, "existsSync").returns(true);
-    const mkdirFake = sinon.fake();
-    sinon.replace(IModelJsFs, "mkdirSync", mkdirFake);
-    const unlinkFake = sinon.fake();
-    sinon.replace(IModelJsFs, "unlinkSync", unlinkFake);
+    vi.spyOn(IModelJsFs, "existsSync").mockReturnValue(true);
+    const mkdirFake = vi.fn();
+    vi.spyOn(IModelJsFs, "mkdirSync").mockImplementation(mkdirFake);
+    const unlinkFake = vi.fn();
+    vi.spyOn(IModelJsFs, "unlinkSync").mockImplementation(unlinkFake);
 
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel(fileName, async () => {});
 
-    expect(mkdirFake.notCalled);
+    expect(mkdirFake).not.toHaveBeenCalled();
   });
 
   it("calls `SnapshotDb.createEmpty` with correct parameters when using overload with imodel name", async () => {
@@ -91,35 +88,41 @@ describe("buildTestIModel", () => {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel(fileName, async () => {});
 
-    expect(createSnapshotDb.firstCall.args[0]).to.include(fileName);
-    expect(createSnapshotDb.firstCall.lastArg).to.deep.equal({ rootSubject: { name: fileName } });
+    expect(createSnapshotDb.mock.calls[0][0]).toContain(fileName);
+    expect(createSnapshotDb.mock.calls[0][1]).toEqual({ rootSubject: { name: fileName } });
   });
 
-  it("calls `SnapshotDb.createEmpty` with correct parameters when using overload with mocha context", async function () {
-    const fileName = createFileNameFromString(this.test!.fullTitle());
+  it("calls `SnapshotDb.createEmpty` with correct parameters when using overload with test context", async () => {
+    // Construct a fake test context-shaped object with a deterministic title.
+    const testContext = {
+      test: {
+        fullTitle: () => "calls `SnapshotDb.createEmpty` with correct parameters when using overload with test context",
+      },
+    };
+    const fileName = createFileNameFromString(testContext.test.fullTitle());
 
     // eslint-disable-next-line @typescript-eslint/no-deprecated
-    await buildTestIModel(this, async () => {});
+    await buildTestIModel(testContext, async () => {});
 
-    expect(createSnapshotDb.firstCall.args[0]).to.include(fileName);
-    expect(createSnapshotDb.firstCall.lastArg).to.deep.equal({ rootSubject: { name: fileName } });
+    expect(createSnapshotDb.mock.calls[0][0]).toContain(fileName);
+    expect(createSnapshotDb.mock.calls[0][1]).toEqual({ rootSubject: { name: fileName } });
   });
 
   it("builder calls provided callback function", async () => {
-    const cb: sinon.SinonSpy<any[], Promise<void>> = sinon.spy();
+    const cb = vi.fn().mockResolvedValue(undefined);
 
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel("name", cb);
 
-    expect(cb.calledOnce);
+    expect(cb).toHaveBeenCalledOnce();
   });
 
   it("builder saves database changes and closes it when callback succeeds", async () => {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel("name", async () => {});
 
-    expect(snapshotDb.saveChanges).to.be.calledOnceWith("Created test IModel");
-    expect(snapshotDb.close).to.be.calledOnce;
+    expect(snapshotDb.saveChanges).toHaveBeenCalledExactlyOnceWith("Created test IModel");
+    expect(snapshotDb.close).toHaveBeenCalledOnce();
   });
 
   it("builder saves database changes and closes it when callback throws", async () => {
@@ -130,9 +133,9 @@ describe("buildTestIModel", () => {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     const promise = buildTestIModel("name", cb);
 
-    await expect(promise).to.be.rejectedWith(Error);
-    expect(snapshotDb.saveChanges).to.be.calledOnceWith("Created test IModel");
-    expect(snapshotDb.close).to.be.calledOnce;
+    await expect(promise).rejects.toThrow(Error);
+    expect(snapshotDb.saveChanges).toHaveBeenCalledExactlyOnceWith("Created test IModel");
+    expect(snapshotDb.close).toHaveBeenCalledOnce();
   });
 
   it("returns result of TestIModelConnection.openFile", async () => {
@@ -140,19 +143,19 @@ describe("buildTestIModel", () => {
     const promise = buildTestIModel("name", async () => {});
     const result = await promise;
 
-    expect(result).to.equal(testIModelConnection);
+    expect(result).toBe(testIModelConnection);
   });
 
   it("raises onClose event when TestIModelConnection.close is called", async () => {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     const result = await buildTestIModel("name", async () => {});
-    expect(result).to.equal(testIModelConnection);
-    const imodelListenerStub = sinon.stub();
-    const imodelConnectionListenerStub = sinon.stub();
+    expect(result).toBe(testIModelConnection);
+    const imodelListenerStub = vi.fn();
+    const imodelConnectionListenerStub = vi.fn();
     result.onClose.addOnce(imodelListenerStub);
     IModelConnection.onClose.addOnce(imodelConnectionListenerStub);
     await result.close();
-    expect(imodelListenerStub).to.be.calledOnce;
-    expect(imodelConnectionListenerStub).to.be.calledOnce;
+    expect(imodelListenerStub).toHaveBeenCalledOnce();
+    expect(imodelConnectionListenerStub).toHaveBeenCalledOnce();
   });
 });

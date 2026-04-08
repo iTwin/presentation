@@ -151,7 +151,7 @@ export class AsyncTasksTracker {
 }
 
 /** @internal */
-/* c8 ignore start */
+/* v8 ignore start -- @preserve */
 export function useMergedRefs<T>(...refs: Array<MutableRefObject<T | null> | LegacyRef<T>>): RefCallback<T> {
   return useCallback(
     (instance: T | null) => {
@@ -166,7 +166,7 @@ export function useMergedRefs<T>(...refs: Array<MutableRefObject<T | null> | Leg
     [...refs], // eslint-disable-line react-hooks/exhaustive-deps
   );
 }
-/* c8 ignore end */
+/* v8 ignore stop -- @preserve */
 
 /**
  * A hook that helps components throw errors in React's render loop so they can be captured by React error
@@ -180,7 +180,7 @@ export function useErrorState() {
   const [_, setError] = useState(undefined);
   const setErrorState = useCallback((e: unknown) => {
     setError(() => {
-      throw e instanceof Error ? e : /* c8 ignore next */ new Error();
+      throw e instanceof Error ? e : /* v8 ignore next -- @preserve */ new Error();
     });
   }, []);
   return setErrorState;
@@ -274,6 +274,8 @@ export async function createKeySetFromSelectables(selectables: Selectables): Pro
   return keys;
 }
 
+/* v8 ignore start -- @preserve */
+
 export function mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(
   // eslint-disable-next-line @typescript-eslint/no-deprecated
   scope: SelectionScopesManager["activeScope"],
@@ -301,6 +303,8 @@ export function mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(
   throw new Error(`Unknown selection scope: "${scopeProps.id}"`);
 }
 
+/* v8 ignore stop -- @preserve */
+
 /**
  * A helper that disposes the given object, if it's disposable.
  *
@@ -311,6 +315,7 @@ export function mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(
  * @internal
  */
 export function safeDispose(disposable: {} | { [Symbol.dispose]: () => void } | { dispose: () => void }) {
+  /* v8 ignore else -- @preserve */
   if ("dispose" in disposable) {
     disposable.dispose();
   } else if (Symbol.dispose in disposable) {

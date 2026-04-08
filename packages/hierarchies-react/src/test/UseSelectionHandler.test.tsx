@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { waitFor } from "presentation-test-utilities";
-import sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { useSelectionHandler } from "../presentation-hierarchies-react/UseSelectionHandler.js";
 import { renderHook } from "./TestUtils.js";
 
@@ -13,15 +12,11 @@ import type { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
 import type { SelectionChangeType } from "../presentation-hierarchies-react/UseSelectionHandler.js";
 
 describe("useSelectionHandler", () => {
-  const selectNodesStub = sinon.stub<[Array<string>, SelectionChangeType], void>();
+  const selectNodesStub = vi.fn<(nodeIds: Array<string>, changeType: SelectionChangeType) => void>();
 
   const createTreeNode = (id: string, children: Array<TreeNode> = [], isExpanded: boolean = true) => {
     return { id, isExpanded, children } as TreeNode;
   };
-
-  afterEach(() => {
-    selectNodesStub.reset();
-  });
 
   describe("`none` selection mode", () => {
     it("does nothing when node is clicked", async () => {
@@ -33,7 +28,7 @@ describe("useSelectionHandler", () => {
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: false, ctrlDown: false });
 
       await waitFor(() => {
-        expect(selectNodesStub).to.not.be.called;
+        expect(selectNodesStub).not.toHaveBeenCalled();
       });
     });
   });
@@ -50,7 +45,7 @@ describe("useSelectionHandler", () => {
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: false, ctrlDown: false });
 
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node"], "replace");
       });
     });
 
@@ -63,14 +58,14 @@ describe("useSelectionHandler", () => {
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: false, ctrlDown: true });
 
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node"], "replace");
       });
-      selectNodesStub.resetHistory();
+      selectNodesStub.mockClear();
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: true, ctrlDown: false });
 
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node"], "replace");
       });
     });
 
@@ -83,7 +78,7 @@ describe("useSelectionHandler", () => {
       result.current.handleNodeSelect({ nodeId: "node", isSelected: true, shiftDown: false, ctrlDown: false });
 
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "remove");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node"], "remove");
       });
     });
   });
@@ -100,7 +95,7 @@ describe("useSelectionHandler", () => {
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: false, ctrlDown: false });
 
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "add");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node"], "add");
       });
     });
 
@@ -113,13 +108,13 @@ describe("useSelectionHandler", () => {
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: false, ctrlDown: true });
 
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "add");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node"], "add");
       });
-      selectNodesStub.resetHistory();
+      selectNodesStub.mockClear();
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: true, ctrlDown: false });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "add");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node"], "add");
       });
     });
 
@@ -132,7 +127,7 @@ describe("useSelectionHandler", () => {
       result.current.handleNodeSelect({ nodeId: "node", isSelected: true, shiftDown: false, ctrlDown: false });
 
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "remove");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node"], "remove");
       });
     });
   });
@@ -149,7 +144,7 @@ describe("useSelectionHandler", () => {
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: false, ctrlDown: false });
 
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node"], "replace");
       });
     });
 
@@ -162,7 +157,7 @@ describe("useSelectionHandler", () => {
       result.current.handleNodeSelect({ nodeId: "node", isSelected: true, shiftDown: false, ctrlDown: false });
 
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node"], "replace");
       });
     });
 
@@ -174,7 +169,7 @@ describe("useSelectionHandler", () => {
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: false, shiftDown: false, ctrlDown: true });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "add");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node"], "add");
       });
     });
 
@@ -186,7 +181,7 @@ describe("useSelectionHandler", () => {
 
       result.current.handleNodeSelect({ nodeId: "node", isSelected: true, shiftDown: false, ctrlDown: true });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "remove");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node"], "remove");
       });
     });
 
@@ -198,13 +193,13 @@ describe("useSelectionHandler", () => {
 
       result.current.handleNodeSelect({ nodeId: "node-1", isSelected: false, shiftDown: false, ctrlDown: false });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node-1"], "replace");
       });
-      selectNodesStub.reset();
+      selectNodesStub.mockReset();
 
       result.current.handleNodeSelect({ nodeId: "node-3", isSelected: false, shiftDown: true, ctrlDown: false });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1", "node-2", "node-3"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node-1", "node-2", "node-3"], "replace");
       });
     });
 
@@ -216,7 +211,7 @@ describe("useSelectionHandler", () => {
 
       result.current.handleNodeSelect({ nodeId: "node-3", isSelected: false, shiftDown: true, ctrlDown: false });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1", "node-2", "node-3"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node-1", "node-2", "node-3"], "replace");
       });
     });
 
@@ -228,13 +223,13 @@ describe("useSelectionHandler", () => {
 
       result.current.handleNodeSelect({ nodeId: "node-3", isSelected: false, shiftDown: false, ctrlDown: false });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node-3"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node-3"], "replace");
       });
-      selectNodesStub.reset();
+      selectNodesStub.mockReset();
 
       result.current.handleNodeSelect({ nodeId: "node-1", isSelected: false, shiftDown: true, ctrlDown: false });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1", "node-2", "node-3"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node-1", "node-2", "node-3"], "replace");
       });
     });
 
@@ -248,13 +243,13 @@ describe("useSelectionHandler", () => {
 
       result.current.handleNodeSelect({ nodeId: "node-1", isSelected: false, shiftDown: false, ctrlDown: false });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node-1"], "replace");
       });
-      selectNodesStub.reset();
+      selectNodesStub.mockReset();
 
       result.current.handleNodeSelect({ nodeId: "node-2", isSelected: false, shiftDown: true, ctrlDown: false });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1", "child-outer", "child-inner", "node-2"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node-1", "child-outer", "child-inner", "node-2"], "replace");
       });
     });
 
@@ -268,13 +263,13 @@ describe("useSelectionHandler", () => {
 
       result.current.handleNodeSelect({ nodeId: "node-1", isSelected: false, shiftDown: false, ctrlDown: false });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node-1"], "replace");
       });
-      selectNodesStub.reset();
+      selectNodesStub.mockReset();
 
       result.current.handleNodeSelect({ nodeId: "node-2", isSelected: false, shiftDown: true, ctrlDown: false });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1", "node-2"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node-1", "node-2"], "replace");
       });
     });
 
@@ -291,31 +286,31 @@ describe("useSelectionHandler", () => {
 
       result.current.handleNodeSelect({ nodeId: "node-2", isSelected: false, shiftDown: false, ctrlDown: false });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node-2"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node-2"], "replace");
       });
-      selectNodesStub.reset();
+      selectNodesStub.mockReset();
 
       result.current.handleNodeSelect({ nodeId: "node-1", isSelected: false, shiftDown: true, ctrlDown: false });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1", "node-2"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node-1", "node-2"], "replace");
       });
-      selectNodesStub.reset();
+      selectNodesStub.mockReset();
 
       result.current.handleNodeSelect({ nodeId: "node-3", isSelected: false, shiftDown: true, ctrlDown: false });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node-2", "node-3"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node-2", "node-3"], "replace");
       });
-      +selectNodesStub.reset();
+      +selectNodesStub.mockReset();
 
       result.current.handleNodeSelect({ nodeId: "node-4", isSelected: false, shiftDown: false, ctrlDown: true });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node-4"], "add");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node-4"], "add");
       });
-      selectNodesStub.reset();
+      selectNodesStub.mockReset();
 
       result.current.handleNodeSelect({ nodeId: "node-3", isSelected: false, shiftDown: true, ctrlDown: false });
       await waitFor(() => {
-        expect(selectNodesStub).to.be.calledOnceWith(["node-3", "node-4"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledWith(["node-3", "node-4"], "replace");
       });
     });
 
@@ -326,7 +321,7 @@ describe("useSelectionHandler", () => {
 
       result.current.handleNodeSelect({ nodeId: "invalid", isSelected: false, shiftDown: true, ctrlDown: false });
 
-      expect(selectNodesStub).to.not.be.called;
+      expect(selectNodesStub).not.toHaveBeenCalled();
     });
   });
 });

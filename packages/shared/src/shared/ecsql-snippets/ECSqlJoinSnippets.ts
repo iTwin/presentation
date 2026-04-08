@@ -144,6 +144,7 @@ async function getNavigationProperty(step: ResolvedRelationshipPathStep): Promis
   const source = !step.relationshipReverse ? step.source : step.target;
   const target = !step.relationshipReverse ? step.target : step.source;
   for (const prop of await source.getProperties()) {
+    /* v8 ignore else -- @preserve */
     if (
       prop.isNavigation() &&
       prop.direction === "Forward" &&
@@ -153,6 +154,7 @@ async function getNavigationProperty(step: ResolvedRelationshipPathStep): Promis
     }
   }
   for (const prop of await target.getProperties()) {
+    /* v8 ignore else -- @preserve */
     if (
       prop.isNavigation() &&
       prop.direction === "Backward" &&

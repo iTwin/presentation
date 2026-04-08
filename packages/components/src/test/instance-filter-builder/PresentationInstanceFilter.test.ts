@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { PresentationInstanceFilter } from "../../presentation-components.js";
 import { serializeUniqueValues } from "../../presentation-components/common/Utils.js";

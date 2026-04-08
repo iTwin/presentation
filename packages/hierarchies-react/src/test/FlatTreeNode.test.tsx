@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useErrorNodes, useFlatTreeItems } from "../presentation-hierarchies-react/FlatTreeNode.js";
 
@@ -39,11 +39,11 @@ describe("FlatTreeNode", () => {
 
       const { result } = renderHook(() => useFlatTreeItems([parentNode]));
 
-      expect(result.current).to.have.lengthOf(4);
-      expect(result.current[0]).to.deep.include({ id: "parent", level: 1 });
-      expect(result.current[1]).to.deep.include({ id: "child-1", level: 2 });
-      expect(result.current[2]).to.deep.include({ id: "grandchild-1", level: 3 });
-      expect(result.current[3]).to.deep.include({ id: "child-2", level: 2 });
+      expect(result.current).toHaveLength(4);
+      expect(result.current[0]).toMatchObject({ id: "parent", level: 1 });
+      expect(result.current[1]).toMatchObject({ id: "child-1", level: 2 });
+      expect(result.current[2]).toMatchObject({ id: "grandchild-1", level: 3 });
+      expect(result.current[3]).toMatchObject({ id: "child-2", level: 2 });
     });
 
     it("does not include children when error is not expandable", () => {
@@ -57,8 +57,8 @@ describe("FlatTreeNode", () => {
 
       const { result } = renderHook(() => useFlatTreeItems([parentNode]));
 
-      expect(result.current).to.have.lengthOf(1);
-      expect(result.current[0]).to.deep.include({ id: "parent" });
+      expect(result.current).toHaveLength(1);
+      expect(result.current[0]).toMatchObject({ id: "parent" });
     });
 
     it("does not include children when error has no isNodeExpandable property", () => {
@@ -72,8 +72,8 @@ describe("FlatTreeNode", () => {
 
       const { result } = renderHook(() => useFlatTreeItems([parentNode]));
 
-      expect(result.current).to.have.lengthOf(1);
-      expect(result.current[0]).to.deep.include({ id: "parent" });
+      expect(result.current).toHaveLength(1);
+      expect(result.current[0]).toMatchObject({ id: "parent" });
     });
 
     it("does not include children when node is collapsed", () => {
@@ -87,8 +87,8 @@ describe("FlatTreeNode", () => {
 
       const { result } = renderHook(() => useFlatTreeItems([parentNode]));
 
-      expect(result.current).to.have.lengthOf(1);
-      expect(result.current[0]).to.deep.include({ id: "parent" });
+      expect(result.current).toHaveLength(1);
+      expect(result.current[0]).toMatchObject({ id: "parent" });
     });
   });
 
@@ -113,10 +113,10 @@ describe("FlatTreeNode", () => {
 
       const { result } = renderHook(() => useErrorNodes([parentNode]));
 
-      expect(result.current).to.have.lengthOf(3);
-      expect(result.current[0].id).to.equal("parent");
-      expect(result.current[1].id).to.equal("child-1");
-      expect(result.current[2].id).to.equal("grandchild-1");
+      expect(result.current).toHaveLength(3);
+      expect(result.current[0].id).toBe("parent");
+      expect(result.current[1].id).toBe("child-1");
+      expect(result.current[2].id).toBe("grandchild-1");
     });
 
     it("does not traverse children when error is not expandable", () => {
@@ -133,8 +133,8 @@ describe("FlatTreeNode", () => {
 
       const { result } = renderHook(() => useErrorNodes([parentNode]));
 
-      expect(result.current).to.have.lengthOf(1);
-      expect(result.current[0].id).to.equal("parent");
+      expect(result.current).toHaveLength(1);
+      expect(result.current[0].id).toBe("parent");
     });
 
     it("does not traverse children when error has no isNodeExpandable property", () => {
@@ -151,8 +151,8 @@ describe("FlatTreeNode", () => {
 
       const { result } = renderHook(() => useErrorNodes([parentNode]));
 
-      expect(result.current).to.have.lengthOf(1);
-      expect(result.current[0].id).to.equal("parent");
+      expect(result.current).toHaveLength(1);
+      expect(result.current[0].id).toBe("parent");
     });
 
     it("counts error root node when it is not expanded", () => {
@@ -164,8 +164,8 @@ describe("FlatTreeNode", () => {
 
       const { result } = renderHook(() => useErrorNodes([rootNode]));
 
-      expect(result.current).to.have.lengthOf(1);
-      expect(result.current[0].id).to.equal("root");
+      expect(result.current).toHaveLength(1);
+      expect(result.current[0].id).toBe("root");
     });
   });
 });

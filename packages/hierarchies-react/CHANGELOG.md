@@ -958,6 +958,12 @@
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
 
+## 1.10.0
+
+### Minor Changes
+
+- [#1258](https://github.com/iTwin/presentation/pull/1258): Introduced new import paths: `@itwin/presentation-hierarchies-react/core` and `@itwin/presentation-hierarchies-react/itwinui`. They should allow to use this package without `@itwin/itwinui-react` dependency.
+
 ## 1.9.13
 
 ### Patch Changes

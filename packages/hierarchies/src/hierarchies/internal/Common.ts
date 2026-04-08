@@ -51,7 +51,7 @@ export function createOperatorLoggingNamespace(
 }
 
 /** @internal */
-/* c8 ignore start */
+/* v8 ignore start */
 export function createNodeIdentifierForLogging(
   node: { label: string | ConcatenatedValue; key: HierarchyNodeKey; parentKeys?: HierarchyNodeKey[] } | undefined,
 ) {
@@ -68,7 +68,7 @@ export function createNodeIdentifierForLogging(
       : undefined;
   return JSON.stringify({ label, key, parentKeys, groupedInstanceKeys });
 }
-/* c8 ignore end */
+/* v8 ignore stop */
 
 /** @internal */
 export function hasChildren<TNode extends { children?: boolean | Array<unknown> }>(node: TNode) {

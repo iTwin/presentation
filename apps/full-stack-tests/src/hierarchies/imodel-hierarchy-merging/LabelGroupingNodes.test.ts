@@ -2,8 +2,8 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable @typescript-eslint/no-this-alias */
 
+import { afterAll, beforeAll, beforeEach, describe, it, test } from "vitest";
 import { omit } from "@itwin/core-bentley";
 import { createChangedDbs } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -19,21 +19,21 @@ import {
 import type { createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
-  before(async function () {
+  beforeAll(async function () {
     await initialize();
   });
 
-  after(async () => {
+  afterAll(async () => {
     await terminate();
   });
 
   describe("Merging iModel hierarchies", () => {
     describe("Label grouping nodes", () => {
       describe("General case", () => {
-        async function setupDbs(mochaContext: Mocha.Context) {
-          return createChangedDbs(
-            mochaContext,
-            async (builder) => {
+        async function setupDbs(testName: string) {
+          return createChangedDbs({
+            name: testName,
+            setupBase: async (builder) => {
               const xyzSchema = await importXYZSchema(builder);
               const x = builder.insertInstance(xyzSchema.items.X.fullName, { ["Label"]: "x" });
               const y1 = builder.insertInstance(xyzSchema.items.Y.fullName, { ["Label"]: "y-group" });
@@ -44,7 +44,7 @@ describe("Hierarchies", () => {
               builder.insertRelationship(xyzSchema.items.XY.fullName, x.id, y3.id);
               return { xyzSchema, x, y1, y2, y3 };
             },
-            async (builder, base) => {
+            setupChangeset1: async (builder, base) => {
               const qSchema = await importQSchema(builder);
               builder.updateInstance(base.y2, { ["Label"]: "y-group-updated" });
               const q1 = builder.insertInstance(qSchema.items.Q.fullName, { ["Label"]: "mixed-group" });
@@ -54,7 +54,7 @@ describe("Hierarchies", () => {
               builder.insertRelationship(base.xyzSchema.items.XY.fullName, w.id, q2.id);
               return { ...base, qSchema, w, q1, q2 };
             },
-          );
+          });
         }
 
         let dbs: Awaited<ReturnType<typeof setupDbs>>;
@@ -64,8 +64,8 @@ describe("Hierarchies", () => {
         };
         let provider: ReturnType<typeof createMergedIModelHierarchyProvider>;
 
-        before(async function () {
-          dbs = await setupDbs(this);
+        test.beforeAll(async function (_c, suite) {
+          dbs = await setupDbs(suite.fullTestName!);
           keys = {
             base: pickAndTransform(dbs.base, ["x", "y1", "y2", "y3"], (_, value) => ({ ...value, imodelKey: "base" })),
             changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y2", "y3", "w", "q1", "q2"], (_, value) => ({
@@ -75,7 +75,7 @@ describe("Hierarchies", () => {
           };
         });
 
-        after(async () => {
+        afterAll(async () => {
           dbs[Symbol.dispose]();
         });
 
@@ -302,22 +302,20 @@ describe("Hierarchies", () => {
       });
 
       it("creates grouping node when it's not created for individual imodels due to `hideIfOneGroupedNode` flag", async function () {
-        const mochaContext = this;
-        using dbs = await createChangedDbs(
-          mochaContext,
-          async (builder) => {
+        using dbs = await createChangedDbs({
+          setupBase: async (builder) => {
             const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y" });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
             return { schema, x, y1 };
           },
-          async (builder, base) => {
+          setupChangeset1: async (builder, base) => {
             const y2 = builder.insertInstance(base.schema.items.Y.fullName, { ["Label"]: "y" });
             builder.insertRelationship(base.schema.items.XY.fullName, base.x.id, y2.id);
             return { ...base, y2 };
           },
-        );
+        });
         const keys = {
           base: pickAndTransform(dbs.base, ["x", "y1"], (_, value) => ({ ...value, imodelKey: "base" })),
           changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y2"], (_, value) => ({
@@ -359,23 +357,21 @@ describe("Hierarchies", () => {
       });
 
       it("creates grouping node when it's not created for individual imodels due to `hideIfNoSiblings` flag", async function () {
-        const mochaContext = this;
-        using dbs = await createChangedDbs(
-          mochaContext,
-          async (builder) => {
+        using dbs = await createChangedDbs({
+          setupBase: async (builder) => {
             const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y" });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y.id);
             return { schema, x, y };
           },
-          async (builder, base) => {
+          setupChangeset1: async (builder, base) => {
             builder.deleteInstance(base.y);
             const z = builder.insertInstance(base.schema.items.Z.fullName, { ["Label"]: "z" });
             builder.insertRelationship(base.schema.items.XZ.fullName, base.x.id, z.id);
             return { ...omit(base, ["y"]), z };
           },
-        );
+        });
         const keys = {
           base: pickAndTransform(dbs.base, ["x", "y"], (_, value) => ({ ...value, imodelKey: "base" })),
           changeset1: pickAndTransform(dbs.changeset1, ["x", "z"], (_, value) => ({
@@ -422,10 +418,8 @@ describe("Hierarchies", () => {
       });
 
       it("creates grouping node when it's not created for individual imodels due to different `groupId` flags", async function () {
-        const mochaContext = this;
-        using dbs = await createChangedDbs(
-          mochaContext,
-          async (builder) => {
+        using dbs = await createChangedDbs({
+          setupBase: async (builder) => {
             const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y", ["PropY"]: 0 });
@@ -434,11 +428,11 @@ describe("Hierarchies", () => {
             builder.insertRelationship(schema.items.XY.fullName, x.id, y2.id);
             return { schema, x, y1, y2 };
           },
-          async (builder, base) => {
+          setupChangeset1: async (builder, base) => {
             builder.updateInstance(base.y2, { ["PropY"]: 0 });
             return { ...base };
           },
-        );
+        });
         const keys = {
           base: pickAndTransform(dbs.base, ["x", "y1", "y2"], (_, value) => ({ ...value, imodelKey: "base" })),
           changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y2"], (_, value) => ({
@@ -491,22 +485,20 @@ describe("Hierarchies", () => {
       });
 
       it("creates merged label node", async function () {
-        const mochaContext = this;
-        using dbs = await createChangedDbs(
-          mochaContext,
-          async (builder) => {
+        using dbs = await createChangedDbs({
+          setupBase: async (builder) => {
             const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y" });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
             return { schema, x, y1 };
           },
-          async (builder, base) => {
+          setupChangeset1: async (builder, base) => {
             const y2 = builder.insertInstance(base.schema.items.Y.fullName, { ["Label"]: "y" });
             builder.insertRelationship(base.schema.items.XY.fullName, base.x.id, y2.id);
             return { ...base, y2 };
           },
-        );
+        });
         const keys = {
           base: pickAndTransform(dbs.base, ["x", "y1"], (_, value) => ({ ...value, imodelKey: "base" })),
           changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y2"], (_, value) => ({

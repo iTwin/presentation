@@ -3,31 +3,31 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.CreateValueFormatter.Imports
 import { IModelConnection } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils.js";
 import { importSchema } from "../../SchemaUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { buildTestIModel } from "../../IModelUtils.js";
 
 describe("Core interop", () => {
   describe("Learning snippets", () => {
     describe("createValueFormatter", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
       it("creates formatter that formats values with units", async function () {
-        const { imodel: testIModel, schema } = await buildIModel(this, async (builder, mochaContext) => {
+        const { imodel: testIModel, schema } = await buildTestIModel(async (builder, testName) => {
           return {
             schema: await importSchema(
-              mochaContext,
+              testName,
               builder,
               `
                 <ECSchemaReference name="Formats" version="01.00.00" alias="f"/>
@@ -61,13 +61,13 @@ describe("Core interop", () => {
         const koqName = `${KOQ_SCHEMA_NAME}.FlowRate`;
 
         // Not passing `koqName` formats the value without units using the default formatter:
-        expect(await metricFormatter({ type: "Double", value })).to.eq("1.23");
+        expect(await metricFormatter({ type: "Double", value })).toBe("1.23");
 
         // Metric formatter formats the value in liters per minute:
-        expect(await metricFormatter({ type: "Double", value, koqName })).to.eq("74040.0 L/min");
+        expect(await metricFormatter({ type: "Double", value, koqName })).toBe("74040.0 L/min");
 
         // Imperial formatter formats the value in gallons per minute:
-        expect(await imperialFormatter({ type: "Double", value, koqName })).to.eq("19559.2988 gal/min");
+        expect(await imperialFormatter({ type: "Double", value, koqName })).toBe("19559.2988 gal/min");
         // __PUBLISH_EXTRACT_END__
       });
     });

@@ -3,10 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import { of } from "rxjs";
-import sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
 import { defaultNodesParser, readNodes } from "../../hierarchies/imodel/TreeNodesReader.js";
 import { createTestSourceInstanceNode } from "../Utils.js";
@@ -17,18 +16,9 @@ import type { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/Limiti
 import type { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 
 describe("readNodes", () => {
-  const parser = sinon.stub<[{ [columnName: string]: any }], SourceInstanceHierarchyNode>();
-  const queryExecutor = {
-    createQueryReader: sinon.stub<
-      Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>,
-      ReturnType<LimitingECSqlQueryExecutor["createQueryReader"]>
-    >(),
-  };
-
-  beforeEach(() => {
-    parser.reset();
-    queryExecutor.createQueryReader.reset();
-  });
+  const parser = vi.fn<(row: { [columnName: string]: any }) => SourceInstanceHierarchyNode>();
+  const createQueryReaderMock = vi.fn<LimitingECSqlQueryExecutor["createQueryReader"]>();
+  const queryExecutor = { createQueryReader: createQueryReaderMock } as unknown as LimitingECSqlQueryExecutor;
 
   it("returns all rows from queryExecutor", async () => {
     const ids = [1, 2, 3];
@@ -39,26 +29,26 @@ describe("readNodes", () => {
         children: false,
       }),
     );
-    queryExecutor.createQueryReader.returns(createAsyncIterator(ids.map((id) => ({ id }))));
-    ids.forEach((_, i) => parser.onCall(i).returns(nodes[i]));
+    createQueryReaderMock.mockReturnValue(createAsyncIterator(ids.map((id) => ({ id }))));
+    nodes.forEach((node) => parser.mockReturnValueOnce(node));
 
     const query = { ecsql: "QUERY", ctes: ["CTE1, CTE2"] };
     const result = await collect(readNodes({ queryExecutor, query, parser: (row) => of(parser(row)) }));
-    expect(queryExecutor.createQueryReader).to.be.calledOnceWith(
+    expect(createQueryReaderMock).toHaveBeenCalledExactlyOnceWith(
       query,
-      sinon.match({ rowFormat: "ECSqlPropertyNames", restartToken: sinon.match.string }),
+      expect.objectContaining({ rowFormat: "ECSqlPropertyNames", restartToken: expect.any(String) }),
     );
-    expect(parser).to.be.calledThrice;
-    expect(result).to.deep.eq(nodes);
+    expect(parser).toHaveBeenCalledTimes(3);
+    expect(result).toEqual(nodes);
   });
 
   it("passes limit override to query queryExecutor", async () => {
-    queryExecutor.createQueryReader.returns(createAsyncIterator([]));
+    createQueryReaderMock.mockReturnValue(createAsyncIterator([]));
     const query = { ecsql: "QUERY" };
     await collect(readNodes({ queryExecutor, query, limit: 123, parser: (row) => of(parser(row)) }));
-    expect(queryExecutor.createQueryReader).to.be.calledOnceWith(
+    expect(createQueryReaderMock).toHaveBeenCalledExactlyOnceWith(
       query,
-      sinon.match({ rowFormat: "ECSqlPropertyNames", limit: 123, restartToken: sinon.match.string }),
+      expect.objectContaining({ rowFormat: "ECSqlPropertyNames", limit: 123, restartToken: expect.any(String) }),
     );
   });
 });
@@ -82,7 +72,7 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.SupportsFiltering]: true,
     };
     const node = defaultNodesParser({ row });
-    expect(node).to.deep.eq({
+    expect(node).toEqual({
       key: { type: "instances", instanceKeys: [{ className: "schema.class", id: "0x1" }] },
       label: "test label",
       extendedData: { test: 123 },
@@ -109,7 +99,7 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.HasChildren]: 0 as any,
     };
     const node = defaultNodesParser({ row });
-    expect(node.children).to.eq(false);
+    expect(node.children).toBe(false);
   });
 
   it("parses undefined `HasChildren`", () => {
@@ -120,7 +110,7 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.HasChildren]: undefined,
     };
     const node = defaultNodesParser({ row });
-    expect(node.children).to.be.undefined;
+    expect(node.children).toBeUndefined();
   });
 
   it("parses complex label of multiple parts", () => {
@@ -135,6 +125,6 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.DisplayLabel]: JSON.stringify(labelParts),
     };
     const node = defaultNodesParser({ row });
-    expect(node.label).to.deep.eq(labelParts);
+    expect(node.label).toEqual(labelParts);
   });
 });

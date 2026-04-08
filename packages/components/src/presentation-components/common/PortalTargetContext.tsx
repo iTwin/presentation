@@ -11,7 +11,7 @@ import { createContext } from "react";
 import type { PropsWithChildren } from "react";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
-/* c8 ignore start */
+/* v8 ignore start -- @preserve */
 
 /**
  * Props for [[PortalTargetContextProvider]]
@@ -45,4 +45,4 @@ export interface PortalTargetContext {
 
 const portalTargetContext = createContext<PortalTargetContext>({ portalTarget: null });
 
-/* c8 ignore end */
+/* v8 ignore stop -- @preserve */

@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { createRef } from "react";
-import sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
@@ -18,7 +17,7 @@ import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 
 import type { PropertyEditorProps } from "@itwin/components-react";
-import type { FormattingUnitSystemChangedArgs, IModelConnection } from "@itwin/core-frontend";
+import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import type { FormatterSpec, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import type { SchemaContext } from "@itwin/ecschema-metadata";
 import type { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
@@ -34,54 +33,42 @@ describe("<QuantityPropertyEditorInput />", () => {
   const schemaContext = {} as SchemaContext;
   const format = new Format("test format");
   const formatterSpec = {
-    applyFormatting: sinon.stub<[number], string>(),
+    applyFormatting: vi.fn<(raw: number) => string>(),
     unitConversions: [{ name: "test unit", label: "unit" }],
     format,
   };
-  const parserSpec = { parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(), format };
+  const parserSpec = { parseToQuantityValue: vi.fn<(value: string) => QuantityParseResult>(), format };
 
-  let getFormatterSpecStub: sinon.SinonStub<
-    Parameters<KoqPropertyValueFormatter["getFormatterSpec"]>,
-    ReturnType<KoqPropertyValueFormatter["getFormatterSpec"]>
-  >;
-  let getParserSpecStub: sinon.SinonStub<
-    Parameters<KoqPropertyValueFormatter["getParserSpec"]>,
-    ReturnType<KoqPropertyValueFormatter["getParserSpec"]>
-  >;
-
-  before(() => {
-    getFormatterSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec");
-    getParserSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec");
-
-    sinon.stub(format, "type").get(() => FormatType.Decimal);
-    sinon
-      .stub(IModelApp, "quantityFormatter")
-      .get(() => ({ onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() }));
-  });
+  let getFormatterSpecStub: ReturnType<typeof vi.spyOn>;
+  let getParserSpecStub: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    formatterSpec.applyFormatting.callsFake((raw) => `${raw} unit`);
-    parserSpec.parseToQuantityValue.callsFake((value) => {
+    getFormatterSpecStub = vi.spyOn(KoqPropertyValueFormatter.prototype, "getFormatterSpec");
+    getParserSpecStub = vi.spyOn(KoqPropertyValueFormatter.prototype, "getParserSpec");
+
+    vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Decimal);
+    vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
+      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
+    } as unknown as QuantityFormatter);
+
+    formatterSpec.applyFormatting.mockImplementation((raw) => `${raw} unit`);
+    parserSpec.parseToQuantityValue.mockImplementation((value) => {
       if (!value.endsWith("unit")) {
         return { ok: false, error: ParseError.UnknownUnit };
       }
       return { ok: true, value: Number(value.substring(0, value.length - 4)) };
     });
 
-    getFormatterSpecStub.resolves(formatterSpec as unknown as FormatterSpec);
-    getParserSpecStub.resolves(parserSpec as unknown as ParserSpec);
+    getFormatterSpecStub.mockResolvedValue(formatterSpec as unknown as FormatterSpec);
+    getParserSpecStub.mockResolvedValue(parserSpec as unknown as ParserSpec);
   });
 
   afterEach(() => {
-    formatterSpec.applyFormatting.reset();
-    parserSpec.parseToQuantityValue.reset();
+    formatterSpec.applyFormatting.mockReset();
+    parserSpec.parseToQuantityValue.mockReset();
 
-    getFormatterSpecStub.reset();
-    getParserSpecStub.reset();
-  });
-
-  after(() => {
-    sinon.restore();
+    getFormatterSpecStub.mockReset();
+    getParserSpecStub.mockReset();
   });
 
   it("renders numeric input if schema context is not available", async () => {
@@ -115,10 +102,12 @@ describe("<QuantityPropertyEditorInput />", () => {
 
   it("allows entering number when schema context is not available", async () => {
     const ref = createRef<PropertyEditorAttributes>();
-    const spy = sinon.stub<
-      Parameters<Required<PropertyEditorProps>["onCommit"]>,
-      ReturnType<Required<PropertyEditorProps>["onCommit"]>
-    >();
+    const spy =
+      vi.fn<
+        (
+          args: Parameters<Required<PropertyEditorProps>["onCommit"]>[0],
+        ) => ReturnType<Required<PropertyEditorProps>["onCommit"]>
+      >();
     const record = createRecord({ initialValue: undefined, kindOfQuantityName: "TestKOQ" });
     const { getByRole, user } = render(
       <QuantityPropertyEditorInput ref={ref} propertyRecord={record} onCommit={spy} />,
@@ -131,7 +120,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     await user.tab();
 
     await waitFor(() => {
-      expect(spy).to.be.calledWith({
+      expect(spy).toHaveBeenCalledWith({
         propertyRecord: record,
         newValue: {
           valueFormat: PropertyValueFormat.Primitive,
@@ -145,7 +134,7 @@ describe("<QuantityPropertyEditorInput />", () => {
 
   it("allows entering quantity value when schema context is available", async () => {
     const ref = createRef<PropertyEditorAttributes>();
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const record = createRecord({ initialValue: undefined, kindOfQuantityName: "TestKOQ" });
     const { getByRole, user } = render(
       <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
@@ -156,17 +145,12 @@ describe("<QuantityPropertyEditorInput />", () => {
     const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
     await waitFor(() => expect(input.disabled).to.be.false);
 
-    // Verify that selection logic from animation frame is applied
-    await waitFor(() => {
-      expect(document.activeElement).to.eq(input);
-      expect(input.selectionEnd).to.eq(0);
-    });
     await user.type(input, "123.4 ", { skipClick: true });
     await user.tab();
 
     await waitFor(() => expect(input.value).to.eq("123.4 unit"));
     await waitFor(() => {
-      expect(spy).to.be.calledWith({
+      expect(spy).toHaveBeenCalledWith({
         propertyRecord: record,
         newValue: {
           valueFormat: PropertyValueFormat.Primitive,
@@ -186,7 +170,7 @@ describe("<QuantityPropertyEditorInput />", () => {
   });
 
   it("should focus on input if setFocus is true", async () => {
-    const record = createRecord({ initialValue: 10, kindOfQuantityName: "TestKOQ" });
+    const record = createRecord({ initialValue: 123, kindOfQuantityName: "TestKOQ" });
     const ref = createRef<PropertyEditorAttributes>();
 
     const { getByRole } = render(
@@ -195,15 +179,18 @@ describe("<QuantityPropertyEditorInput />", () => {
       </SchemaMetadataContextProvider>,
     );
 
-    const input = (await waitFor(() => getByRole("textbox"))) as HTMLInputElement;
+    const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
     await waitFor(() => {
       expect(input).to.be.eq(document.activeElement);
     });
+
+    // Verify that selection logic is applied
+    await waitFor(() => expect(input.selectionEnd).to.eq(8));
   });
 
   it("commits value and blurs input when Enter is pressed", async () => {
     const record = createRecord({ initialValue: 10, kindOfQuantityName: "TestKOQ" });
-    const onCommitSpy = sinon.spy();
+    const onCommitSpy = vi.fn();
     const { getByRole, user } = render(
       <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
         <QuantityPropertyEditorInput propertyRecord={record} onCommit={onCommitSpy} />
@@ -215,12 +202,12 @@ describe("<QuantityPropertyEditorInput />", () => {
     await waitFor(() => expect(inputContainer.selectionEnd).to.eq(inputContainer.value.length));
     await user.keyboard("{Enter}");
 
-    expect(onCommitSpy).to.be.calledOnce;
+    expect(onCommitSpy).toHaveBeenCalledOnce();
   });
 
   it("calls onCancel when Escape is pressed", async () => {
     const record = createRecord({ initialValue: 10, kindOfQuantityName: "TestKOQ" });
-    const onCancelSpy = sinon.spy();
+    const onCancelSpy = vi.fn();
     const { getByRole, user } = render(
       <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
         <QuantityPropertyEditorInput propertyRecord={record} onCancel={onCancelSpy} />
@@ -231,6 +218,6 @@ describe("<QuantityPropertyEditorInput />", () => {
     await user.click(inputContainer);
     await user.keyboard("{Escape}");
 
-    expect(onCancelSpy).to.be.calledOnce;
+    expect(onCancelSpy).toHaveBeenCalledOnce();
   });
 });

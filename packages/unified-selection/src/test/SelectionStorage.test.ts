@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import * as sinon from "sinon";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Selectables } from "../unified-selection/Selectable.js";
 import { createStorage } from "../unified-selection/SelectionStorage.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
@@ -34,18 +33,18 @@ describe("SelectionStorage", () => {
   describe("clearStorage", () => {
     it("clears iModelKey selection", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: [createSelectableInstanceKey()] });
-      expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey }))).to.be.false;
-      const listenerSpy = sinon.spy(() => {});
+      expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey }))).toBe(false);
+      const listenerSpy = vi.fn();
       selectionStorage.selectionChangeEvent.addListener(listenerSpy);
       selectionStorage.clearStorage({ imodelKey });
-      expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey }))).to.be.true;
-      expect(listenerSpy, "Expected selectionChange.onSelectionChange to be called").to.have.callCount(1);
+      expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey }))).toBe(true);
+      expect(listenerSpy, "Expected selectionChange.onSelectionChange to be called").toHaveBeenCalledOnce();
     });
   });
 
   describe("getSelectionLevels", () => {
     it("returns empty list when there're no selection levels", () => {
-      expect(selectionStorage.getSelectionLevels({ imodelKey })).to.be.empty;
+      expect(selectionStorage.getSelectionLevels({ imodelKey })).toHaveLength(0);
     });
 
     it("returns available selection levels", () => {
@@ -60,7 +59,7 @@ describe("SelectionStorage", () => {
         selectables: [createSelectableInstanceKey(2, "schema.class2")],
         level: 3,
       });
-      expect(selectionStorage.getSelectionLevels({ imodelKey })).to.deep.eq([0, 3]);
+      expect(selectionStorage.getSelectionLevels({ imodelKey })).toEqual([0, 3]);
     });
 
     it("doesn't include empty selection levels", () => {
@@ -76,7 +75,7 @@ describe("SelectionStorage", () => {
         level: 1,
       });
       selectionStorage.addToSelection({ imodelKey, source: "", selectables: [], level: 2 });
-      expect(selectionStorage.getSelectionLevels({ imodelKey })).to.deep.eq([0, 1]);
+      expect(selectionStorage.getSelectionLevels({ imodelKey })).toEqual([0, 1]);
     });
 
     it("returns available selection levels with deprecated `iModelKey` prop", () => {
@@ -91,7 +90,7 @@ describe("SelectionStorage", () => {
         selectables: [createSelectableInstanceKey(2, "schema.class2")],
         level: 3,
       });
-      expect(selectionStorage.getSelectionLevels({ iModelKey: imodelKey })).to.deep.eq([0, 3]);
+      expect(selectionStorage.getSelectionLevels({ iModelKey: imodelKey })).toEqual([0, 3]);
     });
   });
 
@@ -99,10 +98,10 @@ describe("SelectionStorage", () => {
     it("adds selection on an empty selection", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: baseSelection });
       const selectables = selectionStorage.getSelection({ imodelKey });
-      expect(Selectables.size(selectables)).to.be.equal(baseSelection.length);
+      expect(Selectables.size(selectables)).toBe(baseSelection.length);
 
       for (const selectable of baseSelection) {
-        expect(Selectables.has(selectables, selectable)).true;
+        expect(Selectables.has(selectables, selectable)).toBe(true);
       }
     });
 
@@ -110,10 +109,10 @@ describe("SelectionStorage", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: [baseSelection[0]] });
       selectionStorage.addToSelection({ imodelKey, source, selectables: [baseSelection[1], baseSelection[2]] });
       const selectables = selectionStorage.getSelection({ imodelKey });
-      expect(Selectables.size(selectables)).to.be.equal(baseSelection.length);
+      expect(Selectables.size(selectables)).toBe(baseSelection.length);
 
       for (const selectable of baseSelection) {
-        expect(Selectables.has(selectables, selectable)).true;
+        expect(Selectables.has(selectables, selectable)).toBe(true);
       }
     });
 
@@ -124,10 +123,10 @@ describe("SelectionStorage", () => {
 
       for (const imodelToken of [imodelKey, imodel2]) {
         const selectables = selectionStorage.getSelection({ imodelKey: imodelToken });
-        expect(Selectables.size(selectables)).to.be.equal(baseSelection.length);
+        expect(Selectables.size(selectables)).toBe(baseSelection.length);
 
         for (const selectable of baseSelection) {
-          expect(Selectables.has(selectables, selectable)).true;
+          expect(Selectables.has(selectables, selectable)).toBe(true);
         }
       }
     });
@@ -137,9 +136,9 @@ describe("SelectionStorage", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: baseSelection, level: 1 });
       for (let i = 0; i <= 1; i++) {
         const selectables = selectionStorage.getSelection({ imodelKey, level: i });
-        expect(Selectables.size(selectables)).to.be.equal(baseSelection.length);
+        expect(Selectables.size(selectables)).toBe(baseSelection.length);
         for (const selectable of baseSelection) {
-          expect(Selectables.has(selectables, selectable)).true;
+          expect(Selectables.has(selectables, selectable)).toBe(true);
         }
       }
     });
@@ -159,7 +158,7 @@ describe("SelectionStorage", () => {
         level: 0,
       });
       const selectables = selectionStorage.getSelection({ imodelKey, level: 1 });
-      expect(Selectables.isEmpty(selectables)).to.be.true;
+      expect(Selectables.isEmpty(selectables)).toBe(true);
     });
 
     it("doesn't clear higher level selection when adding same items to lower level selection", () => {
@@ -167,7 +166,7 @@ describe("SelectionStorage", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(1)], level: 1 });
       selectionStorage.addToSelection({ imodelKey, source, selectables: baseSelection, level: 0 });
       const selectables = selectionStorage.getSelection({ imodelKey, level: 1 });
-      expect(Selectables.isEmpty(selectables)).to.be.false;
+      expect(Selectables.isEmpty(selectables)).toBe(false);
     });
   });
 
@@ -175,10 +174,10 @@ describe("SelectionStorage", () => {
     it("replaces selection on an empty selection", () => {
       selectionStorage.replaceSelection({ imodelKey, source, selectables: baseSelection });
       const selectables = selectionStorage.getSelection({ imodelKey });
-      expect(Selectables.size(selectables)).to.be.equal(baseSelection.length);
+      expect(Selectables.size(selectables)).toBe(baseSelection.length);
 
       for (const selectable of baseSelection) {
-        expect(Selectables.has(selectables, selectable)).true;
+        expect(Selectables.has(selectables, selectable)).toBe(true);
       }
     });
 
@@ -186,10 +185,10 @@ describe("SelectionStorage", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: [baseSelection[0]] });
       selectionStorage.replaceSelection({ imodelKey, source, selectables: [baseSelection[1], baseSelection[2]] });
       const selectables = selectionStorage.getSelection({ imodelKey });
-      expect(Selectables.size(selectables)).to.be.equal(baseSelection.length - 1);
-      expect(Selectables.has(selectables, baseSelection[0])).false;
-      expect(Selectables.has(selectables, baseSelection[1])).true;
-      expect(Selectables.has(selectables, baseSelection[2])).true;
+      expect(Selectables.size(selectables)).toBe(baseSelection.length - 1);
+      expect(Selectables.has(selectables, baseSelection[0])).toBe(false);
+      expect(Selectables.has(selectables, baseSelection[1])).toBe(true);
+      expect(Selectables.has(selectables, baseSelection[2])).toBe(true);
     });
 
     it("replaces on different iModels", () => {
@@ -199,10 +198,10 @@ describe("SelectionStorage", () => {
 
       for (const imodelToken of [imodelKey, imodel2]) {
         const selectables = selectionStorage.getSelection({ imodelKey: imodelToken });
-        expect(Selectables.size(selectables)).to.be.equal(baseSelection.length);
+        expect(Selectables.size(selectables)).toBe(baseSelection.length);
 
         for (const selectable of baseSelection) {
-          expect(Selectables.has(selectables, selectable)).true;
+          expect(Selectables.has(selectables, selectable)).toBe(true);
         }
       }
     });
@@ -212,9 +211,9 @@ describe("SelectionStorage", () => {
       selectionStorage.replaceSelection({ imodelKey, source, selectables: baseSelection, level: 1 });
       for (let i = 0; i <= 1; i++) {
         const selectables = selectionStorage.getSelection({ imodelKey, level: i });
-        expect(Selectables.size(selectables)).to.be.equal(baseSelection.length);
+        expect(Selectables.size(selectables)).toBe(baseSelection.length);
         for (const selectable of baseSelection) {
-          expect(Selectables.has(selectables, selectable)).true;
+          expect(Selectables.has(selectables, selectable)).toBe(true);
         }
       }
     });
@@ -234,7 +233,7 @@ describe("SelectionStorage", () => {
         level: 0,
       });
       const selectables = selectionStorage.getSelection({ imodelKey, level: 1 });
-      expect(Selectables.isEmpty(selectables)).to.be.true;
+      expect(Selectables.isEmpty(selectables)).toBe(true);
     });
 
     it("doesn't clear higher level selection when replacing lower level selection with same items", () => {
@@ -242,7 +241,7 @@ describe("SelectionStorage", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(1)], level: 1 });
       selectionStorage.replaceSelection({ imodelKey, source, selectables: baseSelection, level: 0 });
       const selectables = selectionStorage.getSelection({ imodelKey, level: 1 });
-      expect(Selectables.isEmpty(selectables)).to.be.false;
+      expect(Selectables.isEmpty(selectables)).toBe(false);
     });
   });
 
@@ -250,13 +249,13 @@ describe("SelectionStorage", () => {
     it("clears empty selection", () => {
       selectionStorage.clearSelection({ imodelKey, source });
       const selectables = selectionStorage.getSelection({ imodelKey });
-      expect(Selectables.size(selectables)).to.be.equal(0);
+      expect(Selectables.size(selectables)).toBe(0);
     });
 
     it("clears non empty selection", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: baseSelection });
       selectionStorage.clearSelection({ imodelKey, source });
-      expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey }))).to.be.true;
+      expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey }))).toBe(true);
     });
 
     it("clears on different iModels", () => {
@@ -267,13 +266,13 @@ describe("SelectionStorage", () => {
       selectionStorage.clearSelection({ imodelKey: imodel2, source });
 
       let selectables = selectionStorage.getSelection({ imodelKey: imodel2 });
-      expect(Selectables.size(selectables)).to.be.equal(0);
+      expect(Selectables.size(selectables)).toBe(0);
 
       selectables = selectionStorage.getSelection({ imodelKey });
-      expect(Selectables.size(selectables)).to.be.equal(baseSelection.length);
+      expect(Selectables.size(selectables)).toBe(baseSelection.length);
 
       for (const selectable of baseSelection) {
-        expect(Selectables.has(selectables, selectable)).true;
+        expect(Selectables.has(selectables, selectable)).toBe(true);
       }
     });
 
@@ -283,13 +282,13 @@ describe("SelectionStorage", () => {
 
       selectionStorage.clearSelection({ imodelKey, source, level: 1 });
       const selectablesAtLevel1 = selectionStorage.getSelection({ imodelKey, level: 1 });
-      expect(Selectables.size(selectablesAtLevel1)).to.be.equal(0);
+      expect(Selectables.size(selectablesAtLevel1)).toBe(0);
 
       const selectablesAtLevel0 = selectionStorage.getSelection({ imodelKey, level: 0 });
-      expect(Selectables.size(selectablesAtLevel0)).to.be.equal(baseSelection.length);
+      expect(Selectables.size(selectablesAtLevel0)).toBe(baseSelection.length);
 
       for (const selectable of baseSelection) {
-        expect(Selectables.has(selectablesAtLevel0, selectable)).to.be.true;
+        expect(Selectables.has(selectablesAtLevel0, selectable)).toBe(true);
       }
     });
 
@@ -298,14 +297,14 @@ describe("SelectionStorage", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(1)], level: 1 });
       selectionStorage.clearSelection({ imodelKey, source, level: 0 });
       const selectables = selectionStorage.getSelection({ imodelKey, level: 1 });
-      expect(Selectables.isEmpty(selectables)).to.be.true;
+      expect(Selectables.isEmpty(selectables)).toBe(true);
     });
 
     it("doesn't clear higher level selection when clearing empty lower level selection", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(1)], level: 1 });
       selectionStorage.clearSelection({ imodelKey, source, level: 0 });
       const selectables = selectionStorage.getSelection({ imodelKey, level: 1 });
-      expect(Selectables.isEmpty(selectables)).to.be.false;
+      expect(Selectables.isEmpty(selectables)).toBe(false);
     });
   });
 
@@ -314,17 +313,17 @@ describe("SelectionStorage", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: baseSelection });
       selectionStorage.removeFromSelection({ imodelKey, source, selectables: [baseSelection[1], baseSelection[2]] });
       const selectables = selectionStorage.getSelection({ imodelKey });
-      expect(Selectables.size(selectables)).to.be.equal(baseSelection.length - 2);
-      expect(Selectables.has(selectables, baseSelection[0])).true;
-      expect(Selectables.has(selectables, baseSelection[1])).false;
-      expect(Selectables.has(selectables, baseSelection[2])).false;
+      expect(Selectables.size(selectables)).toBe(baseSelection.length - 2);
+      expect(Selectables.has(selectables, baseSelection[0])).toBe(true);
+      expect(Selectables.has(selectables, baseSelection[1])).toBe(false);
+      expect(Selectables.has(selectables, baseSelection[2])).toBe(false);
     });
 
     it("removes whole selection", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: baseSelection });
       selectionStorage.removeFromSelection({ imodelKey, source, selectables: baseSelection });
       const selectables = selectionStorage.getSelection({ imodelKey });
-      expect(Selectables.size(selectables)).to.be.equal(0);
+      expect(Selectables.size(selectables)).toBe(0);
     });
 
     it("removes on different iModels", () => {
@@ -339,16 +338,16 @@ describe("SelectionStorage", () => {
         selectables: [baseSelection[1], baseSelection[2]],
       });
       let selectables = selectionStorage.getSelection({ imodelKey });
-      expect(Selectables.size(selectables)).to.be.equal(baseSelection.length - 1);
-      expect(Selectables.has(selectables, baseSelection[0])).false;
-      expect(Selectables.has(selectables, baseSelection[1])).true;
-      expect(Selectables.has(selectables, baseSelection[2])).true;
+      expect(Selectables.size(selectables)).toBe(baseSelection.length - 1);
+      expect(Selectables.has(selectables, baseSelection[0])).toBe(false);
+      expect(Selectables.has(selectables, baseSelection[1])).toBe(true);
+      expect(Selectables.has(selectables, baseSelection[2])).toBe(true);
 
       selectables = selectionStorage.getSelection({ imodelKey: imodel2 });
-      expect(Selectables.size(selectables)).to.be.equal(baseSelection.length - 2);
-      expect(Selectables.has(selectables, baseSelection[0])).true;
-      expect(Selectables.has(selectables, baseSelection[1])).false;
-      expect(Selectables.has(selectables, baseSelection[2])).false;
+      expect(Selectables.size(selectables)).toBe(baseSelection.length - 2);
+      expect(Selectables.has(selectables, baseSelection[0])).toBe(true);
+      expect(Selectables.has(selectables, baseSelection[1])).toBe(false);
+      expect(Selectables.has(selectables, baseSelection[2])).toBe(false);
     });
 
     it("removes with different levels", () => {
@@ -357,16 +356,16 @@ describe("SelectionStorage", () => {
       selectionStorage.removeFromSelection({ imodelKey, source, selectables: [baseSelection[0]], level: 1 });
 
       const selectablesAtLevel0 = selectionStorage.getSelection({ imodelKey, level: 0 });
-      expect(Selectables.size(selectablesAtLevel0)).to.be.equal(baseSelection.length);
-      expect(Selectables.has(selectablesAtLevel0, baseSelection[0])).true;
-      expect(Selectables.has(selectablesAtLevel0, baseSelection[1])).true;
-      expect(Selectables.has(selectablesAtLevel0, baseSelection[2])).true;
+      expect(Selectables.size(selectablesAtLevel0)).toBe(baseSelection.length);
+      expect(Selectables.has(selectablesAtLevel0, baseSelection[0])).toBe(true);
+      expect(Selectables.has(selectablesAtLevel0, baseSelection[1])).toBe(true);
+      expect(Selectables.has(selectablesAtLevel0, baseSelection[2])).toBe(true);
 
       const selectablesAtLevel1 = selectionStorage.getSelection({ imodelKey, level: 1 });
-      expect(Selectables.size(selectablesAtLevel1)).to.be.equal(baseSelection.length - 1);
-      expect(Selectables.has(selectablesAtLevel1, baseSelection[0])).false;
-      expect(Selectables.has(selectablesAtLevel1, baseSelection[1])).true;
-      expect(Selectables.has(selectablesAtLevel1, baseSelection[2])).true;
+      expect(Selectables.size(selectablesAtLevel1)).toBe(baseSelection.length - 1);
+      expect(Selectables.has(selectablesAtLevel1, baseSelection[0])).toBe(false);
+      expect(Selectables.has(selectablesAtLevel1, baseSelection[1])).toBe(true);
+      expect(Selectables.has(selectablesAtLevel1, baseSelection[2])).toBe(true);
     });
 
     it("clears higher level selection when removing items from lower level selection", () => {
@@ -374,7 +373,7 @@ describe("SelectionStorage", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(1)], level: 1 });
       selectionStorage.removeFromSelection({ imodelKey, source, selectables: baseSelection, level: 0 });
       const selectables = selectionStorage.getSelection({ imodelKey, level: 1 });
-      expect(Selectables.isEmpty(selectables)).to.be.true;
+      expect(Selectables.isEmpty(selectables)).toBe(true);
     });
 
     it("doesn't clear higher level selection when removing non-existing items from lower level selection", () => {
@@ -391,29 +390,29 @@ describe("SelectionStorage", () => {
         selectables: [createSelectableInstanceKey(2, "schema.class2")],
       });
       const selectables = selectionStorage.getSelection({ imodelKey, level: 1 });
-      expect(Selectables.isEmpty(selectables)).to.be.false;
+      expect(Selectables.isEmpty(selectables)).toBe(false);
     });
   });
 
   describe("selectionChange", () => {
     it("fires `selectionChange` event after `addToSelection`, `replaceSelection`, `clearSelection`, `removeFromSelection`", () => {
-      const listenerSpy = sinon.stub();
+      const listenerSpy = vi.fn();
       selectionStorage.selectionChangeEvent.addListener(listenerSpy);
       selectionStorage.addToSelection({ imodelKey, source, selectables: baseSelection });
       selectionStorage.removeFromSelection({ imodelKey, source, selectables: baseSelection });
       selectionStorage.replaceSelection({ imodelKey, source, selectables: baseSelection });
       selectionStorage.clearSelection({ imodelKey, source });
-      expect(listenerSpy, "Expected selectionChange.raiseEvent to be called").to.have.callCount(4);
+      expect(listenerSpy, "Expected selectionChange.raiseEvent to be called").toHaveBeenCalledTimes(4);
     });
 
     it("doesn't fire `selectionChange` event after addToSelection, replaceSelection, clearSelection, removeFromSelection if nothing changes", () => {
-      const listenerSpy = sinon.stub();
+      const listenerSpy = vi.fn();
       selectionStorage.selectionChangeEvent.addListener(listenerSpy);
       selectionStorage.addToSelection({ imodelKey, source, selectables: [] });
       selectionStorage.clearSelection({ imodelKey, source });
       selectionStorage.removeFromSelection({ imodelKey, source, selectables: baseSelection });
       selectionStorage.replaceSelection({ imodelKey, source, selectables: [] });
-      expect(listenerSpy, "Expected selectionChange.raiseEvent to not be called").to.not.have.been.called;
+      expect(listenerSpy, "Expected selectionChange.raiseEvent to not be called").not.toHaveBeenCalled();
     });
   });
 });

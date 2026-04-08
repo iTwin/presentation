@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { XMLParser } from "fast-xml-parser";
-import { Context as MochaContext } from "mocha";
 import { getFullSchemaXml } from "presentation-test-utilities";
 import { assert, Guid } from "@itwin/core-bentley";
 
@@ -13,8 +12,7 @@ import type { EC } from "@itwin/presentation-shared";
 // cspell:words jpath
 
 export async function importSchema(
-  mochaContextOrTestNameOrSchemaProps:
-    | MochaContext
+  testNameOrSchemaProps:
     | string
     | { schemaName: string; schemaAlias: string; schemaVersion?: `${string}.${string}.${string}` },
   imodel: { importSchema: (xml: string) => Promise<void> | void },
@@ -25,17 +23,11 @@ export async function importSchema(
     schemaAlias: string;
     schemaVersion?: `${string}.${string}.${string}`;
   } => {
-    if (
-      typeof mochaContextOrTestNameOrSchemaProps === "object" &&
-      !(mochaContextOrTestNameOrSchemaProps instanceof MochaContext)
-    ) {
-      return mochaContextOrTestNameOrSchemaProps;
+    if (typeof testNameOrSchemaProps === "object") {
+      return testNameOrSchemaProps;
     }
 
-    const testName =
-      typeof mochaContextOrTestNameOrSchemaProps === "string"
-        ? mochaContextOrTestNameOrSchemaProps
-        : mochaContextOrTestNameOrSchemaProps.test!.fullTitle();
+    const testName = testNameOrSchemaProps;
     return {
       schemaName: `SCHEMA_${testName}`.replace(/[^\w\d_]/gi, "_").replace(/_+/g, "_"),
       schemaAlias: `ALIAS_${Guid.createValue().replaceAll("-", "")}`,

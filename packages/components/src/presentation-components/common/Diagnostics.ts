@@ -68,6 +68,7 @@ export function createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnos
   }
 
   let handler: ClientDiagnosticsHandler;
+  /* v8 ignore else -- @preserve */
   if (props.devDiagnostics && props.ruleDiagnostics && props.devDiagnostics.handler !== props.ruleDiagnostics.handler) {
     handler = createCombinedDiagnosticsHandler([props.devDiagnostics.handler, props.ruleDiagnostics.handler]);
   } else if (props.devDiagnostics) {

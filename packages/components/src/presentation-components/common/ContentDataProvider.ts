@@ -223,7 +223,7 @@ export class ContentDataProvider implements IContentDataProvider {
   }
 
   /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
-  /* c8 ignore next 3 */
+  /* v8 ignore next -- @preserve */
   public dispose() {
     this.#dispose();
   }
@@ -370,7 +370,7 @@ export class ContentDataProvider implements IContentDataProvider {
 
   private getDefaultContentDescriptor = memoize(async (): Promise<Descriptor | undefined> => {
     this.setupListeners();
-    /* c8 ignore next 5 */
+    /* v8 ignore next -- @preserve */
     if (this.keys.size > DEFAULT_KEYS_BATCH_SIZE) {
       const msg = `ContentDataProvider.getContentDescriptor requesting descriptor with ${this.keys.size} keys which
         exceeds the suggested size of ${DEFAULT_KEYS_BATCH_SIZE}. Possible "HTTP 413 Payload Too Large" error.`;
@@ -450,7 +450,7 @@ export class ContentDataProvider implements IContentDataProvider {
       this.setupListeners();
       const descriptorOverrides = await this.getDescriptorOverrides();
 
-      /* c8 ignore next 5 */
+      /* v8 ignore next -- @preserve */
       if (this.keys.size > DEFAULT_KEYS_BATCH_SIZE) {
         const msg = `ContentDataProvider.getContent requesting with ${this.keys.size} keys which
         exceeds the suggested size of ${DEFAULT_KEYS_BATCH_SIZE}. Possible "HTTP 413 Payload Too Large" error.`;
@@ -552,18 +552,18 @@ export class ContentDataProvider implements IContentDataProvider {
 }
 
 function areContentRequestsEqual(lhsArgs: [PageOptions?], rhsArgs: [PageOptions?]): boolean {
-  /* c8 ignore next 3 */
+  /* v8 ignore next -- @preserve */
   if ((lhsArgs[0]?.start ?? 0) !== (rhsArgs[0]?.start ?? 0)) {
     return false;
   }
-  /* c8 ignore next 3 */
+  /* v8 ignore next -- @preserve */
   if ((lhsArgs[0]?.size ?? 0) !== (rhsArgs[0]?.size ?? 0)) {
     return false;
   }
   return true;
 }
 
-/* c8 ignore start */
+/* v8 ignore start -- @preserve */
 /**
  * This is copied from https://github.com/iTwin/itwinjs-core/blob/846393ad2cd49033923f3e7abf100968c2414918/presentation/common/src/presentation-common/content/PropertyValueFormatter.ts#L21
  * and should be removed once https://github.com/iTwin/itwinjs-core/issues/8441 is done.
@@ -818,4 +818,4 @@ function isPoint3d(obj: Value): obj is { x: number; y: number; z: number } {
 function isNumber(obj: Value): obj is number {
   return !isNaN(Number(obj));
 }
-/* c8 ignore end */
+/* v8 ignore stop -- @preserve */

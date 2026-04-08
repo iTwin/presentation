@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
 
-import { expect } from "chai";
+import { afterAll, describe, expect, it, test } from "vitest";
 import {
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
@@ -34,10 +34,10 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport
 import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
+import { buildTestIModel } from "../../IModelUtils.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -47,10 +47,10 @@ describe("Hierarchies", () => {
       let elementIds: { [name: string]: Id64String };
       let elementKeys: { [name: string]: InstanceKey };
 
-      before(async function () {
+      test.beforeAll(async (_context, suite) => {
         await initialize();
 
-        const res = await buildIModel(this, async (builder) => {
+        const res = await buildTestIModel(suite.fullTestName!, async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "A" });
@@ -110,7 +110,7 @@ describe("Hierarchies", () => {
         );
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
@@ -164,14 +164,14 @@ describe("Hierarchies", () => {
       }
       // __PUBLISH_EXTRACT_END__
 
-      it("creates expected default hierarchy", async function () {
+      it("creates expected default hierarchy", async () => {
         const imodelAccess = createIModelAccess(imodel);
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
           search: undefined,
         });
-        expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+        expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
           {
             label: "A",
             children: [
@@ -183,7 +183,7 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("creates hierarchy searched by label", async function () {
+      it("creates hierarchy searched by label", async () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.FindPathsByLabel
         // Define a function that returns `HierarchySearchTree[]` based on given search string. In this case, we run
@@ -224,7 +224,7 @@ describe("Hierarchies", () => {
         }
         // Find paths to elements whose label contains "C" or "E"
         const searchPaths = await createHierarchySearchTree(["C", "E"]);
-        expect(searchPaths).to.deep.eq([
+        expect(searchPaths).toEqual([
           // We expect to find two paths A -> B -> C and A -> E
           {
             identifier: elementKeys.a,
@@ -246,7 +246,7 @@ describe("Hierarchies", () => {
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
         // Note that "E" has a child "F", even though it's not a search target. This is because subtrees under search target nodes
         // (in this case - "E") are returned fully.
-        expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+        expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
           {
             label: "A",
             children: [
@@ -258,7 +258,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
       });
 
-      it("creates hierarchy searched by target instance ids", async function () {
+      it("creates hierarchy searched by target instance ids", async () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.FindPathsByTargetElementId
         // Define a function that returns `HierarchyNodeIdentifiersPath[]` based on given target element IDs. In this case, we run
@@ -301,7 +301,7 @@ describe("Hierarchies", () => {
         }
         // Find paths to target elements "C" and "E"
         const searchPaths = await createSearchTargetPaths([elementIds.c, elementIds.e]);
-        expect(searchPaths).to.deep.eq([
+        expect(searchPaths).toEqual([
           // We expect to find two paths A -> B -> C and A -> E
           [elementKeys.a, elementKeys.e],
           [elementKeys.a, elementKeys.b, elementKeys.c],
@@ -317,7 +317,7 @@ describe("Hierarchies", () => {
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
         // Note that "E" has a child "F", even though it's not a search target. This is because subtrees under search target nodes
         // (in this case - "E") are returned fully.
-        expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+        expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
           {
             label: "A",
             children: [
@@ -328,7 +328,7 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("sets auto-expand flag to parent nodes of the revealed search target", async function () {
+      it("sets auto-expand flag to parent nodes of the revealed search target", async () => {
         const imodelAccess = createIModelAccess(imodel);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.Reveal.SearchPath
@@ -352,16 +352,12 @@ describe("Hierarchies", () => {
 
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
         // Note that all nodes except C have `autoExpand` flag.
-        expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
-          {
-            label: "A",
-            autoExpand: true,
-            children: [{ label: "B", autoExpand: true, children: [{ label: "C", autoExpand: undefined }] }],
-          },
+        expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
+          { label: "A", autoExpand: true, children: [{ label: "B", autoExpand: true, children: [{ label: "C" }] }] },
         ]);
       });
 
-      it("sets auto-expand flag to parent nodes of the search target until specified groupingLevel", async function () {
+      it("sets auto-expand flag to parent nodes of the search target until specified groupingLevel", async () => {
         const imodelAccess = createIModelAccess(imodel);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -436,7 +432,7 @@ describe("Hierarchies", () => {
 
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
         // Note that all nodes before grouping node for label "C" have `autoExpand` flag.
-        expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+        expect(await collectHierarchy(hierarchyProvider)).toEqual([
           {
             // Root node. Has auto-expand flag.
             nodeType: "instances",
@@ -487,7 +483,7 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("sets auto-expand flag to parent nodes of the search target until specified depthInPath", async function () {
+      it("sets auto-expand flag to parent nodes of the search target until specified depthInPath", async () => {
         const imodelAccess = createIModelAccess(imodel);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -560,7 +556,7 @@ describe("Hierarchies", () => {
 
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
         // Note that all nodes before grouping node for label "C" have `autoExpand` flag.
-        expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+        expect(await collectHierarchy(hierarchyProvider)).toEqual([
           {
             // Root node. Has auto-expand flag.
             nodeType: "instances",
@@ -668,7 +664,7 @@ describe("Hierarchies", () => {
 
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
         // Note that all nodes before grouping node for label "C" have `autoExpand` flag.
-        expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+        expect(await collectHierarchy(hierarchyProvider)).toEqual([
           {
             // Root node. Has auto-expand flag.
             nodeType: "instances",

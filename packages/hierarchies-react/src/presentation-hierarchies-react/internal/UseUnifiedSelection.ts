@@ -62,8 +62,8 @@ export function useUnifiedTreeSelection({
   getTreeModelNode: (nodeId: string) => TreeModelHierarchyNode | TreeModelRootNode | undefined;
 }): TreeSelectionOptions {
   const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
-    isNodeSelected: /* c8 ignore next */ () => false,
-    selectNodes: /* c8 ignore next */ () => {},
+    isNodeSelected: () => false,
+    selectNodes: () => {},
   }));
 
   useEffect(() => {

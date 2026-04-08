@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
-import sinon from "sinon";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyValueFormat as AbstractPropertyValueFormat } from "@itwin/appui-abstract";
 import { UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
@@ -19,7 +18,7 @@ import {
 } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
 import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
 import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
-import { createTestECClassInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../_helpers/Common.js";
+import { createTestECClassInfo, stubVirtualization } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
@@ -47,8 +46,6 @@ import type { PresentationInstanceFilterInfo } from "../../presentation-componen
 import type { PresentationInstanceFilterPropertiesSource } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
 
 describe("PresentationInstanceFilterDialog", () => {
-  stubRaf();
-  stubDOMMatrix();
   stubVirtualization();
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
   const classInfo = createTestECClassInfo();
@@ -74,25 +71,25 @@ describe("PresentationInstanceFilterDialog", () => {
   const onCloseEvent = new BeEvent<() => void>();
   const imodel = { key: "test_imodel", onClose: onCloseEvent } as IModelConnection;
 
-  before(() => {
-    HTMLElement.prototype.scrollIntoView = () => {};
+  beforeAll(async () => {
+    await UiComponents.initialize(new EmptyLocalization());
+  });
 
+  beforeEach(() => {
     const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "localization").get(() => localization);
-    sinon.stub(UiComponents, "translate").callsFake((key) => key as string);
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
 
     const metadataProvider = getIModelMetadataProvider(imodel);
-    sinon.stub(metadataProvider, "getECClassInfo").callsFake(async () => {
+    vi.spyOn(metadataProvider, "getECClassInfo").mockImplementation(async () => {
       return new ECClassInfo(classInfo.id, classInfo.name, classInfo.label, new Set(), new Set());
     });
   });
 
-  after(() => {
+  afterAll(() => {
     onCloseEvent.raiseEvent();
-    sinon.restore();
-    delete (HTMLElement.prototype as any).scrollIntoView;
+    UiComponents.terminate();
   });
 
   it("renders with initial filter", async () => {
@@ -214,7 +211,7 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("invokes 'onApply' with string property filter rule", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { baseElement, user } = render(
       <PresentationInstanceFilterDialog
         imodel={imodel}
@@ -242,7 +239,7 @@ describe("PresentationInstanceFilterDialog", () => {
     await user.click(applyButton);
 
     await waitFor(() => {
-      expect(spy).to.be.calledOnceWith({
+      expect(spy).toHaveBeenCalledExactlyOnceWith({
         filter: {
           field: stringField,
           operator: "like",
@@ -258,7 +255,7 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("does not invoke `onApply` when there two empty rules", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { baseElement, user } = render(
       <PresentationInstanceFilterDialog
         imodel={imodel}
@@ -275,11 +272,11 @@ describe("PresentationInstanceFilterDialog", () => {
     const applyButton = await getApplyButton(baseElement);
     await user.click(applyButton);
 
-    expect(spy).to.not.be.called;
+    expect(spy).not.toHaveBeenCalled();
   });
 
   it("does not invoke `onApply` when filter is invalid", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { baseElement, user } = render(
       <PresentationInstanceFilterDialog
         imodel={imodel}
@@ -299,11 +296,11 @@ describe("PresentationInstanceFilterDialog", () => {
     const applyButton = await getApplyButton(baseElement);
     await user.click(applyButton);
 
-    expect(spy).to.not.be.called;
+    expect(spy).not.toHaveBeenCalled();
   });
 
   it("invokes `onApply` when there are no items selected", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { baseElement, user } = render(
       <PresentationInstanceFilterDialog
         imodel={imodel}
@@ -317,11 +314,11 @@ describe("PresentationInstanceFilterDialog", () => {
     const applyButton = await getApplyButton(baseElement);
     await user.click(applyButton);
 
-    expect(spy).to.be.called;
+    expect(spy).toHaveBeenCalled();
   });
 
   it("invokes `onApply` with only selected classes", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { baseElement, user } = render(
       <PresentationInstanceFilterDialog
         imodel={imodel}
@@ -343,11 +340,11 @@ describe("PresentationInstanceFilterDialog", () => {
     const applyButton = await getApplyButton(baseElement);
     await user.click(applyButton);
 
-    expect(spy).to.be.calledWith({ filter: undefined, usedClasses: [classInfo] });
+    expect(spy).toHaveBeenCalledWith({ filter: undefined, usedClasses: [classInfo] });
   });
 
   it("invokes `onReset` when reset is clicked.", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { baseElement, user } = render(
       <PresentationInstanceFilterDialog
         imodel={imodel}
@@ -362,16 +359,18 @@ describe("PresentationInstanceFilterDialog", () => {
     const resetButton = await getResetButton(baseElement);
     await user.click(resetButton);
 
-    expect(spy).to.be.called;
+    expect(spy).toHaveBeenCalled();
   });
 
   it("throws error when filter is missing presentation metadata", async () => {
-    const fromComponentsPropertyFilterStub = sinon
-      .stub(PresentationInstanceFilter, "fromComponentsPropertyFilter")
-      .throws(new Error("Some Error"));
+    const fromComponentsPropertyFilterStub = vi
+      .spyOn(PresentationInstanceFilter, "fromComponentsPropertyFilter")
+      .mockImplementation(() => {
+        throw new Error("Some Error");
+      });
     // stub console log to avoid expected error in console
-    const consoleErrorStub = sinon.stub(console, "error").callsFake(() => {});
-    const spy = sinon.spy();
+    const consoleErrorStub = vi.spyOn(console, "error").mockImplementation(() => {});
+    const spy = vi.fn();
     const { baseElement, user } = render(
       <PresentationInstanceFilterDialog
         imodel={imodel}
@@ -399,12 +398,12 @@ describe("PresentationInstanceFilterDialog", () => {
     await user.click(applyButton);
 
     await waitFor(() => expect(queryByText(baseElement, "general.error")).to.not.be.null);
-    fromComponentsPropertyFilterStub.restore();
-    consoleErrorStub.restore();
+    fromComponentsPropertyFilterStub.mockRestore();
+    consoleErrorStub.mockRestore();
   });
 
   it("renders custom title", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const title = "custom title";
 
     const { baseElement } = render(
@@ -441,7 +440,7 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("renders error boundary if error is thrown", async () => {
     // stub console log to avoid expected error in console
-    const consoleErrorStub = sinon.stub(console, "error").callsFake(() => {});
+    const consoleErrorStub = vi.spyOn(console, "error").mockImplementation(() => {});
     const propertiesSourceGetter = () => {
       throw new Error("Cannot load descriptor");
     };
@@ -456,11 +455,11 @@ describe("PresentationInstanceFilterDialog", () => {
     );
 
     await waitFor(() => expect(queryByText(baseElement, "general.error")).to.not.be.null);
-    consoleErrorStub.restore();
+    consoleErrorStub.mockRestore();
   });
 
   it("renders with lazy-loaded descriptor", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const propertiesSourceGetter = async () => ({ descriptor });
 
     const { baseElement } = render(

@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedIModelHierarchies.Imports
 import {
   createIModelHierarchyProvider,
@@ -24,21 +23,21 @@ import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Merged iModel hierarchies", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
       it("creates merged iModel hierarchy", async function () {
         await using changesets = await createChangedIModels(
-          this,
           async (builder) => {
             const model1 = insertPhysicalModelWithPartition({ builder, codeValue: "Model 1" });
             const category = insertSpatialCategory({ builder, codeValue: "Category" });
@@ -163,7 +162,7 @@ describe("Hierarchies", () => {
           await collectHierarchy(
             createIModelHierarchyProvider({ hierarchyDefinition, imodelAccess: imodels[0].imodelAccess }),
           ),
-        ).to.containSubset(
+        ).toMatchObject(
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedIModelHierarchies.Example.Version1Hierarchy
           // The first iModel version has 3 elements in "Model 1". The resulting hierarchy:
           [{ label: "Model 1", children: [{ label: "Element 1" }, { label: "Element 2" }, { label: "Element 3" }] }],
@@ -174,7 +173,7 @@ describe("Hierarchies", () => {
           await collectHierarchy(
             createIModelHierarchyProvider({ hierarchyDefinition, imodelAccess: imodels[1].imodelAccess }),
           ),
-        ).to.containSubset(
+        ).toMatchObject(
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedIModelHierarchies.Example.Version2Hierarchy
           // The second iModel version has the following changes:
           // - "Element 2" was deleted
@@ -196,7 +195,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedIModelHierarchies.Example.MergedHierarchyProvider
         const mergedHierarchyProvider = createMergedIModelHierarchyProvider({ imodels, hierarchyDefinition });
         // __PUBLISH_EXTRACT_END__
-        expect(await collectHierarchy(mergedHierarchyProvider)).to.containSubset(
+        expect(await collectHierarchy(mergedHierarchyProvider)).toMatchObject(
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedIModelHierarchies.Example.MergedHierarchy
           [
             // "Model 1" exists in both iModel versions - its elements are merged

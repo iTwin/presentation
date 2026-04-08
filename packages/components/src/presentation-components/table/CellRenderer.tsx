@@ -77,6 +77,7 @@ function NonPrimitiveCellRenderer(props: NonPrimitiveCellRendererProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // modal window when opened causes findDOMNode warning https://github.com/iTwin/iTwinUI/issues/2199
+  /* v8 ignore next -- @preserve */
   return (
     <>
       <Anchor
@@ -89,7 +90,7 @@ function NonPrimitiveCellRenderer(props: NonPrimitiveCellRendererProps) {
       <Modal
         isOpen={isOpen}
         title={dialogLabel}
-        onClose={/* c8 ignore next */ () => setIsOpen(false)}
+        onClose={() => setIsOpen(false)}
         className="presentation-components-non-primitive-value"
       >
         <ModalContent>

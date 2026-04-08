@@ -3,16 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
-import sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RegisteredRuleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { useRulesetRegistration } from "../../presentation-components/hooks/UseRulesetRegistration.js";
 import { renderHook } from "../TestUtils.js";
 
 import type { Ruleset } from "@itwin/presentation-common";
-import type { RulesetManager } from "@itwin/presentation-frontend";
+import type { PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 
@@ -22,27 +21,22 @@ describe("[deprecated] useRulesetRegistration", () => {
   }
   const initialProps: HookProps = { ruleset: { id: "test-ruleset", rules: [] } };
 
-  const rulesetManagerStub = {
-    add: sinon.stub<Parameters<RulesetManager["add"]>, ReturnType<RulesetManager["add"]>>(),
-    remove: sinon.stub<Parameters<RulesetManager["remove"]>, ReturnType<RulesetManager["remove"]>>(),
-  };
+  const rulesetManagerStub = { add: vi.fn<RulesetManager["add"]>(), remove: vi.fn<RulesetManager["remove"]>() };
 
-  before(() => {
-    sinon.stub(Presentation, "presentation").get(() => ({ rulesets: () => rulesetManagerStub }));
-  });
-
-  after(() => {
-    sinon.restore();
+  beforeEach(() => {
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
+      rulesets: () => rulesetManagerStub,
+    } as unknown as PresentationManager);
   });
 
   afterEach(() => {
-    rulesetManagerStub.add.reset();
-    rulesetManagerStub.remove.reset();
+    rulesetManagerStub.add.mockReset();
+    rulesetManagerStub.remove.mockReset();
   });
 
   it("registers and un-registers ruleset", async () => {
     const registeredRulesetPromise = new ResolvablePromise<RegisteredRuleset>();
-    rulesetManagerStub.add.returns(registeredRulesetPromise);
+    rulesetManagerStub.add.mockReturnValue(registeredRulesetPromise);
     const { unmount } = renderHook((props: HookProps) => useRulesetRegistration(props.ruleset), { initialProps });
 
     const registered = new RegisteredRuleset(initialProps.ruleset, "testId", async (r) =>
@@ -50,11 +44,11 @@ describe("[deprecated] useRulesetRegistration", () => {
     );
     await registeredRulesetPromise.resolve(registered);
 
-    expect(rulesetManagerStub.add).to.be.calledWith(initialProps.ruleset);
+    expect(rulesetManagerStub.add).toHaveBeenCalledWith(initialProps.ruleset);
 
     unmount();
 
-    expect(rulesetManagerStub.remove).to.be.called;
+    expect(rulesetManagerStub.remove).toHaveBeenCalled();
 
     // this check fails in `StrictMode` due to ruleset registration happening during render cycle
     // expect(rulesetManagerStub.add.callCount).to.be.eq(rulesetManagerStub.remove.callCount);
@@ -62,7 +56,7 @@ describe("[deprecated] useRulesetRegistration", () => {
 
   it("unregisters ruleset if registration happens after unmount", async () => {
     const registeredRulesetPromise = new ResolvablePromise<RegisteredRuleset>();
-    rulesetManagerStub.add.returns(registeredRulesetPromise);
+    rulesetManagerStub.add.mockReturnValue(registeredRulesetPromise);
     const { unmount } = renderHook((props: HookProps) => useRulesetRegistration(props.ruleset), { initialProps });
 
     const registered = new RegisteredRuleset(initialProps.ruleset, "testId", async (r) =>
@@ -70,11 +64,11 @@ describe("[deprecated] useRulesetRegistration", () => {
     );
     unmount();
 
-    expect(rulesetManagerStub.add).to.be.calledWith(initialProps.ruleset);
+    expect(rulesetManagerStub.add).toHaveBeenCalledWith(initialProps.ruleset);
 
     await registeredRulesetPromise.resolve(registered);
 
-    expect(rulesetManagerStub.remove).to.be.called;
+    expect(rulesetManagerStub.remove).toHaveBeenCalled();
     // this check fails in `StrictMode` due to ruleset registration happening during render cycle
     // expect(rulesetManagerStub.add.callCount).to.be.eq(rulesetManagerStub.remove.callCount);
   });

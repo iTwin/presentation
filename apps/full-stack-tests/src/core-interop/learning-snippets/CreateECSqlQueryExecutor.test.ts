@@ -4,34 +4,32 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
 
-import { expect } from "chai";
-import sinon from "sinon";
 // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.CreateECSqlQueryExecutor.Imports
 import { IModelConnection } from "@itwin/core-frontend";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { buildIModel } from "../../IModelUtils.js";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { buildTestIModel } from "../../IModelUtils.js";
 
 describe("Core interop", () => {
   describe("Learning snippets", () => {
     describe("createECSqlQueryExecutor", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
-        sinon.restore();
       });
 
       it("creates executor that can run ECSql queries", async function () {
-        const { imodel: emptyIModel } = await buildIModel(this, async () => {});
+        const { imodel: emptyIModel } = await buildTestIModel(async () => {});
         function getIModelConnection(): IModelConnection {
           return emptyIModel;
         }
         const MY_QUERY = `SELECT ECInstanceId FROM bis.Element WHERE ECInstanceId = 0x1`;
-        const spy = sinon.stub(console, "log");
+        const spy = vi.spyOn(console, "log");
         // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.CreateECSqlQueryExecutor.Example
         const imodel: IModelConnection = getIModelConnection();
         const executor = createECSqlQueryExecutor(imodel);
@@ -39,7 +37,7 @@ describe("Core interop", () => {
           console.log(row);
         }
         // __PUBLISH_EXTRACT_END__
-        expect(spy).to.be.calledWith({ ["ECInstanceId"]: "0x1" });
+        expect(spy).toHaveBeenCalledWith({ ["ECInstanceId"]: "0x1" });
       });
     });
   });

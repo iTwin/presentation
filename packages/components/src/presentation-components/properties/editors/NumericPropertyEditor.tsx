@@ -23,7 +23,7 @@ export const NumericEditorName = "presentation-numeric-editor";
  * @internal
  */
 export class NumericPropertyEditorBase extends PropertyEditorBase {
-  /* c8 ignore start */
+  /* v8 ignore start -- @preserve */
   public override get containerHandlesTab(): boolean {
     return false;
   }
@@ -31,7 +31,7 @@ export class NumericPropertyEditorBase extends PropertyEditorBase {
   public get reactNode(): React.ReactNode {
     return <NumericPropertyEditor />;
   }
-  /* c8 ignore end */
+  /* v8 ignore stop -- @preserve */
 }
 
 /**
@@ -42,7 +42,7 @@ export class NumericPropertyEditorBase extends PropertyEditorBase {
 export class NumericPropertyEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
   private _ref = createRef<PropertyEditorAttributes>();
 
-  /* c8 ignore start */
+  /* v8 ignore start -- @preserve */
   public async getPropertyValue() {
     return this._ref.current?.getValue();
   }
@@ -57,7 +57,7 @@ export class NumericPropertyEditor extends PureComponent<PropertyEditorProps> im
     }
     return this._ref.current.htmlElement.contains(document.activeElement);
   }
-  /* c8 ignore end */
+  /* v8 ignore stop -- @preserve */
 
   /** @internal */
   public override render() {

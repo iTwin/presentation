@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
-import sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { createHierarchyProvider } from "../hierarchies/HierarchyProvider.js";
 import { createTestGenericNode, createTestGenericNodeKey } from "./Utils.js";
 
@@ -28,23 +27,23 @@ describe("createHierarchyProvider", () => {
 
   it("calls provider implementation functions", async () => {
     const provider = createHierarchyProvider(() => ({
-      getNodes: sinon.fake(async function* () {}),
-      getNodeInstanceKeys: sinon.fake(async function* () {}),
-      setFormatter: sinon.spy(),
-      setHierarchySearch: sinon.spy(),
+      getNodes: vi.fn(async function* () {}),
+      getNodeInstanceKeys: vi.fn(async function* () {}),
+      setFormatter: vi.fn(),
+      setHierarchySearch: vi.fn(),
     }));
 
     provider.getNodes({ parentNode: undefined });
-    expect(provider.getNodes).to.be.calledOnce;
+    expect(provider.getNodes).toHaveBeenCalledOnce();
 
     provider.getNodeInstanceKeys({ parentNode: undefined });
-    expect(provider.getNodeInstanceKeys).to.be.calledOnce;
+    expect(provider.getNodeInstanceKeys).toHaveBeenCalledOnce();
 
     provider.setFormatter(undefined);
-    expect(provider.setFormatter).to.be.calledOnce;
+    expect(provider.setFormatter).toHaveBeenCalledOnce();
 
     provider.setHierarchySearch(undefined);
-    expect(provider.setHierarchySearch).to.be.calledOnce;
+    expect(provider.setHierarchySearch).toHaveBeenCalledOnce();
   });
 
   it("provides `hierarchyChanged` event access", async () => {
@@ -58,22 +57,22 @@ describe("createHierarchyProvider", () => {
       },
     }));
 
-    const spy = sinon.spy();
+    const spy = vi.fn();
     provider.hierarchyChanged.addListener(spy);
 
     provider.setFormatter(undefined);
-    expect(spy.calledOnceWithExactly({ formatterChange: { newFormatter: undefined } })).to.be.true;
-    spy.resetHistory();
+    expect(spy).toHaveBeenCalledExactlyOnceWith({ formatterChange: { newFormatter: undefined } });
+    spy.mockReset();
 
     const searchProps = { paths: [] };
     provider.setHierarchySearch(searchProps);
-    expect(spy.calledOnceWithExactly({ searchChange: { newSearch: searchProps } })).to.be.true;
+    expect(spy).toHaveBeenCalledExactlyOnceWith({ searchChange: { newSearch: searchProps } });
   });
 
   it("allows providers with custom methods", async () => {
-    const provider = createHierarchyProvider(() => ({ async *getNodes() {}, customMethod: sinon.spy() }));
+    const provider = createHierarchyProvider(() => ({ async *getNodes() {}, customMethod: vi.fn() }));
     provider.customMethod();
-    expect(provider.customMethod).to.be.calledOnce;
+    expect(provider.customMethod).toHaveBeenCalledOnce();
   });
 
   it("allows class-based providers with custom methods", async () => {
@@ -85,9 +84,9 @@ describe("createHierarchyProvider", () => {
           public [Symbol.dispose]() {}
         })(),
     );
-    const spy = sinon.spy(provider, "customMethod");
+    const spy = vi.spyOn(provider, "customMethod");
     provider.customMethod();
-    expect(spy).to.be.calledOnce;
+    expect(spy).toHaveBeenCalledOnce();
   });
 
   it("allows class-based providers use their private members", async () => {

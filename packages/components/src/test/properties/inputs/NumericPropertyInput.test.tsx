@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { createRef } from "react";
-import sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StandardTypeNames } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
@@ -32,14 +31,12 @@ const createRecord = (initialValue?: number) => {
 describe("<NumericPropertyInput />", () => {
   beforeEach(async () => {
     const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "localization").get(() => localization);
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
   });
 
-  afterEach(async () => {
-    sinon.restore();
-  });
+  afterEach(async () => {});
 
   [
     {
@@ -58,7 +55,7 @@ describe("<NumericPropertyInput />", () => {
       const record: PropertyRecord & { property: WithConstraints<PropertyDescription> } = createRecord(2);
       record.property.constraints = { minimumValue: testCase.min, maximumValue: testCase.max };
       const ref = createRef<PropertyEditorAttributes>();
-      const spy = sinon.spy();
+      const spy = vi.fn();
       const onCommit = (args: PropertyUpdatedArgs) => {
         if ("value" in args.newValue) {
           spy(args.newValue.value);
@@ -78,7 +75,7 @@ describe("<NumericPropertyInput />", () => {
       await user.tab();
 
       await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(testCase.expectedResult));
-      expect(spy).to.be.calledOnceWith(testCase.expectedResult);
+      expect(spy).toHaveBeenCalledExactlyOnceWith(testCase.expectedResult);
     }),
   );
 
@@ -86,7 +83,7 @@ describe("<NumericPropertyInput />", () => {
     const record: PropertyRecord & { property: WithConstraints<PropertyDescription> } = createRecord(2);
     record.property.constraints = { minimumLength: 2 };
     const ref = createRef<PropertyEditorAttributes>();
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const onCommit = (args: PropertyUpdatedArgs) => {
       if ("value" in args.newValue) {
         spy(args.newValue.value);
@@ -104,7 +101,7 @@ describe("<NumericPropertyInput />", () => {
     await user.tab();
 
     await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(3));
-    expect(spy).to.be.calledOnceWith(3);
+    expect(spy).toHaveBeenCalledExactlyOnceWith(3);
   });
 
   it("get value from NumericPropertyInput reference", async () => {
@@ -251,126 +248,126 @@ describe("<NumericInput />", () => {
   });
 
   it("does not fire `onChange` when input is a letter", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { getByRole, user } = render(<NumericInput onChange={spy} value="" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     // cspell:disable-next-line
     await user.type(inputContainer, "qwertyuiopasdfghjklzxcvbnm");
 
-    expect(spy.called).to.be.false;
+    expect(spy).not.toHaveBeenCalled();
   });
 
   it("does not fire `onChange` when number transforms to `Infinity`", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { getByRole, user } = render(<NumericInput onChange={spy} value="1e90" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.click(inputContainer);
     await user.type(inputContainer, "1");
 
-    expect(spy.called).to.be.false;
+    expect(spy).not.toHaveBeenCalled();
   });
 
   it("fires `onChange` when input is a number", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { getByRole, user } = render(<NumericInput onChange={spy} value="" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, "1");
 
-    expect(spy).to.be.calledWith("1");
+    expect(spy).toHaveBeenCalledWith("1");
   });
 
   it("fires `onChange` when input is `-`, `+` or `.`", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { getByRole, user } = render(<NumericInput onChange={spy} value="" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, "+");
-    expect(spy).to.be.calledWith("+");
+    expect(spy).toHaveBeenCalledWith("+");
 
     await user.type(inputContainer, "-");
-    expect(spy).to.be.calledWith("-");
+    expect(spy).toHaveBeenCalledWith("-");
 
     await user.type(inputContainer, ".");
-    expect(spy).to.be.calledWith(".");
+    expect(spy).toHaveBeenCalledWith(".");
   });
 
   it("fires `onChange` when input is `+.`", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { getByRole, user } = render(<NumericInput onChange={spy} value="+" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.click(inputContainer);
     await user.type(inputContainer, ".");
 
-    expect(spy).to.be.calledWith("+.");
+    expect(spy).toHaveBeenCalledWith("+.");
   });
 
   it("fires `onChange` when input is `-.`", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { getByRole, user } = render(<NumericInput onChange={spy} value="-" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.click(inputContainer);
     await user.type(inputContainer, ".");
 
-    expect(spy).to.be.calledWith("-.");
+    expect(spy).toHaveBeenCalledWith("-.");
   });
 
   it("fires `onChange` when input ends with `e` and input before `e` is a correct number", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { getByRole, user } = render(<NumericInput onChange={spy} value="1" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.click(inputContainer);
     await user.type(inputContainer, "e");
 
-    expect(spy).to.be.calledWith("1e");
+    expect(spy).toHaveBeenCalledWith("1e");
   });
 
   it("fires `onChange` when input ends with `e-` and input before `e` is a correct number", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { getByRole, user } = render(<NumericInput onChange={spy} value="1e" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.click(inputContainer);
     await user.type(inputContainer, "-");
 
-    expect(spy).to.be.calledWith("1e-");
+    expect(spy).toHaveBeenCalledWith("1e-");
   });
 
   it("fires `onBlur` when inputContainer becomes blurred", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { getByRole, user } = render(<NumericInput onBlur={spy} onChange={() => {}} value="1" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
     await user.click(inputContainer);
     await user.tab();
 
-    expect(spy).to.be.be.calledOnce;
+    expect(spy).toHaveBeenCalledOnce();
   });
 
   it("commits value and blurs input when Enter is pressed", async () => {
-    const onBlurSpy = sinon.spy();
+    const onBlurSpy = vi.fn();
     const { getByRole, user } = render(<NumericInput onBlur={onBlurSpy} onChange={() => {}} value="123" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.click(inputContainer);
     await user.keyboard("{Enter}");
 
-    expect(onBlurSpy).to.be.calledOnce;
+    expect(onBlurSpy).toHaveBeenCalledOnce();
   });
 
   it("reverts changes and calls onCancel when Escape is pressed", async () => {
-    const onCancelSpy = sinon.spy();
+    const onCancelSpy = vi.fn();
     const { getByRole, user } = render(<NumericInput onCancel={onCancelSpy} onChange={() => {}} value="5" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.click(inputContainer);
     await user.keyboard("{Escape}");
 
-    expect(onCancelSpy).to.be.calledOnce;
+    expect(onCancelSpy).toHaveBeenCalledOnce();
   });
 
   it("should focus on input if setFocus is true", async () => {
@@ -382,14 +379,14 @@ describe("<NumericInput />", () => {
 
   it("commits undefined value when propertyRecord value is NaN on `onBlur` event", async () => {
     const record = createRecord(Number.NaN);
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const ref = createRef<PropertyEditorAttributes>();
     const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={spy} />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
     await user.click(inputContainer);
     await user.tab();
 
-    expect(spy).to.be.calledWith({
+    expect(spy).toHaveBeenCalledWith({
       propertyRecord: record,
       newValue: { valueFormat: 0, value: undefined, displayValue: "NaN", roundingError: undefined },
     });

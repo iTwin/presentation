@@ -4,11 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
-import { buildIModel } from "../../IModelUtils.js";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "../Utils.js";
@@ -26,13 +27,13 @@ describe("Hierarchies", () => {
     let physicalPartitionClassName: string;
     const groupName = "test1";
 
-    before(async function () {
+    beforeAll(async () => {
       await initialize();
       subjectClassName = Subject.classFullName.replace(":", ".");
       physicalPartitionClassName = PhysicalPartition.classFullName.replace(":", ".");
     });
 
-    after(async () => {
+    afterAll(async () => {
       await terminate();
     });
 
@@ -89,8 +90,8 @@ describe("Hierarchies", () => {
         byBaseClasses: { fullClassNames: ["BisCore.InformationReferenceElement"], hideIfOneGroupedNode: true },
       };
 
-      it("hides base class groups when there're no siblings", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("hides base class groups when there're no siblings", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
@@ -108,8 +109,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("hides base class groups when there's only 1 grouped node", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("hides base class groups when there's only 1 grouped node", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           return { childSubject1 };
         });
@@ -123,8 +124,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("doesn't hide base class groups when there are siblings", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("doesn't hide base class groups when there are siblings", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({
             builder,
             codeValue: "A1",
@@ -151,8 +152,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("doesn't hide base class groups when there's more than 1 grouped node", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("doesn't hide base class groups when there's more than 1 grouped node", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
@@ -184,8 +185,8 @@ describe("Hierarchies", () => {
         byClass: { hideIfOneGroupedNode: true },
       };
 
-      it("hides class groups when there're no siblings", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("hides class groups when there're no siblings", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
@@ -203,8 +204,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("hides class groups when there's only 1 grouped node", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("hides class groups when there's only 1 grouped node", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           return { childSubject1 };
         });
@@ -218,8 +219,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("doesn't hide class groups when there are siblings", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("doesn't hide class groups when there are siblings", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
           return { childSubject1, childPartition2 };
@@ -245,8 +246,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("doesn't hide class groups when there's more than 1 grouped node", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("doesn't hide class groups when there's more than 1 grouped node", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
@@ -277,8 +278,8 @@ describe("Hierarchies", () => {
 
       const labelHideIfNoSiblingsGrouping: ECSqlSelectClauseGroupingParams = { byLabel: { hideIfNoSiblings: true } };
 
-      it("hides label groups when there're no siblings", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("hides label groups when there're no siblings", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({
             builder,
             codeValue: "A1",
@@ -306,8 +307,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("hides label groups when there's only 1 grouped node", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("hides label groups when there's only 1 grouped node", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({
             builder,
             codeValue: "A1",
@@ -326,8 +327,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("doesn't hide label groups when there are siblings", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("doesn't hide label groups when there are siblings", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({
             builder,
             codeValue: "A1",
@@ -361,8 +362,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("doesn't hide label groups when there's more than 1 grouped node", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("doesn't hide label groups when there's more than 1 grouped node", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({
             builder,
             codeValue: "A1",
@@ -413,8 +414,8 @@ describe("Hierarchies", () => {
         },
       };
 
-      it("hides property groups when there're no siblings", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("hides property groups when there're no siblings", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({
             builder,
             codeValue: "A1",
@@ -442,8 +443,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("hides property groups when there's only 1 grouped node", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("hides property groups when there's only 1 grouped node", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({
             builder,
             codeValue: "A1",
@@ -462,8 +463,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("doesn't hide property groups when there are siblings", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("doesn't hide property groups when there are siblings", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({
             builder,
             codeValue: "A1",
@@ -501,8 +502,8 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("doesn't hide base class groups when there's more than 1 grouped node", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("doesn't hide base class groups when there's more than 1 grouped node", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({
             builder,
             codeValue: "A1",

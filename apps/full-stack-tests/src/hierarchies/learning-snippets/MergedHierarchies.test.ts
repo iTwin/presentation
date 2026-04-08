@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedHierarchies.Imports
 import {
   createHierarchyProvider,
@@ -18,15 +18,15 @@ import { collectHierarchy } from "./Utils.js";
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Merged hierarchies", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
-      it("merges providers", async function () {
+      it("merges providers", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedHierarchies.Example
         // Create a very basic hierarchy provider factory
         function createBasicHierarchyProvider(
@@ -75,9 +75,9 @@ describe("Hierarchies", () => {
         // Collect the hierarchy. Notes:
         // - Root nodes are sorted by label
         // - "Child node" is placed under both "Node A" and "Node X"
-        expect(await collectHierarchy(mergingProvider)).to.containSubset([
-          { label: "Node A", children: [{ label: "Child node", children: undefined }] },
-          { label: "Node X", children: [{ label: "Child node", children: undefined }] },
+        expect(await collectHierarchy(mergingProvider)).toMatchObject([
+          { label: "Node A", children: [{ label: "Child node" }] },
+          { label: "Node X", children: [{ label: "Child node" }] },
         ]);
         // __PUBLISH_EXTRACT_END__
       });

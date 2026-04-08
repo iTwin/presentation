@@ -61,7 +61,8 @@ interface CreateValueFormatterProps {
  */
 export function createValueFormatter(props: CreateValueFormatterProps): IPrimitiveValueFormatter {
   const { schemaContext, unitSystem } = props;
-  const baseFormatter = props.baseFormatter ?? /* c8 ignore next */ createDefaultValueFormatter();
+  /* v8 ignore next -- @preserve */
+  const baseFormatter = props.baseFormatter ?? createDefaultValueFormatter();
   const unitsProvider = new SchemaUnitProvider(schemaContext);
   return async function (value: TypedPrimitiveValue): Promise<string> {
     if (value.type === "Double" && !!value.koqName) {
@@ -111,7 +112,6 @@ async function getFormattingProps(
   unitSystem?: UnitSystemKey,
 ): Promise<FormattingProps | undefined> {
   const persistenceUnit = await koq.persistenceUnit;
-  /* c8 ignore next 3 */
   if (!persistenceUnit) {
     return undefined;
   }

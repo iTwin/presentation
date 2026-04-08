@@ -8,11 +8,12 @@ import {
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import { PropertyValueRendererManager, UiComponents } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
 import { usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
-import { buildTestIModel } from "@itwin/presentation-testing";
 import { createStorage } from "@itwin/unified-selection";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, getByText, render, waitFor } from "../../RenderUtils.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
@@ -25,17 +26,17 @@ import type { SelectionStorage } from "@itwin/unified-selection";
 
 describe("Learning snippets", async () => {
   describe("Table", () => {
-    before(async () => {
+    beforeAll(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
     });
 
-    after(async () => {
+    afterAll(async () => {
       UiComponents.terminate();
       await terminate();
     });
 
-    it("renders unified selection table", async function () {
+    it("renders unified selection table", async () => {
       // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.Table
       function MyTable(props: { imodel: IModelConnection; selectionStorage: SelectionStorage }) {
         // the library provides a variation of `usePresentationTable` that updates table content based
@@ -109,8 +110,8 @@ describe("Learning snippets", async () => {
       // set up imodel for the test
       let modelKey: InstanceKey;
       const elementKeys: InstanceKey[] = [];
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      const imodel = await buildTestIModel(this, (builder) => {
+
+      const { imodel } = await buildTestIModel((builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
         elementKeys.push(

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { LabelDefinition } from "@itwin/presentation-common";
 import {
   createPartialTreeNodeItem,
@@ -21,7 +21,7 @@ describe("Utils", () => {
     it("creates tree node", () => {
       const node = createTestECInstancesNode();
       const treeNode = createTreeNodeItem(node);
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
 
     it("creates tree node with extended data", () => {
@@ -34,19 +34,19 @@ describe("Utils", () => {
       const node = createTestECInstancesNode();
       const parentId = "test_parent_id";
       const treeNode = createTreeNodeItem(node, parentId);
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
 
     it("creates tree node with custom label styles", () => {
       const node = { ...createTestECInstancesNode(), fontStyle: "Bold Italic" };
       const treeNode = createTreeNodeItem(node);
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
 
     it("creates auto expanded tree node", () => {
       const node = createTestECInstancesNode({ isExpanded: true });
       const treeNode = createTreeNodeItem(node);
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
 
     it("creates tree node with children", () => {
@@ -62,7 +62,7 @@ describe("Utils", () => {
         label: LabelDefinition.fromLabelString("test"),
       };
       const treeNode = createTreeNodeItem(node, undefined, { appendChildrenCountForGroupingNodes: true });
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
 
     it("uses provided callback to customize tree node", () => {
@@ -73,7 +73,7 @@ describe("Utils", () => {
           item.description = "custom-description";
         },
       });
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
   });
 
@@ -105,7 +105,7 @@ describe("Utils", () => {
           },
         },
       );
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
   });
 
@@ -113,14 +113,14 @@ describe("Utils", () => {
     it("creates tree nodes", () => {
       const nodes = [createTestECInstancesNode(), createTestECInstancesNode()];
       const treeNode = createTreeNodeItems(nodes);
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
 
     it("creates tree nodes with parentId", () => {
       const nodes = [createTestECInstancesNode(), createTestECInstancesNode()];
       const parentId = "test_parent_id";
       const treeNode = createTreeNodeItems(nodes, parentId);
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
   });
 

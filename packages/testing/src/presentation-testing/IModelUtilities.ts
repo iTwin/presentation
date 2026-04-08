@@ -51,6 +51,14 @@ export interface TestIModelBuilder {
 }
 
 /**
+ * Type definition for test context compatible with Mocha test context
+ * @beta
+ */
+interface TestContext {
+  test: { fullTitle: () => string } | undefined;
+}
+
+/**
  * Function that creates an iModel and returns a connection to it.
  * @param name Name of test IModel
  * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
@@ -74,30 +82,30 @@ export async function buildTestIModel(
 ): Promise<IModelConnection>;
 /**
  * Function that creates an iModel and returns a connection to it.
- * @param mochaContext Mocha context to generate iModel name from
+ * @param context test context to generate iModel name from
  * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
  * @beta
  * @deprecated in 4.x. Use an overload with `cb` returning a promise.
  */
 export async function buildTestIModel(
   // eslint-disable-next-line @typescript-eslint/unified-signatures
-  mochaContext: Mocha.Context,
+  context: TestContext,
   cb: (builder: TestIModelBuilder) => void,
 ): Promise<IModelConnection>;
 /**
  * Function that creates an iModel and returns a connection to it.
- * @param mochaContext Mocha context to generate iModel name from
+ * @param context test context to generate iModel name from
  * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
  * @beta
  */
 export async function buildTestIModel(
   // eslint-disable-next-line @typescript-eslint/unified-signatures
-  mochaContext: Mocha.Context,
+  context: TestContext,
   // eslint-disable-next-line @typescript-eslint/unified-signatures
   cb: (builder: TestIModelBuilder) => Promise<void>,
 ): Promise<IModelConnection>;
 export async function buildTestIModel(
-  nameParam: string | Mocha.Context,
+  nameParam: string | TestContext,
   cb: (builder: TestIModelBuilder) => void | Promise<void>,
 ): Promise<IModelConnection> {
   const name = typeof nameParam === "string" ? nameParam : createFileNameFromString(nameParam.test!.fullTitle());

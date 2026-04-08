@@ -3,10 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { from } from "rxjs";
-import sinon from "sinon";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { LogLevel } from "@itwin/core-bentley";
 import { createDefaultValueFormatter } from "@itwin/presentation-shared";
 import { createGroupingOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/Grouping.js";
@@ -26,16 +25,12 @@ describe("Grouping", () => {
   const imodelAccess = createIModelAccessStub();
   let formatter: IPrimitiveValueFormatter;
 
-  before(() => {
+  beforeAll(() => {
     formatter = createDefaultValueFormatter();
     setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
   describe("createGroupingOperator", () => {
-    afterEach(() => {
-      sinon.restore();
-    });
-
     it("doesn't change input nodes when grouping handlers list is empty", async () => {
       const nodes = [
         createTestProcessedInstanceNode({
@@ -52,7 +47,7 @@ describe("Grouping", () => {
           createGroupingOperator(imodelAccess, undefined, formatter, testLocalizedStrings, undefined, undefined, []),
         ),
       );
-      expect(result).to.deep.eq(nodes);
+      expect(result).toEqual(nodes);
     });
 
     it("runs grouping handlers in provided order", async () => {
@@ -110,7 +105,7 @@ describe("Grouping", () => {
         ungrouped: [],
       };
 
-      const groupingSpy = sinon.spy();
+      const groupingSpy = vi.fn();
       const result = await collect(
         from([instanceNode1, instanceNode2, instanceNode3]).pipe(
           createGroupingOperator(imodelAccess, undefined, formatter, testLocalizedStrings, groupingSpy, undefined, [
@@ -120,12 +115,12 @@ describe("Grouping", () => {
           ]),
         ),
       );
-      expect(groupingSpy.callCount).to.eq(3);
-      expect(groupingSpy.firstCall).to.be.calledWith(classGroupingResult);
-      expect(groupingSpy.secondCall).to.be.calledWith(propertyGroupingResult);
-      expect(groupingSpy.thirdCall).to.be.calledWith(labelGroupingResult);
+      expect(groupingSpy.mock.calls.length).toBe(3);
+      expect(groupingSpy.mock.calls[0][0]).toEqual(classGroupingResult);
+      expect(groupingSpy.mock.calls[1][0]).toEqual(propertyGroupingResult);
+      expect(groupingSpy.mock.calls[2][0]).toEqual(labelGroupingResult);
 
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         ...classGroupingResult.grouped,
         ...propertyGroupingResult.grouped,
         ...labelGroupingResult.grouped,
@@ -152,7 +147,7 @@ describe("Grouping", () => {
           ]),
         ),
       );
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         createTestProcessedGroupingNode({
           label: "1",
           key: { type: "label-grouping", label: "1" },
@@ -183,7 +178,7 @@ describe("Grouping", () => {
           ]),
         ),
       );
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         createTestProcessedGroupingNode({
           label: "1",
           key: { type: "label-grouping", label: "1" },
@@ -215,7 +210,7 @@ describe("Grouping", () => {
           ]),
         ),
       );
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         createTestProcessedGroupingNode({
           label: "1",
           key: { type: "label-grouping", label: "1" },
@@ -263,7 +258,7 @@ describe("Grouping", () => {
         children: [groupedNode3],
       });
 
-      const onGroupingNodeCreated = sinon.spy();
+      const onGroupingNodeCreated = vi.fn();
       const result = await collect(
         from([groupedNode1, groupedNode2, groupedNode3]).pipe(
           createGroupingOperator(
@@ -286,12 +281,12 @@ describe("Grouping", () => {
         ),
       );
 
-      expect(onGroupingNodeCreated).to.be.calledThrice;
-      expect(onGroupingNodeCreated.firstCall).to.be.calledWith(classGroupingNode);
-      expect(onGroupingNodeCreated.secondCall).to.be.calledWith(propertyGroupingNode);
-      expect(onGroupingNodeCreated.thirdCall).to.be.calledWith(labelGroupingNode);
+      expect(onGroupingNodeCreated).toHaveBeenCalledTimes(3);
+      expect(onGroupingNodeCreated).toHaveBeenNthCalledWith(1, classGroupingNode);
+      expect(onGroupingNodeCreated).toHaveBeenNthCalledWith(2, propertyGroupingNode);
+      expect(onGroupingNodeCreated).toHaveBeenNthCalledWith(3, labelGroupingNode);
 
-      expect(result).to.deep.eq([classGroupingNode, propertyGroupingNode, labelGroupingNode]);
+      expect(result).toEqual([classGroupingNode, propertyGroupingNode, labelGroupingNode]);
     });
   });
 });

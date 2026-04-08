@@ -209,7 +209,7 @@ export class StyleHelper {
     return !!(hasFontStyle(node) && node.fontStyle && node.fontStyle.indexOf("Italic") !== -1);
   }
 
-  /* c8 ignore next 3 */
+  /* v8 ignore next 3 -- @preserve */
   public static getForeColor(node: Partial<Node>): number | undefined {
     return hasForeColor(node) && node.foreColor ? StyleHelper.getColor(node.foreColor) : undefined;
   }

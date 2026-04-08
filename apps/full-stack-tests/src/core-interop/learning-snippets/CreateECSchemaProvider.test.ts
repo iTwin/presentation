@@ -3,27 +3,27 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.CreateECSchemaProvider.Imports
 import { IModelConnection } from "@itwin/core-frontend";
 import { createECSchemaProvider } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { buildIModel } from "../../IModelUtils.js";
+import { buildTestIModel } from "../../IModelUtils.js";
 
 describe("Core interop", () => {
   describe("Learning snippets", () => {
     describe("createECSchemaProvider", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
       it("creates provider that returns BisCore schema from iModel", async function () {
-        const { imodel: emptyIModel } = await buildIModel(this, async () => {});
+        const { imodel: emptyIModel } = await buildTestIModel(async () => {});
         function getIModelConnection(): IModelConnection {
           return emptyIModel;
         }
@@ -32,7 +32,7 @@ describe("Core interop", () => {
         const schemaProvider = createECSchemaProvider(imodel.schemaContext);
         // the created schema provider may be used in `@itwin/presentation-hierarchies` or `@itwin/unified-selection` packages
         // __PUBLISH_EXTRACT_END__
-        expect(await schemaProvider.getSchema("BisCore")).to.not.be.undefined;
+        expect(await schemaProvider.getSchema("BisCore")).toBeDefined();
       });
     });
   });

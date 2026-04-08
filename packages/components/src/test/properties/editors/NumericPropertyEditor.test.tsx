@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { StandardTypeNames } from "@itwin/appui-abstract";
 import {
   NumericEditorName,
@@ -34,7 +33,7 @@ describe("<NumericPropertyEditor />", () => {
 
   it("Invokes `onCommit` with correct parameters only when input container gets blurred", async () => {
     const record = createRecord();
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { getByTestId, queryByDisplayValue, user } = render(
       <NumericPropertyEditor propertyRecord={record} onCommit={spy} />,
     );
@@ -42,12 +41,12 @@ describe("<NumericPropertyEditor />", () => {
     const inputContainer = await waitFor(() => getByTestId("numeric-input"));
 
     await user.type(inputContainer, "1");
-    expect(spy).to.not.be.called;
+    expect(spy).not.toHaveBeenCalled();
 
     await user.tab();
 
     await waitFor(() => expect(queryByDisplayValue("1")).to.not.be.null);
-    expect(spy).to.be.calledOnceWith({
+    expect(spy).toHaveBeenCalledExactlyOnceWith({
       propertyRecord: record,
       newValue: { valueFormat: 0, value: 1, displayValue: "1", roundingError: 0.5 },
     });

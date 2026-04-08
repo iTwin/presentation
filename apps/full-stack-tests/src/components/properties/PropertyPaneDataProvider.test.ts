@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import {
   insertExternalSourceAspect,
   insertPhysicalElement,
@@ -11,7 +10,7 @@ import {
   insertRepositoryLink,
   insertSpatialCategory,
 } from "presentation-test-utilities";
-import * as sinon from "sinon";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { assert } from "@itwin/core-bentley";
 import {
@@ -23,8 +22,7 @@ import {
 } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { buildTestIModel } from "@itwin/presentation-testing";
-import { buildIModel } from "../../IModelUtils.js";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { importSchema } from "../../SchemaUtils.js";
 
@@ -34,11 +32,11 @@ import type { InstanceKey, PropertiesField } from "@itwin/presentation-common";
 import type { PresentationPropertyDataProviderProps } from "@itwin/presentation-components";
 
 describe("PropertyDataProvider", async () => {
-  before(async () => {
+  beforeAll(async () => {
     await initialize();
   });
 
-  after(async () => {
+  afterAll(async () => {
     await terminate();
   });
 
@@ -51,26 +49,25 @@ describe("PropertyDataProvider", async () => {
 
     describe(configName, () => {
       afterEach(() => {
-        sinon.restore();
+        vi.restoreAllMocks();
       });
 
-      it("creates empty result when properties requested for 0 instances", async function () {
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const imodel = await buildTestIModel(this, async (builder) => {
+      it("creates empty result when properties requested for 0 instances", async () => {
+        const { imodel } = await buildTestIModel(async (builder) => {
           insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
         using provider = createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
         provider.keys = new KeySet();
         const properties = await provider.getData();
-        expect(properties.records).to.be.empty;
+        expect(Object.keys(properties.records)).toHaveLength(0);
       });
 
-      it("creates property data when given key with concrete class", async function () {
+      it("creates property data when given key with concrete class", async () => {
         let categoryKey: InstanceKey;
         let modelKey: InstanceKey;
         let elementKey: InstanceKey;
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const imodel = await buildTestIModel(this, async (builder) => {
+
+        const { imodel } = await buildTestIModel(async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
           modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
           elementKey = insertPhysicalElement({
@@ -84,30 +81,27 @@ describe("PropertyDataProvider", async () => {
         using provider = createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
         provider.keys = new KeySet([elementKey!]);
         const properties = await provider.getData();
-        expect((properties.label.value as PrimitiveValue).displayValue).to.contain("My Element");
+        expect((properties.label.value as PrimitiveValue).displayValue).toContain("My Element");
         validateRecords(properties.records["/selected-item/"], [
           {
             propName: "CodeValue",
             valueComparer: (value) =>
-              expect(value).to.containSubset({ valueFormat: PropertyValueFormat.Primitive, value: undefined }),
+              expect(value).toMatchObject({ valueFormat: PropertyValueFormat.Primitive, value: undefined }),
           },
           {
             propName: "UserLabel",
             valueComparer: (value) =>
-              expect(value).to.containSubset({ valueFormat: PropertyValueFormat.Primitive, value: "My Element" }),
+              expect(value).toMatchObject({ valueFormat: PropertyValueFormat.Primitive, value: "My Element" }),
           },
           {
             propName: "Model",
             valueComparer: (value) =>
-              expect(value).to.containSubset({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: { id: modelKey.id },
-              }),
+              expect(value).toMatchObject({ valueFormat: PropertyValueFormat.Primitive, value: { id: modelKey.id } }),
           },
           {
             propName: "Category",
             valueComparer: (value) =>
-              expect(value).to.containSubset({
+              expect(value).toMatchObject({
                 valueFormat: PropertyValueFormat.Primitive,
                 value: { id: categoryKey.id },
               }),
@@ -115,12 +109,12 @@ describe("PropertyDataProvider", async () => {
         ]);
       });
 
-      it("creates property data when given key with base class", async function () {
+      it("creates property data when given key with base class", async () => {
         let categoryKey: InstanceKey;
         let modelKey: InstanceKey;
         let elementKey: InstanceKey;
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const imodel = await buildTestIModel(this, async (builder) => {
+
+        const { imodel } = await buildTestIModel(async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
           modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
           elementKey = insertPhysicalElement({
@@ -134,30 +128,27 @@ describe("PropertyDataProvider", async () => {
         using provider = createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
         provider.keys = new KeySet([{ className: "BisCore:Element", id: elementKey!.id }]);
         const properties = await provider.getData();
-        expect((properties.label.value as PrimitiveValue).displayValue).to.contain("My Element");
+        expect((properties.label.value as PrimitiveValue).displayValue).toContain("My Element");
         validateRecords(properties.records["/selected-item/"], [
           {
             propName: "CodeValue",
             valueComparer: (value) =>
-              expect(value).to.containSubset({ valueFormat: PropertyValueFormat.Primitive, value: undefined }),
+              expect(value).toMatchObject({ valueFormat: PropertyValueFormat.Primitive, value: undefined }),
           },
           {
             propName: "UserLabel",
             valueComparer: (value) =>
-              expect(value).to.containSubset({ valueFormat: PropertyValueFormat.Primitive, value: "My Element" }),
+              expect(value).toMatchObject({ valueFormat: PropertyValueFormat.Primitive, value: "My Element" }),
           },
           {
             propName: "Model",
             valueComparer: (value) =>
-              expect(value).to.containSubset({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: { id: modelKey.id },
-              }),
+              expect(value).toMatchObject({ valueFormat: PropertyValueFormat.Primitive, value: { id: modelKey.id } }),
           },
           {
             propName: "Category",
             valueComparer: (value) =>
-              expect(value).to.containSubset({
+              expect(value).toMatchObject({
                 valueFormat: PropertyValueFormat.Primitive,
                 value: { id: categoryKey.id },
               }),
@@ -165,14 +156,14 @@ describe("PropertyDataProvider", async () => {
         ]);
       });
 
-      it("favorites properties", async function () {
+      it("favorites properties", async () => {
         let categoryKey: InstanceKey;
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const imodel = await buildTestIModel(this, async (builder) => {
+
+        const { imodel } = await buildTestIModel(async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
         using provider = createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
-        sinon.stub(provider as any, "isFieldFavorite").returns(true);
+        vi.spyOn(provider as any, "isFieldFavorite").mockReturnValue(true);
         provider.keys = new KeySet([categoryKey!]);
         const properties = await provider.getData();
         const favoriteCategoryName = provider.isNestedPropertyCategoryGroupingEnabled
@@ -190,10 +181,10 @@ describe("PropertyDataProvider", async () => {
         ]);
       });
 
-      it("overrides default property category", async function () {
+      it("overrides default property category", async () => {
         let categoryKey: InstanceKey;
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const imodel = await buildTestIModel(this, async (builder) => {
+
+        const { imodel } = await buildTestIModel(async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
         using provider = createProvider({
@@ -216,9 +207,7 @@ describe("PropertyDataProvider", async () => {
         });
         provider.keys = new KeySet([categoryKey!]);
         const properties = await provider.getData();
-        expect(properties.categories.find((category) => category.name === "default")?.label).to.be.eq(
-          "Custom Category",
-        );
+        expect(properties.categories.find((category) => category.name === "default")?.label).toBe("Custom Category");
         validateRecords(properties.records.default, [
           { propName: "CodeValue" },
           { propName: "UserLabel" },
@@ -226,10 +215,10 @@ describe("PropertyDataProvider", async () => {
         ]);
       });
 
-      it("finds root property record keys", async function () {
+      it("finds root property record keys", async () => {
         let categoryKey: InstanceKey;
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const imodel = await buildTestIModel(this, async (builder) => {
+
+        const { imodel } = await buildTestIModel(async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
 
@@ -238,20 +227,20 @@ describe("PropertyDataProvider", async () => {
         const properties = await provider.getData();
 
         const category = properties.categories.find((c) => c.name === "/selected-item/");
-        expect(category).to.not.be.undefined;
+        expect(category).toBeDefined();
 
         const record = properties.records[category!.name].find((r) => r.property.displayLabel === "Code");
-        expect(record).to.not.be.undefined;
+        expect(record).toBeDefined();
 
         const keys = await provider.getPropertyRecordInstanceKeys(record!);
-        expect(keys).to.deep.eq([categoryKey!]);
+        expect(keys).toEqual([categoryKey!]);
       });
 
-      it("finds nested property record keys", async function () {
+      it("finds nested property record keys", async () => {
         let elementKey: InstanceKey;
         let externalsSourceAspectKey: InstanceKey;
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const imodel = await buildTestIModel(this, async (builder) => {
+
+        const { imodel } = await buildTestIModel(async (builder) => {
           const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
           const modelKey = insertPhysicalModelWithPartition({
             builder,
@@ -298,13 +287,13 @@ describe("PropertyDataProvider", async () => {
           return undefined;
         }
         const category = findNestedCategory(properties.categories, "/selected-item/-source_information");
-        expect(category).to.not.be.undefined;
+        expect(category).toBeDefined();
 
         const record = properties.records[category!.name].find((r) => r.property.displayLabel === "Source Element ID");
-        expect(record).to.not.be.undefined;
+        expect(record).toBeDefined();
 
         const keys = await provider.getPropertyRecordInstanceKeys(record!);
-        expect(keys).to.deep.eq([externalsSourceAspectKey!]);
+        expect(keys).toEqual([externalsSourceAspectKey!]);
       });
     });
   };
@@ -312,10 +301,10 @@ describe("PropertyDataProvider", async () => {
   runTests("with flat property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = false));
   runTests("with nested property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = true));
 
-  it("finds array item & struct member fields", async function () {
-    const { imodel, ...keys } = await buildIModel(this, async (builder, mochaContext) => {
+  it("finds array item & struct member fields", async () => {
+    const { imodel, ...keys } = await buildTestIModel(async (builder, testName) => {
       const schema = await importSchema(
-        mochaContext,
+        testName,
         builder,
         `
           <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
@@ -363,26 +352,25 @@ describe("PropertyDataProvider", async () => {
         propName: "ArrayProperty",
         valueComparer: (value, property) => {
           assert(value.valueFormat === PropertyValueFormat.Array);
-          expect(value.itemsTypeName).to.eq("string");
-          expect(value.items)
-            .to.have.lengthOf(2)
-            .and.to.containSubset([
-              {
-                property: { name: combineFieldNames("[*]", property.name), typename: "string" },
-                value: { value: "Item 1" },
-              },
-              {
-                property: { name: combineFieldNames("[*]", property.name), typename: "string" },
-                value: { value: "Item 2" },
-              },
-            ]);
+          expect(value.itemsTypeName).toBe("string");
+          expect(value.items).toHaveLength(2);
+          expect(value.items).toMatchObject([
+            {
+              property: { name: combineFieldNames("[*]", property.name), typename: "string" },
+              value: { value: "Item 1" },
+            },
+            {
+              property: { name: combineFieldNames("[*]", property.name), typename: "string" },
+              value: { value: "Item 2" },
+            },
+          ]);
         },
       },
       {
         propName: "StructProperty",
         valueComparer: (value, property) => {
           assert(value.valueFormat === PropertyValueFormat.Struct);
-          expect(value.members).and.to.containSubset({
+          expect(value.members).toMatchObject({
             StringMember: {
               property: { name: combineFieldNames("StringMember", property.name), typename: "string" },
               value: { value: "Test string" },
@@ -398,55 +386,54 @@ describe("PropertyDataProvider", async () => {
         propName: "StructArrayProperty",
         valueComparer: (value, property) => {
           assert(value.valueFormat === PropertyValueFormat.Array);
-          expect(value.itemsTypeName).to.eq("TestStruct");
-          expect(value.items)
-            .to.have.lengthOf(2)
-            .and.to.containSubset([
-              {
-                property: { name: combineFieldNames("[*]", property.name), typename: "TestStruct" },
-                value: {
-                  valueFormat: PropertyValueFormat.Struct,
-                  members: {
-                    StringMember: {
-                      property: {
-                        name: combineFieldNames("StringMember", combineFieldNames("[*]", property.name)),
-                        typename: "string",
-                      },
-                      value: { value: "Item 1" },
+          expect(value.itemsTypeName).toBe("TestStruct");
+          expect(value.items).toHaveLength(2);
+          expect(value.items).toMatchObject([
+            {
+              property: { name: combineFieldNames("[*]", property.name), typename: "TestStruct" },
+              value: {
+                valueFormat: PropertyValueFormat.Struct,
+                members: {
+                  StringMember: {
+                    property: {
+                      name: combineFieldNames("StringMember", combineFieldNames("[*]", property.name)),
+                      typename: "string",
                     },
-                    NumericMember: {
-                      property: {
-                        name: combineFieldNames("NumericMember", combineFieldNames("[*]", property.name)),
-                        typename: "int",
-                      },
-                      value: { value: 456 },
+                    value: { value: "Item 1" },
+                  },
+                  NumericMember: {
+                    property: {
+                      name: combineFieldNames("NumericMember", combineFieldNames("[*]", property.name)),
+                      typename: "int",
                     },
+                    value: { value: 456 },
                   },
                 },
               },
-              {
-                property: { name: combineFieldNames("[*]", property.name), typename: "TestStruct" },
-                value: {
-                  valueFormat: PropertyValueFormat.Struct,
-                  members: {
-                    StringMember: {
-                      property: {
-                        name: combineFieldNames("StringMember", combineFieldNames("[*]", property.name)),
-                        typename: "string",
-                      },
-                      value: { value: "Item 2" },
+            },
+            {
+              property: { name: combineFieldNames("[*]", property.name), typename: "TestStruct" },
+              value: {
+                valueFormat: PropertyValueFormat.Struct,
+                members: {
+                  StringMember: {
+                    property: {
+                      name: combineFieldNames("StringMember", combineFieldNames("[*]", property.name)),
+                      typename: "string",
                     },
-                    NumericMember: {
-                      property: {
-                        name: combineFieldNames("NumericMember", combineFieldNames("[*]", property.name)),
-                        typename: "int",
-                      },
-                      value: { value: 789 },
+                    value: { value: "Item 2" },
+                  },
+                  NumericMember: {
+                    property: {
+                      name: combineFieldNames("NumericMember", combineFieldNames("[*]", property.name)),
+                      typename: "int",
                     },
+                    value: { value: 789 },
                   },
                 },
               },
-            ]);
+            },
+          ]);
         },
       },
     ]);
@@ -456,10 +443,12 @@ describe("PropertyDataProvider", async () => {
     assert(arrayRecord?.value.valueFormat === PropertyValueFormat.Array);
     const arrayItemRecord = arrayRecord.value.items[0];
     const arrayItemField = (await provider.getFieldByPropertyDescription(arrayItemRecord.property)) as PropertiesField;
-    expect(arrayItemField).to.containSubset({ name: "[*]", label: "ArrayProperty" });
-    expect(arrayItemField.parentArrayField)
-      .to.be.instanceOf(ArrayPropertiesField)
-      .and.to.containSubset({ label: "ArrayProperty", type: { valueFormat: "Array", typeName: "string[]" } });
+    expect(arrayItemField).toMatchObject({ name: "[*]", label: "ArrayProperty" });
+    expect(arrayItemField.parentArrayField).toBeInstanceOf(ArrayPropertiesField);
+    expect(arrayItemField.parentArrayField).toMatchObject({
+      label: "ArrayProperty",
+      type: { valueFormat: "Array", typeName: "string[]" },
+    });
 
     // test retrieving struct member field
     const structRecord = properties.records["/selected-item/"].find((r) => r.property.name.endsWith("StructProperty"));
@@ -468,10 +457,12 @@ describe("PropertyDataProvider", async () => {
     const structMemberField = (await provider.getFieldByPropertyDescription(
       structMemberRecord.property,
     )) as PropertiesField;
-    expect(structMemberField).to.containSubset({ name: "StringMember" });
-    expect(structMemberField.parentStructField)
-      .to.be.instanceOf(StructPropertiesField)
-      .and.to.containSubset({ label: "StructProperty", type: { valueFormat: "Struct", typeName: "TestStruct" } });
+    expect(structMemberField).toMatchObject({ name: "StringMember" });
+    expect(structMemberField.parentStructField).toBeInstanceOf(StructPropertiesField);
+    expect(structMemberField.parentStructField).toMatchObject({
+      label: "StructProperty",
+      type: { valueFormat: "Struct", typeName: "TestStruct" },
+    });
 
     // test retrieving struct array member field
     const structArrayRecord = properties.records["/selected-item/"].find((r) =>
@@ -484,26 +475,32 @@ describe("PropertyDataProvider", async () => {
     const structArrayMemberField = (await provider.getFieldByPropertyDescription(
       structArrayItemMemberRecord.property,
     )) as PropertiesField;
-    expect(structArrayMemberField).to.containSubset({ name: "StringMember" });
-    expect(structArrayMemberField.parentStructField)
-      .to.be.instanceOf(StructPropertiesField)
-      .and.to.containSubset({ label: "StructArrayProperty", type: { valueFormat: "Struct", typeName: "TestStruct" } });
-    expect((structArrayMemberField.parentStructField as StructPropertiesField).parentArrayField)
-      .to.be.instanceOf(ArrayPropertiesField)
-      .and.to.containSubset({ label: "StructArrayProperty", type: { valueFormat: "Array", typeName: "TestStruct[]" } });
+    expect(structArrayMemberField).toMatchObject({ name: "StringMember" });
+    expect(structArrayMemberField.parentStructField).toBeInstanceOf(StructPropertiesField);
+    expect(structArrayMemberField.parentStructField).toMatchObject({
+      label: "StructArrayProperty",
+      type: { valueFormat: "Struct", typeName: "TestStruct" },
+    });
+    expect((structArrayMemberField.parentStructField as StructPropertiesField).parentArrayField).toBeInstanceOf(
+      ArrayPropertiesField,
+    );
+    expect((structArrayMemberField.parentStructField as StructPropertiesField).parentArrayField).toMatchObject({
+      label: "StructArrayProperty",
+      type: { valueFormat: "Array", typeName: "TestStruct[]" },
+    });
   });
 
-  it("gets property data after re-initializing Presentation", async function () {
+  it("gets property data after re-initializing Presentation", async () => {
     let categoryKey: InstanceKey;
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    const imodel = await buildTestIModel(this, async (builder) => {
+
+    const { imodel } = await buildTestIModel(async (builder) => {
       categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
     });
     const checkDataProvider = async () => {
       using provider = new PresentationPropertyDataProvider({ imodel });
       provider.keys = new KeySet([categoryKey]);
       const properties = await provider.getData();
-      expect(properties.categories).to.not.be.empty;
+      expect(properties.categories).not.toHaveLength(0);
     };
 
     // first request something to make sure we get data back

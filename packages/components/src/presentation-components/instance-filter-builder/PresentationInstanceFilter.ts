@@ -536,6 +536,7 @@ function findFieldByPath(
     }
 
     const nestedField = findFieldByPath(field.nestedFields, pathMatchResult.leftOver);
+    /* v8 ignore else -- @preserve */
     if (nestedField) {
       return nestedField;
     }

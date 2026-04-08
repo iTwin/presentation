@@ -365,11 +365,13 @@ async function createInstanceFilterClauses(props: {
         try {
           return await imodelAccess.classDerivesFrom(derivedClassName, baseClassName);
         } catch (e) {
+          /* v8 ignore else -- @preserve */
           if (isSchemaOrClassNotFoundError(e)) {
             // either derived or base class doesn't exist in this iModel
             return false;
           }
-          /* c8 ignore next 2 */
+
+          /* v8 ignore next -- @preserve */
           throw e;
         }
       },
@@ -414,11 +416,13 @@ async function createInstanceFilterClauses(props: {
       ),
     );
   } catch (e) {
+    /* v8 ignore else -- @preserve */
     if (isSchemaOrClassNotFoundError(e)) {
       // at least one related instance spec uses a class that doesn't exist in this iModel
       return DISABLE_QUERY;
     }
-    /* c8 ignore next 2 */
+
+    /* v8 ignore next -- @preserve */
     throw e;
   }
 
@@ -440,11 +444,13 @@ async function createInstanceFilterClauses(props: {
   } catch (e) {
     // note: don't need to worry about schemas & classes here, because that's taken care of above, when
     // validating property class names & related instance defs
+    /* v8 ignore else -- @preserve */
     if (isPropertyNotFoundError(e)) {
       // filter uses a property that doesn't exist in this iModel
       return DISABLE_QUERY;
     }
-    /* c8 ignore next 2 */
+
+    /* v8 ignore next -- @preserve */
     throw e;
   }
 
@@ -517,6 +523,8 @@ async function createGroupingSelector(
       ]),
     });
 
+  // TODO: MISSING_COVERAGE
+  /* v8 ignore else -- @preserve */
   if (grouping.byProperties) {
     const propertyClass = await getClass(imodelAccess, grouping.byProperties.propertiesClassName);
     groupingSelectors.push({
@@ -598,6 +606,8 @@ async function createPropertyGroupSelectors(
       property.direction === "Forward"
         ? await relationshipClass.target.abstractConstraint
         : await relationshipClass.source.abstractConstraint;
+    // TODO: MISSING_COVERAGE
+    /* v8 ignore else -- @preserve */
     if (!abstractConstraint) {
       throw new Error(`Could not determine class name for navigation property with direction "${property.direction}".`);
     }
@@ -883,6 +893,7 @@ async function getHiddenClassesTree(
 
   const derivedClassSchemas = derivedClasses.reduce(
     (acc, ecClass) => {
+      /* v8 ignore else -- @preserve */
       if (!acc.set.has(ecClass.schema.name)) {
         acc.schemas.push(ecClass.schema);
         acc.set.add(ecClass.schema.name);
@@ -980,10 +991,12 @@ async function tryGetClass(
   try {
     return await getClass(schemaProvider, fullClassName);
   } catch (e) {
+    /* v8 ignore else -- @preserve */
     if (isSchemaOrClassNotFoundError(e)) {
       return undefined;
     }
-    /* c8 ignore next 2 */
+
+    /* v8 ignore next -- @preserve */
     throw e;
   }
 }

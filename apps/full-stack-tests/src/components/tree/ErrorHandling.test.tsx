@@ -4,20 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
 import {
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import { useState } from "react";
-import sinon from "sinon";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { SelectionMode, UiComponents } from "@itwin/components-react";
 import { Guid } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { buildTestIModel } from "@itwin/presentation-testing";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getByRole, render, waitFor } from "../../RenderUtils.js";
 import { isIterableManager } from "../../Utils.js";
@@ -29,21 +28,21 @@ import type { Ruleset } from "@itwin/presentation-common";
 
 describe("Learning snippets", () => {
   describe("Tree", () => {
-    before(async () => {
+    beforeAll(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
       HTMLElement.prototype.scrollIntoView = () => {};
     });
 
-    after(async () => {
+    afterAll(async () => {
       delete (HTMLElement.prototype as any).scrollIntoView;
       UiComponents.terminate();
       await terminate();
     });
 
-    it("handles errors", async function () {
+    it("handles errors", async () => {
       // stub console log to avoid expected network error in console
-      const consoleStub = sinon.stub(console, "error").callsFake(() => {});
+      const consoleStub = vi.spyOn(console, "error").mockImplementation(() => {});
       // __PUBLISH_EXTRACT_START__ Presentation.Components.Tree.ErrorHandling
       function MyTree(props: { imodel: IModelConnection }) {
         const state = usePresentationTreeState({ imodel: props.imodel, ruleset, pagingSize: 100 });
@@ -74,7 +73,7 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      const imodel = await buildTestIModel(this, (builder) => {
+      const { imodel } = await buildTestIModel((builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKeyA = insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
         const modelKeyB = insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
@@ -109,9 +108,13 @@ describe("Learning snippets", () => {
       // simulate a network error for B model node's children
       const manager = Presentation.presentation;
       if (isIterableManager(manager)) {
-        sinon.stub(manager, "getNodesIterator").throws(new Error("Network error"));
+        vi.spyOn(manager, "getNodesIterator").mockImplementation(() => {
+          throw new Error("Network error");
+        });
       } else {
-        sinon.stub(Presentation.presentation, "getNodesAndCount").throws(new Error("Network error"));
+        vi.spyOn(Presentation.presentation, "getNodesAndCount").mockImplementation(() => {
+          throw new Error("Network error");
+        });
       }
 
       // find & expand model B node
@@ -120,18 +123,18 @@ describe("Learning snippets", () => {
 
       // expect B model to have a single error node
       // cspell:disable-next-line
-      await waitFor(() => expect(getByText("Èrrór ¢rëätíñg thë hìérärçhý lévêl")).is.not.null);
-      expect(() => getNodeByLabel(container, `B element 1`)).to.throw();
-      expect(() => getNodeByLabel(container, `B element 2`)).to.throw();
+      await waitFor(() => expect(getByText("Èrrór ¢rëätíñg thë hìérärçhý lévêl")).not.toBeNull());
+      expect(() => getNodeByLabel(container, `B element 1`)).toThrow();
+      expect(() => getNodeByLabel(container, `B element 2`)).toThrow();
 
       // now try to force-rerender the tree to see how the error is handled at the root nodes' level
       rerender(<MyTree key={Guid.createValue()} imodel={imodel} />);
       await waitFor(() => getByRole(container, "tree"));
-      expect(() => getNodeByLabel(container, `My Model A`)).to.throw();
-      expect(() => getNodeByLabel(container, `My Model B`)).to.throw();
+      expect(() => getNodeByLabel(container, `My Model A`)).toThrow();
+      expect(() => getNodeByLabel(container, `My Model B`)).toThrow();
       // cspell:disable-next-line
-      expect(getByText("Èrrór ¢rëätíñg thë hìérärçhý lévêl")).is.not.null;
-      consoleStub.restore();
+      expect(getByText("Èrrór ¢rëätíñg thë hìérärçhý lévêl")).not.toBeNull();
+      consoleStub.mockRestore();
     });
   });
 });

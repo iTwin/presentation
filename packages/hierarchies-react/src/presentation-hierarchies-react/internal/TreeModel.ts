@@ -89,7 +89,6 @@ export namespace TreeModel {
     }
 
     const parentNode = rootId !== undefined ? model.idToNode.get(rootId) : model.rootNode;
-    /* c8 ignore next 3*/
     if (!parentNode) {
       return;
     }
@@ -173,7 +172,6 @@ export namespace TreeModel {
       return;
     }
     const modelNode = model.idToNode.get(nodeId);
-    /* c8 ignore next 3*/
     if (!modelNode) {
       return;
     }

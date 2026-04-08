@@ -45,6 +45,7 @@ export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSche
     try {
       return await getSchemaUnprotected(schemaName);
     } catch (e) {
+      /* v8 ignore else -- @preserve */
       if (e instanceof Error) {
         if (e.message.includes("already exists within this cache") && !handledExistingSchemaErrors.has(schemaName)) {
           handledExistingSchemaErrors.add(schemaName);

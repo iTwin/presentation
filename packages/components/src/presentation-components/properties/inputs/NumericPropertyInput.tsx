@@ -66,7 +66,7 @@ function parsePrimitiveValue(value: string): PrimitiveValue {
 
 function getInputTargetFromPropertyRecord(propertyRecord: PropertyRecord) {
   const value = propertyRecord.value;
-  /* c8 ignore next 3 */
+  /* v8 ignore next -- @preserve */
   if (value.valueFormat !== PropertyValueFormat.Primitive) {
     return undefined;
   }

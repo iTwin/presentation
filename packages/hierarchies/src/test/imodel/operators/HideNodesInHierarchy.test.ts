@@ -3,10 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { collect, waitFor } from "presentation-test-utilities";
 import { from, Observable } from "rxjs";
-import sinon from "sinon";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { LogLevel } from "@itwin/core-bentley";
 import {
   createHideNodesInHierarchyOperator,
@@ -23,14 +22,14 @@ import {
 import type { ProcessedHierarchyNode } from "../../../hierarchies/imodel/IModelHierarchyNode.js";
 
 describe("HideNodesInHierarchyOperator", () => {
-  before(() => {
+  beforeAll(() => {
     setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
   it("returns nodes that don't need hiding", async () => {
     const nodes = [createTestProcessedGenericNode()];
-    const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(sinon.spy(), false)));
-    expect(result).to.deep.eq(nodes);
+    const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(vi.fn(), false)));
+    expect(result).toEqual(nodes);
   });
 
   it("returns the first hidden node if it has children and operator is created with `stopOnFirstChild = true`", async () => {
@@ -48,8 +47,8 @@ describe("HideNodesInHierarchyOperator", () => {
         processingParams: { hideInHierarchy: true },
       }),
     ];
-    const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(sinon.spy(), true)));
-    expect(result).to.deep.eq([nodes[0]]);
+    const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(vi.fn(), true)));
+    expect(result).toEqual([nodes[0]]);
   });
 
   it("returns the first hidden node if it undetermined children evaluating to `true` and operator is created with `stopOnFirstChild = true`", async () => {
@@ -68,16 +67,16 @@ describe("HideNodesInHierarchyOperator", () => {
       }),
     ];
     const childNode = createTestProcessedGenericNode();
-    const getNodes = sinon.fake(() => from([childNode]));
+    const getNodes = vi.fn().mockImplementation(() => from([childNode]));
     const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(getNodes, true)));
-    expect(result).to.deep.eq([childNode]);
+    expect(result).toEqual([childNode]);
   });
 
   describe("instance nodes", () => {
     it("hides nodes without children", async () => {
       const nodes = [createTestProcessedGenericNode({ children: false, processingParams: { hideInHierarchy: true } })];
-      const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(sinon.spy(), false)));
-      expect(result).to.deep.eq([]);
+      const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(vi.fn(), false)));
+      expect(result).toEqual([]);
     });
 
     it("hides nodes with undetermined children evaluating to empty array", async () => {
@@ -89,9 +88,9 @@ describe("HideNodesInHierarchyOperator", () => {
           processingParams: { hideInHierarchy: true },
         }),
       ];
-      const getNodes = sinon.fake(() => from([]));
+      const getNodes = vi.fn().mockImplementation(() => from([]));
       const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
-      expect(result).to.deep.eq([]);
+      expect(result).toEqual([]);
     });
 
     it("hides nodes with undetermined children evaluating to children array", async () => {
@@ -110,9 +109,9 @@ describe("HideNodesInHierarchyOperator", () => {
           children: false,
         }),
       ];
-      const getNodes = sinon.fake(() => from(childNodes));
+      const getNodes = vi.fn().mockImplementation(() => from(childNodes));
       const result = await collect(from(hiddenNodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
-      expect(result).to.deep.eq(childNodes);
+      expect(result).toEqual(childNodes);
     });
 
     it("merges similar hidden nodes when requesting children", async () => {
@@ -128,9 +127,9 @@ describe("HideNodesInHierarchyOperator", () => {
           processingParams: { hideInHierarchy: true },
         }),
       ];
-      const getNodes = sinon.fake(() => from([]));
+      const getNodes = vi.fn().mockImplementation(() => from([]));
       const result = await collect(from(hiddenNodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
-      expect(getNodes).to.be.calledOnceWithExactly({
+      expect(getNodes).toHaveBeenCalledExactlyOnceWith({
         key: {
           type: "instances",
           instanceKeys: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })],
@@ -139,7 +138,7 @@ describe("HideNodesInHierarchyOperator", () => {
         label: "a",
         processingParams: { hideInHierarchy: true },
       });
-      expect(result).to.deep.eq([]);
+      expect(result).toEqual([]);
     });
   });
 
@@ -159,9 +158,9 @@ describe("HideNodesInHierarchyOperator", () => {
           children: false,
         }),
       ];
-      const getNodes = sinon.fake(() => from(childNodes));
+      const getNodes = vi.fn().mockImplementation(() => from(childNodes));
       const result = await collect(from(hiddenNodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
-      expect(result).to.deep.eq(childNodes);
+      expect(result).toEqual(childNodes);
     });
 
     it("merges similar hidden nodes when requesting children", async () => {
@@ -182,30 +181,30 @@ describe("HideNodesInHierarchyOperator", () => {
           processingParams: { hideInHierarchy: true },
         }),
       ];
-      const getNodes = sinon.fake(() => from([]));
+      const getNodes = vi.fn().mockImplementation(() => from([]));
       const result = await collect(from(hiddenNodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
-      expect(getNodes).to.be.calledTwice;
-      expect(getNodes.firstCall).to.be.calledWithExactly({
+      expect(getNodes).toHaveBeenCalledTimes(2);
+      expect(getNodes).toHaveBeenNthCalledWith(1, {
         key: createTestGenericNodeKey({ id: "custom" }),
         parentKeys: [],
         label: "a",
         processingParams: { hideInHierarchy: true },
       });
-      expect(getNodes.secondCall).to.be.calledWithExactly({
+      expect(getNodes).toHaveBeenNthCalledWith(2, {
         key: createTestGenericNodeKey({ id: "custom", source: "s" }),
         parentKeys: [],
         label: "c",
         processingParams: { hideInHierarchy: true },
       });
-      expect(result).to.deep.eq([]);
+      expect(result).toEqual([]);
     });
 
     it("subscribes to input observable once", async () => {
       const processedHierarchyNodesObservable = new Observable<any>();
-      const subscriptionSpy = sinon.spy(processedHierarchyNodesObservable, "subscribe");
+      const subscriptionSpy = vi.spyOn(processedHierarchyNodesObservable, "subscribe");
       const promise = processedHierarchyNodesObservable.pipe(createHideNodesInHierarchyOperator(() => from([]), false));
       promise.subscribe();
-      await waitFor(() => expect(subscriptionSpy).to.have.been.calledOnce);
+      await waitFor(() => expect(subscriptionSpy).toHaveBeenCalledOnce());
     });
   });
 });

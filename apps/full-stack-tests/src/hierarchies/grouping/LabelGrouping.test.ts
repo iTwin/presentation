@@ -4,11 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertSubject } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createNodesQueryClauseFactory, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, normalizeFullClassName } from "@itwin/presentation-shared";
-import { buildIModel } from "../../IModelUtils.js";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "../Utils.js";
@@ -19,20 +20,20 @@ import type { EC } from "@itwin/presentation-shared";
 describe("Hierarchies", () => {
   let subjectClassName: EC.FullClassName;
 
-  before(async function () {
+  beforeAll(async () => {
     await initialize();
     subjectClassName = normalizeFullClassName(Subject.classFullName);
   });
 
-  after(async () => {
+  afterAll(async () => {
     await terminate();
   });
 
   describe("Label grouping", () => {
-    it("creates different groups for different labels", async function () {
+    it("creates different groups for different labels", async () => {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
-      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
         const childSubject1 = insertSubject({
           builder,
           codeValue: "1",
@@ -113,10 +114,10 @@ describe("Hierarchies", () => {
       });
     });
 
-    it("creates different groups for same labels and different groupIds", async function () {
+    it("creates different groups for same labels and different groupIds", async () => {
       const descriptionGroupName1 = "test1";
       const descriptionGroupName2 = "test2";
-      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
         const childSubject1 = insertSubject({
           builder,
           codeValue: "1",
@@ -205,8 +206,8 @@ describe("Hierarchies", () => {
   });
 
   describe("Label merging", () => {
-    it("doesn't merge when different groupIds or labels are provided", async function () {
-      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+    it("doesn't merge when different groupIds or labels are provided", async () => {
+      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
         const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
         const childSubject1 = insertSubject({
           builder,
@@ -274,8 +275,8 @@ describe("Hierarchies", () => {
       });
     });
 
-    it("merges instance nodes with same merge id", async function () {
-      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+    it("merges instance nodes with same merge id", async () => {
+      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
         const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
         const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: rootSubject.id });
         const childSubject2 = insertSubject({ builder, codeValue: "2", parentId: rootSubject.id });
@@ -326,8 +327,8 @@ describe("Hierarchies", () => {
       });
     });
 
-    it("merges instance nodes from different hidden parent hierarchy levels ", async function () {
-      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+    it("merges instance nodes from different hidden parent hierarchy levels ", async () => {
+      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
         const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
         const visibleSubject1 = insertSubject({ builder, codeValue: "merged", parentId: rootSubject.id });
         const hiddenSubject = insertSubject({ builder, codeValue: "hide", parentId: rootSubject.id });

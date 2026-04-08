@@ -4,40 +4,39 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
 import {
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
-import sinon from "sinon";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { IModelApp, SpatialViewState, ViewManager } from "@itwin/core-frontend";
+import { IModelApp, SpatialViewState } from "@itwin/core-frontend";
 import { Point3d, Vector3d } from "@itwin/core-geometry";
 import { UiIModelComponents, ViewportComponent } from "@itwin/imodel-components-react";
 import { KeySet } from "@itwin/presentation-common";
 import { viewWithUnifiedSelection } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { buildTestIModel } from "@itwin/presentation-testing";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
 
-import type { IModelConnection, SelectedViewportChangedArgs, ViewState } from "@itwin/core-frontend";
+import type { IModelConnection, SelectedViewportChangedArgs, ViewManager, ViewState } from "@itwin/core-frontend";
 import type { InstanceKey } from "@itwin/presentation-common";
 
 describe("Learning snippets", async () => {
   describe("Viewport", () => {
-    before(async () => {
+    beforeAll(async () => {
       await initialize();
       await UiIModelComponents.initialize();
     });
 
-    after(async () => {
+    afterAll(async () => {
       await terminate();
-      sinon.restore();
+      vi.restoreAllMocks();
     });
 
-    it("renders unified selection viewport", async function () {
+    it("renders unified selection viewport", async () => {
       // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.Viewport
       // use `viewWithUnifiedSelection` HOC to create an enhanced `ViewportComponent` that synchronizes with unified selection
       const UnifiedSelectionViewport = viewWithUnifiedSelection(ViewportComponent);
@@ -50,7 +49,7 @@ describe("Learning snippets", async () => {
       // set up imodel for the test
       const elementKeys: InstanceKey[] = [];
 
-      const imodel = await buildTestIModel(this, async (builder) => {
+      const { imodel } = await buildTestIModel(async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         const modelKey = insertPhysicalModelWithPartition({
           builder,
@@ -101,37 +100,34 @@ describe("Learning snippets", async () => {
       // test Unified Selection -> Hilited elements synchronization
       Presentation.selection.replaceSelection("", imodel, new KeySet([elementKeys[0]]));
       await waitFor(() => {
-        expect(imodel.hilited.models.isEmpty).to.be.true;
-        expect(imodel.hilited.subcategories.isEmpty).to.be.true;
-        expect(imodel.hilited.elements.toId64Array())
-          .to.have.lengthOf(3)
-          .and.to.include.members(elementKeys.map((k) => k.id));
-        expect([...imodel.selectionSet.elements])
-          .to.have.lengthOf(3)
-          .and.to.include.members(elementKeys.map((k) => k.id));
+        expect(imodel.hilited.models.isEmpty).toBe(true);
+        expect(imodel.hilited.subcategories.isEmpty).toBe(true);
+        expect(imodel.hilited.elements.toId64Array()).toHaveLength(3);
+        expect(imodel.hilited.elements.toId64Array()).toEqual(expect.arrayContaining(elementKeys.map((k) => k.id)));
+        expect([...imodel.selectionSet.elements]).toHaveLength(3);
+        expect([...imodel.selectionSet.elements]).toEqual(expect.arrayContaining(elementKeys.map((k) => k.id)));
       });
 
       Presentation.selection.clearSelection("", imodel);
       await waitFor(() => {
-        expect(imodel.hilited.models.isEmpty).to.be.true;
-        expect(imodel.hilited.subcategories.isEmpty).to.be.true;
-        expect(imodel.hilited.elements.isEmpty).to.be.true;
-        expect(imodel.selectionSet.size).to.eq(0);
+        expect(imodel.hilited.models.isEmpty).toBe(true);
+        expect(imodel.hilited.subcategories.isEmpty).toBe(true);
+        expect(imodel.hilited.elements.isEmpty).toBe(true);
+        expect(imodel.selectionSet.size).toBe(0);
       });
 
       // test Viewport elements selection => Unified Selection synchronization
       imodel.selectionSet.replace(elementKeys[2].id);
       await waitFor(() => {
         const selection = Presentation.selection.getSelection(imodel);
-        expect(selection)
-          .to.satisfy((sel: KeySet) => sel.size === 1)
-          .and.satisfy((sel: KeySet) => sel.has(elementKeys[2]));
+        expect(selection.size).toBe(1);
+        expect(selection.has(elementKeys[2])).toBe(true);
       });
 
       imodel.selectionSet.emptyAll();
       await waitFor(() => {
         const selection = Presentation.selection.getSelection(imodel);
-        expect(selection.isEmpty).to.be.true;
+        expect(selection.isEmpty).toBe(true);
       });
     });
   });
@@ -139,11 +135,16 @@ describe("Learning snippets", async () => {
 
 function setupViewportStubs() {
   // `ViewportComponent` calls some of the `ViewManager` functions (gets it through `IModelApp.viewManager`)
-  const viewManager = sinon.createStubInstance(ViewManager, { addViewport: sinon.stub(), dropViewport: sinon.stub() });
-  (viewManager as any).onSelectedViewportChanged = new BeUiEvent<SelectedViewportChangedArgs>();
-  sinon.stub(IModelApp, "viewManager").get(() => viewManager as unknown as ViewManager);
+  const viewManager = {
+    addViewport: vi.fn(),
+    dropViewport: vi.fn(),
+    onSelectionSetChanged: vi.fn(),
+    onSelectedViewportChanged: new BeUiEvent<SelectedViewportChangedArgs>(),
+    onShutDown: vi.fn(),
+  };
+  vi.spyOn(IModelApp, "viewManager", "get").mockReturnValue(viewManager as unknown as ViewManager);
 
   // `ScreenViewport` requires a size and JSDom doesn't set that up
-  sinon.stub(HTMLElement.prototype, "clientWidth").get(() => 400);
-  sinon.stub(HTMLElement.prototype, "clientHeight").get(() => 400);
+  vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(400);
+  vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(400);
 }

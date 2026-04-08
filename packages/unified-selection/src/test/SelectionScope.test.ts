@@ -3,27 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { computeSelection } from "../unified-selection/SelectionScope.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
-import type {
-  ECSqlQueryDef,
-  ECSqlQueryExecutor,
-  ECSqlQueryReaderOptions,
-  ECSqlQueryRow,
-} from "@itwin/presentation-shared";
+import type { ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
 import type { SelectableInstanceKey } from "../unified-selection/Selectable.js";
 import type { SelectionScope } from "../unified-selection/SelectionScope.js";
 
 describe("SelectionScope", () => {
-  const queryExecutor = {
-    createQueryReader: sinon.stub<
-      [ECSqlQueryDef, ECSqlQueryReaderOptions | undefined],
-      ReturnType<ECSqlQueryExecutor["createQueryReader"]>
-    >(),
-  };
+  const queryExecutor = { createQueryReader: vi.fn<ECSqlQueryExecutor["createQueryReader"]>() };
 
   describe("computeSelection", () => {
     function createFakeQueryReader<TRow extends object>(
@@ -37,14 +26,15 @@ describe("SelectionScope", () => {
     }
 
     function mockQuery(targetECSqlContent: string, result: SelectableInstanceKey[]) {
-      queryExecutor.createQueryReader
-        .withArgs(sinon.match((query: ECSqlQueryDef) => query.ecsql.includes(targetECSqlContent)))
-        .returns(
-          createFakeQueryReader<ECSqlQueryRow>(
+      queryExecutor.createQueryReader.mockImplementation((query) => {
+        if (query.ecsql.includes(targetECSqlContent)) {
+          return createFakeQueryReader<ECSqlQueryRow>(
             // eslint-disable-next-line @typescript-eslint/naming-convention
             result.map((key) => ({ ECInstanceId: key.id, ClassName: key.className })),
-          ),
-        );
+          );
+        }
+        return createFakeQueryReader([]);
+      });
     }
 
     async function getSelection(
@@ -64,8 +54,8 @@ describe("SelectionScope", () => {
         mockQuery(query, keys);
 
         const result = await getSelection(keys, scope);
-        expect(result.length).to.eq(2);
-        expect(result).to.have.deep.members(keys);
+        expect(result).toHaveLength(2);
+        expect(result).toEqual(expect.arrayContaining(keys));
       });
 
       it("skips transient element ids", async () => {
@@ -73,8 +63,8 @@ describe("SelectionScope", () => {
         mockQuery(query, keys);
 
         const result = await getSelection(keys, scope);
-        expect(result.length).to.eq(2);
-        expect(result).to.deep.contain(keys[0]);
+        expect(result).toHaveLength(2);
+        expect(result).toEqual(expect.arrayContaining([keys[0]]));
       });
     }
 

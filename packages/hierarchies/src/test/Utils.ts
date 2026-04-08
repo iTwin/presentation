@@ -3,12 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import sinon from "sinon";
 import { Dictionary, Logger } from "@itwin/core-bentley";
 import { compareFullClassNames, getClass, normalizeFullClassName } from "@itwin/presentation-shared";
 
 import type { LogLevel } from "@itwin/core-bentley";
-import type { EC } from "@itwin/presentation-shared";
+import type { EC, ECClassHierarchyInspector } from "@itwin/presentation-shared";
 import type { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
 import type {
   ClassGroupingNodeKey,
@@ -160,32 +159,38 @@ export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
   target?: EC.RelationshipConstraint;
   direction?: "Forward" | "Backward";
 }
+export interface StubbedSchema {
+  name: string;
+  getClass: EC.Schema["getClass"];
+  getCustomAttributes: EC.Schema["getCustomAttributes"];
+}
 export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class & ECClassExtraMembers;
 export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass & ECClassExtraMembers;
 export type TStubRelationshipClassFunc = (
   props: StubRelationshipClassFuncProps,
 ) => EC.RelationshipClass & ECClassExtraMembers;
+export type TStubCustomAttributesFunc = (props: {
+  schemaName: string;
+  attributes: Map<EC.FullClassName, EC.CustomAttribute>;
+}) => void;
 
 export function createECSchemaProviderStub() {
-  const schemaStubs = new Map<string, sinon.SinonStubbedInstance<EC.Schema>>();
+  const schemaStubs = new Map<string, StubbedSchema>();
   const classes = new Dictionary<EC.FullClassName, EC.Class>(compareFullClassNames); // className -> class
   const classHierarchy = new Dictionary<EC.FullClassName, EC.FullClassName>(compareFullClassNames); // className -> baseClassName
-  const getSchemaStub = sinon
-    .stub<[string], sinon.SinonStubbedInstance<EC.Schema>>()
-    .callsFake((schemaName: string) => {
-      let schemaStub = schemaStubs.get(schemaName);
-      if (!schemaStub) {
-        schemaStub = {
-          name: schemaName,
-          getClass: sinon
-            .stub<[string], Promise<EC.Class | undefined>>()
-            .callsFake(async (className) => classes.get(`${schemaName}.${className}`)),
-          getCustomAttributes: sinon.stub<[], Promise<EC.CustomAttributeSet>>().callsFake(async () => new Map()),
-        };
-        schemaStubs.set(schemaName, schemaStub);
-      }
-      return schemaStub;
-    });
+  const customAttributes = new Map<string, Map<EC.FullClassName, EC.CustomAttribute>>(); // schemaName -> (className -> customAttribute)
+  const getSchemaImpl = (schemaName: string) => {
+    let schemaStub = schemaStubs.get(schemaName);
+    if (!schemaStub) {
+      schemaStub = {
+        name: schemaName,
+        getClass: async (className) => classes.get(`${schemaName}.${className}`),
+        getCustomAttributes: async () => customAttributes.get(schemaName) ?? new Map(),
+      };
+      schemaStubs.set(schemaName, schemaStub);
+    }
+    return schemaStub;
+  };
   const getDerivedClasses = (classFullName: EC.FullClassName): EC.Class[] => {
     const derivedClasses = new Array<EC.Class>();
     for (const { key: derivedClassName, value: baseClassName } of classHierarchy) {
@@ -207,7 +212,7 @@ export function createECSchemaProviderStub() {
   };
   const createBaseClassProps = (props: StubClassFuncProps) => ({
     get schema() {
-      return getSchemaStub(props.schemaName);
+      return getSchemaImpl(props.schemaName);
     },
     fullName: `${props.schemaName}.${props.className}`,
     name: props.className,
@@ -271,25 +276,40 @@ export function createECSchemaProviderStub() {
     props.baseClass && props.baseClass.addDerivedClass(res);
     return res;
   };
+  const stubCustomAttribute: TStubCustomAttributesFunc = (props) => {
+    const schemaCustomAttributes =
+      customAttributes.get(props.schemaName) ?? new Map<EC.FullClassName, EC.CustomAttribute>();
+    customAttributes.set(props.schemaName, schemaCustomAttributes);
+    for (const [className, attribute] of props.attributes) {
+      schemaCustomAttributes.set(className, { ...attribute, className });
+    }
+  };
+
   return {
     stubEntityClass,
     stubRelationshipClass,
     stubOtherClass,
-    getSchemaStub,
-    getSchema: async (name: string): Promise<EC.Schema | undefined> => getSchemaStub(name),
+    stubCustomAttribute,
+    getSchema: async (name: string) => getSchemaImpl(name),
   };
 }
 
-export function createClassHierarchyInspectorStub(schemaProvider = createECSchemaProviderStub()) {
+export function createClassHierarchyInspectorStub(
+  schemaProvider = createECSchemaProviderStub(),
+): {
+  stubEntityClass: TStubEntityClassFunc;
+  stubRelationshipClass: TStubRelationshipClassFunc;
+  stubOtherClass: TStubClassFunc;
+} & ECClassHierarchyInspector {
   return {
     stubEntityClass: schemaProvider.stubEntityClass,
     stubRelationshipClass: schemaProvider.stubRelationshipClass,
     stubOtherClass: schemaProvider.stubOtherClass,
-    classDerivesFrom: sinon.fake(async (derived: EC.FullClassName, base: EC.FullClassName) => {
+    classDerivesFrom: async (derived: EC.FullClassName, base: EC.FullClassName) => {
       const derivedClass = await getClass(schemaProvider, derived);
       const baseClass = await getClass(schemaProvider, base);
       return derivedClass.is(baseClass);
-    }),
+    },
   };
 }
 

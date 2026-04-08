@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Content, LabelDefinition } from "@itwin/presentation-common";
@@ -25,22 +24,13 @@ import type { Item, NavigationPropertyInfo } from "@itwin/presentation-common";
 import type { PresentationManager } from "@itwin/presentation-frontend";
 
 describe("useNavigationPropertyTargetsLoader", () => {
-  let presentationManagerStub: sinon.SinonStub;
   const testImodel = {} as IModelConnection;
 
-  before(() => {
-    const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "localization").get(() => localization);
-  });
-
-  after(() => {
-    sinon.restore();
-  });
-
   beforeEach(() => {
-    presentationManagerStub = sinon.stub(Presentation, "presentation");
+    const localization = new EmptyLocalization();
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
   });
 
   it("returns empty targets array if ruleset is undefined", async () => {
@@ -52,18 +42,17 @@ describe("useNavigationPropertyTargetsLoader", () => {
   });
 
   describe("when `getContentIterator` is available", () => {
-    const getContentIteratorStub = sinon.stub<
-      Parameters<PresentationManager["getContentIterator"]>,
-      ReturnType<PresentationManager["getContentIterator"]>
-    >();
+    const getContentIteratorStub = vi.fn<PresentationManager["getContentIterator"]>();
 
     beforeEach(() => {
-      getContentIteratorStub.reset();
-      presentationManagerStub.get(() => ({ getContentIterator: getContentIteratorStub }));
+      getContentIteratorStub.mockReset();
+      vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
+        getContentIterator: getContentIteratorStub,
+      } as unknown as PresentationManager);
     });
 
     it("returns empty targets array if there's no content", async () => {
-      getContentIteratorStub.resolves(undefined);
+      getContentIteratorStub.mockResolvedValue(undefined);
       const { result } = renderHook(useNavigationPropertyTargetsLoader, {
         initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } },
       });
@@ -81,7 +70,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
         displayValues: {},
         values: {},
       });
-      getContentIteratorStub.callsFake(async () => {
+      getContentIteratorStub.mockImplementation(async () => {
         return {
           total: 1,
           descriptor: createTestContentDescriptor({ fields: [] }),
@@ -108,7 +97,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
       for (let i = 0; i < VALUE_BATCH_SIZE; i++) {
         contentItems.push(createTestContentItem({ label: i.toString(), displayValues: {}, values: {} }));
       }
-      getContentIteratorStub.callsFake(async () => {
+      getContentIteratorStub.mockImplementation(async () => {
         return {
           total: contentItems.length,
           descriptor: createTestContentDescriptor({ fields: [], categories: [] }),
@@ -128,7 +117,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
     });
 
     it("loads targets using provided filter string", async () => {
-      getContentIteratorStub.callsFake(async () => {
+      getContentIteratorStub.mockImplementation(async () => {
         return {
           total: 0,
           descriptor: createTestContentDescriptor({ fields: [], categories: [] }),
@@ -142,26 +131,25 @@ describe("useNavigationPropertyTargetsLoader", () => {
 
       await waitFor(() => expect(result.current.isLoading).to.eq(false));
       await waitFor(() => {
-        expect(getContentIteratorStub.callCount).to.be.greaterThanOrEqual(2);
-        const descriptor = getContentIteratorStub.lastCall.args[0].descriptor;
+        expect(getContentIteratorStub.mock.calls.length).to.be.greaterThanOrEqual(2);
+        const descriptor = getContentIteratorStub.mock.lastCall![0].descriptor;
         expect(descriptor.fieldsFilterExpression).to.contain("testFilter");
       });
     });
   });
 
   describe("when `getContentIterator` is not available", () => {
-    const getContentStub = sinon.stub<
-      Parameters<PresentationManager["getContent"]>,
-      ReturnType<PresentationManager["getContent"]>
-    >();
+    const getContentStub = vi.fn<PresentationManager["getContent"]>();
 
     beforeEach(() => {
-      getContentStub.reset();
-      presentationManagerStub.get(() => ({ getContent: getContentStub }));
+      getContentStub.mockReset();
+      vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
+        getContent: getContentStub,
+      } as unknown as PresentationManager);
     });
 
     it("returns empty targets array if there's no content", async () => {
-      getContentStub.resolves(undefined);
+      getContentStub.mockResolvedValue(undefined);
       const { result } = renderHook(useNavigationPropertyTargetsLoader, {
         initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] }, filterText: "" },
       });
@@ -178,7 +166,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
         displayValues: {},
         values: {},
       });
-      getContentStub.callsFake(async () => {
+      getContentStub.mockImplementation(async () => {
         return new Content(createTestContentDescriptor({ fields: [] }), [contentItem]);
       });
 
@@ -196,7 +184,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
       const contentItems = Array.from({ length: VALUE_BATCH_SIZE }, () =>
         createTestContentItem({ displayValues: {}, values: {} }),
       );
-      getContentStub.callsFake(async () => {
+      getContentStub.mockImplementation(async () => {
         return new Content(createTestContentDescriptor({ fields: [], categories: [] }), contentItems);
       });
 
@@ -212,7 +200,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
     });
 
     it("loads targets using provided filter string", async () => {
-      getContentStub.callsFake(async () => {
+      getContentStub.mockImplementation(async () => {
         return new Content(createTestContentDescriptor({ fields: [], categories: [] }), []);
       });
 
@@ -222,8 +210,8 @@ describe("useNavigationPropertyTargetsLoader", () => {
 
       await waitFor(() => expect(result.current.isLoading).to.eq(false));
       await waitFor(() => {
-        expect(getContentStub.callCount).to.be.greaterThanOrEqual(2);
-        const descriptor = getContentStub.lastCall.args[0].descriptor;
+        expect(getContentStub.mock.calls.length).to.be.greaterThanOrEqual(2);
+        const descriptor = getContentStub.mock.lastCall![0].descriptor;
         expect(descriptor.fieldsFilterExpression).to.contain("testFilter");
       });
     });
@@ -285,35 +273,31 @@ describe("useNavigationPropertyTargetsRuleset", () => {
 });
 
 describe("NavigationPropertyItemsLoader", () => {
-  const getItemsStub = sinon.stub();
+  const getItemsStub = vi.fn();
 
   beforeEach(() => {
-    getItemsStub.callsFake(() => {
+    getItemsStub.mockImplementation(() => {
       return Array.from({ length: VALUE_BATCH_SIZE }, () => {
         return { label: { displayValue: "filterText" }, key: { id: "0x01" } };
       });
     });
   });
 
-  afterEach(() => {
-    sinon.restore();
-  });
-
   it("does not load items when loaded options matches the filter", async () => {
-    const getItemsSpy = sinon.spy();
+    const getItemsSpy = vi.fn();
     const itemsLoader = new NavigationPropertyItemsLoader(() => {}, getItemsSpy, getItemsStub);
     await itemsLoader.loadItems();
     await itemsLoader.loadItems("filterText");
 
-    expect(getItemsSpy.calledOnce);
+    expect(getItemsSpy).toHaveBeenCalledOnce();
   });
 
   it("does not load items when another load process is in progress", async () => {
-    const getItemsSpy = sinon.spy();
+    const getItemsSpy = vi.fn();
     const itemsLoader = new NavigationPropertyItemsLoader(() => {}, getItemsSpy, getItemsStub);
     await Promise.all([itemsLoader.loadItems("filterText"), itemsLoader.loadItems("filterText")]);
 
-    expect(getItemsSpy.calledOnce);
+    expect(getItemsSpy).toHaveBeenCalledOnce();
   });
 
   it("does not load items when enough items matches the filter", async () => {
@@ -330,7 +314,7 @@ describe("NavigationPropertyItemsLoader", () => {
   });
 
   it("does not load duplicate items", async () => {
-    getItemsStub.callsFake(() => {
+    getItemsStub.mockImplementation(() => {
       return Array.from({ length: VALUE_BATCH_SIZE / 2 }, () => {
         return { label: { displayValue: "filterText" }, key: { id: "0x01" } };
       });

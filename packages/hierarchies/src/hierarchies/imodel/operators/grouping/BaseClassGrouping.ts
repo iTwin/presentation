@@ -77,8 +77,11 @@ export async function createBaseClassGroupsForSingleBaseClass(
     const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
 
     const baseCheckerResult = classHierarchyInspector.classDerivesFrom(fullCurrentNodeClassName, baseClassFullName);
-    /* c8 ignore next */
-    const isCurrentNodeClassOfBase = baseCheckerResult instanceof Promise ? await baseCheckerResult : baseCheckerResult;
+
+    const isCurrentNodeClassOfBase =
+      baseCheckerResult instanceof Promise
+        ? await baseCheckerResult
+        : /* v8 ignore next -- @preserve */ baseCheckerResult;
 
     if (isCurrentNodeClassOfBase) {
       groupedNodes.push(node);

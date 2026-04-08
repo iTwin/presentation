@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { applyGroupHidingParams } from "../../../../hierarchies/imodel/operators/grouping/GroupHiding.js";
 import { createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils.js";
 
@@ -27,7 +27,7 @@ describe("GroupHiding", () => {
         ungrouped: [],
         groupingType: "label",
       };
-      expect(applyGroupHidingParams(nodes, 0)).to.deep.eq({
+      expect(applyGroupHidingParams(nodes, 0)).toEqual({
         groupingType: "label",
         grouped: [],
         ungrouped: nodes.grouped[0].children,
@@ -55,7 +55,7 @@ describe("GroupHiding", () => {
         ungrouped: [],
         groupingType: "label",
       };
-      expect(applyGroupHidingParams(nodes, 0)).to.deep.eq({
+      expect(applyGroupHidingParams(nodes, 0)).toEqual({
         groupingType: "label",
         grouped: [],
         ungrouped: nodes.grouped[0].children,
@@ -87,7 +87,7 @@ describe("GroupHiding", () => {
         ungrouped: [],
         groupingType: "label",
       };
-      expect(applyGroupHidingParams(nodes, 0)).to.deep.eq(nodes);
+      expect(applyGroupHidingParams(nodes, 0)).toEqual(nodes);
     });
 
     it("doesn't hide if grouping node has ungrouped siblings", async () => {
@@ -111,7 +111,7 @@ describe("GroupHiding", () => {
         ],
         groupingType: "label",
       };
-      expect(applyGroupHidingParams(nodes, 0)).to.deep.eq(nodes);
+      expect(applyGroupHidingParams(nodes, 0)).toEqual(nodes);
     });
 
     it("doesn't hide if grouping node has extra siblings", async () => {
@@ -130,7 +130,7 @@ describe("GroupHiding", () => {
         ungrouped: [],
         groupingType: "label",
       };
-      expect(applyGroupHidingParams(nodes, 1)).to.deep.eq(nodes);
+      expect(applyGroupHidingParams(nodes, 1)).toEqual(nodes);
     });
   });
 
@@ -151,7 +151,7 @@ describe("GroupHiding", () => {
         ungrouped: [],
         groupingType: "class",
       };
-      expect(applyGroupHidingParams(nodes, 0)).to.deep.eq({
+      expect(applyGroupHidingParams(nodes, 0)).toEqual({
         groupingType: "class",
         grouped: [],
         ungrouped: nodes.grouped[0].children,
@@ -179,7 +179,7 @@ describe("GroupHiding", () => {
         ungrouped: [],
         groupingType: "label",
       };
-      expect(applyGroupHidingParams(nodes, 0)).to.deep.eq(nodes);
+      expect(applyGroupHidingParams(nodes, 0)).toEqual(nodes);
     });
   });
 
@@ -199,7 +199,7 @@ describe("GroupHiding", () => {
         ],
         ungrouped: [],
       };
-      expect(applyGroupHidingParams(nodes, 0)).to.deep.eq(nodes);
+      expect(applyGroupHidingParams(nodes, 0)).toEqual(nodes);
     });
 
     it("doesn't hide if there are no grouped nodes", async () => {
@@ -214,7 +214,7 @@ describe("GroupHiding", () => {
         ],
         groupingType: "label",
       };
-      expect(applyGroupHidingParams(nodes, 0)).to.deep.eq(nodes);
+      expect(applyGroupHidingParams(nodes, 0)).toEqual(nodes);
     });
 
     it("doesn't hide if groupingType does not match grouped node", async () => {
@@ -234,13 +234,13 @@ describe("GroupHiding", () => {
       };
 
       const baseClassParams: GroupingHandlerResult = { ...nodes, groupingType: "base-class" };
-      expect(applyGroupHidingParams(baseClassParams, 0)).to.deep.eq(baseClassParams);
+      expect(applyGroupHidingParams(baseClassParams, 0)).toEqual(baseClassParams);
 
       const propertyParams: GroupingHandlerResult = { ...nodes, groupingType: "property" };
-      expect(applyGroupHidingParams(propertyParams, 0)).to.deep.eq(propertyParams);
+      expect(applyGroupHidingParams(propertyParams, 0)).toEqual(propertyParams);
 
       const classParams: GroupingHandlerResult = { ...nodes, groupingType: "class" };
-      expect(applyGroupHidingParams(classParams, 0)).to.deep.eq(classParams);
+      expect(applyGroupHidingParams(classParams, 0)).toEqual(classParams);
     });
 
     it("doesn't hide if group has siblings and group has more than one node", async () => {
@@ -269,7 +269,7 @@ describe("GroupHiding", () => {
         ],
         groupingType: "label",
       };
-      expect(applyGroupHidingParams(nodes, 0)).to.deep.eq(nodes);
+      expect(applyGroupHidingParams(nodes, 0)).toEqual(nodes);
     });
 
     it("hides if no siblings are in the hierarchy", async () => {
@@ -293,7 +293,7 @@ describe("GroupHiding", () => {
         ungrouped: [],
         groupingType: "label",
       };
-      expect(applyGroupHidingParams(nodes, 0)).to.deep.eq({
+      expect(applyGroupHidingParams(nodes, 0)).toEqual({
         groupingType: "label",
         grouped: [],
         ungrouped: nodes.grouped[0].children,
@@ -318,7 +318,7 @@ describe("GroupHiding", () => {
         groupingType: "label",
       };
       const res = applyGroupHidingParams(nodes, 0);
-      expect(res).to.deep.eq({ groupingType: "label", grouped: [], ungrouped: [ungroupedSiblingNode, childNode] });
+      expect(res).toEqual({ groupingType: "label", grouped: [], ungrouped: [ungroupedSiblingNode, childNode] });
     });
   });
 });

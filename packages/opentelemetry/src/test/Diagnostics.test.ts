@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import * as sinon from "sinon";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { context, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import { exportDiagnostics } from "../presentation-opentelemetry/Diagnostics.js";
 
@@ -15,69 +14,63 @@ describe("exportDiagnostics", () => {
     parentSpanName?: string;
   }
 
-  const startActiveSpanStub = sinon.stub<any[], Span>();
+  const startActiveSpanStub = vi.fn<(...args: any[]) => Span>();
   const spanStub: Span = {
-    addEvent: sinon.stub(),
-    end: sinon.stub(),
-    isRecording: sinon.stub(),
-    recordException: sinon.stub(),
-    setAttribute: sinon.stub(),
-    setAttributes: sinon.stub(),
-    setStatus: sinon.stub(),
-    spanContext: sinon.stub(),
-    updateName: sinon.stub(),
-    addLink: sinon.stub(),
-    addLinks: sinon.stub(),
+    addEvent: vi.fn(),
+    end: vi.fn(),
+    isRecording: vi.fn(),
+    recordException: vi.fn(),
+    setAttribute: vi.fn(),
+    setAttributes: vi.fn(),
+    setStatus: vi.fn(),
+    spanContext: vi.fn(),
+    updateName: vi.fn(),
+    addLink: vi.fn(),
+    addLinks: vi.fn(),
   };
   let currentSpanContext: TestSpanContext;
 
-  before(() => {
-    sinon.stub(context, "active").callsFake(() => currentSpanContext as any);
-    sinon.stub(trace, "getTracer").returns({ startActiveSpan: startActiveSpanStub, startSpan: sinon.stub() });
-    startActiveSpanStub.callsFake(
+  beforeEach(() => {
+    vi.spyOn(context, "active").mockImplementation(() => currentSpanContext as any);
+    vi.spyOn(trace, "getTracer").mockReturnValue({ startActiveSpan: startActiveSpanStub, startSpan: vi.fn() });
+    startActiveSpanStub.mockImplementation(
       (spanName: string, _spanAttributes: object, _ctx: TestSpanContext, cb: (span: Span) => Span) => {
         currentSpanContext = { parentSpanName: spanName };
         return cb(spanStub);
       },
     );
-  });
-
-  beforeEach(() => {
     currentSpanContext = { parentSpanName: undefined };
-  });
-
-  afterEach(() => {
-    sinon.resetHistory();
   });
 
   it("does nothing if there are no diagnostics", () => {
     exportDiagnostics({}, context.active());
-    expect(startActiveSpanStub).to.not.be.called;
+    expect(startActiveSpanStub).not.toHaveBeenCalled();
 
     exportDiagnostics({ logs: [] }, context.active());
-    expect(startActiveSpanStub).to.not.be.called;
+    expect(startActiveSpanStub).not.toHaveBeenCalled();
   });
 
   it("does nothing when `duration` not set", () => {
     exportDiagnostics({ logs: [{ scope: "test scope 1", scopeCreateTimestamp: 12345 }] }, context.active());
-    expect(startActiveSpanStub).to.not.be.called;
+    expect(startActiveSpanStub).not.toHaveBeenCalled();
   });
 
   it("does nothing when `scopeCreateTimestamp` not set", () => {
     exportDiagnostics({ logs: [{ scope: "test scope 1", duration: 100 }] }, context.active());
-    expect(startActiveSpanStub).to.not.be.called;
+    expect(startActiveSpanStub).not.toHaveBeenCalled();
   });
 
   it("exports logs as spans", () => {
     const ctx = context.active();
     exportDiagnostics({ logs: [{ scope: "test scope", scopeCreateTimestamp: 12345, duration: 1111 }] }, ctx);
-    expect(startActiveSpanStub).to.be.calledOnceWith(
+    expect(startActiveSpanStub).toHaveBeenCalledExactlyOnceWith(
       "test scope",
       { kind: SpanKind.INTERNAL, attributes: {}, startTime: [12, 345000000] },
       ctx,
+      expect.any(Function),
     );
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(spanStub.end).to.be.calledOnceWith([13, 456000000]);
+    expect(spanStub.end).toHaveBeenCalledExactlyOnceWith([13, 456000000]);
   });
 
   it("exports spans with attributes", () => {
@@ -95,7 +88,7 @@ describe("exportDiagnostics", () => {
       },
       ctx,
     );
-    expect(startActiveSpanStub).to.be.calledOnceWith(
+    expect(startActiveSpanStub).toHaveBeenCalledExactlyOnceWith(
       "test scope",
       {
         kind: SpanKind.INTERNAL,
@@ -103,6 +96,7 @@ describe("exportDiagnostics", () => {
         startTime: [12, 345000000],
       },
       ctx,
+      expect.any(Function),
     );
   });
 
@@ -128,13 +122,14 @@ describe("exportDiagnostics", () => {
       },
       ctx,
     );
-    expect(startActiveSpanStub).to.be.calledOnceWith(
+    expect(startActiveSpanStub).toHaveBeenCalledExactlyOnceWith(
       "test scope",
       { kind: SpanKind.INTERNAL, attributes: {}, startTime: [12, 345000000] },
       ctx,
+      expect.any(Function),
     );
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(spanStub.addEvent).to.be.calledOnceWith(
+    expect(spanStub.addEvent).toHaveBeenCalledExactlyOnceWith(
       "test message",
       { devSeverity: "error", editorSeverity: "info", category: "test category" },
       [12, 350000000],
@@ -164,7 +159,7 @@ describe("exportDiagnostics", () => {
       ctx,
     );
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(spanStub.setStatus).to.not.be.called;
+    expect(spanStub.setStatus).not.toHaveBeenCalled();
   });
 
   it("sets span status to 'error' when logs contain errors", () => {
@@ -196,7 +191,7 @@ describe("exportDiagnostics", () => {
       ctx,
     );
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(spanStub.setStatus).to.be.calledOnceWith({ code: SpanStatusCode.ERROR, message: "dev error" });
+    expect(spanStub.setStatus).toHaveBeenCalledExactlyOnceWith({ code: SpanStatusCode.ERROR, message: "dev error" });
   });
 
   it("sets span status to 'error' when nested logs contain errors", () => {
@@ -235,7 +230,7 @@ describe("exportDiagnostics", () => {
       ctx,
     );
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(spanStub.setStatus).to.be.calledOnceWith({ code: SpanStatusCode.ERROR, message: "dev error" });
+    expect(spanStub.setStatus).toHaveBeenCalledExactlyOnceWith({ code: SpanStatusCode.ERROR, message: "dev error" });
   });
 
   it("exports nested logs", () => {
@@ -253,16 +248,20 @@ describe("exportDiagnostics", () => {
       },
       ctx,
     );
-    expect(startActiveSpanStub).to.be.calledTwice;
-    expect(startActiveSpanStub.firstCall).to.be.calledWith(
+    expect(startActiveSpanStub).toHaveBeenCalledTimes(2);
+    expect(startActiveSpanStub).toHaveBeenNthCalledWith(
+      1,
       "parent scope",
       { kind: SpanKind.INTERNAL, attributes: {}, startTime: [12, 345000000] },
       { parentSpanName: undefined },
+      expect.any(Function),
     );
-    expect(startActiveSpanStub.secondCall).to.be.calledWith(
+    expect(startActiveSpanStub).toHaveBeenNthCalledWith(
+      2,
       "child scope",
       { kind: SpanKind.INTERNAL, attributes: {}, startTime: [12, 350000000] },
       { parentSpanName: "parent scope" },
+      expect.any(Function),
     );
   });
 
@@ -282,6 +281,10 @@ describe("exportDiagnostics", () => {
       ctx,
     );
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(spanStub.addEvent).to.be.calledOnceWith("test message", { category: "test category" }, [12, 350000000]);
+    expect(spanStub.addEvent).toHaveBeenCalledExactlyOnceWith(
+      "test message",
+      { category: "test category" },
+      [12, 350000000],
+    );
   });
 });

@@ -3,26 +3,23 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { createAsyncIterator, throwingAsyncIterator } from "presentation-test-utilities";
-import sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { HierarchyNode, HierarchyNodeKey, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { TreeLoader } from "../../presentation-hierarchies-react/internal/TreeLoader.js";
 import { createNodeId } from "../../presentation-hierarchies-react/internal/Utils.js";
 import { createTestHierarchyNode, createTreeModelNode } from "../TestUtils.js";
 
 import type { Observable } from "rxjs";
-import type { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import type { GenericInstanceFilter, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import type { LoadedTreePart } from "../../presentation-hierarchies-react/internal/TreeLoader.js";
 import type { TreeModelHierarchyNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
 import type { ErrorInfo } from "../../presentation-hierarchies-react/TreeNode.js";
 
 describe("TreeLoader", () => {
-  const onHierarchyLimitExceededStub = sinon.stub();
-  const onHierarchyLoadErrorStub = sinon.stub();
-  const hierarchyProvider = {
-    getNodes: sinon.stub<Parameters<HierarchyProvider["getNodes"]>, ReturnType<HierarchyProvider["getNodes"]>>(),
-  };
+  const onHierarchyLimitExceededStub = vi.fn();
+  const onHierarchyLoadErrorStub = vi.fn();
+  const hierarchyProvider = { getNodes: vi.fn<HierarchyProvider["getNodes"]>() };
 
   function createLoader() {
     return new TreeLoader(
@@ -33,17 +30,11 @@ describe("TreeLoader", () => {
     );
   }
 
-  beforeEach(() => {
-    hierarchyProvider.getNodes.reset();
-    onHierarchyLimitExceededStub.reset();
-    onHierarchyLoadErrorStub.reset();
-  });
-
   describe("loadNodes", () => {
     it("loads root nodes", async () => {
       const loader = createLoader();
       const rootHierarchyNodes = [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })];
-      hierarchyProvider.getNodes.callsFake((props) => {
+      hierarchyProvider.getNodes.mockImplementation((props) => {
         return createAsyncIterator(props.parentNode === undefined ? rootHierarchyNodes : []);
       });
 
@@ -55,15 +46,15 @@ describe("TreeLoader", () => {
         }),
       );
 
-      const rootNodes = getTreeModelHierarchyNodeArray(nodes.get(undefined));
-      expect(rootNodes?.map((node) => node.nodeData.key)).to.containSubset([{ id: "root-1" }, { id: "root-2" }]);
+      const rootNodes = getChildNodes(nodes, undefined);
+      expect(rootNodes.map((node) => node.nodeData.key)).toMatchObject([{ id: "root-1" }, { id: "root-2" }]);
     });
 
     it("loads root nodes and child nodes", async () => {
       const loader = createLoader();
       const rootHierarchyNodes = [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })];
       const childHierarchyNodes = [createTestHierarchyNode({ id: "child-1" })];
-      hierarchyProvider.getNodes.callsFake((props) => {
+      hierarchyProvider.getNodes.mockImplementation((props) => {
         if (props.parentNode === undefined) {
           return createAsyncIterator(rootHierarchyNodes);
         }
@@ -82,19 +73,19 @@ describe("TreeLoader", () => {
         }),
       );
 
-      const rootNodes = getTreeModelHierarchyNodeArray(nodes.get(undefined));
-      const childNodes = getTreeModelHierarchyNodeArray(nodes.get("root-1"));
-      expect(rootNodes!.map((node) => node.nodeData.key)).to.containSubset([{ id: "root-1" }, { id: "root-2" }]);
-      expect(childNodes!.map((node) => node.nodeData.key)).to.containSubset([{ id: "child-1" }]);
-      expect(nodes.get("root-2")).to.be.undefined;
-      expect(hierarchyProvider.getNodes).to.be.calledTwice;
+      const rootNodes = getChildNodes(nodes, undefined);
+      const childNodes = getChildNodes(nodes, "root-1");
+      expect(rootNodes.map((node) => node.nodeData.key)).toMatchObject([{ id: "root-1" }, { id: "root-2" }]);
+      expect(childNodes.map((node) => node.nodeData.key)).toMatchObject([{ id: "child-1" }]);
+      expect(nodes.get("root-2")).toBeUndefined();
+      expect(hierarchyProvider.getNodes).toHaveBeenCalledTimes(2);
     });
 
     it("load child nodes", async () => {
       const loader = createLoader();
       const rootHierarchyNode = createTestHierarchyNode({ id: "root-1" });
       const childHierarchyNodes = [createTestHierarchyNode({ id: "child-1" })];
-      hierarchyProvider.getNodes.callsFake((props) => {
+      hierarchyProvider.getNodes.mockImplementation((props) => {
         return createAsyncIterator(
           props.parentNode && HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" })
             ? childHierarchyNodes
@@ -110,13 +101,13 @@ describe("TreeLoader", () => {
         }),
       );
 
-      const childNodes = getTreeModelHierarchyNodeArray(nodes.get("root-1"));
-      expect(childNodes!.map((node) => node.nodeData.key)).to.containSubset([{ id: "child-1" }]);
+      const childNodes = getChildNodes(nodes, "root-1");
+      expect(childNodes.map((node) => node.nodeData.key)).toMatchObject([{ id: "child-1" }]);
     });
 
     it("loads info node when `RowsLimitExceededError` is thrown", async () => {
       const loader = createLoader();
-      hierarchyProvider.getNodes.callsFake(() => {
+      hierarchyProvider.getNodes.mockImplementation(() => {
         return throwingAsyncIterator(new RowsLimitExceededError(10));
       });
 
@@ -129,12 +120,12 @@ describe("TreeLoader", () => {
       );
 
       const error = getErrorInfo(nodes.get(undefined));
-      expect(error!.type).to.be.eq("ResultSetTooLarge");
+      expect(error!.type).toBe("ResultSetTooLarge");
     });
 
     it("loads `ChildrenLoad` error info node when error is thrown", async () => {
       const loader = createLoader();
-      hierarchyProvider.getNodes.callsFake(() => {
+      hierarchyProvider.getNodes.mockImplementation(() => {
         return throwingAsyncIterator(new Error("Some Error"));
       });
 
@@ -147,7 +138,7 @@ describe("TreeLoader", () => {
       );
 
       const error = getErrorInfo(nodes.get(undefined));
-      expect(error!.type).to.be.eq("ChildrenLoad");
+      expect(error!.type).toBe("ChildrenLoad");
     });
 
     it("loads multiple child hierarchy levels", async () => {
@@ -155,7 +146,7 @@ describe("TreeLoader", () => {
       const rootHierarchyNodes = [createTestHierarchyNode({ id: "root-1" })];
       const childHierarchyNodes = [createTestHierarchyNode({ id: "child-1" })];
       const grandChildHierarchyNodes = [createTestHierarchyNode({ id: "grandchild-1" })];
-      hierarchyProvider.getNodes.callsFake((props) => {
+      hierarchyProvider.getNodes.mockImplementation((props) => {
         if (props.parentNode === undefined) {
           return createAsyncIterator(rootHierarchyNodes);
         }
@@ -176,20 +167,20 @@ describe("TreeLoader", () => {
         }),
       );
 
-      const rootNodes = getTreeModelHierarchyNodeArray(nodes.get(undefined));
-      const childNodes = getTreeModelHierarchyNodeArray(nodes.get("root-1"));
-      const grandChildNodes = getTreeModelHierarchyNodeArray(nodes.get("child-1"));
-      expect(rootNodes!.map((node) => node.nodeData.key)).to.containSubset([{ id: "root-1" }]);
-      expect(childNodes!.map((node) => node.nodeData.key)).to.containSubset([{ id: "child-1" }]);
-      expect(grandChildNodes!.map((node) => node.nodeData.key)).to.containSubset([{ id: "grandchild-1" }]);
-      expect(nodes.get("grandchild-1")).to.be.empty;
-      expect(hierarchyProvider.getNodes).to.have.callCount(4);
+      const rootNodes = getChildNodes(nodes, undefined);
+      const childNodes = getChildNodes(nodes, "root-1");
+      const grandChildNodes = getChildNodes(nodes, "child-1");
+      expect(rootNodes.map((node) => node.nodeData.key)).toMatchObject([{ id: "root-1" }]);
+      expect(childNodes.map((node) => node.nodeData.key)).toMatchObject([{ id: "child-1" }]);
+      expect(grandChildNodes.map((node) => node.nodeData.key)).toMatchObject([{ id: "grandchild-1" }]);
+      expect(getChildNodes(nodes, "grandchild-1")).toHaveLength(0);
+      expect(hierarchyProvider.getNodes).toHaveBeenCalledTimes(4);
     });
 
     it("loads hierarchy level with instance filter", async () => {
       const loader = createLoader();
       const rootHierarchyNodes = [createTestHierarchyNode({ id: "root-1" })];
-      hierarchyProvider.getNodes.callsFake((props) => {
+      hierarchyProvider.getNodes.mockImplementation((props) => {
         return createAsyncIterator(
           props.parentNode === undefined && props.instanceFilter !== undefined ? rootHierarchyNodes : [],
         );
@@ -212,13 +203,9 @@ describe("TreeLoader", () => {
         }),
       );
 
-      const rootNodes = getTreeModelHierarchyNodeArray(nodes.get(undefined));
-      expect(rootNodes!.map((node) => node.nodeData.key)).to.containSubset([{ id: "root-1" }]);
-      expect(hierarchyProvider.getNodes).to.be.calledWith(
-        sinon.match((props: GetHierarchyNodesProps) => {
-          return props.instanceFilter === filter;
-        }),
-      );
+      const rootNodes = getChildNodes(nodes, undefined);
+      expect(rootNodes.map((node) => node.nodeData.key)).toMatchObject([{ id: "root-1" }]);
+      expect(hierarchyProvider.getNodes).toHaveBeenCalledWith(expect.objectContaining({ instanceFilter: filter }));
     });
 
     it("loads info node if all children are filtered out", async () => {
@@ -230,7 +217,7 @@ describe("TreeLoader", () => {
       const loader = createLoader();
       const rootHierarchyNode = createTestHierarchyNode({ id: "root-1" });
       const modelNode = createTreeModelNode({ id: "root-1", nodeData: rootHierarchyNode, instanceFilter: filter });
-      hierarchyProvider.getNodes.callsFake(() => {
+      hierarchyProvider.getNodes.mockImplementation(() => {
         return createAsyncIterator([]);
       });
 
@@ -246,17 +233,13 @@ describe("TreeLoader", () => {
       );
 
       const error = getErrorInfo(nodes.get("root-1"));
-      expect(error!.type).to.be.eq("NoFilterMatches");
-      expect(hierarchyProvider.getNodes).to.be.calledWith(
-        sinon.match((props: GetHierarchyNodesProps) => {
-          return props.instanceFilter === filter;
-        }),
-      );
+      expect(error!.type).toBe("NoFilterMatches");
+      expect(hierarchyProvider.getNodes).toHaveBeenCalledWith(expect.objectContaining({ instanceFilter: filter }));
     });
 
     it("reports when `RowsLimitExceededError` is thrown", async () => {
       const loader = createLoader();
-      hierarchyProvider.getNodes.callsFake(() => {
+      hierarchyProvider.getNodes.mockImplementation(() => {
         return throwingAsyncIterator(new RowsLimitExceededError(10));
       });
 
@@ -270,13 +253,13 @@ describe("TreeLoader", () => {
         }),
       );
 
-      expect(onHierarchyLimitExceededStub).to.be.calledOnceWith({ parentId: undefined, filter, limit: 10 });
+      expect(onHierarchyLimitExceededStub).toHaveBeenCalledExactlyOnceWith({ parentId: undefined, filter, limit: 10 });
     });
 
     it("reports when hierarchy load timeouts", async () => {
       const loader = createLoader();
       const error = new Error("query too long to execute or server is too busy");
-      hierarchyProvider.getNodes.callsFake(() => {
+      hierarchyProvider.getNodes.mockImplementation(() => {
         return throwingAsyncIterator(error);
       });
 
@@ -290,13 +273,13 @@ describe("TreeLoader", () => {
         }),
       );
 
-      expect(onHierarchyLoadErrorStub).to.be.calledOnceWith({ parentId: undefined, type: "timeout", error });
+      expect(onHierarchyLoadErrorStub).toHaveBeenCalledExactlyOnceWith({ parentId: undefined, type: "timeout", error });
     });
 
     it("reports unknown hierarchy load error", async () => {
       const loader = createLoader();
       const error = new Error("Test error");
-      hierarchyProvider.getNodes.callsFake(() => {
+      hierarchyProvider.getNodes.mockImplementation(() => {
         return throwingAsyncIterator(error);
       });
 
@@ -310,12 +293,12 @@ describe("TreeLoader", () => {
         }),
       );
 
-      expect(onHierarchyLoadErrorStub).to.be.calledOnceWith({ parentId: undefined, type: "unknown", error });
+      expect(onHierarchyLoadErrorStub).toHaveBeenCalledExactlyOnceWith({ parentId: undefined, type: "unknown", error });
     });
     it("reports unknown hierarchy load error that isn't instanceof Error", async () => {
       const loader = createLoader();
       const error = true;
-      hierarchyProvider.getNodes.callsFake(() => {
+      hierarchyProvider.getNodes.mockImplementation(() => {
         return throwingAsyncIterator(error as unknown as Error);
       });
 
@@ -329,7 +312,7 @@ describe("TreeLoader", () => {
         }),
       );
 
-      expect(onHierarchyLoadErrorStub).to.be.calledOnceWith({ parentId: undefined, type: "unknown", error });
+      expect(onHierarchyLoadErrorStub).toHaveBeenCalledExactlyOnceWith({ parentId: undefined, type: "unknown", error });
     });
   });
 });
@@ -351,11 +334,14 @@ async function collectNodes(loadObs: Observable<LoadedTreePart>) {
   });
 }
 
-function getTreeModelHierarchyNodeArray(nodes: ErrorInfo | TreeModelHierarchyNode[] | undefined) {
-  if (nodes && !Array.isArray(nodes)) {
-    return undefined;
-  }
-  return nodes;
+function getChildNodes(
+  nodes: Map<string | undefined, TreeModelHierarchyNode[] | ErrorInfo>,
+  parentId: string | undefined,
+): TreeModelHierarchyNode[] {
+  const childNodesOrError = nodes.get(parentId);
+  expect(childNodesOrError).toBeDefined();
+  expect(Array.isArray(childNodesOrError)).toBe(true);
+  return childNodesOrError as TreeModelHierarchyNode[];
 }
 
 function getErrorInfo(error: ErrorInfo | TreeModelHierarchyNode[] | undefined) {

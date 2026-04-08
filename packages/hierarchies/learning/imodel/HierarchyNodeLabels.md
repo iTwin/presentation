@@ -45,7 +45,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 });
 
 // Returns the node with formatted and concatenated label:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([{ label: "Example | 123 | (1.00, 2.00)" }]);
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([{ label: "Example | 123 | (1.00, 2.00)" }]);
 ```
 
 <!-- END EXTRACTION -->
@@ -118,9 +118,11 @@ The `NodesQueryClauseFactory.createSelectClause` function has a required `nodeLa
   // | 0x15       | B          | <NULL>     |
   // | 0x16       | <NULL>     | <NULL>     |
   //
-  expect(await collectHierarchy(createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }))).to.containSubset(
-    [{ label: "A" }, { label: "B [0-L]" }, { label: "Physical Object [0-M]" }],
-  );
+  expect(await collectHierarchy(createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }))).toMatchObject([
+    { label: "A" },
+    { label: "B [0-L]" },
+    { label: "Physical Object [0-M]" },
+  ]);
   ```
 
   <!-- END EXTRACTION -->
@@ -221,7 +223,7 @@ By a request of `HierarchyDefinition`, the hierarchy provider groups instance no
   // The iModel has two elements of `myPhysicalObjectClassName` type, whose `DoubleProperty` values
   // are `123.450` and `123.454`. After passing through formatter, they both become equal to `123.45`,
   // so we get one property grouping node for the two nodes:
-  expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+  expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
     { label: "123.45", children: [{ label: "Example element 1" }, { label: "Example element 2" }] },
   ]);
   ```

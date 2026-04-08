@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import * as sinon from "sinon";
+import { vi } from "vitest";
 import { parseFullClassName } from "../shared/Utils.js";
 
-import type { EC, ECSchemaProvider } from "../shared/Metadata.js";
+import type { Mock } from "vitest";
+import type { EC } from "../shared/Metadata.js";
 
 export interface StubClassFuncProps {
   schemaName: string;
@@ -23,25 +24,29 @@ export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
 export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class;
 export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass;
 export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass;
-export interface ClassStubs {
-  stubEntityClass: TStubEntityClassFunc;
-  stubRelationshipClass: TStubRelationshipClassFunc;
-  stubOtherClass: TStubClassFunc;
-  resetHistory: () => void;
-  restore: () => void;
-  stub: sinon.SinonStub<[schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassName], Promise<EC.Class>>;
+interface SchemaStub {
+  name: string;
+  getClass: Mock<EC.Schema["getClass"]>;
+  getCustomAttributes: Mock<EC.Schema["getCustomAttributes"]>;
+  classes: Map<string, EC.Class>;
 }
 export function createECSchemaProviderStub() {
-  const schemaStubs = new Map<string, sinon.SinonStubbedInstance<EC.Schema>>();
+  const schemaStubs = new Map<string, SchemaStub>();
   const stub = {
-    getSchema: sinon.fake(async (schemaName: string): Promise<EC.Schema | undefined> => {
+    getSchema: vi.fn(async (schemaName: string): Promise<EC.Schema | undefined> => {
       return schemaStubs.get(schemaName);
     }),
   };
   const getSchemaStub = (schemaName: string) => {
     let schemaStub = schemaStubs.get(schemaName);
     if (!schemaStub) {
-      schemaStub = { name: schemaName, getClass: sinon.stub(), getCustomAttributes: sinon.stub() };
+      const classMap = new Map<string, EC.Class>();
+      schemaStub = {
+        name: schemaName,
+        classes: classMap,
+        getClass: vi.fn(async (className: string) => classMap.get(className)),
+        getCustomAttributes: vi.fn<EC.Schema["getCustomAttributes"]>(),
+      };
       schemaStubs.set(schemaName, schemaStub);
     }
     return schemaStub;
@@ -58,7 +63,7 @@ export function createECSchemaProviderStub() {
       return props.properties.find((p) => p.name === propertyName);
     },
     getProperties: async (): Promise<Array<EC.Property>> => props.properties ?? [],
-    is: sinon.fake(async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
+    is: vi.fn(async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
       if (!props.is) {
         return false;
       }
@@ -76,7 +81,7 @@ export function createECSchemaProviderStub() {
   });
   const stubEntityClass: TStubEntityClassFunc = (props) => {
     const res = { ...createBaseClassProps(props), isEntityClass: () => true } as unknown as EC.EntityClass;
-    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
+    getSchemaStub(props.schemaName).classes.set(props.className, res);
     return res;
   };
   const stubRelationshipClass: TStubRelationshipClassFunc = (props) => {
@@ -87,12 +92,12 @@ export function createECSchemaProviderStub() {
       target: props.target ?? { polymorphic: true, abstractConstraint: async () => undefined },
       isRelationshipClass: () => true,
     } as unknown as EC.RelationshipClass;
-    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
+    getSchemaStub(props.schemaName).classes.set(props.className, res);
     return res;
   };
   const stubOtherClass: TStubClassFunc = (props) => {
     const res = { ...createBaseClassProps(props) } as unknown as EC.Class;
-    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
+    getSchemaStub(props.schemaName).classes.set(props.className, res);
     return res;
   };
   return {
@@ -105,7 +110,7 @@ export function createECSchemaProviderStub() {
       if (!schemaStub) {
         return 0;
       }
-      return schemaStub.getClass.getCalls().filter((call) => call.args[0] === props.className).length;
+      return schemaStub.getClass.mock.calls.filter((call) => call[0] === props.className).length;
     },
   };
 }

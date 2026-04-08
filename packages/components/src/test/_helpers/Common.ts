@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Component } from "react";
-import sinon from "sinon";
+import { beforeEach, vi } from "vitest";
 import { BeDuration } from "@itwin/core-bentley";
 import { createTestCategoryDescription, createTestPropertiesContentField } from "./Content.js";
 
@@ -87,35 +87,6 @@ export const waitForPendingAsyncs = async (handler: { pendingAsyncs: Set<string>
   await recursiveWaitInternal();
 };
 
-/**
- * Stubs global 'requestAnimationFrame' and 'cancelAnimationFrame' functions.
- * This is needed for tests using 'react-select' component.
- */
-export function stubRaf() {
-  const raf = global.requestAnimationFrame;
-  const caf = global.cancelAnimationFrame;
-
-  before(() => {
-    Object.defineProperty(global, "requestAnimationFrame", {
-      writable: true,
-      value: (cb: FrameRequestCallback) => {
-        return setTimeout(cb, 0);
-      },
-    });
-    Object.defineProperty(global, "cancelAnimationFrame", {
-      writable: true,
-      value: (handle: number) => {
-        clearTimeout(handle);
-      },
-    });
-  });
-
-  after(() => {
-    Object.defineProperty(global, "requestAnimationFrame", { writable: true, value: raf });
-    Object.defineProperty(global, "cancelAnimationFrame", { writable: true, value: caf });
-  });
-}
-
 export const createTestPresentationInstanceFilterPropertyInfo = (
   props?: Partial<PresentationInstanceFilterPropertyInfo>,
 ) => ({
@@ -130,39 +101,21 @@ export const createTestPresentationInstanceFilterPropertyInfo = (
   ...props,
 });
 
-/**
- * Stubs global 'DOMMatrix' interface.
- * 'DOMMatrix' is needed for tests using draggable 'Dialog'.
- */
-export function stubDOMMatrix() {
-  const domMatrix = global.DOMMatrix;
-
-  before(() => {
-    Object.defineProperty(global, "DOMMatrix", { writable: true, value: sinon.fake(() => ({ m41: 0, m42: 0 })) });
-  });
-
-  after(() => {
-    Object.defineProperty(global, "DOMGlobal", { writable: true, value: domMatrix });
-  });
-}
-
 export function stubVirtualization() {
-  let stubs: sinon.SinonStub[] = [];
-
   beforeEach(() => {
-    stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetHeight").get(() => 800));
-    stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetWidth").get(() => 800));
-
-    stubs.push(
-      sinon
-        .stub(window.Element.prototype, "getBoundingClientRect")
-        .returns({ height: 20, width: 20, x: 0, y: 0, bottom: 0, left: 0, right: 0, top: 0, toJSON: () => {} }),
-    );
-  });
-
-  afterEach(() => {
-    stubs.forEach((stub) => stub.restore());
-    stubs = [];
+    vi.spyOn(window.HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(800);
+    vi.spyOn(window.HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(800);
+    vi.spyOn(window.Element.prototype, "getBoundingClientRect").mockReturnValue({
+      height: 20,
+      width: 20,
+      x: 0,
+      y: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      top: 0,
+      toJSON: () => {},
+    });
   });
 }
 
@@ -182,14 +135,16 @@ export interface TestErrorBoundaryState {
  *
  * Example usage:
  * ```tsx
- * const errorSpy = sinon.spy();
+ * const errorSpy = vi.fn();
  * render(
  *   <TestErrorBoundary onError={errorSpy}>
  *     <TestComponent />
  *   </TestErrorBoundary>
  * );
  * await waitFor(() => {
- *   expect(errorSpy).to.be.calledOnce.and.calledWith(sinon.match((error: Error) => error.message === "test error"));
+ *   expect(errorSpy).toHaveBeenCalledOnce();
+ *   const [error] = errorSpy.mock.calls[0];
+ *   expect(error.message).toBe("test error");
  * });
  * ```
  */

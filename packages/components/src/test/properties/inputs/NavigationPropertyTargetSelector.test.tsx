@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { createRef } from "react";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
@@ -48,27 +47,22 @@ describe("NavigationPropertyTargetSelector", () => {
     values: {},
   });
 
-  const getContentStub = sinon.stub<
-    Parameters<PresentationManager["getContent"]>,
-    ReturnType<PresentationManager["getContent"]>
-  >();
+  const getContentStub = vi.fn<PresentationManager["getContent"]>();
 
   stubVirtualization();
-  before(() => {
-    const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "localization").get(() => localization);
-    sinon.stub(Presentation, "presentation").get(() => ({ getContent: getContentStub }));
-  });
-
-  after(() => {
-    sinon.restore();
-  });
-
   beforeEach(() => {
-    getContentStub.reset();
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
+    const localization = new EmptyLocalization();
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
+      getContent: getContentStub,
+    } as unknown as PresentationManager);
+
+    getContentStub.mockReset();
+    getContentStub.mockResolvedValue(
+      new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]),
+    );
   });
 
   it("renders selector", async () => {
@@ -87,7 +81,7 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("invokes onCommit with selected target", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { getByRole, getByText, user } = render(
       <NavigationPropertyTargetSelector
         imodel={testImodel}
@@ -102,7 +96,7 @@ describe("NavigationPropertyTargetSelector", () => {
 
     const target = await waitFor(() => getByText(contentItem.label.displayValue));
     await user.click(target);
-    expect(spy).to.be.calledOnceWith({
+    expect(spy).toHaveBeenCalledExactlyOnceWith({
       propertyRecord: testRecord,
       newValue: {
         valueFormat: PropertyValueFormat.Primitive,
@@ -148,7 +142,7 @@ describe("NavigationPropertyTargetSelector", () => {
       displayValues: {},
       values: {},
     });
-    getContentStub.resolves(
+    getContentStub.mockResolvedValue(
       new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem, baseContentItem]),
     );
 
@@ -176,7 +170,7 @@ describe("NavigationPropertyTargetSelector", () => {
       displayValues: {},
       values: {},
     });
-    getContentStub.resolves(
+    getContentStub.mockResolvedValue(
       new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem, baseContentItem]),
     );
 
@@ -203,7 +197,7 @@ describe("NavigationPropertyTargetSelector", () => {
       values: {},
     });
 
-    getContentStub.resolves(
+    getContentStub.mockResolvedValue(
       new Content(createTestContentDescriptor({ fields: [], categories: [] }), [
         contentItem,
         baseContentItem,
@@ -243,13 +237,13 @@ describe("NavigationPropertyTargetSelector", () => {
       );
     }
 
-    getContentStub.callsFake(
+    getContentStub.mockImplementation(
       async () => new Content(createTestContentDescriptor({ fields: [], categories: [] }), items),
     );
 
     const { getByPlaceholderText, user } = render(<NavigationPropertyTargetSelector {...initialProps} />);
     await waitFor(() => {
-      expect(getContentStub.calledOnce);
+      expect(getContentStub).toHaveBeenCalledOnce();
     });
 
     const combobox = await waitFor(() => getByPlaceholderText("navigation-property-editor.select-target-instance"));
@@ -258,7 +252,7 @@ describe("NavigationPropertyTargetSelector", () => {
     await user.type(combobox, "1");
 
     await waitFor(() => {
-      expect(getContentStub.calledOnce);
+      expect(getContentStub).toHaveBeenCalledOnce();
     });
   });
 

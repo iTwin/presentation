@@ -166,10 +166,10 @@ export function createHierarchyProvider<
     hierarchyChanged,
     ...(impl.getNodeInstanceKeys
       ? { getNodeInstanceKeys: impl.getNodeInstanceKeys }
-      : { /* c8 ignore next */ async *getNodeInstanceKeys() {} }),
-    ...(impl.setFormatter ? { setFormatter: impl.setFormatter } : { /* c8 ignore next */ setFormatter() {} }),
+      : /* v8 ignore next */ { async *getNodeInstanceKeys() {} }),
+    ...(impl.setFormatter ? { setFormatter: impl.setFormatter } : /* v8 ignore next */ { setFormatter() {} }),
     ...(impl.setHierarchySearch
       ? { setHierarchySearch: impl.setHierarchySearch }
-      : { /* c8 ignore next */ setHierarchySearch() {} }),
+      : /* v8 ignore next */ { setHierarchySearch() {} }),
   });
 }

@@ -3,12 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelDb, IModelJsFs, StandaloneDb } from "@itwin/core-backend";
+import { IModelDb, IModelJsFs, SnapshotDb, StandaloneDb } from "@itwin/core-backend";
 import { OpenMode } from "@itwin/core-bentley";
 import { Code } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Schema, SchemaContext } from "@itwin/ecschema-metadata";
-import { buildTestIModel, setupOutputFileLocation, TestIModelConnection } from "@itwin/presentation-testing";
+import { createFileNameFromString, getTestName, setupOutputFileLocation } from "./FilenameUtils.js";
 
 import type { ECDb } from "@itwin/core-backend";
 import type { Id64String } from "@itwin/core-bentley";
@@ -21,33 +21,98 @@ import type {
   RelationshipProps,
 } from "@itwin/core-common";
 import type { SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
-import type { TestIModelBuilder } from "@itwin/presentation-testing";
 
-interface IIModelBuilder extends TestIModelBuilder {
+export interface IIModelBuilder {
+  insertModel<TProps extends ModelProps>(props: TProps): Id64String;
+  insertElement<TProps extends ElementProps>(props: TProps): Id64String;
+  insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String;
+  insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String;
+  createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code;
+  importSchema(schemaXml: string): Promise<void>;
   deleteElement(elementId: Id64String): void;
   updateElement<TProps extends ElementProps>(props: Partial<Omit<TProps, "id">> & { id: Id64String }): void;
 }
 
-export async function buildIModel<TFirstArg extends Mocha.Context | string>(
-  mochaContextOrTestName: TFirstArg,
-  setup?: (builder: TestIModelBuilder, mochaContextOrTestName: TFirstArg) => Promise<void>,
-): Promise<{ imodel: IModelConnection }>;
-export async function buildIModel<TFirstArg extends Mocha.Context | string, TResult extends {}>(
-  mochaContextOrTestName: TFirstArg,
-  setup: (builder: TestIModelBuilder, mochaContextOrTestName: TFirstArg) => Promise<TResult>,
-): Promise<{ imodel: IModelConnection } & TResult>;
-export async function buildIModel<TFirstArg extends Mocha.Context | string, TResult extends {} | undefined>(
-  mochaContextOrTestName: TFirstArg,
-  setup?: (builder: TestIModelBuilder, mochaContextOrTestName: TFirstArg) => Promise<TResult>,
-) {
-  let res!: TResult;
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  const imodel = await buildTestIModel(mochaContextOrTestName as any, async (builder) => {
-    if (setup) {
-      res = await setup(builder, mochaContextOrTestName);
+export class TestIModelBuilderImpl implements IIModelBuilder {
+  private _imodel: IModelDb;
+
+  constructor(iModel: IModelDb) {
+    this._imodel = iModel;
+  }
+
+  public insertModel<TProps extends ModelProps>(props: TProps): Id64String {
+    return this._imodel.models.insertModel(props);
+  }
+
+  public insertElement<TProps extends ElementProps>(props: TProps): Id64String {
+    return this._imodel.elements.insertElement(props);
+  }
+
+  public insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String {
+    return this._imodel.elements.insertAspect(props);
+  }
+
+  public insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String {
+    return this._imodel.relationships.insertInstance(props);
+  }
+
+  public deleteElement(elementId: Id64String): void {
+    this._imodel.elements.deleteElement(elementId);
+  }
+
+  public updateElement<TProps extends ElementProps>(props: Partial<Omit<TProps, "id">> & { id: Id64String }): void {
+    this._imodel.elements.updateElement(props);
+  }
+
+  public createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code {
+    const codeSpec = this._imodel.codeSpecs.getByName(codeSpecName);
+    return new Code({ spec: codeSpec.id, scope: scopeModelId, value: codeValue });
+  }
+
+  public async importSchema(schemaXml: string) {
+    await this._imodel.importSchemaStrings([schemaXml]);
+  }
+}
+
+/**
+ * Create test iModel and returns a connection to it.
+ *
+ * **Note:** do not call this function outside `it` block without name. It uses `expect.getState().currentTestName` to determine the test name.
+ */
+export async function buildTestIModel<TResult extends {} | void>(
+  cb: (builder: IIModelBuilder, testName: string) => TResult | Promise<TResult>,
+): Promise<TResult & { imodel: TestIModelConnection }>;
+export async function buildTestIModel<TResult extends {} | void>(
+  name: string,
+  cb: (builder: IIModelBuilder, testName: string) => TResult | Promise<TResult>,
+): Promise<TResult & { imodel: TestIModelConnection }>;
+export async function buildTestIModel(
+  cb?: (builder: IIModelBuilder, testName: string) => void | Promise<void>,
+): Promise<{ imodel: TestIModelConnection }>;
+export async function buildTestIModel(
+  name: string,
+  cb?: (builder: IIModelBuilder, testName: string) => void | Promise<void>,
+): Promise<{ imodel: TestIModelConnection }>;
+export async function buildTestIModel<TResult extends {} | void>(
+  nameOrCb?: string | ((builder: IIModelBuilder, testName: string) => TResult | Promise<TResult>),
+  cb?: (builder: IIModelBuilder, testName: string) => TResult | Promise<TResult>,
+): Promise<TResult & { imodel: TestIModelConnection }> {
+  const name = typeof nameOrCb === "string" ? nameOrCb : getTestName();
+  const callback = typeof nameOrCb === "function" ? nameOrCb : cb;
+  const fileName = createFileNameFromString(`${name}.bim`);
+  const outputFile = setupOutputFileLocation(fileName);
+  const db = SnapshotDb.createEmpty(outputFile, { rootSubject: { name } });
+  const builder = new TestIModelBuilderImpl(db);
+  let result!: TResult;
+  try {
+    if (callback) {
+      result = await callback(builder, name);
     }
-  });
-  return { ...res, imodel };
+  } finally {
+    db.saveChanges("Created test IModel");
+    db.close();
+  }
+  return { ...result, imodel: TestIModelConnection.openFile(outputFile) };
 }
 
 async function cloneIModel<TResult extends {}>(
@@ -63,7 +128,7 @@ async function cloneIModel<TResult extends {}>(
   try {
     const res = await setup(new TestIModelBuilderImpl(imodel));
     imodel.saveChanges("Updated cloned iModel");
-    return { ...res, imodel: new TestIModelConnection(imodel), imodelPath: targetIModelPath };
+    return { ...res, imodel: new TestIModelConnection(imodel, targetIModelPath), imodelPath: targetIModelPath };
   } catch (e) {
     imodel.close();
     throw e;
@@ -71,13 +136,13 @@ async function cloneIModel<TResult extends {}>(
 }
 
 export async function createChangedIModels<TResultBase extends {}, TResultChangeset1 extends {}>(
-  mochaContext: Mocha.Context,
-  setupBase: (imodel: TestIModelBuilder) => Promise<TResultBase>,
+  setupBase: (imodel: IIModelBuilder) => Promise<TResultBase>,
   setupChangeset1: (imodel: IIModelBuilder, before: TResultBase) => Promise<TResultChangeset1>,
 ) {
-  const baseIModelPath = setupOutputFileLocation(`${mochaContext.test!.fullTitle()}-base.bim`);
-  const base = await buildIModel(`${mochaContext.test!.fullTitle()}-base`, setupBase);
-  const changeset1 = await cloneIModel(baseIModelPath, `${mochaContext.test!.fullTitle()}-changeset1`, async (ecdb) =>
+  const testName = getTestName();
+  const base = await buildTestIModel(`${testName}-base`, setupBase);
+  const baseIModelPath = base.imodel.filePath;
+  const changeset1 = await cloneIModel(baseIModelPath, `${testName}-changeset1`, async (ecdb) =>
     setupChangeset1(ecdb, base),
   );
   return {
@@ -132,43 +197,28 @@ export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) 
   return schemas;
 }
 
-class TestIModelBuilderImpl implements IIModelBuilder {
-  private _imodel: IModelDb;
-
-  constructor(iModel: IModelDb) {
-    this._imodel = iModel;
+export class TestIModelConnection extends IModelConnection {
+  constructor(
+    private readonly _db: IModelDb,
+    public readonly filePath: string,
+  ) {
+    // eslint-disable-next-line @itwin/no-internal
+    super(_db.getConnectionProps());
+    IModelConnection.onOpen.raiseEvent(this);
   }
 
-  public insertModel<TProps extends ModelProps>(props: TProps): Id64String {
-    return this._imodel.models.insertModel(props);
+  public override get isClosed(): boolean {
+    // eslint-disable-next-line @itwin/no-internal
+    return !this._db.isOpen;
   }
 
-  public insertElement<TProps extends ElementProps>(props: TProps): Id64String {
-    return this._imodel.elements.insertElement(props);
+  public override async close(): Promise<void> {
+    this._db.close();
+    this.onClose.raiseEvent(this);
+    IModelConnection.onClose.raiseEvent(this);
   }
 
-  public insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String {
-    return this._imodel.elements.insertAspect(props);
-  }
-
-  public insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String {
-    return this._imodel.relationships.insertInstance(props);
-  }
-
-  public deleteElement(elementId: Id64String): void {
-    this._imodel.elements.deleteElement(elementId);
-  }
-
-  public updateElement<TProps extends ElementProps>(props: Partial<Omit<TProps, "id">> & { id: Id64String }): void {
-    this._imodel.elements.updateElement(props);
-  }
-
-  public createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code {
-    const codeSpec = this._imodel.codeSpecs.getByName(codeSpecName);
-    return new Code({ spec: codeSpec.id, scope: scopeModelId, value: codeValue });
-  }
-
-  public async importSchema(schemaXml: string) {
-    await this._imodel.importSchemaStrings([schemaXml]);
+  public static openFile(filePath: string): TestIModelConnection {
+    return new TestIModelConnection(SnapshotDb.openFile(filePath), filePath);
   }
 }

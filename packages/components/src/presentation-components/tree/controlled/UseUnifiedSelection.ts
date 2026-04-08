@@ -151,11 +151,11 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
   }
 
   /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
-  /* c8 ignore start */
+  /* v8 ignore start -- @preserve */
   protected getNodeKey(node: TreeNodeItem): NodeKey {
     return this.#dataProvider.getNodeKey(node);
   }
-  /* c8 ignore end */
+  /* v8 ignore stop -- @preserve */
 
   /**
    * Determines if node should be selected.
@@ -163,7 +163,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
    * or node is ECInstance node and instance key is in selection.
    */
   protected shouldSelectNode(node: TreeNodeItem, selection: Readonly<KeySet>) {
-    /* c8 ignore next 3 */
+    /* v8 ignore next -- @preserve */
     if (!isPresentationTreeNodeItem(node)) {
       return false;
     }
@@ -194,7 +194,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
 
   protected getKeys(nodes: TreeNodeItem[]): Keys {
     const nodeKeys: NodeKey[] = nodes
-      .map((node) => (isPresentationTreeNodeItem(node) ? node.key : /* c8 ignore next */ undefined))
+      .map((node) => (isPresentationTreeNodeItem(node) ? node.key : /* v8 ignore next -- @preserve */ undefined))
       .filter((key) => key !== undefined) as NodeKey[];
     return SelectionHelper.getKeysForSelection(nodeKeys);
   }
@@ -263,7 +263,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
     this.modelSource.modifyModel((model: MutableTreeModel) => {
       for (const nodeId of affectedNodeIds) {
         const node = model.getNode(nodeId);
-        /* c8 ignore next 3 */
+        /* v8 ignore next -- @preserve */
         if (!node) {
           continue;
         }

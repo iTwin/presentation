@@ -4,19 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
-import sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from "vitest";
 import { BeEvent, Guid } from "@itwin/core-bentley";
 import { LabelDefinition, RegisteredRuleset } from "@itwin/presentation-common";
-import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { Presentation } from "@itwin/presentation-frontend";
 import { HierarchyBuilder } from "../presentation-testing/HierarchyBuilder.js";
-import { createStub } from "./Utils.js";
 
 import type { TreeNodeItem } from "@itwin/components-react";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { HierarchyRequestOptions, Node, NodeKey, Ruleset } from "@itwin/presentation-common";
-import type { RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import type { PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import type { NodeMappingFunc } from "../presentation-testing/HierarchyBuilder.js";
 
 async function getRootNodes() {
@@ -45,69 +43,75 @@ async function getChildrenNodes(opts: HierarchyRequestOptions<IModelConnection, 
 }
 
 describe("HierarchyBuilder", () => {
-  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
-  const rulesetManager = { add: createStub<RulesetManager["add"]>() };
+  let presentationManager: { rulesets: MockInstance; vars: MockInstance; getNodesIterator: MockInstance };
+  const rulesetManager = { add: vi.fn<RulesetManager["add"]>() };
 
   const ruleset = { id: "1" } as Ruleset;
   const imodel = {} as IModelConnection;
 
   beforeEach(() => {
-    rulesetManager.add.callsFake(async (rules) => new RegisteredRuleset(rules, Guid.createValue(), () => {}));
+    rulesetManager.add.mockImplementation(async (rules) => new RegisteredRuleset(rules, Guid.createValue(), () => {}));
 
-    presentationManager = sinon.createStubInstance(PresentationManager);
-    presentationManager.rulesets.returns(rulesetManager as unknown as RulesetManager);
-    presentationManager.vars.returns({ onVariableChanged: new BeEvent() } as RulesetVariablesManager);
+    presentationManager = {
+      rulesets: vi.fn().mockReturnValue(rulesetManager as unknown as RulesetManager),
+      vars: vi.fn().mockReturnValue({ onVariableChanged: new BeEvent() } as RulesetVariablesManager),
+      getNodesIterator: vi.fn(),
+    };
   });
 
   afterEach(() => {
-    rulesetManager.add.reset();
+    rulesetManager.add.mockReset();
   });
 
   describe("createHierarchy", () => {
-    context("without data", () => {
+    describe("without data", () => {
       beforeEach(() => {
-        sinon.stub(Presentation, "presentation").get(() => presentationManager);
-        presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([]), total: 0 });
+        vi.spyOn(Presentation, "presentation", "get").mockReturnValue(
+          presentationManager as unknown as PresentationManager,
+        );
+        presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([]), total: 0 });
       });
 
       afterEach(() => {
-        sinon.restore();
+        vi.restoreAllMocks();
       });
 
       it("returns empty list when rulesetId is given", async () => {
         const builder = new HierarchyBuilder({ imodel });
         const hierarchy = await builder.createHierarchy("1");
-        expect(hierarchy).to.be.empty;
+        expect(hierarchy).toHaveLength(0);
       });
 
       it("returns empty list when ruleset is given", async () => {
         const builder = new HierarchyBuilder({ imodel });
         const hierarchy = await builder.createHierarchy(ruleset);
-        expect(hierarchy).to.be.empty;
+        expect(hierarchy).toHaveLength(0);
       });
     });
 
-    context("with data", () => {
+    describe("with data", () => {
       beforeEach(() => {
-        sinon.stub(Presentation, "presentation").get(() => presentationManager);
-        presentationManager.getNodesIterator.callsFake(async (opts) =>
+        vi.spyOn(Presentation, "presentation", "get").mockReturnValue(
+          presentationManager as unknown as PresentationManager,
+        );
+        presentationManager.getNodesIterator.mockImplementation(async (opts) =>
           opts.parentKey === undefined ? getRootNodes() : getChildrenNodes(opts),
         );
       });
 
       afterEach(() => {
-        sinon.restore();
+        vi.restoreAllMocks();
       });
 
       it("returns correct hierarchy", async () => {
         const builder = new HierarchyBuilder({ imodel });
-        expect(await builder.createHierarchy(ruleset)).to.matchSnapshot();
+        expect(await builder.createHierarchy(ruleset)).toMatchSnapshot();
       });
 
       it("returns correct hierarchy with custom node mapping function", async () => {
         const nodeMapper: NodeMappingFunc = (node: TreeNodeItem) => ({ id: node.id });
         const builder = new HierarchyBuilder({ imodel, nodeMappingFunc: nodeMapper });
-        expect(await builder.createHierarchy(ruleset)).to.matchSnapshot();
+        expect(await builder.createHierarchy(ruleset)).toMatchSnapshot();
       });
     });
   });

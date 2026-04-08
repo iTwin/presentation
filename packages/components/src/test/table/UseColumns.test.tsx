@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { useColumns } from "../../presentation-components/table/UseColumns.js";
@@ -14,8 +13,9 @@ import {
   createTestNestedContentField,
   createTestPropertiesContentField,
 } from "../_helpers/Content.js";
-import { render, renderHook, waitFor } from "../TestUtils.js";
+import { createMocked, render, renderHook, waitFor } from "../TestUtils.js";
 
+import type { Mocked } from "vitest";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { UseColumnsProps } from "../../presentation-components/table/UseColumns.js";
 
@@ -27,15 +27,11 @@ describe("useColumns", () => {
     ruleset: "ruleset_id",
   };
 
-  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
+  let presentationManager: Mocked<PresentationManager>;
 
   beforeEach(() => {
-    presentationManager = sinon.createStubInstance(PresentationManager);
-    sinon.stub(Presentation, "presentation").get(() => presentationManager);
-  });
-
-  afterEach(() => {
-    sinon.restore();
+    presentationManager = createMocked(PresentationManager);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
   });
 
   it("loads columns", async () => {
@@ -44,7 +40,7 @@ describe("useColumns", () => {
       label: "First Field",
       properties: [],
     });
-    presentationManager.getContentDescriptor.resolves(createTestContentDescriptor({ fields: [contentField] }));
+    presentationManager.getContentDescriptor.mockResolvedValue(createTestContentDescriptor({ fields: [contentField] }));
 
     const { result } = renderHook((props) => useColumns(props), { initialProps });
 
@@ -71,7 +67,7 @@ describe("useColumns", () => {
       label: "Nesting Field",
       nestedFields: [nestedField],
     });
-    presentationManager.getContentDescriptor.resolves(
+    presentationManager.getContentDescriptor.mockResolvedValue(
       createTestContentDescriptor({ fields: [propertyField, nestingField] }),
     );
 
@@ -90,7 +86,9 @@ describe("useColumns", () => {
       label: "First Field",
       properties: [],
     });
-    presentationManager.getContentDescriptor.resolves(createTestContentDescriptor({ fields: [propertyField] }));
+    presentationManager.getContentDescriptor.mockResolvedValue(
+      createTestContentDescriptor({ fields: [propertyField] }),
+    );
 
     const { result } = renderHook((props) => useColumns(props), {
       initialProps: { ...initialProps, keys: new KeySet() },
@@ -100,7 +98,7 @@ describe("useColumns", () => {
   });
 
   it("returns empty column list if content descriptor was not loaded", async () => {
-    presentationManager.getContentDescriptor.resolves(undefined);
+    presentationManager.getContentDescriptor.mockResolvedValue(undefined);
 
     const { result } = renderHook((props) => useColumns(props), { initialProps });
 
@@ -109,10 +107,10 @@ describe("useColumns", () => {
 
   it("throws in React render loop on failure to get content descriptor", async () => {
     // stub console error to avoid warnings/errors in console
-    const consoleErrorStub = sinon.stub(console, "error").callsFake(() => {});
-    presentationManager.getContentDescriptor.resolves(undefined).rejects(new Error("test error"));
+    const consoleErrorStub = vi.spyOn(console, "error").mockImplementation(() => {});
+    presentationManager.getContentDescriptor.mockResolvedValue(undefined).mockRejectedValue(new Error("test error"));
 
-    const errorSpy = sinon.spy();
+    const errorSpy = vi.fn();
     function TestComponent() {
       useColumns(initialProps);
       return null;
@@ -124,8 +122,10 @@ describe("useColumns", () => {
     );
 
     await waitFor(() => {
-      expect(errorSpy).to.be.calledOnce.and.calledWith(sinon.match((error: Error) => error.message === "test error"));
+      expect(errorSpy).toHaveBeenCalledOnce();
+      const [error] = errorSpy.mock.calls[0];
+      expect((error as Error).message).toBe("test error");
     });
-    consoleErrorStub.restore();
+    consoleErrorStub.mockRestore();
   });
 });

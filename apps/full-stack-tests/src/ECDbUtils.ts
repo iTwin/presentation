@@ -8,7 +8,12 @@ import hash from "object-hash";
 import { ECDb, ECDbOpenMode, IModelJsFs } from "@itwin/core-backend";
 import { BentleyError, DbResult, Id64, OrderedId64Iterable } from "@itwin/core-bentley";
 import { parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
-import { createFileNameFromString, limitFilePathLength, setupOutputFileLocation } from "@itwin/presentation-testing";
+import {
+  createFileNameFromString,
+  getTestName,
+  limitFilePathLength,
+  setupOutputFileLocation,
+} from "./FilenameUtils.js";
 import { safeDispose } from "./Utils.js";
 
 import type { ECSqlWriteStatement } from "@itwin/core-backend";
@@ -203,12 +208,10 @@ function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding 
 }
 
 export async function createECDb<TResult extends {}>(
-  mochaContextOrName: Mocha.Context | string,
+  testName: string | undefined,
   setup: (db: ECDbBuilder) => Promise<TResult>,
 ): Promise<TResult & { ecdb: ECDb; ecdbPath: string }> {
-  const name = createFileNameFromString(
-    typeof mochaContextOrName === "string" ? mochaContextOrName : mochaContextOrName.test!.fullTitle(),
-  );
+  const name = createFileNameFromString(typeof testName === "string" ? testName : getTestName());
   const ecdbPath = setupOutputFileLocation(`${name}.bim`);
   const ecdb = new ECDb();
   ecdb.createDb(ecdbPath);
@@ -246,50 +249,26 @@ async function cloneECDb<TResult extends {}>(
   }
 }
 
-export async function createChangedDbs<TResultBase extends {}, TResultChangeset1 extends {}>(
-  mochaContext: Mocha.Context,
-  setupBase: (db: ECDbBuilder) => Promise<TResultBase>,
-  setupChangeset1: (db: ECDbBuilder, before: TResultBase) => Promise<TResultChangeset1>,
-): Promise<
-  {
-    base: Awaited<ReturnType<typeof createECDb>> & TResultBase;
-    changeset1: Awaited<ReturnType<typeof createECDb>> & TResultChangeset1;
-  } & Disposable
->;
+interface CreateChangedDbsProps<TResultBase extends {}, TResultChangeset1 extends {}, TResultChangeset2 extends {}> {
+  name?: string;
+  setupBase: (db: ECDbBuilder) => Promise<TResultBase>;
+  setupChangeset1: (db: ECDbBuilder, before: TResultBase) => Promise<TResultChangeset1>;
+  setupChangeset2?: (db: ECDbBuilder, before: TResultChangeset1) => Promise<TResultChangeset2>;
+}
+
 export async function createChangedDbs<
   TResultBase extends {},
   TResultChangeset1 extends {},
   TResultChangeset2 extends {},
->(
-  mochaContext: Mocha.Context,
-  setupBase: (db: ECDbBuilder) => Promise<TResultBase>,
-  setupChangeset1: (db: ECDbBuilder, before: TResultBase) => Promise<TResultChangeset1>,
-  setupChangeset2: (db: ECDbBuilder, before: TResultChangeset1) => Promise<TResultChangeset2>,
-): Promise<
-  {
-    base: Awaited<ReturnType<typeof createECDb>> & TResultBase;
-    changeset1: Awaited<ReturnType<typeof createECDb>> & TResultChangeset1;
-    changeset2: Awaited<ReturnType<typeof createECDb>> & TResultChangeset2;
-  } & Disposable
->;
-export async function createChangedDbs<
-  TResultBase extends {},
-  TResultChangeset1 extends {},
-  TResultChangeset2 extends {},
->(
-  mochaContext: Mocha.Context,
-  setupBase: (db: ECDbBuilder) => Promise<TResultBase>,
-  setupChangeset1: (db: ECDbBuilder, before: TResultBase) => Promise<TResultChangeset1>,
-  setupChangeset2?: (db: ECDbBuilder, before: TResultChangeset1) => Promise<TResultChangeset2>,
-) {
-  const base = await createECDb(`${mochaContext.test!.fullTitle()}-base`, setupBase);
-  const changeset1 = await cloneECDb(base.ecdbPath, `${mochaContext.test!.fullTitle()}-changeset1`, async (ecdb) =>
+>(props: CreateChangedDbsProps<TResultBase, TResultChangeset1, TResultChangeset2>) {
+  const testName = props.name ?? getTestName();
+  const { setupBase, setupChangeset1, setupChangeset2 } = props;
+  const base = await createECDb(`${testName}-base`, setupBase);
+  const changeset1 = await cloneECDb(base.ecdbPath, `${testName}-changeset1`, async (ecdb) =>
     setupChangeset1(ecdb, base),
   );
   const changeset2 = setupChangeset2
-    ? await cloneECDb(changeset1.ecdbPath, `${mochaContext.test!.fullTitle()}-changeset2`, async (ecdb) =>
-        setupChangeset2(ecdb, changeset1),
-      )
+    ? await cloneECDb(changeset1.ecdbPath, `${testName}-changeset2`, async (ecdb) => setupChangeset2(ecdb, changeset1))
     : undefined;
   return {
     base,
@@ -304,26 +283,24 @@ export async function createChangedDbs<
 }
 
 export async function withECDb(
-  mochaContext: Mocha.Context,
-  setup: (db: ECDbBuilder, mochaContext: Mocha.Context) => Promise<void>,
+  setup: (db: ECDbBuilder, testName: string) => Promise<void>,
   use: (db: ECDb) => Promise<void>,
 ): Promise<void>;
 export async function withECDb<TResult extends {}>(
-  mochaContext: Mocha.Context,
-  setup: (db: ECDbBuilder, mochaContext: Mocha.Context) => Promise<TResult>,
+  setup: (db: ECDbBuilder, testName: string) => Promise<TResult>,
   use: (db: ECDb, res: TResult) => Promise<void>,
 ): Promise<void>;
 export async function withECDb<TResult extends {} | undefined>(
-  mochaContext: Mocha.Context,
-  setup: (db: ECDbBuilder, mochaContext: Mocha.Context) => Promise<TResult | undefined>,
+  setup: (db: ECDbBuilder, testName: string) => Promise<TResult | undefined>,
   use: (db: ECDb, res: TResult | undefined) => Promise<void>,
 ) {
-  const name = createFileNameFromString(mochaContext.test!.fullTitle());
+  const testName = getTestName();
+  const name = createFileNameFromString(testName);
   const outputFile = setupOutputFileLocation(name);
   using db = new ECDb();
 
   db.createDb(outputFile);
-  const res = await setup(new ECDbBuilder(db, outputFile), mochaContext);
+  const res = await setup(new ECDbBuilder(db, outputFile), testName);
   db.saveChanges("Created test ECDb");
   await use(db, res);
   safeDispose(db);

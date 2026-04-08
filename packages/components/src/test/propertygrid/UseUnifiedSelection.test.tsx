@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KeySet } from "@itwin/presentation-common";
 import { SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
 import { createStorage, Selectables } from "@itwin/unified-selection";
@@ -13,9 +12,10 @@ import {
   usePropertyDataProviderWithUnifiedSelection,
 } from "../../presentation-components/propertygrid/UseUnifiedSelection.js";
 import { createTestECInstanceKey } from "../_helpers/Common.js";
-import { act, renderHook, waitFor } from "../TestUtils.js";
+import { act, createMocked, renderHook, waitFor } from "../TestUtils.js";
 
 import type { PropsWithChildren } from "react";
+import type { Mocked } from "vitest";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { ISelectionProvider, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 import type { SelectionStorage } from "@itwin/unified-selection";
@@ -25,7 +25,7 @@ import type { IPresentationPropertyDataProvider } from "../../presentation-compo
 
 describe("usePropertyDataProviderWithUnifiedSelection", () => {
   const imodelKey = "test-imodel-key";
-  const setKeysSpy = sinon.stub<[KeySet], void>();
+  const setKeysSpy = vi.fn<(newKeys: KeySet) => void>();
   const dataProvider = {
     set keys(newKeys: KeySet) {
       setKeysSpy(newKeys);
@@ -35,7 +35,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
   };
 
   beforeEach(() => {
-    setKeysSpy.reset();
+    setKeysSpy.mockReset();
   });
 
   function getProvider() {
@@ -43,8 +43,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
   }
 
   describe("with deprecated SelectionHandler", () => {
-    let selectionHandler: sinon.SinonStubbedInstance<SelectionHandler>;
-    function SelectionHandlerWrapper({ children }: PropsWithChildren) {
+    let selectionHandler: Mocked<SelectionHandler>;
+    // eslint-disable-next-line @stylistic/object-curly-spacing
+    function SelectionHandlerWrapper({ children }: PropsWithChildren<{}>) {
       return (
         <SelectionHandlerContextProvider selectionHandler={selectionHandler}>
           {children}
@@ -53,12 +54,11 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     }
 
     beforeEach(() => {
-      selectionHandler = sinon.createStubInstance(SelectionHandler);
-      selectionHandler[Symbol.dispose] = sinon.stub();
+      selectionHandler = createMocked(SelectionHandler);
     });
 
     it("doesn't set provider keys when handler returns no selection", () => {
-      selectionHandler.getSelectionLevels.returns([]);
+      selectionHandler.getSelectionLevels.mockReturnValue([]);
 
       const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
         initialProps: { dataProvider: getProvider() },
@@ -68,12 +68,12 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       expect(result.current.isOverLimit).to.be.false;
       expect(result.current.numSelectedElements).to.be.equal(0);
 
-      expect(setKeysSpy).to.not.be.called;
+      expect(setKeysSpy).not.toHaveBeenCalled();
     });
 
     it("sets empty keyset when handler returns empty selection", () => {
-      selectionHandler.getSelectionLevels.returns([0]);
-      selectionHandler.getSelection.returns(new KeySet());
+      selectionHandler.getSelectionLevels.mockReturnValue([0]);
+      selectionHandler.getSelection.mockReturnValue(new KeySet());
 
       const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
         initialProps: { dataProvider: getProvider() },
@@ -83,14 +83,14 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       expect(result.current.isOverLimit).to.be.false;
       expect(result.current.numSelectedElements).to.be.equal(0);
 
-      expect(setKeysSpy).to.be.calledWith(sinon.match((keys: KeySet) => keys.isEmpty));
+      expect(setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0].isEmpty).toBe(true);
     });
 
     it("sets keyset when handler returns a selection", () => {
       const setKeys = new KeySet([createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })]);
 
-      selectionHandler.getSelectionLevels.returns([0]);
-      selectionHandler.getSelection.returns(setKeys);
+      selectionHandler.getSelectionLevels.mockReturnValue([0]);
+      selectionHandler.getSelection.mockReturnValue(setKeys);
 
       const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
         initialProps: { dataProvider: getProvider() },
@@ -100,15 +100,15 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       expect(result.current.isOverLimit).to.be.false;
       expect(result.current.numSelectedElements).to.be.equal(2);
 
-      expect(setKeysSpy).to.be.calledWith(sinon.match((keys: KeySet) => equalKeySets(setKeys, keys)));
+      expect(equalKeySets(setKeys, setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
     });
 
     it("sets empty keyset when handler returns selection containing more keys than set limit", () => {
       const setKeys = new KeySet([createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })]);
       const instancesLimit = 1;
 
-      selectionHandler.getSelectionLevels.returns([0]);
-      selectionHandler.getSelection.returns(setKeys);
+      selectionHandler.getSelectionLevels.mockReturnValue([0]);
+      selectionHandler.getSelection.mockReturnValue(setKeys);
 
       const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
         initialProps: { selectionHandler, requestedContentInstancesLimit: instancesLimit, dataProvider: getProvider() },
@@ -119,7 +119,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       expect(result.current.isOverLimit).to.be.true;
       expect(result.current.numSelectedElements).to.be.equal(2);
 
-      expect(setKeysSpy).to.be.calledWith(sinon.match((keys: KeySet) => keys.isEmpty));
+      expect(setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0].isEmpty).toBe(true);
     });
 
     it("changes KeySet according to selection", () => {
@@ -136,8 +136,8 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         timestamp: new Date(),
       };
 
-      selectionHandler.getSelectionLevels.returns([0]);
-      selectionHandler.getSelection.callsFake((level) => {
+      selectionHandler.getSelectionLevels.mockReturnValue([0]);
+      selectionHandler.getSelection.mockImplementation((level) => {
         if (level === 0) {
           return keys0;
         }
@@ -152,7 +152,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         wrapper: SelectionHandlerWrapper,
       });
 
-      expect(setKeysSpy).to.be.calledWith(sinon.match((keys: KeySet) => equalKeySets(keys0, keys)));
+      expect(equalKeySets(keys0, setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
 
       expect(selectionHandler.onSelect).to.not.be.undefined;
       expect(result.current).to.not.be.undefined;
@@ -163,13 +163,13 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         selectionHandler.onSelect!(selectionEvent, selectionProvider);
       });
 
-      expect(setKeysSpy).to.be.calledWith(sinon.match((keys: KeySet) => equalKeySets(keys2, keys)));
+      expect(equalKeySets(keys2, setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
     });
 
     it("disposes selection handler when unmounts", () => {
       const setKeys = new KeySet([createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })]);
-      selectionHandler.getSelectionLevels.returns([0]);
-      selectionHandler.getSelection.returns(setKeys);
+      selectionHandler.getSelectionLevels.mockReturnValue([0]);
+      selectionHandler.getSelection.mockReturnValue(setKeys);
 
       const { unmount } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
         initialProps: { dataProvider: getProvider() },
@@ -177,7 +177,8 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       });
 
       unmount();
-      expect(selectionHandler.dispose).to.be.called;
+
+      expect(selectionHandler.dispose).toHaveBeenCalled();
     });
   });
 
@@ -188,24 +189,20 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       selectionStorage = createStorage();
     });
 
-    afterEach(() => {
-      sinon.restore();
-    });
-
     it("doesn't set provider keys when selection storage has no selection", () => {
-      sinon.stub(selectionStorage, "getSelectionLevels").returns([]);
+      vi.spyOn(selectionStorage, "getSelectionLevels").mockReturnValue([]);
       const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
         initialProps: { selectionStorage, dataProvider: getProvider() },
       });
       expect(result.current).to.not.be.undefined;
       expect(result.current.isOverLimit).to.be.false;
       expect(result.current.numSelectedElements).to.be.equal(0);
-      expect(setKeysSpy).to.not.be.called;
+      expect(setKeysSpy).not.toHaveBeenCalled();
     });
 
     it("sets empty keyset when selection storage has empty selection", async () => {
-      sinon.stub(selectionStorage, "getSelectionLevels").returns([0]);
-      sinon.stub(selectionStorage, "getSelection").returns(Selectables.create([]));
+      vi.spyOn(selectionStorage, "getSelectionLevels").mockReturnValue([0]);
+      vi.spyOn(selectionStorage, "getSelection").mockReturnValue(Selectables.create([]));
 
       const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
         initialProps: { selectionStorage, dataProvider: getProvider() },
@@ -214,7 +211,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         expect(result.current).to.not.be.undefined;
         expect(result.current.isOverLimit).to.be.false;
         expect(result.current.numSelectedElements).to.be.equal(0);
-        expect(setKeysSpy).to.be.calledWith(sinon.match((keys: KeySet) => keys.isEmpty));
+        expect(setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0].isEmpty).toBe(true);
       });
     });
 
@@ -229,9 +226,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         expect(result.current).to.not.be.undefined;
         expect(result.current.isOverLimit).to.be.false;
         expect(result.current.numSelectedElements).to.be.equal(2);
-        expect(setKeysSpy).to.be.calledWith(
-          sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances), keys)),
-        );
+        expect(
+          equalKeySets(new KeySet(selectedInstances), setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0]),
+        ).toBe(true);
       });
     });
 
@@ -246,7 +243,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         expect(result.current).to.not.be.undefined;
         expect(result.current.isOverLimit).to.be.true;
         expect(result.current.numSelectedElements).to.be.equal(2);
-        expect(setKeysSpy).to.be.calledWith(sinon.match((keys: KeySet) => keys.isEmpty));
+        expect(setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0].isEmpty).toBe(true);
       });
     });
 
@@ -260,9 +257,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         initialProps: { selectionStorage, dataProvider: getProvider() },
       });
       await waitFor(async () => {
-        expect(setKeysSpy).to.be.calledWith(
-          sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances1), keys)),
-        );
+        expect(
+          equalKeySets(new KeySet(selectedInstances1), setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0]),
+        ).toBe(true);
         expect(result.current).to.not.be.undefined;
         expect(result.current.isOverLimit).to.be.false;
         expect(result.current.numSelectedElements).to.be.equal(2);
@@ -272,9 +269,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         selectionStorage.replaceSelection({ imodelKey, source: "test", selectables: selectedInstances2 });
       });
       await waitFor(async () => {
-        expect(setKeysSpy).to.be.calledWith(
-          sinon.match((keys: KeySet) => equalKeySets(new KeySet(selectedInstances2), keys)),
-        );
+        expect(
+          equalKeySets(new KeySet(selectedInstances2), setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0]),
+        ).toBe(true);
       });
     });
   });

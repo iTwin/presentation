@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { useNodeHighlighting } from "../presentation-hierarchies-react/UseNodeHighlighting.js";
 import { render, renderHook } from "./TestUtils.js";
 
@@ -18,7 +18,7 @@ describe("useNodeHighlighting", () => {
 
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
-    expect(container.querySelector("mark")).to.be.null;
+    expect(container.querySelector("mark")).toBeNull();
   });
 
   it("does not highlight text when no matches found", () => {
@@ -28,7 +28,7 @@ describe("useNodeHighlighting", () => {
 
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
-    expect(container.querySelector("mark")).to.be.null;
+    expect(container.querySelector("mark")).toBeNull();
   });
 
   it("does not highlight text when node is not filter target", () => {
@@ -38,7 +38,7 @@ describe("useNodeHighlighting", () => {
 
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
-    expect(container.querySelector("mark")).to.be.null;
+    expect(container.querySelector("mark")).toBeNull();
   });
 
   it("highlights text when match found", () => {
@@ -48,7 +48,7 @@ describe("useNodeHighlighting", () => {
 
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
-    expect(container.querySelector("mark")?.textContent).to.be.eq("node");
+    expect(container.querySelector("mark")?.textContent).toBe("node");
   });
 
   it("highlights text with special characters", () => {
@@ -58,7 +58,7 @@ describe("useNodeHighlighting", () => {
 
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
-    expect(container.querySelector("mark")?.textContent).to.be.eq("[1-x]node");
+    expect(container.querySelector("mark")?.textContent).toBe("[1-x]node");
   });
 
   it("highlights text in the middle", () => {
@@ -71,11 +71,11 @@ describe("useNodeHighlighting", () => {
     const spans = container.querySelectorAll("span");
     const marks = container.querySelectorAll("mark");
 
-    expect(spans).to.have.length(2);
-    expect(marks).to.have.length(1);
-    expect(spans[0].textContent).to.be.eq("1 ");
-    expect(spans[1].textContent).to.be.eq(" 2");
-    expect(marks[0].textContent).to.be.eq("test");
+    expect(spans).toHaveLength(2);
+    expect(marks).toHaveLength(1);
+    expect(spans[0].textContent).toBe("1 ");
+    expect(spans[1].textContent).toBe(" 2");
+    expect(marks[0].textContent).toBe("test");
   });
 
   it("highlights edges of text", () => {
@@ -88,11 +88,11 @@ describe("useNodeHighlighting", () => {
     const spans = container.querySelectorAll("span");
     const marks = container.querySelectorAll("mark");
 
-    expect(spans).to.have.length(1);
-    expect(marks).to.have.length(2);
-    expect(spans[0].textContent).to.be.eq(" node ");
-    expect(marks[0].textContent).to.be.eq("test");
-    expect(marks[1].textContent).to.be.eq("test");
+    expect(spans).toHaveLength(1);
+    expect(marks).toHaveLength(2);
+    expect(spans[0].textContent).toBe(" node ");
+    expect(marks[0].textContent).toBe("test");
+    expect(marks[1].textContent).toBe("test");
   });
 });
 

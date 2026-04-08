@@ -33,15 +33,15 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "npm run -s build:cjs && npm run -s build:esm",
+    "build": "npm run -s typecheck && npm run -s build:cjs && npm run -s build:esm",
     "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "rimraf lib",
-    "cover": "c8 npm -s test",
+    "cover": "vitest run --coverage",
     "lint": "eslint \"./src/**/*.ts\"",
-    "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
-    "test": "npm run test:dev",
-    "extract-api": "betools extract-api --entry=./lib/esm/presentation-hierarchies --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "test": "vitest run",
+    "extract-api": "betools extract-api --entry=presentation-hierarchies --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-hierarchies.api.md",
     "update-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md,./learning",
     "check-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md,./learning --check",
@@ -58,23 +58,14 @@
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
     "@itwin/eslint-plugin": "catalog:build-tools",
-    "@types/chai": "catalog:test-tools",
-    "@types/chai-as-promised": "catalog:test-tools",
-    "@types/mocha": "catalog:test-tools",
     "@types/natural-compare-lite": "^1.4.2",
     "@types/node": "catalog:build-tools",
-    "@types/sinon": "catalog:test-tools",
-    "@types/sinon-chai": "catalog:test-tools",
-    "c8": "catalog:test-tools",
-    "chai": "catalog:test-tools",
-    "chai-as-promised": "catalog:test-tools",
+    "@vitest/coverage-v8": "catalog:test-tools",
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
-    "mocha": "catalog:test-tools",
     "presentation-test-utilities": "workspace:*",
     "rimraf": "catalog:build-tools",
-    "sinon": "catalog:test-tools",
-    "sinon-chai": "catalog:test-tools",
-    "typescript": "catalog:build-tools"
+    "typescript": "catalog:build-tools",
+    "vitest": "catalog:test-tools"
   }
 }

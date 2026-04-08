@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collect } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { withECDb } from "../ECDbUtils.js";
@@ -16,21 +17,20 @@ import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
   describe("EC custom attributes handling", () => {
-    before(async () => {
+    beforeAll(async () => {
       await initialize();
     });
 
-    after(async () => {
+    afterAll(async () => {
       await terminate();
     });
 
     describe("HiddenClass", () => {
       it("loads nodes for instances of hidden class", async function () {
         await withECDb(
-          this,
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              this,
+              testName,
               db,
               `
                 <ECEntityClass typeName="X">
@@ -87,10 +87,9 @@ describe("Hierarchies", () => {
 
       it("loads nodes for instances of class with hidden base", async function () {
         await withECDb(
-          this,
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              this,
+              testName,
               db,
               `
                 <ECEntityClass typeName="X">
@@ -151,10 +150,9 @@ describe("Hierarchies", () => {
 
       it("hides instances of hidden classes", async function () {
         await withECDb(
-          this,
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              this,
+              testName,
               db,
               `
                 <ECEntityClass typeName="X">
@@ -238,10 +236,9 @@ describe("Hierarchies", () => {
     describe("HiddenSchema", () => {
       it("loads nodes for instances of hidden schema classes", async function () {
         await withECDb(
-          this,
-          async (db) => {
+          async (db, testName) => {
             const schema = await importSchema(
-              this,
+              testName,
               db,
               `
                 <ECCustomAttributes>
@@ -297,10 +294,9 @@ describe("Hierarchies", () => {
 
       it("loads nodes for instances of class whose base is in hidden schema", async function () {
         await withECDb(
-          this,
-          async (db) => {
+          async (db, testName) => {
             const hiddenSchema = await importSchema(
-              `${this.test!.fullTitle()}_HiddenSchema`,
+              `${testName}_HiddenSchema`,
               db,
               `
                 <ECCustomAttributes>
@@ -310,7 +306,7 @@ describe("Hierarchies", () => {
               `,
             );
             const schema = await importSchema(
-              this,
+              testName,
               db,
               `
                 <ECSchemaReference name="${hiddenSchema.schemaName}" version="01.00.00" alias="hs" />
@@ -368,17 +364,16 @@ describe("Hierarchies", () => {
       // https://github.com/iTwin/itwinjs-core/issues/8047
       it.skip("hides instances of hidden schema classes", async function () {
         await withECDb(
-          this,
-          async (db) => {
+          async (db, testName) => {
             const xSchema = await importSchema(
-              `${this.test!.fullTitle()}_x`,
+              `${testName}_x`,
               db,
               `
                 <ECEntityClass typeName="X" />
               `,
             );
             const ySchema = await importSchema(
-              `${this.test!.fullTitle()}_y`,
+              `${testName}_y`,
               db,
               `
                 <ECSchemaReference name="${xSchema.schemaName}" version="01.00.00" alias="xSchema" />
@@ -391,7 +386,7 @@ describe("Hierarchies", () => {
               `,
             );
             const zSchema = await importSchema(
-              `${this.test!.fullTitle()}_z`,
+              `${testName}_z`,
               db,
               `
                 <ECSchemaReference name="${ySchema.schemaName}" version="01.00.00" alias="ySchema" />
@@ -406,7 +401,7 @@ describe("Hierarchies", () => {
               `,
             );
             const wSchema = await importSchema(
-              `${this.test!.fullTitle()}_w`,
+              `${testName}_w`,
               db,
               `
                 <ECSchemaReference name="${zSchema.schemaName}" version="01.00.00" alias="zSchema" />

@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.4.18
+
+### Patch Changes
+
+- [#1280](https://github.com/iTwin/presentation/pull/1280): Updated `buildTestIModel` to use more generic context instead of referencing `Mocha.Context` directly. This allows to pass in `Mocha.Context` and custom context that matches expected shape.
+
 ## 5.4.18-alpha.0
 
 ### Patch Changes

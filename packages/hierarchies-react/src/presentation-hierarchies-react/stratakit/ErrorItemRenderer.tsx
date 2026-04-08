@@ -51,7 +51,6 @@ export function ErrorItemRenderer({
     return (
       <ErrorItemContainer
         treeNode={treeNode}
-        error={error}
         actions={[
           {
             action: () => {
@@ -78,7 +77,6 @@ export function ErrorItemRenderer({
     return (
       <ErrorItemContainer
         treeNode={treeNode}
-        error={error}
         actions={[
           {
             action: () => {
@@ -98,7 +96,6 @@ export function ErrorItemRenderer({
     return (
       <ErrorItemContainer
         treeNode={treeNode}
-        error={error}
         actions={[
           { action: () => reloadTree({ parentNodeId: treeNode.id }), label: translate("retry"), condition: () => true },
         ]}

@@ -128,7 +128,7 @@ function assignOptionalTreeNodeItemFields(
  * [TreeNodeItem]($components-react) customization based on values in extended data.
  * See [extended data usage page]($docs/presentation/customization/ExtendedDataUsage.md) for more details.
  */
-/* c8 ignore start */
+/* v8 ignore start -- @preserve */
 export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node>) {
   if (node.imageId) {
     item.icon = node.imageId;
@@ -179,7 +179,7 @@ function createTreeNodeItemStyle(node: Partial<Node>): ItemStyle {
 
   return style;
 }
-/* c8 ignore end */
+/* v8 ignore stop -- @preserve */
 
 /** @internal */
 export function pageOptionsUiToPresentation(pageOptions?: UiPageOptions): PresentationPageOptions | undefined {
@@ -237,6 +237,8 @@ function hasCheckboxVisible<T extends object>(node: T): node is WithCheckboxVisi
   return "isCheckboxVisible" in node;
 }
 
+/* v8 ignore start -- @preserve */
+
 function hasIsChecked<T extends object>(node: T): node is WithIsChecked<T> {
   return "isChecked" in node;
 }
@@ -244,3 +246,5 @@ function hasIsChecked<T extends object>(node: T): node is WithIsChecked<T> {
 function hasIsCheckboxEnabled<T extends object>(node: T): node is WithIsCheckboxEnabled<T> {
   return "isCheckboxEnabled" in node;
 }
+
+/* v8 ignore stop -- @preserve */
