@@ -224,7 +224,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 
   private invalidateHierarchyCache(reason?: string) {
-    /* v8 ignore next -- @preserve*/
+    /* v8 ignore next -- @preserve */
     doLog({
       category: `${LOGGING_NAMESPACE}.Events`,
       message: () => (reason ? `${reason}: clear hierarchy cache` : `Clear hierarchy cache`),
@@ -266,7 +266,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
 
   private createHierarchyLevelDefinitionsObservable(props: DefineHierarchyLevelProps & RequestContextProp): Observable<HierarchyNodesDefinition> {
     const { requestContext, ...defineHierarchyLevelProps } = props;
-    /* v8 ignore next -- @preserve*/
+    /* v8 ignore next -- @preserve */
     doLog({
       category: LOGGING_NAMESPACE_PERFORMANCE,
       message: () => `[${requestContext.requestId}] Requesting hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
@@ -291,7 +291,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     return this._activeHierarchyDefinition.defineHierarchyLevel({ ...defineHierarchyLevelProps, parentNode }).pipe(
       mergeAll(),
       finalize(() => {
-        /* v8 ignore next -- @preserve*/
+        /* v8 ignore next -- @preserve */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE,
           message: () => `[${requestContext.requestId}] Received all hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
@@ -328,7 +328,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
         );
       }),
       finalize(() => {
-        /* v8 ignore next -- @preserve*/
+        /* v8 ignore next -- @preserve */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE,
           message: () => `[${props.requestContext.requestId}] Read all child nodes ${createNodeIdentifierForLogging(props.parentNode)}`,
@@ -359,7 +359,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
         false,
       ),
       finalize(() => {
-        /* v8 ignore next -- @preserve*/
+        /* v8 ignore next -- @preserve */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE,
           message: () => `[${props.requestContext.requestId}] Finished pre-processing child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
@@ -377,7 +377,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
         this.onGroupingNodeCreated(gn, props),
       ),
       finalize(() => {
-        /* v8 ignore next -- @preserve*/
+        /* v8 ignore next -- @preserve */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE,
           message: () => `[${props.requestContext.requestId}] Finished grouping child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
@@ -404,7 +404,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       }),
       takeUntil(this._dispose),
       finalize(() => {
-        /* v8 ignore next -- @preserve*/
+        /* v8 ignore next -- @preserve */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE,
           message: () => `[${props.requestContext.requestId}] Finished finalizing child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
@@ -420,7 +420,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   ): Observable<boolean> {
     const loggingCategory = `${LOGGING_NAMESPACE_INTERNAL}.HasNodes`;
     return concat((possiblyKnownChildrenObservable ?? EMPTY).pipe(filter((n) => hasChildren(n))), preprocessedNodesObservable).pipe(
-      /* v8 ignore next -- @preserve*/
+      /* v8 ignore next -- @preserve */
       log({
         category: loggingCategory,
         message: (n) => `[${props.requestContext.requestId}] Node before mapping to 'true': ${createNodeIdentifierForLogging(n)}`,
@@ -429,7 +429,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       map(() => true),
       defaultIfEmpty(false),
       catchError((e: Error) => {
-        /* v8 ignore next -- @preserve*/
+        /* v8 ignore next -- @preserve */
         doLog({
           category: loggingCategory,
           message: () => `[${props.requestContext.requestId}] Error while determining children: ${e.message}`,
@@ -439,7 +439,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
         }
         throw e;
       }),
-      /* v8 ignore next -- @preserve*/
+      /* v8 ignore next -- @preserve */
       log({ category: loggingCategory, message: (r) => `[${props.requestContext.requestId}] Result: ${r}` }),
     );
   }
@@ -449,7 +449,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     const { parentNode, ...restProps } = props;
     const cached = props.ignoreCache || !this._nodesCache ? undefined : this._nodesCache.get(props);
     if (cached) {
-      /* v8 ignore next -- @preserve*/
+      /* v8 ignore next -- @preserve */
       doLog({
         category: loggingCategory,
         message: () => `[${props.requestContext.requestId}] Found query nodes observable for ${createNodeIdentifierForLogging(parentNode)}`,
@@ -479,7 +479,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     };
     const value = { observable: this.createSourceNodesObservable(nonGroupingNodeChildrenRequestProps), processingStatus: "none" as const };
     this._nodesCache?.set(nonGroupingNodeChildrenRequestProps, value);
-    /* v8 ignore next -- @preserve*/
+    /* v8 ignore next -- @preserve */
     doLog({
       category: loggingCategory,
       message: () => `[${props.requestContext.requestId}] Saved query nodes observable for ${createNodeIdentifierForLogging(parentNode)}`,
@@ -519,7 +519,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     const timer = new StopWatch(undefined, true);
     let error: any;
     let nodesCount = 0;
-    /* v8 ignore next -- @preserve*/
+    /* v8 ignore next -- @preserve */
     doLog({
       category: loggingCategory,
       message: () => `[${requestContext.requestId}] Requesting child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
@@ -532,7 +532,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
           throw e;
         }),
         finalize(() => {
-          /* v8 ignore next -- @preserve*/
+          /* v8 ignore next -- @preserve */
           doLog({
             category: loggingCategory,
             message: () =>
@@ -650,7 +650,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     const requestContext = { requestId: Guid.createValue() };
     const loggingCategory = `${LOGGING_NAMESPACE}.GetNodeInstanceKeys`;
     const timer = new StopWatch(undefined, true);
-    /* v8 ignore next -- @preserve*/
+    /* v8 ignore next -- @preserve */
     doLog({
       category: loggingCategory,
       message: () => `[${requestContext.requestId}] Requesting keys for ${createNodeIdentifierForLogging(props.parentNode)}`,
@@ -665,7 +665,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
           throw e;
         }),
         finalize(() => {
-          /* v8 ignore next -- @preserve*/
+          /* v8 ignore next -- @preserve */
           doLog({
             category: loggingCategory,
             message: () =>

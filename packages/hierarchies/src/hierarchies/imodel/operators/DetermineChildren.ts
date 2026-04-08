@@ -21,7 +21,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME, L
 export function createDetermineChildrenOperator(hasNodes: (node: ProcessedHierarchyNode) => Observable<boolean>) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     return nodes.pipe(
-      /* v8 ignore next -- @preserve*/
+      /* v8 ignore next -- @preserve */
       log({ category: LOGGING_NAMESPACE, message: (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
       releaseMainThreadOnItemsCount(200),
       concatMap((n: ProcessedHierarchyNode): Observable<ProcessedHierarchyNode> => {
@@ -29,7 +29,7 @@ export function createDetermineChildrenOperator(hasNodes: (node: ProcessedHierar
           return of(n);
         }
         return hasNodes(n).pipe(
-          /* v8 ignore next -- @preserve*/
+          /* v8 ignore next -- @preserve */
           log({
             category: LOGGING_NAMESPACE,
             message: (hasChildrenFlag) => `${createNodeIdentifierForLogging(n)}: determined children: ${hasChildrenFlag}`,
@@ -37,7 +37,7 @@ export function createDetermineChildrenOperator(hasNodes: (node: ProcessedHierar
           map((hasChildrenFlag) => Object.assign(n, { children: hasChildrenFlag })),
         );
       }),
-      /* v8 ignore next -- @preserve*/
+      /* v8 ignore next -- @preserve */
       log({ category: LOGGING_NAMESPACE, message: (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
     );
   };

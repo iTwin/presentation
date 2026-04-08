@@ -28,7 +28,7 @@ export function createHideNodesInHierarchyOperator(
 ) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     const inputNodes = nodes.pipe(
-      /* v8 ignore next -- @preserve*/
+      /* v8 ignore next -- @preserve */
       log({ category: LOGGING_NAMESPACE, message: (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
     );
     const [withFlag, withoutFlag] = partition(
@@ -39,7 +39,7 @@ export function createHideNodesInHierarchyOperator(
     // Defer to create a new seed for reduce on every subscribe
     const withLoadedChildren = defer(() =>
       withFlag.pipe(
-        /* v8 ignore next -- @preserve*/
+        /* v8 ignore next -- @preserve */
         log({
           category: LOGGING_NAMESPACE,
           message: (n) => `${createNodeIdentifierForLogging(n)} needs hide and needs children to be loaded`,
@@ -59,7 +59,7 @@ export function createHideNodesInHierarchyOperator(
             return node;
           },
         ),
-        /* v8 ignore next -- @preserve*/
+        /* v8 ignore next -- @preserve */
         log({ category: LOGGING_NAMESPACE, message: (mm) => `created a merge map of size ${mm.size}` }),
         mergeMap((mm) => [...mm.values()].map((mergedNode) => defer(() => getNodes(mergedNode)))),
         mergeAll(),
@@ -69,7 +69,7 @@ export function createHideNodesInHierarchyOperator(
 
     return merge(
       withoutFlag.pipe(
-        /* v8 ignore next -- @preserve*/
+        /* v8 ignore next -- @preserve */
         log({
           category: LOGGING_NAMESPACE,
           message: (n) => `${createNodeIdentifierForLogging(n)} doesn't need hide, return the node`,
@@ -81,7 +81,7 @@ export function createHideNodesInHierarchyOperator(
             // with a `hasChildren = true` - we just return the hidden node itself in that case to avoid digging deeper into the hierarchy
             inputNodes.pipe(
               filter(hasChildren),
-              /* v8 ignore next -- @preserve*/
+              /* v8 ignore next -- @preserve */
               log({
                 category: LOGGING_NAMESPACE,
                 message: (n) =>
@@ -90,7 +90,7 @@ export function createHideNodesInHierarchyOperator(
             ),
             EMPTY.pipe(
               finalize(() => {
-                /* v8 ignore next -- @preserve*/
+                /* v8 ignore next -- @preserve */
                 doLog({
                   category: LOGGING_NAMESPACE,
                   message: () => `\`stopOnFirstChild = true\` but none of the nodes had children determined to \`true\` - do load children`,
@@ -101,7 +101,7 @@ export function createHideNodesInHierarchyOperator(
           ).pipe(take(1))
         : withLoadedChildren,
     ).pipe(
-      /* v8 ignore next -- @preserve*/
+      /* v8 ignore next -- @preserve */
       log({ category: LOGGING_NAMESPACE, message: (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
     );
   };

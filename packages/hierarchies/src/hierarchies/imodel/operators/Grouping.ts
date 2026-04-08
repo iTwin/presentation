@@ -43,10 +43,10 @@ export function createGroupingOperator(
 ) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     return nodes.pipe(
-      /* v8 ignore next -- @preserve*/
+      /* v8 ignore next -- @preserve */
       log({ category: LOGGING_NAMESPACE, message: (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
       tapOnce(() => {
-        /* v8 ignore next -- @preserve*/
+        /* v8 ignore next -- @preserve */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE,
           message: () => `Starting grouping (parent: ${createNodeIdentifierForLogging(parentNode)})`,
@@ -64,7 +64,7 @@ export function createGroupingOperator(
         { instanceNodes: [], restNodes: [] },
       ),
       tap(({ instanceNodes, restNodes }) => {
-        /* v8 ignore next -- @preserve*/
+        /* v8 ignore next -- @preserve */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
           message: () => `Nodes partitioned. Got ${instanceNodes.length} instance nodes and ${restNodes.length} rest nodes.`,
@@ -88,7 +88,7 @@ export function createGroupingOperator(
               groupInstanceNodes(instanceNodes, restNodes.length, createdGroupingHandlers, parentNode, onNodesGrouped, onGroupingNodeCreated),
             ),
             finalize(() => {
-              /* v8 ignore next -- @preserve*/
+              /* v8 ignore next -- @preserve */
               doLog({
                 category: LOGGING_NAMESPACE_PERFORMANCE,
                 message: () => `Grouping ${instanceNodes.length} nodes took ${timer.elapsedSeconds.toFixed(3)} s`,
@@ -99,7 +99,7 @@ export function createGroupingOperator(
         );
       }),
       releaseMainThreadOnItemsCount(500),
-      /* v8 ignore next -- @preserve*/
+      /* v8 ignore next -- @preserve */
       log({ category: LOGGING_NAMESPACE, message: (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
     );
   };
@@ -145,7 +145,7 @@ function groupInstanceNodes(
       const timer = new StopWatch(undefined, true);
       const currentHandler = groupingHandlers[handlerIndex];
       return from(currentHandler(curr?.ungrouped ?? nodes, curr?.grouped ?? [])).pipe(
-        /* v8 ignore next -- @preserve*/
+        /* v8 ignore next -- @preserve */
         log({
           category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
           message: () => `Grouping handler ${handlerIndex} exclusively took ${timer.elapsedSeconds.toFixed(3)} s.`,
@@ -162,7 +162,7 @@ function groupInstanceNodes(
             map((r) => applyGroupHidingParams(r, extraSiblings)),
             map((r) => assignAutoExpand(r)),
             map((r) => ({ handlerIndex: handlerIndex + 1, result: { ...r, grouped: mergeInPlace(curr?.grouped, r.grouped) } })),
-            /* v8 ignore next -- @preserve*/
+            /* v8 ignore next -- @preserve */
             log({
               category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
               message: () => `Post-processing grouping handler ${handlerIndex} exclusively took ${groupingPostProcessingTimer.elapsedSeconds.toFixed(3)} s.`,
@@ -170,7 +170,7 @@ function groupInstanceNodes(
             delay(0),
           );
         }),
-        /* v8 ignore next -- @preserve*/
+        /* v8 ignore next -- @preserve */
         log({
           category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
           message: () => `Total time for grouping handler ${handlerIndex}: ${timer.elapsedSeconds.toFixed(3)} s.`,
@@ -230,7 +230,7 @@ function createGroupingHandlers(
   ).pipe(
     tap({
       subscribe: () => {
-        /* v8 ignore next -- @preserve*/
+        /* v8 ignore next -- @preserve */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
           message: () => `Start creating grouping handlers`,
@@ -239,7 +239,7 @@ function createGroupingHandlers(
       },
     }),
     finalize(() => {
-      /* v8 ignore next -- @preserve*/
+      /* v8 ignore next -- @preserve */
       doLog({
         category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
         message: () => `Creating grouping handlers took ${timer.elapsedSeconds.toFixed(3)} s`,
