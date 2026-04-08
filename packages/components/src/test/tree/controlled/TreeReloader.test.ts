@@ -277,13 +277,13 @@ describe("reloadTree", () => {
       expect(rootNodes.getLength()).toEqual(3);
       expect(rootNodes.get(0)).toEqual("root-0");
       expect(rootNodes.get(1)).toEqual("root-1");
-      expect(rootNodes.get(2)).to.undefined;
+      expect(rootNodes.get(2)).toBeUndefined();
 
       const childNodes = treeModel.getChildren("root-1")!;
       expect(childNodes.getLength()).toEqual(3);
       expect(childNodes.get(0)).toEqual("root-1-0");
       expect(childNodes.get(1)).toEqual("root-1-1");
-      expect(childNodes.get(2)).to.undefined;
+      expect(childNodes.get(2)).toBeUndefined();
     });
 
     it("handles reload resulting in empty tree", async () => {
