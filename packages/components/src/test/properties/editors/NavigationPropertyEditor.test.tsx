@@ -59,7 +59,7 @@ describe("<NavigationPropertyTargetEditor />", () => {
 
   it("renders selector when rendered inside context", async () => {
     const { queryByRole } = render(<NavigationPropertyTargetEditor propertyRecord={testRecord} />, {});
-    await waitFor(() => expect(queryByRole("combobox")).to.not.be.null);
+    await waitFor(() => expect(queryByRole("combobox")).not.toBeNull());
   });
 
   it("uses default property renderer when rendered not in the context", () => {
@@ -70,7 +70,7 @@ describe("<NavigationPropertyTargetEditor />", () => {
 
   it("renders nothing when property record is 'undefined'", () => {
     const { container } = render(<NavigationPropertyTargetEditor />, {});
-    expect(container.firstChild).to.be.null;
+    expect(container.firstChild).toBeNull();
   });
 
   it("invokes 'onCommit' when new target is selected changes", async () => {
@@ -160,7 +160,7 @@ describe("useNavigationPropertyEditorContextProviderProps", () => {
     });
 
     const info = await result.current.getNavigationPropertyInfo(propertyDescription);
-    expect(info).to.be.eq(navigationPropertyInfo);
+    expect(info).toBe(navigationPropertyInfo);
   });
 
   it("returns undefined if non properties field is returned", async () => {
@@ -172,6 +172,6 @@ describe("useNavigationPropertyEditorContextProviderProps", () => {
     });
 
     const info = await result.current.getNavigationPropertyInfo(propertyDescription);
-    expect(info).to.be.undefined;
+    expect(info).toBeUndefined();
   });
 });

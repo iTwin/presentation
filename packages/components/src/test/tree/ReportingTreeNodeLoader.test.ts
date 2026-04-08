@@ -51,7 +51,7 @@ describe("ReportingTreeNodeLoader", () => {
       loadNodeSubject.complete();
 
       await waitFor(() => {
-        expect(loadedNodes).to.have.lengthOf(2);
+        expect(loadedNodes).toHaveLength(2);
         expect(reportStub).toHaveBeenCalledWith(expect.objectContaining({ node: "id", duration: 300 }));
       });
     });
@@ -65,7 +65,7 @@ describe("ReportingTreeNodeLoader", () => {
       loadNodeSubject.complete();
 
       await waitFor(() => {
-        expect(loadedNodes).to.have.lengthOf(1);
+        expect(loadedNodes).toHaveLength(1);
         expect(reportStub).not.toHaveBeenCalled();
       });
     });
@@ -82,7 +82,7 @@ describe("ReportingTreeNodeLoader", () => {
       loadNodeSubject.complete();
 
       await waitFor(() => {
-        expect(loadedNodes).to.have.lengthOf(2);
+        expect(loadedNodes).toHaveLength(2);
         expect(reportStub).toHaveBeenCalledOnce();
       });
     });
@@ -95,7 +95,7 @@ describe("ReportingTreeNodeLoader", () => {
       loadNodeSubject.error(new Error());
 
       await waitFor(() => {
-        expect(loadedNodes).to.have.lengthOf(0);
+        expect(loadedNodes).toHaveLength(0);
         expect(reportStub).not.toHaveBeenCalled();
       });
     });
@@ -110,7 +110,7 @@ describe("ReportingTreeNodeLoader", () => {
       loadNodeSubject.complete();
 
       await waitFor(() => {
-        expect(loadedNodes).to.have.lengthOf(0);
+        expect(loadedNodes).toHaveLength(0);
         expect(reportStub).not.toHaveBeenCalled();
       });
     });
@@ -125,7 +125,7 @@ describe("ReportingTreeNodeLoader", () => {
       loadNodeSubject.complete();
 
       await waitFor(() => {
-        expect(loadedNodes).to.have.lengthOf(0);
+        expect(loadedNodes).toHaveLength(0);
         expect(reportStub).toHaveBeenCalledOnce();
       });
     });

@@ -66,24 +66,22 @@ describe("usePresentationTable", () => {
       initialProps,
     });
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    expect(result.current.columns)
-      .to.have.lengthOf(1)
-      .and.containSubset([
-        {
-          name: propertiesField.name,
-          label: propertiesField.label,
-          field: propertiesField,
-        },
-      ]);
-    expect(result.current.rows).to.have.lengthOf(1);
-    expect(result.current.rows[0].cells)
-      .to.have.lengthOf(1)
-      .and.containSubset([
-        {
-          key: propertiesField.name,
-        },
-      ]);
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.columns).toHaveLength(1);
+    expect(result.current.columns).toMatchObject([
+      {
+        name: propertiesField.name,
+        label: propertiesField.label,
+        field: propertiesField,
+      },
+    ]);
+    expect(result.current.rows).toHaveLength(1);
+    expect(result.current.rows[0].cells).toHaveLength(1);
+    expect(result.current.rows[0].cells).toMatchObject([
+      {
+        key: propertiesField.name,
+      },
+    ]);
   });
 });
 
@@ -132,24 +130,22 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection({ ...initialProps, selectionStorage }));
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    expect(result.current.columns)
-      .to.have.lengthOf(1)
-      .and.containSubset([
-        {
-          name: propertiesField.name,
-          label: propertiesField.label,
-          field: propertiesField,
-        },
-      ]);
-    expect(result.current.rows).to.have.lengthOf(1);
-    expect(result.current.rows[0].cells)
-      .to.have.lengthOf(1)
-      .and.containSubset([
-        {
-          key: propertiesField.name,
-        },
-      ]);
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.columns).toHaveLength(1);
+    expect(result.current.columns).toMatchObject([
+      {
+        name: propertiesField.name,
+        label: propertiesField.label,
+        field: propertiesField,
+      },
+    ]);
+    expect(result.current.rows).toHaveLength(1);
+    expect(result.current.rows[0].cells).toHaveLength(1);
+    expect(result.current.rows[0].cells).toMatchObject([
+      {
+        key: propertiesField.name,
+      },
+    ]);
 
     expect(presentationManager.getContentDescriptor).toHaveBeenCalled();
     expect(presentationManager.getContentDescriptor.mock.lastCall![0].keys.has(selectedKey)).toBe(true);
@@ -165,10 +161,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       initialProps: { ...initialProps, selectionStorage: createStorage() },
     });
     await waitFor(() => {
-      expect(result.current.isLoading).to.be.false;
+      expect(result.current.isLoading).toBe(false);
     });
-    expect(result.current.columns).to.have.lengthOf(0);
-    expect(result.current.rows).to.have.lengthOf(0);
+    expect(result.current.columns).toHaveLength(0);
+    expect(result.current.rows).toHaveLength(0);
   });
 
   describe("with deprecated `SelectionManager` from `presentation-frontend` package", () => {
@@ -188,8 +184,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
       await waitFor(() => {
-        expect(result.current.isLoading).to.be.false;
-        expect(result.current.rows.length).to.be.equal(1);
+        expect(result.current.isLoading).toBe(false);
+        expect(result.current.rows.length).toEqual(1);
       });
 
       expect(presentationManager.getContentDescriptor).toHaveBeenCalled();
@@ -214,7 +210,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
         const replaceSpy = vi.spyOn(Presentation.selection, "replaceSelection");
-        await waitFor(() => expect(result.current.isLoading).to.be.false);
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         const expectedKeys = result.current.rows.map((row) => JSON.parse(row.key));
         act(() => {
@@ -226,7 +222,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       it("gets invalid keys and does not pass any to `SelectionManager`", async () => {
         const keys = ["this is not a valid key", ""];
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
-        await waitFor(() => expect(result.current.isLoading).to.be.false);
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         const replaceSpy = vi.spyOn(Presentation.selection, "replaceSelection");
         act(() => {
@@ -240,7 +236,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         const stringifiedKeys = [createTestECInstanceKey()].map((key) => JSON.stringify(key));
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
-        await waitFor(() => expect(result.current.isLoading).to.be.false);
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         const replaceSpy = vi.spyOn(Presentation.selection, "replaceSelection");
         act(() => {
@@ -257,8 +253,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       it("loads rows when unified selection changes", async () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
-          expect(result.current.rows.length).to.be.equal(0);
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.rows.length).toEqual(0);
         });
         setupPresentationManager([createTestECInstanceKey()]);
 
@@ -280,8 +276,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
 
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
-          expect(result.current.rows.length).to.be.equal(1);
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.rows.length).toEqual(1);
         });
         expect(presentationManager.getContentDescriptor).toHaveBeenCalled();
         expect(presentationManager.getContentDescriptor.mock.lastCall![0].keys.hasAll(keySet)).toBe(true);
@@ -292,8 +288,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       it("ignores selection changes on different imodel", async () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
-          expect(result.current.rows.length).to.be.equal(0);
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.rows.length).toEqual(0);
         });
         const instanceKey = createTestECInstanceKey();
         setupPresentationManager([instanceKey]);
@@ -306,8 +302,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
 
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
-          expect(result.current.rows.length).to.be.equal(0);
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.rows.length).toEqual(0);
           expect(presentationManager.getContentDescriptor).not.toHaveBeenCalled();
         });
       });
@@ -323,16 +319,16 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
         // wait for selection to be setup
         await waitFor(() => {
-          expect(Presentation.selection.getSelection(imodel, 0).size).to.be.eq(keys.size);
-          expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(keys.size);
+          expect(Presentation.selection.getSelection(imodel, 0).size).toBe(keys.size);
+          expect(Presentation.selection.getSelection(imodel, 1).size).toBe(keys.size);
         });
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const resultAfterLoading = result.current.selectedRows;
-          expect(resultAfterLoading.length).to.be.equal(1);
+          expect(resultAfterLoading.length).toEqual(1);
         });
       });
 
@@ -349,16 +345,16 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
         // wait for selection to be setup
         await waitFor(() => {
-          expect(Presentation.selection.getSelection(imodel, 0).size).to.be.eq(2);
-          expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(1);
+          expect(Presentation.selection.getSelection(imodel, 0).size).toBe(2);
+          expect(Presentation.selection.getSelection(imodel, 1).size).toBe(1);
         });
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).to.be.equal(1);
+          expect(selectedRowsAfterLoading.length).toEqual(1);
         });
 
         act(() => {
@@ -366,9 +362,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
 
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterAdding = result.current.selectedRows;
-          expect(selectedRowsAfterAdding.length).to.be.equal(2);
+          expect(selectedRowsAfterAdding.length).toEqual(2);
         });
       });
 
@@ -385,17 +381,17 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
         // wait for selection to be setup
         await waitFor(() => {
-          expect(Presentation.selection.getSelection(imodel, 0).size).to.be.eq(2);
-          expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(1);
+          expect(Presentation.selection.getSelection(imodel, 0).size).toBe(2);
+          expect(Presentation.selection.getSelection(imodel, 1).size).toBe(1);
         });
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).to.be.equal(1);
-          expect(selectedRowsAfterLoading[0].key).to.be.equal(JSON.stringify(instanceKey1));
+          expect(selectedRowsAfterLoading.length).toEqual(1);
+          expect(selectedRowsAfterLoading[0].key).toEqual(JSON.stringify(instanceKey1));
         });
 
         act(() => {
@@ -403,10 +399,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
 
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterReplacing = result.current.selectedRows;
-          expect(selectedRowsAfterReplacing.length).to.be.equal(1);
-          expect(selectedRowsAfterReplacing[0].key).to.be.equal(JSON.stringify(instanceKey2));
+          expect(selectedRowsAfterReplacing.length).toEqual(1);
+          expect(selectedRowsAfterReplacing[0].key).toEqual(JSON.stringify(instanceKey2));
         });
       });
 
@@ -422,16 +418,16 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
         // wait for selection to be setup
         await waitFor(() => {
-          expect(Presentation.selection.getSelection(imodel, 0).size).to.be.eq(2);
-          expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(2);
+          expect(Presentation.selection.getSelection(imodel, 0).size).toBe(2);
+          expect(Presentation.selection.getSelection(imodel, 1).size).toBe(2);
         });
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).to.be.equal(2);
+          expect(selectedRowsAfterLoading.length).toEqual(2);
         });
 
         act(() => {
@@ -439,10 +435,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
 
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterRemoving = result.current.selectedRows;
-          expect(selectedRowsAfterRemoving.length).to.be.equal(1);
-          expect(selectedRowsAfterRemoving[0].key).to.be.equal(JSON.stringify(instanceKey2));
+          expect(selectedRowsAfterRemoving.length).toEqual(1);
+          expect(selectedRowsAfterRemoving[0].key).toEqual(JSON.stringify(instanceKey2));
         });
       });
 
@@ -458,16 +454,16 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
         // wait for selection to be setup
         await waitFor(() => {
-          expect(Presentation.selection.getSelection(imodel, 0).size).to.be.eq(2);
-          expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(2);
+          expect(Presentation.selection.getSelection(imodel, 0).size).toBe(2);
+          expect(Presentation.selection.getSelection(imodel, 1).size).toBe(2);
         });
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).to.be.equal(2);
+          expect(selectedRowsAfterLoading.length).toEqual(2);
         });
 
         act(() => {
@@ -475,9 +471,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
 
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterClearing = result.current.selectedRows;
-          expect(selectedRowsAfterClearing.length).to.be.equal(0);
+          expect(selectedRowsAfterClearing.length).toEqual(0);
         });
       });
 
@@ -493,16 +489,16 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
         // wait for selection to be setup
         await waitFor(() => {
-          expect(Presentation.selection.getSelection(imodel, 0).size).to.be.eq(1);
-          expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(1);
+          expect(Presentation.selection.getSelection(imodel, 0).size).toBe(1);
+          expect(Presentation.selection.getSelection(imodel, 1).size).toBe(1);
         });
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
-          expect(result.current.rows.length).to.be.eq(1);
-          expect(result.current.selectedRows.length).to.be.eq(1);
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.rows.length).toBe(1);
+          expect(result.current.selectedRows.length).toBe(1);
         });
 
         setupPresentationManager([instanceKey1, instanceKey2]);
@@ -511,25 +507,25 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
 
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
-          expect(result.current.rows.length).to.be.eq(2);
-          expect(result.current.selectedRows.length).to.be.eq(0);
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.rows.length).toBe(2);
+          expect(result.current.selectedRows.length).toBe(0);
         });
       });
 
       it("returns an empty array of selectedRows when keys are passed from the wrong level on selectionChange event", async () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
-        await waitFor(() => expect(result.current.isLoading).to.be.false);
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         act(() => {
           Presentation.selection.addToSelection(selectionSource, initialProps.imodel, new KeySet([createTestECInstanceKey()]), 3);
         });
 
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterAdding = result.current.selectedRows;
-          expect(selectedRowsAfterAdding.length).to.be.equal(0);
+          expect(selectedRowsAfterAdding.length).toEqual(0);
         });
       });
     });
@@ -549,10 +545,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
         const selectionLevel0 = [createTestECInstanceKey()];
         selectionStorage.addToSelection({ imodelKey: imodel.key, source: "UnifiedSelectionTable", selectables: selectionLevel0, level: 0 });
-        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).to.be.true;
+        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).toBe(true);
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
-        await waitFor(() => expect(result.current.isLoading).to.be.false);
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         act(() => {
           const stringifiedKeys: string[] = [];
@@ -562,31 +558,31 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           result.current.onSelect(stringifiedKeys);
         });
         await waitFor(() => {
-          expect(Selectables.hasAll(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }), selectionLevel0)).to.be.true;
+          expect(Selectables.hasAll(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }), selectionLevel0)).toBe(true);
         });
       });
 
       it("gets invalid keys and does not pass any to storage", async () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
-        await waitFor(() => expect(result.current.isLoading).to.be.false);
-        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).to.be.true;
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
+        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).toBe(true);
 
         act(() => {
           result.current.onSelect(["this is not a valid key", ""]);
         });
-        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).to.be.true;
+        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).toBe(true);
       });
 
       it("gets valid keys for rows that are not loaded and does not pass any to storage", async () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
-        await waitFor(() => expect(result.current.isLoading).to.be.false);
-        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).to.be.true;
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
+        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).toBe(true);
 
         act(() => {
           const stringifiedKeys = [createTestECInstanceKey()].map((key) => JSON.stringify(key));
           result.current.onSelect(stringifiedKeys);
         });
-        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).to.be.true;
+        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).toBe(true);
       });
     });
 
@@ -594,8 +590,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       it("loads rows when unified selection changes", async () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
-          expect(result.current.rows.length).to.be.equal(0);
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.rows.length).toEqual(0);
         });
         setupPresentationManager([createTestECInstanceKey()]);
 
@@ -614,8 +610,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           });
         });
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
-          expect(result.current.rows.length).to.be.equal(1);
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.rows.length).toEqual(1);
         });
         expect(presentationManager.getContentDescriptor).toHaveBeenCalled();
         expect(presentationManager.getContentDescriptor.mock.lastCall![0].keys.hasAll(selectablesInstanceKeys)).toBe(true);
@@ -626,8 +622,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       it("ignores selection changes on different imodel", async () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
-          expect(result.current.rows.length).to.be.equal(0);
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.rows.length).toEqual(0);
         });
         const instanceKey = createTestECInstanceKey();
         setupPresentationManager([instanceKey]);
@@ -639,8 +635,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           selectionStorage.addToSelection({ imodelKey: otherIModel.key, source: selectionSource, selectables: [instanceKey], level: 0 });
         });
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
-          expect(result.current.rows.length).to.be.equal(0);
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.rows.length).toEqual(0);
           expect(presentationManager.getContentDescriptor).not.toHaveBeenCalled();
         });
       });
@@ -655,15 +651,15 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey], level: 1 });
         // wait for selection to be setup
         await waitFor(() => {
-          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).to.eq(1);
-          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).to.eq(1);
+          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).toBe(1);
+          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).toBe(1);
         });
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const resultAfterLoading = result.current.selectedRows;
-          expect(resultAfterLoading.length).to.be.equal(1);
+          expect(resultAfterLoading.length).toEqual(1);
         });
       });
 
@@ -678,24 +674,24 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1], level: 1 });
         // wait for selection to be setup
         await waitFor(() => {
-          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).to.eq(2);
-          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).to.eq(1);
+          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).toBe(2);
+          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).toBe(1);
         });
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).to.be.equal(1);
+          expect(selectedRowsAfterLoading.length).toEqual(1);
         });
 
         act(() => {
           selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey2], level: 1 });
         });
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterAdding = result.current.selectedRows;
-          expect(selectedRowsAfterAdding.length).to.be.equal(2);
+          expect(selectedRowsAfterAdding.length).toEqual(2);
         });
       });
 
@@ -710,26 +706,26 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1], level: 1 });
         // wait for selection to be setup
         await waitFor(() => {
-          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).to.eq(2);
-          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).to.eq(1);
+          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).toBe(2);
+          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).toBe(1);
         });
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).to.be.equal(1);
-          expect(selectedRowsAfterLoading[0].key).to.be.equal(JSON.stringify(instanceKey1));
+          expect(selectedRowsAfterLoading.length).toEqual(1);
+          expect(selectedRowsAfterLoading[0].key).toEqual(JSON.stringify(instanceKey1));
         });
 
         act(() => {
           selectionStorage.replaceSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey2], level: 1 });
         });
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterReplacing = result.current.selectedRows;
-          expect(selectedRowsAfterReplacing.length).to.be.equal(1);
-          expect(selectedRowsAfterReplacing[0].key).to.be.equal(JSON.stringify(instanceKey2));
+          expect(selectedRowsAfterReplacing.length).toEqual(1);
+          expect(selectedRowsAfterReplacing[0].key).toEqual(JSON.stringify(instanceKey2));
         });
       });
 
@@ -743,25 +739,25 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1, instanceKey2], level: 1 });
         // wait for selection to be setup
         await waitFor(() => {
-          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).to.eq(2);
-          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).to.eq(2);
+          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).toBe(2);
+          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).toBe(2);
         });
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).to.be.equal(2);
+          expect(selectedRowsAfterLoading.length).toEqual(2);
         });
 
         act(() => {
           selectionStorage.removeFromSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1], level: 1 });
         });
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterRemoving = result.current.selectedRows;
-          expect(selectedRowsAfterRemoving.length).to.be.equal(1);
-          expect(selectedRowsAfterRemoving[0].key).to.be.equal(JSON.stringify(instanceKey2));
+          expect(selectedRowsAfterRemoving.length).toEqual(1);
+          expect(selectedRowsAfterRemoving[0].key).toEqual(JSON.stringify(instanceKey2));
         });
       });
 
@@ -775,24 +771,24 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1, instanceKey2], level: 1 });
         // wait for selection to be setup
         await waitFor(() => {
-          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).to.eq(2);
-          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).to.eq(2);
+          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).toBe(2);
+          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).toBe(2);
         });
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).to.be.equal(2);
+          expect(selectedRowsAfterLoading.length).toEqual(2);
         });
 
         act(() => {
           selectionStorage.clearSelection({ imodelKey: imodel.key, source: selectionSource, level: 1 });
         });
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterClearing = result.current.selectedRows;
-          expect(selectedRowsAfterClearing.length).to.be.equal(0);
+          expect(selectedRowsAfterClearing.length).toEqual(0);
         });
       });
 
@@ -806,15 +802,15 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey1], level: 1 });
         // wait for selection to be setup
         await waitFor(() => {
-          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).to.eq(1);
-          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).to.eq(1);
+          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 0 }))).toBe(1);
+          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key, level: 1 }))).toBe(1);
         });
 
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
-          expect(result.current.rows.length).to.be.eq(1);
-          expect(result.current.selectedRows.length).to.be.eq(1);
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.rows.length).toBe(1);
+          expect(result.current.selectedRows.length).toBe(1);
         });
 
         setupPresentationManager([instanceKey1, instanceKey2]);
@@ -822,23 +818,23 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [instanceKey2], level: 0 });
         });
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
-          expect(result.current.rows.length).to.be.eq(2);
-          expect(result.current.selectedRows.length).to.be.eq(0);
+          expect(result.current.isLoading).toBe(false);
+          expect(result.current.rows.length).toBe(2);
+          expect(result.current.selectedRows.length).toBe(0);
         });
       });
 
       it("returns an empty array of selectedRows when keys are passed from the wrong level on selectionChange event", async () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
-        await waitFor(() => expect(result.current.isLoading).to.be.false);
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         act(() => {
           selectionStorage.addToSelection({ imodelKey: imodel.key, source: selectionSource, selectables: [createTestECInstanceKey()], level: 3 });
         });
         await waitFor(() => {
-          expect(result.current.isLoading).to.be.false;
+          expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterAdding = result.current.selectedRows;
-          expect(selectedRowsAfterAdding.length).to.be.equal(0);
+          expect(selectedRowsAfterAdding.length).toEqual(0);
         });
       });
     });

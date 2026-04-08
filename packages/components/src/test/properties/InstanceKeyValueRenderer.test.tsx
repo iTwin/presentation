@@ -41,22 +41,22 @@ describe("InstanceKeyValueRenderer", () => {
   describe("canRender", () => {
     it("returns true if value is primitive and undefined", () => {
       const record = createNavigationPropertyRecord(createPrimitiveValue());
-      expect(renderer.canRender(record)).to.be.true;
+      expect(renderer.canRender(record)).toBe(true);
     });
 
     it("returns true if value is primitive instance key", () => {
       const record = createNavigationPropertyRecord(createPrimitiveValue({ className: "", id: "" }));
-      expect(renderer.canRender(record)).to.be.true;
+      expect(renderer.canRender(record)).toBe(true);
     });
 
     it("returns false if value is not primitive", () => {
       const record = createNavigationPropertyRecord({ valueFormat: PropertyValueFormat.Struct, members: {} });
-      expect(renderer.canRender(record)).to.be.false;
+      expect(renderer.canRender(record)).toBe(false);
     });
 
     it("returns false if value is primitive but not undefined or instance key", () => {
       const record = createNavigationPropertyRecord(createPrimitiveValue("test_value"));
-      expect(renderer.canRender(record)).to.be.false;
+      expect(renderer.canRender(record)).toBe(false);
     });
   });
 
@@ -73,8 +73,8 @@ describe("InstanceKeyValueRenderer", () => {
         it("renders non-clickable display value", () => {
           const record = createNavigationPropertyRecord(createPrimitiveValue(instanceKey, "test_display_value"));
           const { getByText, queryByTitle } = render(renderer.render(record));
-          expect(getByText("test_display_value")).not.to.be.null;
-          expect(queryByTitle("instance-key-value-renderer.select-instance")).to.be.null;
+          expect(getByText("test_display_value")).not.toBeNull();
+          expect(queryByTitle("instance-key-value-renderer.select-instance")).toBeNull();
         });
       });
 
@@ -90,7 +90,7 @@ describe("InstanceKeyValueRenderer", () => {
           const { getByTitle } = render(
             <UnifiedSelectionContextProviderDeprecated imodel={testIModel}>{renderer.render(record)}</UnifiedSelectionContextProviderDeprecated>,
           );
-          expect(getByTitle("instance-key-value-renderer.select-instance").textContent).to.be.empty;
+          expect(getByTitle("instance-key-value-renderer.select-instance").textContent).toHaveLength(0);
         });
 
         it("changes current selection when clicked", async () => {
@@ -105,7 +105,7 @@ describe("InstanceKeyValueRenderer", () => {
             getByTitle("instance-key-value-renderer.select-instance").click();
           });
 
-          await waitFor(() => expect(Presentation.selection.getSelection(testIModel, 10).has(instanceKey)).to.be.true);
+          await waitFor(() => expect(Presentation.selection.getSelection(testIModel, 10).has(instanceKey)).toBe(true));
         });
       });
       /* eslint-enable @typescript-eslint/no-deprecated */
@@ -124,7 +124,7 @@ describe("InstanceKeyValueRenderer", () => {
           const { getByTitle } = render(
             <UnifiedSelectionContextProvider storage={selectionStorage}>{renderer.render(record)}</UnifiedSelectionContextProvider>,
           );
-          await waitFor(() => expect(getByTitle("instance-key-value-renderer.select-instance").textContent).to.be.empty);
+          await waitFor(() => expect(getByTitle("instance-key-value-renderer.select-instance").textContent).toHaveLength(0));
         });
 
         it("changes current selection when clicked", async () => {
@@ -176,14 +176,14 @@ describe("InstanceKeyValueRenderer", () => {
           const record = createNavigationPropertyRecord(createPrimitiveValue(instanceKey));
           applyCustomTypeConverter(record, "test_value");
           const { getByText } = render(renderer.render(record));
-          await waitFor(() => expect(getByText("test_value")).not.to.be.null);
+          await waitFor(() => expect(getByText("test_value")).not.toBeNull());
         });
 
         it("uses default value from context if converted value is undefined", async () => {
           const record = createNavigationPropertyRecord(createPrimitiveValue(instanceKey));
           applyCustomTypeConverter(record, undefined);
           const { getByText } = render(renderer.render(record, { defaultValue: "test_default_value" }));
-          await waitFor(() => expect(getByText("test_default_value")).not.to.be.null);
+          await waitFor(() => expect(getByText("test_default_value")).not.toBeNull());
         });
 
         it("renders empty if converted value is undefined and there is no default", async () => {
@@ -193,7 +193,7 @@ describe("InstanceKeyValueRenderer", () => {
           const { getByTitle } = render(
             <UnifiedSelectionContextProvider storage={{} as unknown as SelectionStorage}>{renderer.render(record)}</UnifiedSelectionContextProvider>,
           );
-          await waitFor(() => expect(getByTitle("instance-key-value-renderer.select-instance").textContent).to.be.empty);
+          await waitFor(() => expect(getByTitle("instance-key-value-renderer.select-instance").textContent).toHaveLength(0));
         });
       });
     });

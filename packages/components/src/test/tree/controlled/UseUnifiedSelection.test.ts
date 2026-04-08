@@ -128,7 +128,7 @@ describe("UnifiedSelectionEventHandler", () => {
   describe("modelSource", () => {
     it("returns modelSource", () => {
       using handler = createHandler();
-      expect(handler.modelSource).to.be.eq(modelSource);
+      expect(handler.modelSource).toBe(modelSource);
     });
   });
 
@@ -194,8 +194,8 @@ describe("UnifiedSelectionEventHandler", () => {
       handler.onSelectionModified(event);
       await waitForCompletion();
 
-      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.true;
-      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.true;
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).toBe(true);
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).toBe(true);
     });
 
     it("stops handling event when selection is cleared", () => {
@@ -207,7 +207,7 @@ describe("UnifiedSelectionEventHandler", () => {
 
       using handler = createHandler();
       handler.onSelectionModified(event);
-      expect(modificationsSubject.observed).to.be.true;
+      expect(modificationsSubject.observed).toBe(true);
 
       selectionChangeEvent.raiseEvent(
         {
@@ -221,7 +221,7 @@ describe("UnifiedSelectionEventHandler", () => {
         {} as ISelectionProvider,
       );
 
-      expect(modificationsSubject.observed).to.be.false;
+      expect(modificationsSubject.observed).toBe(false);
     });
   });
 
@@ -333,8 +333,8 @@ describe("UnifiedSelectionEventHandler", () => {
       handler.onSelectionReplaced(event);
       await waitForCompletion();
 
-      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.true;
-      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.true;
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).toBe(true);
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).toBe(true);
     });
 
     it("stops handling event when selection is cleared", () => {
@@ -346,7 +346,7 @@ describe("UnifiedSelectionEventHandler", () => {
 
       using handler = createHandler();
       handler.onSelectionReplaced(event);
-      expect(replacementsSubject.observed).to.be.true;
+      expect(replacementsSubject.observed).toBe(true);
 
       selectionChangeEvent.raiseEvent(
         {
@@ -360,7 +360,7 @@ describe("UnifiedSelectionEventHandler", () => {
         {} as ISelectionProvider,
       );
 
-      expect(replacementsSubject.observed).to.be.false;
+      expect(replacementsSubject.observed).toBe(false);
     });
   });
 
@@ -373,7 +373,7 @@ describe("UnifiedSelectionEventHandler", () => {
       modelSource.modifyModel((model) => {
         model.setChildren(undefined, [node], 0);
       });
-      expect(modelSource.getModel().getNode(node.id)?.isSelected).to.be.true;
+      expect(modelSource.getModel().getNode(node.id)?.isSelected).toBe(true);
     });
 
     it("applies unified selection for modified nodes", () => {
@@ -389,7 +389,7 @@ describe("UnifiedSelectionEventHandler", () => {
         model.getNode(node.id)!.isExpanded = true;
       });
 
-      expect(modelSource.getModel().getNode(node.id)?.isSelected).to.be.true;
+      expect(modelSource.getModel().getNode(node.id)?.isSelected).toBe(true);
     });
 
     it("does not lookup selection when node is removed", () => {
@@ -444,9 +444,9 @@ describe("UnifiedSelectionEventHandler", () => {
 
       using _handler = createHandler();
       // verify nodes selected based on initial unified selection
-      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
-      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.true;
-      expect(modelSource.getModel().getNode(nodes[2].id)?.isSelected).to.be.false;
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).toBe(false);
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).toBe(true);
+      expect(modelSource.getModel().getNode(nodes[2].id)?.isSelected).toBe(false);
 
       selectionManager.getSelection.mockReset();
       const selectionKeys = SelectionHelper.getKeysForSelection(nodes.map((n) => getItemKey(n.item)));
@@ -454,9 +454,9 @@ describe("UnifiedSelectionEventHandler", () => {
       selectionChangeEvent.raiseEvent(createSelectionEvent({ changeType: SelectionChangeType.Add }), selectionProvider);
 
       // verify nodes selected based on updated unified selection
-      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.true;
-      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.true;
-      expect(modelSource.getModel().getNode(nodes[2].id)?.isSelected).to.be.true;
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).toBe(true);
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).toBe(true);
+      expect(modelSource.getModel().getNode(nodes[2].id)?.isSelected).toBe(true);
     });
 
     it("deselects nodes according unified selection", () => {
@@ -474,16 +474,16 @@ describe("UnifiedSelectionEventHandler", () => {
 
       using _handler = createHandler();
       // verify nodes selected based on initial unified selection
-      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.true;
-      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).toBe(true);
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).toBe(false);
 
       selectionManager.getSelection.mockReset();
       selectionManager.getSelection.mockReturnValue(new KeySet());
       selectionChangeEvent.raiseEvent(createSelectionEvent({ changeType: SelectionChangeType.Add }), selectionProvider);
 
       // verify nodes selected based on updated unified selection
-      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
-      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).toBe(false);
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).toBe(false);
     });
 
     it("ignores selection changes on different imodel", () => {
@@ -501,16 +501,16 @@ describe("UnifiedSelectionEventHandler", () => {
 
       using _handler = createHandler();
       // verify nodes selected based on initial unified selection
-      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
-      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).toBe(false);
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).toBe(false);
 
       selectionManager.getSelection.mockClear();
       selectionChangeEvent.raiseEvent({ ...createSelectionEvent({ changeType: SelectionChangeType.Add }), imodel: {} as IModelConnection }, selectionProvider);
       expect(selectionManager.getSelection).not.toHaveBeenCalled();
 
       // verify selection change event was ignored
-      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
-      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).toBe(false);
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).toBe(false);
     });
 
     it("cancels ongoing changes when unified selection changes", async () => {
@@ -595,9 +595,9 @@ describe("useUnifiedSelectionTreeEventHandler", () => {
     const { result, unmount } = renderHook((props: UnifiedSelectionTreeEventHandlerParams) => useUnifiedSelectionTreeEventHandler(props), {
       initialProps: { nodeLoader },
     });
-    expect(result.current).to.not.be.undefined;
-    expect(nodeLoader.modelSource.onModelChanged.numberOfListeners).to.be.eq(1);
+    expect(result.current).toBeDefined();
+    expect(nodeLoader.modelSource.onModelChanged.numberOfListeners).toBe(1);
     unmount();
-    expect(nodeLoader.modelSource.onModelChanged.numberOfListeners).to.be.eq(0);
+    expect(nodeLoader.modelSource.onModelChanged.numberOfListeners).toBe(0);
   });
 });

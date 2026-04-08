@@ -96,7 +96,7 @@ describe("PresentationInstanceFilter", () => {
 
     // open operator selector
     const operatorSelector = await getRuleOperatorSelector(container);
-    expect(operatorSelector).to.be.not.null;
+    expect(operatorSelector).not.toBeNull();
     await user.click(operatorSelector);
 
     // select operator
@@ -143,11 +143,11 @@ describe("PresentationInstanceFilter", () => {
     );
 
     await waitFor(() => {
-      expect(queryByDisplayValue(propertiesField.label)).to.not.be.null;
+      expect(queryByDisplayValue(propertiesField.label)).not.toBeNull();
     });
 
     await waitFor(() => {
-      expect(queryByDisplayValue(propertiesField2.label)).to.not.be.null;
+      expect(queryByDisplayValue(propertiesField2.label)).not.toBeNull();
     });
   });
 
@@ -175,7 +175,7 @@ describe("PresentationInstanceFilter", () => {
     );
 
     // ensure there's a property filter
-    await waitFor(() => expect(queryByDisplayValue(propertiesField.label)).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(propertiesField.label)).not.toBeNull());
 
     // expand class selector
     const expander = getByPlaceholderText("instance-filter-builder.selected-classes");
@@ -186,7 +186,7 @@ describe("PresentationInstanceFilter", () => {
     await user.click(classItem);
 
     // assert that filtering rule was cleared
-    await waitFor(() => expect(queryByDisplayValue(propertiesField.label)).to.be.null);
+    await waitFor(() => expect(queryByDisplayValue(propertiesField.label)).toBeNull());
   });
 });
 

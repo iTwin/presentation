@@ -83,7 +83,7 @@ describe("Category renderer customization", () => {
       const { queryByText } = render(
         <VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={500} height={1200} orientation={Orientation.Horizontal} />,
       );
-      await waitFor(() => expect(queryByText("rootCategory1Property")).not.to.be.null);
+      await waitFor(() => expect(queryByText("rootCategory1Property")).not.toBeNull());
     });
 
     it("compiles PropertyRecord to InstanceKey sample", async () => {
@@ -123,7 +123,7 @@ describe("Category renderer customization", () => {
       };
       const { result } = renderHook(() => useInstanceKeys(stubProps as unknown as PropertyCategoryRendererProps));
       await waitFor(() => {
-        expect(result.current).to.not.be.undefined;
+        expect(result.current).toBeDefined();
       });
     });
   });
@@ -175,7 +175,7 @@ describe("Property renderer customization", () => {
       const dataProvider = setupDataProvider();
       const { findAllByText } = render(<VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={500} height={1200} />);
       const renderedElements = await findAllByText("TestValue");
-      expect(renderedElements[0].style.color).to.eq("red");
+      expect(renderedElements[0].style.color).toBe("red");
     });
   });
 });

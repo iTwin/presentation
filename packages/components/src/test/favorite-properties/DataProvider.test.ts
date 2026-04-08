@@ -49,11 +49,11 @@ describe("FavoritePropertiesDataProvider", () => {
 
   describe("constructor", () => {
     it("sets `includeFieldsWithNoValues` to true", () => {
-      expect(provider.includeFieldsWithNoValues).to.be.true;
+      expect(provider.includeFieldsWithNoValues).toBe(true);
     });
 
     it("sets `includeFieldsWithCompositeValues` to true", () => {
-      expect(provider.includeFieldsWithCompositeValues).to.be.true;
+      expect(provider.includeFieldsWithCompositeValues).toBe(true);
     });
   });
 
@@ -92,8 +92,8 @@ describe("FavoritePropertiesDataProvider", () => {
       presentationPropertyDataProvider.getData.mockResolvedValue(dataToReturn);
 
       const data = await provider.getData(imodel, elementId);
-      expect(data.categories.length).to.eq(0);
-      expect(Object.keys(data.records).length).to.eq(0);
+      expect(data.categories.length).toBe(0);
+      expect(Object.keys(data.records).length).toBe(0);
     });
 
     it("filters out only favorite category", async () => {
@@ -122,10 +122,10 @@ describe("FavoritePropertiesDataProvider", () => {
       presentationPropertyDataProvider.getData.mockResolvedValue(dataToReturn);
 
       const data = await provider.getData(imodel, elementId);
-      expect(data.categories.length).to.eq(1);
-      expect(data.records[favoritesCategory.name]).to.be.not.undefined;
-      expect(data.records[favoritesCategory.name].length).to.eq(1);
-      expect(data.records[favoritesCategory.name][0].property.name).to.eq(favoritePropertyName);
+      expect(data.categories.length).toBe(1);
+      expect(data.records[favoritesCategory.name]).toBeDefined();
+      expect(data.records[favoritesCategory.name].length).toBe(1);
+      expect(data.records[favoritesCategory.name][0].property.name).toBe(favoritePropertyName);
     });
   });
 });

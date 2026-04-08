@@ -65,8 +65,8 @@ describe("PropertyRecordsBuilder", () => {
       displayValues: {},
     });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.enum).to.deep.eq(enumerationInfo);
+    expect(builder.entries.length).toBe(1);
+    expect(builder.entries[0].property.enum).toEqual(enumerationInfo);
   });
 
   it("sets constraints props for `string` type", () => {
@@ -90,9 +90,9 @@ describe("PropertyRecordsBuilder", () => {
       displayValues: {},
     });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
+    expect(builder.entries.length).toBe(1);
     const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
-    expect(property.constraints).to.deep.eq(constraints);
+    expect(property.constraints).toEqual(constraints);
   });
 
   it("sets constraints props for numeric type", () => {
@@ -116,9 +116,9 @@ describe("PropertyRecordsBuilder", () => {
       displayValues: {},
     });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
+    expect(builder.entries.length).toBe(1);
     const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
-    expect(property.constraints).to.deep.eq(constraints);
+    expect(property.constraints).toEqual(constraints);
   });
 
   it("sets constraints props for `array` type", () => {
@@ -142,9 +142,9 @@ describe("PropertyRecordsBuilder", () => {
       displayValues: {},
     });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
+    expect(builder.entries.length).toBe(1);
     const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
-    expect(property.constraints).to.deep.eq(constraints);
+    expect(property.constraints).toEqual(constraints);
   });
 
   it("sets extended data", () => {
@@ -160,8 +160,8 @@ describe("PropertyRecordsBuilder", () => {
       extendedData,
     });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].extendedData).to.deep.eq(extendedData);
+    expect(builder.entries.length).toBe(1);
+    expect(builder.entries[0].extendedData).toEqual(extendedData);
   });
 
   it("sets `autoExpand` flag for nested content field based property records", () => {
@@ -194,11 +194,11 @@ describe("PropertyRecordsBuilder", () => {
       displayValues: {},
     });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
+    expect(builder.entries.length).toBe(1);
     const record = builder.entries[0];
-    expect(record.autoExpand).to.be.true;
-    expect((record.value as ArrayValue).items[0].autoExpand).to.be.true;
-    expect(((record.value as ArrayValue).items[0].value as StructValue).members.child.autoExpand).to.be.undefined;
+    expect(record.autoExpand).toBe(true);
+    expect((record.value as ArrayValue).items[0].autoExpand).toBe(true);
+    expect(((record.value as ArrayValue).items[0].value as StructValue).members.child.autoExpand).toBeUndefined();
   });
 
   it("sets custom `renderer`", () => {
@@ -207,8 +207,8 @@ describe("PropertyRecordsBuilder", () => {
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.renderer).to.deep.eq({
+    expect(builder.entries.length).toBe(1);
+    expect(builder.entries[0].property.renderer).toEqual({
       name: "custom-renderer",
     });
   });
@@ -219,8 +219,8 @@ describe("PropertyRecordsBuilder", () => {
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.editor).to.deep.eq({
+    expect(builder.entries.length).toBe(1);
+    expect(builder.entries[0].property.editor).toEqual({
       name: "custom-editor",
     });
   });
@@ -231,8 +231,8 @@ describe("PropertyRecordsBuilder", () => {
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.editor).to.deep.eq({
+    expect(builder.entries.length).toBe(1);
+    expect(builder.entries[0].property.editor).toEqual({
       name: NumericEditorName,
     });
   });
@@ -248,8 +248,8 @@ describe("PropertyRecordsBuilder", () => {
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.editor).to.deep.eq({
+    expect(builder.entries.length).toBe(1);
+    expect(builder.entries[0].property.editor).toEqual({
       name: "custom-editor",
     });
   });
@@ -277,8 +277,8 @@ describe("PropertyRecordsBuilder", () => {
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.kindOfQuantityName).to.be.eq("testKOQ");
+    expect(builder.entries.length).toBe(1);
+    expect(builder.entries[0].property.kindOfQuantityName).toBe("testKOQ");
   });
 
   it("sets editor name when field has kind of quantity", () => {
@@ -304,9 +304,9 @@ describe("PropertyRecordsBuilder", () => {
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.kindOfQuantityName).to.be.eq("testKOQ");
-    expect(builder.entries[0].property.editor?.name).to.be.eq(QuantityEditorName);
+    expect(builder.entries.length).toBe(1);
+    expect(builder.entries[0].property.kindOfQuantityName).toBe("testKOQ");
+    expect(builder.entries[0].property.editor?.name).toBe(QuantityEditorName);
   });
 
   it("does not override custom editor when field has kind of quantity", () => {
@@ -333,9 +333,9 @@ describe("PropertyRecordsBuilder", () => {
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.kindOfQuantityName).to.be.eq("testKOQ");
-    expect(builder.entries[0].property.editor?.name).to.be.eq("custom-editor");
+    expect(builder.entries.length).toBe(1);
+    expect(builder.entries[0].property.kindOfQuantityName).toBe("testKOQ");
+    expect(builder.entries[0].property.editor?.name).toBe("custom-editor");
   });
 
   it("creates merged property record", () => {
@@ -358,10 +358,10 @@ describe("PropertyRecordsBuilder", () => {
     });
     const item = createTestContentItem({ values: {}, displayValues: {}, mergedFieldNames: [fieldName] });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.name).to.eq(fieldName);
-    expect(builder.entries[0].isMerged).to.be.true;
-    expect(builder.entries[0].value).to.deep.eq({
+    expect(builder.entries.length).toBe(1);
+    expect(builder.entries[0].property.name).toBe(fieldName);
+    expect(builder.entries[0].isMerged).toBe(true);
+    expect(builder.entries[0].value).toEqual({
       valueFormat: UiPropertyValueFormat.Primitive,
     });
   });
@@ -401,8 +401,8 @@ describe("PropertyRecordsBuilder", () => {
       },
     });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
-    expect(Object.keys((builder.entries[0].value as StructValue).members)).to.eql(["member1", "member2", "member3"]);
+    expect(builder.entries.length).toBe(1);
+    expect(Object.keys((builder.entries[0].value as StructValue).members)).toEqual(["member1", "member2", "member3"]);
   });
 
   it("passes nested content value labels to property records", () => {
@@ -437,8 +437,8 @@ describe("PropertyRecordsBuilder", () => {
       displayValues: {},
     });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
-    expect((builder.entries[0].value as ArrayValue).items[0].description).to.eq(labelDefinition.displayValue);
+    expect(builder.entries.length).toBe(1);
+    expect((builder.entries[0].value as ArrayValue).items[0].description).toBe(labelDefinition.displayValue);
   });
 
   it("replaces unspecified nested content value label with `undefined`", () => {
@@ -474,7 +474,7 @@ describe("PropertyRecordsBuilder", () => {
       displayValues: {},
     });
     createContentTraverser(builder)(descriptor, [item]);
-    expect(builder.entries.length).to.eq(1);
-    expect((builder.entries[0].value as ArrayValue).items[0].description).to.be.undefined;
+    expect(builder.entries.length).toBe(1);
+    expect((builder.entries[0].value as ArrayValue).items[0].description).toBeUndefined();
   });
 });

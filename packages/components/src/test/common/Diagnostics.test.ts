@@ -9,17 +9,17 @@ import { createDiagnosticsOptions } from "../../presentation-components/common/D
 
 describe("createDiagnosticsOptions", () => {
   it("returns undefined when neither rule nor dev diagnostic props are set", () => {
-    expect(createDiagnosticsOptions({ ruleDiagnostics: undefined, devDiagnostics: undefined })).to.be.undefined;
+    expect(createDiagnosticsOptions({ ruleDiagnostics: undefined, devDiagnostics: undefined })).toBeUndefined();
   });
 
   it("returns options with perf flag when dev diagnostic props have it", () => {
     const handler = vi.fn();
-    expect(createDiagnosticsOptions({ devDiagnostics: { perf: true, handler } })).to.deep.eq({ perf: true, handler });
+    expect(createDiagnosticsOptions({ devDiagnostics: { perf: true, handler } })).toEqual({ perf: true, handler });
   });
 
   it("returns options with perf object when dev diagnostic props have it", () => {
     const handler = vi.fn();
-    expect(createDiagnosticsOptions({ devDiagnostics: { perf: { minimumDuration: 100 }, handler } })).to.deep.eq({
+    expect(createDiagnosticsOptions({ devDiagnostics: { perf: { minimumDuration: 100 }, handler } })).toEqual({
       perf: { minimumDuration: 100 },
       handler,
     });
@@ -27,12 +27,12 @@ describe("createDiagnosticsOptions", () => {
 
   it("returns options with dev severity when dev diagnostic props have it", () => {
     const handler = vi.fn();
-    expect(createDiagnosticsOptions({ devDiagnostics: { severity: "warning", handler } })).to.deep.eq({ dev: "warning", handler });
+    expect(createDiagnosticsOptions({ devDiagnostics: { severity: "warning", handler } })).toEqual({ dev: "warning", handler });
   });
 
   it("returns options with editor severity when rule diagnostic props are set", () => {
     const handler = vi.fn();
-    expect(createDiagnosticsOptions({ ruleDiagnostics: { severity: "warning", handler } })).to.deep.eq({ editor: "warning", handler });
+    expect(createDiagnosticsOptions({ ruleDiagnostics: { severity: "warning", handler } })).toEqual({ editor: "warning", handler });
   });
 
   it("returns options with combined handler when rule and dev props have different handlers", () => {
@@ -42,7 +42,7 @@ describe("createDiagnosticsOptions", () => {
       devDiagnostics: { severity: "info", handler: handler1 },
       ruleDiagnostics: { severity: "warning", handler: handler2 },
     });
-    expect(result).to.containSubset({
+    expect(result).toMatchObject({
       editor: "warning",
       dev: "info",
     });

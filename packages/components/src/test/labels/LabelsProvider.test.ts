@@ -32,7 +32,7 @@ describe("PresentationLabelsProvider", () => {
       const result = "Label";
 
       presentationManager.getDisplayLabelDefinition.mockResolvedValue({ displayValue: result, rawValue: result, typeName: "string" });
-      expect(await provider.getLabel(key)).to.eq(result);
+      expect(await provider.getLabel(key)).toBe(result);
     });
 
     it("calls manager only once for the same key", async () => {
@@ -40,8 +40,8 @@ describe("PresentationLabelsProvider", () => {
       const result = "Label";
       presentationManager.getDisplayLabelDefinition.mockResolvedValue({ displayValue: result, rawValue: result, typeName: "string" });
 
-      expect(await provider.getLabel(key)).to.eq(result);
-      expect(await provider.getLabel(key)).to.eq(result);
+      expect(await provider.getLabel(key)).toBe(result);
+      expect(await provider.getLabel(key)).toBe(result);
       expect(presentationManager.getDisplayLabelDefinition).toHaveBeenCalledOnce();
     });
 
@@ -61,8 +61,8 @@ describe("PresentationLabelsProvider", () => {
         return { displayValue: "", rawValue: "", typeName: "string" };
       });
 
-      expect(await provider.getLabel(key1)).to.eq(result1);
-      expect(await provider.getLabel(key2)).to.eq(result2);
+      expect(await provider.getLabel(key1)).toBe(result1);
+      expect(await provider.getLabel(key2)).toBe(result2);
     });
   });
 
@@ -76,7 +76,7 @@ describe("PresentationLabelsProvider", () => {
           total: result.length,
           items: createAsyncIterator(result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" }))),
         });
-        expect(await provider.getLabels(keys)).to.deep.eq(result);
+        expect(await provider.getLabels(keys)).toEqual(result);
       });
 
       it("calls manager only once for the same key", async () => {
@@ -87,8 +87,8 @@ describe("PresentationLabelsProvider", () => {
           total: result.length,
           items: createAsyncIterator(result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" }))),
         });
-        expect(await provider.getLabels(keys)).to.deep.eq(result);
-        expect(await provider.getLabels(keys)).to.deep.eq(result);
+        expect(await provider.getLabels(keys)).toEqual(result);
+        expect(await provider.getLabels(keys)).toEqual(result);
         expect(presentationManager.getDisplayLabelDefinitionsIterator).toHaveBeenCalledOnce();
       });
 
@@ -114,8 +114,8 @@ describe("PresentationLabelsProvider", () => {
           return { total: 0, items: createAsyncIterator([]) };
         });
 
-        expect(await provider.getLabels(keys1)).to.deep.eq(result1);
-        expect(await provider.getLabels(keys2)).to.deep.eq(result2);
+        expect(await provider.getLabels(keys1)).toEqual(result1);
+        expect(await provider.getLabels(keys2)).toEqual(result2);
       });
 
       it("requests labels in batches when keys count exceeds max and returns expected results", async () => {
@@ -157,9 +157,9 @@ describe("PresentationLabelsProvider", () => {
         });
 
         const result = await provider.getLabels(inputKeys);
-        expect(result).to.deep.eq(results);
+        expect(result).toEqual(results);
 
-        expect(presentationManager.getDisplayLabelDefinitionsIterator).to.be.calledThrice;
+        expect(presentationManager.getDisplayLabelDefinitionsIterator).toHaveBeenCalledTimes(3);
       });
     });
 
@@ -174,7 +174,7 @@ describe("PresentationLabelsProvider", () => {
         const result = ["Label 1", "Label 2"];
 
         presentationManager.getDisplayLabelDefinitions.mockResolvedValue(result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })));
-        expect(await provider.getLabels(keys)).to.deep.eq(result);
+        expect(await provider.getLabels(keys)).toEqual(result);
       });
 
       it("calls manager only once for the same key", async () => {
@@ -182,8 +182,8 @@ describe("PresentationLabelsProvider", () => {
         const result = ["Label 1", "Label 2"];
 
         presentationManager.getDisplayLabelDefinitions.mockResolvedValue(result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })));
-        expect(await provider.getLabels(keys)).to.deep.eq(result);
-        expect(await provider.getLabels(keys)).to.deep.eq(result);
+        expect(await provider.getLabels(keys)).toEqual(result);
+        expect(await provider.getLabels(keys)).toEqual(result);
         expect(presentationManager.getDisplayLabelDefinitions).toHaveBeenCalledOnce();
       });
 
@@ -203,8 +203,8 @@ describe("PresentationLabelsProvider", () => {
           return [];
         });
 
-        expect(await provider.getLabels(keys1)).to.deep.eq(result1);
-        expect(await provider.getLabels(keys2)).to.deep.eq(result2);
+        expect(await provider.getLabels(keys1)).toEqual(result1);
+        expect(await provider.getLabels(keys2)).toEqual(result2);
       });
 
       it("requests labels in batches when keys count exceeds max and returns expected results", async () => {
@@ -237,9 +237,9 @@ describe("PresentationLabelsProvider", () => {
         });
 
         const result = await provider.getLabels(inputKeys);
-        expect(result).to.deep.eq(results);
+        expect(result).toEqual(results);
 
-        expect(presentationManager.getDisplayLabelDefinitions).to.be.calledThrice;
+        expect(presentationManager.getDisplayLabelDefinitions).toHaveBeenCalledTimes(3);
       });
       /* eslint-enable @typescript-eslint/no-deprecated */
     });

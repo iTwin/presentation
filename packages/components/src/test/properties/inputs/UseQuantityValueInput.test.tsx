@@ -75,30 +75,30 @@ describe("UseQuantityValueInput", () => {
 
   it("renders with placeholder", async () => {
     const { queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
-    await waitFor(() => expect(queryByPlaceholderText("unit")).to.not.be.null);
+    await waitFor(() => expect(queryByPlaceholderText("unit")).not.toBeNull());
   });
 
   it("renders with formatted initial raw value", async () => {
     const { queryByDisplayValue } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />);
-    await waitFor(() => expect(queryByDisplayValue("2.5 unit")).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue("2.5 unit")).not.toBeNull());
   });
 
   it("renders disabled input if cannot create formatter", async () => {
     getFormatterSpecStub.mockResolvedValue(undefined);
     const { getByRole } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />);
-    await waitFor(() => expect((getByRole("textbox") as HTMLInputElement).disabled).to.be.true);
+    await waitFor(() => expect((getByRole("textbox") as HTMLInputElement).disabled).toBe(true));
   });
 
   it("renders disabled input if cannot create parser", async () => {
     getParserSpecStub.mockResolvedValue(undefined);
     const { getByRole } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />);
-    await waitFor(() => expect((getByRole("textbox") as HTMLInputElement).disabled).to.be.true);
+    await waitFor(() => expect((getByRole("textbox") as HTMLInputElement).disabled).toBe(true));
   });
 
   it("parses entered value", async () => {
     const spy = vi.fn<(value: QuantityValue) => void>();
     const { user, getByRole, queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" onChange={spy} />);
-    await waitFor(() => expect(queryByPlaceholderText("unit")).to.not.be.null);
+    await waitFor(() => expect(queryByPlaceholderText("unit")).not.toBeNull());
 
     const input = getByRole("textbox");
 
@@ -106,14 +106,14 @@ describe("UseQuantityValueInput", () => {
     await user.type(input, "1.23 unit");
     await waitFor(() => {
       const value = spy.mock.lastCall![0];
-      expect(value.rawValue).to.be.eq(1.23);
-      expect(value.highPrecisionFormattedValue).to.be.eq("1.23 unit");
+      expect(value.rawValue).toBe(1.23);
+      expect(value.highPrecisionFormattedValue).toBe("1.23 unit");
     });
   });
 
   it("reacts to format change", async () => {
     const { queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
-    await waitFor(() => expect(queryByPlaceholderText("unit")).to.not.be.null);
+    await waitFor(() => expect(queryByPlaceholderText("unit")).not.toBeNull());
 
     const newFormatterSpec = {
       applyFormatting: (num: number) => `${num} new unit`,
@@ -135,7 +135,7 @@ describe("UseQuantityValueInput", () => {
 
     formatProvider.onFormatsChanged.raiseEvent();
 
-    await waitFor(() => expect(queryByPlaceholderText("new unit")).to.not.be.null);
+    await waitFor(() => expect(queryByPlaceholderText("new unit")).not.toBeNull());
   });
 
   it("sets precision to 12 for Decimal format types", async () => {
@@ -156,7 +156,7 @@ describe("UseQuantityValueInput", () => {
     await waitFor(() => expect(decimalFormatterSpec.applyFormatting).toHaveBeenCalled());
 
     // Verify that precision was set to 12 for Decimal format
-    expect(decimalFormat.precision).to.eq(12);
+    expect(decimalFormat.precision).toBe(12);
   });
 
   it("does not set precision to 12 for Fractional format types", async () => {
@@ -177,6 +177,6 @@ describe("UseQuantityValueInput", () => {
     await waitFor(() => expect(fractionalFormatterSpec.applyFormatting).toHaveBeenCalled());
 
     // Verify that precision was NOT modified for Fractional format
-    expect(fractionalFormat.precision).to.eq(6);
+    expect(fractionalFormat.precision).toBe(6);
   });
 });
