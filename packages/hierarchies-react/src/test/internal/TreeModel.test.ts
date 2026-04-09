@@ -544,7 +544,7 @@ describe("isTreeModelHierarchyNode", () => {
         children: false,
         nodeData: createTestHierarchyNode({ id: "hierarchy-node" }),
       }),
-    ).to.be.true;
+    ).toBe(true);
   });
 });
 
@@ -559,6 +559,6 @@ describe("isTreeModelInfoNode", () => {
         children: false,
         nodeData: createTestHierarchyNode({ id: "hierarchy-node" }),
       }),
-    ).to.be.false;
+    ).toBe(false);
   });
 });
