@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { describe } from "vitest";
 import { Datasets } from "../util/Datasets";
 import { runHierarchyTest } from "./RunHierarchyTest";
 

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect } from "vitest";
 import { IModelDb, PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
 import { createNodesQueryClauseFactory, DefineHierarchyLevelProps, HierarchyFilteringPath, HierarchyNode } from "@itwin/presentation-hierarchies";
@@ -118,7 +118,7 @@ describe("filtering", () => {
     test: async (props) => {
       const provider = new StatelessHierarchyProvider({ ...props, rowLimit: "unbounded" });
       const nodeCount = await provider.loadHierarchy();
-      expect(nodeCount).to.eq(totalNumberOfFilteringPaths);
+      expect(nodeCount).toBe(totalNumberOfFilteringPaths);
     },
   });
 });

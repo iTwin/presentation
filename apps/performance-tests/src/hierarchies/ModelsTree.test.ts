@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect } from "vitest";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition, ModelsTreeIdsCache } from "@itwin/presentation-models-tree";
 import { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, InstanceKey } from "@itwin/presentation-shared";
@@ -23,7 +23,7 @@ describe("models tree", () => {
     test: async (iModel) => {
       const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
       const result = await provider.loadHierarchy({ depth: 2 });
-      expect(result).to.be.greaterThan(0);
+      expect(result).toBeGreaterThan(0);
     },
   });
 
@@ -34,7 +34,7 @@ describe("models tree", () => {
     test: async (iModel) => {
       const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
       const result = await provider.loadHierarchy();
-      expect(result).to.be.greaterThan(0);
+      expect(result).toBeGreaterThan(0);
     },
   });
 
@@ -65,14 +65,14 @@ describe("models tree", () => {
           abortSignal,
         }),
       };
-      expect(filtering.paths.length).to.eq(50000);
+      expect(filtering.paths.length).toBe(50000);
       const provider = new StatelessHierarchyProvider({
         imodelAccess,
         getHierarchyFactory: () => new ModelsTreeDefinition({ imodelAccess, idsCache }),
         filtering,
       });
       const result = await provider.loadHierarchy({ depth: 2 });
-      expect(result).to.eq(2);
+      expect(result).toBe(2);
     },
   });
 });

@@ -5,18 +5,19 @@
 
 import asTable from "as-table";
 import fs from "fs";
-import Mocha from "mocha";
-import { MainThreadBlocksDetector, Summary } from "./MainThreadBlocksDetector";
+
+import type { SerializedError, UserConsoleLog } from "vitest";
+import type { Reporter, TestCase, TestModule, TestSuite } from "vitest/node";
+import type { Summary } from "./MainThreadBlocksDetector";
 
 interface TestInfo {
-  test: Mocha.Runnable;
+  fullName: string;
+  name: string;
+  state: "passed" | "failed" | "skipped" | "pending";
   duration: number;
   blockingSummary: Summary;
+  symbol: string;
 }
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const Base = Mocha.reporters.Base;
-const { EVENT_TEST_BEGIN, EVENT_TEST_END, EVENT_SUITE_BEGIN, EVENT_SUITE_END, EVENT_RUN_END } = Mocha.Runner.constants;
 
 const tableFormatter = asTable.configure({
   delimiter: " | ",
@@ -25,85 +26,96 @@ const tableFormatter = asTable.configure({
 /**
  * Measures test time and the amounts of time when the main thread was blocked.
  */
-export class TestReporter extends Base {
-  private readonly _testStartTimes = new Map<string, number>();
-  private readonly _testInfo = new Map<string, TestInfo>();
-  private readonly _blockHandler = new MainThreadBlocksDetector();
-  private readonly _outputPath?: string;
-  private _indentLevel = 0;
+export default class TestReporter implements Reporter {
+  readonly #testInfo: TestInfo[] = [];
+  #hasFailures = false;
+  #outputPath?: string;
+  #indentLevel = 0;
 
-  constructor(runner: Mocha.Runner, options: Mocha.MochaOptions) {
-    super(runner, options);
-    this._outputPath = options.reporterOptions?.BENCHMARK_OUTPUT_PATH;
+  public onInit(): void {
+    this.#outputPath = process.env.BENCHMARK_OUTPUT_PATH;
+  }
 
-    runner.on(EVENT_SUITE_BEGIN, (suite) => {
-      this.print(`${suite.title}`);
-      this._indentLevel++;
-    });
-    runner.on(EVENT_SUITE_END, () => this._indentLevel--);
-    runner.on(EVENT_TEST_BEGIN, (test) => {
-      // This event can be fired before beforeEach() and we do not want to measure beforeEach() blocking time.
-      // Add callback to the test context, so that it could be called at the actual beginning of the test.
-      test.ctx!.reporter = {
-        // Must be called to start measuring.
-        onTestStart: () => this.onTestStart(test),
-        // Can be called to stop measuring.
-        onTestEnd: async () => this.measureTestTime(test),
-      };
-    });
-    runner.on(EVENT_TEST_END, async (test) => this.onTestEnd(test));
-    runner.on(EVENT_RUN_END, () => {
-      this.printResults();
-      if (this._outputPath && this.failures.length === 0) {
-        this.saveResults();
+  public onTestSuiteReady(testSuite: TestSuite): void {
+    this.print(`${testSuite.name}`);
+    this.#indentLevel++;
+  }
+
+  public onTestSuiteResult(_testSuite: TestSuite): void {
+    this.#indentLevel--;
+  }
+
+  public onUserConsoleLog(log: UserConsoleLog) {
+    this.print(`  ${log.content}`);
+  }
+
+  public onTestCaseReady(testCase: TestCase): void {
+    if (testCase.options.mode !== "skip") {
+      this.print(`${testCase.name}...`);
+    }
+  }
+
+  public onTestCaseResult(testCase: TestCase): void {
+    const result = testCase.result();
+    const state = result.state;
+    const meta = testCase.meta();
+
+    const info: TestInfo = {
+      fullName: testCase.fullName.replaceAll(">", "").replaceAll("  ", " "),
+      name: testCase.name,
+      state,
+      duration: meta.duration ?? 0,
+      blockingSummary: meta.blockingSummary ?? { count: 0 },
+      symbol: state === "passed" ? "✅" : state === "failed" ? "❌" : "⏩",
+    };
+
+    this.#testInfo.push(info);
+    if (state === "failed") {
+      this.#hasFailures = true;
+      if (result.errors && result.errors.length > 0) {
+        this.printErrors(result.errors);
       }
-    });
+    }
+
+    this.print(`${info.symbol} ${testCase.name} (${info.duration} ms)`);
+  }
+
+  public onTestModuleEnd(testModule: TestModule): void {
+    const errors = testModule.errors();
+    if (errors.length > 0) {
+      this.#hasFailures = true;
+      this.print(`\n❌ Module errors in ${testModule.moduleId}:`);
+      this.printErrors(errors);
+    }
+  }
+
+  public printErrors(errors: ReadonlyArray<SerializedError>) {
+    for (const error of errors) {
+      this.print(`  ${error.name ?? "Error"}: ${error.message}`);
+      if (error.stack) {
+        const stackLines = error.stack.split("\n").slice(1, 6);
+        for (const line of stackLines) {
+          this.print(`    ${line.trim()}`);
+        }
+      }
+    }
+  }
+
+  public onTestRunEnd(): void {
+    this.printResults();
+    if (this.#outputPath && !this.#hasFailures) {
+      this.saveResults();
+    }
   }
 
   /** Print a line indented according to the level of depth in nested test suites. */
   private print(line: string = "", newLine = true) {
-    line = `\r${"  ".repeat(this._indentLevel)}${line}${newLine ? "\n" : ""}`;
+    line = `\r${"  ".repeat(this.#indentLevel)}${line}${newLine ? "\n" : ""}`;
     process.stdout.write(line);
   }
 
-  /** Run before each test starts. */
-  private onTestStart(test: Mocha.Runnable) {
-    this._blockHandler.start();
-    this.print(`${test.title}...`, false);
-    this._testStartTimes.set(test.fullTitle(), performance.now());
-  }
-
-  /** Run after each test passes or fails. */
-  private async measureTestTime(test: Mocha.Test) {
-    const endTime = performance.now();
-    const fullTitle = test.fullTitle();
-    const startTime = this._testStartTimes.get(fullTitle);
-    if (startTime === undefined) {
-      return;
-    }
-
-    const duration = Math.round((endTime - startTime) * 100) / 100;
-    await this._blockHandler.stop();
-
-    const blockingSummary = this._blockHandler.getSummary();
-    this._testInfo.set(fullTitle, {
-      test,
-      duration,
-      blockingSummary,
-    });
-    this._testStartTimes.delete(fullTitle);
-  }
-
-  private async onTestEnd(test: Mocha.Test) {
-    await this.measureTestTime(test);
-
-    const pass = test.isPassed();
-    const duration = this._testInfo.get(test.fullTitle())!.duration;
-    this.print(`${pass ? Base.symbols.ok : Base.symbols.err} ${test.title} (${duration} ms)`);
-  }
-
   private printResults() {
-    const results = [...this._testInfo.entries()].map(([testFullName, { test, duration, blockingSummary }]) => {
+    const results = this.#testInfo.map(({ state, fullName, duration, blockingSummary, symbol }) => {
       const blockingInfo = Object.entries(blockingSummary)
         .filter(([_, val]) => val !== undefined)
         .map(([key, val]) => `${key}: ${(key === "count" ? val : val?.toFixed(2)) ?? "N/A"}`)
@@ -111,8 +123,8 @@ export class TestReporter extends Base {
 
       /* eslint-disable @typescript-eslint/naming-convention */
       return {
-        Status: test.isPassed() ? "PASS" : "FAIL",
-        Test: testFullName,
+        Status: `${symbol} ${state}`,
+        Test: fullName,
         Duration: `${duration} ms`,
         Blocks: blockingInfo,
       };
@@ -121,25 +133,19 @@ export class TestReporter extends Base {
 
     console.log();
     console.log(tableFormatter(results));
-
-    for (const test of this.failures) {
-      console.error();
-      console.error(`${test.fullTitle()}:`);
-      console.error(test.err);
-    }
   }
 
   /** Saves performance results in a format that is compatible with Github benchmark action. */
   private saveResults() {
-    const data = [...this._testInfo.entries()].flatMap(([fullTitle, { duration, blockingSummary }]) => {
+    const data = this.#testInfo.flatMap(({ fullName, duration, blockingSummary }) => {
       const durationEntry = {
-        name: fullTitle,
+        name: fullName,
         unit: "ms",
         value: duration,
       };
 
       const blockingEntry = {
-        name: `${fullTitle} (P95 of main thread blocks)`,
+        name: `${fullName} (P95 of main thread blocks)`,
         unit: "ms",
         value: blockingSummary.p95 ?? 0,
         extra: Object.entries(blockingSummary)
@@ -150,10 +156,8 @@ export class TestReporter extends Base {
       return [durationEntry, blockingEntry];
     });
 
-    const outputPath = this._outputPath!;
+    const outputPath = this.#outputPath!;
     fs.writeFileSync(outputPath, JSON.stringify(data, undefined, 2));
     console.log(`Test results saved at ${outputPath}`);
   }
 }
-
-module.exports = TestReporter;

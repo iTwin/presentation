@@ -3,6 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { it, type TaskMeta } from "vitest";
+import { MainThreadBlocksDetector, type Summary } from "./MainThreadBlocksDetector";
+
+declare module "vitest" {
+  interface TaskMeta {
+    blockingSummary?: Summary;
+    duration?: number;
+  }
+}
+
 export interface RunOptions<TContext> {
   /** Name of the test. */
   testName: string;
@@ -29,18 +39,17 @@ export function run<T>(props: RunOptions<T>): void {
     return;
   }
 
-  const testFunc = async function (this: Mocha.Context) {
-    let value: T;
+  const testFunc = async ({ task }: { task: { meta: TaskMeta } }) => {
+    const blockHandler = new MainThreadBlocksDetector();
+    const value = await props.setup();
+    const start = Date.now();
     try {
-      value = await props.setup();
-    } finally {
-      this.test!.ctx!.reporter.onTestStart();
-    }
-
-    try {
+      blockHandler.start();
       await props.test(value);
     } finally {
-      await this.test!.ctx!.reporter.onTestEnd();
+      await blockHandler.stop();
+      task.meta.blockingSummary = blockHandler.getSummary();
+      task.meta.duration = Date.now() - start;
       await props.cleanup?.(value);
     }
   };

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { expect } from "vitest";
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { createNodesQueryClauseFactory, DefineHierarchyLevelProps, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider, Props } from "@itwin/presentation-shared";
@@ -66,7 +66,7 @@ export function runHierarchyTest(
       const provider = new StatelessHierarchyProvider({ ...props, rowLimit: "unbounded" });
       const nodeCount = await provider.loadHierarchy();
       if (testProps.expectedNodeCount !== undefined) {
-        expect(nodeCount).to.eq(testProps.expectedNodeCount);
+        expect(nodeCount).toBe(testProps.expectedNodeCount);
       }
     },
     cleanup: ({ iModel }) => iModel.close(),

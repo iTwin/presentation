@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect } from "vitest";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import {
   createNodesQueryClauseFactory,
@@ -57,7 +57,7 @@ describe("hide if no children", () => {
         rowLimit: "unbounded",
       });
       const result = await provider.loadHierarchy({ depth: 1 });
-      expect(result).to.eq(5);
+      expect(result).toBe(5);
     },
   });
 
@@ -97,7 +97,7 @@ describe("hide if no children", () => {
         rowLimit: "unbounded",
       });
       const result = await provider.loadHierarchy({ depth: 1 });
-      expect(result).to.eq(5);
+      expect(result).toBe(5);
     },
   });
 });
