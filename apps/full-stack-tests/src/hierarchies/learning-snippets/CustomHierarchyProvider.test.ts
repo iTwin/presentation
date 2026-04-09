@@ -78,7 +78,6 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
 
         const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
-        expect(rootNodes).toHaveLength(1);
         expect(rootNodes).toMatchObject([
           {
             label: "Root node",
@@ -86,7 +85,6 @@ describe("Hierarchies", () => {
           },
         ]);
         const childNodes1 = await collect(provider.getNodes({ parentNode: rootNodes[0] }));
-        expect(childNodes1).toHaveLength(1);
         expect(childNodes1).toMatchObject([
           {
             label: "Child 1",
@@ -94,7 +92,6 @@ describe("Hierarchies", () => {
           },
         ]);
         const childNodes2 = await collect(provider.getNodes({ parentNode: childNodes1[0] }));
-        expect(childNodes2).toHaveLength(1);
         expect(childNodes2).toMatchObject([
           {
             label: "Child 2",
@@ -215,7 +212,7 @@ describe("Hierarchies", () => {
         await traverseHierarchy(provider);
         // __PUBLISH_EXTRACT_END__
 
-        expect(consoleLogSpy.mock.calls.length).toBe(3);
+        expect(consoleLogSpy.mock.calls).toHaveLength(3);
         expect(consoleLogSpy.mock.calls[0][0]).toBe(imodel.rootSubject.name);
         expect(consoleLogSpy.mock.calls[1][0]).toBe("  BisCore.RealityDataSources");
         expect(consoleLogSpy.mock.calls[2][0]).toBe("  BisCore.DictionaryModel");
@@ -368,7 +365,7 @@ describe("Hierarchies", () => {
         console.log((await provider.getNodes().next()).value.label);
         // __PUBLISH_EXTRACT_END__
 
-        expect(consoleLogSpy.mock.calls.length).toBe(2);
+        expect(consoleLogSpy.mock.calls).toHaveLength(2);
         expect(consoleLogSpy.mock.calls[0][0]).toBe(
           `Boolean: true | Integer: 123 | Double: 4.56 | Date/Time: ${new Date(Date.UTC(2024, 11, 31)).toLocaleDateString()} | Point2d: (1.23, 5.68)`,
         );

@@ -74,7 +74,7 @@ describe("Favorite properties", () => {
 
       // verify we have a new favorites category
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.length).toBe(categoriesCountBefore + 1);
+      expect(propertyData.categories).toHaveLength(categoriesCountBefore + 1);
       expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(true);
     });
 
@@ -101,7 +101,7 @@ describe("Favorite properties", () => {
       // request properties for 1 element again
       propertiesDataProvider.keys = new KeySet([{ className: "Generic:PhysicalObject", id: "0x74" }]);
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.length).toBe(categoriesCountBefore + 1);
+      expect(propertyData.categories).toHaveLength(categoriesCountBefore + 1);
       expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(true);
     });
 
@@ -118,7 +118,7 @@ describe("Favorite properties", () => {
 
       // verify the property is now in favorites group
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.length).toBe(categoriesCountBefore + 1);
+      expect(propertyData.categories).toHaveLength(categoriesCountBefore + 1);
       expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(true);
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Model");
 
@@ -143,7 +143,7 @@ describe("Favorite properties", () => {
 
       // verify the property is now in favorites group
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.length).toBe(categoriesCountBefore + 1);
+      expect(propertyData.categories).toHaveLength(categoriesCountBefore + 1);
       expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(true);
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe(sourceFileNameRecord.property.displayLabel);
     });
@@ -175,7 +175,7 @@ describe("Favorite properties", () => {
       await makeFieldFavorite(propertyData, "Category");
 
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).toBe(2);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME]).toHaveLength(2);
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Model");
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).toBe("Category");
 
@@ -205,7 +205,7 @@ describe("Favorite properties", () => {
       await makeFieldFavorite(propertyData, "Model"); // `Model` is relevant for property `area`
 
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).toBe(3);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME]).toHaveLength(3);
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Code");
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).toBe("area");
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][2].property.displayLabel).toBe("Model");
@@ -246,7 +246,7 @@ describe("Favorite properties", () => {
       await makeFieldFavorite(propertyData, "Country"); // `Country` is irrelevant for property `area`
 
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).toBe(3);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME]).toHaveLength(3);
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Code");
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).toBe("area");
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][2].property.displayLabel).toBe("Country");
@@ -306,7 +306,7 @@ describe("Favorite properties", () => {
     it("favorite properties survive Presentation re-initialization", async () => {
       propertiesDataProvider.keys = new KeySet([{ className: "Generic:PhysicalObject", id: "0x74" }]);
       let propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.length).toBe(5);
+      expect(propertyData.categories).toHaveLength(5);
       expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(false);
 
       // find the property record to make the property favorite
@@ -316,9 +316,9 @@ describe("Favorite properties", () => {
 
       // verify the property is now in favorites group
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.length).toBe(6);
+      expect(propertyData.categories).toHaveLength(6);
       expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(true);
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).toBe(1);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME]).toHaveLength(1);
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Model");
 
       // refresh Presentation
@@ -335,9 +335,9 @@ describe("Favorite properties", () => {
 
       // verify the property is still in favorites group
       propertyData = await propertiesDataProvider.getData();
-      expect(propertyData.categories.length).toBe(6);
+      expect(propertyData.categories).toHaveLength(6);
       expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(true);
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).toBe(1);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME]).toHaveLength(1);
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Model");
     });
   });

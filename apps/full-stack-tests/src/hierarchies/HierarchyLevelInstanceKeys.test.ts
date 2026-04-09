@@ -59,7 +59,6 @@ describe("Hierarchies", () => {
           parentNode: undefined,
         }),
       );
-      expect(keys).toHaveLength(1);
       expect(keys).toMatchObject([{ className: "BisCore.Subject", id: "0x1" }]);
     });
 
@@ -110,7 +109,6 @@ describe("Hierarchies", () => {
           parentNode: rootSubjectNode,
         }),
       );
-      expect(keys).toHaveLength(2);
       expect(keys).toMatchObject([
         { className: LinkModel.classFullName.replace(":", "."), id: "0xe" },
         { className: DictionaryModel.classFullName.replace(":", "."), id: "0x10" },
@@ -157,7 +155,6 @@ describe("Hierarchies", () => {
           parentNode: testCustomNode,
         }),
       );
-      expect(keys).toHaveLength(1);
       expect(keys).toMatchObject([{ className: "BisCore.Subject", id: "0x1" }]);
     });
 
@@ -217,7 +214,6 @@ describe("Hierarchies", () => {
           parentNode: undefined,
         }),
       );
-      expect(keys).toHaveLength(2);
       expect(keys).toMatchObject([
         { className: LinkModel.classFullName.replace(":", "."), id: "0xe" },
         { className: DictionaryModel.classFullName.replace(":", "."), id: "0x10" },
@@ -271,7 +267,6 @@ describe("Hierarchies", () => {
           parentNode: undefined,
         }),
       );
-      expect(keys).toHaveLength(1);
       expect(keys).toMatchObject([{ className: "BisCore.Subject", id: "0x1" }]);
     });
   });

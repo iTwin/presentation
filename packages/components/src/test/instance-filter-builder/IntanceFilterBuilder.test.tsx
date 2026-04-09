@@ -288,7 +288,6 @@ describe("usePresentationInstanceFilteringProps", () => {
   it("initializes class list from descriptor", () => {
     const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
 
-    expect(result.current.classes).toHaveLength(2);
     expect(result.current.classes).toMatchObject([concreteClass1, concreteClass2]);
   });
 
@@ -304,7 +303,6 @@ describe("usePresentationInstanceFilteringProps", () => {
     });
     const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
 
-    expect(result.current.classes).toHaveLength(1);
     expect(result.current.classes).toMatchObject([concreteClass1]);
   });
 
@@ -315,7 +313,6 @@ describe("usePresentationInstanceFilteringProps", () => {
       result.current.onSelectedClassesChanged([concreteClass1.id]);
     });
     await waitFor(() => {
-      expect(result.current.selectedClasses).toHaveLength(1);
       expect(result.current.selectedClasses).toMatchObject([concreteClass1]);
     });
   });
@@ -327,7 +324,6 @@ describe("usePresentationInstanceFilteringProps", () => {
       result.current.onSelectedClassesChanged([concreteClass1.id]);
     });
     await waitFor(() => {
-      expect(result.current.selectedClasses).toHaveLength(1);
       expect(result.current.selectedClasses).toMatchObject([concreteClass1]);
     });
 
@@ -348,12 +344,10 @@ describe("usePresentationInstanceFilteringProps", () => {
       result.current.onSelectedClassesChanged([concreteClass1.id]);
     });
     await waitFor(() => {
-      expect(result.current.selectedClasses).toHaveLength(1);
       expect(result.current.selectedClasses).toMatchObject([concreteClass1]);
     });
 
     rerender({ descriptor: initialProps.descriptor, imodel: initialProps.imodel });
-    expect(result.current.selectedClasses).toHaveLength(1);
     expect(result.current.selectedClasses).toMatchObject([concreteClass1]);
   });
 
@@ -415,7 +409,6 @@ describe("usePresentationInstanceFilteringProps", () => {
         result.current.onRulePropertySelected(property);
       });
       await waitFor(() => {
-        expect(result.current.selectedClasses).toHaveLength(1);
         expect(result.current.selectedClasses).toMatchObject([concreteClass2]);
       });
     });
@@ -429,7 +422,6 @@ describe("usePresentationInstanceFilteringProps", () => {
         result.current.onRulePropertySelected(property);
       });
       await waitFor(() => {
-        expect(result.current.selectedClasses).toHaveLength(2);
         expect(result.current.selectedClasses).toMatchObject([concreteClass1, concreteClass2]);
       });
     });
@@ -443,7 +435,6 @@ describe("usePresentationInstanceFilteringProps", () => {
         result.current.onRulePropertySelected(property);
       });
       await waitFor(() => {
-        expect(result.current.selectedClasses).toHaveLength(2);
         expect(result.current.selectedClasses).toMatchObject([concreteClass1, concreteClass2]);
       });
     });
@@ -455,7 +446,6 @@ describe("usePresentationInstanceFilteringProps", () => {
         result.current.onSelectedClassesChanged([concreteClass2.id]);
       });
       await waitFor(() => {
-        expect(result.current.selectedClasses).toHaveLength(1);
         expect(result.current.selectedClasses).toMatchObject([concreteClass2]);
       });
 
@@ -465,7 +455,6 @@ describe("usePresentationInstanceFilteringProps", () => {
         result.current.onRulePropertySelected(property);
       });
       await waitFor(() => {
-        expect(result.current.selectedClasses).toHaveLength(1);
         expect(result.current.selectedClasses).toMatchObject([concreteClass2]);
       });
     });

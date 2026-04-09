@@ -13,6 +13,7 @@ import { Presentation, PresentationManager } from "@itwin/presentation-frontend"
 import { VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
 import {
   NavigationPropertyItemsLoader,
+  NavigationPropertyTarget,
   useNavigationPropertyTargetsLoader,
   useNavigationPropertyTargetsRuleset,
 } from "../../../presentation-components/properties/inputs/UseNavigationPropertyTargetsLoader.js";
@@ -71,9 +72,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
       const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 
       await waitFor(() => {
-        expect(result.current.selectOptions).toHaveLength(1);
-        expect(result.current.loadedOptions).toHaveLength(1);
-        expect(result.current.loadedOptions[0]).toMatchObject({ label: contentItem.label, key: contentItem.primaryKeys[0] });
+        expect(result.current.loadedOptions).toMatchObject([{ label: contentItem.label, key: contentItem.primaryKeys[0] }]);
       });
     });
 
@@ -156,9 +155,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
       });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
-      expect(result.current.selectOptions).toHaveLength(1);
-      expect(result.current.loadedOptions).toHaveLength(1);
-      expect(result.current.loadedOptions[0]).toMatchObject({ label: contentItem.label, key: contentItem.primaryKeys[0] });
+      expect(result.current.loadedOptions).toMatchObject([{ label: contentItem.label, key: contentItem.primaryKeys[0] }]);
     });
 
     it("loads full batch of targets", async () => {
@@ -272,7 +269,7 @@ describe("NavigationPropertyItemsLoader", () => {
   });
 
   it("does not load items when enough items matches the filter", async () => {
-    const loadedItems = [];
+    const loadedItems: NavigationPropertyTarget[] = [];
     const itemsLoader = new NavigationPropertyItemsLoader(
       () => {},
       (newItems) => loadedItems.push(...newItems),
@@ -281,7 +278,7 @@ describe("NavigationPropertyItemsLoader", () => {
     await itemsLoader.loadItems("filterText");
     await itemsLoader.loadItems("filterText");
 
-    expect(loadedItems.length).toBe(VALUE_BATCH_SIZE);
+    expect(loadedItems).toHaveLength(VALUE_BATCH_SIZE);
   });
 
   it("does not load duplicate items", async () => {
@@ -291,7 +288,7 @@ describe("NavigationPropertyItemsLoader", () => {
       });
     });
 
-    const loadedItems = [];
+    const loadedItems: NavigationPropertyTarget[] = [];
     const itemsLoader = new NavigationPropertyItemsLoader(
       () => {},
       (newItems) => loadedItems.push(...newItems),
@@ -300,6 +297,6 @@ describe("NavigationPropertyItemsLoader", () => {
     await itemsLoader.loadItems("filterText");
     await itemsLoader.loadItems("filterText");
 
-    expect(loadedItems.length).toBe(VALUE_BATCH_SIZE / 2);
+    expect(loadedItems).toHaveLength(VALUE_BATCH_SIZE / 2);
   });
 });

@@ -429,7 +429,6 @@ describe("createInstanceFilterDefinition", () => {
       };
       const { expression, relatedInstances } = await createInstanceFilterDefinition(info, testImodel);
       expect(expression).toBe(`${createAlias("C")}.${propertyInfo.name} = NULL`);
-      expect(relatedInstances).toHaveLength(1);
       expect(relatedInstances).toMatchObject([
         {
           pathFromSelectToPropertyClass: [
@@ -470,7 +469,6 @@ describe("createInstanceFilterDefinition", () => {
       };
       const { expression, relatedInstances } = await createInstanceFilterDefinition(info, testImodel);
       expect(expression).toBe(`(${createAlias("C")}.${propertyInfo.name} = NULL AND ${createAlias("C")}.${propertyInfo.name} <> NULL)`);
-      expect(relatedInstances).toHaveLength(1);
       expect(relatedInstances).toMatchObject([
         {
           pathFromSelectToPropertyClass: [
@@ -502,7 +500,6 @@ describe("createInstanceFilterDefinition", () => {
       };
       const { expression, relatedInstances } = await createInstanceFilterDefinition(info, testImodel);
       expect(expression).toBe(`${createAlias("C")}.${propertyInfo.name} = NULL`);
-      expect(relatedInstances).toHaveLength(1);
       expect(relatedInstances).toMatchObject([
         {
           pathFromSelectToPropertyClass: [
@@ -543,7 +540,6 @@ describe("createInstanceFilterDefinition", () => {
       };
       const { expression, relatedInstances } = await createInstanceFilterDefinition(info, testImodel);
       expect(expression).toBe(`(${createAlias("C", 0)}.${propertyInfo.name} = NULL AND ${createAlias("C", 1)}.${propertyInfo.name} <> NULL)`);
-      expect(relatedInstances).toHaveLength(2);
       expect(relatedInstances).toMatchObject([
         {
           pathFromSelectToPropertyClass: [

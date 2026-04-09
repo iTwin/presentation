@@ -822,7 +822,6 @@ describe("useTree", () => {
     const { result } = renderHook(useTree, { initialProps });
 
     await waitFor(() => {
-      expect(result.current.rootNodes).toHaveLength(1);
       expect(result.current.rootNodes).toMatchObject([{ id: createNodeId(nodeBefore) }]);
     });
 
@@ -838,7 +837,6 @@ describe("useTree", () => {
     });
 
     await waitFor(() => {
-      expect(result.current.rootNodes).toHaveLength(1);
       expect(result.current.rootNodes).toMatchObject([{ id: createNodeId(nodeAfter) }]);
     });
   });

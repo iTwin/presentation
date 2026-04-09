@@ -72,7 +72,7 @@ describe("PropertiesGrouping", () => {
         className: "Class",
       });
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       checkPropertyGroupInfo(result[0], "TestSchema.Class", [], { propertyName: "PropertyName", ranges: undefined });
     });
 
@@ -107,7 +107,7 @@ describe("PropertiesGrouping", () => {
       });
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
-      expect(result.length).toBe(2);
+      expect(result).toHaveLength(2);
       checkPropertyGroupInfo(result[0], className, [], propertyGroup1);
       checkPropertyGroupInfo(
         result[1],
@@ -159,7 +159,7 @@ describe("PropertiesGrouping", () => {
       });
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
-      expect(result.length).toBe(2);
+      expect(result).toHaveLength(2);
       checkPropertyGroupInfo(result[0], className, [], propertyGroup1);
       checkPropertyGroupInfo(result[1], className, [], propertyGroup2);
     });
@@ -213,7 +213,7 @@ describe("PropertiesGrouping", () => {
       });
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
-      expect(result.length).toBe(5);
+      expect(result).toHaveLength(5);
       checkPropertyGroupInfo(result[0], className, [], propertyGroup1);
       checkPropertyGroupInfo(
         result[1],
@@ -286,7 +286,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: false }], {
         propertyName: "PropertyName2",
       });
@@ -325,7 +325,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: true }], {
         propertyName: "PropertyName2",
         ranges: [{ fromValue: 2, toValue: 8 }],
@@ -366,7 +366,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: true }], {
         propertyName: "PropertyName2",
         ranges: [{ fromValue: 2, toValue: 8 }],
@@ -405,7 +405,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: false }], {
         propertyName: "PropertyName2",
       });
@@ -445,7 +445,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: true }], {
         propertyName: "PropertyName2",
         ranges: [{ fromValue: 2, toValue: 8 }],
@@ -483,7 +483,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).toBe(2);
+      expect(result).toHaveLength(2);
       checkPropertyGroupInfo(result[0], className, [], {
         propertyName: "PropertyName1",
       });
@@ -1996,7 +1996,7 @@ describe("PropertiesGrouping", () => {
       });
 
       const result = await propertiesGrouping.createPropertiesGroupingHandlers(imodelAccess, undefined, nodes, formatter, testLocalizedStrings);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       const handlerResult = await result[0](nodes, []);
       expect(handlerResult.groupingType).toBe("property");
     });

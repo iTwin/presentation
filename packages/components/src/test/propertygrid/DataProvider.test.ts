@@ -531,7 +531,7 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories.length).toBe(0);
+            expect(data.categories).toHaveLength(0);
             expect(data.records.hasOwnProperty(category.name)).toBe(false);
           });
 
@@ -563,7 +563,7 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories.length).toBe(0);
+            expect(data.categories).toHaveLength(0);
             expect(data.records.hasOwnProperty(category.name)).toBe(false);
           });
 
@@ -1252,8 +1252,7 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories.length).toBe(1);
-            expect(data.records[data.categories[0].name].length).toBe(1);
+            expect(data.categories).toHaveLength(1);
             expect(data.records[data.categories[0].name]).toMatchObject([
               {
                 property: { name: "IncludedField" },
@@ -1276,8 +1275,7 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories.length).toBe(1);
-            expect(data.records[data.categories[0].name].length).toBe(1);
+            expect(data.categories).toHaveLength(1);
             expect(data.records[data.categories[0].name]).toMatchObject([
               {
                 property: { name: "WithItems" },
@@ -1310,8 +1308,7 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories.length).toBe(1);
-            expect(data.records[data.categories[0].name].length).toBe(1);
+            expect(data.categories).toHaveLength(1);
             expect(data.records[data.categories[0].name]).toMatchObject([
               {
                 property: { name: "WithMembers" },
@@ -1358,8 +1355,7 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories.length).toBe(1);
-            expect(data.records[data.categories[0].name].length).toBe(1);
+            expect(data.categories).toHaveLength(1);
             expect(data.records[data.categories[0].name]).toMatchObject([
               {
                 property: { displayLabel: "b" },
@@ -1397,8 +1393,8 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories.length).toBe(1);
-            expect(data.records[data.categories[0].name].length).toBe(1);
+            expect(data.categories).toHaveLength(1);
+            expect(data.records[data.categories[0].name]).toHaveLength(1);
             expect(data.records[data.categories[0].name][0].property.name).toBe(primitiveField.name);
           });
         });
@@ -1424,7 +1420,7 @@ describe("PropertyDataProvider", () => {
             provider.getContent = async () => new Content(descriptor, [record]);
 
             const data = await provider.getData();
-            expect(data.categories.length).toBe(2);
+            expect(data.categories).toHaveLength(2);
             data.categories.forEach((category) => {
               expect(category.name).not.toContain(FAVORITES_CATEGORY_NAME);
             });
@@ -1445,10 +1441,9 @@ describe("PropertyDataProvider", () => {
             provider.getContent = async () => new Content(descriptor, [record]);
 
             const data = await provider.getData();
-            expect(data.categories.length).toBe(3);
+            expect(data.categories).toHaveLength(3);
             if (provider.isNestedPropertyCategoryGroupingEnabled) {
               expect(data.records[FAVORITES_CATEGORY_NAME]).toBeUndefined();
-              expect(data.records[`${FAVORITES_CATEGORY_NAME}-category1`].length).toBe(2);
               expect(data.records[`${FAVORITES_CATEGORY_NAME}-category1`]).toMatchObject([
                 {
                   property: { name: "field1" },
@@ -1457,14 +1452,13 @@ describe("PropertyDataProvider", () => {
                   property: { name: "field2" },
                 },
               ]);
-              expect(data.records[`${FAVORITES_CATEGORY_NAME}-category2`].length).toBe(1);
               expect(data.records[`${FAVORITES_CATEGORY_NAME}-category2`]).toMatchObject([
                 {
                   property: { name: "field3" },
                 },
               ]);
             } else {
-              expect(data.records[FAVORITES_CATEGORY_NAME].length).toBe(3);
+              expect(data.records[FAVORITES_CATEGORY_NAME]).toHaveLength(3);
             }
           });
 
@@ -1497,7 +1491,6 @@ describe("PropertyDataProvider", () => {
 
             const data = await provider.getData();
             const records = data.records[category.name];
-            expect(records.length).toBe(3);
             expect(records).toMatchObject([
               {
                 property: { displayLabel: "a" },
@@ -1542,7 +1535,6 @@ describe("PropertyDataProvider", () => {
 
             const data = await provider.getData();
             const records = data.records[category.name];
-            expect(records.length).toBe(3);
             expect(records).toMatchObject([
               {
                 property: { displayLabel: "a" },
@@ -1600,11 +1592,10 @@ describe("PropertyDataProvider", () => {
               provider.getContent = async () => new Content(descriptor, [record]);
 
               const data = await provider.getData();
-              expect(data.categories.length).toBe(2);
+              expect(data.categories).toHaveLength(2);
 
               if (provider.isNestedPropertyCategoryGroupingEnabled) {
                 const favoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
-                expect(favoritesCategory.childCategories!.length).toBe(1);
                 expect(favoritesCategory.childCategories).toMatchObject([
                   {
                     label: "Parent",
@@ -1615,14 +1606,12 @@ describe("PropertyDataProvider", () => {
                     ],
                   },
                 ]);
-                expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`].length).toBe(1);
                 expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`]).toMatchObject([
                   {
                     property: { displayLabel: "Primitive" },
                   },
                 ]);
               } else {
-                expect(data.records[FAVORITES_CATEGORY_NAME].length).toBe(1);
                 expect(data.records[FAVORITES_CATEGORY_NAME]).toMatchObject([
                   {
                     property: { displayLabel: "Primitive" },
@@ -1709,12 +1698,11 @@ describe("PropertyDataProvider", () => {
               provider.getContent = async () => new Content(descriptor, [record]);
 
               const data = await provider.getData();
-              expect(data.categories.length).toBe(2);
+              expect(data.categories).toHaveLength(2);
 
               let favoritesCategory: PropertyCategory;
               if (provider.isNestedPropertyCategoryGroupingEnabled) {
                 const rootFavoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
-                expect(rootFavoritesCategory.childCategories!.length).toBe(1);
                 expect(rootFavoritesCategory.childCategories).toMatchObject([
                   {
                     label: "My Category",
@@ -1725,7 +1713,6 @@ describe("PropertyDataProvider", () => {
                 favoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
               }
 
-              expect(data.records[favoritesCategory.name].length).toBe(2);
               expect(data.records[favoritesCategory.name]).toMatchObject([
                 {
                   property: { displayLabel: "Nested Content" },
@@ -1785,7 +1772,7 @@ describe("PropertyDataProvider", () => {
               provider.getContent = async () => new Content(descriptor, [record]);
 
               const data = await provider.getData();
-              expect(data.categories.length).toBe(2);
+              expect(data.categories).toHaveLength(2);
 
               if (provider.isNestedPropertyCategoryGroupingEnabled) {
                 const favoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
@@ -1801,14 +1788,13 @@ describe("PropertyDataProvider", () => {
                     },
                   ],
                 });
-                expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`].length).toBe(1);
                 expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`]).toMatchObject([
                   {
                     property: { displayLabel: propertiesField.label },
                   },
                 ]);
               } else {
-                expect(data.records[FAVORITES_CATEGORY_NAME].length).toBe(1);
+                expect(data.records[FAVORITES_CATEGORY_NAME]).toHaveLength(1);
                 expect(data.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe(propertiesField.label);
               }
             });
@@ -1840,24 +1826,22 @@ describe("PropertyDataProvider", () => {
               provider.getContent = async () => new Content(descriptor, [record]);
 
               const data = await provider.getData();
-              expect(data.categories.length).toBe(2);
+              expect(data.categories).toHaveLength(2);
 
               if (provider.isNestedPropertyCategoryGroupingEnabled) {
                 const favoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
-                expect(favoritesCategory.childCategories!.length).toBe(1);
                 expect(favoritesCategory.childCategories).toMatchObject([
                   {
                     label: "Parent",
                   },
                 ]);
-                expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`].length).toBe(1);
                 expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`]).toMatchObject([
                   {
                     property: { displayLabel: "Nested Content" },
                   },
                 ]);
               } else {
-                expect(data.records[FAVORITES_CATEGORY_NAME].length).toBe(1);
+                expect(data.records[FAVORITES_CATEGORY_NAME]).toHaveLength(1);
                 expect(data.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe(nestedContentField.label);
               }
             });
@@ -1958,7 +1942,6 @@ describe("PropertyDataProvider", () => {
 
           const data = await provider.getData();
           const records = data.records[category.name];
-          expect(records.length).toBe(3);
           expect(records).toMatchObject([
             {
               property: { displayLabel: "a" },
@@ -1982,7 +1965,7 @@ describe("PropertyDataProvider", () => {
           const record = createTestContentItem({ values, displayValues });
           provider.getContent = async () => new Content(descriptor, [record]);
           const data = await provider.getData();
-          expect(data.categories.length).toBe(0);
+          expect(data.categories).toHaveLength(0);
         });
       });
     }

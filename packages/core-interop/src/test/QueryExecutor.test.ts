@@ -24,8 +24,8 @@ describe("createECSqlQueryExecutor", () => {
       expect(imodel.createQueryReader).toHaveBeenCalledOnce();
       const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
       expect(ecsql).toBe("ecsql");
-      expect(Object.keys((binder as QueryBinder).serialize()).length).toBe(0);
-      expect(Object.keys(options as QueryOptions).length).toBe(0);
+      expect(Object.keys((binder as QueryBinder).serialize())).toHaveLength(0);
+      expect(Object.keys(options as QueryOptions)).toHaveLength(0);
     });
 
     it("calls IModel's `createQueryReader` with CTEs", async () => {
@@ -69,7 +69,7 @@ describe("createECSqlQueryExecutor", () => {
       expect(imodel.createQueryReader).toHaveBeenCalledOnce();
       const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
       expect(ecsql).toBe("ecsql");
-      expect(Object.keys((binder as QueryBinder).serialize()).length).toBe(0);
+      expect(Object.keys((binder as QueryBinder).serialize())).toHaveLength(0);
       expect((options as QueryOptions).rowFormat).toBe(QueryRowFormat.UseECSqlPropertyNames);
     });
 
@@ -86,7 +86,7 @@ describe("createECSqlQueryExecutor", () => {
       expect(imodel.createQueryReader).toHaveBeenCalledOnce();
       const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
       expect(ecsql).toBe("ecsql");
-      expect(Object.keys((binder as QueryBinder).serialize()).length).toBe(0);
+      expect(Object.keys((binder as QueryBinder).serialize())).toHaveLength(0);
       expect((options as QueryOptions).rowFormat).toBe(QueryRowFormat.UseECSqlPropertyIndexes);
     });
 
@@ -103,7 +103,7 @@ describe("createECSqlQueryExecutor", () => {
       expect(imodel.createQueryReader).toHaveBeenCalledOnce();
       const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
       expect(ecsql).toBe("ecsql");
-      expect(Object.keys((binder as QueryBinder).serialize()).length).toBe(0);
+      expect(Object.keys((binder as QueryBinder).serialize())).toHaveLength(0);
       expect((options as QueryOptions).restartToken).toBe("TestToken");
     });
 
@@ -173,7 +173,7 @@ describe("createECSqlQueryExecutor", () => {
       const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
       expect(ecsql).toBe("ecsql");
       expect(JSON.stringify((binder as QueryBinder).serialize())).toBe(JSON.stringify(expectedBinder.serialize()));
-      expect(Object.keys(options as QueryOptions).length).toBe(0);
+      expect(Object.keys(options as QueryOptions)).toHaveLength(0);
     });
 
     it("creates iterable reader for rows as objects", async () => {

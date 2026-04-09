@@ -67,7 +67,6 @@ describe("usePresentationTable", () => {
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.columns).toHaveLength(1);
     expect(result.current.columns).toMatchObject([
       {
         name: propertiesField.name,
@@ -76,7 +75,6 @@ describe("usePresentationTable", () => {
       },
     ]);
     expect(result.current.rows).toHaveLength(1);
-    expect(result.current.rows[0].cells).toHaveLength(1);
     expect(result.current.rows[0].cells).toMatchObject([
       {
         key: propertiesField.name,
@@ -131,7 +129,6 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection({ ...initialProps, selectionStorage }));
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.columns).toHaveLength(1);
     expect(result.current.columns).toMatchObject([
       {
         name: propertiesField.name,
@@ -140,7 +137,6 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       },
     ]);
     expect(result.current.rows).toHaveLength(1);
-    expect(result.current.rows[0].cells).toHaveLength(1);
     expect(result.current.rows[0].cells).toMatchObject([
       {
         key: propertiesField.name,
@@ -497,8 +493,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
-          expect(result.current.rows.length).toBe(1);
-          expect(result.current.selectedRows.length).toBe(1);
+          expect(result.current.rows).toHaveLength(1);
+          expect(result.current.selectedRows).toHaveLength(1);
         });
 
         setupPresentationManager([instanceKey1, instanceKey2]);
@@ -508,8 +504,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
-          expect(result.current.rows.length).toBe(2);
-          expect(result.current.selectedRows.length).toBe(0);
+          expect(result.current.rows).toHaveLength(2);
+          expect(result.current.selectedRows).toHaveLength(0);
         });
       });
 
@@ -809,8 +805,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
-          expect(result.current.rows.length).toBe(1);
-          expect(result.current.selectedRows.length).toBe(1);
+          expect(result.current.rows).toHaveLength(1);
+          expect(result.current.selectedRows).toHaveLength(1);
         });
 
         setupPresentationManager([instanceKey1, instanceKey2]);
@@ -819,8 +815,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
-          expect(result.current.rows.length).toBe(2);
-          expect(result.current.selectedRows.length).toBe(0);
+          expect(result.current.rows).toHaveLength(2);
+          expect(result.current.selectedRows).toHaveLength(0);
         });
       });
 

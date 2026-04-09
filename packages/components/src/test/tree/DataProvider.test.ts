@@ -657,7 +657,6 @@ describe("TreeDataProvider", () => {
 
       const result = await provider.getNodes(parentTreeNodeItem);
       const groupingNodeItem = result[0] as PresentationTreeNodeItem;
-      expect(groupingNodeItem.filtering?.ancestorFilters).toHaveLength(1);
       expect(groupingNodeItem.filtering?.ancestorFilters).toMatchObject([parentFilterInfo]);
     });
 
@@ -674,7 +673,6 @@ describe("TreeDataProvider", () => {
 
       const result = await provider.getNodes(parentTreeNodeItem);
       const groupingNodeItem = result[0] as PresentationTreeNodeItem;
-      expect(groupingNodeItem.filtering?.ancestorFilters).toHaveLength(1);
       expect(groupingNodeItem.filtering?.ancestorFilters).toMatchObject([grandParentFilterInfo]);
     });
   });
@@ -707,7 +705,6 @@ describe("TreeDataProvider", () => {
 
       setupPresentationManager({ iconName: "custom-icon" });
       const treeNodeItems = await dataProvider.getNodes();
-      expect(treeNodeItems).toHaveLength(1);
       expect(treeNodeItems).toMatchObject([{ icon: "custom-icon" }]);
     });
 
@@ -734,7 +731,6 @@ describe("TreeDataProvider", () => {
         disableCheckbox: false,
       });
       const treeNodeItems = await dataProvider.getNodes();
-      expect(treeNodeItems).toHaveLength(1);
       expect(treeNodeItems).toMatchObject([
         {
           isCheckboxVisible: true,
@@ -771,7 +767,6 @@ describe("TreeDataProvider", () => {
         color: 255,
       });
       const treeNodeItems = await dataProvider.getNodes();
-      expect(treeNodeItems).toHaveLength(1);
       expect(treeNodeItems).toMatchObject([
         {
           style: {

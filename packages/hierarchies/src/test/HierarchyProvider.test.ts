@@ -96,7 +96,7 @@ describe("mergeProviders", () => {
         expect.objectContaining({ className: "2", id: "2" }),
       ]),
     );
-    providers.forEach((provider) => expect(provider.getNodeInstanceKeys.mock.calls.length).toBe(1));
+    providers.forEach((provider) => expect(provider.getNodeInstanceKeys.mock.calls).toHaveLength(1));
   });
 
   it("sets formatter on all providers", async () => {

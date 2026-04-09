@@ -15,7 +15,7 @@ describe("limitFilePathLength", () => {
       name: inputFileName,
       ext: ".ext",
     });
-    expect(inputFilePath.length).toBe(260 - FILE_PATH_RESERVED_CHARACTERS);
+    expect(inputFilePath).toHaveLength(260 - FILE_PATH_RESERVED_CHARACTERS);
     expect(limitFilePathLength(inputFilePath)).toBe(inputFilePath);
   });
 
@@ -26,7 +26,7 @@ describe("limitFilePathLength", () => {
       name: inputFileName,
       ext: ".ext",
     });
-    expect(inputFilePath.length).toBe(260 - FILE_PATH_RESERVED_CHARACTERS + 1);
+    expect(inputFilePath).toHaveLength(260 - FILE_PATH_RESERVED_CHARACTERS + 1);
 
     const result = limitFilePathLength(inputFilePath);
     expect(result).toBe(
@@ -36,7 +36,7 @@ describe("limitFilePathLength", () => {
         ext: ".ext",
       }),
     );
-    expect(result.length).toBe(260 - FILE_PATH_RESERVED_CHARACTERS);
+    expect(result).toHaveLength(260 - FILE_PATH_RESERVED_CHARACTERS);
   });
 
   it("returns shortened file path when length exceeds limits by 2 characters, and shortened file name fits into path", async () => {
@@ -46,7 +46,7 @@ describe("limitFilePathLength", () => {
       name: inputFileName,
       ext: ".ext",
     });
-    expect(inputFilePath.length).toBe(260 - FILE_PATH_RESERVED_CHARACTERS + 2);
+    expect(inputFilePath).toHaveLength(260 - FILE_PATH_RESERVED_CHARACTERS + 2);
 
     const result = limitFilePathLength(inputFilePath);
     expect(result).toBe(
@@ -56,7 +56,7 @@ describe("limitFilePathLength", () => {
         ext: ".ext",
       }),
     );
-    expect(result.length).toBe(260 - FILE_PATH_RESERVED_CHARACTERS);
+    expect(result).toHaveLength(260 - FILE_PATH_RESERVED_CHARACTERS);
   });
 
   it("throws when file path without name exceeds allowed length", async () => {
@@ -65,7 +65,7 @@ describe("limitFilePathLength", () => {
       name: "a",
       ext: ".ext",
     });
-    expect(inputFilePath.length).toBe(260 - FILE_PATH_RESERVED_CHARACTERS + 1);
+    expect(inputFilePath).toHaveLength(260 - FILE_PATH_RESERVED_CHARACTERS + 1);
     expect(() => limitFilePathLength(inputFilePath)).toThrow(Error);
   });
 });

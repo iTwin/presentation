@@ -93,7 +93,7 @@ describe("PresentationTreeNodeRenderer", () => {
     const { container } = render(<PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />);
 
     const buttons = await waitFor(() => container.querySelectorAll(".presentation-components-node-action-buttons button"));
-    expect(buttons.length).toBe(1);
+    expect(buttons).toHaveLength(1);
   });
 
   it("renders filtered node with filter and clear filter buttons", async () => {
@@ -109,7 +109,7 @@ describe("PresentationTreeNodeRenderer", () => {
     const { container } = render(<PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />);
 
     const buttons = await waitFor(() => container.querySelectorAll(".presentation-components-node-action-buttons button"));
-    expect(buttons.length).toBe(2);
+    expect(buttons).toHaveLength(2);
   });
 
   it("renders without buttons when node is not filterable", async () => {
@@ -173,7 +173,7 @@ describe("PresentationTreeNodeRenderer", () => {
     const { container } = render(<PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={spy} onClearFilterClick={() => {}} />);
 
     const buttons = await waitFor(() => container.querySelectorAll(".presentation-components-node-action-buttons button"));
-    expect(buttons.length).toBe(1);
+    expect(buttons).toHaveLength(1);
     fireEvent.click(buttons[0]);
     expect(spy).toHaveBeenCalledOnce();
   });
@@ -192,7 +192,7 @@ describe("PresentationTreeNodeRenderer", () => {
     const { container } = render(<PresentationTreeNodeRenderer treeActions={treeActions} node={node} onFilterClick={() => {}} onClearFilterClick={spy} />);
 
     const buttons = await waitFor(() => container.querySelectorAll(".presentation-components-node-action-buttons button"));
-    expect(buttons.length).toBe(2);
+    expect(buttons).toHaveLength(2);
     fireEvent.click(buttons[0]);
     expect(spy).toHaveBeenCalledOnce();
   });

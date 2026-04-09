@@ -92,8 +92,8 @@ describe("FavoritePropertiesDataProvider", () => {
       presentationPropertyDataProvider.getData.mockResolvedValue(dataToReturn);
 
       const data = await provider.getData(imodel, elementId);
-      expect(data.categories.length).toBe(0);
-      expect(Object.keys(data.records).length).toBe(0);
+      expect(data.categories).toHaveLength(0);
+      expect(Object.keys(data.records)).toHaveLength(0);
     });
 
     it("filters out only favorite category", async () => {
@@ -122,9 +122,9 @@ describe("FavoritePropertiesDataProvider", () => {
       presentationPropertyDataProvider.getData.mockResolvedValue(dataToReturn);
 
       const data = await provider.getData(imodel, elementId);
-      expect(data.categories.length).toBe(1);
+      expect(data.categories).toHaveLength(1);
       expect(data.records[favoritesCategory.name]).toBeDefined();
-      expect(data.records[favoritesCategory.name].length).toBe(1);
+      expect(data.records[favoritesCategory.name]).toHaveLength(1);
       expect(data.records[favoritesCategory.name][0].property.name).toBe(favoritePropertyName);
     });
   });

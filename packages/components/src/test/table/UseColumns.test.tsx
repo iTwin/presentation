@@ -34,7 +34,6 @@ describe("useColumns", () => {
     const { result } = renderHook((props) => useColumns(props), { initialProps });
 
     await waitFor(() => {
-      expect(result.current).toHaveLength(1);
       expect(result.current).toMatchObject([
         {
           name: contentField.name,
@@ -54,7 +53,6 @@ describe("useColumns", () => {
     const { result } = renderHook((props) => useColumns(props), { initialProps });
 
     await waitFor(() => {
-      expect(result.current).toHaveLength(1);
       expect(result.current).toMatchObject([
         {
           name: propertyField.name,
