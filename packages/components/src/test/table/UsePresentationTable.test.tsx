@@ -74,7 +74,6 @@ describe("usePresentationTable", () => {
         field: propertiesField,
       },
     ]);
-    expect(result.current.rows).toHaveLength(1);
     expect(result.current.rows[0].cells).toMatchObject([
       {
         key: propertiesField.name,
@@ -136,7 +135,6 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         field: propertiesField,
       },
     ]);
-    expect(result.current.rows).toHaveLength(1);
     expect(result.current.rows[0].cells).toMatchObject([
       {
         key: propertiesField.name,

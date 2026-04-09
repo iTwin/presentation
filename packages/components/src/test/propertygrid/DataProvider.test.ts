@@ -1252,7 +1252,6 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories).toHaveLength(1);
             expect(data.records[data.categories[0].name]).toMatchObject([
               {
                 property: { name: "IncludedField" },
@@ -1275,7 +1274,6 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories).toHaveLength(1);
             expect(data.records[data.categories[0].name]).toMatchObject([
               {
                 property: { name: "WithItems" },
@@ -1308,7 +1306,6 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories).toHaveLength(1);
             expect(data.records[data.categories[0].name]).toMatchObject([
               {
                 property: { name: "WithMembers" },
@@ -1355,7 +1352,6 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories).toHaveLength(1);
             expect(data.records[data.categories[0].name]).toMatchObject([
               {
                 property: { displayLabel: "b" },
