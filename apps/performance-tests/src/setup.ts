@@ -7,8 +7,8 @@ import { afterAll, beforeAll } from "vitest";
 import { IModelHost } from "@itwin/core-backend";
 import { Logger, LogLevel } from "@itwin/core-bentley";
 import { setLogger } from "@itwin/presentation-hierarchies";
-import { Datasets } from "./util/Datasets";
-import { LOGGER } from "./util/Logging";
+import { Datasets } from "./util/Datasets.js";
+import { LOGGER } from "./util/Logging.js";
 
 beforeAll(async () => {
   setLogger(LOGGER);

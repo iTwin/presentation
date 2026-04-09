@@ -8,8 +8,8 @@ import { SnapshotDb } from "@itwin/core-backend";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { Props } from "@itwin/presentation-shared";
 import { computeSelection } from "@itwin/unified-selection";
-import { Datasets, IModelName } from "../util/Datasets";
-import { run, RunOptions } from "../util/TestUtilities";
+import { Datasets, IModelName } from "../util/Datasets.js";
+import { run, RunOptions } from "../util/TestUtilities.js";
 
 describe("compute", () => {
   runSelectionScopeTest({

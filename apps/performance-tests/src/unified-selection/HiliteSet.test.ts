@@ -9,8 +9,8 @@ import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, Selectable, Selectables } from "@itwin/unified-selection";
-import { Datasets, IModelName } from "../util/Datasets";
-import { run, RunOptions } from "../util/TestUtilities";
+import { Datasets, IModelName } from "../util/Datasets.js";
+import { run, RunOptions } from "../util/TestUtilities.js";
 
 describe("hilite", () => {
   runHiliteTest({

@@ -19,7 +19,7 @@ import {
   insertSubCategory,
   insertSubject,
 } from "presentation-test-utilities";
-import { createIModel } from "./IModelUtilities";
+import { createIModel } from "./IModelUtilities.js";
 
 export const IMODEL_NAMES = [
   "baytown",

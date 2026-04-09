@@ -2,6 +2,7 @@
   "name": "presentation-performance-tests",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "benchmark:hierarchies": "cross-env BENCHMARK_OUTPUT_PATH=./hierarchies-benchmark.json pnpm test:hierarchies",
     "benchmark:unified-selection": "cross-env BENCHMARK_OUTPUT_PATH=./unified-selection-benchmark.json pnpm test:unified-selection",

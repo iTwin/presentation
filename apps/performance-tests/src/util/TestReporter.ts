@@ -8,7 +8,7 @@ import fs from "fs";
 
 import type { SerializedError, UserConsoleLog } from "vitest";
 import type { Reporter, TestCase, TestModule, TestSuite } from "vitest/node";
-import type { Summary } from "./MainThreadBlocksDetector";
+import type { Summary } from "./MainThreadBlocksDetector.js";
 
 interface TestInfo {
   fullName: string;

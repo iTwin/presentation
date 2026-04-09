@@ -7,9 +7,9 @@ import { describe, expect } from "vitest";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition, ModelsTreeIdsCache } from "@itwin/presentation-models-tree";
 import { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, InstanceKey } from "@itwin/presentation-shared";
-import { Datasets } from "../util/Datasets";
-import { run } from "../util/TestUtilities";
-import { IModelAccess, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { Datasets } from "../util/Datasets.js";
+import { run } from "../util/TestUtilities.js";
+import { IModelAccess, StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
 describe("models tree", () => {
   const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & ECSqlQueryExecutor) => new ModelsTreeDefinition({ imodelAccess });

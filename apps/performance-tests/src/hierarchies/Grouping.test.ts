@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe } from "vitest";
-import { Datasets } from "../util/Datasets";
-import { runHierarchyTest } from "./RunHierarchyTest";
+import { Datasets } from "../util/Datasets.js";
+import { runHierarchyTest } from "./RunHierarchyTest.js";
 
 describe("grouping", () => {
   const { schemaName, baseClassName, customPropName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;

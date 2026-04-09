@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { it, type TaskMeta } from "vitest";
-import { MainThreadBlocksDetector, type Summary } from "./MainThreadBlocksDetector";
+import { MainThreadBlocksDetector, type Summary } from "./MainThreadBlocksDetector.js";
 
 declare module "vitest" {
   interface TaskMeta {
