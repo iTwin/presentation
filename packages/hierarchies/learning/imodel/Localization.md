@@ -58,10 +58,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
       return [];
     },
   },
-  localizedStrings: {
-    other: "Kita",
-    unspecified: "Nenurodyta",
-  },
+  localizedStrings: { other: "Kita", unspecified: "Nenurodyta" },
 });
 
 // The iModel has four elements of `myPhysicalObjectClassName` type:

@@ -203,9 +203,7 @@ const definition: HierarchyNodesDefinition = {
   node: {
     key: "MyCustomNode",
     label: "My custom node",
-    extendedData: {
-      description: "This is a custom node",
-    },
+    extendedData: { description: "This is a custom node" },
   },
 };
 ```
@@ -279,16 +277,15 @@ const definition: HierarchyNodesDefinition = {
         ecClassId: { selector: "this.ECClassId" },
         ecInstanceId: { selector: "this.ECInstanceId" },
         nodeLabel: {
-          selector: await labelsFactory.createSelectClause({ className: "BisCore.GeometricModel", classAlias: "this" }),
+          selector: await labelsFactory.createSelectClause({
+            className: "BisCore.GeometricModel",
+            classAlias: "this",
+          }),
         },
         hasChildren: true,
         grouping: {
           byClass: true,
-          byLabel: {
-            action: "group",
-            hideIfNoSiblings: true,
-            hideIfOneGroupedNode: true,
-          },
+          byLabel: { action: "group", hideIfNoSiblings: true, hideIfOneGroupedNode: true },
         },
       })}
       FROM BisCore.GeometricModel [this]
@@ -614,9 +611,7 @@ const definition: HierarchyNodesDefinition = {
           }),
         },
         grouping: {
-          byBaseClasses: {
-            fullClassNames: ["BisCore.GeometricElement3d", "BisCore.PhysicalElement"],
-          },
+          byBaseClasses: { fullClassNames: ["BisCore.GeometricElement3d", "BisCore.PhysicalElement"] },
         },
       })}
       FROM BisCore.GeometricElement [this]
@@ -670,11 +665,12 @@ const definition: HierarchyNodesDefinition = {
         ecClassId: { selector: "this.ECClassId" },
         ecInstanceId: { selector: "this.ECInstanceId" },
         nodeLabel: {
-          selector: await labelsFactory.createSelectClause({ className: "BisCore.Element", classAlias: "this" }),
+          selector: await labelsFactory.createSelectClause({
+            className: "BisCore.Element",
+            classAlias: "this",
+          }),
         },
-        grouping: {
-          byClass: true,
-        },
+        grouping: { byClass: true },
       })}
       FROM BisCore.Element [this]
     `,
@@ -839,11 +835,12 @@ const definition: HierarchyNodesDefinition = {
         ecClassId: { selector: "this.ECClassId" },
         ecInstanceId: { selector: "this.ECInstanceId" },
         nodeLabel: {
-          selector: await labelsFactory.createSelectClause({ className: "BisCore.Element", classAlias: "this" }),
+          selector: await labelsFactory.createSelectClause({
+            className: "BisCore.Element",
+            classAlias: "this",
+          }),
         },
-        grouping: {
-          byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true },
-        },
+        grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } },
       })}
       FROM BisCore.Element [this]
     `,
@@ -931,11 +928,12 @@ const definition: HierarchyNodesDefinition = {
         ecClassId: { selector: "this.ECClassId" },
         ecInstanceId: { selector: "this.ECInstanceId" },
         nodeLabel: {
-          selector: await labelsFactory.createSelectClause({ className: "BisCore.Element", classAlias: "this" }),
+          selector: await labelsFactory.createSelectClause({
+            className: "BisCore.Element",
+            classAlias: "this",
+          }),
         },
-        grouping: {
-          byLabel: { action: "merge" },
-        },
+        grouping: { byLabel: { action: "merge" } },
       })}
       FROM BisCore.Element [this]
     `,

@@ -52,11 +52,7 @@ Before the deprecation, we made sure that migration is as smooth as possible by 
 
    // Initialize Presentation with our selection storage, to make sure that any components, using `Presentation.selection`,
    // use the same underlying selection store.
-   await Presentation.initialize({
-     selection: {
-       selectionStorage,
-     },
-   });
+   await Presentation.initialize({ selection: { selectionStorage } });
    ```
 
    <!-- END EXTRACTION -->

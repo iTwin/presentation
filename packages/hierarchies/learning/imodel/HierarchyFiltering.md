@@ -228,14 +228,8 @@ expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     label: "A",
     children: [
-      {
-        label: "B",
-        children: [{ label: "C" }],
-      },
-      {
-        label: "E",
-        children: [{ label: "F" }],
-      },
+      { label: "B", children: [{ label: "C" }] },
+      { label: "E", children: [{ label: "F" }] },
     ],
   },
 ]);

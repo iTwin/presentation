@@ -20,15 +20,7 @@ import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-s
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
     if (!parentNode) {
-      return [
-        {
-          node: {
-            key: "custom node",
-            label: "Custom Node",
-            supportsFiltering: true,
-          },
-        },
-      ];
+      return [{ node: { key: "custom node", label: "Custom Node", supportsFiltering: true } }];
     }
     return [];
   },
@@ -117,10 +109,7 @@ const hierarchyDefinition: HierarchyDefinition = {
     const { from, joins, where } = await queryClauseFactory.createFilterClauses({
       // specify the content class whose instances are used to build nodes - this should
       // generally match the instance whose ECClassId and ECInstanceId are used in the SELECT clause
-      contentClass: {
-        fullName: "BisCore.PhysicalElement",
-        alias: "this",
-      },
+      contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
       // specify the filter that we get from props for this hierarchy level
       filter: props.instanceFilter,
     });

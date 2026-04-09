@@ -177,9 +177,7 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
                           className: "BisCore.Element",
                         }),
                       },
-                      grouping: {
-                        byClass: true,
-                      },
+                      grouping: { byClass: true },
                     })}
                   FROM BisCore.Element this
                   WHERE this.Model.Id IN (${parentNodeInstanceIds.map(() => "?").join(",")})

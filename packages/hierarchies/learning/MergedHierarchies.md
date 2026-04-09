@@ -74,22 +74,8 @@ const mergingProvider = mergeProviders({ providers: [provider1, provider2, child
 // - Root nodes are sorted by label
 // - "Child node" is placed under both "Node A" and "Node X"
 expect(await collectHierarchy(mergingProvider)).toMatchObject([
-  {
-    label: "Node A",
-    children: [
-      {
-        label: "Child node",
-      },
-    ],
-  },
-  {
-    label: "Node X",
-    children: [
-      {
-        label: "Child node",
-      },
-    ],
-  },
+  { label: "Node A", children: [{ label: "Child node" }] },
+  { label: "Node X", children: [{ label: "Child node" }] },
 ]);
 ```
 

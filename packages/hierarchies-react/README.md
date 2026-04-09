@@ -237,7 +237,9 @@ type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
 // The hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all `BisCore.PhysicalModel` instances
 function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }): HierarchyDefinition {
   // Create a factory for building labels SELECT query clauses according to BIS conventions
-  const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+  const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({
+    classHierarchyInspector: imodelAccess,
+  });
   // Create a factory for building nodes SELECT query clauses in a format understood by the provider
   const nodesQueryFactory = createNodesQueryClauseFactory({
     imodelAccess,

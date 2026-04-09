@@ -18,12 +18,7 @@ import { Props } from "@itwin/presentation-shared";
 const provider: HierarchyProvider = {
   async *getNodes({ parentNode }) {
     yield !parentNode
-      ? {
-          key: { type: "generic", id: `root` },
-          label: `Root node`,
-          children: true,
-          parentKeys: [],
-        }
+      ? { key: { type: "generic", id: `root` }, label: `Root node`, children: true, parentKeys: [] }
       : {
           key: { type: "generic", id: `child-${parentNode.parentKeys.length + 1}` },
           label: `Child ${parentNode.parentKeys.length + 1}`,
@@ -630,10 +625,7 @@ function createBooksServiceFilter(
     return { [rule.propertyName]: rule.value?.rawValue ?? "" };
   }
   function createGroupFilter(group: GenericInstanceFilterRuleGroup): BooksServiceFilter<Record<string, unknown>> {
-    return {
-      operator: group.operator,
-      rules: group.rules.map(createRuleOrGroupFilter),
-    };
+    return { operator: group.operator, rules: group.rules.map(createRuleOrGroupFilter) };
   }
   function createRuleOrGroupFilter(
     ruleOrGroup: GenericInstanceFilter["rules"],
@@ -730,20 +722,14 @@ const createAuthorsFilter = (): GenericInstanceFilter => ({
         operator: "like",
         propertyTypeName: "string",
         sourceAlias: "",
-        value: {
-          displayValue: "Mark",
-          rawValue: "Mark",
-        },
+        value: { displayValue: "Mark", rawValue: "Mark" },
       },
       {
         propertyName: "hasBooks",
         operator: "is-equal",
         propertyTypeName: "boolean",
         sourceAlias: "",
-        value: {
-          displayValue: "False",
-          rawValue: false,
-        },
+        value: { displayValue: "False", rawValue: false },
       },
     ],
   },
@@ -767,20 +753,14 @@ const createBooksFilter = (): GenericInstanceFilter => ({
         operator: "like",
         propertyTypeName: "string",
         sourceAlias: "",
-        value: {
-          displayValue: "OL274",
-          rawValue: "OL274",
-        },
+        value: { displayValue: "OL274", rawValue: "OL274" },
       },
       {
         propertyName: "title",
         operator: "like",
         propertyTypeName: "string",
         sourceAlias: "",
-        value: {
-          displayValue: "Hobbit",
-          rawValue: "Hobbit",
-        },
+        value: { displayValue: "Hobbit", rawValue: "Hobbit" },
       },
     ],
   },
