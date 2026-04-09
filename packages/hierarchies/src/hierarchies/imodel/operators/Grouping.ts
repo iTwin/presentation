@@ -43,11 +43,13 @@ export function createGroupingOperator(
 ) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     return nodes.pipe(
-      log({ category: LOGGING_NAMESPACE, message: /* v8 ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
+      /* v8 ignore next -- @preserve */
+      log({ category: LOGGING_NAMESPACE, message: (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
       tapOnce(() => {
+        /* v8 ignore next -- @preserve */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE,
-          message: /* v8 ignore next */ () => `Starting grouping (parent: ${createNodeIdentifierForLogging(parentNode)})`,
+          message: () => `Starting grouping (parent: ${createNodeIdentifierForLogging(parentNode)})`,
         });
       }),
       reduce<ProcessedHierarchyNode, { instanceNodes: ProcessedInstanceHierarchyNode[]; restNodes: ProcessedHierarchyNode[] }>(
@@ -62,9 +64,10 @@ export function createGroupingOperator(
         { instanceNodes: [], restNodes: [] },
       ),
       tap(({ instanceNodes, restNodes }) => {
+        /* v8 ignore next -- @preserve */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
-          message: /* v8 ignore next */ () => `Nodes partitioned. Got ${instanceNodes.length} instance nodes and ${restNodes.length} rest nodes.`,
+          message: () => `Nodes partitioned. Got ${instanceNodes.length} instance nodes and ${restNodes.length} rest nodes.`,
         });
       }),
       mergeMap((res) => {
@@ -85,9 +88,10 @@ export function createGroupingOperator(
               groupInstanceNodes(instanceNodes, restNodes.length, createdGroupingHandlers, parentNode, onNodesGrouped, onGroupingNodeCreated),
             ),
             finalize(() => {
+              /* v8 ignore next -- @preserve */
               doLog({
                 category: LOGGING_NAMESPACE_PERFORMANCE,
-                message: /* v8 ignore next */ () => `Grouping ${instanceNodes.length} nodes took ${timer.elapsedSeconds.toFixed(3)} s`,
+                message: () => `Grouping ${instanceNodes.length} nodes took ${timer.elapsedSeconds.toFixed(3)} s`,
               });
             }),
           ),
@@ -95,7 +99,8 @@ export function createGroupingOperator(
         );
       }),
       releaseMainThreadOnItemsCount(500),
-      log({ category: LOGGING_NAMESPACE, message: /* v8 ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
+      /* v8 ignore next -- @preserve */
+      log({ category: LOGGING_NAMESPACE, message: (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
     );
   };
 }
@@ -140,9 +145,10 @@ function groupInstanceNodes(
       const timer = new StopWatch(undefined, true);
       const currentHandler = groupingHandlers[handlerIndex];
       return from(currentHandler(curr?.ungrouped ?? nodes, curr?.grouped ?? [])).pipe(
+        /* v8 ignore next -- @preserve */
         log({
           category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
-          message: /* v8 ignore next */ () => `Grouping handler ${handlerIndex} exclusively took ${timer.elapsedSeconds.toFixed(3)} s.`,
+          message: () => `Grouping handler ${handlerIndex} exclusively took ${timer.elapsedSeconds.toFixed(3)} s.`,
         }),
         tap((result) => {
           onNodesGrouped?.(result, currentHandler);
@@ -156,17 +162,18 @@ function groupInstanceNodes(
             map((r) => applyGroupHidingParams(r, extraSiblings)),
             map((r) => assignAutoExpand(r)),
             map((r) => ({ handlerIndex: handlerIndex + 1, result: { ...r, grouped: mergeInPlace(curr?.grouped, r.grouped) } })),
+            /* v8 ignore next -- @preserve */
             log({
               category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
-              message: /* v8 ignore next */ () =>
-                `Post-processing grouping handler ${handlerIndex} exclusively took ${groupingPostProcessingTimer.elapsedSeconds.toFixed(3)} s.`,
+              message: () => `Post-processing grouping handler ${handlerIndex} exclusively took ${groupingPostProcessingTimer.elapsedSeconds.toFixed(3)} s.`,
             }),
             delay(0),
           );
         }),
+        /* v8 ignore next -- @preserve */
         log({
           category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
-          message: /* v8 ignore next */ () => `Total time for grouping handler ${handlerIndex}: ${timer.elapsedSeconds.toFixed(3)} s.`,
+          message: () => `Total time for grouping handler ${handlerIndex}: ${timer.elapsedSeconds.toFixed(3)} s.`,
         }),
       );
     }),
@@ -223,17 +230,19 @@ function createGroupingHandlers(
   ).pipe(
     tap({
       subscribe: () => {
+        /* v8 ignore next -- @preserve */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
-          message: /* v8 ignore next */ () => `Start creating grouping handlers`,
+          message: () => `Start creating grouping handlers`,
         });
         timer.start();
       },
     }),
     finalize(() => {
+      /* v8 ignore next -- @preserve */
       doLog({
         category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
-        message: /* v8 ignore next */ () => `Creating grouping handlers took ${timer.elapsedSeconds.toFixed(3)} s`,
+        message: () => `Creating grouping handlers took ${timer.elapsedSeconds.toFixed(3)} s`,
       });
     }),
   );

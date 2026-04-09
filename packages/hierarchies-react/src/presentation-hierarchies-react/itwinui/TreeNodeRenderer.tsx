@@ -152,6 +152,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     }
 
     if (node.type === "NoFilterMatches") {
+      /* v8 ignore next -- @preserve */
       return (
         <TreeNode
           {...treeNodeProps}
@@ -159,12 +160,13 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
           ref={forwardedRef}
           label={localizedStrings.noFilteredChildren}
           isDisabled={true}
-          onExpanded={/* v8 ignore next */ () => {}}
+          onExpanded={() => {}}
         />
       );
     }
 
     const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
+    /* v8 ignore next -- @preserve */
     return (
       <TreeNode
         {...treeNodeProps}
@@ -172,7 +174,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
         ref={forwardedRef}
         label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />}
         isDisabled={true}
-        onExpanded={/* v8 ignore next */ () => {}}
+        onExpanded={() => {}}
       />
     );
   },
@@ -252,6 +254,7 @@ const PlaceholderNode = forwardRef<
   }
 >(({ size, ...props }, forwardedRef) => {
   const { localizedStrings } = useLocalizationContext();
+  /* v8 ignore next -- @preserve */
   return (
     <TreeNode
       {...props}
@@ -266,7 +269,7 @@ const PlaceholderNode = forwardRef<
           className={cx(props.className, { "stateless-tree-node-small-spinner": size === "small" })}
         />
       }
-      onExpanded={/* v8 ignore next */ () => {}}
+      onExpanded={() => {}}
     />
   );
 });
@@ -274,13 +277,14 @@ PlaceholderNode.displayName = "PlaceholderNode";
 
 const ResultSetTooLargeNode = forwardRef<HTMLDivElement, Omit<TreeNodeProps, "onExpanded" | "label"> & ResultSetTooLargeNodeLabelProps>(
   ({ onFilterClick, onOverrideLimit, limit, ...props }, forwardedRef) => {
+    /* v8 ignore next -- @preserve */
     return (
       <TreeNode
         {...props}
         ref={forwardedRef}
         className="stateless-tree-node"
         label={<ResultSetTooLargeNodeLabel limit={limit} onFilterClick={onFilterClick} onOverrideLimit={onOverrideLimit} />}
-        onExpanded={/* v8 ignore next */ () => {}}
+        onExpanded={() => {}}
         isDisabled={true}
       />
     );
