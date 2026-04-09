@@ -3,14 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect } from "vitest";
 import { SnapshotDb } from "@itwin/core-backend";
 import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, Selectable, Selectables } from "@itwin/unified-selection";
-import { Datasets, IModelName } from "../util/Datasets";
-import { run, RunOptions } from "../util/TestUtilities";
+import { Datasets, IModelName } from "../util/Datasets.js";
+import { run, RunOptions } from "../util/TestUtilities.js";
 
 describe("hilite", () => {
   runHiliteTest({
@@ -114,9 +114,9 @@ function runHiliteTest(
       }
 
       if (testProps.expectedCounts !== undefined) {
-        expect(counts.elements).to.eq(testProps.expectedCounts.elements ?? 0);
-        expect(counts.subCategories).to.eq(testProps.expectedCounts.subCategories ?? 0);
-        expect(counts.models).to.eq(testProps.expectedCounts.models ?? 0);
+        expect(counts.elements).toBe(testProps.expectedCounts.elements ?? 0);
+        expect(counts.subCategories).toBe(testProps.expectedCounts.subCategories ?? 0);
+        expect(counts.models).toBe(testProps.expectedCounts.models ?? 0);
       }
     },
     cleanup: ({ iModel }) => iModel.close(),

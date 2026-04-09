@@ -3,14 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect } from "vitest";
 import { IModelDb, PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
 import { createNodesQueryClauseFactory, DefineHierarchyLevelProps, HierarchyFilteringPath, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
-import { Datasets } from "../util/Datasets";
-import { run } from "../util/TestUtilities";
-import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { Datasets } from "../util/Datasets.js";
+import { run } from "../util/TestUtilities.js";
+import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
 describe("filtering", () => {
   const totalNumberOfFilteringPaths = 50000;
@@ -118,7 +118,7 @@ describe("filtering", () => {
     test: async (props) => {
       const provider = new StatelessHierarchyProvider({ ...props, rowLimit: "unbounded" });
       const nodeCount = await provider.loadHierarchy();
-      expect(nodeCount).to.eq(totalNumberOfFilteringPaths);
+      expect(nodeCount).toBe(totalNumberOfFilteringPaths);
     },
   });
 });

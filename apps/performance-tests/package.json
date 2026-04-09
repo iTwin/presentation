@@ -2,17 +2,18 @@
   "name": "presentation-performance-tests",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "benchmark:hierarchies": "npm run test:hierarchies -- -O BENCHMARK_OUTPUT_PATH=./hierarchies-benchmark.json",
-    "benchmark:unified-selection": "npm run test:unified-selection -- -O BENCHMARK_OUTPUT_PATH=./unified-selection-benchmark.json",
-    "build": "tsc",
+    "benchmark:hierarchies": "cross-env BENCHMARK_OUTPUT_PATH=./hierarchies-benchmark.json pnpm test:hierarchies",
+    "benchmark:unified-selection": "cross-env BENCHMARK_OUTPUT_PATH=./unified-selection-benchmark.json pnpm test:unified-selection",
+    "build": "tsc -b",
     "clean": "rimraf lib temp",
     "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract",
     "lint": "eslint \"./src/**/*.ts\"",
-    "test": "mocha --enable-source-maps --config ./.mocharc.json ./lib/**/*.test.js",
-    "test:hierarchies": "mocha --enable-source-maps --config ./.mocharc.json ./lib/hierarchies/*.test.js",
-    "test:unified-selection": "mocha --enable-source-maps --config ./.mocharc.json ./lib/unified-selection/*.test.js",
-    "test:recreate": "cross-env RECREATE=true npm run test"
+    "test": "vitest run",
+    "test:hierarchies": "vitest run src/hierarchies",
+    "test:unified-selection": "vitest run src/unified-selection",
+    "test:recreate": "cross-env RECREATE=true pnpm test"
   },
   "devDependencies": {
     "@bentley/functional-schema": "^1.0.4",
@@ -27,17 +28,14 @@
     "@itwin/presentation-models-tree": "workspace:*",
     "@itwin/presentation-shared": "workspace:*",
     "@itwin/unified-selection": "workspace:*",
-    "@types/chai": "catalog:test-tools",
-    "@types/mocha": "catalog:test-tools",
     "@types/node": "catalog:build-tools",
     "as-table": "^1.0.55",
-    "chai": "catalog:test-tools",
     "cross-env": "catalog:build-tools",
     "eslint": "catalog:build-tools",
-    "mocha": "catalog:test-tools",
     "presentation-test-utilities": "workspace:^",
     "rimraf": "catalog:build-tools",
     "rxjs": "catalog:rxjs",
-    "typescript": "catalog:build-tools"
+    "typescript": "catalog:build-tools",
+    "vitest": "catalog:test-tools"
   }
 }

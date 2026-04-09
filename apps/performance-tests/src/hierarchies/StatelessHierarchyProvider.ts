@@ -25,7 +25,7 @@ import {
   ECSqlQueryExecutor,
   ECSqlQueryReaderOptions,
 } from "@itwin/presentation-shared";
-import { LOGGER } from "../util/Logging";
+import { LOGGER } from "../util/Logging.js";
 
 interface ProviderOptionsBase {
   rowLimit?: number | "unbounded";
