@@ -25,8 +25,8 @@ export * from "./presentation-testing/ContentBuilder.js";
  * @docs-group-description Helpers
  * Various test helpers.
  */
-// eslint-disable-next-line @typescript-eslint/no-deprecated
 export {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   HierarchyCacheMode,
   PresentationBackendProps,
   PresentationTestingInitProps,

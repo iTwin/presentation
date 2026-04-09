@@ -105,10 +105,11 @@ describe("Helpers", () => {
     it("clears cache directory when PresentationBackend has HybridCacheConfig in initProps", async () => {
       const testDirectory = "/test/directory/";
       vi.spyOn(PresentationBackend, "initProps", "get").mockReturnValue({
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
         caching: {
           hierarchies: {
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
             mode: HierarchyCacheMode.Hybrid,
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
             disk: { mode: HierarchyCacheMode.Disk, directory: testDirectory },
           },
         },

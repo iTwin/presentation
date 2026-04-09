@@ -95,9 +95,10 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    *
    * @deprecated in 1.5. Use `imodelHiliteSetProvider` prop instead.
    */
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
   cachingHiliteSetProvider?:
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     | CachingHiliteSetProvider
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     | (Omit<CachingHiliteSetProvider, "dispose"> & { [Symbol.dispose]: () => void });
 }
 

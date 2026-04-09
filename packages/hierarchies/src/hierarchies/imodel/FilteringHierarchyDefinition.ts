@@ -368,9 +368,9 @@ function getAutoExpandAsTrueFalse(
   // If grouping node's child has `autoExpandUntil` flag,
   // auto-expand the grouping node only if it's depth is lower than that of the grouping node in associated with the target.
   const nodeDepth =
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
     "key" in autoExpand ||
     "depthInHierarchy" in autoExpand ||
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     (!("depthInPath" in autoExpand) && autoExpand.includeGroupingNodes)
       ? numberOfParentNodes
       : numberOfNonGroupingParentNodes;

@@ -23,8 +23,8 @@ export const QuantityPropertyEditorInput = forwardRef<PropertyEditorAttributes, 
   (props, ref) => {
     const schemaMetadataContext = useSchemaMetadataContext();
 
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
     if (
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       (!props.propertyRecord.property.kindOfQuantityName && !props.propertyRecord.property.quantityType) ||
       !schemaMetadataContext
     ) {

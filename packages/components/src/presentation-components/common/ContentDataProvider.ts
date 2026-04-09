@@ -564,8 +564,8 @@ class ContentFormatter {
   constructor(imodel: IModelConnection) {
     // note: using deprecated version of `KoqPropertyValueFormatter` constructor because we
     // support 4.x core, where the updated overload doesn't exist
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
     this._propertyValueFormatter = new ContentPropertyValueFormatter(
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       new KoqPropertyValueFormatter(imodel.schemaContext, undefined, IModelApp.formatsProvider),
     );
     this._unitSystem = IModelApp.quantityFormatter.activeUnitSystem;

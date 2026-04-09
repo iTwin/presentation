@@ -408,9 +408,9 @@ describe("createECClass", () => {
 
         it("returns multiplicity from core constraint", () => {
           const rel = createECClass(
-            // eslint-disable-next-line @itwin/no-internal
             {
               ...coreRelationshipClass,
+              // eslint-disable-next-line @itwin/no-internal
               source: { multiplicity: new RelationshipMultiplicity(123, 456) },
             } as unknown as CoreClass,
             schema,

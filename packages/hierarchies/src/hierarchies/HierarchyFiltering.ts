@@ -131,11 +131,11 @@ namespace HierarchyFilteringPathOptions {
     const lhsDepth = "depth" in lhs ? lhs.depth : "depthInPath" in lhs ? lhs.depthInPath : lhs.depthInHierarchy;
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     const rhsDepth = "depth" in rhs ? rhs.depth : "depthInPath" in rhs ? rhs.depthInPath : rhs.depthInHierarchy;
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
     const isLhsDepthBasedOnPath =
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       "depthInPath" in lhs ? true : !("key" in lhs) && !("depthInHierarchy" in lhs) && !lhs.includeGroupingNodes;
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
     const isRhsDepthBasedOnPath =
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       "depthInPath" in rhs ? true : !("key" in rhs) && !("depthInHierarchy" in rhs) && !rhs.includeGroupingNodes;
 
     if (isLhsDepthBasedOnPath) {

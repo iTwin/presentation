@@ -93,10 +93,10 @@ function NonPrimitiveCellRenderer(props: NonPrimitiveCellRendererProps) {
       >
         <ModalContent>
           {/* Can't change our import to `components-react`, because it was added there in a version later than our peer dependency */}
-          {/* eslint-disable-next-line @typescript-eslint/no-deprecated */}
           <NonPrimitivePropertyRenderer
             uniqueKey={uniqueKey}
             propertyRecord={record}
+            /* eslint-disable-next-line @typescript-eslint/no-deprecated */
             orientation={Orientation.Horizontal}
           />
         </ModalContent>
