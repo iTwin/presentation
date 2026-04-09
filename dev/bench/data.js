@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775731581196,
+  "lastUpdate": 1775731591355,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -46822,6 +46822,162 @@ window.BENCHMARK_DATA = {
             "value": 73,
             "unit": "ms",
             "extra": "count: 13\nmax: 73\np95: 73\nmedian: 44"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "635b08b5e899d2e1080bff1f9dac71a647fbf027",
+          "message": "Vitest cleanup (#1288)\n\n* Cleanup vitest config\n\n* Update scripts\n\n* Components tests vitest assertions\n\n* Format\n\n* Update packages/components/src/test/properties/inputs/NavigationPropertyTargetSelector.test.tsx\n\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>\n\n* Fix assertion\n\n* cleanup\n\n* typo\n\n* More cleanup\n\n* Cleanup 3\n\n* Revert performance test change\n\n* Full revert\n\n---------\n\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>",
+          "timestamp": "2026-04-09T13:43:41+03:00",
+          "tree_id": "5e1597520164909665448951380f44281756bca4",
+          "url": "https://github.com/iTwin/presentation/commit/635b08b5e899d2e1080bff1f9dac71a647fbf027"
+        },
+        "date": 1775731590309,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 3999.69,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 64,
+            "unit": "ms",
+            "extra": "count: 12\nmax: 64\np95: 64\nmedian: 31.5"
+          },
+          {
+            "name": "filtering filters with 50000 paths",
+            "value": 7178.22,
+            "unit": "ms"
+          },
+          {
+            "name": "filtering filters with 50000 paths (P95 of main thread blocks)",
+            "value": 131,
+            "unit": "ms",
+            "extra": "count: 8\nmax: 131\np95: 131\nmedian: 29.5"
+          },
+          {
+            "name": "grouping by label",
+            "value": 8921.75,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 45,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 45\np95: 45\nmedian: 34"
+          },
+          {
+            "name": "grouping by class",
+            "value": 8946.92,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 35,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 35\np95: 35\nmedian: 31"
+          },
+          {
+            "name": "grouping by property",
+            "value": 9487.4,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 81,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 81\np95: 81\nmedian: 32"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 6644.57,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 67,
+            "unit": "ms",
+            "extra": "count: 18\nmax: 67\np95: 67\nmedian: 32.5"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 24183.33,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 52,
+            "unit": "ms",
+            "extra": "count: 10\nmax: 52\np95: 52\nmedian: 34.5"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 33686.02,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 29,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 29\np95: 29\nmedian: 26"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 140.68,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 37.74,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 6152.25,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 89,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 89\np95: 89\nmedian: 71"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 2079.6,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 199,
+            "unit": "ms",
+            "extra": "count: 8\nmax: 199\np95: 199\nmedian: 43.5"
           }
         ]
       }
