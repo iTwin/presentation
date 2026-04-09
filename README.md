@@ -56,7 +56,73 @@ The new generation packages can be divided into the following groups:
 
 The below diagram shows the typical dependency structure of a React application or component that uses Presentation packages to create a tree component:
 
-![Presentation packages dependency diagram](./media/presentation-packages.png)
+```mermaid
+%%{init: {"flowchart": {"htmlLabels": true, "curve": "linear", "nodeSpacing": 50, "rankSpacing": 70}}}%%
+flowchart TB
+  app["React application"]
+
+  subgraph tier1[ ]
+    direction LR
+    pkgUnifiedSelection["<div style='text-align:center;white-space:nowrap;'><b>@itwin/unified-selection</b></div><br/><div style='text-align:left;font-weight:normal;'>Provides APIs for maintaining a single source of truth for what's selected in the application.</div>"]
+    pkgUnifiedSelectionReact["<div style='text-align:center;white-space:nowrap;'><b>@itwin/unified-selection-react</b></div><br/><div style='text-align:left;font-weight:normal;'>Provides APIs for making it easier to implement unified selection-driven React components.</div>"]
+    pkgHierarchiesReact["<div style='text-align:center;white-space:nowrap;'><b>@itwin/presentation-hierarchies-react</b></div><br/><div style='text-align:left;font-weight:normal;'>Provides headless UI components for creating hierarchical React components as well as iTwinUI-based renderers.</div>"]
+    pkgHierarchies["<div style='text-align:center;white-space:nowrap;'><b>@itwin/presentation-hierarchies</b></div><br/><div style='text-align:left;font-weight:normal;'>Provides framework-agnostic APIs to create hierarchies. May be used on any frontend as well as backend.</div>"]
+  end
+
+  pkgCoreInterop["<div style='text-align:center;white-space:nowrap;'><b>@itwin/presentation-core-interop</b></div><br/><div style='text-align:left;font-weight:normal;'>This interop package allows avoiding peer dependencies on core packages.</div>"]
+
+  subgraph tier3[ ]
+    direction LR
+    pkgShared["<div style='text-align:center;white-space:nowrap;'><b>@itwin/presentation-shared</b></div><br/><div style='text-align:left;font-weight:normal;'>Provides types and utilities shared across multiple Presentation packages.</div>"]
+    pkgCoreLegacy["<div style='text-align:center;white-space:nowrap;'><b>@itwin/core-*</b><br/><b>@itwin/presentation-common</b></div>"]
+  end
+
+  app -->|uses to provide selection storage to tree components| pkgUnifiedSelection
+  app -->|may use to provide unified selection React context| pkgUnifiedSelectionReact
+  app -->|uses to create tree components| pkgHierarchiesReact
+  app -->|uses to define hierarchies for tree components| pkgHierarchies
+  app -->|uses to map itwinjs-core types to Presentation ones| pkgCoreInterop
+
+  pkgUnifiedSelectionReact -.->|uses| pkgUnifiedSelection
+  pkgHierarchiesReact -->|uses to manage tree selection| pkgUnifiedSelection
+  pkgHierarchiesReact -->|uses to create hierarchies| pkgHierarchies
+  pkgHierarchies -->|uses| pkgShared
+  pkgCoreInterop -->|creates types for| pkgShared
+  pkgCoreInterop -.->|creates Presentation types from| pkgCoreLegacy
+
+  subgraph Legend["<div style='font-weight: bold; padding: 10px'>Legend</div>"]
+    direction TB
+    lGray["Platform-agnostic packages<br/>(any UI framework)"]:::clsPlatformAgnosticPackageNode
+    lRed["React-based frontend package"]:::clsReactPackageNode
+
+    subgraph legendRegular[ ]
+      direction LR
+      legendN1[ ] -->|regular dependency| legendN2[ ]
+    end
+
+    subgraph legendPeer[ ]
+      direction LR
+      legendN3[ ] -.->|peer dependency| legendN4[ ]
+    end
+  end
+
+  tier3 ~~~ Legend
+
+  style tier1 fill:none,stroke:none
+  style tier3 fill:none,stroke:none
+  style legendRegular fill:none,stroke:none
+  style legendPeer fill:none,stroke:none
+  style legendN1 fill:none,stroke:none,color:none
+  style legendN2 fill:none,stroke:none,color:none
+  style legendN3 fill:none,stroke:none,color:none
+  style legendN4 fill:none,stroke:none,color:none
+
+  classDef clsReactPackageNode fill:#f8cecc,stroke:#b85450,color:#333333,stroke-width:1.2px;
+  classDef clsPlatformAgnosticPackageNode fill:#f5f5f5,stroke:#666666,color:#333333,stroke-width:1.2px;
+
+  class app,pkgHierarchiesReact,pkgUnifiedSelectionReact clsReactPackageNode;
+  class pkgHierarchies,pkgUnifiedSelection,pkgCoreInterop,pkgShared,pkgCoreLegacy clsPlatformAgnosticPackageNode;
+```
 
 ## Contribution
 
