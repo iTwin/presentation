@@ -31,9 +31,9 @@ When reviewing pull requests in this repository, check the following:
 
   ```md
   ---
-  "@myproject/cli": major
-  "@myproject/core": minor
-  "@myproject/mypackage": patch
+  "@itwin/changed-package-1": major
+  "@itwin/changed-package-2": minor
+  "@itwin/changed-package-3": patch
   ---
 
   {Short 1-2 sentence description of the change. When only one specific component is affected, prefix this description with the component name.}
@@ -43,7 +43,7 @@ When reviewing pull requests in this repository, check the following:
 
 - The changeset bump type must match the severity:
   - When in 0.x version range: `patch` for bug fixes and new features or deprecations, `minor` for breaking changes, never `major`.
-  - When in 1+.x version range:`patch` for fixes, `minor` for new features, `major` for breaking changes.
+  - When in 1.x and above version range: `patch` for fixes, `minor` for new features, `major` for breaking changes.
 - Purely internal changes (refactors, test-only changes, tooling updates) do not require a changeset.
 - Check that the changeset description is clear and written from a consumer-facing perspective.
 - Ensure all referenced APIs are public and specified within backticks.
@@ -56,7 +56,8 @@ When reviewing pull requests in this repository, check the following:
 
 #### API Docs (TSDoc comments)
 
-- All exported public symbols must have TSDoc comments (`/** ... */`). Use multiline comments even for short descriptions as single-line ones don't work without our build system.
+- All exported public symbols must have TSDoc comments (`/** ... */`).
+  - In `@itwin/presentation-hierarchies-react` package, use multiline comments even for short descriptions as single-line ones don't work without package's build system.
 - Comments must accurately describe the symbol's purpose and any notable behavior (e.g. side effects, throws). No need to list individual parameters or return values if they are self-explanatory, but if the API is complex, use `@param` and `@returns` to clarify.
 - Use `@param`, `@returns`, `@throws`, `@deprecated`, `@public`, `@beta`, and `@internal` tags as appropriate.
 - Avoid restating the symbol name verbatim — explain *what it does*, not what it *is called*.
