@@ -91,7 +91,10 @@ class IModelHierarchyProvider implements HierarchyProvider {
         `,
       )) {
         yield {
-          key: { type: "instances", instanceKeys: [{ className: "BisCore.Subject", id: "0x1", imodelKey: this._imodel.key }] },
+          key: {
+            type: "instances",
+            instanceKeys: [{ className: "BisCore.Subject", id: "0x1", imodelKey: this._imodel.key }],
+          },
           label: row.label,
           children: !!row.hasChildren,
           parentKeys: [],
@@ -117,7 +120,10 @@ class IModelHierarchyProvider implements HierarchyProvider {
         `,
       )) {
         yield {
-          key: { type: "instances", instanceKeys: [{ className: row.className, id: row.id, imodelKey: this._imodel.key }] },
+          key: {
+            type: "instances",
+            instanceKeys: [{ className: row.className, id: row.id, imodelKey: this._imodel.key }],
+          },
           label: row.label,
           children: !!row.hasChildren,
           parentKeys: [...parentNode.parentKeys, parentNode.key],
@@ -177,7 +183,9 @@ First, let's define a sample books service:
 
 ```ts
 // Define a type for a filter that can be applied to books service queries.
-type BooksServiceFilter<TEntry> = { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" } | Partial<TEntry>;
+type BooksServiceFilter<TEntry> =
+  | { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" }
+  | Partial<TEntry>;
 
 // Creates a books service that provides authors and books data. The service has two methods:
 // - `getAuthors` - returns authors based on the provided query.
@@ -441,14 +449,22 @@ import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
-import { createHierarchyFilteringHelper, GenericNodeKey, HierarchyFilteringPath, HierarchyNodeIdentifier } from "@itwin/presentation-hierarchies";
+import {
+  createHierarchyFilteringHelper,
+  GenericNodeKey,
+  HierarchyFilteringPath,
+  HierarchyNodeIdentifier,
+} from "@itwin/presentation-hierarchies";
 
 // A function that matches given string against authors and books, and returns hierarchy paths
 // from root to the matched node. This function must be aware of the hierarchy structure to know what paths
 // to create.
 async function createFilterPaths(filter: string): Promise<HierarchyFilteringPath[]> {
   const results: HierarchyFilteringPath[] = [];
-  const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: filter }), booksService.getBooks({ title: filter })]);
+  const [matchingAuthors, matchingBooks] = await Promise.all([
+    booksService.getAuthors({ name: filter }),
+    booksService.getBooks({ title: filter }),
+  ]);
   for (const author of matchingAuthors) {
     results.push([{ type: "generic", id: `author:${author.key}` }]);
   }
@@ -476,7 +492,12 @@ import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
-import { createHierarchyFilteringHelper, GenericNodeKey, HierarchyFilteringPath, HierarchyNodeIdentifier } from "@itwin/presentation-hierarchies";
+import {
+  createHierarchyFilteringHelper,
+  GenericNodeKey,
+  HierarchyFilteringPath,
+  HierarchyNodeIdentifier,
+} from "@itwin/presentation-hierarchies";
 
 let rootFilter: Props<HierarchyProvider["setHierarchyFilter"]>;
 const hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
@@ -600,7 +621,10 @@ Hierarchy level filters are defined using the `GenericInstanceFilter` data struc
 import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
 
 // A function that creates a books service - specific filter, based on the given parent node and children filters
-function createBooksServiceFilter(parentNodeFilter: Record<string, unknown> | undefined, genericChildrenFilter: GenericInstanceFilter | undefined) {
+function createBooksServiceFilter(
+  parentNodeFilter: Record<string, unknown> | undefined,
+  genericChildrenFilter: GenericInstanceFilter | undefined,
+) {
   function createRuleFilter(rule: GenericInstanceFilterRule): Record<string, unknown> {
     // note: this is a very simplistic implementation that doesn't support different operators, value types, etc.
     return { [rule.propertyName]: rule.value?.rawValue ?? "" };
@@ -611,8 +635,12 @@ function createBooksServiceFilter(parentNodeFilter: Record<string, unknown> | un
       rules: group.rules.map(createRuleOrGroupFilter),
     };
   }
-  function createRuleOrGroupFilter(ruleOrGroup: GenericInstanceFilter["rules"]): BooksServiceFilter<Record<string, unknown>> {
-    return GenericInstanceFilter.isFilterRuleGroup(ruleOrGroup) ? createGroupFilter(ruleOrGroup) : createRuleFilter(ruleOrGroup);
+  function createRuleOrGroupFilter(
+    ruleOrGroup: GenericInstanceFilter["rules"],
+  ): BooksServiceFilter<Record<string, unknown>> {
+    return GenericInstanceFilter.isFilterRuleGroup(ruleOrGroup)
+      ? createGroupFilter(ruleOrGroup)
+      : createRuleFilter(ruleOrGroup);
   }
   const childrenFilter = genericChildrenFilter ? createRuleOrGroupFilter(genericChildrenFilter.rules) : undefined;
   if (parentNodeFilter && childrenFilter) {
@@ -657,7 +685,9 @@ const provider: HierarchyProvider = {
       }
     } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
       // For author parent node, query books and return nodes based on them
-      const books = await booksService.getBooks(createBooksServiceFilter({ authorKey: parentNode.key.id.slice(7) }, instanceFilter));
+      const books = await booksService.getBooks(
+        createBooksServiceFilter({ authorKey: parentNode.key.id.slice(7) }, instanceFilter),
+      );
       for (const book of books) {
         const nodeKey: GenericNodeKey = { type: "generic", id: `book:${book.key}` };
         yield {

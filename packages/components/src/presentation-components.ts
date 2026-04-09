@@ -22,7 +22,10 @@ export * from "./presentation-components/common/IUnifiedSelectionComponent.js";
 export * from "./presentation-components/common/PropertyRecordsBuilder.js";
 export * from "./presentation-components/common/SchemaMetadataContext.js";
 // eslint-disable-next-line @typescript-eslint/no-deprecated
-export { PortalTargetContextProvider, type PortalTargetContextProviderProps } from "./presentation-components/common/PortalTargetContext.js";
+export {
+  PortalTargetContextProvider,
+  type PortalTargetContextProviderProps,
+} from "./presentation-components/common/PortalTargetContext.js";
 export * from "./presentation-components/hooks/UseRulesetRegistration.js";
 
 /**
@@ -98,7 +101,10 @@ export * from "./presentation-components/table/CellRenderer.js";
  * Presentation features for [ViewportComponent]($imodel-components-react).
  */
 // eslint-disable-next-line @typescript-eslint/no-deprecated
-export { viewWithUnifiedSelection, ViewWithUnifiedSelectionProps } from "./presentation-components/viewport/WithUnifiedSelection.js";
+export {
+  viewWithUnifiedSelection,
+  ViewWithUnifiedSelectionProps,
+} from "./presentation-components/viewport/WithUnifiedSelection.js";
 
 /**
  * @module DisplayLabels

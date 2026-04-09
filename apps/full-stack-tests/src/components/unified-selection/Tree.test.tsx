@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { useCallback, useState } from "react";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { SelectionMode, UiComponents } from "@itwin/components-react";
@@ -44,7 +48,8 @@ describe("Learning snippets", async () => {
           pagingSize: 10,
           // create a tree events handler that synchronizes tree nodes' selection with unified selection
           eventHandlerFactory: useCallback(
-            (eventHandlerProps: PresentationTreeEventHandlerProps) => new UnifiedSelectionTreeEventHandler({ nodeLoader: eventHandlerProps.nodeLoader }),
+            (eventHandlerProps: PresentationTreeEventHandlerProps) =>
+              new UnifiedSelectionTreeEventHandler({ nodeLoader: eventHandlerProps.nodeLoader }),
             [],
           ),
         });
@@ -67,7 +72,13 @@ describe("Learning snippets", async () => {
       const { imodel } = await buildTestIModel(async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
-        elementKey = insertPhysicalElement({ builder, fullClassNameSeparator: ":", userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });
+        elementKey = insertPhysicalElement({
+          builder,
+          fullClassNameSeparator: ":",
+          userLabel: "My Element",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+        });
       });
 
       // render the component
@@ -133,10 +144,7 @@ const ruleset: Ruleset = {
         {
           specType: "RelatedInstanceNodes",
           relationshipPaths: [
-            {
-              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-              direction: "Forward",
-            },
+            { relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" },
           ],
           groupByClass: false,
           groupByLabel: false,

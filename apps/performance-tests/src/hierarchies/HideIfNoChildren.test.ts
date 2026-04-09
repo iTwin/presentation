@@ -31,7 +31,9 @@ describe("hide if no children", () => {
         getHierarchyFactory: (imodelAccess) => {
           const queryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           return createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
@@ -71,7 +73,9 @@ describe("hide if no children", () => {
         getHierarchyFactory: (imodelAccess) => {
           const queryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           return createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,

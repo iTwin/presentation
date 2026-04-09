@@ -11,7 +11,10 @@ import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+import {
+  createBisInstanceLabelSelectClauseFactory,
+  createCachingECClassHierarchyInspector,
+} from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.CommonImports
 import { Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
@@ -22,7 +25,12 @@ import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-r
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react";
 import { LocalizationContextProvider } from "@itwin/presentation-hierarchies-react";
-import { createRenderedTreeNodeData, RenderedTreeNode, TreeNodeRenderer, TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
+import {
+  createRenderedTreeNodeData,
+  RenderedTreeNode,
+  TreeNodeRenderer,
+  TreeRenderer,
+} from "@itwin/presentation-hierarchies-react/itwinui";
 // __PUBLISH_EXTRACT_END__
 import { render, waitFor } from "../../RenderUtils.js";
 import { stubVirtualization } from "../../Utils.js";
@@ -47,7 +55,8 @@ describe("Hierarchies React", () => {
         clearHierarchyLevelFilter: "Clear active filter",
         noFilteredChildren: "No child nodes match current filter",
         resultLimitExceeded: "There are more items than allowed limit of {{limit}}.",
-        resultLimitExceededWithFiltering: "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
+        resultLimitExceededWithFiltering:
+          "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
         increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
         increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
       };
@@ -76,7 +85,9 @@ describe("Hierarchies React", () => {
         };
         const nodesQueryFactory = createNodesQueryClauseFactory({
           imodelAccess: access,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: access }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: access,
+          }),
         });
         const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: access });
         getHierarchyDefinition = () => ({
@@ -90,7 +101,10 @@ describe("Hierarchies React", () => {
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: {
-                        selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
+                        selector: await labelsQueryFactory.createSelectClause({
+                          classAlias: "this",
+                          className: "BisCore.PhysicalModel",
+                        }),
                       },
                       hasChildren: true,
                       hideIfNoChildren: false,
@@ -120,7 +134,14 @@ describe("Hierarchies React", () => {
           if (!rootNodes) {
             return localizedStrings.loading;
           }
-          return <TreeRenderer rootNodes={rootNodes} expandNode={expandNode} localizedStrings={localizedStrings} onFilterClick={() => {}} />;
+          return (
+            <TreeRenderer
+              rootNodes={rootNodes}
+              expandNode={expandNode}
+              localizedStrings={localizedStrings}
+              onFilterClick={() => {}}
+            />
+          );
         }
         // __PUBLISH_EXTRACT_END__
 
@@ -140,11 +161,19 @@ describe("Hierarchies React", () => {
             return <TreeNodeRenderer {...nodeProps} onFilterClick={() => {}} expandNode={() => {}} />;
           }, []);
 
-          const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, () => false), []);
+          const getNode = useCallback<TreeProps["getNode"]>(
+            (node) => createRenderedTreeNodeData(node, () => false),
+            [],
+          );
 
           return (
             <LocalizationContextProvider localizedStrings={localizedStrings}>
-              <Tree<RenderedTreeNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
+              <Tree<RenderedTreeNode>
+                data={rootNodes}
+                nodeRenderer={nodeRenderer}
+                getNode={getNode}
+                enableVirtualization={true}
+              />
             </LocalizationContextProvider>
           );
         }

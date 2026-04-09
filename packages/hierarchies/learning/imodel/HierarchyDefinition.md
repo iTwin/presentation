@@ -18,7 +18,12 @@ In its most simple form, a hierarchy definition may just have one `defineHierarc
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
+  HierarchyDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
@@ -37,7 +42,9 @@ const hierarchyDefinition: HierarchyDefinition = {
     if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "physical-elements") {
       const queryClauseFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       return [
         {
@@ -73,7 +80,12 @@ However, some hierarchy definitions may choose to write SELECT clause manually a
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
+  HierarchyDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
@@ -125,7 +137,12 @@ For example, the following code snippet shows how to use the `preProcessNode` ca
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
+  HierarchyDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
@@ -133,7 +150,9 @@ const hierarchyDefinition: HierarchyDefinition = {
     if (!parentNode) {
       const queryClauseFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       return [
         {
@@ -179,7 +198,12 @@ For example, the following code snippet shows how to use the `postProcessNode` c
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
+  HierarchyDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
@@ -187,7 +211,9 @@ const hierarchyDefinition: HierarchyDefinition = {
     if (!parentNode) {
       const queryClauseFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       return [
         {
@@ -237,11 +263,18 @@ For example, the following code snippet shows how to define a hierarchy, similar
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
+  HierarchyDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 
 const queryClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
-  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+    classHierarchyInspector: imodelAccess,
+  }),
 });
 const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
   classHierarchyInspector: imodelAccess,

@@ -110,7 +110,9 @@ describe("useIModelTree hooks", () => {
         signal = abortSignal;
         return undefined;
       });
-      const { result } = renderHook(useIModelUnifiedSelectionTree, { initialProps: { ...initialProps, getFilteredPaths } });
+      const { result } = renderHook(useIModelUnifiedSelectionTree, {
+        initialProps: { ...initialProps, getFilteredPaths },
+      });
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });

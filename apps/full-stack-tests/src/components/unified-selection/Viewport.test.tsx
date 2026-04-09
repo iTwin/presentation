@@ -4,10 +4,21 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection, SelectedViewportChangedArgs, SpatialViewState, ViewManager, ViewState } from "@itwin/core-frontend";
+import {
+  IModelApp,
+  IModelConnection,
+  SelectedViewportChangedArgs,
+  SpatialViewState,
+  ViewManager,
+  ViewState,
+} from "@itwin/core-frontend";
 import { Point3d, Vector3d } from "@itwin/core-geometry";
 import { UiIModelComponents, ViewportComponent } from "@itwin/imodel-components-react";
 import { InstanceKey, KeySet } from "@itwin/presentation-common";
@@ -44,9 +55,19 @@ describe("Learning snippets", async () => {
 
       const { imodel } = await buildTestIModel(async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
-        const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
+        const modelKey = insertPhysicalModelWithPartition({
+          builder,
+          fullClassNameSeparator: ":",
+          codeValue: "My Model",
+        });
         (elementKeys.push(
-          insertPhysicalElement({ builder, fullClassNameSeparator: ":", userLabel: "My Assembly Element", modelId: modelKey.id, categoryId: categoryKey.id }),
+          insertPhysicalElement({
+            builder,
+            fullClassNameSeparator: ":",
+            userLabel: "My Assembly Element",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          }),
         ),
           elementKeys.push(
             insertPhysicalElement({
@@ -73,7 +94,10 @@ describe("Learning snippets", async () => {
 
       // render the component
       const { getByTestId, unmount } = render(
-        <MyViewport imodel={imodel} initialViewState={SpatialViewState.createBlank(imodel, Point3d.createZero(), Vector3d.create(400, 400))} />,
+        <MyViewport
+          imodel={imodel}
+          initialViewState={SpatialViewState.createBlank(imodel, Point3d.createZero(), Vector3d.create(400, 400))}
+        />,
       );
       await waitFor(() => getByTestId("viewport-component"));
 

@@ -35,9 +35,9 @@ describe("useRows", () => {
   const getContentIteratorStub = vi.fn<PresentationManager["getContentIterator"]>();
 
   beforeEach(() => {
-    presentationManagerSpy = vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
-      getContentIterator: getContentIteratorStub,
-    } as unknown as PresentationManager);
+    presentationManagerSpy = vi
+      .spyOn(Presentation, "presentation", "get")
+      .mockReturnValue({ getContentIterator: getContentIteratorStub } as unknown as PresentationManager);
     onActiveFormattingUnitSystemChanged = new BeUiEvent<FormattingUnitSystemChangedArgs>();
     vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged,
@@ -74,9 +74,7 @@ describe("useRows", () => {
 
       await waitFor(() => expect(result.current.rows).toHaveLength(1));
       const cell = result.current.rows[0].cells[0];
-      expect(cell).toMatchObject({
-        key: propertiesField.name,
-      });
+      expect(cell).toMatchObject({ key: propertiesField.name });
     });
 
     it("returns empty rows list if there are no content", async () => {
@@ -98,15 +96,17 @@ describe("useRows", () => {
       values: { [propertiesField.name]: "test_value" },
       displayValues: { [propertiesField.name]: "Test value" },
     });
-    getContentIteratorStub.mockImplementation(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
+    getContentIteratorStub.mockImplementation(async () => ({
+      descriptor,
+      items: createAsyncIterator([item]),
+      total: 1,
+    }));
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
 
     await waitFor(() => expect(result.current.rows).toHaveLength(1));
     const cell = result.current.rows[0].cells[0];
-    expect(cell).toMatchObject({
-      key: propertiesField.name,
-    });
+    expect(cell).toMatchObject({ key: propertiesField.name });
   });
 
   it("does not create cells for nested content fields", async () => {
@@ -122,7 +122,12 @@ describe("useRows", () => {
       category: nestedCategory,
       properties: [{ property: createTestPropertyInfo() }],
     });
-    const nestingField = createTestNestedContentField({ name: "nesting_field", label: "Nesting Field", category: nestedCategory, nestedFields: [nestedField] });
+    const nestingField = createTestNestedContentField({
+      name: "nesting_field",
+      label: "Nesting Field",
+      category: nestedCategory,
+      nestedFields: [nestedField],
+    });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField, nestingField] });
     const item = createTestContentItem({
       values: {
@@ -138,21 +143,21 @@ describe("useRows", () => {
       },
       displayValues: {
         [propertiesField.name]: "Test value",
-        [nestingField.name]: {
-          [nestedField.name]: "Nested Value",
-        },
+        [nestingField.name]: { [nestedField.name]: "Nested Value" },
       },
     });
-    getContentIteratorStub.mockImplementation(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
+    getContentIteratorStub.mockImplementation(async () => ({
+      descriptor,
+      items: createAsyncIterator([item]),
+      total: 1,
+    }));
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
 
     await waitFor(() => expect(result.current.rows).toHaveLength(1));
     expect(result.current.rows[0].cells).toHaveLength(1);
     const cell = result.current.rows[0].cells[0];
-    expect(cell).toMatchObject({
-      key: propertiesField.name,
-    });
+    expect(cell).toMatchObject({ key: propertiesField.name });
   });
 
   it("loads next page of rows when 'loadMoreRows' is called", async () => {
@@ -180,7 +185,9 @@ describe("useRows", () => {
       return undefined;
     });
 
-    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 1 } });
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, pageSize: 1 },
+    });
 
     await waitFor(() => expect(result.current.rows).toHaveLength(1));
 
@@ -202,9 +209,15 @@ describe("useRows", () => {
       values: { [propertiesField.name]: "test_value_1" },
       displayValues: { [propertiesField.name]: "Test value 1" },
     });
-    getContentIteratorStub.mockImplementation(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
+    getContentIteratorStub.mockImplementation(async () => ({
+      descriptor,
+      items: createAsyncIterator([item]),
+      total: 1,
+    }));
 
-    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 1 } });
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, pageSize: 1 },
+    });
 
     await waitFor(() => expect(result.current.rows).toHaveLength(1));
     getContentIteratorStub.mockReset();
@@ -252,7 +265,9 @@ describe("useRows", () => {
 
   it("returns empty rows list if key set is empty", async () => {
     const emptyKeySet = new KeySet();
-    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, keys: emptyKeySet } });
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, keys: emptyKeySet },
+    });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.rows).toHaveLength(0);
@@ -283,21 +298,22 @@ describe("useRows", () => {
       properties: [{ property: createTestPropertyInfo() }],
     });
     const fieldDescriptor = propertiesField.getFieldDescriptor();
-    const sorting = {
-      field: fieldDescriptor,
-      direction: SortDirection.Descending,
-    };
+    const sorting = { field: fieldDescriptor, direction: SortDirection.Descending };
     getContentIteratorStub.mockImplementation(async () => ({
       descriptor: createTestContentDescriptor({ fields: [] }),
       items: createAsyncIterator([]),
       total: 0,
     }));
 
-    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, options: { sorting } } });
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, options: { sorting } },
+    });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(getContentIteratorStub).toHaveBeenCalled();
-    expect((getContentIteratorStub.mock.lastCall![0].descriptor as DescriptorOverrides).sorting?.direction).toBe(SortDirection.Descending);
+    expect((getContentIteratorStub.mock.lastCall![0].descriptor as DescriptorOverrides).sorting?.direction).toBe(
+      SortDirection.Descending,
+    );
   });
 
   it("reloads rows when active unit system changes", async () => {
@@ -316,12 +332,20 @@ describe("useRows", () => {
       displayValues: { [propertiesField.name]: "Test value 2" },
     });
 
-    getContentIteratorStub.mockImplementation(async () => ({ descriptor, items: createAsyncIterator([item1, item2]), total: 2 }));
-    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 10 } });
+    getContentIteratorStub.mockImplementation(async () => ({
+      descriptor,
+      items: createAsyncIterator([item1, item2]),
+      total: 2,
+    }));
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, pageSize: 10 },
+    });
 
     await waitFor(() => expect(result.current.rows).toHaveLength(2));
     // initial rows load request
-    expect(getContentIteratorStub).toHaveBeenCalledWith(expect.objectContaining({ paging: expect.objectContaining({ start: 0, size: 10 }) }));
+    expect(getContentIteratorStub).toHaveBeenCalledWith(
+      expect.objectContaining({ paging: expect.objectContaining({ start: 0, size: 10 }) }),
+    );
 
     act(() => {
       onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
@@ -330,7 +354,9 @@ describe("useRows", () => {
     await waitFor(() => {
       expect(result.current.rows).toHaveLength(2);
       // reload request should have page options to get only previously loaded rows.
-      expect(getContentIteratorStub).toHaveBeenCalledWith(expect.objectContaining({ paging: expect.objectContaining({ start: 0, size: 2 }) }));
+      expect(getContentIteratorStub).toHaveBeenCalledWith(
+        expect.objectContaining({ paging: expect.objectContaining({ start: 0, size: 2 }) }),
+      );
     });
   });
 
@@ -343,7 +369,9 @@ describe("useRows", () => {
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
     getContentIteratorStub.mockImplementation(async () => ({ descriptor, items: createAsyncIterator([]), total: 0 }));
 
-    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 10 } });
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, pageSize: 10 },
+    });
 
     await waitFor(() => {
       expect(result.current.rows).toHaveLength(0);
@@ -351,7 +379,9 @@ describe("useRows", () => {
     });
 
     // initial load request
-    expect(getContentIteratorStub).toHaveBeenCalledWith(expect.objectContaining({ paging: expect.objectContaining({ start: 0, size: 10 }) }));
+    expect(getContentIteratorStub).toHaveBeenCalledWith(
+      expect.objectContaining({ paging: expect.objectContaining({ start: 0, size: 10 }) }),
+    );
     getContentIteratorStub.mockClear();
 
     act(() => {
@@ -379,10 +409,16 @@ describe("useRows", () => {
       }),
     );
 
-    getContentIteratorStub.mockImplementation(async () => ({ descriptor, items: createAsyncIterator(items), total: itemsCount }));
+    getContentIteratorStub.mockImplementation(async () => ({
+      descriptor,
+      items: createAsyncIterator(items),
+      total: itemsCount,
+    }));
 
     // all items should be loaded with single request
-    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: itemsCount } });
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, pageSize: itemsCount },
+    });
     await waitFor(() => {
       expect(result.current.rows).toHaveLength(itemsCount);
     });
@@ -391,7 +427,11 @@ describe("useRows", () => {
     getContentIteratorStub.mockReset();
     getContentIteratorStub.mockImplementation(async (options) => {
       if (options.paging?.start === 0 && options.paging?.size === ROWS_RELOAD_PAGE_SIZE) {
-        return { descriptor, items: createAsyncIterator(items.slice(0, ROWS_RELOAD_PAGE_SIZE)), total: ROWS_RELOAD_PAGE_SIZE };
+        return {
+          descriptor,
+          items: createAsyncIterator(items.slice(0, ROWS_RELOAD_PAGE_SIZE)),
+          total: ROWS_RELOAD_PAGE_SIZE,
+        };
       }
       if (options.paging?.start === ROWS_RELOAD_PAGE_SIZE && options.paging?.size === 1) {
         return { descriptor, items: createAsyncIterator(items.slice(ROWS_RELOAD_PAGE_SIZE)), total: 1 };

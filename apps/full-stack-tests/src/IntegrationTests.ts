@@ -8,14 +8,26 @@ import Backend from "i18next-http-backend";
 import * as path from "path";
 import { IModelHost } from "@itwin/core-backend";
 import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
-import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration, RpcInterfaceDefinition } from "@itwin/core-common";
+import {
+  IModelReadRpcInterface,
+  RpcConfiguration,
+  RpcDefaultConfiguration,
+  RpcInterfaceDefinition,
+} from "@itwin/core-common";
 import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
-import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationBackendNativeLoggerCategory } from "@itwin/presentation-backend";
+import {
+  HierarchyCacheMode,
+  Presentation as PresentationBackend,
+  PresentationBackendNativeLoggerCategory,
+} from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
-import { Presentation as PresentationFrontend, PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
+import {
+  Presentation as PresentationFrontend,
+  PresentationProps as PresentationFrontendProps,
+} from "@itwin/presentation-frontend";
 import { setTestOutputDir } from "./FilenameUtils.js";
 
 class IntegrationTestsApp extends NoRenderApp {
@@ -70,23 +82,15 @@ export async function initialize(props?: { backendTimeout?: number }) {
       },
     },
   };
-  const frontendInitProps: PresentationFrontendProps = {
-    presentation: {
-      activeLocale: "en-PSEUDO",
-    },
-  };
+  const frontendInitProps: PresentationFrontendProps = { presentation: { activeLocale: "en-PSEUDO" } };
 
-  const frontendAppOptions: IModelAppOptions = {
-    localization: createTestLocalization(),
-  };
+  const frontendAppOptions: IModelAppOptions = { localization: createTestLocalization() };
 
   // set up rpc interfaces
   initializeRpcInterfaces([IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface]);
 
   // init backend
-  await IModelHost.startup({
-    cacheDir: path.join(import.meta.dirname, "..", "build", ".cache", `${process.pid}`),
-  });
+  await IModelHost.startup({ cacheDir: path.join(import.meta.dirname, "..", "build", ".cache", `${process.pid}`) });
   PresentationBackend.initialize(backendInitProps);
 
   // init frontend
@@ -123,9 +127,7 @@ export async function resetBackend() {
 function createTestLocalization(): ITwinLocalization {
   return new ITwinLocalization({
     urlTemplate: `file://${path.join(path.resolve("build/public/locales"), "{{lng}}/{{ns}}.json").replace(/\\/g, "/")}`,
-    initOptions: {
-      preload: ["test"],
-    },
+    initOptions: { preload: ["test"] },
     backendHttpOptions: {
       request: (options, url, payload, callback) => {
         /**

@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { concatMap, map, Observable, of } from "rxjs";
-import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, LOGGING_NAMESPACE_INTERNAL } from "../../internal/Common.js";
+import {
+  createNodeIdentifierForLogging,
+  createOperatorLoggingNamespace,
+  LOGGING_NAMESPACE_INTERNAL,
+} from "../../internal/Common.js";
 import { log } from "../../internal/LoggingUtils.js";
 import { releaseMainThreadOnItemsCount } from "../../internal/operators/ReleaseMainThread.js";
 import { ProcessedHierarchyNode } from "../IModelHierarchyNode.js";
@@ -32,7 +36,8 @@ export function createDetermineChildrenOperator(hasNodes: (node: ProcessedHierar
           /* v8 ignore next -- @preserve */
           log({
             category: LOGGING_NAMESPACE,
-            message: (hasChildrenFlag) => `${createNodeIdentifierForLogging(n)}: determined children: ${hasChildrenFlag}`,
+            message: (hasChildrenFlag) =>
+              `${createNodeIdentifierForLogging(n)}: determined children: ${hasChildrenFlag}`,
           }),
           map((hasChildrenFlag) => Object.assign(n, { children: hasChildrenFlag })),
         );

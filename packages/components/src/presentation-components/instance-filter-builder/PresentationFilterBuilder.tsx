@@ -8,10 +8,21 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 import { PropertyDescription } from "@itwin/appui-abstract";
-import { PropertyFilterBuilderRuleValue, PropertyFilterBuilderRuleValueRendererProps, usePropertyFilterBuilder } from "@itwin/components-react";
+import {
+  PropertyFilterBuilderRuleValue,
+  PropertyFilterBuilderRuleValueRendererProps,
+  usePropertyFilterBuilder,
+} from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ClassId, ClassInfo, Descriptor, InstanceFilterDefinition, Keys, PropertiesField } from "@itwin/presentation-common";
+import {
+  ClassId,
+  ClassInfo,
+  Descriptor,
+  InstanceFilterDefinition,
+  Keys,
+  PropertiesField,
+} from "@itwin/presentation-common";
 import { WithConstraints } from "../common/ContentBuilder.js";
 import { NavigationPropertyEditorContextProvider } from "../properties/editors/NavigationPropertyEditorContext.js";
 import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector.js";
@@ -19,7 +30,10 @@ import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./
 import { createFilterClassExpression, createInstanceFilterDefinitionBase } from "./InstanceFilterConverter.js";
 import { PresentationInstanceFilter, PresentationInstanceFilterConditionGroup } from "./PresentationInstanceFilter.js";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty.js";
-import { createInstanceFilterPropertyInfos, useFilterBuilderNavigationPropertyEditorContextProviderProps } from "./Utils.js";
+import {
+  createInstanceFilterPropertyInfos,
+  useFilterBuilderNavigationPropertyEditorContextProviderProps,
+} from "./Utils.js";
 
 /**
  * Function that checks if supplied [[PresentationInstanceFilter]] is [[PresentationInstanceFilterConditionGroup]].
@@ -27,7 +41,9 @@ import { createInstanceFilterPropertyInfos, useFilterBuilderNavigationPropertyEd
  * @deprecated in 5.0. Use `PresentationInstanceFilter.isConditionGroup` instead.
  */
 /* v8 ignore next 3 -- @preserve */
-export function isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup {
+export function isPresentationInstanceFilterConditionGroup(
+  filter: PresentationInstanceFilter,
+): filter is PresentationInstanceFilterConditionGroup {
   return PresentationInstanceFilter.isConditionGroup(filter);
 }
 
@@ -38,7 +54,10 @@ export function isPresentationInstanceFilterConditionGroup(filter: PresentationI
  * @deprecated in 5.0. Use `createInstanceFilterDefinition` instead.
  */
 /* v8 ignore next 3 -- @preserve */
-export async function convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition> {
+export async function convertToInstanceFilterDefinition(
+  filter: PresentationInstanceFilter,
+  imodel: IModelConnection,
+): Promise<InstanceFilterDefinition> {
   return createInstanceFilterDefinitionBase(filter, imodel);
 }
 
@@ -106,10 +125,7 @@ export function useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilter
     [propertyInfos],
   );
 
-  return {
-    propertyInfos,
-    propertyRenderer,
-  };
+  return { propertyInfos, propertyRenderer };
 }
 
 /**
@@ -142,7 +158,10 @@ export function PresentationFilterBuilderValueRenderer({
   selectedClasses,
   ...props
 }: PresentationFilterBuilderValueRendererProps) {
-  const navigationPropertyContextProviderProps = useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor);
+  const navigationPropertyContextProviderProps = useFilterBuilderNavigationPropertyEditorContextProviderProps(
+    imodel,
+    descriptor,
+  );
   if (props.operator === "is-equal" || props.operator === "is-not-equal") {
     return (
       <UniquePropertyValuesSelector
@@ -191,13 +210,20 @@ export interface PresentationInstanceFilterBuilderProps {
 export function PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps) {
   const { imodel, descriptor, onInstanceFilterChanged, initialFilter } = props;
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
-    initialFilter: initialFilter?.filter ? PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, initialFilter.filter) : undefined,
+    initialFilter: initialFilter?.filter
+      ? PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, initialFilter.filter)
+      : undefined,
   });
   const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
   useEffect(() => {
     const filter = buildFilter({ ignoreErrors: true });
     onInstanceFilterChanged(
-      filter ? { filter: PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter), usedClasses: filteringProps.selectedClasses } : undefined,
+      filter
+        ? {
+            filter: PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter),
+            usedClasses: filteringProps.selectedClasses,
+          }
+        : undefined,
     );
   }, [descriptor, buildFilter, onInstanceFilterChanged, filteringProps.selectedClasses]);
   const onSelectedClassesChanged = (classIds: string[]) => {
@@ -221,7 +247,10 @@ export function PresentationInstanceFilterBuilder(props: PresentationInstanceFil
  * can be passed to [PresentationManager]($presentation-frontend) through request options in order to filter results.
  * @public
  */
-export async function createInstanceFilterDefinition(info: PresentationInstanceFilterInfo, imodel: IModelConnection): Promise<InstanceFilterDefinition> {
+export async function createInstanceFilterDefinition(
+  info: PresentationInstanceFilterInfo,
+  imodel: IModelConnection,
+): Promise<InstanceFilterDefinition> {
   if (!info.filter) {
     return { expression: createFilterClassExpression(info.usedClasses), selectClassName: "" };
   }

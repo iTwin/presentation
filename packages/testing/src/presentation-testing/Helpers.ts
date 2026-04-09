@@ -9,7 +9,12 @@
 import { join } from "path";
 import { IModelHost, IModelHostOptions } from "@itwin/core-backend";
 import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
-import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration, RpcInterfaceDefinition } from "@itwin/core-common";
+import {
+  IModelReadRpcInterface,
+  RpcConfiguration,
+  RpcDefaultConfiguration,
+  RpcInterfaceDefinition,
+} from "@itwin/core-common";
 import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
 import {
   HierarchyCacheMode,
@@ -18,7 +23,10 @@ import {
   PresentationManagerProps as PresentationBackendProps,
 } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
-import { Presentation as PresentationFrontend, PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
+import {
+  Presentation as PresentationFrontend,
+  PresentationProps as PresentationFrontendProps,
+} from "@itwin/presentation-frontend";
 import { getTestOutputDir, setTestOutputDir } from "./FilenameUtils.js";
 
 function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
@@ -115,9 +123,7 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
   }
   await props.frontendApp.startup(props.frontendAppOptions);
   const defaultFrontendProps: PresentationFrontendProps = {
-    presentation: {
-      activeLocale: IModelApp.localization.getLanguageList()[0],
-    },
+    presentation: { activeLocale: IModelApp.localization.getLanguageList()[0] },
   };
   await PresentationFrontend.initialize({ ...defaultFrontendProps, ...props.frontendProps });
   setTestOutputDir(props.testOutputDir);

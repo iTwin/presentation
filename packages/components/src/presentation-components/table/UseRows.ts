@@ -11,7 +11,15 @@ import { EMPTY, from, map, mergeMap, Observable, of, Subject, toArray } from "rx
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Content, DefaultContentDisplayTypes, KeySet, PageOptions, Ruleset, StartItemProps, traverseContent } from "@itwin/presentation-common";
+import {
+  Content,
+  DefaultContentDisplayTypes,
+  KeySet,
+  PageOptions,
+  Ruleset,
+  StartItemProps,
+  traverseContent,
+} from "@itwin/presentation-common";
 import { createIModelKey } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { FieldHierarchyRecord, InternalPropertyRecordsBuilder } from "../common/ContentBuilder.js";
@@ -45,11 +53,7 @@ export function useRows(props: UseRowsProps): UseRowsResult {
 
   const { imodel, ruleset, keys, pageSize, options } = props;
   const setErrorState = useErrorState();
-  const [state, setState] = useState<State>({
-    isLoading: false,
-    rows: [],
-    total: 0,
-  });
+  const [state, setState] = useState<State>({ isLoading: false, rows: [], total: 0 });
 
   const loaderRef = useRef<RowsLoader>(noopRowsLoader);
 
@@ -71,12 +75,7 @@ export function useRows(props: UseRowsProps): UseRowsResult {
           const newRows = [...prev.rows];
           newRows.splice(offset, rowDefinitions.length, ...rowDefinitions);
 
-          return {
-            ...prev,
-            isLoading: false,
-            rows: newRows,
-            total,
-          };
+          return { ...prev, isLoading: false, rows: newRows, total };
         });
       },
       error: (err) => {
@@ -157,7 +156,9 @@ function createRowsLoader({
           return from(loadRows(imodel, ruleset, keys, { start: loaderOptions.pageStart, size: pageSize }, options));
         }
         case "reload": {
-          return loaderOptions.loadedRowsCount === 0 ? EMPTY : createReloadObs(imodel, ruleset, keys, options, loaderOptions.loadedRowsCount);
+          return loaderOptions.loadedRowsCount === 0
+            ? EMPTY
+            : createReloadObs(imodel, ruleset, keys, options, loaderOptions.loadedRowsCount);
         }
       }
     }),
@@ -177,16 +178,19 @@ function createRowsLoader({
 /** @internal */
 export const ROWS_RELOAD_PAGE_SIZE = 1000;
 
-function createReloadObs(imodel: IModelConnection, ruleset: Ruleset | string, keys: Readonly<KeySet>, options: TableOptions, loadedItemsCount: number) {
+function createReloadObs(
+  imodel: IModelConnection,
+  ruleset: Ruleset | string,
+  keys: Readonly<KeySet>,
+  options: TableOptions,
+  loadedItemsCount: number,
+) {
   const lastPageIndex = Math.floor(loadedItemsCount / ROWS_RELOAD_PAGE_SIZE);
   const lastPageSize = loadedItemsCount % ROWS_RELOAD_PAGE_SIZE;
 
   const pages: Array<Required<PageOptions>> = [];
   for (let i = 0; i <= lastPageIndex; i++) {
-    pages.push({
-      start: i * ROWS_RELOAD_PAGE_SIZE,
-      size: i === lastPageIndex ? lastPageSize : ROWS_RELOAD_PAGE_SIZE,
-    });
+    pages.push({ start: i * ROWS_RELOAD_PAGE_SIZE, size: i === lastPageIndex ? lastPageSize : ROWS_RELOAD_PAGE_SIZE });
   }
 
   return from(pages).pipe(mergeMap((pageOptions) => from(loadRows(imodel, ruleset, keys, pageOptions, options))));
@@ -231,35 +235,17 @@ async function loadRows(
         )
       : // eslint-disable-next-line @typescript-eslint/no-deprecated
         from(Presentation.presentation.getContentAndSize(requestProps)).pipe(
-          map((result) =>
-            result
-              ? {
-                  total: result.size,
-                  content: result.content,
-                }
-              : undefined,
-          ),
+          map((result) => (result ? { total: result.size, content: result.content } : undefined)),
         )
     )
       .pipe(
         map((result) =>
           result
-            ? {
-                rowDefinitions: createRows(result.content, imodel),
-                total: result.total,
-                offset: paging.start,
-              }
-            : {
-                rowDefinitions: [],
-                total: 0,
-                offset: 0,
-              },
+            ? { rowDefinitions: createRows(result.content, imodel), total: result.total, offset: paging.start }
+            : { rowDefinitions: [], total: 0, offset: 0 },
         ),
       )
-      .subscribe({
-        next: resolve,
-        error: reject,
-      });
+      .subscribe({ next: resolve, error: reject });
   });
 }
 
@@ -285,10 +271,7 @@ class RowsBuilder extends InternalPropertyRecordsBuilder {
           }
 
           assert(this._currentRow !== undefined);
-          this._currentRow.cells.push({
-            key: record.fieldHierarchy.field.name,
-            record: record.record,
-          });
+          this._currentRow.cells.push({ key: record.fieldHierarchy.field.name, record: record.record });
         },
       }),
       (record: WithIModelKey<PropertyRecord>) => {
@@ -312,8 +295,5 @@ class RowsBuilder extends InternalPropertyRecordsBuilder {
 }
 
 /* v8 ignore start -- @preserve */
-const noopRowsLoader: RowsLoader = {
-  loadPage: () => {},
-  reload: () => {},
-};
+const noopRowsLoader: RowsLoader = { loadPage: () => {}, reload: () => {} };
 /* v8 ignore stop -- @preserve */

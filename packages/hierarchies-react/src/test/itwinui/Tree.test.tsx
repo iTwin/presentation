@@ -7,7 +7,11 @@ import { ComponentPropsWithoutRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { MAX_LIMIT_OVERRIDE } from "../../presentation-hierarchies-react/internal/Utils.js";
 import { TreeRenderer } from "../../presentation-hierarchies-react/itwinui/TreeRenderer.js";
-import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../../presentation-hierarchies-react/TreeNode.js";
+import {
+  PresentationHierarchyNode,
+  PresentationInfoNode,
+  PresentationTreeNode,
+} from "../../presentation-hierarchies-react/TreeNode.js";
 import { HierarchyLevelDetails } from "../../presentation-hierarchies-react/UseTree.js";
 import { act, createTestHierarchyNode, render, stubVirtualization, waitFor, within } from "../TestUtils.js";
 
@@ -21,26 +25,12 @@ describe("Tree", () => {
   const getHierarchyLevelDetails = vi.fn<RequiredTreeProps["getHierarchyLevelDetails"]>();
   const reloadTree = vi.fn<RequiredTreeProps["reloadTree"]>();
 
-  const initialProps = {
-    onFilterClick,
-    expandNode,
-    selectNodes,
-    isNodeSelected,
-    getHierarchyLevelDetails,
-    reloadTree,
-  };
+  const initialProps = { onFilterClick, expandNode, selectNodes, isNodeSelected, getHierarchyLevelDetails, reloadTree };
 
   stubVirtualization();
 
   it("renders nodes", () => {
-    const rootNodes = createNodes([
-      {
-        id: "root-1",
-      },
-      {
-        id: "root-2",
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "root-1" }, { id: "root-2" }]);
 
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
@@ -50,24 +40,8 @@ describe("Tree", () => {
 
   it("expands/collapses nodes", async () => {
     const rootNodes = createNodes([
-      {
-        id: "root-1",
-        isExpanded: true,
-        children: [
-          {
-            id: "child-1",
-          },
-        ],
-      },
-      {
-        id: "root-2",
-        isExpanded: false,
-        children: [
-          {
-            id: "child-2",
-          },
-        ],
-      },
+      { id: "root-1", isExpanded: true, children: [{ id: "child-1" }] },
+      { id: "root-2", isExpanded: false, children: [{ id: "child-2" }] },
     ]);
 
     const { user, getByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
@@ -89,13 +63,11 @@ describe("Tree", () => {
   });
 
   it("renders unselectable nodes when selection callbacks are not provided", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "test node",
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "test node" }]);
 
-    const { user, getByRole } = render(<TreeRenderer rootNodes={rootNodes} expandNode={initialProps.expandNode} selectionMode={"single"} />);
+    const { user, getByRole } = render(
+      <TreeRenderer rootNodes={rootNodes} expandNode={initialProps.expandNode} selectionMode={"single"} />,
+    );
 
     const node = getByRole("treeitem");
     expect(within(node).queryByText("test node")).not.toBeNull();
@@ -106,18 +78,13 @@ describe("Tree", () => {
   });
 
   it("selects/unselects nodes", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "root-1",
-      },
-      {
-        id: "root-2",
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "root-1" }, { id: "root-2" }]);
 
     isNodeSelected.mockImplementation((nodeId) => nodeId === "root-1");
 
-    const { user, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} selectionMode={"single"} />);
+    const { user, getByText, queryByText } = render(
+      <TreeRenderer rootNodes={rootNodes} {...initialProps} selectionMode={"single"} />,
+    );
 
     expect(queryByText("root-1")).not.toBeNull();
     expect(queryByText("root-2")).not.toBeNull();
@@ -131,18 +98,13 @@ describe("Tree", () => {
   });
 
   it("selects/deselects using keyboard", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "root-1",
-      },
-      {
-        id: "root-2",
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "root-1" }, { id: "root-2" }]);
 
     isNodeSelected.mockImplementation((nodeId) => nodeId === "root-1");
 
-    const { user, getAllByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} selectionMode={"single"} />);
+    const { user, getAllByRole, queryByText } = render(
+      <TreeRenderer rootNodes={rootNodes} {...initialProps} selectionMode={"single"} />,
+    );
 
     expect(queryByText("root-1")).not.toBeNull();
     expect(queryByText("root-2")).not.toBeNull();
@@ -164,17 +126,7 @@ describe("Tree", () => {
   });
 
   it("does not select node when expander clicked using keyboard", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "root-1",
-        isExpanded: false,
-        children: [
-          {
-            id: "child-1",
-          },
-        ],
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "root-1", isExpanded: false, children: [{ id: "child-1" }] }]);
 
     const { user, getByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
@@ -193,16 +145,7 @@ describe("Tree", () => {
 
   it("focuses node buttons with keyboard", async () => {
     const rootNodes = createNodes([
-      {
-        id: "root-1",
-        isExpanded: false,
-        isFilterable: true,
-        children: [
-          {
-            id: "child-1",
-          },
-        ],
-      },
+      { id: "root-1", isExpanded: false, isFilterable: true, children: [{ id: "child-1" }] },
     ]);
 
     const { user, getByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
@@ -226,17 +169,7 @@ describe("Tree", () => {
 
   it("focuses filtered node buttons with keyboard", async () => {
     const rootNodes = createNodes([
-      {
-        id: "root-1",
-        isExpanded: false,
-        isFilterable: true,
-        isFiltered: true,
-        children: [
-          {
-            id: "child-1",
-          },
-        ],
-      },
+      { id: "root-1", isExpanded: false, isFilterable: true, isFiltered: true, children: [{ id: "child-1" }] },
     ]);
 
     const { user, getByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
@@ -268,17 +201,7 @@ describe("Tree", () => {
 
   it("focuses `Apply filter` button when node becomes filtered", async () => {
     const rootNodes = createNodes([
-      {
-        id: "root-1",
-        isExpanded: false,
-        isFilterable: true,
-        isFiltered: false,
-        children: [
-          {
-            id: "child-1",
-          },
-        ],
-      },
+      { id: "root-1", isExpanded: false, isFilterable: true, isFiltered: false, children: [{ id: "child-1" }] },
     ]);
 
     const { rerender, getByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
@@ -290,17 +213,7 @@ describe("Tree", () => {
     expect(within(rootNode).getByRole("button", { name: "Apply filter" }).matches(":focus")).toBe(false);
 
     const filteredRootNodes = createNodes([
-      {
-        id: "root-1",
-        isExpanded: false,
-        isFilterable: true,
-        isFiltered: true,
-        children: [
-          {
-            id: "child-1",
-          },
-        ],
-      },
+      { id: "root-1", isExpanded: false, isFilterable: true, isFiltered: true, children: [{ id: "child-1" }] },
     ]);
     rerender(<TreeRenderer rootNodes={filteredRootNodes} {...initialProps} />);
 
@@ -312,57 +225,43 @@ describe("Tree", () => {
   });
 
   it("renders icon", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "root-1",
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "root-1" }]);
 
-    const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} getIcon={() => <div>Icon</div>} />);
+    const { queryByText } = render(
+      <TreeRenderer rootNodes={rootNodes} {...initialProps} getIcon={() => <div>Icon</div>} />,
+    );
 
     expect(queryByText("root-1")).not.toBeNull();
     expect(queryByText("Icon")).not.toBeNull();
   });
 
   it("renders custom label", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "root-1",
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "root-1" }]);
 
-    const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} getLabel={() => <div>Label</div>} />);
+    const { queryByText } = render(
+      <TreeRenderer rootNodes={rootNodes} {...initialProps} getLabel={() => <div>Label</div>} />,
+    );
 
     expect(queryByText("root-1")).toBeNull();
     expect(queryByText("Label")).not.toBeNull();
   });
 
   it("renders sublabel", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "root-1",
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "root-1" }]);
 
-    const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} getSublabel={() => <div>Sublabel</div>} />);
+    const { queryByText } = render(
+      <TreeRenderer rootNodes={rootNodes} {...initialProps} getSublabel={() => <div>Sublabel</div>} />,
+    );
 
     expect(queryByText("root-1")).not.toBeNull();
     expect(queryByText("Sublabel")).not.toBeNull();
   });
 
   it("clears active filter", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "root-1",
-        isFiltered: true,
-        isFilterable: true,
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "root-1", isFiltered: true, isFilterable: true }]);
 
     const setInstanceFilter = vi.fn();
-    getHierarchyLevelDetails.mockReturnValue({
-      setInstanceFilter,
-    } as unknown as HierarchyLevelDetails);
+    getHierarchyLevelDetails.mockReturnValue({ setInstanceFilter } as unknown as HierarchyLevelDetails);
 
     const { user, queryByText, getByRole } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
@@ -373,12 +272,7 @@ describe("Tree", () => {
   });
 
   it("calls `onFilterClick` if node is filterable", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "root-1",
-        isFilterable: true,
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "root-1", isFilterable: true }]);
 
     const hierarchyLevelDetails = {} as unknown as HierarchyLevelDetails;
     getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
@@ -391,18 +285,14 @@ describe("Tree", () => {
   });
 
   it("renders filter button when filter buttons are hidden, but node is filtered", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "root-1",
-        isFilterable: true,
-        isFiltered: true,
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "root-1", isFilterable: true, isFiltered: true }]);
 
     const hierarchyLevelDetails = {} as unknown as HierarchyLevelDetails;
     getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
 
-    const { user, queryByText, getByRole } = render(<TreeRenderer rootNodes={rootNodes} filterButtonsVisibility={"hide"} {...initialProps} />);
+    const { user, queryByText, getByRole } = render(
+      <TreeRenderer rootNodes={rootNodes} filterButtonsVisibility={"hide"} {...initialProps} />,
+    );
 
     expect(queryByText("root-1")).not.toBeNull();
     await user.click(getByRole("button", { name: "Apply filter" }));
@@ -410,26 +300,19 @@ describe("Tree", () => {
   });
 
   it("renders single additional action inline", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "root-1",
-        isFilterable: true,
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "root-1", isFilterable: true }]);
 
     const hierarchyLevelDetails = {} as unknown as HierarchyLevelDetails;
     getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
 
     const actionSpy = vi.fn();
     const getActions: RequiredTreeProps["getActions"] = () => [
-      {
-        label: "Custom action",
-        onClick: actionSpy,
-        icon: <></>,
-      },
+      { label: "Custom action", onClick: actionSpy, icon: <></> },
     ];
 
-    const { user, getByRole } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} getActions={getActions} />);
+    const { user, getByRole } = render(
+      <TreeRenderer rootNodes={rootNodes} {...initialProps} getActions={getActions} />,
+    );
 
     const actionButton = getByRole("button", { name: "Custom action" });
     await user.click(actionButton);
@@ -437,12 +320,7 @@ describe("Tree", () => {
   });
 
   it("renders additional actions in dropdown menu", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "root-1",
-        isFilterable: true,
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "root-1", isFilterable: true }]);
 
     const hierarchyLevelDetails = {} as unknown as HierarchyLevelDetails;
     getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
@@ -450,19 +328,13 @@ describe("Tree", () => {
     const actionSpy1 = vi.fn();
     const actionSpy2 = vi.fn();
     const getActions: RequiredTreeProps["getActions"] = () => [
-      {
-        label: "Custom action 1",
-        onClick: actionSpy1,
-        icon: <></>,
-      },
-      {
-        label: "Custom action 2",
-        onClick: actionSpy2,
-        icon: <></>,
-      },
+      { label: "Custom action 1", onClick: actionSpy1, icon: <></> },
+      { label: "Custom action 2", onClick: actionSpy2, icon: <></> },
     ];
 
-    const { user, getByRole, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} getActions={getActions} />);
+    const { user, getByRole, getByText, queryByText } = render(
+      <TreeRenderer rootNodes={rootNodes} {...initialProps} getActions={getActions} />,
+    );
 
     const moreButton = getByRole("button", { name: "More" });
     await user.click(moreButton);
@@ -489,12 +361,7 @@ describe("Tree", () => {
       } as unknown as HierarchyLevelDetails;
       getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
       const rootNodes = createNodes([
-        {
-          id: "info-node",
-          parentNodeId: "parent-id",
-          type: "ResultSetTooLarge",
-          resultSetSizeLimit: 100,
-        },
+        { id: "info-node", parentNodeId: "parent-id", type: "ResultSetTooLarge", resultSetSizeLimit: 100 },
       ]);
       const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
       expect(queryByText(/Please provide/)).not.toBeNull();
@@ -509,14 +376,11 @@ describe("Tree", () => {
       } as unknown as HierarchyLevelDetails;
       getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
       const rootNodes = createNodes([
-        {
-          id: "info-node",
-          parentNodeId: "parent-id",
-          type: "ResultSetTooLarge",
-          resultSetSizeLimit: 100,
-        },
+        { id: "info-node", parentNodeId: "parent-id", type: "ResultSetTooLarge", resultSetSizeLimit: 100 },
       ]);
-      const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} onFilterClick={undefined} />);
+      const { queryByText } = render(
+        <TreeRenderer rootNodes={rootNodes} {...initialProps} onFilterClick={undefined} />,
+      );
       expect(queryByText(/Please provide/)).toBeNull();
       expect(queryByText(/additional filtering/)).toBeNull();
       expect(queryByText(/There are more items than allowed limit of 100/)).not.toBeNull();
@@ -525,14 +389,15 @@ describe("Tree", () => {
 
     it("renders `ResultSetTooLarge` node without filtering or override support", async () => {
       const rootNodes = createNodes([
-        {
-          id: "info-node",
-          parentNodeId: "parent-id",
-          type: "ResultSetTooLarge",
-          resultSetSizeLimit: 100,
-        },
+        { id: "info-node", parentNodeId: "parent-id", type: "ResultSetTooLarge", resultSetSizeLimit: 100 },
       ]);
-      const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} expandNode={initialProps.expandNode} getHierarchyLevelDetails={undefined} />);
+      const { queryByText } = render(
+        <TreeRenderer
+          rootNodes={rootNodes}
+          expandNode={initialProps.expandNode}
+          getHierarchyLevelDetails={undefined}
+        />,
+      );
       expect(queryByText(/Please provide/)).toBeNull();
       expect(queryByText(/additional filtering/)).toBeNull();
       expect(queryByText(/There are more items than allowed limit of 100/)).not.toBeNull();
@@ -541,12 +406,7 @@ describe("Tree", () => {
 
     it("calls `onFilterClick` if node is `ResultSetTooLarge` info node", async () => {
       const rootNodes = createNodes([
-        {
-          id: "info-node",
-          parentNodeId: "parent-id",
-          type: "ResultSetTooLarge",
-          resultSetSizeLimit: 100,
-        },
+        { id: "info-node", parentNodeId: "parent-id", type: "ResultSetTooLarge", resultSetSizeLimit: 100 },
       ]);
 
       const hierarchyLevelDetails = {
@@ -571,9 +431,7 @@ describe("Tree", () => {
       ]);
 
       const setSizeLimit = vi.fn();
-      getHierarchyLevelDetails.mockReturnValue({
-        setSizeLimit,
-      } as unknown as HierarchyLevelDetails);
+      getHierarchyLevelDetails.mockReturnValue({ setSizeLimit } as unknown as HierarchyLevelDetails);
 
       const { user, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
@@ -601,14 +459,7 @@ describe("Tree", () => {
   });
 
   it("renders placeholder node if children is loading", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "root-1",
-        isExpanded: true,
-        isLoading: true,
-        children: true,
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "root-1", isExpanded: true, isLoading: true, children: true }]);
 
     const { queryByText, queryByTitle } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
@@ -619,13 +470,7 @@ describe("Tree", () => {
   });
 
   it("renders NoFilterMatches info node", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "info-node",
-        parentNodeId: undefined,
-        type: "NoFilterMatches",
-      },
-    ]);
+    const rootNodes = createNodes([{ id: "info-node", parentNodeId: undefined, type: "NoFilterMatches" }]);
 
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
@@ -636,12 +481,7 @@ describe("Tree", () => {
 
   it("renders unknown info node", async () => {
     const rootNodes = createNodes([
-      {
-        id: "info-node",
-        parentNodeId: undefined,
-        type: "Unknown",
-        message: "Some Error",
-      },
+      { id: "info-node", parentNodeId: undefined, type: "Unknown", message: "Some Error" },
     ]);
 
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
@@ -653,12 +493,7 @@ describe("Tree", () => {
 
   it("allows to reload subtree with error", async () => {
     const rootNodes = createNodes([
-      {
-        id: "info-node",
-        parentNodeId: "parent-id",
-        type: "Unknown",
-        message: "Some Error",
-      },
+      { id: "info-node", parentNodeId: "parent-id", type: "Unknown", message: "Some Error" },
     ]);
 
     const { queryByText, getByText, user } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
@@ -676,12 +511,7 @@ describe("Tree", () => {
 
   it("does not render `Retry` button if `reloadTree` callback is not provided", async () => {
     const rootNodes = createNodes([
-      {
-        id: "info-node",
-        parentNodeId: "parent-id",
-        type: "Unknown",
-        message: "Some Error",
-      },
+      { id: "info-node", parentNodeId: "parent-id", type: "Unknown", message: "Some Error" },
     ]);
 
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} reloadTree={undefined} />);
@@ -694,34 +524,11 @@ describe("Tree", () => {
 
   it("uses localization", async () => {
     const rootNodes = createNodes([
-      {
-        id: "filtered-node",
-        isFiltered: true,
-        isFilterable: true,
-      },
-      {
-        id: "info-node-1",
-        isExpanded: true,
-        isLoading: true,
-        children: true,
-      },
-      {
-        id: "info-node-2",
-        parentNodeId: "parent-id",
-        type: "NoFilterMatches",
-      },
-      {
-        id: "info-node-3",
-        parentNodeId: "parent-id",
-        type: "ResultSetTooLarge",
-        resultSetSizeLimit: 100,
-      },
-      {
-        id: "info-node-4",
-        parentNodeId: undefined,
-        type: "Unknown",
-        message: "Some Error",
-      },
+      { id: "filtered-node", isFiltered: true, isFilterable: true },
+      { id: "info-node-1", isExpanded: true, isLoading: true, children: true },
+      { id: "info-node-2", parentNodeId: "parent-id", type: "NoFilterMatches" },
+      { id: "info-node-3", parentNodeId: "parent-id", type: "ResultSetTooLarge", resultSetSizeLimit: 100 },
+      { id: "info-node-4", parentNodeId: undefined, type: "Unknown", message: "Some Error" },
     ]);
 
     const localizedStrings = {
@@ -733,14 +540,17 @@ describe("Tree", () => {
       resultLimitExceededWithFiltering:
         "Custom please provide <link>Custom additional filtering</link> - Custom there are more items than allowed limit of {{limit}}.",
       increaseHierarchyLimit: "<link>Custom increase the hierarchy level size limit to {{limit}}.</link>",
-      increaseHierarchyLimitWithFiltering: "Custom or, <link>Custom increase the hierarchy level size limit to {{limit}}.</link>",
+      increaseHierarchyLimitWithFiltering:
+        "Custom or, <link>Custom increase the hierarchy level size limit to {{limit}}.</link>",
     };
 
     const hierarchyLevelDetails = {
       hierarchyNode: createTestHierarchyNode({ id: "parent-id", supportsFiltering: true }),
     } as unknown as HierarchyLevelDetails;
     getHierarchyLevelDetails.mockReturnValue(hierarchyLevelDetails);
-    const { queryByText, queryByRole, queryByTitle, rerender } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+    const { queryByText, queryByRole, queryByTitle, rerender } = render(
+      <TreeRenderer rootNodes={rootNodes} {...initialProps} />,
+    );
 
     await waitFor(() => {
       expect(queryByText(/Some Error/)).not.toBeNull();
@@ -754,7 +564,9 @@ describe("Tree", () => {
       expect(queryByText(/Or,/)).not.toBeNull();
       expect(queryByText(/increase the hierarchy level size limit to /)).not.toBeNull();
       expect(
-        queryByTitle(/Please provide additional filtering - there are more items than allowed limit of 100. Or, increase the hierarchy level size limit to/),
+        queryByTitle(
+          /Please provide additional filtering - there are more items than allowed limit of 100. Or, increase the hierarchy level size limit to/,
+        ),
       ).not.toBeNull();
     });
 
@@ -788,9 +600,7 @@ type PartialHierarchyNode = Partial<Omit<PresentationHierarchyNode, "children">>
 function createNodes(nodes: Array<PartialHierarchyNode | PresentationInfoNode>): PresentationTreeNode[] {
   return nodes.map<PresentationTreeNode>((node) => {
     if (isInfoNode(node)) {
-      return {
-        ...node,
-      };
+      return { ...node };
     }
 
     const presentationNode: PresentationHierarchyNode = {

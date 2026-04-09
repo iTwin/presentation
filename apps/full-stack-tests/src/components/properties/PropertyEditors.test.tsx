@@ -3,7 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import { EditorContainer, UiComponents } from "@itwin/components-react";
@@ -68,11 +72,7 @@ describe("Property editors", () => {
           return {
             name: "TestFormat",
             label: "Test format override",
-            composite: {
-              includeZero: true,
-              spacer: "",
-              units: [{ label: "in", name: "Units.IN" }],
-            },
+            composite: { includeZero: true, spacer: "", units: [{ label: "in", name: "Units.IN" }] },
             formatTraits: ["keepSingleZero", "showUnitLabel"],
             precision: 1,
             type: "Decimal",
@@ -91,12 +91,7 @@ describe("Property editors", () => {
       {
         type: FieldDescriptorType.Properties,
         pathFromSelectToPropertyClass: [],
-        properties: [
-          {
-            class: schema.items.MyPhysicalObject.fullName.replaceAll(".", ":"),
-            name: "MyProperty",
-          },
-        ],
+        properties: [{ class: schema.items.MyPhysicalObject.fullName.replaceAll(".", ":"), name: "MyProperty" }],
       },
       true,
     );
@@ -175,12 +170,7 @@ describe("Property editors", () => {
       {
         type: FieldDescriptorType.Properties,
         pathFromSelectToPropertyClass: [],
-        properties: [
-          {
-            class: schema.items.MyPhysicalObject.fullName.replaceAll(".", ":"),
-            name: "MyProperty",
-          },
-        ],
+        properties: [{ class: schema.items.MyPhysicalObject.fullName.replaceAll(".", ":"), name: "MyProperty" }],
       },
       true,
     );
@@ -195,7 +185,9 @@ describe("Property editors", () => {
     // render an editor for the property
     const commitSpy = vi.fn();
     const cancelSpy = vi.fn();
-    const { findByRole, user } = render(<EditorContainer propertyRecord={propertyRecord!} onCommit={commitSpy} onCancel={cancelSpy} />);
+    const { findByRole, user } = render(
+      <EditorContainer propertyRecord={propertyRecord!} onCommit={commitSpy} onCancel={cancelSpy} />,
+    );
 
     // ensure the input is editable
     const input = await findByRole("textbox");

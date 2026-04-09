@@ -127,7 +127,10 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
   const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
 
   // Create a factory for building nodes SELECT query clauses in a format understood by the provider
-  const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsQueryFactory });
+  const nodesQueryFactory = createNodesQueryClauseFactory({
+    imodelAccess,
+    instanceLabelSelectClauseFactory: labelsQueryFactory,
+  });
 
   // Then, define the hierarchy
   const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
@@ -144,7 +147,10 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: {
-                    selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.GeometricModel3d" }),
+                    selector: await labelsQueryFactory.createSelectClause({
+                      classAlias: "this",
+                      className: "BisCore.GeometricModel3d",
+                    }),
                   },
                 })}
               FROM BisCore.GeometricModel3d this
@@ -166,7 +172,10 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: {
-                        selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.Element" }),
+                        selector: await labelsQueryFactory.createSelectClause({
+                          classAlias: "this",
+                          className: "BisCore.Element",
+                        }),
                       },
                       grouping: {
                         byClass: true,

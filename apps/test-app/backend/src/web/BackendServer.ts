@@ -19,7 +19,10 @@ export async function initialize(rpcInterfaces: RpcInterfaceDefinition[]) {
   await IModelHost.startup();
 
   // tell BentleyCloudRpcManager which RPC interfaces to handle
-  const rpcConfig = BentleyCloudRpcManager.initializeImpl({ info: { title: "presentation-test-app", version: "v1.0" } }, rpcInterfaces);
+  const rpcConfig = BentleyCloudRpcManager.initializeImpl(
+    { info: { title: "presentation-test-app", version: "v1.0" } },
+    rpcInterfaces,
+  );
 
   // create a basic express web server
   const port = Number(process.env.PORT || 3001);

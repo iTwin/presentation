@@ -3,7 +3,24 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { concat, concatAll, delay, EMPTY, expand, finalize, from, last, map, merge, mergeMap, Observable, of, reduce, tap, toArray } from "rxjs";
+import {
+  concat,
+  concatAll,
+  delay,
+  EMPTY,
+  expand,
+  finalize,
+  from,
+  last,
+  map,
+  merge,
+  mergeMap,
+  Observable,
+  of,
+  reduce,
+  tap,
+  toArray,
+} from "rxjs";
 import { assert, StopWatch } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { HierarchyNode, ParentHierarchyNode } from "../../HierarchyNode.js";
@@ -17,7 +34,11 @@ import {
 import { doLog, log } from "../../internal/LoggingUtils.js";
 import { releaseMainThreadOnItemsCount } from "../../internal/operators/ReleaseMainThread.js";
 import { tapOnce } from "../../internal/operators/TapOnce.js";
-import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode.js";
+import {
+  ProcessedGroupingHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "../IModelHierarchyNode.js";
 import { assignAutoExpand } from "./grouping/AutoExpand.js";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping.js";
 import { createClassGroups } from "./grouping/ClassGrouping.js";
@@ -29,7 +50,10 @@ const OPERATOR_NAME = "Grouping";
 /** @internal */
 export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME, LOGGING_NAMESPACE_INTERNAL);
 const LOGGING_NAMESPACE_PERFORMANCE = createOperatorLoggingNamespace(OPERATOR_NAME, BASE_LOGGING_NAMESPACE_PERFORMANCE);
-const LOGGING_NAMESPACE_PERFORMANCE_INTERNAL = createOperatorLoggingNamespace(OPERATOR_NAME, BASE_LOGGING_NAMESPACE_PERFORMANCE_INTERNAL);
+const LOGGING_NAMESPACE_PERFORMANCE_INTERNAL = createOperatorLoggingNamespace(
+  OPERATOR_NAME,
+  BASE_LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
+);
 
 /** @internal */
 export function createGroupingOperator(
@@ -52,7 +76,10 @@ export function createGroupingOperator(
           message: () => `Starting grouping (parent: ${createNodeIdentifierForLogging(parentNode)})`,
         });
       }),
-      reduce<ProcessedHierarchyNode, { instanceNodes: ProcessedInstanceHierarchyNode[]; restNodes: ProcessedHierarchyNode[] }>(
+      reduce<
+        ProcessedHierarchyNode,
+        { instanceNodes: ProcessedInstanceHierarchyNode[]; restNodes: ProcessedHierarchyNode[] }
+      >(
         (resolvedNodes, node) => {
           if (HierarchyNode.isInstancesNode(node)) {
             resolvedNodes.instanceNodes.push(node);
@@ -67,7 +94,8 @@ export function createGroupingOperator(
         /* v8 ignore next -- @preserve */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
-          message: () => `Nodes partitioned. Got ${instanceNodes.length} instance nodes and ${restNodes.length} rest nodes.`,
+          message: () =>
+            `Nodes partitioned. Got ${instanceNodes.length} instance nodes and ${restNodes.length} rest nodes.`,
         });
       }),
       mergeMap((res) => {
@@ -85,7 +113,14 @@ export function createGroupingOperator(
           groupingHandlersObs.pipe(
             toArray(),
             mergeMap((createdGroupingHandlers) =>
-              groupInstanceNodes(instanceNodes, restNodes.length, createdGroupingHandlers, parentNode, onNodesGrouped, onGroupingNodeCreated),
+              groupInstanceNodes(
+                instanceNodes,
+                restNodes.length,
+                createdGroupingHandlers,
+                parentNode,
+                onNodesGrouped,
+                onGroupingNodeCreated,
+              ),
             ),
             finalize(() => {
               /* v8 ignore next -- @preserve */
@@ -106,7 +141,9 @@ export function createGroupingOperator(
 }
 
 /** @internal */
-export type ProcessedInstancesGroupingHierarchyNode = Omit<ProcessedGroupingHierarchyNode, "children"> & { children: ProcessedInstanceHierarchyNode[] };
+export type ProcessedInstancesGroupingHierarchyNode = Omit<ProcessedGroupingHierarchyNode, "children"> & {
+  children: ProcessedInstanceHierarchyNode[];
+};
 
 /** @internal */
 export interface GroupingHandlerResult {
@@ -161,11 +198,15 @@ function groupInstanceNodes(
           return of(result).pipe(
             map((r) => applyGroupHidingParams(r, extraSiblings)),
             map((r) => assignAutoExpand(r)),
-            map((r) => ({ handlerIndex: handlerIndex + 1, result: { ...r, grouped: mergeInPlace(curr?.grouped, r.grouped) } })),
+            map((r) => ({
+              handlerIndex: handlerIndex + 1,
+              result: { ...r, grouped: mergeInPlace(curr?.grouped, r.grouped) },
+            })),
             /* v8 ignore next -- @preserve */
             log({
               category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
-              message: () => `Post-processing grouping handler ${handlerIndex} exclusively took ${groupingPostProcessingTimer.elapsedSeconds.toFixed(3)} s.`,
+              message: () =>
+                `Post-processing grouping handler ${handlerIndex} exclusively took ${groupingPostProcessingTimer.elapsedSeconds.toFixed(3)} s.`,
             }),
             delay(0),
           );
@@ -192,7 +233,10 @@ function groupInstanceNodes(
         assert(HierarchyNode.isGeneric(parentNode) || HierarchyNode.isInstancesNode(parentNode));
         groupingNode.nonGroupingAncestor = parentNode;
       });
-      return mergeInPlace<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>(result.grouped, result.ungrouped);
+      return mergeInPlace<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>(
+        result.grouped,
+        result.ungrouped,
+      );
     }),
   );
 }
@@ -224,17 +268,22 @@ function createGroupingHandlers(
         )
       : EMPTY,
     groupingLevel <= GroupingLevel.Property
-      ? from(createPropertiesGroupingHandlers(imodelAccess, parentNode, processedInstanceNodes, valueFormatter, localizedStrings)).pipe(concatAll())
+      ? from(
+          createPropertiesGroupingHandlers(
+            imodelAccess,
+            parentNode,
+            processedInstanceNodes,
+            valueFormatter,
+            localizedStrings,
+          ),
+        ).pipe(concatAll())
       : EMPTY,
     groupingLevel < GroupingLevel.Label ? of<GroupingHandler>(async (allNodes) => createLabelGroups(allNodes)) : EMPTY,
   ).pipe(
     tap({
       subscribe: () => {
         /* v8 ignore next -- @preserve */
-        doLog({
-          category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
-          message: () => `Start creating grouping handlers`,
-        });
+        doLog({ category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL, message: () => `Start creating grouping handlers` });
         timer.start();
       },
     }),

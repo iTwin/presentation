@@ -20,7 +20,11 @@ import { safeDispose } from "./Utils.js";
 // cspell:words jpath
 
 function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding {
-  return typeof value === "object" && (value as ECSqlBinding).type !== undefined && (value as ECSqlBinding).value !== undefined;
+  return (
+    typeof value === "object" &&
+    (value as ECSqlBinding).type !== undefined &&
+    (value as ECSqlBinding).value !== undefined
+  );
 }
 
 export class ECDbBuilder {
@@ -36,7 +40,10 @@ export class ECDbBuilder {
     this._ecdb.importSchema(schemaFilePath);
   }
 
-  private createInsertQuery(fullClassName: string, props?: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined }) {
+  private createInsertQuery(
+    fullClassName: string,
+    props?: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined },
+  ) {
     if (!props) {
       props = { ecInstanceId: undefined };
     }
@@ -124,7 +131,10 @@ export class ECDbBuilder {
         query.binder(stmt);
         const res = stmt.stepForInsert();
         if (res.status !== DbResult.BE_SQLITE_DONE) {
-          throw new BentleyError(res.status, `Failed to insert instance of class "${fullClassName}". Query: ${query.clause}`);
+          throw new BentleyError(
+            res.status,
+            `Failed to insert instance of class "${fullClassName}". Query: ${query.clause}`,
+          );
         }
         return { className: fullClassName, id: res.id! };
       } finally {
@@ -135,7 +145,12 @@ export class ECDbBuilder {
     });
   }
 
-  public insertRelationship(fullClassName: string, sourceId: Id64String, targetId: Id64String, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
+  public insertRelationship(
+    fullClassName: string,
+    sourceId: Id64String,
+    targetId: Id64String,
+    props?: { [propertyName: string]: PrimitiveValue | undefined },
+  ) {
     const query = this.createInsertQuery(fullClassName, {
       ...props,
       sourceECInstanceId: sourceId,
@@ -146,7 +161,10 @@ export class ECDbBuilder {
         query.binder(stmt);
         const res = stmt.stepForInsert();
         if (res.status !== DbResult.BE_SQLITE_DONE) {
-          throw new BentleyError(res.status, `Failed to insert instance of relationship "${fullClassName}". Query: ${query.clause}`);
+          throw new BentleyError(
+            res.status,
+            `Failed to insert instance of relationship "${fullClassName}". Query: ${query.clause}`,
+          );
         }
         return { className: fullClassName, id: res.id! };
       } finally {
@@ -158,12 +176,19 @@ export class ECDbBuilder {
   }
 }
 
-export async function withECDb(setup: (db: ECDbBuilder, testName: string) => Promise<void>, use: (db: ECDb) => Promise<void>): Promise<void>;
+export async function withECDb(
+  setup: (db: ECDbBuilder, testName: string) => Promise<void>,
+  use: (db: ECDb) => Promise<void>,
+): Promise<void>;
 export async function withECDb<TResult extends {}>(
   setup: (db: ECDbBuilder, testName: string) => Promise<TResult>,
   use: (db: ECDb, res: TResult) => Promise<void>,
 ): Promise<void>;
-export async function withECDb(testName: string, setup: (db: ECDbBuilder, testName: string) => Promise<void>, use: (db: ECDb) => Promise<void>): Promise<void>;
+export async function withECDb(
+  testName: string,
+  setup: (db: ECDbBuilder, testName: string) => Promise<void>,
+  use: (db: ECDb) => Promise<void>,
+): Promise<void>;
 export async function withECDb<TResult extends {}>(
   testName: string,
   setup: (db: ECDbBuilder, testName: string) => Promise<TResult>,
@@ -171,12 +196,20 @@ export async function withECDb<TResult extends {}>(
 ): Promise<void>;
 export async function withECDb<TResult extends {} | undefined>(
   testNameOrSetup: string | ((db: ECDbBuilder, testName: string) => Promise<TResult | undefined>),
-  setupOrUse: ((db: ECDbBuilder, testName: string) => Promise<TResult | undefined>) | ((db: ECDb, res: TResult | undefined) => Promise<void>),
+  setupOrUse:
+    | ((db: ECDbBuilder, testName: string) => Promise<TResult | undefined>)
+    | ((db: ECDb, res: TResult | undefined) => Promise<void>),
   useOrNone?: (db: ECDb, res: TResult | undefined) => Promise<void>,
 ) {
   const testName = typeof testNameOrSetup === "string" ? testNameOrSetup : expect.getState().currentTestName!;
-  const setup = (typeof testNameOrSetup === "function" ? testNameOrSetup : setupOrUse) as (db: ECDbBuilder, testName: string) => Promise<TResult | undefined>;
-  const use = (typeof testNameOrSetup === "function" ? setupOrUse : useOrNone!) as (db: ECDb, res: TResult | undefined) => Promise<void>;
+  const setup = (typeof testNameOrSetup === "function" ? testNameOrSetup : setupOrUse) as (
+    db: ECDbBuilder,
+    testName: string,
+  ) => Promise<TResult | undefined>;
+  const use = (typeof testNameOrSetup === "function" ? setupOrUse : useOrNone!) as (
+    db: ECDb,
+    res: TResult | undefined,
+  ) => Promise<void>;
 
   const name = createFileNameFromString(testName);
   const outputFile = setupOutputFileLocation(name);
@@ -189,7 +222,11 @@ export async function withECDb<TResult extends {} | undefined>(
   safeDispose(db);
 }
 
-export async function importSchema(testName: string, imodel: { importSchema: (xml: string) => Promise<void> | void }, schemaContentXml: string) {
+export async function importSchema(
+  testName: string,
+  imodel: { importSchema: (xml: string) => Promise<void> | void },
+  schemaContentXml: string,
+) {
   const schemaName = `SCHEMA_${testName}`.replace(/[^\w\d_]/gi, "_").replace(/_+/g, "_");
   const schemaAlias = `a_${Guid.createValue().replaceAll("-", "")}`;
   const schemaXml = getFullSchemaXml({ schemaName, schemaAlias, schemaContentXml });
@@ -210,17 +247,16 @@ export async function importSchema(testName: string, imodel: { importSchema: (xm
   return {
     schemaName,
     schemaAlias,
-    items: schemaItems.reduce<{ [className: string]: { name: string; fullName: string; label: string } }>((classesObj, schemaItemDef) => {
-      const name = schemaItemDef.typeName;
-      return {
-        ...classesObj,
-        [name]: {
-          fullName: `${schemaName}.${name}`,
-          name,
-          label: schemaItemDef.displayLabel,
-        },
-      };
-    }, {}),
+    items: schemaItems.reduce<{ [className: string]: { name: string; fullName: string; label: string } }>(
+      (classesObj, schemaItemDef) => {
+        const name = schemaItemDef.typeName;
+        return {
+          ...classesObj,
+          [name]: { fullName: `${schemaName}.${name}`, name, label: schemaItemDef.displayLabel },
+        };
+      },
+      {},
+    ),
   };
 }
 
@@ -230,10 +266,18 @@ export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) 
     schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
   } else {
     schemas.addLocater({
-      getSchemaSync<T extends Schema>(_schemaKey: Readonly<SchemaKey>, _matchType: SchemaMatchType, _schemaContext: SchemaContext): T | undefined {
+      getSchemaSync<T extends Schema>(
+        _schemaKey: Readonly<SchemaKey>,
+        _matchType: SchemaMatchType,
+        _schemaContext: SchemaContext,
+      ): T | undefined {
         throw new Error(`getSchemaSync not implemented`);
       },
-      async getSchemaInfo(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<SchemaInfo | undefined> {
+      async getSchemaInfo(
+        schemaKey: Readonly<SchemaKey>,
+        matchType: SchemaMatchType,
+        schemaContext: SchemaContext,
+      ): Promise<SchemaInfo | undefined> {
         const schemaJson = imodel.getSchemaProps(schemaKey.name);
         const schemaInfo = await Schema.startLoadingFromJson(schemaJson, schemaContext);
         if (schemaInfo !== undefined && schemaInfo.schemaKey.matches(schemaKey as SchemaKey, matchType)) {
@@ -241,7 +285,11 @@ export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) 
         }
         return undefined;
       },
-      async getSchema<T extends Schema>(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<T | undefined> {
+      async getSchema<T extends Schema>(
+        schemaKey: Readonly<SchemaKey>,
+        matchType: SchemaMatchType,
+        schemaContext: SchemaContext,
+      ): Promise<T | undefined> {
         await this.getSchemaInfo(schemaKey as SchemaKey, matchType, schemaContext);
         // eslint-disable-next-line @itwin/no-internal
         const schema = await schemaContext.getCachedSchema(schemaKey as SchemaKey, matchType);

@@ -7,8 +7,22 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ComboBox, SelectOption } from "@itwin/itwinui-react";
-import { ClassInfo, Descriptor, Field, Keys, KeySet, MultiSchemaClassesSpecification, Ruleset } from "@itwin/presentation-common";
-import { deserializeUniqueValues, findField, serializeUniqueValues, translate, UniqueValue } from "../../common/Utils.js";
+import {
+  ClassInfo,
+  Descriptor,
+  Field,
+  Keys,
+  KeySet,
+  MultiSchemaClassesSpecification,
+  Ruleset,
+} from "@itwin/presentation-common";
+import {
+  deserializeUniqueValues,
+  findField,
+  serializeUniqueValues,
+  translate,
+  UniqueValue,
+} from "../../common/Utils.js";
 import { getInstanceFilterFieldName } from "../../instance-filter-builder/Utils.js";
 import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader.js";
 import { useUniquePropertyValuesLoader } from "./UseUniquePropertyValuesLoader.js";
@@ -34,7 +48,9 @@ export interface UniquePropertyValuesSelectorProps {
 /** @internal */
 export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelectorProps) {
   const { imodel, descriptor, property, onChange, value, descriptorInputKeys, selectedClasses } = props;
-  const [field, setField] = useState<Field | undefined>(() => findField(descriptor, getInstanceFilterFieldName(property)));
+  const [field, setField] = useState<Field | undefined>(() =>
+    findField(descriptor, getInstanceFilterFieldName(property)),
+  );
   const [searchInput, setSearchInput] = useState<string>("");
   const selectedValues = useMemo(() => getUniqueValueFromProperty(value)?.map((val) => val.displayValue), [value]);
   const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field, descriptorInputKeys, selectedClasses);
@@ -52,25 +68,19 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
     (newValues: string[]) => {
       const newSelectedValues = loadedOptions.filter((opt) => newValues.includes(opt.displayValue));
       if (newSelectedValues.length === 0) {
-        onChange({
-          valueFormat: PropertyValueFormat.Primitive,
-          displayValue: undefined,
-          value: undefined,
-        });
+        onChange({ valueFormat: PropertyValueFormat.Primitive, displayValue: undefined, value: undefined });
       } else {
         const { displayValues, groupedRawValues } = serializeUniqueValues(newSelectedValues);
-        onChange({
-          valueFormat: PropertyValueFormat.Primitive,
-          displayValue: displayValues,
-          value: groupedRawValues,
-        });
+        onChange({ valueFormat: PropertyValueFormat.Primitive, displayValue: displayValues, value: groupedRawValues });
       }
     },
     [loadedOptions, onChange],
   );
 
   const emptyContent = useMemo(() => {
-    return isLoading ? translate("unique-values-property-editor.loading-values") : translate("unique-values-property-editor.no-values");
+    return isLoading
+      ? translate("unique-values-property-editor.loading-values")
+      : translate("unique-values-property-editor.no-values");
   }, [isLoading]);
 
   useEffect(() => {
@@ -86,7 +96,11 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
       onChange={onValueChange}
       filterFunction={(options: SelectOption<string>[], inputValue: string) => {
         const filteredOptions = options
-          .filter((option) => option.label.toLowerCase().includes(inputValue.toLowerCase()) && option.value !== FILTER_WARNING_OPTION.value)
+          .filter(
+            (option) =>
+              option.label.toLowerCase().includes(inputValue.toLowerCase()) &&
+              option.value !== FILTER_WARNING_OPTION.value,
+          )
           .slice(0, VALUE_BATCH_SIZE);
 
         if (filteredOptions.length >= VALUE_BATCH_SIZE) {
@@ -109,13 +123,22 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
 }
 
 function getUniqueValueFromProperty(propertyValue: PropertyValue | undefined): UniqueValue[] | undefined {
-  if (propertyValue?.valueFormat === PropertyValueFormat.Primitive && typeof propertyValue.value === "string" && propertyValue.displayValue) {
+  if (
+    propertyValue?.valueFormat === PropertyValueFormat.Primitive &&
+    typeof propertyValue.value === "string" &&
+    propertyValue.displayValue
+  ) {
     return deserializeUniqueValues(propertyValue.displayValue, propertyValue.value);
   }
   return [];
 }
 
-function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Field, descriptorInputKeys?: Keys, selectedClasses?: ClassInfo[]) {
+function useUniquePropertyValuesRuleset(
+  descriptorRuleset?: Ruleset,
+  field?: Field,
+  descriptorInputKeys?: Keys,
+  selectedClasses?: ClassInfo[],
+) {
   const [ruleset, setRuleset] = useState<Ruleset>();
   useEffect(() => {
     if (descriptorRuleset) {
@@ -132,7 +155,9 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
             specifications: [
               {
                 specType: "SelectedNodeInstances",
-                acceptableClassNames: selectedClasses ? selectedClasses.map(({ name }) => name.split(/[\.:]/)[1]) : undefined,
+                acceptableClassNames: selectedClasses
+                  ? selectedClasses.map(({ name }) => name.split(/[\.:]/)[1])
+                  : undefined,
                 acceptablePolymorphically: true,
               },
             ],
@@ -153,12 +178,7 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
       rules: [
         {
           ruleType: "Content",
-          specifications: [
-            {
-              specType: "ContentInstancesOfSpecificClasses",
-              classes: createSchemaClasses(classInfos),
-            },
-          ],
+          specifications: [{ specType: "ContentInstancesOfSpecificClasses", classes: createSchemaClasses(classInfos) }],
         },
       ],
     });
@@ -180,7 +200,11 @@ function createSchemaClasses(infos: ClassInfo[]): MultiSchemaClassesSpecificatio
       classNames.push(className);
     }
   });
-  const schemaClasses = [...schemaClassMap.entries()].map(([schemaName, classNames]) => ({ schemaName, classNames, arePolymorphic: true }));
+  const schemaClasses = [...schemaClassMap.entries()].map(([schemaName, classNames]) => ({
+    schemaName,
+    classNames,
+    arePolymorphic: true,
+  }));
   return schemaClasses.length === 1 ? schemaClasses[0] : schemaClasses;
 }
 

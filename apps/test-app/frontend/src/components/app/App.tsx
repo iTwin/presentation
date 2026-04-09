@@ -29,7 +29,12 @@ import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { SchemaMetadataContextProvider } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel, HiliteSet, SelectionScope } from "@itwin/unified-selection";
+import {
+  createHiliteSetProvider,
+  enableUnifiedSelectionSyncWithIModel,
+  HiliteSet,
+  SelectionScope,
+} from "@itwin/unified-selection";
 import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
@@ -54,11 +59,7 @@ export function App() {
   const [state, setState] = useAppState();
 
   const onIModelSelected = (imodel: IModelConnection | undefined, path?: string) => {
-    setState((prev) => ({
-      ...prev,
-      imodel,
-      imodelPath: path,
-    }));
+    setState((prev) => ({ ...prev, imodel, imodelPath: path }));
   };
 
   const onRulesetSelected = (rulesetId: string | undefined) => {
@@ -70,10 +71,7 @@ export function App() {
       });
     }
 
-    setState((prev) => ({
-      ...prev,
-      rulesetId,
-    }));
+    setState((prev) => ({ ...prev, rulesetId }));
   };
 
   const onUnitSystemSelected = async (unitSystem: UnitSystemKey) => {
@@ -81,10 +79,7 @@ export function App() {
   };
 
   const onPersistSettingsValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setState((prev) => ({
-      ...prev,
-      persistSettings: e.target.checked,
-    }));
+    setState((prev) => ({ ...prev, persistSettings: e.target.checked }));
   };
 
   useEffect(() => {
@@ -93,10 +88,15 @@ export function App() {
     }
     const schemaUnitsProvider = new SchemaUnitProvider(state.imodel.schemaContext);
     IModelApp.quantityFormatter.unitsProvider = schemaUnitsProvider;
-    const schemaFormatsProvider = new SchemaFormatsProvider(state.imodel.schemaContext, IModelApp.quantityFormatter.activeUnitSystem);
-    const removeFormatterListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener((args) => {
-      schemaFormatsProvider.unitSystem = args.system;
-    });
+    const schemaFormatsProvider = new SchemaFormatsProvider(
+      state.imodel.schemaContext,
+      IModelApp.quantityFormatter.activeUnitSystem,
+    );
+    const removeFormatterListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(
+      (args) => {
+        schemaFormatsProvider.unitSystem = args.system;
+      },
+    );
     IModelApp.formatsProvider = schemaFormatsProvider;
 
     return () => {
@@ -133,7 +133,11 @@ export function App() {
           ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(schemas) }),
         },
       });
-      from(hiliteSetProvider.getHiliteSet({ selectables: MyAppFrontend.selectionStorage.getSelection({ imodelKey: createIModelKey(state.imodel) }) }))
+      from(
+        hiliteSetProvider.getHiliteSet({
+          selectables: MyAppFrontend.selectionStorage.getSelection({ imodelKey: createIModelKey(state.imodel) }),
+        }),
+      )
         .pipe(
           takeUntil(cancel),
           reduce<HiliteSet, { elements: Id64String[] }>(
@@ -169,8 +173,16 @@ export function App() {
           <div className="app-pickers">
             <IModelSelector onIModelSelected={onIModelSelected} activeIModelPath={state.imodelPath} />
             <RulesetSelector onRulesetSelected={onRulesetSelected} activeRulesetId={state.rulesetId} />
-            <UnitSystemSelector selectedUnitSystem={state.activeUnitSystem} onUnitSystemSelected={onUnitSystemSelected} />
-            <ToggleSwitch label="Persist settings" labelPosition="right" checked={state.persistSettings} onChange={onPersistSettingsValueChange} />
+            <UnitSystemSelector
+              selectedUnitSystem={state.activeUnitSystem}
+              onUnitSystemSelected={onUnitSystemSelected}
+            />
+            <ToggleSwitch
+              label="Persist settings"
+              labelPosition="right"
+              checked={state.persistSettings}
+              onChange={onPersistSettingsValueChange}
+            />
           </div>
           {state.imodel ? <IModelComponents imodel={state.imodel} rulesetId={state.rulesetId} /> : null}
         </div>
@@ -180,9 +192,7 @@ export function App() {
 }
 
 function updateAppSettings(state: State) {
-  const settings: MyAppSettings = {
-    persistSettings: state.persistSettings,
-  };
+  const settings: MyAppSettings = { persistSettings: state.persistSettings };
   if (state.persistSettings) {
     settings.imodelPath = state.imodelPath;
     settings.rulesetId = state.rulesetId;
@@ -222,10 +232,7 @@ function useAppState(): [State, (produceState: (prev: State) => State) => void] 
 
   useEffect(() => {
     return IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(({ system }) => {
-      updateState((prev) => ({
-        ...prev,
-        activeUnitSystem: system,
-      }));
+      updateState((prev) => ({ ...prev, activeUnitSystem: system }));
     });
   }, []);
 
@@ -254,7 +261,12 @@ function IModelComponents(props: IModelComponentsProps) {
           {
             id: "primaryContent",
             classId: "",
-            content: <ViewportContentControl imodel={imodel} onSelectionScopeChanged={(scope) => (activeSelectionScope.current = scope)} />,
+            content: (
+              <ViewportContentControl
+                imodel={imodel}
+                onSelectionScopeChanged={(scope) => (activeSelectionScope.current = scope)}
+              />
+            ),
           },
         ],
       }),
@@ -325,7 +337,9 @@ function IModelComponents(props: IModelComponentsProps) {
       enableUnifiedSelectionSyncWithIModel({
         imodelAccess: {
           ...createECSqlQueryExecutor(imodel),
-          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)) }),
+          ...createCachingECClassHierarchyInspector({
+            schemaProvider: createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)),
+          }),
           key: imodel.key,
           hiliteSet: imodel.hilited,
           selectionSet: imodel.selectionSet,
@@ -337,7 +351,10 @@ function IModelComponents(props: IModelComponentsProps) {
   );
 
   return (
-    <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={MyAppFrontend.getSchemaContext.bind(MyAppFrontend)}>
+    <SchemaMetadataContextProvider
+      imodel={imodel}
+      schemaContextProvider={MyAppFrontend.getSchemaContext.bind(MyAppFrontend)}
+    >
       <ThemeManager>
         <UiStateStorageHandler>
           <ConfigurableUiContent />

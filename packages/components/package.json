@@ -42,7 +42,7 @@
     "copy:esm": "cpx \"./src/**/*.{scss,json}\" ./lib/esm",
     "clean": "rimraf lib build",
     "cover": "vitest run --coverage",
-    "lint": "eslint ./src/**/*.{ts,tsx}",
+    "lint": "eslint \"./src/**/*.{ts,tsx}\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

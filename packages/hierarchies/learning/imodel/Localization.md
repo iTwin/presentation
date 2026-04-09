@@ -27,7 +27,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },

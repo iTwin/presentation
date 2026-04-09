@@ -13,12 +13,12 @@ import { createTestRuleset } from "../_helpers/Common.js";
 import { createStub } from "../TestUtils.js";
 
 describe("RulesetRegistrationHelper", () => {
-  const rulesetManager = {
-    add: createStub<RulesetManager["add"]>(),
-  };
+  const rulesetManager = { add: createStub<RulesetManager["add"]>() };
 
   beforeEach(() => {
-    vi.spyOn(Presentation, "presentation", "get").mockReturnValue({ rulesets: () => rulesetManager } as unknown as PresentationManager);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
+      rulesets: () => rulesetManager,
+    } as unknown as PresentationManager);
   });
 
   it("does nothing when helper is created with ruleset id", () => {

@@ -26,7 +26,9 @@ export async function initScenario(context: VUContext, _events: VUEvents) {
 }
 
 export function terminateScenario(context: VUContext, _ee: VUEvents) {
-  console.log(`Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount as number}`);
+  console.log(
+    `Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount as number}`,
+  );
   context.vars.tooLargeHierarchyLevelsCount = 0;
 }
 
@@ -40,7 +42,11 @@ export async function loadInitialHierarchy(context: VUContext, events: VUEvents)
 export async function loadFirstBranch(context: VUContext, events: VUEvents) {
   const timer = new StopWatch(undefined, true);
   await loadNodes(events, createProvider(context, events), (node, index) => !!node.hasChildren && index === 0);
-  events.emit("histogram", `Models Tree first branch load:${getCurrentIModelName(context)}`, timer.current.milliseconds);
+  events.emit(
+    "histogram",
+    `Models Tree first branch load:${getCurrentIModelName(context)}`,
+    timer.current.milliseconds,
+  );
 }
 
 export async function loadFullHierarchy(context: VUContext, events: VUEvents) {
@@ -62,20 +68,22 @@ function createProvider(context: VUContext, events: VUEvents) {
       } as HierarchyRpcRequestOptions,
     ]);
     async function requestRepeatedly(): Promise<Node[]> {
-      return doRequest("PresentationRpcInterface-5.0.0-getPagedNodes", requestBody, events, "nodes").then(async (response) => {
-        const responseBody = response as PresentationRpcResponseData<PagedResponse<Node>>;
-        switch (responseBody.statusCode) {
-          case PresentationStatus.Canceled:
-            return [];
-          case PresentationStatus.ResultSetTooLarge:
-            ++(context.vars.tooLargeHierarchyLevelsCount as number);
-            return [];
-          case PresentationStatus.Success:
-            return responseBody.result!.items;
-          default:
-            throw new PresentationError(responseBody.statusCode, responseBody.errorMessage);
-        }
-      });
+      return doRequest("PresentationRpcInterface-5.0.0-getPagedNodes", requestBody, events, "nodes").then(
+        async (response) => {
+          const responseBody = response as PresentationRpcResponseData<PagedResponse<Node>>;
+          switch (responseBody.statusCode) {
+            case PresentationStatus.Canceled:
+              return [];
+            case PresentationStatus.ResultSetTooLarge:
+              ++(context.vars.tooLargeHierarchyLevelsCount as number);
+              return [];
+            case PresentationStatus.Success:
+              return responseBody.result!.items;
+            default:
+              throw new PresentationError(responseBody.statusCode, responseBody.errorMessage);
+          }
+        },
+      );
     }
     return requestRepeatedly();
   };

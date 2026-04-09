@@ -12,9 +12,7 @@ import { createECSqlQueryExecutor } from "../core-interop/QueryExecutor.js";
 describe("createECSqlQueryExecutor", () => {
   describe("createQueryReader", () => {
     it("calls IModel's `createQueryReader` with default params", async () => {
-      const imodel = {
-        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([{}, {}])),
-      };
+      const imodel = { createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([{}, {}])) };
 
       const executor = createECSqlQueryExecutor(imodel);
       const reader = executor.createQueryReader({ ecsql: "ecsql" });
@@ -29,9 +27,7 @@ describe("createECSqlQueryExecutor", () => {
     });
 
     it("calls IModel's `createQueryReader` with CTEs", async () => {
-      const imodel = {
-        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([{}, {}])),
-      };
+      const imodel = { createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([{}, {}])) };
 
       const executor = createECSqlQueryExecutor(imodel);
       const reader = executor.createQueryReader({ ctes: ["cte1", "cte2"], ecsql: "ecsql" });
@@ -43,23 +39,24 @@ describe("createECSqlQueryExecutor", () => {
     });
 
     it("calls IModel's `createQueryReader` with whitespace removed from ECSQL and CTEs", async () => {
-      const imodel = {
-        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])),
-      };
+      const imodel = { createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])) };
 
       const executor = createECSqlQueryExecutor(imodel);
-      const reader = executor.createQueryReader({ ctes: [" cte  with   whitespace "], ecsql: " ( ecsql , with   whitespace) " });
+      const reader = executor.createQueryReader({
+        ctes: [" cte  with   whitespace "],
+        ecsql: " ( ecsql , with   whitespace) ",
+      });
       for await (const _ of reader) {
       }
 
       expect(imodel.createQueryReader).toHaveBeenCalledOnce();
-      expect(imodel.createQueryReader.mock.calls[0][0]).toBe("WITH RECURSIVE cte with whitespace (ecsql, with whitespace)");
+      expect(imodel.createQueryReader.mock.calls[0][0]).toBe(
+        "WITH RECURSIVE cte with whitespace (ecsql, with whitespace)",
+      );
     });
 
     it("calls IModel's `createQueryReader` with `ECSqlPropertyNames` row format", async () => {
-      const imodel = {
-        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])),
-      };
+      const imodel = { createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])) };
 
       const executor = createECSqlQueryExecutor(imodel);
       const reader = executor.createQueryReader({ ecsql: "ecsql" }, { rowFormat: "ECSqlPropertyNames" });
@@ -74,9 +71,7 @@ describe("createECSqlQueryExecutor", () => {
     });
 
     it("calls IModel's `createQueryReader` with `Indexes` row format", async () => {
-      const imodel = {
-        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])),
-      };
+      const imodel = { createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])) };
 
       const executor = createECSqlQueryExecutor(imodel);
       const reader = executor.createQueryReader({ ecsql: "ecsql" }, { rowFormat: "Indexes" });
@@ -91,9 +86,7 @@ describe("createECSqlQueryExecutor", () => {
     });
 
     it("calls IModel's `createQueryReader` with `restartToken`", async () => {
-      const imodel = {
-        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])),
-      };
+      const imodel = { createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])) };
 
       const executor = createECSqlQueryExecutor(imodel);
       const reader = executor.createQueryReader({ ecsql: "ecsql" }, { restartToken: "TestToken" });
@@ -108,48 +101,19 @@ describe("createECSqlQueryExecutor", () => {
     });
 
     it("calls IModel's `createQueryReader` with different bindings", async () => {
-      const imodel = {
-        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])),
-      };
+      const imodel = { createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])) };
 
       const bindings: ECSqlBinding[] = [
-        {
-          type: "boolean",
-          value: true,
-        },
-        {
-          type: "double",
-          value: 1.23,
-        },
-        {
-          type: "id",
-          value: "0x123",
-        },
-        {
-          type: "idset",
-          value: ["0x123", "0x456"],
-        },
-        {
-          type: "int",
-          value: 123,
-        },
+        { type: "boolean", value: true },
+        { type: "double", value: 1.23 },
+        { type: "id", value: "0x123" },
+        { type: "idset", value: ["0x123", "0x456"] },
+        { type: "int", value: 123 },
         { type: "long", value: 456 },
-        {
-          type: "point2d",
-          value: { x: 1.23, y: 4.56 },
-        },
-        {
-          type: "point3d",
-          value: { x: 1.23, y: 4.56, z: 7.89 },
-        },
-        {
-          type: "string",
-          value: "xxx",
-        },
-        {
-          type: "string",
-          value: undefined,
-        },
+        { type: "point2d", value: { x: 1.23, y: 4.56 } },
+        { type: "point3d", value: { x: 1.23, y: 4.56, z: 7.89 } },
+        { type: "string", value: "xxx" },
+        { type: "string", value: undefined },
       ];
 
       const expectedBinder = new QueryBinder();
@@ -178,9 +142,7 @@ describe("createECSqlQueryExecutor", () => {
 
     it("creates iterable reader for rows as objects", async () => {
       const rows = [{ x: 1 }, { y: 2 }];
-      const imodel = {
-        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub(rows)),
-      };
+      const imodel = { createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub(rows)) };
 
       const executor = createECSqlQueryExecutor(imodel);
       const reader = executor.createQueryReader({ ecsql: "ecsql" }, { rowFormat: "ECSqlPropertyNames" });
@@ -198,9 +160,7 @@ describe("createECSqlQueryExecutor", () => {
         [1, 2],
         [3, 4],
       ];
-      const imodel = {
-        createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub(rows)),
-      };
+      const imodel = { createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub(rows)) };
 
       const executor = createECSqlQueryExecutor(imodel);
       const reader = executor.createQueryReader({ ecsql: "ecsql" }, { rowFormat: "Indexes" });
@@ -235,9 +195,5 @@ function createCoreECSqlReaderStub(rows: object[]) {
 }
 
 function createQueryRowProxy(data: object) {
-  return {
-    ...data,
-    toArray: () => data,
-    toRow: () => data,
-  };
+  return { ...data, toArray: () => data, toRow: () => data };
 }

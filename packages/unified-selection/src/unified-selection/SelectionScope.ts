@@ -4,7 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Guid, Id64, Id64Arg, Id64Array } from "@itwin/core-bentley";
-import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
+import {
+  ECSqlBinding,
+  ECSqlQueryDef,
+  ECSqlQueryExecutor,
+  ECSqlQueryReaderOptions,
+  ECSqlQueryRow,
+} from "@itwin/presentation-shared";
 import { SelectableInstanceKey } from "./Selectable.js";
 import { formIdBindings, genericExecuteQuery } from "./Utils.js";
 
@@ -76,7 +82,13 @@ export async function* computeSelection(props: ComputeSelectionProps): AsyncIter
 
   switch (scope.id) {
     case "element":
-      yield* computeElementSelection(queryExecutor, nonTransientIds, (scope as ElementSelectionScopeProps).ancestorLevel ?? 0, componentId, componentName);
+      yield* computeElementSelection(
+        queryExecutor,
+        nonTransientIds,
+        (scope as ElementSelectionScopeProps).ancestorLevel ?? 0,
+        componentId,
+        componentName,
+      );
       return;
     case "category":
       yield* computeCategorySelection(queryExecutor, nonTransientIds, componentId, componentName);
@@ -295,9 +307,6 @@ async function* executeQuery(props: {
 }): AsyncIterableIterator<SelectableInstanceKey> {
   yield* genericExecuteQuery({
     ...props,
-    parseQueryRow: (row: ECSqlQueryRow) => ({
-      className: row.ClassName,
-      id: row.ECInstanceId,
-    }),
+    parseQueryRow: (row: ECSqlQueryRow) => ({ className: row.ClassName, id: row.ECInstanceId }),
   });
 }

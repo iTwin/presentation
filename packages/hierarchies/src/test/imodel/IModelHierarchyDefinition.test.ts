@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { GenericHierarchyNodeDefinition, HierarchyNodesDefinition, InstanceNodesQueryDefinition } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
+import {
+  GenericHierarchyNodeDefinition,
+  HierarchyNodesDefinition,
+  InstanceNodesQueryDefinition,
+} from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
 import { createTestSourceGenericNode } from "../Utils.js";
 
 describe("HierarchyNodesDefinition", () => {
@@ -27,18 +31,11 @@ describe("HierarchyNodesDefinition", () => {
 });
 
 function createGenericNodeDefinition(props?: Partial<GenericHierarchyNodeDefinition>): GenericHierarchyNodeDefinition {
-  return {
-    node: createTestSourceGenericNode(),
-    ...props,
-  };
+  return { node: createTestSourceGenericNode(), ...props };
 }
 
-function createInstanceNodesQueryDefinition(props?: Partial<InstanceNodesQueryDefinition>): InstanceNodesQueryDefinition {
-  return {
-    fullClassName: "full.class_name",
-    query: {
-      ecsql: "test ecsql",
-    },
-    ...props,
-  };
+function createInstanceNodesQueryDefinition(
+  props?: Partial<InstanceNodesQueryDefinition>,
+): InstanceNodesQueryDefinition {
+  return { fullClassName: "full.class_name", query: { ecsql: "test ecsql" }, ...props };
 }

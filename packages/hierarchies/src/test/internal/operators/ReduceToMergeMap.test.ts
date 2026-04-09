@@ -6,7 +6,10 @@
 import { collect } from "presentation-test-utilities";
 import { from, of } from "rxjs";
 import { describe, expect, it } from "vitest";
-import { reduceToMergeMapItem, reduceToMergeMapList } from "../../../hierarchies/internal/operators/ReduceToMergeMap.js";
+import {
+  reduceToMergeMapItem,
+  reduceToMergeMapList,
+} from "../../../hierarchies/internal/operators/ReduceToMergeMap.js";
 
 describe("reduceToMergeMapItem", () => {
   it("creates different entries for items with different keys", async () => {

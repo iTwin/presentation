@@ -4,7 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { collect, insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  collect,
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.SelectionScopes.Imports
 import { computeSelection } from "@itwin/unified-selection";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
@@ -27,7 +32,12 @@ describe("Unified selection", () => {
         const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const elementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
+          const elementKey = insertPhysicalElement({
+            builder,
+            userLabel: "test element",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          });
           return { modelKey, categoryKey, elementKey };
         });
 
@@ -46,7 +56,12 @@ describe("Unified selection", () => {
         const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const parentElementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
+          const parentElementKey = insertPhysicalElement({
+            builder,
+            userLabel: "test element",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          });
           const elementKey = insertPhysicalElement({
             builder,
             userLabel: "test element",

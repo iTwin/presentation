@@ -8,7 +8,15 @@
 
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
-import { BisCodeSpec, Code, CodeScopeProps, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
+import {
+  BisCodeSpec,
+  Code,
+  CodeScopeProps,
+  ElementAspectProps,
+  ElementProps,
+  ModelProps,
+  RelationshipProps,
+} from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createFileNameFromString, setupOutputFileLocation } from "./FilenameUtils.js";
 import { TestIModelBuilderImpl } from "./IModelBuilderImpl.js";
@@ -55,7 +63,10 @@ interface TestContext {
  * @beta
  * @deprecated in 4.x. Use an overload with `cb` returning a promise.
  */
-export async function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;
+export async function buildTestIModel(
+  name: string,
+  cb: (builder: TestIModelBuilder) => void,
+): Promise<IModelConnection>;
 /**
  * Function that creates an iModel and returns a connection to it.
  * @param name Name of test IModel
@@ -63,7 +74,10 @@ export async function buildTestIModel(name: string, cb: (builder: TestIModelBuil
  * @beta
  */
 // eslint-disable-next-line @typescript-eslint/unified-signatures
-export async function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => Promise<void>): Promise<IModelConnection>;
+export async function buildTestIModel(
+  name: string,
+  cb: (builder: TestIModelBuilder) => Promise<void>,
+): Promise<IModelConnection>;
 /**
  * Function that creates an iModel and returns a connection to it.
  * @param context test context to generate iModel name from
@@ -72,7 +86,10 @@ export async function buildTestIModel(name: string, cb: (builder: TestIModelBuil
  * @deprecated in 4.x. Use an overload with `cb` returning a promise.
  */
 // eslint-disable-next-line @typescript-eslint/unified-signatures
-export async function buildTestIModel(context: TestContext, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;
+export async function buildTestIModel(
+  context: TestContext,
+  cb: (builder: TestIModelBuilder) => void,
+): Promise<IModelConnection>;
 /**
  * Function that creates an iModel and returns a connection to it.
  * @param context test context to generate iModel name from
@@ -80,8 +97,14 @@ export async function buildTestIModel(context: TestContext, cb: (builder: TestIM
  * @beta
  */
 // eslint-disable-next-line @typescript-eslint/unified-signatures
-export async function buildTestIModel(context: TestContext, cb: (builder: TestIModelBuilder) => Promise<void>): Promise<IModelConnection>;
-export async function buildTestIModel(nameParam: string | TestContext, cb: (builder: TestIModelBuilder) => void | Promise<void>): Promise<IModelConnection> {
+export async function buildTestIModel(
+  context: TestContext,
+  cb: (builder: TestIModelBuilder) => Promise<void>,
+): Promise<IModelConnection>;
+export async function buildTestIModel(
+  nameParam: string | TestContext,
+  cb: (builder: TestIModelBuilder) => void | Promise<void>,
+): Promise<IModelConnection> {
   const name = typeof nameParam === "string" ? nameParam : createFileNameFromString(nameParam.test!.fullTitle());
   const outputFile = setupOutputFileLocation(`${name}.bim`);
   const db = SnapshotDb.createEmpty(outputFile, { rootSubject: { name } });

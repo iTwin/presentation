@@ -59,7 +59,9 @@ export class RulesetRegistrationHelper implements Disposable {
   }
 
   private async registerRuleset(ruleset: Ruleset) {
-    this._registeredRuleset = await Presentation.presentation.rulesets().add(ruleset instanceof RegisteredRuleset ? ruleset.toJSON() : ruleset);
+    this._registeredRuleset = await Presentation.presentation
+      .rulesets()
+      .add(ruleset instanceof RegisteredRuleset ? ruleset.toJSON() : ruleset);
     if (this._isDisposed) {
       // ensure we don't keep a hanging registered ruleset if the instance
       // gets disposed before the ruleset finishes registration

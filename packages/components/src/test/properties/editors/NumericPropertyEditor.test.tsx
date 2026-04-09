@@ -5,7 +5,10 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { StandardTypeNames } from "@itwin/appui-abstract";
-import { NumericEditorName, NumericPropertyEditor } from "../../../presentation-components/properties/editors/NumericPropertyEditor.js";
+import {
+  NumericEditorName,
+  NumericPropertyEditor,
+} from "../../../presentation-components/properties/editors/NumericPropertyEditor.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 
@@ -31,7 +34,9 @@ describe("<NumericPropertyEditor />", () => {
   it("Invokes `onCommit` with correct parameters only when input container gets blurred", async () => {
     const record = createRecord();
     const spy = vi.fn();
-    const { getByTestId, queryByDisplayValue, user } = render(<NumericPropertyEditor propertyRecord={record} onCommit={spy} />);
+    const { getByTestId, queryByDisplayValue, user } = render(
+      <NumericPropertyEditor propertyRecord={record} onCommit={spy} />,
+    );
 
     const inputContainer = await waitFor(() => getByTestId("numeric-input"));
 
@@ -41,6 +46,9 @@ describe("<NumericPropertyEditor />", () => {
     await user.tab();
 
     await waitFor(() => expect(queryByDisplayValue("1")).not.toBeNull());
-    expect(spy).toHaveBeenCalledExactlyOnceWith({ propertyRecord: record, newValue: { valueFormat: 0, value: 1, displayValue: "1", roundingError: 0.5 } });
+    expect(spy).toHaveBeenCalledExactlyOnceWith({
+      propertyRecord: record,
+      newValue: { valueFormat: 0, value: 1, displayValue: "1", roundingError: 0.5 },
+    });
   });
 });

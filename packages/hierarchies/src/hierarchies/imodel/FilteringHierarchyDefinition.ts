@@ -6,7 +6,11 @@
 import { defer, filter, from, map, merge, mergeAll, mergeMap, Observable, of, toArray } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
-import { createHierarchyFilteringHelper, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../HierarchyFiltering.js";
+import {
+  createHierarchyFilteringHelper,
+  HierarchyFilteringPath,
+  HierarchyFilteringPathOptions,
+} from "../HierarchyFiltering.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { HierarchyNodeKey, IModelInstanceKey } from "../HierarchyNodeKey.js";
 import {
@@ -20,7 +24,12 @@ import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode } from "../imode
 import { NodeSelectClauseColumnNames } from "../imodel/NodeSelectQueryFactory.js";
 import { defaultNodesParser } from "../imodel/TreeNodesReader.js";
 import { partition } from "../internal/operators/Partition.js";
-import { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "../internal/RxjsHierarchyDefinition.js";
+import {
+  RxjsHierarchyDefinition,
+  RxjsNodeParser,
+  RxjsNodePostProcessor,
+  RxjsNodePreProcessor,
+} from "../internal/RxjsHierarchyDefinition.js";
 
 interface FilteringHierarchyDefinitionProps {
   imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
@@ -47,7 +56,11 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
     return (node) => {
       return (this._source.preProcessNode ? this._source.preProcessNode(node) : of(node)).pipe(
         filter((processedNode) => {
-          if (processedNode.processingParams?.hideInHierarchy && processedNode.filtering?.isFilterTarget && !processedNode.filtering.hasFilterTargetAncestor) {
+          if (
+            processedNode.processingParams?.hideInHierarchy &&
+            processedNode.filtering?.isFilterTarget &&
+            !processedNode.filtering.hasFilterTargetAncestor
+          ) {
             // we want to hide target nodes if they have `hideInHierarchy` param, but only if they're not under another filter target
             return false;
           }
@@ -78,7 +91,10 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
           if (!row[ECSQL_COLUMN_NAME_FilterECInstanceId] || !row[ECSQL_COLUMN_NAME_FilterClassName]) {
             return of(parsedNode);
           }
-          const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_FilterClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
+          const rowInstanceKey = {
+            className: row[ECSQL_COLUMN_NAME_FilterClassName],
+            id: row[ECSQL_COLUMN_NAME_FilterECInstanceId],
+          };
           const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, parentNode);
           const nodeExtraPropsPossiblyPromise = filteringHelper.createChildNodePropsAsync({
             pathMatcher: (identifier): boolean | Promise<boolean> => {
@@ -100,7 +116,11 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
               ]).then(([isDerivedFrom, isDerivedTo]) => isDerivedFrom || isDerivedTo);
             },
           });
-          return (nodeExtraPropsPossiblyPromise instanceof Promise ? from(nodeExtraPropsPossiblyPromise) : of(nodeExtraPropsPossiblyPromise)).pipe(
+          return (
+            nodeExtraPropsPossiblyPromise instanceof Promise
+              ? from(nodeExtraPropsPossiblyPromise)
+              : of(nodeExtraPropsPossiblyPromise)
+          ).pipe(
             map((nodeExtraProps) => {
               if (nodeExtraProps?.autoExpand) {
                 parsedNode.autoExpand = true;
@@ -125,7 +145,10 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
       return sourceDefinitions;
     }
 
-    const [genericNodeDefinitions, instanceNodeDefinitions] = partition(sourceDefinitions.pipe(mergeAll()), HierarchyNodesDefinition.isGenericNode);
+    const [genericNodeDefinitions, instanceNodeDefinitions] = partition(
+      sourceDefinitions.pipe(mergeAll()),
+      HierarchyNodesDefinition.isGenericNode,
+    );
     return merge(
       genericNodeDefinitions.pipe(
         map((definition) => {
@@ -242,7 +265,10 @@ function getClassECInstanceIds(filteredInstanceKeys: InstanceKey[]) {
 }
 
 /** @internal */
-export function applyECInstanceIdsFilter(def: InstanceNodesQueryDefinition, filteredInstanceKeys: InstanceKey[]): InstanceNodesQueryDefinition {
+export function applyECInstanceIdsFilter(
+  def: InstanceNodesQueryDefinition,
+  filteredInstanceKeys: InstanceKey[],
+): InstanceNodesQueryDefinition {
   const instanceIdsByClass = getClassECInstanceIds(filteredInstanceKeys);
   return {
     ...def,
@@ -302,7 +328,11 @@ function shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
 
     if (
       child.filtering.isFilterTarget &&
-      getAutoExpandAsTrueFalse(child.filtering.filterTargetOptions?.autoExpand, numberOfNonGroupingParentNodes, node.parentKeys.length)
+      getAutoExpandAsTrueFalse(
+        child.filtering.filterTargetOptions?.autoExpand,
+        numberOfNonGroupingParentNodes,
+        node.parentKeys.length,
+      )
     ) {
       return true;
     }
@@ -312,7 +342,10 @@ function shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
     }
 
     for (const path of child.filtering.filteredChildrenIdentifierPaths) {
-      if ("path" in path && getAutoExpandAsTrueFalse(path.options?.autoExpand, numberOfNonGroupingParentNodes, node.parentKeys.length)) {
+      if (
+        "path" in path &&
+        getAutoExpandAsTrueFalse(path.options?.autoExpand, numberOfNonGroupingParentNodes, node.parentKeys.length)
+      ) {
         return true;
       }
     }
@@ -336,7 +369,9 @@ function getAutoExpandAsTrueFalse(
   // auto-expand the grouping node only if it's depth is lower than that of the grouping node in associated with the target.
   const nodeDepth =
     // eslint-disable-next-line @typescript-eslint/no-deprecated
-    "key" in autoExpand || "depthInHierarchy" in autoExpand || (!("depthInPath" in autoExpand) && autoExpand.includeGroupingNodes)
+    "key" in autoExpand ||
+    "depthInHierarchy" in autoExpand ||
+    (!("depthInPath" in autoExpand) && autoExpand.includeGroupingNodes)
       ? numberOfParentNodes
       : numberOfNonGroupingParentNodes;
   const filterTargetDepth =

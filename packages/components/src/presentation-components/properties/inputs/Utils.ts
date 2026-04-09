@@ -11,7 +11,8 @@ import { Format, FormatType, Parser, ParserSpec } from "@itwin/core-quantity";
  */
 export function getPersistenceUnitRoundingError(numberStr: string, parser: ParserSpec): number | undefined {
   const tokens = Parser.parseQuantitySpecification(numberStr, parser.format);
-  const enteredUnit = tokens.length > 0 && tokens[tokens.length - 1].isString ? (tokens[tokens.length - 1].value as string) : undefined;
+  const enteredUnit =
+    tokens.length > 0 && tokens[tokens.length - 1].isString ? (tokens[tokens.length - 1].value as string) : undefined;
 
   const precisionStr = getPrecision(numberStr, parser.format);
   if (!precisionStr) {
@@ -89,14 +90,7 @@ function getDecimalPrecision(numStr: string): string | undefined {
   return `${0.5 * Math.pow(10, -digitsAfterSeparator.value.length)}`;
 }
 
-type ParseResult =
-  | {
-      result: "noNumber" | "noSymbol";
-    }
-  | {
-      result: "success";
-      value: string;
-    };
+type ParseResult = { result: "noNumber" | "noSymbol" } | { result: "success"; value: string };
 
 function parseDigitsAfterSymbol(numStr: string, symbol: string): ParseResult {
   let lastDigitIndex = -1;

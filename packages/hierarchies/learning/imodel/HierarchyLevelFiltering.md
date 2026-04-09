@@ -48,7 +48,9 @@ import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-s
 
 const queryClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
-  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+    classHierarchyInspector: imodelAccess,
+  }),
 });
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
@@ -104,7 +106,9 @@ import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-s
 
 const queryClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
-  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+    classHierarchyInspector: imodelAccess,
+  }),
 });
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel(props) {

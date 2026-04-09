@@ -15,7 +15,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rimraf lib build",
-    "lint": "eslint ./src/**/*.ts",
+    "lint": "eslint \"./src/**/*.ts\"",
     "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "devDependencies": {

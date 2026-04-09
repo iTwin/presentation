@@ -25,7 +25,12 @@ import {
 import { Guid } from "@itwin/core-bentley";
 import { useDisposable } from "@itwin/core-react";
 import { Keys, KeySet, NodeKey } from "@itwin/presentation-common";
-import { Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHelper } from "@itwin/presentation-frontend";
+import {
+  Presentation,
+  SelectionChangeEventArgs,
+  SelectionChangeType,
+  SelectionHelper,
+} from "@itwin/presentation-frontend";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
 import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem.js";
 import { toRxjsObservable } from "../Utils.js";
@@ -73,10 +78,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
   #cancelled = new Subject<void>();
 
   constructor(params: UnifiedSelectionTreeEventHandlerParams) {
-    super({
-      ...params,
-      modelSource: params.nodeLoader.modelSource,
-    });
+    super({ ...params, modelSource: params.nodeLoader.modelSource });
     this.#dataProvider = params.nodeLoader.dataProvider;
     this.#selectionSourceName = params.name ?? `Tree_${this.#dataProvider.rulesetId}_${Guid.createValue()}`;
     this.#listeners.push(Presentation.selection.selectionChange.addListener((args) => this.onSelectionChanged(args)));
@@ -174,7 +176,10 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
     }
 
     // ... or if it's an ECInstances node and any of instance keys is in selection
-    if (NodeKey.isInstancesNodeKey(node.key) && node.key.instanceKeys.some((instanceKey) => selection.has(instanceKey))) {
+    if (
+      NodeKey.isInstancesNodeKey(node.key) &&
+      node.key.instanceKeys.some((instanceKey) => selection.has(instanceKey))
+    ) {
       return true;
     }
 
@@ -231,7 +236,10 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
       return;
     }
 
-    if (evt.source !== this.#selectionSourceName && (evt.changeType === SelectionChangeType.Clear || evt.changeType === SelectionChangeType.Replace)) {
+    if (
+      evt.source !== this.#selectionSourceName &&
+      (evt.changeType === SelectionChangeType.Clear || evt.changeType === SelectionChangeType.Replace)
+    ) {
       this.#cancelled.next();
     }
 
@@ -287,7 +295,9 @@ export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeE
   return useDisposable(
     useCallback(
       () => new UnifiedSelectionTreeEventHandler(props),
-      Object.values(props) /* eslint-disable-line react-hooks/exhaustive-deps */ /* want to re-create the handler whenever any prop changes */,
+      Object.values(
+        props,
+      ) /* eslint-disable-line react-hooks/exhaustive-deps */ /* want to re-create the handler whenever any prop changes */,
     ),
   );
 }

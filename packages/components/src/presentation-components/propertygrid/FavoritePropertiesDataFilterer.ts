@@ -38,7 +38,11 @@ export interface FavoritePropertiesDataFiltererProps {
 export class FavoritePropertiesDataFilterer extends PropertyDataFiltererBase {
   private _source: IPresentationPropertyDataProvider;
   private _favoritesScope: FavoritePropertiesScope;
-  private _favoritesCheckCallback: (field: Field, imodel: IModelConnection, scope: FavoritePropertiesScope) => Promise<boolean> | boolean;
+  private _favoritesCheckCallback: (
+    field: Field,
+    imodel: IModelConnection,
+    scope: FavoritePropertiesScope,
+  ) => Promise<boolean> | boolean;
   private _isActive: boolean;
 
   public constructor(props: FavoritePropertiesDataFiltererProps) {
@@ -71,7 +75,9 @@ export class FavoritePropertiesDataFilterer extends PropertyDataFiltererBase {
     }
 
     // If one of the parents is favorite, we don't want to expand to this node, because the parent has already matched and expanded
-    const anyParentFavorite = (await Promise.all(parents.map(async (parent) => this.isFavorite(parent)))).some((isParentFavorite) => isParentFavorite);
+    const anyParentFavorite = (await Promise.all(parents.map(async (parent) => this.isFavorite(parent)))).some(
+      (isParentFavorite) => isParentFavorite,
+    );
     if (anyParentFavorite) {
       return { matchesFilter: true };
     }
@@ -90,7 +96,11 @@ export class FavoritePropertiesDataFilterer extends PropertyDataFiltererBase {
   }
 }
 
-async function defaultFavoritePropertyCheckCallback(field: Field, imodel: IModelConnection, scope: FavoritePropertiesScope) {
+async function defaultFavoritePropertyCheckCallback(
+  field: Field,
+  imodel: IModelConnection,
+  scope: FavoritePropertiesScope,
+) {
   if (Presentation.favoriteProperties.hasAsync) {
     return Presentation.favoriteProperties.hasAsync(field, imodel, scope);
   }

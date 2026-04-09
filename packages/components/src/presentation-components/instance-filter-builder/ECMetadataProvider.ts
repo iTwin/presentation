@@ -49,14 +49,19 @@ export class ECMetadataProvider {
   private _classInfoCache = new LRUDictionary<CacheKey, ECClassInfo>(50, compareKeys);
   #componentId: GuidString;
   #componentName: string;
-  constructor(private _queryReaderFactory: (ecsql: string, params?: QueryBinder, config?: QueryOptions) => ECSqlReader) {
+  constructor(
+    private _queryReaderFactory: (ecsql: string, params?: QueryBinder, config?: QueryOptions) => ECSqlReader,
+  ) {
     this.#componentId = Guid.createValue();
     this.#componentName = "ECMetadataProvider";
   }
 
   public async getECClassInfo(idOrFullName: Id64String | string): Promise<ECClassInfo | undefined>;
   public async getECClassInfo(schemaName: string, className: string): Promise<ECClassInfo | undefined>;
-  public async getECClassInfo(idNameOrSchema: Id64String | string, className?: string): Promise<ECClassInfo | undefined> {
+  public async getECClassInfo(
+    idNameOrSchema: Id64String | string,
+    className?: string,
+  ): Promise<ECClassInfo | undefined> {
     // load class info using class id
     if (Id64.isId64(idNameOrSchema)) {
       return this.getClassInfoById(idNameOrSchema);
@@ -107,12 +112,20 @@ export class ECMetadataProvider {
   private async createECClassInfo(reader: ECSqlReader) {
     while (await reader.step()) {
       const classHierarchy = await this.queryClassHierarchyInfo(reader.current.id);
-      return new ECClassInfo(reader.current.id, reader.current.name, reader.current.label, classHierarchy.baseClasses, classHierarchy.derivedClasses);
+      return new ECClassInfo(
+        reader.current.id,
+        reader.current.name,
+        reader.current.label,
+        classHierarchy.baseClasses,
+        classHierarchy.derivedClasses,
+      );
     }
     return undefined;
   }
 
-  private async queryClassHierarchyInfo(id: Id64String): Promise<{ baseClasses: Set<Id64String>; derivedClasses: Set<Id64String> }> {
+  private async queryClassHierarchyInfo(
+    id: Id64String,
+  ): Promise<{ baseClasses: Set<Id64String>; derivedClasses: Set<Id64String> }> {
     const classHierarchyQuery = `
       SELECT chc.TargetECInstanceId baseId, chc.SourceECInstanceId derivedId
       FROM meta.ClassHasAllBaseClasses chc
@@ -152,7 +165,9 @@ const metadataProviders = new Map<string, ECMetadataProvider>();
 export function getIModelMetadataProvider(imodel: IModelConnection) {
   let metadataProvider = metadataProviders.get(imodel.key);
   if (!metadataProvider) {
-    metadataProvider = new ECMetadataProvider((ecsql: string, params?: QueryBinder, config?: QueryOptions) => imodel.createQueryReader(ecsql, params, config));
+    metadataProvider = new ECMetadataProvider((ecsql: string, params?: QueryBinder, config?: QueryOptions) =>
+      imodel.createQueryReader(ecsql, params, config),
+    );
     metadataProviders.set(imodel.key, metadataProvider);
     /* v8 ignore next 3 -- @preserve */
     imodel.onClose.addOnce(() => {

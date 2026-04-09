@@ -106,7 +106,12 @@ describe("Helpers", () => {
       const testDirectory = "/test/directory/";
       vi.spyOn(PresentationBackend, "initProps", "get").mockReturnValue({
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        caching: { hierarchies: { mode: HierarchyCacheMode.Hybrid, disk: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } },
+        caching: {
+          hierarchies: {
+            mode: HierarchyCacheMode.Hybrid,
+            disk: { mode: HierarchyCacheMode.Disk, directory: testDirectory },
+          },
+        },
       });
       await initialize();
 

@@ -21,7 +21,10 @@ export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<s
  *
  * @public
  */
-export async function formatConcatenatedValue(props: { value: ConcatenatedValue | string; valueFormatter: IPrimitiveValueFormatter }): Promise<string> {
+export async function formatConcatenatedValue(props: {
+  value: ConcatenatedValue | string;
+  valueFormatter: IPrimitiveValueFormatter;
+}): Promise<string> {
   const { value, valueFormatter } = props;
   if (typeof value === "string") {
     return valueFormatter({ value, type: "String" });
@@ -31,10 +34,7 @@ export async function formatConcatenatedValue(props: { value: ConcatenatedValue 
     partFormatter: async (part) => {
       // strings are converted to typed strings
       if (ConcatenatedValuePart.isString(part)) {
-        part = {
-          value: part,
-          type: "String",
-        };
+        part = { value: part, type: "String" };
       }
       // finally, use provided value formatter to create a string from `TypedPrimitiveValue`
       return valueFormatter(part);
@@ -76,7 +76,12 @@ export function createDefaultValueFormatter(): IPrimitiveValueFormatter {
       }
     }
 
-    assert(typeof value.value === "undefined" || typeof value.value === "boolean" || typeof value.value === "number" || typeof value.value === "string");
+    assert(
+      typeof value.value === "undefined" ||
+        typeof value.value === "boolean" ||
+        typeof value.value === "number" ||
+        typeof value.value === "string",
+    );
     return value.value.toString();
   };
 }
@@ -100,7 +105,11 @@ function applyNumericFormatting(value: TypedPrimitiveValue) {
 
 function applyDatesFormatting(value: TypedPrimitiveValue) {
   function getDate(julianOrDate: number | string | Date): Date {
-    return typeof julianOrDate === "number" ? julianToDateTime(julianOrDate) : typeof julianOrDate === "string" ? new Date(julianOrDate) : julianOrDate;
+    return typeof julianOrDate === "number"
+      ? julianToDateTime(julianOrDate)
+      : typeof julianOrDate === "string"
+        ? new Date(julianOrDate)
+        : julianOrDate;
   }
   if (value.type !== "DateTime") {
     return undefined;

@@ -5,17 +5,22 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { CodeSpecs, IModelDb, Relationships } from "@itwin/core-backend";
-import { BisCodeSpec, Code, CodeScopeProps, CodeSpec, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
+import {
+  BisCodeSpec,
+  Code,
+  CodeScopeProps,
+  CodeSpec,
+  ElementAspectProps,
+  ElementProps,
+  ModelProps,
+  RelationshipProps,
+} from "@itwin/core-common";
 import { TestIModelBuilderImpl } from "../presentation-testing/IModelBuilderImpl.js";
 import { createStub } from "./Utils.js";
 
 describe("TestIModelBuilderImpl", () => {
   it("insertModel calls iModel.models.insertModel", async () => {
-    const imodel = {
-      models: {
-        insertModel: createStub<IModelDb.Models["insertModel"]>(),
-      },
-    };
+    const imodel = { models: { insertModel: createStub<IModelDb.Models["insertModel"]>() } };
 
     const builder = new TestIModelBuilderImpl(imodel as unknown as IModelDb);
     builder.insertModel({} as ModelProps);
@@ -24,11 +29,7 @@ describe("TestIModelBuilderImpl", () => {
   });
 
   it("insertElement calls iModel.elements.insertElement", async () => {
-    const imodel = {
-      elements: {
-        insertElement: createStub<IModelDb.Elements["insertElement"]>(),
-      },
-    };
+    const imodel = { elements: { insertElement: createStub<IModelDb.Elements["insertElement"]>() } };
 
     const builder = new TestIModelBuilderImpl(imodel as unknown as IModelDb);
     builder.insertElement({} as ElementProps);
@@ -37,11 +38,7 @@ describe("TestIModelBuilderImpl", () => {
   });
 
   it("insertAspect calls iModel.elements.insertAspect", async () => {
-    const imodel = {
-      elements: {
-        insertAspect: createStub<IModelDb.Elements["insertAspect"]>(),
-      },
-    };
+    const imodel = { elements: { insertAspect: createStub<IModelDb.Elements["insertAspect"]>() } };
 
     const builder = new TestIModelBuilderImpl(imodel as unknown as IModelDb);
     builder.insertAspect({} as ElementAspectProps);
@@ -50,11 +47,7 @@ describe("TestIModelBuilderImpl", () => {
   });
 
   it("insertRelationship calls iModel.relationships.insertInstance", async () => {
-    const imodel = {
-      relationships: {
-        insertInstance: createStub<Relationships["insertInstance"]>(),
-      },
-    };
+    const imodel = { relationships: { insertInstance: createStub<Relationships["insertInstance"]>() } };
 
     const builder = new TestIModelBuilderImpl(imodel as unknown as IModelDb);
     builder.insertRelationship({} as RelationshipProps);
@@ -66,11 +59,7 @@ describe("TestIModelBuilderImpl", () => {
     const imodel = {
       codeSpecs: {
         getByName: createStub<CodeSpecs["getByName"]>().mockImplementation(
-          (name) =>
-            ({
-              id: "code_spec_id",
-              name,
-            }) as CodeSpec,
+          (name) => ({ id: "code_spec_id", name }) as CodeSpec,
         ),
       },
     };
@@ -84,9 +73,7 @@ describe("TestIModelBuilderImpl", () => {
 
   it("importSchema calls iModel.importSchemaStrings", async () => {
     const importSchemaStringsStub = vi.fn().mockResolvedValue(undefined);
-    const imodel = {
-      importSchemaStrings: importSchemaStringsStub,
-    } as unknown as IModelDb;
+    const imodel = { importSchemaStrings: importSchemaStringsStub } as unknown as IModelDb;
 
     const builder = new TestIModelBuilderImpl(imodel);
     await builder.importSchema("test xml");

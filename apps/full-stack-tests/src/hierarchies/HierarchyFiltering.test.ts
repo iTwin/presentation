@@ -29,7 +29,12 @@ import {
   HierarchyProvider,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding, InstanceKey, Props } from "@itwin/presentation-shared";
+import {
+  createBisInstanceLabelSelectClauseFactory,
+  ECSqlBinding,
+  InstanceKey,
+  Props,
+} from "@itwin/presentation-shared";
 import { importSchema, withECDb } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { buildTestIModel } from "../TestIModelSetup.js";
@@ -60,7 +65,9 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -88,9 +95,7 @@ describe("Hierarchies", () => {
                     key: "custom",
                     label: "custom",
                     children: undefined,
-                    extendedData: {
-                      parentSubjectIds: parentNode.key.instanceKeys.map((key) => key.id),
-                    },
+                    extendedData: { parentSubjectIds: parentNode.key.instanceKeys.map((key) => key.id) },
                   },
                 },
               ];
@@ -109,7 +114,9 @@ describe("Hierarchies", () => {
                       FROM ${subjectClassName} AS this
                       WHERE this.Parent.Id IN (${parentNode.extendedData!.parentSubjectIds.map(() => "?").join(",")})
                     `,
-                    bindings: parentNode.extendedData!.parentSubjectIds.map((id: Id64String): ECSqlBinding => ({ type: "id", value: id })),
+                    bindings: parentNode.extendedData!.parentSubjectIds.map(
+                      (id: Id64String): ECSqlBinding => ({ type: "id", value: id }),
+                    ),
                   },
                 },
               ];
@@ -122,7 +129,12 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
+            filteredNodePaths: [
+              {
+                path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2],
+                options: { autoExpand: true },
+              },
+            ],
           }),
           expect: [
             NodeValidators.createForInstanceNode({
@@ -158,7 +170,9 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -181,20 +195,8 @@ describe("Hierarchies", () => {
             }
             if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "root subject") {
               return [
-                {
-                  node: {
-                    key: "custom1",
-                    label: "custom1",
-                    children: undefined,
-                  },
-                },
-                {
-                  node: {
-                    key: "custom2",
-                    label: "custom2",
-                    children: undefined,
-                  },
-                },
+                { node: { key: "custom1", label: "custom1", children: undefined } },
+                { node: { key: "custom2", label: "custom2", children: undefined } },
               ];
             }
             return [];
@@ -205,7 +207,9 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom2" }], options: { autoExpand: true } }],
+            filteredNodePaths: [
+              { path: [keys.rootSubject, { type: "generic", id: "custom2" }], options: { autoExpand: true } },
+            ],
           }),
           expect: [
             NodeValidators.createForInstanceNode({
@@ -213,11 +217,7 @@ describe("Hierarchies", () => {
               autoExpand: true,
               isFilterTarget: false,
               children: [
-                NodeValidators.createForGenericNode({
-                  key: "custom2",
-                  autoExpand: false,
-                  isFilterTarget: true,
-                }),
+                NodeValidators.createForGenericNode({ key: "custom2", autoExpand: false, isFilterTarget: true }),
               ],
             }),
           ],
@@ -229,51 +229,18 @@ describe("Hierarchies", () => {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  node: {
-                    key: "custom1",
-                    label: "custom1",
-                  },
-                },
-                {
-                  node: {
-                    key: "custom2",
-                    label: "custom2",
-                  },
-                },
-              ];
+              return [{ node: { key: "custom1", label: "custom1" } }, { node: { key: "custom2", label: "custom2" } }];
             }
             if (HierarchyNode.isGeneric(parentNode) && parentNode.label === "custom2") {
               return [
-                {
-                  node: {
-                    key: "custom21",
-                    label: "custom21",
-                  },
-                },
-                {
-                  node: {
-                    key: "custom22",
-                    label: "custom22",
-                  },
-                },
+                { node: { key: "custom21", label: "custom21" } },
+                { node: { key: "custom22", label: "custom22" } },
               ];
             }
             if (HierarchyNode.isGeneric(parentNode) && parentNode.label === "custom22") {
               return [
-                {
-                  node: {
-                    key: "custom221",
-                    label: "custom221",
-                  },
-                },
-                {
-                  node: {
-                    key: "custom222",
-                    label: "custom222",
-                  },
-                },
+                { node: { key: "custom221", label: "custom221" } },
+                { node: { key: "custom222", label: "custom222" } },
               ];
             }
             return [];
@@ -312,16 +279,8 @@ describe("Hierarchies", () => {
                   autoExpand: true,
                   isFilterTarget: false,
                   children: [
-                    NodeValidators.createForGenericNode({
-                      key: "custom221",
-                      autoExpand: false,
-                      isFilterTarget: false,
-                    }),
-                    NodeValidators.createForGenericNode({
-                      key: "custom222",
-                      autoExpand: false,
-                      isFilterTarget: true,
-                    }),
+                    NodeValidators.createForGenericNode({ key: "custom221", autoExpand: false, isFilterTarget: false }),
+                    NodeValidators.createForGenericNode({ key: "custom222", autoExpand: false, isFilterTarget: true }),
                   ],
                 }),
               ],
@@ -344,7 +303,9 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const createHierarchyLevelDefinition = async (whereClause: (alias: string) => string) => {
           return [
@@ -368,16 +329,34 @@ describe("Hierarchies", () => {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId IN (${keys.childSubject1.id}, ${keys.childSubject4.id})`);
+              return createHierarchyLevelDefinition(
+                (alias: string) =>
+                  `WHERE ${alias}.ECInstanceId IN (${keys.childSubject1.id}, ${keys.childSubject4.id})`,
+              );
             }
-            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 1" && parentNode.parentKeys.length === 0) {
-              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId IN (${keys.childSubject2.id}, ${keys.childSubject3.id})`);
+            if (
+              HierarchyNode.isInstancesNode(parentNode) &&
+              parentNode.label === "test subject 1" &&
+              parentNode.parentKeys.length === 0
+            ) {
+              return createHierarchyLevelDefinition(
+                (alias: string) =>
+                  `WHERE ${alias}.ECInstanceId IN (${keys.childSubject2.id}, ${keys.childSubject3.id})`,
+              );
             }
             if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 4") {
-              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId = ${keys.childSubject1.id}`);
+              return createHierarchyLevelDefinition(
+                (alias: string) => `WHERE ${alias}.ECInstanceId = ${keys.childSubject1.id}`,
+              );
             }
-            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 1" && parentNode.parentKeys.length === 1) {
-              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId = ${keys.childSubject2.id}`);
+            if (
+              HierarchyNode.isInstancesNode(parentNode) &&
+              parentNode.label === "test subject 1" &&
+              parentNode.parentKeys.length === 1
+            ) {
+              return createHierarchyLevelDefinition(
+                (alias: string) => `WHERE ${alias}.ECInstanceId = ${keys.childSubject2.id}`,
+              );
             }
             return [];
           },
@@ -436,12 +415,22 @@ describe("Hierarchies", () => {
           const childSubject22 = insertSubject({ builder, codeValue: "test subject 22", parentId: rootSubject.id });
           const childSubject221 = insertSubject({ builder, codeValue: "test subject 221", parentId: rootSubject.id });
           const childSubject222 = insertSubject({ builder, codeValue: "test subject 222", parentId: rootSubject.id });
-          return { rootSubject, childSubject1, childSubject2, childSubject21, childSubject22, childSubject221, childSubject222 };
+          return {
+            rootSubject,
+            childSubject1,
+            childSubject2,
+            childSubject21,
+            childSubject22,
+            childSubject221,
+            childSubject222,
+          };
         });
         const imodelAccess = createIModelAccess(imodel);
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const createHierarchyLevelDefinition = async (whereClause: (alias: string) => string) => [
           {
@@ -462,14 +451,21 @@ describe("Hierarchies", () => {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId IN (${keys.childSubject1.id}, ${keys.childSubject2.id})`);
+              return createHierarchyLevelDefinition(
+                (alias: string) =>
+                  `WHERE ${alias}.ECInstanceId IN (${keys.childSubject1.id}, ${keys.childSubject2.id})`,
+              );
             }
             if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 2") {
-              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId IN (${keys.childSubject21.id}, ${keys.childSubject22.id})`);
+              return createHierarchyLevelDefinition(
+                (alias: string) =>
+                  `WHERE ${alias}.ECInstanceId IN (${keys.childSubject21.id}, ${keys.childSubject22.id})`,
+              );
             }
             if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 22") {
               return createHierarchyLevelDefinition(
-                (alias: string) => `WHERE ${alias}.ECInstanceId IN (${keys.childSubject221.id}, ${keys.childSubject222.id})`,
+                (alias: string) =>
+                  `WHERE ${alias}.ECInstanceId IN (${keys.childSubject221.id}, ${keys.childSubject222.id})`,
               );
             }
             return [];
@@ -535,7 +531,9 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -563,12 +561,8 @@ describe("Hierarchies", () => {
                     key: "custom",
                     label: "custom",
                     children: undefined,
-                    processingParams: {
-                      hideInHierarchy: true,
-                    },
-                    extendedData: {
-                      parentSubjectIds: parentNode.key.instanceKeys.map((key) => key.id),
-                    },
+                    processingParams: { hideInHierarchy: true },
+                    extendedData: { parentSubjectIds: parentNode.key.instanceKeys.map((key) => key.id) },
                   },
                 },
               ];
@@ -587,7 +581,9 @@ describe("Hierarchies", () => {
                       FROM ${subjectClassName} AS this
                       WHERE this.Parent.Id IN (${parentNode.extendedData!.parentSubjectIds.map(() => "?").join(",")})
                     `,
-                    bindings: parentNode.extendedData!.parentSubjectIds.map((id: Id64String): ECSqlBinding => ({ type: "id", value: id })),
+                    bindings: parentNode.extendedData!.parentSubjectIds.map(
+                      (id: Id64String): ECSqlBinding => ({ type: "id", value: id }),
+                    ),
                   },
                 },
               ];
@@ -600,7 +596,12 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
+            filteredNodePaths: [
+              {
+                path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2],
+                options: { autoExpand: true },
+              },
+            ],
           }),
           expect: [
             NodeValidators.createForInstanceNode({
@@ -633,7 +634,9 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -661,12 +664,8 @@ describe("Hierarchies", () => {
                     key: "custom",
                     label: "custom",
                     children: undefined,
-                    processingParams: {
-                      hideInHierarchy: true,
-                    },
-                    extendedData: {
-                      parentSubjectIds: parentNode.key.instanceKeys.map((key) => key.id),
-                    },
+                    processingParams: { hideInHierarchy: true },
+                    extendedData: { parentSubjectIds: parentNode.key.instanceKeys.map((key) => key.id) },
                   },
                 },
               ];
@@ -685,7 +684,9 @@ describe("Hierarchies", () => {
                       FROM ${subjectClassName} AS this
                       WHERE this.Parent.Id IN (${parentNode.extendedData!.parentSubjectIds.map(() => "?").join(",")})
                     `,
-                    bindings: parentNode.extendedData!.parentSubjectIds.map((id: Id64String): ECSqlBinding => ({ type: "id", value: id })),
+                    bindings: parentNode.extendedData!.parentSubjectIds.map(
+                      (id: Id64String): ECSqlBinding => ({ type: "id", value: id }),
+                    ),
                   },
                 },
               ];
@@ -695,7 +696,11 @@ describe("Hierarchies", () => {
         };
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy, filteredNodePaths: [[keys.rootSubject, { type: "generic", id: "custom" }]] }),
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            filteredNodePaths: [[keys.rootSubject, { type: "generic", id: "custom" }]],
+          }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
@@ -718,7 +723,9 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -815,7 +822,9 @@ describe("Hierarchies", () => {
             const imodelAccess = createIModelAccess(imodel);
             const selectQueryFactory = createNodesQueryClauseFactory({
               imodelAccess,
-              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                classHierarchyInspector: imodelAccess,
+              }),
             });
             const hierarchy: HierarchyDefinition = {
               async defineHierarchyLevel({ parentNode }) {
@@ -922,7 +931,9 @@ describe("Hierarchies", () => {
             const imodelAccess = createIModelAccess(imodel);
             const selectQueryFactory = createNodesQueryClauseFactory({
               imodelAccess,
-              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                classHierarchyInspector: imodelAccess,
+              }),
             });
             const hierarchy: HierarchyDefinition = {
               async defineHierarchyLevel({ parentNode }) {
@@ -1011,7 +1022,9 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const rootNodeKey: GenericNodeKey = { type: "generic", id: "root-node" };
         const hierarchy: HierarchyDefinition = {
@@ -1046,10 +1059,7 @@ describe("Hierarchies", () => {
             filteredNodePaths: keys.elements.map((elementKey) => ({
               path: [rootNodeKey, elementKey],
               options: {
-                autoExpand: {
-                  key: { type: "class-grouping", className: keys.elements[0].className },
-                  depth: 1,
-                },
+                autoExpand: { key: { type: "class-grouping", className: keys.elements[0].className }, depth: 1 },
               },
             })),
           }),
@@ -1075,15 +1085,27 @@ describe("Hierarchies", () => {
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const rootElement = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id });
-          const middleElement = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, parentId: rootElement.id });
-          const childElement = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, parentId: middleElement.id });
+          const middleElement = insertPhysicalElement({
+            builder,
+            modelId: model.id,
+            categoryId: category.id,
+            parentId: rootElement.id,
+          });
+          const childElement = insertPhysicalElement({
+            builder,
+            modelId: model.id,
+            categoryId: category.id,
+            parentId: middleElement.id,
+          });
           return { rootSubject, model, category, rootElement, middleElement, childElement };
         });
 
         const imodelAccess = createIModelAccess(imodel);
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const rootNodeKey: GenericNodeKey = { type: "generic", id: "root-node" };
         const hierarchy: HierarchyDefinition = {
@@ -1105,7 +1127,9 @@ describe("Hierarchies", () => {
                     FROM BisCore.PhysicalElement this
                     WHERE this.Parent.Id ${HierarchyNodeKey.isGeneric(parentNode.key) ? "IS NULL" : "= ?"}
                   `,
-                  bindings: HierarchyNodeKey.isGeneric(parentNode.key) ? undefined : [{ type: "id", value: parentNode.key.instanceKeys[0].id }],
+                  bindings: HierarchyNodeKey.isGeneric(parentNode.key)
+                    ? undefined
+                    : [{ type: "id", value: parentNode.key.instanceKeys[0].id }],
                 },
               },
             ];
@@ -1150,9 +1174,7 @@ describe("Hierarchies", () => {
                                 NodeValidators.createForClassGroupingNode({
                                   autoExpand: false,
                                   children: [
-                                    NodeValidators.createForInstanceNode({
-                                      instanceKeys: [keys.childElement],
-                                    }),
+                                    NodeValidators.createForInstanceNode({ instanceKeys: [keys.childElement] }),
                                   ],
                                 }),
                               ],
@@ -1184,7 +1206,9 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const rootNodeKey: GenericNodeKey = { type: "generic", id: "root-node" };
         const hierarchy: HierarchyDefinition = {
@@ -1221,10 +1245,7 @@ describe("Hierarchies", () => {
               ...keys.elements.map((elementKey) => ({
                 path: [rootNodeKey, elementKey],
                 options: {
-                  autoExpand: {
-                    key: { type: "class-grouping" as const, className: elementKey.className },
-                    depth: 1,
-                  },
+                  autoExpand: { key: { type: "class-grouping" as const, className: elementKey.className }, depth: 1 },
                 },
               })),
             ],
@@ -1238,14 +1259,8 @@ describe("Hierarchies", () => {
                   className: keys.elements[0].className,
                   autoExpand: true,
                   children: [
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [keys.elements[0]],
-                      isFilterTarget: true,
-                    }),
-                    NodeValidators.createForInstanceNode({
-                      isFilterTarget: true,
-                      instanceKeys: [keys.elements[1]],
-                    }),
+                    NodeValidators.createForInstanceNode({ instanceKeys: [keys.elements[0]], isFilterTarget: true }),
+                    NodeValidators.createForInstanceNode({ isFilterTarget: true, instanceKeys: [keys.elements[1]] }),
                   ],
                 }),
               ],
@@ -1290,7 +1305,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           hierarchy = {
             defineHierarchyLevel: async (props) => {
@@ -1311,12 +1328,7 @@ describe("Hierarchies", () => {
                           byClass: true,
                           byProperties: {
                             propertiesClassName: circleClassName,
-                            propertyGroups: [
-                              {
-                                propertyName: "Color",
-                                propertyClassAlias: "this",
-                              },
-                            ],
+                            propertyGroups: [{ propertyName: "Color", propertyClassAlias: "this" }],
                           },
                           byLabel: true,
                         },
@@ -1331,20 +1343,12 @@ describe("Hierarchies", () => {
         });
 
         it("sets auto-expand flag until class grouping node", async () => {
-          const autoExpandOptions = {
-            key: { type: "class-grouping", className: circleClassName },
-            depth: 1,
-          } as const;
+          const autoExpandOptions = { key: { type: "class-grouping", className: circleClassName }, depth: 1 } as const;
           await validateHierarchy({
             provider: createProvider({
               imodel,
               hierarchy,
-              filteredNodePaths: [
-                {
-                  path: [rootNodeKey, elementKey],
-                  options: { autoExpand: autoExpandOptions },
-                },
-              ],
+              filteredNodePaths: [{ path: [rootNodeKey, elementKey], options: { autoExpand: autoExpandOptions } }],
             }),
             expect: [
               NodeValidators.createForGenericNode({
@@ -1382,19 +1386,19 @@ describe("Hierarchies", () => {
 
         it("sets auto-expand flag until property grouping node", async () => {
           const autoExpandOptions = {
-            key: { type: "property-grouping:value", propertyClassName: circleClassName, propertyName: "Color", formattedPropertyValue: "Red" },
+            key: {
+              type: "property-grouping:value",
+              propertyClassName: circleClassName,
+              propertyName: "Color",
+              formattedPropertyValue: "Red",
+            },
             depth: 2,
           } as const;
           await validateHierarchy({
             provider: createProvider({
               imodel,
               hierarchy,
-              filteredNodePaths: [
-                {
-                  path: [rootNodeKey, elementKey],
-                  options: { autoExpand: autoExpandOptions },
-                },
-              ],
+              filteredNodePaths: [{ path: [rootNodeKey, elementKey], options: { autoExpand: autoExpandOptions } }],
             }),
             expect: [
               NodeValidators.createForGenericNode({
@@ -1431,20 +1435,12 @@ describe("Hierarchies", () => {
         });
 
         it("sets auto-expand flag until label grouping node", async () => {
-          const autoExpandOptions = {
-            key: { type: "label-grouping", label: "Circle" },
-            depth: 3,
-          } as const;
+          const autoExpandOptions = { key: { type: "label-grouping", label: "Circle" }, depth: 3 } as const;
           await validateHierarchy({
             provider: createProvider({
               imodel,
               hierarchy,
-              filteredNodePaths: [
-                {
-                  path: [rootNodeKey, elementKey],
-                  options: { autoExpand: autoExpandOptions },
-                },
-              ],
+              filteredNodePaths: [{ path: [rootNodeKey, elementKey], options: { autoExpand: autoExpandOptions } }],
             }),
             expect: [
               NodeValidators.createForGenericNode({
@@ -1485,12 +1481,7 @@ describe("Hierarchies", () => {
             provider: createProvider({
               imodel,
               hierarchy,
-              filteredNodePaths: [
-                {
-                  path: [rootNodeKey, elementKey],
-                  options: { autoExpand: true },
-                },
-              ],
+              filteredNodePaths: [{ path: [rootNodeKey, elementKey], options: { autoExpand: true } }],
             }),
             expect: [
               NodeValidators.createForGenericNode({
@@ -1529,14 +1520,20 @@ describe("Hierarchies", () => {
 
     describe("when filtering merged hierarchy provider", () => {
       it("filters root nodes of individual provider", async () => {
-        const { imodel: imodel1, ...keys1 } = await buildTestIModel(`${expect.getState().currentTestName!} 1`, async (builder) => {
-          const testSubject = insertSubject({ builder, codeValue: "A subject", parentId: IModel.rootSubjectId });
-          return { testSubject };
-        });
-        const { imodel: imodel2, ...keys2 } = await buildTestIModel(`${expect.getState().currentTestName!} 2`, async (builder) => {
-          const testSubject = insertSubject({ builder, codeValue: "B subject", parentId: IModel.rootSubjectId });
-          return { testSubject };
-        });
+        const { imodel: imodel1, ...keys1 } = await buildTestIModel(
+          `${expect.getState().currentTestName!} 1`,
+          async (builder) => {
+            const testSubject = insertSubject({ builder, codeValue: "A subject", parentId: IModel.rootSubjectId });
+            return { testSubject };
+          },
+        );
+        const { imodel: imodel2, ...keys2 } = await buildTestIModel(
+          `${expect.getState().currentTestName!} 2`,
+          async (builder) => {
+            const testSubject = insertSubject({ builder, codeValue: "B subject", parentId: IModel.rootSubjectId });
+            return { testSubject };
+          },
+        );
         expect(keys1.testSubject).toEqual(keys2.testSubject);
 
         const testSubjectKey1 = { ...keys1.testSubject, imodelKey: imodel1.key };
@@ -1555,7 +1552,9 @@ describe("Hierarchies", () => {
                       ecsql: `
                         SELECT ${await createNodesQueryClauseFactory({
                           imodelAccess: imodelAccess1,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess1 }),
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                            classHierarchyInspector: imodelAccess1,
+                          }),
                         }).createSelectClause({
                           ecClassId: { selector: `this.ECClassId` },
                           ecInstanceId: { selector: `this.ECInstanceId` },
@@ -1585,7 +1584,9 @@ describe("Hierarchies", () => {
                       ecsql: `
                         SELECT ${await createNodesQueryClauseFactory({
                           imodelAccess: imodelAccess2,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess2 }),
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                            classHierarchyInspector: imodelAccess2,
+                          }),
                         }).createSelectClause({
                           ecClassId: { selector: `this.ECClassId` },
                           ecInstanceId: { selector: `this.ECInstanceId` },
@@ -1607,14 +1608,7 @@ describe("Hierarchies", () => {
           hierarchy: {
             async defineHierarchyLevel({ parentNode }) {
               if (!parentNode) {
-                return [
-                  {
-                    node: {
-                      key: "gen",
-                      label: "Generic node 3",
-                    },
-                  },
-                ];
+                return [{ node: { key: "gen", label: "Generic node 3" } }];
               }
               return [];
             },
@@ -1694,53 +1688,53 @@ describe("Hierarchies", () => {
         await validateHierarchy({
           provider: mergeAndFilterProviders({
             providers: [provider1, provider2, provider3, provider4],
-            filterProps: {
-              paths: [[testSubjectKey1]],
-            },
+            filterProps: { paths: [[testSubjectKey1]] },
           }),
           expect: [NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey1] })],
         });
         await validateHierarchy({
           provider: mergeAndFilterProviders({
             providers: [provider1, provider2, provider3, provider4],
-            filterProps: {
-              paths: [[testSubjectKey2]],
-            },
+            filterProps: { paths: [[testSubjectKey2]] },
           }),
           expect: [NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey2] })],
         });
         await validateHierarchy({
           provider: mergeAndFilterProviders({
             providers: [provider1, provider2, provider3, provider4],
-            filterProps: {
-              paths: [[{ type: "generic", id: "gen", source: imodel2.key }]],
-            },
+            filterProps: { paths: [[{ type: "generic", id: "gen", source: imodel2.key }]] },
           }),
           expect: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: imodel2.key } })],
         });
         await validateHierarchy({
           provider: mergeAndFilterProviders({
             providers: [provider1, provider2, provider3, provider4],
-            filterProps: {
-              paths: [[{ type: "generic", id: "gen", source: "custom-provider" }]],
-            },
+            filterProps: { paths: [[{ type: "generic", id: "gen", source: "custom-provider" }]] },
           }),
-          expect: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
+          expect: [
+            NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } }),
+          ],
         });
       });
 
       it("filters through multiple providers", async () => {
         const rootSubjectKey = { className: subjectClassName, id: IModel.rootSubjectId };
-        const { imodel: imodel1, ...keys1 } = await buildTestIModel(`${expect.getState().currentTestName!} 1`, async (builder) => {
-          const subject1 = insertSubject({ builder, codeValue: "A subject 1", parentId: rootSubjectKey.id });
-          const subject11 = insertSubject({ builder, codeValue: "A subject 1.1", parentId: subject1.id });
-          return { subject1, subject11 };
-        });
-        const { imodel: imodel2, ...keys2 } = await buildTestIModel(`${expect.getState().currentTestName!} 2`, async (builder) => {
-          const subject2 = insertSubject({ builder, codeValue: "B subject 2", parentId: rootSubjectKey.id });
-          const subject21 = insertSubject({ builder, codeValue: "B subject 2.1", parentId: subject2.id });
-          return { subject2, subject21 };
-        });
+        const { imodel: imodel1, ...keys1 } = await buildTestIModel(
+          `${expect.getState().currentTestName!} 1`,
+          async (builder) => {
+            const subject1 = insertSubject({ builder, codeValue: "A subject 1", parentId: rootSubjectKey.id });
+            const subject11 = insertSubject({ builder, codeValue: "A subject 1.1", parentId: subject1.id });
+            return { subject1, subject11 };
+          },
+        );
+        const { imodel: imodel2, ...keys2 } = await buildTestIModel(
+          `${expect.getState().currentTestName!} 2`,
+          async (builder) => {
+            const subject2 = insertSubject({ builder, codeValue: "B subject 2", parentId: rootSubjectKey.id });
+            const subject21 = insertSubject({ builder, codeValue: "B subject 2.1", parentId: subject2.id });
+            return { subject2, subject21 };
+          },
+        );
 
         const instanceKeys: (typeof keys1 & typeof keys2) & {} = {
           ...Object.entries(keys1).reduce<Record<keyof typeof keys1, InstanceKey>>((acc, [key, value]) => {
@@ -1753,7 +1747,9 @@ describe("Hierarchies", () => {
           }, {} as any),
         };
 
-        function createSubjectsHierarchyProvider(imodelAccess: ReturnType<typeof createIModelAccess>): HierarchyProvider {
+        function createSubjectsHierarchyProvider(
+          imodelAccess: ReturnType<typeof createIModelAccess>,
+        ): HierarchyProvider {
           return createProvider({
             imodelAccess,
             hierarchy: createPredicateBasedHierarchyDefinition({
@@ -1766,7 +1762,9 @@ describe("Hierarchies", () => {
                       ecsql: `
                         SELECT ${await createNodesQueryClauseFactory({
                           imodelAccess,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                            classHierarchyInspector: imodelAccess,
+                          }),
                         }).createSelectClause({
                           ecClassId: { selector: `this.ECClassId` },
                           ecInstanceId: { selector: `this.ECInstanceId` },
@@ -1789,7 +1787,9 @@ describe("Hierarchies", () => {
                           ecsql: `
                             SELECT ${await createNodesQueryClauseFactory({
                               imodelAccess,
-                              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                                classHierarchyInspector: imodelAccess,
+                              }),
                             }).createSelectClause({
                               ecClassId: { selector: `this.ECClassId` },
                               ecInstanceId: { selector: `this.ECInstanceId` },
@@ -1830,9 +1830,13 @@ describe("Hierarchies", () => {
               if (!filteringHelper.hasFilter) {
                 return createAsyncIterator([myNode]);
               }
-              const nodeMatchesFilter = filteringHelper.getChildNodeFilteringIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
+              const nodeMatchesFilter = filteringHelper
+                .getChildNodeFilteringIdentifiers()
+                ?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
               if (nodeMatchesFilter) {
-                return createAsyncIterator([{ ...myNode, ...filteringHelper.createChildNodeProps({ nodeKey: myNode.key }) }]);
+                return createAsyncIterator([
+                  { ...myNode, ...filteringHelper.createChildNodeProps({ nodeKey: myNode.key }) },
+                ]);
               }
             }
             return createAsyncIterator([]);
@@ -1854,7 +1858,11 @@ describe("Hierarchies", () => {
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [instanceKeys.subject11],
-                  children: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
+                  children: [
+                    NodeValidators.createForGenericNode({
+                      key: { type: "generic", id: "gen", source: "custom-provider" },
+                    }),
+                  ],
                 }),
                 NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } }),
               ],
@@ -1864,7 +1872,11 @@ describe("Hierarchies", () => {
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [instanceKeys.subject21],
-                  children: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
+                  children: [
+                    NodeValidators.createForGenericNode({
+                      key: { type: "generic", id: "gen", source: "custom-provider" },
+                    }),
+                  ],
                 }),
                 NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } }),
               ],
@@ -1878,7 +1890,12 @@ describe("Hierarchies", () => {
             providers: [provider1, provider2, provider3],
             filterProps: {
               paths: [
-                [rootSubjectKey, instanceKeys.subject1, instanceKeys.subject11, { type: "generic", id: "gen", source: "custom-provider" }],
+                [
+                  rootSubjectKey,
+                  instanceKeys.subject1,
+                  instanceKeys.subject11,
+                  { type: "generic", id: "gen", source: "custom-provider" },
+                ],
                 [rootSubjectKey, instanceKeys.subject2, { type: "generic", id: "gen", source: "custom-provider" }],
               ],
             },
@@ -1904,7 +1921,13 @@ describe("Hierarchies", () => {
   });
 });
 
-function mergeAndFilterProviders({ providers, filterProps }: { providers: HierarchyProvider[]; filterProps: Props<HierarchyProvider["setHierarchyFilter"]> }) {
+function mergeAndFilterProviders({
+  providers,
+  filterProps,
+}: {
+  providers: HierarchyProvider[];
+  filterProps: Props<HierarchyProvider["setHierarchyFilter"]>;
+}) {
   const mergedProvider = mergeProviders({ providers });
   mergedProvider.setHierarchyFilter(filterProps);
   return mergedProvider;

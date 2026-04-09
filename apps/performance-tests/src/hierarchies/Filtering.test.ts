@@ -6,8 +6,17 @@
 import { describe, expect } from "vitest";
 import { IModelDb, PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
-import { createNodesQueryClauseFactory, DefineHierarchyLevelProps, HierarchyFilteringPath, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import {
+  createNodesQueryClauseFactory,
+  DefineHierarchyLevelProps,
+  HierarchyFilteringPath,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
+import {
+  createBisInstanceLabelSelectClauseFactory,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+} from "@itwin/presentation-shared";
 import { Datasets } from "../util/Datasets.js";
 import { run } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
@@ -25,15 +34,16 @@ describe("filtering", () => {
     testName: `filters with ${totalNumberOfFilteringPaths} paths`,
     setup: () => {
       const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
-      const filtering = {
-        paths: new Array<HierarchyFilteringPath>(),
-      };
+      const filtering = { paths: new Array<HierarchyFilteringPath>() };
       const parentIdsArr = new Array<number>();
       for (let i = 1; i <= totalNumberOfFilteringPaths / numberOfPathsForASingleParent; ++i) {
         parentIdsArr.push(i + physicalElementsSmallestDecimalId);
         for (let j = (i - 1) * numberOfPathsForASingleParent; j < i * numberOfPathsForASingleParent; ++j) {
           filtering.paths.push([
-            { className: `${schemaName}.${defaultClassName}_0`, id: `0x${physicalElementsSmallestDecimalId.toString(16)}` },
+            {
+              className: `${schemaName}.${defaultClassName}_0`,
+              id: `0x${physicalElementsSmallestDecimalId.toString(16)}`,
+            },
             {
               className: `${schemaName}.${defaultClassName}_${Math.floor(i / itemsPerGroup)}`,
               id: `0x${(i + physicalElementsSmallestDecimalId).toString(16)}`,
@@ -48,10 +58,15 @@ describe("filtering", () => {
 
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
       const fullClassName = PhysicalElement.classFullName.replace(":", ".");
-      const createHierarchyLevelDefinition = async (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector, whereClause: (alias: string) => string) => {
+      const createHierarchyLevelDefinition = async (
+        imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
+        whereClause: (alias: string) => string,
+      ) => {
         const query = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         return [
           {
@@ -85,14 +100,22 @@ describe("filtering", () => {
             // We need to split the hierarchy in 50 parts to reduce the time of the test.
 
             if (!props.parentNode) {
-              return createHierarchyLevelDefinition(imodelAccess, (alias) => `WHERE ${alias}.ECInstanceId = ${physicalElementsSmallestDecimalId}`);
+              return createHierarchyLevelDefinition(
+                imodelAccess,
+                (alias) => `WHERE ${alias}.ECInstanceId = ${physicalElementsSmallestDecimalId}`,
+              );
             }
             if (
               props.parentNode &&
               HierarchyNode.isInstancesNode(props.parentNode) &&
-              props.parentNode.key.instanceKeys.some(({ id }) => Id64.getLocalId(id) === physicalElementsSmallestDecimalId)
+              props.parentNode.key.instanceKeys.some(
+                ({ id }) => Id64.getLocalId(id) === physicalElementsSmallestDecimalId,
+              )
             ) {
-              return createHierarchyLevelDefinition(imodelAccess, (alias) => `WHERE ${alias}.ECInstanceId IN (${parentIdsArr.join(", ")})`);
+              return createHierarchyLevelDefinition(
+                imodelAccess,
+                (alias) => `WHERE ${alias}.ECInstanceId IN (${parentIdsArr.join(", ")})`,
+              );
             }
 
             if (
@@ -102,7 +125,8 @@ describe("filtering", () => {
             ) {
               return createHierarchyLevelDefinition(
                 imodelAccess,
-                (alias) => `WHERE ${alias}.ECInstanceId NOT IN (${physicalElementsSmallestDecimalId}, ${parentIdsArr.join(", ")})`,
+                (alias) =>
+                  `WHERE ${alias}.ECInstanceId NOT IN (${physicalElementsSmallestDecimalId}, ${parentIdsArr.join(", ")})`,
               );
             }
 

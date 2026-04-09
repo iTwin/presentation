@@ -44,17 +44,15 @@ export function createTreeModelNode(node?: Partial<TreeModelNode>, nodeItem?: Tr
     isExpanded: node?.isExpanded ?? false,
     isSelected: node?.isSelected ?? false,
     description: nodeItem?.description ?? node?.description ?? "Node Description",
-    checkbox: node?.checkbox ?? {
-      isDisabled: false,
-      isVisible: true,
-      state: CheckBoxState.Off,
-    },
+    checkbox: node?.checkbox ?? { isDisabled: false, isVisible: true, state: CheckBoxState.Off },
     label,
     item: nodeItem ?? createTreeNodeItem({ label }),
   };
 }
 
-export function createTreeModelNodeInput(input?: Partial<Omit<TreeModelNodeInput, "item"> & { item?: Partial<PresentationTreeNodeItem> }>): TreeModelNodeInput {
+export function createTreeModelNodeInput(
+  input?: Partial<Omit<TreeModelNodeInput, "item"> & { item?: Partial<PresentationTreeNodeItem> }>,
+): TreeModelNodeInput {
   const id = input?.id ?? "0";
   const label = input?.label ?? PropertyRecord.fromString(input?.id ?? "TestNode");
   return {

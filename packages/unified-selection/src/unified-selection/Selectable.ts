@@ -284,7 +284,9 @@ export namespace Selectables {
   export function load(selectables: Selectables): AsyncIterableIterator<SelectableInstanceKey> {
     return eachValueFrom(
       merge(
-        from(selectables.instanceKeys).pipe(mergeMap(([className, ids]) => from(ids).pipe(map((id) => ({ className, id }))))),
+        from(selectables.instanceKeys).pipe(
+          mergeMap(([className, ids]) => from(ids).pipe(map((id) => ({ className, id })))),
+        ),
         from(selectables.custom).pipe(mergeMap(([_, selectable]) => from(selectable.loadInstanceKeys()))),
       ),
     );

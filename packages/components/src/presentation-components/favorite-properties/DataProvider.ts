@@ -76,7 +76,8 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
     /* v8 ignore start -- @preserve */
     this._getActiveScope =
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      props?.activeScopeProvider ?? (() => mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(Presentation.selection.scopes.activeScope));
+      props?.activeScopeProvider ??
+      (() => mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(Presentation.selection.scopes.activeScope));
     /* v8 ignore stop -- @preserve */
   }
 

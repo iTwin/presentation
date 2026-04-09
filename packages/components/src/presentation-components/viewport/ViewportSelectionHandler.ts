@@ -8,7 +8,14 @@ import "../common/DisposePolyfill.js";
 import { from, Subject, takeUntil } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
-import { HiliteSet, HiliteSetProvider, Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
+import {
+  HiliteSet,
+  HiliteSetProvider,
+  Presentation,
+  SelectionChangeEventArgs,
+  SelectionChangeType,
+  SelectionHandler,
+} from "@itwin/presentation-frontend";
 import { safeDispose } from "../common/Utils.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
@@ -77,9 +84,17 @@ export class ViewportSelectionHandler implements Disposable {
     this.applyCurrentHiliteSet(this._imodel);
   }
 
-  private handleUnifiedSelectionChange(imodel: IModelConnection, changeType: SelectionChangeType, keys: Readonly<KeySet>, source: string) {
+  private handleUnifiedSelectionChange(
+    imodel: IModelConnection,
+    changeType: SelectionChangeType,
+    keys: Readonly<KeySet>,
+    source: string,
+  ) {
     if (changeType === SelectionChangeType.Clear || changeType === SelectionChangeType.Replace) {
-      this.applyCurrentHiliteSet(imodel, changeType === SelectionChangeType.Replace && source === "Tool" ? "onlyHilited" : "all");
+      this.applyCurrentHiliteSet(
+        imodel,
+        changeType === SelectionChangeType.Replace && source === "Tool" ? "onlyHilited" : "all",
+      );
       return;
     }
 
@@ -173,7 +188,9 @@ export class ViewportSelectionHandler implements Disposable {
 
 let counter = 1;
 
-function toDisposable(resource: {} | { [Symbol.dispose]: () => void } | { dispose: () => void }): { [Symbol.dispose]: () => void } {
+function toDisposable(resource: {} | { [Symbol.dispose]: () => void } | { dispose: () => void }): {
+  [Symbol.dispose]: () => void;
+} {
   return {
     [Symbol.dispose]: () => {
       safeDispose(resource);

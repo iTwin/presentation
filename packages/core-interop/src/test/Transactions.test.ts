@@ -50,11 +50,7 @@ describe("registerTxnListeners", () => {
   });
 
   function createCoreTxnManager() {
-    return {
-      onCommit: createEventStub(),
-      onCommitted: createEventStub(),
-      onChangesApplied: createEventStub(),
-    };
+    return { onCommit: createEventStub(), onCommitted: createEventStub(), onChangesApplied: createEventStub() };
   }
 
   function createEventStub() {

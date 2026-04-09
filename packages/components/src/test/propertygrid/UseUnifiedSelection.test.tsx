@@ -7,7 +7,12 @@ import { PropsWithChildren } from "react";
 import { beforeEach, describe, expect, it, Mocked, vi } from "vitest";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
-import { ISelectionProvider, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
+import {
+  ISelectionProvider,
+  SelectionChangeEventArgs,
+  SelectionChangeType,
+  SelectionHandler,
+} from "@itwin/presentation-frontend";
 import { createStorage, Selectables, SelectionStorage } from "@itwin/unified-selection";
 import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 import {
@@ -27,9 +32,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       setKeysSpy(newKeys);
     },
     rulesetId: "test_ruleset_id",
-    imodel: {
-      key: imodelKey,
-    } as IModelConnection,
+    imodel: { key: imodelKey } as IModelConnection,
   };
 
   beforeEach(() => {
@@ -43,7 +46,11 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
   describe("with deprecated SelectionHandler", () => {
     let selectionHandler: Mocked<SelectionHandler>;
     function SelectionHandlerWrapper({ children }: PropsWithChildren<{}>) {
-      return <SelectionHandlerContextProvider selectionHandler={selectionHandler}>{children}</SelectionHandlerContextProvider>;
+      return (
+        <SelectionHandlerContextProvider selectionHandler={selectionHandler}>
+          {children}
+        </SelectionHandlerContextProvider>
+      );
     }
 
     beforeEach(() => {
@@ -219,7 +226,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         expect(result.current).toBeDefined();
         expect(result.current.isOverLimit).toBe(false);
         expect(result.current.numSelectedElements).toEqual(2);
-        expect(equalKeySets(new KeySet(selectedInstances), setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
+        expect(
+          equalKeySets(new KeySet(selectedInstances), setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0]),
+        ).toBe(true);
       });
     });
 
@@ -248,7 +257,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         initialProps: { selectionStorage, dataProvider: getProvider() },
       });
       await waitFor(async () => {
-        expect(equalKeySets(new KeySet(selectedInstances1), setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
+        expect(
+          equalKeySets(new KeySet(selectedInstances1), setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0]),
+        ).toBe(true);
         expect(result.current).toBeDefined();
         expect(result.current.isOverLimit).toBe(false);
         expect(result.current.numSelectedElements).toEqual(2);
@@ -258,7 +269,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         selectionStorage.replaceSelection({ imodelKey, source: "test", selectables: selectedInstances2 });
       });
       await waitFor(async () => {
-        expect(equalKeySets(new KeySet(selectedInstances2), setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
+        expect(
+          equalKeySets(new KeySet(selectedInstances2), setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0]),
+        ).toBe(true);
       });
     });
   });

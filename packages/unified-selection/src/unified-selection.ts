@@ -14,8 +14,15 @@ export {
 export { SelectionStorage, createStorage } from "./unified-selection/SelectionStorage.js";
 export { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./unified-selection/HiliteSetProvider.js";
 // eslint-disable-next-line @typescript-eslint/no-deprecated
-export { createCachingHiliteSetProvider, CachingHiliteSetProvider } from "./unified-selection/CachingHiliteSetProvider.js";
+export {
+  createCachingHiliteSetProvider,
+  CachingHiliteSetProvider,
+} from "./unified-selection/CachingHiliteSetProvider.js";
 export { createIModelHiliteSetProvider, IModelHiliteSetProvider } from "./unified-selection/IModelHiliteSetProvider.js";
 export { computeSelection, SelectionScope } from "./unified-selection/SelectionScope.js";
 export { enableUnifiedSelectionSyncWithIModel } from "./unified-selection/EnableUnifiedSelectionSyncWithIModel.js";
-export { StorageSelectionChangeType, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "./unified-selection/SelectionChangeEvent.js";
+export {
+  StorageSelectionChangeType,
+  StorageSelectionChangeEventArgs,
+  StorageSelectionChangesListener,
+} from "./unified-selection/SelectionChangeEvent.js";

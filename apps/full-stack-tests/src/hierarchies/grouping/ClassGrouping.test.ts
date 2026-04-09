@@ -41,7 +41,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
@@ -55,9 +57,7 @@ describe("Hierarchies", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.CodeValue` },
-                      grouping: {
-                        byClass: true,
-                      },
+                      grouping: { byClass: true },
                     })}
                     FROM (
                       SELECT ECClassId, ECInstanceId, CodeValue, Parent
@@ -81,26 +81,14 @@ describe("Hierarchies", () => {
         expect: [
           NodeValidators.createForClassGroupingNode({
             children: [
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childPartition2],
-                children: false,
-              }),
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childPartition4],
-                children: false,
-              }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition4], children: false }),
             ],
           }),
           NodeValidators.createForClassGroupingNode({
             children: [
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject1],
-                children: false,
-              }),
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject3],
-                children: false,
-              }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject3], children: false }),
             ],
           }),
         ],

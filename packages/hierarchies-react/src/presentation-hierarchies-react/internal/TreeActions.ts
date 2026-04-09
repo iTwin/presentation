@@ -6,11 +6,31 @@
 import "./DisposePolyfill.js";
 
 import { Draft, enableMapSet, produce } from "immer";
-import { buffer, debounceTime, EMPTY, groupBy, map, mergeMap, Observable, reduce, Subject, switchMap, takeUntil, tap } from "rxjs";
+import {
+  buffer,
+  debounceTime,
+  EMPTY,
+  groupBy,
+  map,
+  mergeMap,
+  Observable,
+  reduce,
+  Subject,
+  switchMap,
+  takeUntil,
+  tap,
+} from "rxjs";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { SelectionChangeType } from "../UseSelectionHandler.js";
 import { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, LoadNodesOptions, TreeLoader } from "./TreeLoader.js";
-import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel.js";
+import {
+  isTreeModelHierarchyNode,
+  isTreeModelInfoNode,
+  TreeModel,
+  TreeModelHierarchyNode,
+  TreeModelNode,
+  TreeModelRootNode,
+} from "./TreeModel.js";
 import { createNodeId, sameNodes } from "./Utils.js";
 
 enableMapSet();
@@ -35,7 +55,11 @@ export class TreeActions {
   constructor(
     private _onModelChanged: (model: TreeModel) => void,
     private _onLoad: (actionType: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void,
-    private _onHierarchyLimitExceeded: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void,
+    private _onHierarchyLimitExceeded: (props: {
+      parentId?: string;
+      filter?: GenericInstanceFilter;
+      limit?: number | "unbounded";
+    }) => void,
     private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void,
     nodeIdFactory?: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string,
     seed?: TreeModel,
@@ -129,7 +153,11 @@ export class TreeActions {
   }
 
   private getLoadAction(parentId: string | undefined) {
-    return this._currentModel.idToNode.size === 0 ? "initial-load" : parentId === undefined ? "reload" : "hierarchy-level-load";
+    return this._currentModel.idToNode.size === 0
+      ? "initial-load"
+      : parentId === undefined
+        ? "reload"
+        : "hierarchy-level-load";
   }
 
   private loadSubTree(options: LoadNodesOptions, initialRootNode?: TreeModelRootNode, discardState?: boolean) {
@@ -138,7 +166,14 @@ export class TreeActions {
 
     return {
       complete: new Promise<void>((resolve) => {
-        this._nodeLoader.next({ loadOptions: options, onComplete: resolve, timeTracker, parentId: options.parent.id, initialRootNode, discardState });
+        this._nodeLoader.next({
+          loadOptions: options,
+          onComplete: resolve,
+          timeTracker,
+          parentId: options.parent.id,
+          initialRootNode,
+          discardState,
+        });
       }),
     };
   }
@@ -152,16 +187,25 @@ export class TreeActions {
 
     return this.loadSubTree({
       parent: parentNode,
-      getHierarchyLevelOptions: (node) => createHierarchyLevelOptions(this._currentModel, getNonGroupedParentId(node, this._nodeIdFactory)),
+      getHierarchyLevelOptions: (node) =>
+        createHierarchyLevelOptions(this._currentModel, getNonGroupedParentId(node, this._nodeIdFactory)),
       shouldLoadChildren: (node) => !!node.nodeData.autoExpand,
       ignoreCache,
     });
   }
 
-  private reloadSubTree(parentId: string | undefined, oldModel: TreeModel, options?: { discardState?: boolean; ignoreCache?: boolean }) {
+  private reloadSubTree(
+    parentId: string | undefined,
+    oldModel: TreeModel,
+    options?: { discardState?: boolean; ignoreCache?: boolean },
+  ) {
     const currModel = this._currentModel;
-    const expandedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === true);
-    const collapsedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === false);
+    const expandedNodes = !!options?.discardState
+      ? []
+      : collectNodes(parentId, oldModel, (node) => node.isExpanded === true);
+    const collapsedNodes = !!options?.discardState
+      ? []
+      : collectNodes(parentId, oldModel, (node) => node.isExpanded === false);
     const getHierarchyLevelOptions = (node: TreeModelRootNode | TreeModelHierarchyNode) => {
       if (!!options?.discardState) {
         return { instanceFilter: undefined, hierarchyLevelSizeLimit: undefined };
@@ -178,7 +222,8 @@ export class TreeActions {
       }
       return !!node.nodeData.autoExpand;
     };
-    const buildNode = (node: TreeModelHierarchyNode) => (!!options?.discardState || node.id === parentId ? node : addAttributes(node, oldModel));
+    const buildNode = (node: TreeModelHierarchyNode) =>
+      !!options?.discardState || node.id === parentId ? node : addAttributes(node, oldModel);
 
     const rootNode = parentId !== undefined ? this.getNode(parentId) : currModel.rootNode;
     /* v8 ignore if -- @preserve */
@@ -327,7 +372,11 @@ function addAttributes(node: TreeModelHierarchyNode, oldModel: TreeModel) {
   return node;
 }
 
-function collectNodes(parentId: string | undefined, model: TreeModel, pred: (node: TreeModelHierarchyNode) => boolean): TreeModelHierarchyNode[] {
+function collectNodes(
+  parentId: string | undefined,
+  model: TreeModel,
+  pred: (node: TreeModelHierarchyNode) => boolean,
+): TreeModelHierarchyNode[] {
   const currentChildren = model.parentChildMap.get(parentId);
   if (!currentChildren) {
     return [];
@@ -345,7 +394,10 @@ function collectNodes(parentId: string | undefined, model: TreeModel, pred: (nod
   return [currNode, ...currentChildren.flatMap((child) => collectNodes(child, model, pred))];
 }
 
-function getNonGroupedParentId(node: TreeModelHierarchyNode | TreeModelRootNode, nodeIdFactory: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string) {
+function getNonGroupedParentId(
+  node: TreeModelHierarchyNode | TreeModelRootNode,
+  nodeIdFactory: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string,
+) {
   if (!node.nodeData || !HierarchyNode.isGroupingNode(node.nodeData)) {
     return node.id;
   }
