@@ -3,18 +3,18 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { expect } from "vitest";
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, normalizeFullClassName } from "@itwin/presentation-shared";
-import { Datasets } from "../util/Datasets";
-import { run } from "../util/TestUtilities";
-import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { Datasets } from "../util/Datasets.js";
+import { run } from "../util/TestUtilities.js";
+import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
 import type { DefineHierarchyLevelProps, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import type { EC, ECClassHierarchyInspector, ECSchemaProvider, Props } from "@itwin/presentation-shared";
-import type { IModelName } from "../util/Datasets";
-import type { RunOptions } from "../util/TestUtilities";
+import type { IModelName } from "../util/Datasets.js";
+import type { RunOptions } from "../util/TestUtilities.js";
 
 /**
  * Runs a full hierarchy test against a given iModel. The hierarchy is created using the given
@@ -73,7 +73,7 @@ export function runHierarchyTest(
       const provider = new StatelessHierarchyProvider({ ...props, rowLimit: "unbounded" });
       const nodeCount = await provider.loadHierarchy();
       if (testProps.expectedNodeCount !== undefined) {
-        expect(nodeCount).to.eq(testProps.expectedNodeCount);
+        expect(nodeCount).toBe(testProps.expectedNodeCount);
       }
     },
     cleanup: ({ iModel }) => iModel.close(),

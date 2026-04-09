@@ -1410,7 +1410,7 @@ describe("createIModelHierarchyProvider", () => {
         queryCacheSize: 10,
       });
       const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(rootNodes.length).toBe(1);
+      expect(rootNodes).toHaveLength(1);
       await collect(provider.getNodes({ parentNode: rootNodes[0] }));
       await collect(provider.getNodes({ parentNode: rootNodes[0] }));
       expect(imodelAccess.createQueryReader).toHaveBeenCalledOnce();

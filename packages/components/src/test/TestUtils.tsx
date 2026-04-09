@@ -67,7 +67,7 @@ export async function waitForElement<T extends HTMLElement>(
     if (condition) {
       condition(element);
     } else {
-      expect(element, `Failed to find element. Selector: "${selector}"`).to.not.be.null;
+      expect(element, `Failed to find element. Selector: "${selector}"`).not.toBeNull();
     }
     return element as T;
   });

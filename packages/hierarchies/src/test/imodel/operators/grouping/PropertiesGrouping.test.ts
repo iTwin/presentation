@@ -66,7 +66,7 @@ describe("PropertiesGrouping", () => {
       ];
       imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       checkPropertyGroupInfo(result[0], "TestSchema.Class", [], { propertyName: "PropertyName", ranges: undefined });
     });
 
@@ -95,7 +95,7 @@ describe("PropertiesGrouping", () => {
       imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
-      expect(result.length).toBe(2);
+      expect(result).toHaveLength(2);
       checkPropertyGroupInfo(result[0], className, [], propertyGroup1);
       checkPropertyGroupInfo(
         result[1],
@@ -134,7 +134,7 @@ describe("PropertiesGrouping", () => {
       imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
-      expect(result.length).toBe(2);
+      expect(result).toHaveLength(2);
       checkPropertyGroupInfo(result[0], className, [], propertyGroup1);
       checkPropertyGroupInfo(result[1], className, [], propertyGroup2);
     });
@@ -173,7 +173,7 @@ describe("PropertiesGrouping", () => {
       imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
-      expect(result.length).toBe(5);
+      expect(result).toHaveLength(5);
       checkPropertyGroupInfo(result[0], className, [], propertyGroup1);
       checkPropertyGroupInfo(
         result[1],
@@ -243,7 +243,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       checkPropertyGroupInfo(
         result[0],
         className,
@@ -283,7 +283,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       checkPropertyGroupInfo(
         result[0],
         className,
@@ -318,7 +318,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       checkPropertyGroupInfo(
         result[0],
         className,
@@ -358,7 +358,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       checkPropertyGroupInfo(
         result[0],
         className,
@@ -398,7 +398,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       checkPropertyGroupInfo(
         result[0],
         className,
@@ -430,7 +430,7 @@ describe("PropertiesGrouping", () => {
       ];
 
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
-      expect(result.length).toBe(2);
+      expect(result).toHaveLength(2);
       checkPropertyGroupInfo(result[0], className, [], { propertyName: "PropertyName1" });
       checkPropertyGroupInfo(
         result[1],
@@ -2167,7 +2167,7 @@ describe("PropertiesGrouping", () => {
         formatter,
         testLocalizedStrings,
       );
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
       const handlerResult = await result[0](nodes, []);
       expect(handlerResult.groupingType).toBe("property");
     });

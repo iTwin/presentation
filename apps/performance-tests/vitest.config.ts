@@ -4,21 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { defineConfig } from "vitest/config";
+import TestReporter from "./src/util/TestReporter.js";
 
 export default defineConfig({
   test: {
-    name: "Hierarchies tests",
-    include: ["src/test/**/*.test.ts"],
-    testTimeout: 60000,
-    restoreMocks: true,
-    clearMocks: true,
-    mockReset: true,
-    coverage: {
-      provider: "v8",
-      include: ["src/hierarchies/**/*.ts"],
-      reportsDirectory: "./lib/test/coverage",
-      reporter: ["text-summary", "lcov", "cobertura"],
-      thresholds: { statements: 100, functions: 100, branches: 100, lines: 100 },
-    },
+    name: "Performance tests",
+    include: ["src/**/*.test.ts"],
+    testTimeout: 300000,
+    pool: "forks",
+    fileParallelism: false,
+    setupFiles: ["./src/setup.ts"],
+    reporters: [new TestReporter()],
   },
 });

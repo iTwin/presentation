@@ -9,14 +9,13 @@ export default defineConfig({
   test: {
     name: "Hierarchies-react tests",
     include: ["src/test/**/*.test.{ts,tsx}"],
-    environment: "happy-dom",
     testTimeout: 60000,
     slowTestThreshold: 500,
+    environment: "happy-dom",
+    setupFiles: ["./src/test/setup.ts"],
     clearMocks: true,
     restoreMocks: true,
     mockReset: true,
-    pool: "forks",
     css: false,
-    setupFiles: ["./src/test/setup.ts"],
   },
 });

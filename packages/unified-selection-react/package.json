@@ -41,6 +41,7 @@
     "cover": "vitest run --coverage",
     "lint": "eslint \"./src/**/*.{ts,tsx}\"",
     "test": "vitest run",
+    "test:watch": "vitest",
     "extract-api": "betools extract-api --entry=unified-selection-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/unified-selection-react.api.md",
     "update-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md",

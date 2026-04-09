@@ -3,8 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Datasets } from "../util/Datasets";
-import { runHierarchyTest } from "./RunHierarchyTest";
+import { describe } from "vitest";
+import { Datasets } from "../util/Datasets.js";
+import { runHierarchyTest } from "./RunHierarchyTest.js";
 
 import type { EC } from "@itwin/presentation-shared";
 

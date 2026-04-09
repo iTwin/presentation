@@ -108,7 +108,7 @@ describe("Utils", () => {
   describe("createLabelRecord", () => {
     const validateCompositeValue = (actual: Primitives.Composite, expected: LabelCompositeValue) => {
       expect(actual.separator).toBe(expected.separator);
-      expect(actual.parts.length).toBe(expected.values.length);
+      expect(actual.parts).toHaveLength(expected.values.length);
       for (let i = 0; i < actual.parts.length; i++) {
         expect(actual.parts[i].displayValue).toBe(expected.values[i].displayValue);
         expect(actual.parts[i].rawValue).toBe(expected.values[i].rawValue);

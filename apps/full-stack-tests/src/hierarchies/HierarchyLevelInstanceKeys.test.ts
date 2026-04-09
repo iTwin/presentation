@@ -63,7 +63,6 @@ describe("Hierarchies", () => {
       };
       const provider = createProvider({ imodel, hierarchy });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
-      expect(keys).toHaveLength(1);
       expect(keys).toMatchObject([{ className: "BisCore.Subject", id: "0x1" }]);
     });
 
@@ -113,7 +112,6 @@ describe("Hierarchies", () => {
       };
       const provider = createProvider({ imodel, hierarchy });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: rootSubjectNode }));
-      expect(keys).toHaveLength(2);
       expect(keys).toMatchObject([
         { className: normalizeFullClassName(LinkModel.classFullName), id: "0xe" },
         { className: normalizeFullClassName(DictionaryModel.classFullName), id: "0x10" },
@@ -158,7 +156,6 @@ describe("Hierarchies", () => {
       };
       const provider = createProvider({ imodel, hierarchy });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: testCustomNode }));
-      expect(keys).toHaveLength(1);
       expect(keys).toMatchObject([{ className: "BisCore.Subject", id: "0x1" }]);
     });
 
@@ -219,7 +216,6 @@ describe("Hierarchies", () => {
       };
       const provider = createProvider({ imodel, hierarchy });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
-      expect(keys).toHaveLength(2);
       expect(keys).toMatchObject([
         { className: normalizeFullClassName(LinkModel.classFullName), id: "0xe" },
         { className: normalizeFullClassName(DictionaryModel.classFullName), id: "0x10" },
@@ -263,7 +259,6 @@ describe("Hierarchies", () => {
       };
       const provider = createProvider({ imodel, hierarchy });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
-      expect(keys).toHaveLength(1);
       expect(keys).toMatchObject([{ className: "BisCore.Subject", id: "0x1" }]);
     });
   });

@@ -76,7 +76,7 @@ describe("useHierarchyLevelFiltering", () => {
 
     result.current.applyFilter(node.item.id, filterInfo);
     const treeModel = modelSource.getModel();
-    expect((treeModel.getNode(node.id)?.item as PresentationTreeNodeItem).filtering?.active).to.be.eq(filterInfo);
+    expect((treeModel.getNode(node.id)?.item as PresentationTreeNodeItem).filtering?.active).toBe(filterInfo);
   });
 
   it("reloads children after filter applied to expanded node", () => {
@@ -111,12 +111,12 @@ describe("useHierarchyLevelFiltering", () => {
     });
     nodeLoader.loadNode.mockReturnValue(from([]));
 
-    expect(modelSource.getModel().getNode(childNode.id)).to.not.be.undefined;
+    expect(modelSource.getModel().getNode(childNode.id)).toBeDefined();
 
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.applyFilter(parentNode.item.id, filterInfo);
-    expect(modelSource.getModel().getNode(childNode.id)).to.be.undefined;
+    expect(modelSource.getModel().getNode(childNode.id)).toBeUndefined();
   });
 
   it("does not apply filter on non presentation tree node item", () => {
@@ -136,7 +136,7 @@ describe("useHierarchyLevelFiltering", () => {
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.applyFilter(parentNode.item.id, filterInfo);
-    expect(modelSource.getModel().getNode(childNode.id)).to.not.be.undefined;
+    expect(modelSource.getModel().getNode(childNode.id)).toBeDefined();
   });
 
   it("clears filter", () => {
@@ -147,14 +147,14 @@ describe("useHierarchyLevelFiltering", () => {
       model.setChildren(undefined, [node], 0);
     });
 
-    expect((modelSource.getModel().getNode(node.id)?.item as PresentationTreeNodeItem).filtering?.active).to.not.be
-      .undefined;
+    expect((modelSource.getModel().getNode(node.id)?.item as PresentationTreeNodeItem).filtering?.active).toBeDefined();
 
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.clearFilter(node.item.id);
-    expect((modelSource.getModel().getNode(node.id)?.item as PresentationTreeNodeItem).filtering?.active).to.be
-      .undefined;
+    expect(
+      (modelSource.getModel().getNode(node.id)?.item as PresentationTreeNodeItem).filtering?.active,
+    ).toBeUndefined();
   });
 
   it("reloads children after filter cleared on expanded node", () => {
@@ -192,12 +192,12 @@ describe("useHierarchyLevelFiltering", () => {
       model.setChildren(parentNode.id, [childNode], 0);
     });
 
-    expect(modelSource.getModel().getNode(childNode.id)).to.not.be.undefined;
+    expect(modelSource.getModel().getNode(childNode.id)).toBeDefined();
 
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.clearFilter(parentNode.item.id);
-    expect(modelSource.getModel().getNode(childNode.id)).to.be.undefined;
+    expect(modelSource.getModel().getNode(childNode.id)).toBeUndefined();
   });
 
   it("clears filter unsubscribes from observable created by `applyFilter`", () => {
@@ -216,10 +216,10 @@ describe("useHierarchyLevelFiltering", () => {
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.applyFilter(node.item.id, filterInfo);
-    expect(applyFilterActionSubject.observed).to.be.true;
+    expect(applyFilterActionSubject.observed).toBe(true);
 
     result.current.clearFilter(node.item.id);
-    expect(applyFilterActionSubject.observed).to.be.false;
+    expect(applyFilterActionSubject.observed).toBe(false);
   });
 
   it("`applyFilter` unsubscribes from previous observable if called second time", () => {
@@ -239,12 +239,12 @@ describe("useHierarchyLevelFiltering", () => {
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.applyFilter(node.item.id, filterInfo);
-    expect(nodeLoad1.observed).to.be.true;
-    expect(nodeLoad2.observed).to.be.false;
+    expect(nodeLoad1.observed).toBe(true);
+    expect(nodeLoad2.observed).toBe(false);
 
     result.current.applyFilter(node.item.id, filterInfo);
-    expect(nodeLoad1.observed).to.be.false;
-    expect(nodeLoad2.observed).to.be.true;
+    expect(nodeLoad1.observed).toBe(false);
+    expect(nodeLoad2.observed).toBe(true);
   });
 
   it("unsubscribes from observable if error is thrown", () => {
@@ -260,8 +260,8 @@ describe("useHierarchyLevelFiltering", () => {
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.applyFilter(node.item.id, filterInfo);
-    expect(subject.observed).to.be.true;
+    expect(subject.observed).toBe(true);
     subject.error([]);
-    expect(subject.observed).to.be.false;
+    expect(subject.observed).toBe(false);
   });
 });

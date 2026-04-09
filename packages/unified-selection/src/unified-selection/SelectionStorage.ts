@@ -17,15 +17,26 @@ import type {
 /** @public */
 type IModelKeyProp =
   | {
-      /** Key of the iModel. It's recommended to use `createIModelKey` function from `@itwin/presentation-core-interop` package to create the key for an iModel. */
-      imodelKey: string;
+      /**
+       * Key of the iModel. It's recommended to use `createIModelKey` function from `@itwin/presentation-core-interop`
+       * package to create the key for an iModel.
+       *
+       * Defaults to an empty string when not supplied.
+       */
+      imodelKey?: string;
+      iModelKey?: never;
     }
   | {
+      imodelKey?: never;
       /**
-       * Key of the iModel. It's recommended to use `createIModelKey` function from `@itwin/presentation-core-interop` package to create the key for an iModel.
+       * Key of the iModel. It's recommended to use `createIModelKey` function from `@itwin/presentation-core-interop`
+       * package to create the key for an iModel.
+       *
+       * Defaults to an empty string when not supplied.
+       *
        * @deprecated in 0.2. Use `imodelKey` instead.
        */
-      iModelKey: string;
+      iModelKey?: string;
     };
 
 /**
@@ -229,7 +240,7 @@ class SelectionStorageImpl implements SelectionStorage {
 
 function getIModelKey(props: IModelKeyProp): string {
   // eslint-disable-next-line @typescript-eslint/no-deprecated
-  return "imodelKey" in props ? props.imodelKey : props.iModelKey;
+  return ("imodelKey" in props ? props.imodelKey : props.iModelKey) ?? "";
 }
 
 class MultiLevelSelectablesContainer {

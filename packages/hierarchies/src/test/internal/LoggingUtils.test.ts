@@ -30,7 +30,7 @@ describe("LoggingUtils", () => {
 
       severities.forEach((severity) => doLog({ category: "test category", message: messageFunc, severity }));
 
-      expect(logger.isEnabled.mock.calls.length).toBe(4);
+      expect(logger.isEnabled.mock.calls).toHaveLength(4);
       severities.forEach((severity) => expect(logger.isEnabled).toHaveBeenCalledWith("test category", severity));
 
       expect(messageFunc).not.toHaveBeenCalled();

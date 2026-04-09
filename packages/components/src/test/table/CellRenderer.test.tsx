@@ -33,7 +33,7 @@ describe("TableCellRenderer", () => {
     const record = createRecord(value, { typename: "string" });
 
     const { queryByText } = render(<TableCellRenderer record={record} />);
-    expect(queryByText(stringValue)).to.not.be.null;
+    expect(queryByText(stringValue)).not.toBeNull();
   });
 
   it("renders array value as button that opens dialog", async () => {
@@ -52,7 +52,7 @@ describe("TableCellRenderer", () => {
 
     await user.click(button);
     const dialogLabel = `Array of type "${value.itemsTypeName}"`;
-    await waitFor(() => expect(queryByText(dialogLabel)).to.not.be.null);
+    await waitFor(() => expect(queryByText(dialogLabel)).not.toBeNull());
   });
 
   it("renders empty array value as button that opens dialog", async () => {
@@ -66,7 +66,7 @@ describe("TableCellRenderer", () => {
 
     await user.click(button);
     const dialogLabel = `Array of type "${value.itemsTypeName}"`;
-    await waitFor(() => expect(queryByText(dialogLabel)).to.not.be.null);
+    await waitFor(() => expect(queryByText(dialogLabel)).not.toBeNull());
   });
 
   it("renders struct value as button that opens dialog", async () => {
@@ -84,6 +84,6 @@ describe("TableCellRenderer", () => {
 
     await user.click(button);
     const dialogLabel = `Struct of type "${record.property.typename}"`;
-    await waitFor(() => expect(queryByText(dialogLabel)).to.not.be.null);
+    await waitFor(() => expect(queryByText(dialogLabel)).not.toBeNull());
   });
 });

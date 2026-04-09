@@ -51,7 +51,7 @@ describe("[deprecated] useRulesetRegistration", () => {
     expect(rulesetManagerStub.remove).toHaveBeenCalled();
 
     // this check fails in `StrictMode` due to ruleset registration happening during render cycle
-    // expect(rulesetManagerStub.add.callCount).to.be.eq(rulesetManagerStub.remove.callCount);
+    // expect(rulesetManagerStub.add.callCount).toBe(rulesetManagerStub.remove.callCount);
   });
 
   it("unregisters ruleset if registration happens after unmount", async () => {
@@ -70,6 +70,6 @@ describe("[deprecated] useRulesetRegistration", () => {
 
     expect(rulesetManagerStub.remove).toHaveBeenCalled();
     // this check fails in `StrictMode` due to ruleset registration happening during render cycle
-    // expect(rulesetManagerStub.add.callCount).to.be.eq(rulesetManagerStub.remove.callCount);
+    // expect(rulesetManagerStub.add.callCount).toBe(rulesetManagerStub.remove.callCount);
   });
 });

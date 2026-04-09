@@ -115,7 +115,7 @@ describe("Grouping", () => {
           ]),
         ),
       );
-      expect(groupingSpy.mock.calls.length).toBe(3);
+      expect(groupingSpy.mock.calls).toHaveLength(3);
       expect(groupingSpy.mock.calls[0][0]).toEqual(classGroupingResult);
       expect(groupingSpy.mock.calls[1][0]).toEqual(propertyGroupingResult);
       expect(groupingSpy.mock.calls[2][0]).toEqual(labelGroupingResult);

@@ -1,5 +1,15 @@
 # Change Log - @itwin/presentation-components
 
+## 5.13.2
+
+### Patch Changes
+
+- [#1286](https://github.com/iTwin/presentation/pull/1286): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-core-interop@1.3.11
+  - @itwin/presentation-shared@1.2.11
+  - @itwin/unified-selection@1.7.0
+
 ## 5.13.2-alpha.0
 
 ### Patch Changes

@@ -46,7 +46,7 @@ describe("useFilteredNodeLoader", () => {
 
   it("does not start filtering if filter is not provided", () => {
     const { result } = renderHook(useFilteredNodeLoader, { initialProps: { ...initialProps } });
-    expect(result.current.isFiltering).to.be.false;
+    expect(result.current.isFiltering).toBe(false);
   });
 
   it("starts filtering if filter is provided", async () => {
@@ -56,12 +56,12 @@ describe("useFilteredNodeLoader", () => {
     const { result } = renderHook(useFilteredNodeLoader, {
       initialProps: { ...initialProps, filter: "test", activeMatchIndex: 0 },
     });
-    expect(result.current).to.not.be.undefined;
-    expect(result.current.isFiltering).to.be.true;
+    expect(result.current).toBeDefined();
+    expect(result.current.isFiltering).toBe(true);
 
     await act(async () => pathsResult1.resolve([]));
 
-    await waitFor(() => expect(result.current.isFiltering).to.be.false);
+    await waitFor(() => expect(result.current.isFiltering).toBe(false));
   });
 
   it("does not start new filtering request while previous is still in progress", async () => {
@@ -89,8 +89,8 @@ describe("useFilteredNodeLoader", () => {
     });
 
     expect(dataProvider.getFilteredNodePaths).toHaveBeenCalledOnce();
-    expect(result.current).to.not.be.undefined;
-    expect(result.current.isFiltering).to.be.true;
+    expect(result.current).toBeDefined();
+    expect(result.current.isFiltering).toBe(true);
 
     // render with new filter and verify that new request was not started
     rerender({ ...initialProps, filter: "changed" });
@@ -100,8 +100,8 @@ describe("useFilteredNodeLoader", () => {
       await vi.advanceTimersByTimeAsync(1);
     });
     expect(dataProvider.getFilteredNodePaths).toHaveBeenCalledOnce();
-    expect(result.current).to.not.be.undefined;
-    expect(result.current.isFiltering).to.be.true;
+    expect(result.current).toBeDefined();
+    expect(result.current.isFiltering).toBe(true);
 
     // render with new filter again and verify that new request was not started
     rerender({ ...initialProps, filter: "last" });
@@ -111,8 +111,8 @@ describe("useFilteredNodeLoader", () => {
       await vi.advanceTimersByTimeAsync(1);
     });
     expect(dataProvider.getFilteredNodePaths).toHaveBeenCalledOnce();
-    expect(result.current).to.not.be.undefined;
-    expect(result.current.isFiltering).to.be.true;
+    expect(result.current).toBeDefined();
+    expect(result.current.isFiltering).toBe(true);
 
     vi.useRealTimers();
     // resolve first request and verify that new filtering request started
@@ -120,8 +120,8 @@ describe("useFilteredNodeLoader", () => {
       await pathsResult1.resolve([]);
     });
     expect(dataProvider.getFilteredNodePaths).toHaveBeenCalledTimes(2);
-    expect(result.current).to.not.be.undefined;
-    expect(result.current.isFiltering).to.be.true;
+    expect(result.current).toBeDefined();
+    expect(result.current.isFiltering).toBe(true);
 
     // resolve second request and verify state
     await act(async () => {
@@ -132,11 +132,11 @@ describe("useFilteredNodeLoader", () => {
     expect(dataProvider.getFilteredNodePaths).toHaveBeenCalledWith("test");
     expect(dataProvider.getFilteredNodePaths).toHaveBeenCalledWith("last");
 
-    await waitFor(() => expect(result.current.isFiltering).to.be.false);
-    expect(result.current.filteredNodeLoader).to.not.be.undefined;
+    await waitFor(() => expect(result.current.isFiltering).toBe(false));
+    expect(result.current.filteredNodeLoader).toBeDefined();
     const filteredProvider = result.current.filteredProvider;
-    expect(filteredProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
-    expect((filteredProvider as FilteredPresentationTreeDataProvider).filter).to.be.eq("last");
+    expect(filteredProvider).toBeInstanceOf(FilteredPresentationTreeDataProvider);
+    expect((filteredProvider as FilteredPresentationTreeDataProvider).filter).toBe("last");
   });
 
   it("clears filtering request still in progress", async () => {
@@ -153,8 +153,8 @@ describe("useFilteredNodeLoader", () => {
       await vi.advanceTimersByTimeAsync(1);
     });
     expect(dataProvider.getFilteredNodePaths).toHaveBeenCalledOnce();
-    expect(result.current).to.not.be.undefined;
-    expect(result.current.isFiltering).to.be.true;
+    expect(result.current).toBeDefined();
+    expect(result.current.isFiltering).toBe(true);
 
     // render without filter
     rerender({ ...initialProps, filter: "" });
@@ -164,17 +164,17 @@ describe("useFilteredNodeLoader", () => {
       await vi.advanceTimersByTimeAsync(1);
     });
     expect(dataProvider.getFilteredNodePaths).toHaveBeenCalledOnce();
-    expect(result.current).to.not.be.undefined;
-    expect(result.current.isFiltering).to.be.false;
+    expect(result.current).toBeDefined();
+    expect(result.current.isFiltering).toBe(false);
 
     vi.useRealTimers();
     // resolve first request verify that filtering was not applied
     await act(async () => pathsResult.resolve([]));
     expect(dataProvider.getFilteredNodePaths).toHaveBeenCalledOnce();
-    expect(result.current).to.not.be.undefined;
-    expect(result.current.isFiltering).to.be.false;
-    expect(result.current.filteredNodeLoader).to.be.undefined;
-    expect(result.current.matchesCount).to.be.undefined;
+    expect(result.current).toBeDefined();
+    expect(result.current.isFiltering).toBe(false);
+    expect(result.current.filteredNodeLoader).toBeUndefined();
+    expect(result.current.matchesCount).toBeUndefined();
   });
 
   it("filters when dataProvider changes", async () => {
@@ -185,8 +185,8 @@ describe("useFilteredNodeLoader", () => {
     const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps: { ...initialProps, filter } });
 
     await act(async () => pathsResult.resolve([]));
-    await waitFor(() => expect(result.current.isFiltering).to.be.false);
-    expect(result.current.filteredNodeLoader).to.not.be.undefined;
+    await waitFor(() => expect(result.current.isFiltering).toBe(false));
+    expect(result.current.filteredNodeLoader).toBeDefined();
     expect(dataProvider.getFilteredNodePaths).toHaveBeenCalledOnce();
 
     const newProvider = { getFilteredNodePaths: createStub<IPresentationTreeDataProvider["getFilteredNodePaths"]>() };
@@ -196,8 +196,8 @@ describe("useFilteredNodeLoader", () => {
     rerender({ ...initialProps, filter, dataProvider: newProvider as unknown as IPresentationTreeDataProvider });
 
     await act(async () => newPathsResult.resolve([]));
-    await waitFor(() => expect(result.current.isFiltering).to.be.false);
-    expect(result.current.filteredNodeLoader).to.not.be.undefined;
+    await waitFor(() => expect(result.current.isFiltering).toBe(false));
+    expect(result.current.filteredNodeLoader).toBeDefined();
     expect(newProvider.getFilteredNodePaths).toHaveBeenCalledOnce();
   });
 
@@ -219,9 +219,9 @@ describe("useFilteredNodeLoader", () => {
     const { result } = renderHook(useFilteredNodeLoader, { initialProps: { ...initialProps, filter: "test" } });
 
     const nodeLoader = await waitFor(() => {
-      expect(result.current.isFiltering).to.be.true;
-      expect(result.current.filteredNodeLoader).to.not.be.undefined;
-      expect(result.current.filteredNodeLoader!.modelSource.getModel().getRootNode().numChildren).to.be.undefined;
+      expect(result.current.isFiltering).toBe(true);
+      expect(result.current.filteredNodeLoader).toBeDefined();
+      expect(result.current.filteredNodeLoader!.modelSource.getModel().getRootNode().numChildren).toBeUndefined();
       return result.current.filteredNodeLoader!;
     });
 
@@ -232,8 +232,8 @@ describe("useFilteredNodeLoader", () => {
       },
     });
     await waitFor(() => {
-      expect(loadedNodes).to.not.be.undefined;
-      expect(loadedNodes).to.have.lengthOf(0);
+      expect(loadedNodes).toBeDefined();
+      expect(loadedNodes).toHaveLength(0);
     });
   });
 
@@ -255,24 +255,24 @@ describe("useFilteredNodeLoader", () => {
     });
 
     await act(async () => initialPathsResult.resolve([]));
-    await waitFor(() => expect(result.current.isFiltering).to.be.false);
+    await waitFor(() => expect(result.current.isFiltering).toBe(false));
 
-    expect(result.current.filteredProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
+    expect(result.current.filteredProvider).toBeInstanceOf(FilteredPresentationTreeDataProvider);
 
     rerender({ ...initialProps, filter: "changed" });
-    expect(result.current.filteredProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
+    expect(result.current.filteredProvider).toBeInstanceOf(FilteredPresentationTreeDataProvider);
 
     // wait until filtered node loader is reset
     await waitFor(() => {
-      expect(result.current.isFiltering).to.be.true;
-      expect(result.current.filteredNodeLoader!).to.not.be.undefined;
-      expect(result.current.filteredNodeLoader!.modelSource.getModel().getRootNode().numChildren).to.be.undefined;
+      expect(result.current.isFiltering).toBe(true);
+      expect(result.current.filteredNodeLoader!).toBeDefined();
+      expect(result.current.filteredNodeLoader!.modelSource.getModel().getRootNode().numChildren).toBeUndefined();
     });
 
     await act(async () => changedPathsResult.resolve([]));
-    await waitFor(() => expect(result.current.isFiltering).to.be.false);
+    await waitFor(() => expect(result.current.isFiltering).toBe(false));
 
-    expect(result.current.filteredProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
+    expect(result.current.filteredProvider).toBeInstanceOf(FilteredPresentationTreeDataProvider);
   });
 });
 
@@ -294,7 +294,7 @@ describe("useNodeHighlightingProps", () => {
       (props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex),
       { initialProps: { filter: "test", activeMatchIndex: 1 } },
     );
-    expect(result.current).to.be.undefined;
+    expect(result.current).toBeUndefined();
   });
 
   it("returns `undefined` if filter is not supplied", () => {
@@ -302,7 +302,7 @@ describe("useNodeHighlightingProps", () => {
       (props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex),
       { initialProps: { dataProvider: provider, activeMatchIndex: 1 } },
     );
-    expect(result.current).to.be.undefined;
+    expect(result.current).toBeUndefined();
   });
 
   it("returns highlighting props with active match `undefined` if active match index is not supplied", () => {
@@ -310,9 +310,9 @@ describe("useNodeHighlightingProps", () => {
       (props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex),
       { initialProps: { filter: "test", dataProvider: provider } },
     );
-    expect(result.current).to.not.be.undefined;
-    expect(result.current!.activeMatch).to.be.undefined;
-    expect(result.current!.searchText).to.be.eq("test");
+    expect(result.current).toBeDefined();
+    expect(result.current!.activeMatch).toBeUndefined();
+    expect(result.current!.searchText).toBe("test");
   });
 
   it("returns highlighting props", () => {
@@ -322,8 +322,8 @@ describe("useNodeHighlightingProps", () => {
       (props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex),
       { initialProps: { filter: "test", dataProvider: provider, activeMatchIndex: 1 } },
     );
-    expect(result.current).to.not.be.undefined;
-    expect(result.current!.activeMatch).to.be.deep.eq({ matchIndex: 2, nodeId: "test-node" });
-    expect(result.current!.searchText).to.be.eq("test");
+    expect(result.current).toBeDefined();
+    expect(result.current!.activeMatch).toEqual({ matchIndex: 2, nodeId: "test-node" });
+    expect(result.current!.searchText).toBe("test");
   });
 });

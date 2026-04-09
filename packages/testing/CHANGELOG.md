@@ -1,5 +1,13 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.4.19
+
+### Patch Changes
+
+- [#1286](https://github.com/iTwin/presentation/pull/1286): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-components@5.13.2
+
 ## 5.4.18
 
 ### Patch Changes

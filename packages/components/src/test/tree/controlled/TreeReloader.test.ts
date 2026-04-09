@@ -52,10 +52,10 @@ describe("reloadTree", () => {
     const treeModel = modelSource.getModel();
 
     const rootNodes = treeModel.getChildren(undefined)!;
-    expect(rootNodes.getLength()).to.be.equal(3);
-    expect(rootNodes.get(0)).to.be.equal("root-0");
-    expect(rootNodes.get(1)).to.be.undefined;
-    expect(rootNodes.get(2)).to.be.undefined;
+    expect(rootNodes.getLength()).toEqual(3);
+    expect(rootNodes.get(0)).toEqual("root-0");
+    expect(rootNodes.get(1)).toBeUndefined();
+    expect(rootNodes.get(2)).toBeUndefined();
   });
 
   it("loads first page in expanded nodes", async () => {
@@ -76,17 +76,17 @@ describe("reloadTree", () => {
     const treeModel = modelSource.getModel();
 
     const rootNodes = treeModel.getChildren(undefined)!;
-    expect(rootNodes.getLength()).to.be.equal(3);
-    expect(rootNodes.get(0)).to.be.equal("root-0");
-    expect(rootNodes.get(1)).to.be.undefined;
-    expect(rootNodes.get(2)).to.be.undefined;
+    expect(rootNodes.getLength()).toEqual(3);
+    expect(rootNodes.get(0)).toEqual("root-0");
+    expect(rootNodes.get(1)).toBeUndefined();
+    expect(rootNodes.get(2)).toBeUndefined();
 
-    expect(treeModel.getNode("root-0")!.isExpanded).to.be.true;
+    expect(treeModel.getNode("root-0")!.isExpanded).toBe(true);
     const childNodes = treeModel.getChildren("root-0")!;
-    expect(childNodes.getLength()).to.be.equal(3);
-    expect(childNodes.get(0)).to.be.equal("root-0-0");
-    expect(childNodes.get(1)).to.be.undefined;
-    expect(childNodes.get(2)).to.be.undefined;
+    expect(childNodes.getLength()).toEqual(3);
+    expect(childNodes.get(0)).toEqual("root-0-0");
+    expect(childNodes.get(1)).toBeUndefined();
+    expect(childNodes.get(2)).toBeUndefined();
   });
 
   it("looks for an expanded node at its original place", async () => {
@@ -107,17 +107,17 @@ describe("reloadTree", () => {
     const treeModel = modelSource.getModel();
 
     const rootNodes = treeModel.getChildren(undefined)!;
-    expect(rootNodes.getLength()).to.be.equal(3);
-    expect(rootNodes.get(0)).to.be.equal("root-0");
-    expect(rootNodes.get(1)).to.be.equal("root-1");
-    expect(rootNodes.get(2)).to.be.undefined;
+    expect(rootNodes.getLength()).toEqual(3);
+    expect(rootNodes.get(0)).toEqual("root-0");
+    expect(rootNodes.get(1)).toEqual("root-1");
+    expect(rootNodes.get(2)).toBeUndefined();
 
-    expect(treeModel.getNode("root-1")!.isExpanded).to.be.true;
+    expect(treeModel.getNode("root-1")!.isExpanded).toBe(true);
     const childNodes = treeModel.getChildren("root-1")!;
-    expect(childNodes.getLength()).to.be.equal(3);
-    expect(childNodes.get(0)).to.be.equal("root-1-0");
-    expect(childNodes.get(1)).to.be.undefined;
-    expect(childNodes.get(2)).to.be.undefined;
+    expect(childNodes.getLength()).toEqual(3);
+    expect(childNodes.get(0)).toEqual("root-1-0");
+    expect(childNodes.get(1)).toBeUndefined();
+    expect(childNodes.get(2)).toBeUndefined();
   });
 
   it("looks for an expanded node a page before its original position", async () => {
@@ -136,17 +136,17 @@ describe("reloadTree", () => {
     const treeModel = modelSource.getModel();
 
     const rootNodes = treeModel.getChildren(undefined)!;
-    expect(rootNodes.getLength()).to.be.equal(3);
-    expect(rootNodes.get(0)).to.be.equal("root-0");
-    expect(rootNodes.get(1)).to.be.equal("root-1");
-    expect(rootNodes.get(2)).to.be.equal("root-2");
+    expect(rootNodes.getLength()).toEqual(3);
+    expect(rootNodes.get(0)).toEqual("root-0");
+    expect(rootNodes.get(1)).toEqual("root-1");
+    expect(rootNodes.get(2)).toEqual("root-2");
 
-    expect(treeModel.getNode("root-1")!.isExpanded).to.be.true;
+    expect(treeModel.getNode("root-1")!.isExpanded).toBe(true);
     const childNodes = treeModel.getChildren("root-1")!;
-    expect(childNodes.getLength()).to.be.equal(3);
-    expect(childNodes.get(0)).to.be.equal("root-1-0");
-    expect(childNodes.get(1)).to.be.undefined;
-    expect(childNodes.get(2)).to.be.undefined;
+    expect(childNodes.getLength()).toEqual(3);
+    expect(childNodes.get(0)).toEqual("root-1-0");
+    expect(childNodes.get(1)).toBeUndefined();
+    expect(childNodes.get(2)).toBeUndefined();
   });
 
   it("looks for an expanded node a page after its original position", async () => {
@@ -163,17 +163,17 @@ describe("reloadTree", () => {
     const treeModel = modelSource.getModel();
 
     const rootNodes = treeModel.getChildren(undefined)!;
-    expect(rootNodes.getLength()).to.be.equal(3);
-    expect(rootNodes.get(0)).to.be.equal("root-0");
-    expect(rootNodes.get(1)).to.be.equal("root-1");
-    expect(rootNodes.get(2)).to.be.equal("root-2");
+    expect(rootNodes.getLength()).toEqual(3);
+    expect(rootNodes.get(0)).toEqual("root-0");
+    expect(rootNodes.get(1)).toEqual("root-1");
+    expect(rootNodes.get(2)).toEqual("root-2");
 
-    expect(treeModel.getNode("root-2")!.isExpanded).to.be.true;
+    expect(treeModel.getNode("root-2")!.isExpanded).toBe(true);
     const childNodes = treeModel.getChildren("root-2")!;
-    expect(childNodes.getLength()).to.be.equal(3);
-    expect(childNodes.get(0)).to.be.equal("root-2-0");
-    expect(childNodes.get(1)).to.be.undefined;
-    expect(childNodes.get(2)).to.be.undefined;
+    expect(childNodes.getLength()).toEqual(3);
+    expect(childNodes.get(0)).toEqual("root-2-0");
+    expect(childNodes.get(1)).toBeUndefined();
+    expect(childNodes.get(2)).toBeUndefined();
   });
 
   it("handles not being able to find the expanded node", async () => {
@@ -195,13 +195,13 @@ describe("reloadTree", () => {
     const treeModel = modelSource.getModel();
 
     const rootNodes = treeModel.getChildren(undefined)!;
-    expect(rootNodes.getLength()).to.be.equal(3);
-    expect(rootNodes.get(0)).to.be.equal("root-0");
-    expect(rootNodes.get(1)).to.be.equal("root-1");
-    expect(rootNodes.get(2)).to.be.equal("root-2");
+    expect(rootNodes.getLength()).toEqual(3);
+    expect(rootNodes.get(0)).toEqual("root-0");
+    expect(rootNodes.get(1)).toEqual("root-1");
+    expect(rootNodes.get(2)).toEqual("root-2");
 
-    expect(treeModel.getNode("root-1")!.isExpanded).to.be.false;
-    expect(treeModel.getChildren("root-1")).to.be.undefined;
+    expect(treeModel.getNode("root-1")!.isExpanded).toBe(false);
+    expect(treeModel.getChildren("root-1")).toBeUndefined();
   });
 
   it("handles failure to retrieve parent node's child count", async () => {
@@ -223,13 +223,13 @@ describe("reloadTree", () => {
     const treeModel = modelSource.getModel();
 
     const rootNodes = treeModel.getChildren(undefined)!;
-    expect(rootNodes.getLength()).to.be.equal(3);
-    expect(rootNodes.get(0)).to.be.equal("root-0");
-    expect(rootNodes.get(1)).to.be.undefined;
-    expect(rootNodes.get(2)).to.be.undefined;
+    expect(rootNodes.getLength()).toEqual(3);
+    expect(rootNodes.get(0)).toEqual("root-0");
+    expect(rootNodes.get(1)).toBeUndefined();
+    expect(rootNodes.get(2)).toBeUndefined();
 
-    expect(treeModel.getNode("root-0")!.numChildren).to.be.undefined;
-    expect(treeModel.getNode("root-0")!.isExpanded).to.be.false;
+    expect(treeModel.getNode("root-0")!.numChildren).toBeUndefined();
+    expect(treeModel.getNode("root-0")!.isExpanded).toBe(false);
   });
 
   it("does not search for expanded nodes if parent no longer has any children", async () => {
@@ -251,13 +251,13 @@ describe("reloadTree", () => {
     const modelSource = await waitForReload(reloadTree(initialTreeModel, dataProvider, 1));
     const treeModel = modelSource.getModel();
 
-    expect(getNodesFake).to.have.been.calledOnce;
+    expect(getNodesFake).toHaveBeenCalledOnce();
 
     const rootNodes = treeModel.getChildren(undefined)!;
-    expect(rootNodes.getLength()).to.be.equal(1);
-    expect(rootNodes.get(0)).to.be.equal("root-0");
+    expect(rootNodes.getLength()).toEqual(1);
+    expect(rootNodes.get(0)).toEqual("root-0");
 
-    expect(treeModel.getNode("root-0")!.isExpanded).to.be.false;
+    expect(treeModel.getNode("root-0")!.isExpanded).toBe(false);
   });
 
   describe("visible range", () => {
@@ -283,10 +283,10 @@ describe("reloadTree", () => {
       const treeModel = modelSource.getModel();
 
       const rootNodes = treeModel.getChildren(undefined)!;
-      expect(rootNodes.getLength()).to.be.equal(3);
-      expect(rootNodes.get(0)).to.be.equal("root-0");
-      expect(rootNodes.get(1)).to.be.undefined;
-      expect(rootNodes.get(2)).to.be.equal("root-2");
+      expect(rootNodes.getLength()).toEqual(3);
+      expect(rootNodes.get(0)).toEqual("root-0");
+      expect(rootNodes.get(1)).toBeUndefined();
+      expect(rootNodes.get(2)).toEqual("root-2");
     });
 
     it("adjusts visible range when reloading nodes", async () => {
@@ -310,10 +310,10 @@ describe("reloadTree", () => {
 
       // expect visible range to be adjusted and one last node to be loaded
       const rootNodes = treeModel.getChildren(undefined)!;
-      expect(rootNodes.getLength()).to.be.equal(3);
-      expect(rootNodes.get(0)).to.be.equal("root-0");
-      expect(rootNodes.get(1)).to.be.undefined;
-      expect(rootNodes.get(2)).to.be.equal("root-2");
+      expect(rootNodes.getLength()).toEqual(3);
+      expect(rootNodes.get(0)).toEqual("root-0");
+      expect(rootNodes.get(1)).toBeUndefined();
+      expect(rootNodes.get(2)).toEqual("root-2");
     });
 
     it("reloads child nodes in visible range", async () => {
@@ -345,16 +345,16 @@ describe("reloadTree", () => {
       const treeModel = modelSource.getModel();
 
       const rootNodes = treeModel.getChildren(undefined)!;
-      expect(rootNodes.getLength()).to.be.equal(3);
-      expect(rootNodes.get(0)).to.be.equal("root-0");
-      expect(rootNodes.get(1)).to.be.equal("root-1");
-      expect(rootNodes.get(2)).to.undefined;
+      expect(rootNodes.getLength()).toEqual(3);
+      expect(rootNodes.get(0)).toEqual("root-0");
+      expect(rootNodes.get(1)).toEqual("root-1");
+      expect(rootNodes.get(2)).toBeUndefined();
 
       const childNodes = treeModel.getChildren("root-1")!;
-      expect(childNodes.getLength()).to.be.equal(3);
-      expect(childNodes.get(0)).to.be.equal("root-1-0");
-      expect(childNodes.get(1)).to.be.equal("root-1-1");
-      expect(childNodes.get(2)).to.undefined;
+      expect(childNodes.getLength()).toEqual(3);
+      expect(childNodes.get(0)).toEqual("root-1-0");
+      expect(childNodes.get(1)).toEqual("root-1-1");
+      expect(childNodes.get(2)).toBeUndefined();
     });
 
     it("handles reload resulting in empty tree", async () => {
@@ -378,7 +378,7 @@ describe("reloadTree", () => {
       const treeModel = modelSource.getModel();
 
       const rootNodes = treeModel.getChildren(undefined)!;
-      expect(rootNodes.getLength()).to.be.equal(0);
+      expect(rootNodes.getLength()).toEqual(0);
     });
   });
 
@@ -415,7 +415,7 @@ describe("reloadTree", () => {
         },
         error: reject,
         complete: () => {
-          expect(numEmissions).to.be.equal(1);
+          expect(numEmissions).toEqual(1);
           resolve(lastEmission!);
         },
       });

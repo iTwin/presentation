@@ -7,7 +7,7 @@ import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } fr
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { LOGGER } from "../util/Logging";
+import { LOGGER } from "../util/Logging.js";
 
 import type { IModelDb } from "@itwin/core-backend";
 import type {

@@ -150,8 +150,8 @@ describe("UniquePropertyValuesSelector", () => {
     // click on menu item
     const menuItem1 = await waitFor(() => getByText("TestValue1"));
     const menuItem2 = await waitFor(() => getByText("TestValue2"));
-    expect(menuItem1).to.not.be.null;
-    expect(menuItem2).to.not.be.null;
+    expect(menuItem1).not.toBeNull();
+    expect(menuItem2).not.toBeNull();
   });
 
   it("invokes `onChange` when item from the menu is selected", async () => {
@@ -254,7 +254,7 @@ describe("UniquePropertyValuesSelector", () => {
     // click on menu item
     const menuItem = await waitFor(() => getAllByText("TestValue1"));
     // first shown in selector, second in dropdown menu
-    expect(menuItem).to.have.lengthOf(2);
+    expect(menuItem).toHaveLength(2);
     await user.click(menuItem[1]);
 
     await waitFor(() =>
@@ -500,7 +500,7 @@ describe("UniquePropertyValuesSelector", () => {
       // ensure only the searched for value is shown
       await waitFor(() => {
         getByText("TestValue2");
-        expect(queryByText("Value1")).to.be.null;
+        expect(queryByText("Value1")).toBeNull();
       });
       expect(getDistinctValuesIteratorStub).toHaveBeenCalledOnce();
     });
@@ -539,7 +539,7 @@ describe("UniquePropertyValuesSelector", () => {
       // ensure new filter is applied
       await waitFor(() => {
         getByText("Value1");
-        expect(queryByText("TestValue2")).to.be.null;
+        expect(queryByText("TestValue2")).toBeNull();
       });
       expect(getDistinctValuesIteratorStub).toHaveBeenCalledOnce();
     });
@@ -618,8 +618,8 @@ describe("UniquePropertyValuesSelector", () => {
       await waitFor(() => {
         getByText("Value3");
         getByText("TestValue4");
-        expect(queryByText("Value1")).to.be.null;
-        expect(queryByText("TestValue2")).to.be.null;
+        expect(queryByText("Value1")).toBeNull();
+        expect(queryByText("TestValue2")).toBeNull();
       });
     });
 
@@ -674,7 +674,7 @@ describe("UniquePropertyValuesSelector", () => {
         getByText("SearchedValue1");
         getByText("SearchedValue2");
         getByText("SearchedValue3");
-        expect(queryAllByText(/SkippedValue/)).to.be.empty;
+        expect(queryAllByText(/SkippedValue/)).toHaveLength(0);
       });
       expect(getDistinctValuesIteratorStub).toHaveBeenCalledTimes(2);
     });
@@ -728,7 +728,7 @@ describe("UniquePropertyValuesSelector", () => {
       // ensure all searched for values are shown
       await waitFor(() => {
         getByText("SearchedValue");
-        expect(queryAllByText(/SkippedValue/)).to.be.empty;
+        expect(queryAllByText(/SkippedValue/)).toHaveLength(0);
       });
       expect(getDistinctValuesIteratorStub).toHaveBeenCalledTimes(3);
     });
@@ -764,7 +764,7 @@ describe("UniquePropertyValuesSelector", () => {
 
       // ensure no values are shown
       await waitFor(() => {
-        expect(queryAllByText(/SkippedValue/)).to.be.empty;
+        expect(queryAllByText(/SkippedValue/)).toHaveLength(0);
       });
       expect(getDistinctValuesIteratorStub).toHaveBeenCalledOnce();
     });
@@ -834,7 +834,7 @@ describe("UniquePropertyValuesSelector", () => {
           getByText("SearchedValue1");
           getByText("SearchedValue2");
           getByText("SearchedValue3");
-          expect(queryAllByText(/SkippedValue/)).to.be.empty;
+          expect(queryAllByText(/SkippedValue/)).toHaveLength(0);
         },
         { timeout: 2000 },
       );
@@ -942,17 +942,17 @@ describe("UniquePropertyValuesSelector", () => {
               fractionalSecondDigits: 3,
             }),
           ),
-        ).to.not.be.null;
+        ).not.toBeNull();
       });
     });
   });
 
   describe("Ruleset creation", () => {
     const getSchemaAndClassNamesFromRuleset = (ruleset: Ruleset) => {
-      expect(ruleset.rules.length).to.be.equal(1);
+      expect(ruleset.rules).toHaveLength(1);
       const contentRule = ruleset.rules[0] as ContentRule;
 
-      expect(contentRule.specifications.length).to.be.equal(1);
+      expect(contentRule.specifications).toHaveLength(1);
       const specification = contentRule.specifications[0] as ContentInstancesOfSpecificClassesSpecification;
 
       if (Array.isArray(specification.classes)) {
@@ -987,9 +987,9 @@ describe("UniquePropertyValuesSelector", () => {
       const ruleset = getPagedDistinctValuesCallArguments.rulesetOrId as Ruleset;
       const expectedKeySet = new KeySet([descriptorInputKeys]);
 
-      expect(ruleset.id).to.be.equal(testDescriptor.ruleset?.id);
+      expect(ruleset.id).toEqual(testDescriptor.ruleset?.id);
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      expect(getPagedDistinctValuesCallArguments.keys.nodeKeys).to.be.deep.equal(expectedKeySet.nodeKeys);
+      expect(getPagedDistinctValuesCallArguments.keys.nodeKeys).toEqual(expectedKeySet.nodeKeys);
     });
 
     it("calls 'getDistinctValuesIterator' with ruleset that is created from a 'NestedContentField'", async () => {
@@ -1031,7 +1031,7 @@ describe("UniquePropertyValuesSelector", () => {
       const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
       expect(
         getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId as Ruleset),
-      ).to.deep.eq({ schemaName: expectedSchemaName, classNames: [expectedClassName] });
+      ).toEqual({ schemaName: expectedSchemaName, classNames: [expectedClassName] });
     });
 
     it("calls 'getDistinctValuesIterator' with ruleset that is created from a 'NestedContentField' with multiple layers of nesting", async () => {
@@ -1074,7 +1074,7 @@ describe("UniquePropertyValuesSelector", () => {
       const [expectedSchemaName2, expectedClassName2] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
       expect(
         getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId as Ruleset),
-      ).to.deep.eq({ schemaName: expectedSchemaName2, classNames: [expectedClassName2] });
+      ).toEqual({ schemaName: expectedSchemaName2, classNames: [expectedClassName2] });
     });
 
     it("calls 'getDistinctValuesIterator' with ruleset that is created from a 'PropertiesField' with a single property", async () => {
@@ -1104,7 +1104,7 @@ describe("UniquePropertyValuesSelector", () => {
       const [expectedSchemaName3, expectedClassName3] = testClassInfo.name.split(":");
       expect(
         getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId as Ruleset),
-      ).to.deep.eq({ schemaName: expectedSchemaName3, classNames: [expectedClassName3] });
+      ).toEqual({ schemaName: expectedSchemaName3, classNames: [expectedClassName3] });
     });
 
     it("calls 'getDistinctValuesIterator' with ruleset that is created from a 'PropertiesField' with multiple properties", async () => {
@@ -1138,7 +1138,7 @@ describe("UniquePropertyValuesSelector", () => {
 
       expect(
         getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId as Ruleset),
-      ).to.deep.eq([
+      ).toEqual([
         { schemaName: "testSchema1", classNames: ["testClass1", "testClass2"] },
         { schemaName: "testSchema2", classNames: ["testClass3"] },
       ]);
@@ -1170,7 +1170,7 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(selector);
 
-      expect(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId).to.containSubset({
+      expect(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId).toMatchObject({
         rules: [{ ruleType: "Content", specifications: [{ specType: "SelectedNodeInstances" }] }],
       });
     });
@@ -1201,7 +1201,7 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(selector);
 
-      expect(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId).to.containSubset({
+      expect(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId).toMatchObject({
         rules: [{ ruleType: "Content", specifications: [{ specType: "SelectedNodeInstances" }] }],
       });
     });
@@ -1265,7 +1265,7 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(selector);
 
-      expect(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId).to.containSubset({
+      expect(getDistinctValuesIteratorStub.mock.calls[0][0].rulesetOrId).toMatchObject({
         rules: [
           {
             ruleType: "Content",

@@ -27,7 +27,7 @@ describe("Utils", () => {
     it("creates tree node with extended data", () => {
       const node = { ...createTestECInstancesNode(), extendedData: { test: "value" } };
       const treeNode = createTreeNodeItem(node);
-      expect(treeNode.extendedData!.test).to.eq("value");
+      expect(treeNode.extendedData!.test).toBe("value");
     });
 
     it("creates tree node with parent id", () => {
@@ -52,7 +52,7 @@ describe("Utils", () => {
     it("creates tree node with children", () => {
       const node = createTestECInstancesNode({ hasChildren: true });
       const treeNode = createTreeNodeItem(node);
-      expect(treeNode.hasChildren).to.be.true;
+      expect(treeNode.hasChildren).toBe(true);
     });
 
     it("appends grouped nodes count if requested", () => {
@@ -84,14 +84,14 @@ describe("Utils", () => {
         undefined,
         {},
       );
-      expect(node.id).not.to.be.undefined;
-      expect(node.label).not.to.be.undefined;
-      expect(node.key).not.to.be.undefined;
+      expect(node.id).not.toBeUndefined();
+      expect(node.label).not.toBeUndefined();
+      expect(node.key).not.toBeUndefined();
     });
 
     it("does not set a presentation tree node key when input does not have a key", () => {
       const node = createPartialTreeNodeItem({}, undefined, {});
-      expect(node.key).to.be.undefined;
+      expect(node.key).toBeUndefined();
     });
 
     it("uses provided callback to customize tree node", () => {
@@ -127,7 +127,7 @@ describe("Utils", () => {
   describe("pageOptionsUiToPresentation", () => {
     it("returns undefined if passed undefined parameter", () => {
       const result = pageOptionsUiToPresentation(undefined);
-      expect(result).to.be.equal(undefined);
+      expect(result).toEqual(undefined);
     });
 
     it("converts ui page options to presentation page options", () => {
@@ -136,9 +136,9 @@ describe("Utils", () => {
       const pageOptions: PageOptions = { size, start };
       const result = pageOptionsUiToPresentation(pageOptions);
 
-      expect(result).to.not.be.undefined;
-      expect(result!.size).to.be.equal(size);
-      expect(result!.start).to.be.equal(start);
+      expect(result).toBeDefined();
+      expect(result!.size).toEqual(size);
+      expect(result!.start).toEqual(start);
     });
   });
 });

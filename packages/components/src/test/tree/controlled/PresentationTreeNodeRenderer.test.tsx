@@ -51,7 +51,7 @@ describe("PresentationTreeNodeRenderer", () => {
 
     await waitFor(() => {
       getByText(testLabel);
-      expect(container.querySelector(".presentation-components-node")).to.be.null;
+      expect(container.querySelector(".presentation-components-node")).toBeNull();
     });
   });
 
@@ -96,7 +96,7 @@ describe("PresentationTreeNodeRenderer", () => {
     );
 
     await waitFor(() => getByText(testLabel));
-    expect(container.querySelector(".presentation-components-node")).to.not.be.null;
+    expect(container.querySelector(".presentation-components-node")).not.toBeNull();
   });
 
   it("renders node with filter button", async () => {
@@ -117,7 +117,7 @@ describe("PresentationTreeNodeRenderer", () => {
     const buttons = await waitFor(() =>
       container.querySelectorAll(".presentation-components-node-action-buttons button"),
     );
-    expect(buttons.length).to.eq(1);
+    expect(buttons).toHaveLength(1);
   });
 
   it("renders filtered node with filter and clear filter buttons", async () => {
@@ -142,7 +142,7 @@ describe("PresentationTreeNodeRenderer", () => {
     const buttons = await waitFor(() =>
       container.querySelectorAll(".presentation-components-node-action-buttons button"),
     );
-    expect(buttons.length).to.eq(2);
+    expect(buttons).toHaveLength(2);
   });
 
   it("renders without buttons when node is not filterable", async () => {
@@ -161,7 +161,7 @@ describe("PresentationTreeNodeRenderer", () => {
     const buttons = await waitFor(() =>
       container.querySelectorAll(".presentation-components-node-action-buttons button"),
     );
-    expect(buttons).to.be.empty;
+    expect(buttons).toHaveLength(0);
   });
 
   it("renders with option to provide additional filtering, when node is of type 'ResultSetTooLarge'", async () => {
@@ -178,7 +178,7 @@ describe("PresentationTreeNodeRenderer", () => {
     );
 
     const infoNode = await waitFor(() => queryByText("tree.additional-filtering", { exact: false }));
-    expect(infoNode).to.not.be.null;
+    expect(infoNode).not.toBeNull();
   });
 
   it("calls 'onFilterClick' when additional filtering message is clicked with correct parent", async () => {
@@ -241,7 +241,7 @@ describe("PresentationTreeNodeRenderer", () => {
     const buttons = await waitFor(() =>
       container.querySelectorAll(".presentation-components-node-action-buttons button"),
     );
-    expect(buttons.length).to.eq(1);
+    expect(buttons).toHaveLength(1);
     fireEvent.click(buttons[0]);
     expect(spy).toHaveBeenCalledOnce();
   });
@@ -269,7 +269,7 @@ describe("PresentationTreeNodeRenderer", () => {
     const buttons = await waitFor(() =>
       container.querySelectorAll(".presentation-components-node-action-buttons button"),
     );
-    expect(buttons.length).to.eq(2);
+    expect(buttons).toHaveLength(2);
     fireEvent.click(buttons[0]);
     expect(spy).toHaveBeenCalledOnce();
   });

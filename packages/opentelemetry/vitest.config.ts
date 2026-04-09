@@ -14,7 +14,7 @@ export default defineConfig({
     restoreMocks: true,
     coverage: {
       provider: "v8",
-      include: ["src/presentation-opentelemetry/**/*"],
+      include: ["src/presentation-opentelemetry/**/*.ts"],
       reportsDirectory: "./lib/test/coverage",
       reporter: ["text-summary", "lcov", "cobertura"],
       thresholds: { statements: 100, functions: 100, branches: 100, lines: 100 },

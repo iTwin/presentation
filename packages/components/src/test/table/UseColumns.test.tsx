@@ -44,11 +44,11 @@ describe("useColumns", () => {
 
     const { result } = renderHook((props) => useColumns(props), { initialProps });
 
-    await waitFor(() =>
-      expect(result.current)
-        .to.have.lengthOf(1)
-        .and.containSubset([{ name: contentField.name, label: contentField.label, field: contentField }]),
-    );
+    await waitFor(() => {
+      expect(result.current).toMatchObject([
+        { name: contentField.name, label: contentField.label, field: contentField },
+      ]);
+    });
   });
 
   it("loads columns only for properties fields", async () => {
@@ -73,11 +73,11 @@ describe("useColumns", () => {
 
     const { result } = renderHook((props) => useColumns(props), { initialProps });
 
-    await waitFor(() =>
-      expect(result.current)
-        .to.have.lengthOf(1)
-        .and.containSubset([{ name: propertyField.name, label: propertyField.label, field: propertyField }]),
-    );
+    await waitFor(() => {
+      expect(result.current).toMatchObject([
+        { name: propertyField.name, label: propertyField.label, field: propertyField },
+      ]);
+    });
   });
 
   it("returns empty column list if no keys provided", async () => {
@@ -94,7 +94,7 @@ describe("useColumns", () => {
       initialProps: { ...initialProps, keys: new KeySet() },
     });
 
-    await waitFor(() => expect(result.current).to.have.lengthOf(0));
+    await waitFor(() => expect(result.current).toHaveLength(0));
   });
 
   it("returns empty column list if content descriptor was not loaded", async () => {
@@ -102,7 +102,7 @@ describe("useColumns", () => {
 
     const { result } = renderHook((props) => useColumns(props), { initialProps });
 
-    await waitFor(() => expect(result.current).to.have.lengthOf(0));
+    await waitFor(() => expect(result.current).toHaveLength(0));
   });
 
   it("throws in React render loop on failure to get content descriptor", async () => {

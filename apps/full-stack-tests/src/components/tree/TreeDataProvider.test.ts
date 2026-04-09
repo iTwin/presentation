@@ -72,13 +72,13 @@ describe("TreeDataProvider", async () => {
 
   it("returns root nodes", async () => {
     const nodes = await provider.getNodes();
-    expect(nodes.length).toBe(1);
+    expect(nodes).toHaveLength(1);
   });
 
   it("returns root nodes with paging", async () => {
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(undefined, { start: 0, size: 5 });
-    expect(nodes.length).toBe(1);
+    expect(nodes).toHaveLength(1);
   });
 
   it("creates error node when requesting root nodes with invalid paging", async () => {
@@ -107,14 +107,14 @@ describe("TreeDataProvider", async () => {
   it("returns child nodes", async () => {
     const rootNodes = await provider.getNodes();
     const childNodes = await provider.getNodes(rootNodes[0]);
-    expect(childNodes.length).toBe(1);
+    expect(childNodes).toHaveLength(1);
   });
 
   it("returns child nodes with paging", async () => {
     const rootNodes = await provider.getNodes();
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(rootNodes[0], { start: 0, size: 5 });
-    expect(nodes.length).toBe(1);
+    expect(nodes).toHaveLength(1);
   });
 
   it("returns error node when requesting child nodes with invalid paging", async () => {

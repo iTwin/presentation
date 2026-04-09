@@ -27,8 +27,8 @@ describe("isPresentationTreeNodeItem", () => {
       label: PropertyRecord.fromString("Presentation Item"),
     };
     const simpleItem: TreeNodeItem = { id: "simple_item_id", label: PropertyRecord.fromString("Simple Item") };
-    expect(isPresentationTreeNodeItem(presentationItem)).to.be.true;
-    expect(isPresentationTreeNodeItem(simpleItem)).to.be.false;
+    expect(isPresentationTreeNodeItem(presentationItem)).toBe(true);
+    expect(isPresentationTreeNodeItem(simpleItem)).toBe(false);
   });
 });
 
@@ -48,8 +48,8 @@ describe("isPresentationInfoTreeNodeItem", () => {
       label: PropertyRecord.fromString("Presentation Item"),
     };
     const simpleItem: TreeNodeItem = { id: "simple_item_id", label: PropertyRecord.fromString("Simple Item") };
-    expect(isPresentationInfoTreeNodeItem(presentationInfoItem)).to.be.true;
-    expect(isPresentationInfoTreeNodeItem(presentationItem)).to.be.false;
-    expect(isPresentationInfoTreeNodeItem(simpleItem)).to.be.false;
+    expect(isPresentationInfoTreeNodeItem(presentationInfoItem)).toBe(true);
+    expect(isPresentationInfoTreeNodeItem(presentationItem)).toBe(false);
+    expect(isPresentationInfoTreeNodeItem(simpleItem)).toBe(false);
   });
 });

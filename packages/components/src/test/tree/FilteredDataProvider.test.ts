@@ -103,25 +103,25 @@ describe("FilteredTreeDataProvider", () => {
 
   describe("filter", () => {
     it("returns filter with which it was initialized", () => {
-      expect(provider.filter).to.be.equal(filter);
+      expect(provider.filter).toEqual(filter);
     });
   });
 
   describe("rulesetId", () => {
     it("returns rulesetId of the parent data provider", () => {
-      expect(provider.rulesetId).to.eq(rulesetId);
+      expect(provider.rulesetId).toBe(rulesetId);
     });
   });
 
   describe("imodel", () => {
     it("returns imodel of the parent data provider", () => {
-      expect(provider.imodel).to.eq(imodel);
+      expect(provider.imodel).toBe(imodel);
     });
   });
 
   describe("parentDataProvider", () => {
     it("returns parent data provider", () => {
-      expect(provider.parentDataProvider).to.eq(parentProvider);
+      expect(provider.parentDataProvider).toBe(parentProvider);
     });
   });
 
@@ -159,14 +159,14 @@ describe("FilteredTreeDataProvider", () => {
   describe("getNodesCount", () => {
     it("returns root nodes count", async () => {
       const result = await provider.getNodesCount();
-      expect(result).to.equal(paths.length);
+      expect(result).toEqual(paths.length);
     });
 
     it("returns child nodes count", async () => {
       const parentNode = createTreeNodeItem(paths[1].node);
 
       const result = await provider.getNodesCount(parentNode);
-      expect(result).to.equal(paths[1].children.length);
+      expect(result).toEqual(paths[1].children.length);
     });
   });
 
@@ -175,7 +175,7 @@ describe("FilteredTreeDataProvider", () => {
       parentProvider.getFilteredNodePaths.mockResolvedValue(paths);
 
       const result = await provider.getFilteredNodePaths(filter);
-      expect(result).to.equal(paths);
+      expect(result).toEqual(paths);
       expect(parentProvider.getFilteredNodePaths).toHaveBeenCalledWith(filter);
     });
   });
@@ -190,7 +190,7 @@ describe("FilteredTreeDataProvider", () => {
         imodel: {} as IModelConnection,
       });
       const result = provider.createRequestOptions(key, filterDefinition);
-      expect(result.rulesetOrId).to.be.equal("test_ruleset");
+      expect(result.rulesetOrId).toEqual("test_ruleset");
       expect(parentProvider.createRequestOptions).toHaveBeenCalledWith(key, filterDefinition);
     });
   });
@@ -222,7 +222,7 @@ describe("FilteredTreeDataProvider", () => {
 
   describe("countFilteringResults", () => {
     it("all matches get counted", () => {
-      expect(provider.countFilteringResults(filteredNodePaths)).to.be.eq(2);
+      expect(provider.countFilteringResults(filteredNodePaths)).toBe(2);
     });
 
     it("doesn't count if node paths don't have filtering data", () => {
@@ -230,7 +230,7 @@ describe("FilteredTreeDataProvider", () => {
       paths[0] = createTestNodePathElement();
       paths[0].node.label = LabelDefinition.fromLabelString("A-1");
       paths[0].filteringData = undefined;
-      expect(provider.countFilteringResults(paths)).to.eq(0);
+      expect(provider.countFilteringResults(paths)).toBe(0);
     });
   });
 
@@ -243,9 +243,9 @@ describe("FilteredTreeDataProvider", () => {
       });
       const result = provider.getActiveMatch(2);
 
-      expect(result).to.not.be.undefined;
-      expect(result!.nodeId).to.be.eq(createTreeNodeItem(filteredNodePaths[1].node).id);
-      expect(result!.matchIndex).to.be.eq(0);
+      expect(result).toBeDefined();
+      expect(result!.nodeId).toBe(createTreeNodeItem(filteredNodePaths[1].node).id);
+      expect(result!.matchIndex).toBe(0);
     });
 
     it("returns undefined when index is 0 or lower", () => {
@@ -255,7 +255,7 @@ describe("FilteredTreeDataProvider", () => {
         paths: filteredNodePaths,
       });
       const result = provider.getActiveMatch(0);
-      expect(result).to.be.undefined;
+      expect(result).toBeUndefined();
     });
   });
 
@@ -267,7 +267,7 @@ describe("FilteredTreeDataProvider", () => {
         paths: filteredNodePaths,
       });
       const node = createTreeNodeItem(filteredNodePaths[1].node);
-      expect(provider.nodeMatchesFilter(node)).to.be.true;
+      expect(provider.nodeMatchesFilter(node)).toBe(true);
     });
 
     it("returns false when node matches filter", () => {
@@ -277,7 +277,7 @@ describe("FilteredTreeDataProvider", () => {
         paths: filteredNodePaths,
       });
       const node = createTreeNodeItem(filteredNodePaths[0].node);
-      expect(provider.nodeMatchesFilter(node)).to.be.false;
+      expect(provider.nodeMatchesFilter(node)).toBe(false);
     });
   });
 });

@@ -7,12 +7,15 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    environment: "happy-dom",
+    name: "Full-stack tests",
     include: ["src/**/*.test.{ts,tsx}"],
     exclude: ["src/hierarchies-react/learning-snippets/**"],
     testTimeout: 60000,
     slowTestThreshold: 500,
-    pool: "forks",
+    environment: "happy-dom",
+    setupFiles: ["./src/setup.ts"],
+    globalSetup: ["./scripts/setup-tests.js"],
+    css: false,
     snapshotFormat: { escapeString: true, printBasicPrototype: true },
     environmentOptions: {
       happyDOM: {
@@ -23,9 +26,6 @@ export default defineConfig({
         },
       },
     },
-    setupFiles: ["./src/setup.ts"],
-    globalSetup: ["./scripts/setup-tests.js"],
-    css: false,
     server: {
       deps: {
         inline: [

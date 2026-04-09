@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect } from "vitest";
 import { SnapshotDb } from "@itwin/core-backend";
 import { HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import {
@@ -11,9 +11,9 @@ import {
   ModelsTreeDefinition,
   ModelsTreeIdsCache,
 } from "@itwin/presentation-models-tree";
-import { Datasets } from "../util/Datasets";
-import { run } from "../util/TestUtilities";
-import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { Datasets } from "../util/Datasets.js";
+import { run } from "../util/TestUtilities.js";
+import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
 import type { IModelDb } from "@itwin/core-backend";
 import type {
@@ -23,7 +23,7 @@ import type {
   ECSqlQueryExecutor,
   InstanceKey,
 } from "@itwin/presentation-shared";
-import type { IModelAccess } from "./StatelessHierarchyProvider";
+import type { IModelAccess } from "./StatelessHierarchyProvider.js";
 
 describe("models tree", () => {
   const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & ECSqlQueryExecutor) =>
@@ -38,7 +38,7 @@ describe("models tree", () => {
     test: async (iModel) => {
       const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
       const result = await provider.loadHierarchy({ depth: 2 });
-      expect(result).to.be.greaterThan(0);
+      expect(result).toBeGreaterThan(0);
     },
   });
 
@@ -49,7 +49,7 @@ describe("models tree", () => {
     test: async (iModel) => {
       const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
       const result = await provider.loadHierarchy();
-      expect(result).to.be.greaterThan(0);
+      expect(result).toBeGreaterThan(0);
     },
   });
 
@@ -80,14 +80,14 @@ describe("models tree", () => {
           abortSignal,
         }),
       };
-      expect(search.paths.length).to.eq(50000);
+      expect(search.paths).toHaveLength(50000);
       const provider = new StatelessHierarchyProvider({
         imodelAccess,
         getHierarchyFactory: () => new ModelsTreeDefinition({ imodelAccess, idsCache }),
         search: { paths: await HierarchySearchTree.createFromPathsList(search.paths) },
       });
       const result = await provider.loadHierarchy({ depth: 2 });
-      expect(result).to.eq(2);
+      expect(result).toBe(2);
     },
   });
 });

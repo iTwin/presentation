@@ -6,18 +6,18 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    environment: "happy-dom",
+    name: "Components tests",
     include: ["src/**/*.test.{ts,tsx}"],
-    restoreMocks: true,
     testTimeout: 60000,
     slowTestThreshold: 500,
-    pool: "forks",
-    snapshotFormat: { escapeString: true, printBasicPrototype: true },
+    environment: "happy-dom",
+    setupFiles: ["./src/test/setup.ts"],
+    restoreMocks: true,
+    css: false,
     environmentOptions: {
       happyDOM: { settings: { disableCSSFileLoading: true, handleDisabledFileLoadingAsSuccess: true } },
     },
-    setupFiles: ["./src/test/setup.ts"],
-    css: false,
+    snapshotFormat: { escapeString: true, printBasicPrototype: true },
     coverage: {
       provider: "v8",
       include: ["src/presentation-components/**/*.{ts,tsx}"],

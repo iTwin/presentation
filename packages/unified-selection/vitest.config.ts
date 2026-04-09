@@ -11,8 +11,7 @@ export default defineConfig({
     mockReset: true,
     coverage: {
       provider: "v8",
-      include: ["src/unified-selection/**"],
-      exclude: ["src/test/**"],
+      include: ["src/unified-selection/**/*.ts"],
       reportsDirectory: "./lib/test/coverage",
       reporter: ["text-summary", "lcov", "cobertura"],
       thresholds: { statements: 100, functions: 100, branches: 100, lines: 100 },

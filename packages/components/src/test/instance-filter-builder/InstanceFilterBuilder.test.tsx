@@ -310,7 +310,7 @@ describe("usePresentationInstanceFilteringProps", () => {
       { initialProps },
     );
 
-    expect(result.current.classes).to.have.lengthOf(2).and.to.containSubset([concreteClass1, concreteClass2]);
+    expect(result.current.classes).toMatchObject([concreteClass1, concreteClass2]);
   });
 
   it("does not duplicate classes when descriptor contains multiple similar select classes", () => {
@@ -328,7 +328,7 @@ describe("usePresentationInstanceFilteringProps", () => {
       { initialProps },
     );
 
-    expect(result.current.classes).to.have.lengthOf(1).and.to.containSubset([concreteClass1]);
+    expect(result.current.classes).toMatchObject([concreteClass1]);
   });
 
   it("updates selected classes when 'onSelectedClassesChange' is called", async () => {
@@ -340,9 +340,9 @@ describe("usePresentationInstanceFilteringProps", () => {
     act(() => {
       result.current.onSelectedClassesChanged([concreteClass1.id]);
     });
-    await waitFor(() =>
-      expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([concreteClass1]),
-    );
+    await waitFor(() => {
+      expect(result.current.selectedClasses).toMatchObject([concreteClass1]);
+    });
   });
 
   it("clears selected classes when new descriptor is provided", async () => {
@@ -354,9 +354,9 @@ describe("usePresentationInstanceFilteringProps", () => {
     act(() => {
       result.current.onSelectedClassesChanged([concreteClass1.id]);
     });
-    await waitFor(() =>
-      expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([concreteClass1]),
-    );
+    await waitFor(() => {
+      expect(result.current.selectedClasses).toMatchObject([concreteClass1]);
+    });
 
     const newDescriptor = createTestContentDescriptor({
       selectClasses: [{ selectClassInfo: concreteClass1, isSelectPolymorphic: false }],
@@ -365,7 +365,7 @@ describe("usePresentationInstanceFilteringProps", () => {
     });
     // rerender with new descriptor
     rerender({ descriptor: newDescriptor, imodel: initialProps.imodel });
-    expect(result.current.selectedClasses).to.be.empty;
+    expect(result.current.selectedClasses).toHaveLength(0);
   });
 
   it("does not clear selected classes on rerender when descriptor does not change", async () => {
@@ -377,12 +377,12 @@ describe("usePresentationInstanceFilteringProps", () => {
     act(() => {
       result.current.onSelectedClassesChanged([concreteClass1.id]);
     });
-    await waitFor(() =>
-      expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([concreteClass1]),
-    );
+    await waitFor(() => {
+      expect(result.current.selectedClasses).toMatchObject([concreteClass1]);
+    });
 
     rerender({ descriptor: initialProps.descriptor, imodel: initialProps.imodel });
-    expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([concreteClass1]);
+    expect(result.current.selectedClasses).toMatchObject([concreteClass1]);
   });
 
   describe("properties filtering", () => {
@@ -395,7 +395,7 @@ describe("usePresentationInstanceFilteringProps", () => {
       act(() => {
         result.current.onSelectedClassesChanged([concreteClass2.id]);
       });
-      await waitFor(() => expect(result.current.properties).to.have.lengthOf(3));
+      await waitFor(() => expect(result.current.properties).toHaveLength(3));
     });
 
     it("return all properties when selected class contains all available properties", async () => {
@@ -409,12 +409,12 @@ describe("usePresentationInstanceFilteringProps", () => {
         { initialProps: { ...initialProps, descriptor: testDescriptor } },
       );
 
-      await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
+      await waitFor(() => expect(result.current.properties).toHaveLength(2));
 
       act(() => {
         result.current.onSelectedClassesChanged([concreteClass1.id]);
       });
-      await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
+      await waitFor(() => expect(result.current.properties).toHaveLength(2));
     });
 
     it("returns union of properties that are derived from two selected classes", async () => {
@@ -436,7 +436,7 @@ describe("usePresentationInstanceFilteringProps", () => {
         result.current.onSelectedClassesChanged([concreteClass1.id, concreteClass2.id]);
       });
 
-      await waitFor(() => expect(result.current.properties).to.have.lengthOf(3));
+      await waitFor(() => expect(result.current.properties).toHaveLength(3));
     });
 
     it("selects classes that have selected property", async () => {
@@ -452,9 +452,9 @@ describe("usePresentationInstanceFilteringProps", () => {
       act(() => {
         result.current.onRulePropertySelected(property);
       });
-      await waitFor(() =>
-        expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([concreteClass2]),
-      );
+      await waitFor(() => {
+        expect(result.current.selectedClasses).toMatchObject([concreteClass2]);
+      });
     });
 
     it("selects all derived classes that have selected property", async () => {
@@ -470,9 +470,9 @@ describe("usePresentationInstanceFilteringProps", () => {
       act(() => {
         result.current.onRulePropertySelected(property);
       });
-      await waitFor(() =>
-        expect(result.current.selectedClasses).to.have.lengthOf(2).and.containSubset([concreteClass1, concreteClass2]),
-      );
+      await waitFor(() => {
+        expect(result.current.selectedClasses).toMatchObject([concreteClass1, concreteClass2]);
+      });
     });
 
     it("selects all classes that have selected property", async () => {
@@ -488,9 +488,9 @@ describe("usePresentationInstanceFilteringProps", () => {
       act(() => {
         result.current.onRulePropertySelected(property);
       });
-      await waitFor(() =>
-        expect(result.current.selectedClasses).to.have.lengthOf(2).and.containSubset([concreteClass1, concreteClass2]),
-      );
+      await waitFor(() => {
+        expect(result.current.selectedClasses).toMatchObject([concreteClass1, concreteClass2]);
+      });
     });
 
     it("does not change selected classes when selected property class is already selected", async () => {
@@ -502,9 +502,9 @@ describe("usePresentationInstanceFilteringProps", () => {
       act(() => {
         result.current.onSelectedClassesChanged([concreteClass2.id]);
       });
-      await waitFor(() =>
-        expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([concreteClass2]),
-      );
+      await waitFor(() => {
+        expect(result.current.selectedClasses).toMatchObject([concreteClass2]);
+      });
 
       const property = result.current.properties.find(
         (prop) => prop.displayLabel === concretePropertiesField2.label,
@@ -513,9 +513,9 @@ describe("usePresentationInstanceFilteringProps", () => {
       act(() => {
         result.current.onRulePropertySelected(property);
       });
-      await waitFor(() =>
-        expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([concreteClass2]),
-      );
+      await waitFor(() => {
+        expect(result.current.selectedClasses).toMatchObject([concreteClass2]);
+      });
     });
 
     it("does not change selected classes when 'onPropertySelected' is invoked with invalid property", () => {
@@ -527,7 +527,7 @@ describe("usePresentationInstanceFilteringProps", () => {
       act(() => {
         result.current.onRulePropertySelected({ name: "invalidProp", displayLabel: "InvalidProp", typename: "string" });
       });
-      expect(result.current.selectedClasses).to.be.empty;
+      expect(result.current.selectedClasses).toHaveLength(0);
     });
   });
 });

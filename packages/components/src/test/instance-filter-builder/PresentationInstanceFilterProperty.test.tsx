@@ -39,14 +39,14 @@ describe("PresentationInstanceFilterProperty", () => {
       />,
     );
 
-    expect(queryByTitle(testPropertyInfo.propertyDescription.displayLabel)).to.not.be.null;
+    expect(queryByTitle(testPropertyInfo.propertyDescription.displayLabel)).not.toBeNull();
     const propertyBadgeSelector = container.querySelector<HTMLInputElement>(".badge");
-    expect(propertyBadgeSelector).to.not.be.null;
+    expect(propertyBadgeSelector).not.toBeNull();
 
     await user.hover(propertyBadgeSelector!);
     await waitFor(() => {
-      expect(queryByText(className)).to.not.be.null;
-      expect(queryByText(schemaName)).to.not.be.null;
+      expect(queryByText(className)).not.toBeNull();
+      expect(queryByText(schemaName)).not.toBeNull();
     });
   });
 
@@ -61,7 +61,7 @@ describe("PresentationInstanceFilterProperty", () => {
       />,
     );
 
-    expect(queryByTitle(testPropertyInfo.propertyDescription.displayLabel)).to.not.be.null;
-    expect(container.querySelector<HTMLInputElement>(".badge")).to.be.null;
+    expect(queryByTitle(testPropertyInfo.propertyDescription.displayLabel)).not.toBeNull();
+    expect(container.querySelector<HTMLInputElement>(".badge")).toBeNull();
   });
 });

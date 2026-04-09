@@ -3,16 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect } from "vitest";
 import { SnapshotDb } from "@itwin/core-backend";
 import {
   createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
-import { Datasets } from "../util/Datasets";
-import { run } from "../util/TestUtilities";
-import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { Datasets } from "../util/Datasets.js";
+import { run } from "../util/TestUtilities.js";
+import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
 import type { IModelDb } from "@itwin/core-backend";
 import type {
@@ -63,7 +63,7 @@ describe("hide if no children", () => {
         rowLimit: "unbounded",
       });
       const result = await provider.loadHierarchy({ depth: 1 });
-      expect(result).to.eq(5);
+      expect(result).toBe(5);
     },
   });
 
@@ -105,7 +105,7 @@ describe("hide if no children", () => {
         rowLimit: "unbounded",
       });
       const result = await provider.loadHierarchy({ depth: 1 });
-      expect(result).to.eq(5);
+      expect(result).toBe(5);
     },
   });
 });

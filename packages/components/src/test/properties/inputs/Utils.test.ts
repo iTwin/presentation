@@ -14,10 +14,10 @@ import type { ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 
 describe("getDecimalRoundingError", () => {
   it("returns correct results", () => {
-    expect(getDecimalRoundingError("123")).to.eq(0.5);
-    expect(getDecimalRoundingError("123.456")).to.eq(0.0005);
-    expect(getDecimalRoundingError("123.457 unit")).to.eq(0.0005);
-    expect(getDecimalRoundingError("invalid number")).to.be.undefined;
+    expect(getDecimalRoundingError("123")).toBe(0.5);
+    expect(getDecimalRoundingError("123.456")).toBe(0.0005);
+    expect(getDecimalRoundingError("123.457 unit")).toBe(0.0005);
+    expect(getDecimalRoundingError("invalid number")).toBeUndefined();
   });
 });
 
@@ -33,7 +33,7 @@ describe("getPersistenceUnitRoundingError", () => {
     parserSpec.parseToQuantityValue.mockReturnValue({ ok: true, value: 0.05 });
 
     const result = getPersistenceUnitRoundingError("123.4 unit", parserSpec as unknown as ParserSpec);
-    expect(result).to.eq(0.05);
+    expect(result).toBe(0.05);
     expect(parserSpec.parseToQuantityValue).toHaveBeenCalledWith("0.05unit");
   });
 
@@ -41,7 +41,7 @@ describe("getPersistenceUnitRoundingError", () => {
     parserSpec.parseToQuantityValue.mockReturnValue({ ok: true, value: 1 / 8 });
 
     const result = getPersistenceUnitRoundingError("3/4 unit", parserSpec as unknown as ParserSpec);
-    expect(result).to.eq(1 / 8);
+    expect(result).toBe(1 / 8);
     expect(parserSpec.parseToQuantityValue).toHaveBeenCalledWith("1/8unit");
   });
 
@@ -50,7 +50,7 @@ describe("getPersistenceUnitRoundingError", () => {
     vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Decimal);
 
     const result = getPersistenceUnitRoundingError("123", parserSpec as unknown as ParserSpec);
-    expect(result).to.eq(0.5);
+    expect(result).toBe(0.5);
     expect(parserSpec.parseToQuantityValue).toHaveBeenCalledWith("0.5");
   });
 
@@ -59,7 +59,7 @@ describe("getPersistenceUnitRoundingError", () => {
     vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Fractional);
 
     const result = getPersistenceUnitRoundingError("123", parserSpec as unknown as ParserSpec);
-    expect(result).to.eq(1 / 2);
+    expect(result).toBe(1 / 2);
     expect(parserSpec.parseToQuantityValue).toHaveBeenCalledWith("1/2");
   });
 
@@ -68,7 +68,7 @@ describe("getPersistenceUnitRoundingError", () => {
     vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Azimuth);
 
     const result = getPersistenceUnitRoundingError("123'", parserSpec as unknown as ParserSpec);
-    expect(result).to.be.undefined;
+    expect(result).toBeUndefined();
     expect(parserSpec.parseToQuantityValue).not.toHaveBeenCalled();
   });
 
@@ -77,7 +77,7 @@ describe("getPersistenceUnitRoundingError", () => {
     vi.spyOn(format, "type", "get").mockReturnValue(FormatType.Fractional);
 
     const result = getPersistenceUnitRoundingError("not a number", parserSpec as unknown as ParserSpec);
-    expect(result).to.be.undefined;
+    expect(result).toBeUndefined();
     expect(parserSpec.parseToQuantityValue).not.toHaveBeenCalled();
   });
 });

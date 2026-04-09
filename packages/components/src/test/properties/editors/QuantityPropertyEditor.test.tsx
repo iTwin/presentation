@@ -63,14 +63,14 @@ describe("<QuantityPropertyEditor />", () => {
 
   it("renders nothing if property record is not provided", async () => {
     const { container } = render(<QuantityPropertyEditor />);
-    expect(container.childElementCount).to.be.eq(0);
+    expect(container.childElementCount).toBe(0);
   });
 
   it("renders numeric input if schema context is not available", async () => {
     const record = createRecord({ initialValue: 10 });
     const { getByDisplayValue } = render(<QuantityPropertyEditor propertyRecord={record} />);
 
-    expect(getByDisplayValue("10")).to.not.be.null;
+    expect(getByDisplayValue("10")).not.toBeNull();
   });
 
   it("renders quantity input if schema context is available and kindOfQuantityName is provided", async () => {
@@ -85,7 +85,7 @@ describe("<QuantityPropertyEditor />", () => {
     );
 
     await waitFor(() => {
-      expect(getByDisplayValue("10 unit")).to.not.be.null;
+      expect(getByDisplayValue("10 unit")).not.toBeNull();
     });
   });
 
@@ -101,7 +101,7 @@ describe("<QuantityPropertyEditor />", () => {
     );
 
     await waitFor(() => {
-      expect(getByDisplayValue("10 unit")).to.not.be.null;
+      expect(getByDisplayValue("10 unit")).not.toBeNull();
     });
   });
 });

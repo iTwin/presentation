@@ -141,17 +141,17 @@ describe("PropertyDataProvider", () => {
   describe("constructor", () => {
     it("uses default ruleset if not given through props", () => {
       using p = new PresentationPropertyDataProvider({ imodel });
-      expect(p.rulesetId).to.eq(DEFAULT_PROPERTY_GRID_RULESET.id);
+      expect(p.rulesetId).toBe(DEFAULT_PROPERTY_GRID_RULESET.id);
     });
 
     it("[deprecated] sets `includeFieldsWithNoValues` to true", () => {
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      expect(provider.includeFieldsWithNoValues).to.be.true;
+      expect(provider.includeFieldsWithNoValues).toBe(true);
     });
 
     it("[deprecated] sets `includeFieldsWithCompositeValues` to true", () => {
       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      expect(provider.includeFieldsWithCompositeValues).to.be.true;
+      expect(provider.includeFieldsWithCompositeValues).toBe(true);
     });
 
     it("subscribes to `Presentation.favoriteProperties.onFavoritesChanged` to invalidate cache", async () => {
@@ -170,9 +170,9 @@ describe("PropertyDataProvider", () => {
       provider = new Provider({ imodel, ruleset: rulesetId });
       await provider.getData();
 
-      expect(onFavoritesChanged.numberOfListeners).to.eq(1);
+      expect(onFavoritesChanged.numberOfListeners).toBe(1);
       provider[Symbol.dispose]();
-      expect(onFavoritesChanged.numberOfListeners).to.eq(0);
+      expect(onFavoritesChanged.numberOfListeners).toBe(0);
     });
   });
 
@@ -188,7 +188,7 @@ describe("PropertyDataProvider", () => {
     it("should have `ShowLabels` and `MergeResults` flags", async () => {
       const overrides = await provider.getDescriptorOverrides();
       const flags = overrides.contentFlags!;
-      expect(flags & (ContentFlags.MergeResults | ContentFlags.ShowLabels)).to.not.eq(0);
+      expect(flags & (ContentFlags.MergeResults | ContentFlags.ShowLabels)).not.toBe(0);
     });
   });
 
@@ -274,9 +274,9 @@ describe("PropertyDataProvider", () => {
       categories[1].priority = 3;
       categories[2].priority = 1;
       provider.sortCategories(categories);
-      expect(categories[0].priority).to.eq(3);
-      expect(categories[1].priority).to.eq(2);
-      expect(categories[2].priority).to.eq(1);
+      expect(categories[0].priority).toBe(3);
+      expect(categories[1].priority).toBe(2);
+      expect(categories[2].priority).toBe(1);
     });
   });
 
@@ -287,9 +287,9 @@ describe("PropertyDataProvider", () => {
       fields[1].priority = 3;
       fields[2].priority = 1;
       await provider.sortFieldsAsync(createTestCategoryDescription(), fields);
-      expect(fields[0].priority).to.eq(3);
-      expect(fields[1].priority).to.eq(2);
-      expect(fields[2].priority).to.eq(1);
+      expect(fields[0].priority).toBe(3);
+      expect(fields[1].priority).toBe(2);
+      expect(fields[2].priority).toBe(1);
     });
 
     it("calls deprecated `sortFields` when it's overridden by a subclass", async () => {
@@ -361,7 +361,7 @@ describe("PropertyDataProvider", () => {
 
     it("returns empty data object when receives undefined content", async () => {
       provider.getContent = async () => undefined;
-      expect(await provider.getData()).to.deep.eq({
+      expect(await provider.getData()).toEqual({
         label: PropertyRecord.fromString("", "label"),
         categories: [],
         records: {},
@@ -370,7 +370,7 @@ describe("PropertyDataProvider", () => {
 
     it("returns empty data object when receives content with no values", async () => {
       provider.getContent = async () => new Content(createTestContentDescriptor({ fields: [] }), []);
-      expect(await provider.getData()).to.deep.eq({
+      expect(await provider.getData()).toEqual({
         label: PropertyRecord.fromString("", "label"),
         categories: [],
         records: {},
@@ -380,7 +380,7 @@ describe("PropertyDataProvider", () => {
     it("set property data label", async () => {
       const item = createTestContentItem({ label: "test", values: {}, displayValues: {} });
       provider.getContent = async () => new Content(createTestContentDescriptor({ fields: [] }), [item]);
-      expect(await provider.getData()).to.containSubset({ label: { value: { displayValue: "test" } } });
+      expect(await provider.getData()).toMatchObject({ label: { value: { displayValue: "test" } } });
     });
 
     it("set property data description", async () => {
@@ -467,7 +467,7 @@ describe("PropertyDataProvider", () => {
           provider.onDataChanged.addListener(dataChangedSpy);
 
           // check the first (unformatted) request
-          expect((await provider.getData()).records[field.category.name][0].value).to.deep.eq({
+          expect((await provider.getData()).records[field.category.name][0].value).toEqual({
             valueFormat: UiPropertyValueFormat.Primitive,
             value: 123.456789,
             displayValue: "123.5 m",
@@ -477,7 +477,7 @@ describe("PropertyDataProvider", () => {
           vi.spyOn(KoqPropertyValueFormatter.prototype, "format").mockResolvedValue("formatted value");
           onFormatsChanged.raiseEvent({ formatsChanged: "all" });
           expect(dataChangedSpy).toHaveBeenCalledOnce();
-          expect((await provider.getData()).records[field.category.name][0].value).to.deep.eq({
+          expect((await provider.getData()).records[field.category.name][0].value).toEqual({
             valueFormat: UiPropertyValueFormat.Primitive,
             value: 123.456789,
             displayValue: "formatted value",
@@ -520,8 +520,8 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories.length).to.eq(0);
-            expect(data.records.hasOwnProperty(category.name)).to.be.false;
+            expect(data.categories).toHaveLength(0);
+            expect(data.records.hasOwnProperty(category.name)).toBe(false);
           });
 
           it("returns nothing for nested content without nested fields", async () => {
@@ -537,8 +537,8 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories.length).to.eq(0);
-            expect(data.records.hasOwnProperty(category.name)).to.be.false;
+            expect(data.categories).toHaveLength(0);
+            expect(data.records.hasOwnProperty(category.name)).toBe(false);
           });
 
           it("returns nested content with multiple nested records as struct array", async () => {
@@ -1124,9 +1124,8 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories.length).to.eq(1);
-            expect(data.records[data.categories[0].name].length).to.eq(1);
-            expect(data.records[data.categories[0].name]).to.containSubset([{ property: { name: "IncludedField" } }]);
+            expect(data.categories).toHaveLength(1);
+            expect(data.records[data.categories[0].name]).toMatchObject([{ property: { name: "IncludedField" } }]);
           });
 
           it("doesn't include array fields with no values when set", async () => {
@@ -1138,9 +1137,8 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories.length).to.eq(1);
-            expect(data.records[data.categories[0].name].length).to.eq(1);
-            expect(data.records[data.categories[0].name]).to.containSubset([{ property: { name: "WithItems" } }]);
+            expect(data.categories).toHaveLength(1);
+            expect(data.records[data.categories[0].name]).toMatchObject([{ property: { name: "WithItems" } }]);
           });
 
           it("doesn't include struct fields with no values when set", async () => {
@@ -1167,9 +1165,8 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories.length).to.eq(1);
-            expect(data.records[data.categories[0].name].length).to.eq(1);
-            expect(data.records[data.categories[0].name]).to.containSubset([{ property: { name: "WithMembers" } }]);
+            expect(data.categories).toHaveLength(1);
+            expect(data.records[data.categories[0].name]).toMatchObject([{ property: { name: "WithMembers" } }]);
           });
 
           it("doesn't include nested fields with no values when set", async () => {
@@ -1201,9 +1198,8 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories.length).to.eq(1);
-            expect(data.records[data.categories[0].name].length).to.eq(1);
-            expect(data.records[data.categories[0].name]).to.containSubset([
+            expect(data.categories).toHaveLength(1);
+            expect(data.records[data.categories[0].name]).toMatchObject([
               { property: { displayLabel: "b" }, value: { value: "some value" } },
             ]);
           });
@@ -1233,9 +1229,9 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories.length).to.eq(1);
-            expect(data.records[data.categories[0].name].length).to.eq(1);
-            expect(data.records[data.categories[0].name][0].property.name).to.eq(primitiveField.name);
+            expect(data.categories).toHaveLength(1);
+            expect(data.records[data.categories[0].name]).toHaveLength(1);
+            expect(data.records[data.categories[0].name][0].property.name).toBe(primitiveField.name);
           });
         });
 
@@ -1269,9 +1265,9 @@ describe("PropertyDataProvider", () => {
             provider.getContent = async () => new Content(descriptor, [record]);
 
             const data = await provider.getData();
-            expect(data.categories.length).to.eq(2);
+            expect(data.categories).toHaveLength(2);
             data.categories.forEach((category) => {
-              expect(category.name).to.not.contain(FAVORITES_CATEGORY_NAME);
+              expect(category.name).not.toContain(FAVORITES_CATEGORY_NAME);
             });
           });
 
@@ -1299,20 +1295,18 @@ describe("PropertyDataProvider", () => {
             provider.getContent = async () => new Content(descriptor, [record]);
 
             const data = await provider.getData();
-            expect(data.categories.length).to.eq(3);
+            expect(data.categories).toHaveLength(3);
             if (provider.isNestedPropertyCategoryGroupingEnabled) {
-              expect(data.records[FAVORITES_CATEGORY_NAME]).to.be.undefined;
-              expect(data.records[`${FAVORITES_CATEGORY_NAME}-category1`].length).to.eq(2);
-              expect(data.records[`${FAVORITES_CATEGORY_NAME}-category1`]).to.containSubset([
+              expect(data.records[FAVORITES_CATEGORY_NAME]).toBeUndefined();
+              expect(data.records[`${FAVORITES_CATEGORY_NAME}-category1`]).toMatchObject([
                 { property: { name: "field1" } },
                 { property: { name: "field2" } },
               ]);
-              expect(data.records[`${FAVORITES_CATEGORY_NAME}-category2`].length).to.eq(1);
-              expect(data.records[`${FAVORITES_CATEGORY_NAME}-category2`]).to.containSubset([
+              expect(data.records[`${FAVORITES_CATEGORY_NAME}-category2`]).toMatchObject([
                 { property: { name: "field3" } },
               ]);
             } else {
-              expect(data.records[FAVORITES_CATEGORY_NAME].length).to.eq(3);
+              expect(data.records[FAVORITES_CATEGORY_NAME]).toHaveLength(3);
             }
           });
 
@@ -1345,11 +1339,10 @@ describe("PropertyDataProvider", () => {
 
             const data = await provider.getData();
             const records = data.records[category.name];
-            expect(records.length).to.eq(3);
-            expect(records).to.containSubset([
+            expect(records).toMatchObject([
               { property: { displayLabel: "a" } },
-              { property: { displayLabel: "b" } },
               { property: { displayLabel: "c" } },
+              { property: { displayLabel: "b" } },
             ]);
           });
 
@@ -1384,11 +1377,10 @@ describe("PropertyDataProvider", () => {
 
             const data = await provider.getData();
             const records = data.records[category.name];
-            expect(records.length).to.eq(3);
-            expect(records).to.containSubset([
+            expect(records).toMatchObject([
               { property: { displayLabel: "a" } },
-              { property: { displayLabel: "b" } },
               { property: { displayLabel: "c" } },
+              { property: { displayLabel: "b" } },
             ]);
           });
 
@@ -1434,21 +1426,18 @@ describe("PropertyDataProvider", () => {
               provider.getContent = async () => new Content(descriptor, [record]);
 
               const data = await provider.getData();
-              expect(data.categories.length).to.eq(2);
+              expect(data.categories).toHaveLength(2);
 
               if (provider.isNestedPropertyCategoryGroupingEnabled) {
                 const favoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
-                expect(favoritesCategory.childCategories!.length).to.eq(1);
-                expect(favoritesCategory.childCategories).to.containSubset([
+                expect(favoritesCategory.childCategories).toMatchObject([
                   { label: "Parent", childCategories: [{ label: "Child" }] },
                 ]);
-                expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`].length).to.eq(1);
-                expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`]).to.containSubset([
+                expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`]).toMatchObject([
                   { property: { displayLabel: "Primitive" } },
                 ]);
               } else {
-                expect(data.records[FAVORITES_CATEGORY_NAME].length).to.eq(1);
-                expect(data.records[FAVORITES_CATEGORY_NAME]).to.containSubset([
+                expect(data.records[FAVORITES_CATEGORY_NAME]).toMatchObject([
                   { property: { displayLabel: "Primitive" } },
                 ]);
               }
@@ -1536,20 +1525,18 @@ describe("PropertyDataProvider", () => {
               provider.getContent = async () => new Content(descriptor, [record]);
 
               const data = await provider.getData();
-              expect(data.categories.length).to.eq(2);
+              expect(data.categories).toHaveLength(2);
 
               let favoritesCategory: PropertyCategory;
               if (provider.isNestedPropertyCategoryGroupingEnabled) {
                 const rootFavoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
-                expect(rootFavoritesCategory.childCategories!.length).to.eq(1);
-                expect(rootFavoritesCategory.childCategories).to.containSubset([{ label: "My Category" }]);
+                expect(rootFavoritesCategory.childCategories).toMatchObject([{ label: "My Category" }]);
                 favoritesCategory = rootFavoritesCategory.childCategories![0];
               } else {
                 favoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
               }
 
-              expect(data.records[favoritesCategory.name].length).to.eq(2);
-              expect(data.records[favoritesCategory.name]).to.containSubset([
+              expect(data.records[favoritesCategory.name]).toMatchObject([
                 {
                   property: { displayLabel: "Nested Content" },
                   value: {
@@ -1608,20 +1595,19 @@ describe("PropertyDataProvider", () => {
               provider.getContent = async () => new Content(descriptor, [record]);
 
               const data = await provider.getData();
-              expect(data.categories.length).to.eq(2);
+              expect(data.categories).toHaveLength(2);
 
               if (provider.isNestedPropertyCategoryGroupingEnabled) {
                 const favoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
-                expect(favoritesCategory).to.containSubset({
+                expect(favoritesCategory).toMatchObject({
                   childCategories: [{ label: parentCategory.label, childCategories: [{ label: childCategory.label }] }],
                 });
-                expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`].length).to.eq(1);
-                expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`]).to.containSubset([
+                expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`]).toMatchObject([
                   { property: { displayLabel: propertiesField.label } },
                 ]);
               } else {
-                expect(data.records[FAVORITES_CATEGORY_NAME].length).to.eq(1);
-                expect(data.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq(propertiesField.label);
+                expect(data.records[FAVORITES_CATEGORY_NAME]).toHaveLength(1);
+                expect(data.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe(propertiesField.label);
               }
             });
 
@@ -1664,21 +1650,17 @@ describe("PropertyDataProvider", () => {
               provider.getContent = async () => new Content(descriptor, [record]);
 
               const data = await provider.getData();
-              expect(data.categories.length).to.eq(2);
+              expect(data.categories).toHaveLength(2);
 
               if (provider.isNestedPropertyCategoryGroupingEnabled) {
                 const favoritesCategory = data.categories.find((c) => c.name === FAVORITES_CATEGORY_NAME)!;
-                expect(favoritesCategory.childCategories!.length).to.eq(1);
-                expect(favoritesCategory.childCategories).to.containSubset([{ label: "Parent" }]);
-                expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`].length).to.eq(1);
-                expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`]).to.containSubset([
+                expect(favoritesCategory.childCategories).toMatchObject([{ label: "Parent" }]);
+                expect(data.records[`${FAVORITES_CATEGORY_NAME}-${childCategory.name}`]).toMatchObject([
                   { property: { displayLabel: "Nested Content" } },
                 ]);
               } else {
-                expect(data.records[FAVORITES_CATEGORY_NAME].length).to.eq(1);
-                expect(data.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.be.eq(
-                  nestedContentField.label,
-                );
+                expect(data.records[FAVORITES_CATEGORY_NAME]).toHaveLength(1);
+                expect(data.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe(nestedContentField.label);
               }
             });
           });
@@ -1716,15 +1698,15 @@ describe("PropertyDataProvider", () => {
 
           const data = await provider.getData();
           if (provider.isNestedPropertyCategoryGroupingEnabled) {
-            expect(data.categories[0].label).to.eq("aa");
-            expect(data.categories[0].childCategories![0].label).to.eq("a");
-            expect(data.categories[0].childCategories![1].label).to.eq("c");
-            expect(data.categories[1].label).to.eq("bb");
-            expect(data.categories[1].childCategories![0].label).to.eq("b");
+            expect(data.categories[0].label).toBe("aa");
+            expect(data.categories[0].childCategories![0].label).toBe("a");
+            expect(data.categories[0].childCategories![1].label).toBe("c");
+            expect(data.categories[1].label).toBe("bb");
+            expect(data.categories[1].childCategories![0].label).toBe("b");
           } else {
-            expect(data.categories[0].label).to.eq("a");
-            expect(data.categories[1].label).to.eq("b");
-            expect(data.categories[2].label).to.eq("c");
+            expect(data.categories[0].label).toBe("a");
+            expect(data.categories[1].label).toBe("b");
+            expect(data.categories[2].label).toBe("c");
           }
         });
 
@@ -1755,8 +1737,7 @@ describe("PropertyDataProvider", () => {
 
           const data = await provider.getData();
           const records = data.records[category.name];
-          expect(records.length).to.eq(3);
-          expect(records).to.containSubset([
+          expect(records).toMatchObject([
             { property: { displayLabel: "a" } },
             { property: { displayLabel: "b" } },
             { property: { displayLabel: "c" } },
@@ -1773,7 +1754,7 @@ describe("PropertyDataProvider", () => {
           const record = createTestContentItem({ values, displayValues });
           provider.getContent = async () => new Content(descriptor, [record]);
           const data = await provider.getData();
-          expect(data.categories.length).to.eq(0);
+          expect(data.categories).toHaveLength(0);
         });
       });
     }
@@ -1786,7 +1767,7 @@ describe("PropertyDataProvider", () => {
     it("returns empty list when there's no content", async () => {
       provider.getContent = async () => undefined;
       const record = PropertyRecord.fromString("test");
-      expect(await provider.getPropertyRecordInstanceKeys(record)).to.deep.eq([]);
+      expect(await provider.getPropertyRecordInstanceKeys(record)).toEqual([]);
     });
 
     it("returns empty list when record is not made from current content", async () => {
@@ -1801,7 +1782,7 @@ describe("PropertyDataProvider", () => {
           }),
         ]);
       const record = PropertyRecord.fromString("test");
-      expect(await provider.getPropertyRecordInstanceKeys(record)).to.deep.eq([]);
+      expect(await provider.getPropertyRecordInstanceKeys(record)).toEqual([]);
     });
 
     it("returns root level field instance keys", async () => {
@@ -1820,7 +1801,7 @@ describe("PropertyDataProvider", () => {
           ],
         );
       const record = PropertyRecord.fromString("value", "test-field-name");
-      expect(await provider.getPropertyRecordInstanceKeys(record)).to.deep.eq(instanceKeys);
+      expect(await provider.getPropertyRecordInstanceKeys(record)).toEqual(instanceKeys);
     });
 
     it("returns nested field instance keys", async () => {
@@ -1865,7 +1846,7 @@ describe("PropertyDataProvider", () => {
           ],
         );
       const record = PropertyRecord.fromString("", combineFieldNames("nested-field", "root-field"));
-      expect(await provider.getPropertyRecordInstanceKeys(record)).to.deep.eq(instanceKeys);
+      expect(await provider.getPropertyRecordInstanceKeys(record)).toEqual(instanceKeys);
     });
   });
 });

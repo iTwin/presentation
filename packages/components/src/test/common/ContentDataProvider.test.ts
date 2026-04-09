@@ -371,7 +371,7 @@ describe("ContentDataProvider", () => {
         });
 
         const size = await provider.getContentSetSize();
-        expect(size).toBe(1);
+        expect(size).toEqual(1);
         expect(presentationManager.getContentSetSize).not.toHaveBeenCalled();
         expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(
           matchOptions(({ paging }) => paging === undefined),
@@ -439,7 +439,7 @@ describe("ContentDataProvider", () => {
         presentationManager.getContent.mockResolvedValue(content);
 
         const size = await provider.getContentSetSize();
-        expect(size).toBe(content.contentSet.length);
+        expect(size).toEqual(content.contentSet.length);
         expect(presentationManager.getContentSetSize).not.toHaveBeenCalled();
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContent).toHaveBeenCalledExactlyOnceWith(
@@ -537,9 +537,10 @@ describe("ContentDataProvider", () => {
         expect(responses[0], "responses[1] should eq responses[0]").toEqual(responses[1]);
         expect(responses[0], "responses[2] should eq responses[0]").toEqual(responses[2]);
         expect(responses[0], "responses[3] should eq responses[0]").toEqual(responses[3]);
-        expect(responses[0], "responses[0] should eq noPageOptionsResponse").toEqual(
-          new Content(descriptor, noPageOptionsResponse),
-        );
+        expect(
+          responses[0],
+          "responses[0], responses[1], responses[2] and responses[3] should eq noPageOptionsResponse",
+        ).toEqual(new Content(descriptor, noPageOptionsResponse));
         expect(responses[4], "responses[4] should eq noPageStartWithSizeResponse").toEqual(
           new Content(descriptor, noPageStartWithSizeResponse),
         );

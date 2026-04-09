@@ -3,16 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect } from "vitest";
 import { SnapshotDb } from "@itwin/core-backend";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { computeSelection } from "@itwin/unified-selection";
-import { Datasets } from "../util/Datasets";
-import { run } from "../util/TestUtilities";
+import { Datasets } from "../util/Datasets.js";
+import { run } from "../util/TestUtilities.js";
 
 import type { Props } from "@itwin/presentation-shared";
-import type { IModelName } from "../util/Datasets";
-import type { RunOptions } from "../util/TestUtilities";
+import type { IModelName } from "../util/Datasets.js";
+import type { RunOptions } from "../util/TestUtilities.js";
 
 describe("compute", () => {
   runSelectionScopeTest({
@@ -160,7 +160,7 @@ function runSelectionScopeTest(
 
       if (testProps.expectedCounts !== undefined) {
         for (const entry of testProps.expectedCounts) {
-          expect(counts.get(entry.className)?.count).to.be.eq(entry.count);
+          expect(counts.get(entry.className)?.count).toBe(entry.count);
         }
       }
     },

@@ -414,5 +414,12 @@ describe("SelectionStorage", () => {
       selectionStorage.replaceSelection({ imodelKey, source, selectables: [] });
       expect(listenerSpy, "Expected selectionChange.raiseEvent to not be called").not.toHaveBeenCalled();
     });
+
+    it("fires `selectionChange` event with empty `imodelKey` when triggered without an iModel key", () => {
+      const listenerSpy = vi.fn();
+      selectionStorage.selectionChangeEvent.addListener(listenerSpy);
+      selectionStorage.replaceSelection({ source, selectables: baseSelection });
+      expect(listenerSpy).toHaveBeenCalledWith(expect.objectContaining({ imodelKey: "" }), selectionStorage);
+    });
   });
 });

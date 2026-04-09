@@ -284,7 +284,6 @@ describe("useUnifiedSelection", () => {
         expect(Selectables.size(callArgs.selectables)).toBe(1);
         const selectable = callArgs.selectables.custom.get("grouping-node");
         const keys = await collect(selectable!.loadInstanceKeys());
-        expect(keys).toHaveLength(1);
         expect(keys).toMatchObject([instanceKey]);
         expect(selectable?.data).toBe(groupingNode);
       }
@@ -446,7 +445,6 @@ describe("useUnifiedSelection", () => {
         expect(Selectables.size(callArgs.selectables)).toBe(1);
         const selectable = callArgs.selectables.custom.get("grouping-node");
         const keys = await collect(selectable!.loadInstanceKeys());
-        expect(keys).toHaveLength(1);
         expect(keys).toMatchObject([instanceKey]);
         expect(selectable?.data).toBe(groupingNode);
       }

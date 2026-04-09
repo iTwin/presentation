@@ -1,5 +1,19 @@
 # @itwin/unified-selection
 
+## 1.7.0
+
+### Minor Changes
+
+- [#1285](https://github.com/iTwin/presentation/pull/1285): Make `imodelKey` prop optional when calling `SelectionStorage` methods.
+
+  While the package is designed to work with iModels' selection as the first class citizen, it can be used in other contexts as well. In those cases, the `imodelKey` prop is not relevant and should not be required. This change makes it optional and defaults to an empty string when not supplied.
+
+### Patch Changes
+
+- [#1286](https://github.com/iTwin/presentation/pull/1286): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.11
+
 ## 1.6.8
 
 ### Patch Changes

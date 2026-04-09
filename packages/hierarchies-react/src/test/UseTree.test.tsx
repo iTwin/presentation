@@ -987,7 +987,6 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps!.rootNodes).toHaveLength(1);
       expect(treeRenderProps!.rootNodes).toMatchObject([{ id: createNodeId(nodeBefore) }]);
     });
 

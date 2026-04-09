@@ -75,16 +75,16 @@ describe("Viewport withUnifiedSelection", () => {
     };
     vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManagerMock as unknown as SelectionManager);
 
-    expect(selectionChangeEvent.numberOfListeners).to.be.eq(0);
+    expect(selectionChangeEvent.numberOfListeners).toBe(0);
 
     const { unmount } = render(<PresentationViewport imodel={imodel} viewDefinitionId={viewDefinitionId} />);
 
     // new 'ViewportSelectionHandler' should be listening to selection change event
-    expect(selectionChangeEvent.numberOfListeners).to.be.eq(1);
+    expect(selectionChangeEvent.numberOfListeners).toBe(1);
     unmount();
 
     // 'ViewportSelectionHandler' should not be listening to selection change event anymore
-    expect(selectionChangeEvent.numberOfListeners).to.be.eq(0);
+    expect(selectionChangeEvent.numberOfListeners).toBe(0);
   });
 
   it("sets ViewportSelectionHandler.imodel property when rendered with new imodel", () => {
@@ -93,7 +93,7 @@ describe("Viewport withUnifiedSelection", () => {
         <PresentationViewport imodel={imodel} viewDefinitionId={viewDefinitionId} />
       </ViewportSelectionHandlerContextProvider>,
     );
-    expect(selectionHandler.imodel).to.be.eq(imodel);
+    expect(selectionHandler.imodel).toBe(imodel);
 
     const newImodel = {} as IModelConnection;
     rerender(
@@ -101,7 +101,7 @@ describe("Viewport withUnifiedSelection", () => {
         <PresentationViewport imodel={newImodel} viewDefinitionId={viewDefinitionId} />
       </ViewportSelectionHandlerContextProvider>,
     );
-    expect(selectionHandler.imodel).to.be.eq(newImodel);
+    expect(selectionHandler.imodel).toBe(newImodel);
   });
 });
 
@@ -171,7 +171,7 @@ describe("ViewportSelectionHandler", () => {
 
   describe("imodel", () => {
     it("returns imodel handler is created with", () => {
-      expect(handler.imodel).to.eq(imodel);
+      expect(handler.imodel).toBe(imodel);
     });
 
     it("does nothing when setting the same imodel", () => {
@@ -183,7 +183,7 @@ describe("ViewportSelectionHandler", () => {
     it("sets a different imodel", () => {
       const newImodel = { hilited, selectionSet, elements: imodelElements } as unknown as IModelConnection;
       handler.imodel = newImodel;
-      expect(handler.imodel).to.eq(newImodel);
+      expect(handler.imodel).toBe(newImodel);
     });
   });
 

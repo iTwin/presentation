@@ -9,18 +9,16 @@ export default defineConfig({
   test: {
     name: "Shared tests",
     include: ["src/test/**/*.test.ts"],
-    environment: "node",
-    pool: "forks",
+    testTimeout: 60000,
     clearMocks: true,
     restoreMocks: true,
-    testTimeout: 60000,
     env: { NODE_ENV: "development" },
     coverage: {
       provider: "v8",
-      include: ["src/shared/**"],
-      thresholds: { statements: 100, functions: 100, branches: 100, lines: 100 },
-      reporter: ["text-summary", "lcov", "cobertura"],
+      include: ["src/shared/**/*.ts"],
       reportsDirectory: "./lib/test/coverage",
+      reporter: ["text-summary", "lcov", "cobertura"],
+      thresholds: { statements: 100, functions: 100, branches: 100, lines: 100 },
     },
   },
 });

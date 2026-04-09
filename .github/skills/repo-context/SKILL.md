@@ -15,7 +15,7 @@ This is a **pnpm monorepo** orchestrated with **Lage** and versioned with **Chan
 |------|-----------|
 | Language | TypeScript (strict, ES2022, dual CJS/ESM builds) |
 | UI | React 18, iTwinUI components, SCSS |
-| Testing | Mocha + Chai (+ sinon-chai / chai-as-promised) + Sinon |
+| Testing | Vitest |
 | Linting | ESLint 9 (flat config), oxfmt for formatting |
 | Platform | iTwin.js (iModels, ECSQL, Presentation APIs) |
 | Reactive | RxJS |

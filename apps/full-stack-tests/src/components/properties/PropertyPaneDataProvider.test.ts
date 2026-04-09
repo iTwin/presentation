@@ -353,7 +353,6 @@ describe("PropertyDataProvider", async () => {
         valueComparer: (value, property) => {
           assert(value.valueFormat === PropertyValueFormat.Array);
           expect(value.itemsTypeName).toBe("string");
-          expect(value.items).toHaveLength(2);
           expect(value.items).toMatchObject([
             {
               property: { name: combineFieldNames("[*]", property.name), typename: "string" },
@@ -387,7 +386,6 @@ describe("PropertyDataProvider", async () => {
         valueComparer: (value, property) => {
           assert(value.valueFormat === PropertyValueFormat.Array);
           expect(value.itemsTypeName).toBe("TestStruct");
-          expect(value.items).toHaveLength(2);
           expect(value.items).toMatchObject([
             {
               property: { name: combineFieldNames("[*]", property.name), typename: "TestStruct" },
