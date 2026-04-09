@@ -889,10 +889,10 @@ describe("UniquePropertyValuesSelector", () => {
 
   describe("Ruleset creation", () => {
     const getSchemaAndClassNamesFromRuleset = (ruleset: Ruleset) => {
-      expect(ruleset.rules.length).toEqual(1);
+      expect(ruleset.rules).toHaveLength(1);
       const contentRule = ruleset.rules[0] as ContentRule;
 
-      expect(contentRule.specifications.length).toEqual(1);
+      expect(contentRule.specifications).toHaveLength(1);
       const specification = contentRule.specifications[0] as ContentInstancesOfSpecificClassesSpecification;
 
       if (Array.isArray(specification.classes)) {

@@ -65,7 +65,7 @@ describe("models tree", () => {
           abortSignal,
         }),
       };
-      expect(filtering.paths.length).to.eq(50000);
+      expect(filtering.paths).toHaveLength(50000);
       const provider = new StatelessHierarchyProvider({
         imodelAccess,
         getHierarchyFactory: () => new ModelsTreeDefinition({ imodelAccess, idsCache }),

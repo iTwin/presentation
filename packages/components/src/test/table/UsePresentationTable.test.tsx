@@ -179,7 +179,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
-        expect(result.current.rows.length).toEqual(1);
+        expect(result.current.rows).toHaveLength(1);
       });
 
       expect(presentationManager.getContentDescriptor).toHaveBeenCalled();
@@ -248,7 +248,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
-          expect(result.current.rows.length).toEqual(0);
+          expect(result.current.rows).toHaveLength(0);
         });
         setupPresentationManager([createTestECInstanceKey()]);
 
@@ -271,7 +271,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
-          expect(result.current.rows.length).toEqual(1);
+          expect(result.current.rows).toHaveLength(1);
         });
         expect(presentationManager.getContentDescriptor).toHaveBeenCalled();
         expect(presentationManager.getContentDescriptor.mock.lastCall![0].keys.hasAll(keySet)).toBe(true);
@@ -283,7 +283,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
-          expect(result.current.rows.length).toEqual(0);
+          expect(result.current.rows).toHaveLength(0);
         });
         const instanceKey = createTestECInstanceKey();
         setupPresentationManager([instanceKey]);
@@ -297,7 +297,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
-          expect(result.current.rows.length).toEqual(0);
+          expect(result.current.rows).toHaveLength(0);
           expect(presentationManager.getContentDescriptor).not.toHaveBeenCalled();
         });
       });
@@ -322,7 +322,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const resultAfterLoading = result.current.selectedRows;
-          expect(resultAfterLoading.length).toEqual(1);
+          expect(resultAfterLoading).toHaveLength(1);
         });
       });
 
@@ -348,7 +348,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).toEqual(1);
+          expect(selectedRowsAfterLoading).toHaveLength(1);
         });
 
         act(() => {
@@ -358,7 +358,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterAdding = result.current.selectedRows;
-          expect(selectedRowsAfterAdding.length).toEqual(2);
+          expect(selectedRowsAfterAdding).toHaveLength(2);
         });
       });
 
@@ -384,7 +384,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).toEqual(1);
+          expect(selectedRowsAfterLoading).toHaveLength(1);
           expect(selectedRowsAfterLoading[0].key).toEqual(JSON.stringify(instanceKey1));
         });
 
@@ -395,7 +395,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterReplacing = result.current.selectedRows;
-          expect(selectedRowsAfterReplacing.length).toEqual(1);
+          expect(selectedRowsAfterReplacing).toHaveLength(1);
           expect(selectedRowsAfterReplacing[0].key).toEqual(JSON.stringify(instanceKey2));
         });
       });
@@ -421,7 +421,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).toEqual(2);
+          expect(selectedRowsAfterLoading).toHaveLength(2);
         });
 
         act(() => {
@@ -431,7 +431,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterRemoving = result.current.selectedRows;
-          expect(selectedRowsAfterRemoving.length).toEqual(1);
+          expect(selectedRowsAfterRemoving).toHaveLength(1);
           expect(selectedRowsAfterRemoving[0].key).toEqual(JSON.stringify(instanceKey2));
         });
       });
@@ -457,7 +457,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).toEqual(2);
+          expect(selectedRowsAfterLoading).toHaveLength(2);
         });
 
         act(() => {
@@ -467,7 +467,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterClearing = result.current.selectedRows;
-          expect(selectedRowsAfterClearing.length).toEqual(0);
+          expect(selectedRowsAfterClearing).toHaveLength(0);
         });
       });
 
@@ -519,7 +519,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterAdding = result.current.selectedRows;
-          expect(selectedRowsAfterAdding.length).toEqual(0);
+          expect(selectedRowsAfterAdding).toHaveLength(0);
         });
       });
     });
@@ -585,7 +585,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
-          expect(result.current.rows.length).toEqual(0);
+          expect(result.current.rows).toHaveLength(0);
         });
         setupPresentationManager([createTestECInstanceKey()]);
 
@@ -605,7 +605,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
-          expect(result.current.rows.length).toEqual(1);
+          expect(result.current.rows).toHaveLength(1);
         });
         expect(presentationManager.getContentDescriptor).toHaveBeenCalled();
         expect(presentationManager.getContentDescriptor.mock.lastCall![0].keys.hasAll(selectablesInstanceKeys)).toBe(true);
@@ -617,7 +617,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
-          expect(result.current.rows.length).toEqual(0);
+          expect(result.current.rows).toHaveLength(0);
         });
         const instanceKey = createTestECInstanceKey();
         setupPresentationManager([instanceKey]);
@@ -630,7 +630,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         });
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
-          expect(result.current.rows.length).toEqual(0);
+          expect(result.current.rows).toHaveLength(0);
           expect(presentationManager.getContentDescriptor).not.toHaveBeenCalled();
         });
       });
@@ -653,7 +653,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const resultAfterLoading = result.current.selectedRows;
-          expect(resultAfterLoading.length).toEqual(1);
+          expect(resultAfterLoading).toHaveLength(1);
         });
       });
 
@@ -676,7 +676,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).toEqual(1);
+          expect(selectedRowsAfterLoading).toHaveLength(1);
         });
 
         act(() => {
@@ -685,7 +685,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterAdding = result.current.selectedRows;
-          expect(selectedRowsAfterAdding.length).toEqual(2);
+          expect(selectedRowsAfterAdding).toHaveLength(2);
         });
       });
 
@@ -708,7 +708,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).toEqual(1);
+          expect(selectedRowsAfterLoading).toHaveLength(1);
           expect(selectedRowsAfterLoading[0].key).toEqual(JSON.stringify(instanceKey1));
         });
 
@@ -718,7 +718,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterReplacing = result.current.selectedRows;
-          expect(selectedRowsAfterReplacing.length).toEqual(1);
+          expect(selectedRowsAfterReplacing).toHaveLength(1);
           expect(selectedRowsAfterReplacing[0].key).toEqual(JSON.stringify(instanceKey2));
         });
       });
@@ -741,7 +741,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).toEqual(2);
+          expect(selectedRowsAfterLoading).toHaveLength(2);
         });
 
         act(() => {
@@ -750,7 +750,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterRemoving = result.current.selectedRows;
-          expect(selectedRowsAfterRemoving.length).toEqual(1);
+          expect(selectedRowsAfterRemoving).toHaveLength(1);
           expect(selectedRowsAfterRemoving[0].key).toEqual(JSON.stringify(instanceKey2));
         });
       });
@@ -773,7 +773,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterLoading = result.current.selectedRows;
-          expect(selectedRowsAfterLoading.length).toEqual(2);
+          expect(selectedRowsAfterLoading).toHaveLength(2);
         });
 
         act(() => {
@@ -782,7 +782,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterClearing = result.current.selectedRows;
-          expect(selectedRowsAfterClearing.length).toEqual(0);
+          expect(selectedRowsAfterClearing).toHaveLength(0);
         });
       });
 
@@ -828,7 +828,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         await waitFor(() => {
           expect(result.current.isLoading).toBe(false);
           const selectedRowsAfterAdding = result.current.selectedRows;
-          expect(selectedRowsAfterAdding.length).toEqual(0);
+          expect(selectedRowsAfterAdding).toHaveLength(0);
         });
       });
     });
