@@ -58,9 +58,10 @@ export function useUnifiedTreeSelection({
   getTreeModelNode,
   createSelectableForGenericNode,
 }: UseUnifiedTreeSelectionProps & { getTreeModelNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined }): TreeSelectionOptions {
+  /* v8 ignore next -- @preserve */
   const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
-    isNodeSelected: /* v8 ignore next */ () => false,
-    selectNodes: /* v8 ignore next */ () => {},
+    isNodeSelected: () => false,
+    selectNodes: () => {},
   }));
 
   const deprecatedSelectionStorage = useUnifiedSelectionStorage();

@@ -137,12 +137,11 @@ export class IModelSelectionHandler {
         return [props.imodelHiliteSetProvider, () => {}];
       }
 
+      /* eslint-disable @typescript-eslint/no-deprecated */
       /* v8 ignore else -- @preserve */
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
       if (props.cachingHiliteSetProvider) {
         return [
           createIModelHiliteSetProviderFromCachingProvider(
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
             props.cachingHiliteSetProvider,
             props.hiliteSetProvider ?? createHiliteSetProvider({ imodelAccess: props.imodelAccess }),
           ),
@@ -151,6 +150,8 @@ export class IModelSelectionHandler {
           () => {},
         ];
       }
+      /* eslint-enable @typescript-eslint/no-deprecated */
+
       /* v8 ignore start */
       const internalProvider = createIModelHiliteSetProvider({
         selectionStorage: this._selectionStorage,
