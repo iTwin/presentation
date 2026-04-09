@@ -15,19 +15,13 @@ export default defineConfig({
       targets: [
         {
           // copy assets from `@itwin` dependencies
-          src: "./node_modules/@itwin/*/lib/public/*",
+          src: "./node_modules/@itwin/*/lib/public",
           dest: ".",
+          rename: { stripBase: 5 },
         },
       ],
     }),
   ],
-  css: {
-    preprocessorOptions: {
-      scss: {
-        api: "modern-compiler",
-      },
-    },
-  },
   server: {
     port: 3000,
     strictPort: true,

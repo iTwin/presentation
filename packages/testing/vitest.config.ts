@@ -6,9 +6,6 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  esbuild: {
-    target: "esnext",
-  },
   test: {
     name: "Testing tests",
     environment: "happy-dom",
