@@ -7,11 +7,11 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
+    name: "Testing tests",
     environment: "happy-dom",
     include: ["src/test/**/*.test.ts"],
     testTimeout: 60000,
     slowTestThreshold: 500,
-    pool: "forks",
     restoreMocks: true,
     mockReset: true,
     css: false,
@@ -29,9 +29,9 @@ export default defineConfig({
     },
     coverage: {
       provider: "v8",
-      include: ["src/presentation-testing/**/*"],
-      reporter: ["text-summary", "lcov", "cobertura"],
+      include: ["src/presentation-testing/**/*.{ts,tsx}"],
       reportsDirectory: "./lib/test/coverage",
+      reporter: ["text-summary", "lcov", "cobertura"],
       thresholds: {
         statements: 100,
         functions: 100,

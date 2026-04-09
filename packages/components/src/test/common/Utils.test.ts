@@ -29,17 +29,17 @@ describe("Utils", () => {
     it("returns displayName property value, if set", () => {
       const displayName = "Test Display Name";
       (TestComponent as any).displayName = displayName;
-      expect(getDisplayName(TestComponent)).to.eq(displayName);
+      expect(getDisplayName(TestComponent)).toBe(displayName);
     });
 
     it("returns name property value, if set", () => {
       const displayName = "Test Display Name";
       Object.defineProperty(TestComponent, "name", { value: displayName });
-      expect(getDisplayName(TestComponent)).to.eq(displayName);
+      expect(getDisplayName(TestComponent)).toBe(displayName);
     });
 
     it("returns 'Component' if neither displayName nor name properties are set", () => {
-      expect(getDisplayName(TestComponent)).to.eq("Component");
+      expect(getDisplayName(TestComponent)).toBe("Component");
     });
   });
 
@@ -47,7 +47,7 @@ describe("Utils", () => {
     it("returns undefined for invalid name", () => {
       const descriptor = createTestContentDescriptor({ fields: [] });
       const result = findField(descriptor, "doesn't exist");
-      expect(result).to.be.undefined;
+      expect(result).toBeUndefined();
     });
 
     it("returns undefined for invalid name when there are nested fields", () => {
@@ -57,14 +57,14 @@ describe("Utils", () => {
       const nestingField = createTestNestedContentField({ nestedFields: [nestedField] });
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
       const result = findField(descriptor, combineFieldNames(nestedField.name, "doesn't exist"));
-      expect(result).to.be.undefined;
+      expect(result).toBeUndefined();
     });
 
     it("returns undefined for field of invalid type", () => {
       const invalidParentField = createTestPropertiesContentField({ name: "parent field", properties: [] });
       const descriptor = createTestContentDescriptor({ fields: [invalidParentField] });
       const result = findField(descriptor, combineFieldNames("child field", invalidParentField.name));
-      expect(result).to.be.undefined;
+      expect(result).toBeUndefined();
     });
 
     it("finds field in Descriptor.fields list", () => {
@@ -73,7 +73,7 @@ describe("Utils", () => {
       });
       const field = descriptor.fields[0];
       const result = findField(descriptor, field.name);
-      expect(result).to.eq(field);
+      expect(result).toBe(field);
     });
 
     it("finds nested field", () => {
@@ -83,7 +83,7 @@ describe("Utils", () => {
       const nestingField = createTestNestedContentField({ nestedFields: [nestedField] });
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
       const result = findField(descriptor, combineFieldNames(nestedField.name, nestingField.name));
-      expect(result!.name).to.eq(nestedField.name);
+      expect(result!.name).toBe(nestedField.name);
     });
 
     it("finds array item field", () => {
@@ -91,7 +91,7 @@ describe("Utils", () => {
       const arrayField = createTestPropertiesContentField({ itemsField, properties: [] });
       const descriptor = createTestContentDescriptor({ fields: [arrayField] });
       const result = findField(descriptor, combineFieldNames(itemsField.name, arrayField.name));
-      expect(result!.name).to.eq(itemsField.name);
+      expect(result!.name).toBe(itemsField.name);
     });
 
     it("finds struct member field", () => {
@@ -99,18 +99,18 @@ describe("Utils", () => {
       const structField = createTestPropertiesContentField({ memberFields: [memberField], properties: [] });
       const descriptor = createTestContentDescriptor({ fields: [structField] });
       const result = findField(descriptor, combineFieldNames(memberField.name, structField.name));
-      expect(result!.name).to.eq(memberField.name);
+      expect(result!.name).toBe(memberField.name);
     });
   });
 
   describe("createLabelRecord", () => {
     const validateCompositeValue = (actual: Primitives.Composite, expected: LabelCompositeValue) => {
-      expect(actual.separator).to.be.eq(expected.separator);
-      expect(actual.parts.length).to.be.eq(expected.values.length);
+      expect(actual.separator).toBe(expected.separator);
+      expect(actual.parts).toHaveLength(expected.values.length);
       for (let i = 0; i < actual.parts.length; i++) {
-        expect(actual.parts[i].displayValue).to.be.eq(expected.values[i].displayValue);
-        expect(actual.parts[i].rawValue).to.be.eq(expected.values[i].rawValue);
-        expect(actual.parts[i].typeName).to.be.eq(expected.values[i].typeName);
+        expect(actual.parts[i].displayValue).toBe(expected.values[i].displayValue);
+        expect(actual.parts[i].rawValue).toBe(expected.values[i].rawValue);
+        expect(actual.parts[i].typeName).toBe(expected.values[i].typeName);
       }
     };
 
@@ -118,9 +118,9 @@ describe("Utils", () => {
       const definition = createTestLabelDefinition();
       const record = createLabelRecord(definition, "test");
       const primitiveValue = record.value as PrimitiveValue;
-      expect(primitiveValue.value).to.be.eq(definition.rawValue);
-      expect(primitiveValue.displayValue).to.be.eq(definition.displayValue);
-      expect(record.property.typename).to.be.eq(definition.typeName);
+      expect(primitiveValue.value).toBe(definition.rawValue);
+      expect(primitiveValue.displayValue).toBe(definition.displayValue);
+      expect(record.property.typename).toBe(definition.typeName);
     });
 
     it("creates PropertyRecord for label with composite value", () => {
@@ -128,8 +128,8 @@ describe("Utils", () => {
       const record = createLabelRecord(definition, "test");
       const primitiveValue = record.value as PrimitiveValue;
       validateCompositeValue(primitiveValue.value as Primitives.Composite, definition.rawValue as LabelCompositeValue);
-      expect(primitiveValue.displayValue).to.be.eq(definition.displayValue);
-      expect(record.property.typename).to.be.eq(definition.typeName);
+      expect(primitiveValue.displayValue).toBe(definition.displayValue);
+      expect(record.property.typename).toBe(definition.typeName);
     });
   });
 });
@@ -137,43 +137,43 @@ describe("Utils", () => {
 describe("AsyncTasksTracker", () => {
   it("tracks async task while it's disposed", () => {
     const tracker = new AsyncTasksTracker();
-    expect(tracker.pendingAsyncs.size).to.eq(0);
+    expect(tracker.pendingAsyncs.size).toBe(0);
     {
       using _res = tracker.trackAsyncTask();
-      expect(tracker.pendingAsyncs.size).to.eq(1);
+      expect(tracker.pendingAsyncs.size).toBe(1);
     }
-    expect(tracker.pendingAsyncs.size).to.eq(0);
+    expect(tracker.pendingAsyncs.size).toBe(0);
   });
 
   it("supports nesting", () => {
     const tracker = new AsyncTasksTracker();
     {
       using _r1 = tracker.trackAsyncTask();
-      expect(tracker.pendingAsyncs.size).to.eq(1);
+      expect(tracker.pendingAsyncs.size).toBe(1);
       {
         using _r2 = tracker.trackAsyncTask();
-        expect(tracker.pendingAsyncs.size).to.eq(2);
+        expect(tracker.pendingAsyncs.size).toBe(2);
       }
-      expect(tracker.pendingAsyncs.size).to.eq(1);
+      expect(tracker.pendingAsyncs.size).toBe(1);
     }
-    expect(tracker.pendingAsyncs.size).to.eq(0);
+    expect(tracker.pendingAsyncs.size).toBe(0);
   });
 });
 
 describe("deserializeUniqueValues", () => {
   it("returns undefined for non serialized numeric string values", () => {
     const deserialized = deserializeUniqueValues("50", "50");
-    expect(deserialized).to.be.undefined;
+    expect(deserialized).toBeUndefined();
   });
 
   it("returns undefined for non serialized string values", () => {
     const deserialized = deserializeUniqueValues("some value", "some value");
-    expect(deserialized).to.be.undefined;
+    expect(deserialized).toBeUndefined();
   });
 
   it("returns undefined if display value count does not match raw values count", () => {
     const deserialized = deserializeUniqueValues(`[1, 2]`, `{"1": [1], "2": [2]}`);
-    expect(deserialized).to.have.lengthOf(2);
-    expect(deserializeUniqueValues(`[1, 2]`, `{"1": [1]}`)).to.be.undefined;
+    expect(deserialized).toHaveLength(2);
+    expect(deserializeUniqueValues(`[1, 2]`, `{"1": [1]}`)).toBeUndefined();
   });
 });

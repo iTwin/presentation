@@ -24,7 +24,7 @@ describe("RulesetRegistrationHelper", () => {
   it("does nothing when helper is created with ruleset id", () => {
     const rulesetId = "test";
     using registration = new RulesetRegistrationHelper(rulesetId);
-    expect(registration.rulesetId).to.eq(rulesetId);
+    expect(registration.rulesetId).toBe(rulesetId);
     expect(rulesetManager.add).not.toHaveBeenCalled();
   });
 
@@ -35,7 +35,7 @@ describe("RulesetRegistrationHelper", () => {
     {
       using registration = new RulesetRegistrationHelper(ruleset);
       await BeDuration.wait(0); // handle the floating promise
-      expect(registration.rulesetId).to.eq(ruleset.id);
+      expect(registration.rulesetId).toBe(ruleset.id);
       expect(rulesetManager.add).toHaveBeenCalledWith(ruleset);
     }
     expect(disposeSpy).toHaveBeenCalledOnce();
@@ -48,7 +48,7 @@ describe("RulesetRegistrationHelper", () => {
     {
       using registration = new RulesetRegistrationHelper(ruleset);
       await BeDuration.wait(0); // handle the floating promise
-      expect(registration.rulesetId).to.eq(ruleset.id);
+      expect(registration.rulesetId).toBe(ruleset.id);
       expect(rulesetManager.add).toHaveBeenCalledWith(ruleset.toJSON());
     }
     expect(disposeSpy).toHaveBeenCalledOnce();
@@ -62,7 +62,7 @@ describe("RulesetRegistrationHelper", () => {
     rulesetManager.add.mockReturnValue(result);
     {
       using registration = new RulesetRegistrationHelper(ruleset);
-      expect(registration.rulesetId).to.eq(ruleset.id);
+      expect(registration.rulesetId).toBe(ruleset.id);
       expect(rulesetManager.add).toHaveBeenCalledWith(ruleset);
     }
     expect(disposeSpy).not.toHaveBeenCalled();

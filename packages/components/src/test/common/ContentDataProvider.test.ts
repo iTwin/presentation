@@ -113,51 +113,51 @@ describe("ContentDataProvider", () => {
     it("sets display type", () => {
       const type = "new_display_type";
       const p = new Provider({ imodel, ruleset: rulesetId, displayType: type });
-      expect(p.displayType).to.eq(type);
+      expect(p.displayType).toBe(type);
     });
 
     it("sets paging size", () => {
       const pagingSize = 50;
       const p = new Provider({ imodel, ruleset: rulesetId, displayType, pagingSize });
-      expect(p.pagingSize).to.be.eq(pagingSize);
+      expect(p.pagingSize).toBe(pagingSize);
     });
   });
 
   describe("rulesetId", () => {
     it("returns rulesetId provider is initialized with", () => {
-      expect(provider.rulesetId).to.eq(rulesetId);
+      expect(provider.rulesetId).toBe(rulesetId);
     });
 
     it("sets a different rulesetId and clears caches", () => {
       const newId = `${rulesetId} (changed)`;
       provider.rulesetId = newId;
-      expect(provider.rulesetId).to.eq(newId);
+      expect(provider.rulesetId).toBe(newId);
       expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith(CacheInvalidationProps.full());
     });
 
     it("doesn't clear caches if setting to the same rulesetId", () => {
       const newId = `${rulesetId}`;
       provider.rulesetId = newId;
-      expect(provider.rulesetId).to.eq(newId);
+      expect(provider.rulesetId).toBe(newId);
       expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
   });
 
   describe("imodel", () => {
     it("returns imodel provider is initialized with", () => {
-      expect(provider.imodel).to.eq(imodel);
+      expect(provider.imodel).toBe(imodel);
     });
 
     it("sets a different imodel and clears caches", () => {
       const newConnection = {} as IModelConnection;
       provider.imodel = newConnection;
-      expect(provider.imodel).to.eq(newConnection);
+      expect(provider.imodel).toBe(newConnection);
       expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith(CacheInvalidationProps.full());
     });
 
     it("doesn't clear caches if setting to the same imodel", () => {
       provider.imodel = imodel;
-      expect(provider.imodel).to.eq(imodel);
+      expect(provider.imodel).toBe(imodel);
       expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
   });
@@ -166,23 +166,23 @@ describe("ContentDataProvider", () => {
     it("sets a different selectionInfo and clears caches", () => {
       const info1: SelectionInfo = { providerName: "a" };
       provider.selectionInfo = info1;
-      expect(provider.selectionInfo).to.eq(info1);
+      expect(provider.selectionInfo).toBe(info1);
       invalidateCacheSpy.mockClear();
 
       const info2: SelectionInfo = { providerName: "b" };
       provider.selectionInfo = info2;
-      expect(provider.selectionInfo).to.eq(info2);
+      expect(provider.selectionInfo).toBe(info2);
       expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith(CacheInvalidationProps.full());
     });
 
     it("doesn't clear caches if setting to the same selectionInfo", () => {
       const info1: SelectionInfo = { providerName: "a" };
       provider.selectionInfo = info1;
-      expect(provider.selectionInfo).to.eq(info1);
+      expect(provider.selectionInfo).toBe(info1);
       invalidateCacheSpy.mockClear();
 
       provider.selectionInfo = info1;
-      expect(provider.selectionInfo).to.eq(info1);
+      expect(provider.selectionInfo).toBe(info1);
       expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
   });
@@ -191,7 +191,7 @@ describe("ContentDataProvider", () => {
     it("sets keys and clears caches", () => {
       const keys = new KeySet([createTestECInstanceKey()]);
       provider.keys = keys;
-      expect(provider.keys).to.eq(keys);
+      expect(provider.keys).toBe(keys);
       expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith(CacheInvalidationProps.full());
     });
 
@@ -232,8 +232,8 @@ describe("ContentDataProvider", () => {
           (options) => options.imodel === imodel && options.rulesetOrId === rulesetId && options.displayType === displayType && options.selection === selection,
         ),
       );
-      expect(descriptor).to.not.eq(result);
-      expect(descriptor).to.deep.eq(result);
+      expect(descriptor).not.toBe(result);
+      expect(descriptor).toEqual(result);
     });
 
     it("requests presentation manager for descriptor when keyset is empty and `shouldRequestContentForEmptyKeyset()` returns `true`", async () => {
@@ -242,7 +242,7 @@ describe("ContentDataProvider", () => {
       presentationManager.getContentDescriptor.mockResolvedValue(undefined);
       const descriptor = await provider.getContentDescriptor();
       expect(presentationManager.getContentDescriptor).toHaveBeenCalled();
-      expect(descriptor).to.be.undefined;
+      expect(descriptor).toBeUndefined();
     });
 
     it("doesn't request presentation manager for descriptor when keyset is empty and `shouldRequestContentForEmptyKeyset()` returns `false`", async () => {
@@ -250,13 +250,13 @@ describe("ContentDataProvider", () => {
       presentationManager.getContentDescriptor.mockResolvedValue(undefined);
       const descriptor = await provider.getContentDescriptor();
       expect(presentationManager.getContentDescriptor).not.toHaveBeenCalled();
-      expect(descriptor).to.be.undefined;
+      expect(descriptor).toBeUndefined();
     });
 
     it("handles undefined descriptor returned by presentation manager", async () => {
       presentationManager.getContentDescriptor.mockResolvedValue(undefined);
       const descriptor = await provider.getContentDescriptor();
-      expect(descriptor).to.be.undefined;
+      expect(descriptor).toBeUndefined();
     });
 
     it("memoizes result", async () => {
@@ -267,7 +267,7 @@ describe("ContentDataProvider", () => {
       const result = createTestContentDescriptor({ fields: [] });
       resultPromiseContainer.resolveSync(result);
       const descriptors = await Promise.all(requests);
-      descriptors.forEach((descriptor) => expect(descriptor).to.deep.eq(result));
+      descriptors.forEach((descriptor) => expect(descriptor).toEqual(result));
       expect(presentationManager.getContentDescriptor).toHaveBeenCalledOnce();
     });
   });
@@ -281,7 +281,7 @@ describe("ContentDataProvider", () => {
       presentationManager.getContentDescriptor.mockResolvedValue(undefined);
       const size = await provider.getContentSetSize();
       expect(presentationManager.getContentSetSize).not.toHaveBeenCalled();
-      expect(size).to.eq(0);
+      expect(size).toBe(0);
     });
 
     describe("when `getContentIterator` is available", () => {
@@ -293,7 +293,7 @@ describe("ContentDataProvider", () => {
         const contentAndContentSize = { total: 2, descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([]) };
         result.resolveSync(contentAndContentSize);
         const size = await provider.getContentSetSize();
-        expect(size).to.eq(contentAndContentSize.total);
+        expect(size).toBe(contentAndContentSize.total);
         expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
       });
 
@@ -305,7 +305,7 @@ describe("ContentDataProvider", () => {
         const result = { descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([]), total: 2 };
         resultPromiseContainer.resolveSync(result);
         const sizes = await Promise.all(requests);
-        sizes.forEach((size) => expect(size).to.eq(result.total));
+        sizes.forEach((size) => expect(size).toBe(result.total));
         expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
       });
 
@@ -318,7 +318,7 @@ describe("ContentDataProvider", () => {
         const result = { descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([]), total: 2 };
         resultPromiseContainer.resolveSync(result);
         const size = await provider.getContentSetSize();
-        expect(size).to.eq(result.total);
+        expect(size).toBe(result.total);
         expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(
           matchOptions(({ paging }) => paging?.start === 0 && paging.size === pagingSize),
         );
@@ -333,7 +333,7 @@ describe("ContentDataProvider", () => {
         });
 
         const size = await provider.getContentSetSize();
-        expect(size).to.equal(1);
+        expect(size).toEqual(1);
         expect(presentationManager.getContentSetSize).not.toHaveBeenCalled();
         expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging === undefined));
       });
@@ -349,7 +349,7 @@ describe("ContentDataProvider", () => {
         presentationManager.getContentAndSize.mockResolvedValue({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 });
         provider.pagingSize = 10;
         const size = await provider.getContentSetSize();
-        expect(size).to.eq(2);
+        expect(size).toBe(2);
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
       });
@@ -363,7 +363,7 @@ describe("ContentDataProvider", () => {
         const result = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 };
         resultPromiseContainer.resolveSync(result);
         const sizes = await Promise.all(requests);
-        sizes.forEach((size) => expect(size).to.eq(result.size));
+        sizes.forEach((size) => expect(size).toBe(result.size));
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
       });
@@ -378,7 +378,7 @@ describe("ContentDataProvider", () => {
         const result = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 };
         resultPromiseContainer.resolveSync(result);
         const size = await provider.getContentSetSize();
-        expect(size).to.eq(result.size);
+        expect(size).toBe(result.size);
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(
           matchOptions(({ paging }) => paging?.start === 0 && paging.size === pagingSize),
@@ -392,7 +392,7 @@ describe("ContentDataProvider", () => {
         presentationManager.getContent.mockResolvedValue(content);
 
         const size = await provider.getContentSetSize();
-        expect(size).to.equal(content.contentSet.length);
+        expect(size).toEqual(content.contentSet.length);
         expect(presentationManager.getContentSetSize).not.toHaveBeenCalled();
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContent).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging === undefined));
@@ -409,7 +409,7 @@ describe("ContentDataProvider", () => {
       it("returns undefined when manager returns undefined content", async () => {
         presentationManager.getContentIterator.mockResolvedValue(undefined);
         const c = await provider.getContent();
-        expect(c).to.be.undefined;
+        expect(c).toBeUndefined();
       });
 
       it("requests presentation manager for content", async () => {
@@ -423,7 +423,7 @@ describe("ContentDataProvider", () => {
         presentationManager.getContentIterator.mockResolvedValue(result);
         const c = await provider.getContent({ start: 0, size: 10 });
         expect(presentationManager.getContentIterator).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
-        expect(c).to.deep.eq(new Content(result.descriptor, []));
+        expect(c).toEqual(new Content(result.descriptor, []));
       });
 
       it("memoizes result", async () => {
@@ -467,18 +467,16 @@ describe("ContentDataProvider", () => {
         resultWithPageStart.resolveSync({ total: 1, descriptor, items: createAsyncIterator(withPageStartResponse) });
         const responses = await Promise.all(requests);
 
-        expect(responses[0])
-          .to.deep.eq(responses[1], "responses[1] should eq responses[0]")
-          .to.deep.eq(responses[2], "responses[2] should eq responses[0]")
-          .to.deep.eq(responses[3], "responses[3] should eq responses[0]")
-          .to.deep.eq(
-            new Content(descriptor, noPageOptionsResponse),
-            "responses[0], responses[1], responses[2] and responses[3] should eq noPageOptionsResponse",
-          );
-        expect(responses[4]).to.deep.eq(new Content(descriptor, noPageStartWithSizeResponse), "responses[4] should eq noPageStartWithSizeResponse");
-        expect(responses[5]).to.deep.eq(new Content(descriptor, withPageStartResponse), "responses[5] should eq withPageStartResponse");
+        expect(responses[0], "responses[1] should eq responses[0]").toEqual(responses[1]);
+        expect(responses[0], "responses[2] should eq responses[0]").toEqual(responses[2]);
+        expect(responses[0], "responses[3] should eq responses[0]").toEqual(responses[3]);
+        expect(responses[0], "responses[0], responses[1], responses[2] and responses[3] should eq noPageOptionsResponse").toEqual(
+          new Content(descriptor, noPageOptionsResponse),
+        );
+        expect(responses[4], "responses[4] should eq noPageStartWithSizeResponse").toEqual(new Content(descriptor, noPageStartWithSizeResponse));
+        expect(responses[5], "responses[5] should eq withPageStartResponse").toEqual(new Content(descriptor, withPageStartResponse));
 
-        expect(presentationManager.getContentIterator).to.be.calledThrice;
+        expect(presentationManager.getContentIterator).toHaveBeenCalledTimes(3);
         expect(presentationManager.getContentIterator).toHaveBeenCalledWith(matchOptions(({ paging }) => paging === undefined));
         expect(presentationManager.getContentIterator).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 1 && paging.size === 0));
         expect(presentationManager.getContentIterator).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 1));
@@ -502,7 +500,7 @@ describe("ContentDataProvider", () => {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         presentationManager.getContent.mockResolvedValue(undefined);
         const c = await provider.getContent();
-        expect(c).to.be.undefined;
+        expect(c).toBeUndefined();
       });
 
       it("requests presentation manager for content", async () => {
@@ -517,7 +515,7 @@ describe("ContentDataProvider", () => {
         const c = await provider.getContent({ start: 0, size: 10 });
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContentAndSize).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
-        expect(c).to.deep.eq(result.content);
+        expect(c).toEqual(result.content);
       });
 
       it("memoizes result", async () => {
@@ -564,16 +562,15 @@ describe("ContentDataProvider", () => {
         resultContentNonFirstPagePromise.resolveSync(nonPagedContentStartingAt1Response);
         const responses = await Promise.all(requests);
 
-        expect(responses[0])
-          .to.deep.eq(responses[1], "responses[1] should eq responses[0]")
-          .to.deep.eq(responses[2], "responses[2] should eq responses[0]")
-          .to.deep.eq(responses[3], "responses[3] should eq responses[0]")
-          .to.deep.eq(
-            nonPagedContentStartingAt0Response,
-            "responses[0], responses[1], responses[2] and responses[3] should eq nonPagedContentStartingAt0Response",
-          );
-        expect(responses[4]).to.deep.eq(pagedContentAndSizeResponse.content, "responses[4] should eq pagedContentAndSizeResponse.content");
-        expect(responses[5]).to.deep.eq(nonPagedContentStartingAt1Response, "responses[5] should eq nonPagedContentStartingAt1Response");
+        expect(responses[0], "responses[1] should eq responses[0]").toEqual(responses[1]);
+        expect(responses[0], "responses[2] should eq responses[0]").toEqual(responses[2]);
+        expect(responses[0], "responses[3] should eq responses[0]").toEqual(responses[3]);
+
+        expect(responses[0], "responses[0], responses[1], responses[2] and responses[3] should eq nonPagedContentStartingAt0Response").toEqual(
+          nonPagedContentStartingAt0Response,
+        );
+        expect(responses[4], "responses[4] should eq pagedContentAndSizeResponse.content").toEqual(pagedContentAndSizeResponse.content);
+        expect(responses[5], "responses[5] should eq nonPagedContentStartingAt1Response").toEqual(nonPagedContentStartingAt1Response);
 
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContent).toHaveBeenCalledTimes(2);
@@ -627,7 +624,7 @@ describe("ContentDataProvider", () => {
       const actualField = await provider.getFieldByPropertyRecord(record);
 
       expect(provider.getFieldByPropertyDescription).toHaveBeenCalledExactlyOnceWith(record.property);
-      expect(actualField).to.eq(field);
+      expect(actualField).toBe(field);
     });
   });
 
@@ -652,7 +649,7 @@ describe("ContentDataProvider", () => {
 
       const field = await provider.getFieldByPropertyDescription(propertyDescription);
       expect(presentationManager.getContentDescriptor).toHaveBeenCalledOnce();
-      expect(field).to.be.undefined;
+      expect(field).toBeUndefined();
     });
 
     it("return undefined when field is not found", async () => {
@@ -661,7 +658,7 @@ describe("ContentDataProvider", () => {
 
       const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
       expect(presentationManager.getContentDescriptor).toHaveBeenCalledOnce();
-      expect(resultField).to.be.undefined;
+      expect(resultField).toBeUndefined();
     });
 
     it("return a field", async () => {
@@ -680,7 +677,7 @@ describe("ContentDataProvider", () => {
 
       const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
       expect(presentationManager.getContentDescriptor).toHaveBeenCalledOnce();
-      expect(resultField).to.eq(field);
+      expect(resultField).toBe(field);
     });
 
     it("return a nested field", async () => {
@@ -696,7 +693,7 @@ describe("ContentDataProvider", () => {
 
       const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
       expect(presentationManager.getContentDescriptor).toHaveBeenCalledOnce();
-      expect(resultField).to.eq(nestedField);
+      expect(resultField).toBe(nestedField);
     });
 
     it("return a struct member field", async () => {
@@ -741,7 +738,7 @@ describe("ContentDataProvider", () => {
 
       const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
       expect(presentationManager.getContentDescriptor).toHaveBeenCalledOnce();
-      expect(resultField).to.eq(memberField);
+      expect(resultField).toBe(memberField);
     });
 
     it("return an array item field", async () => {
@@ -780,7 +777,7 @@ describe("ContentDataProvider", () => {
 
       const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
       expect(presentationManager.getContentDescriptor).toHaveBeenCalledOnce();
-      expect(resultField).to.eq(itemsField);
+      expect(resultField).toBe(itemsField);
     });
   });
 

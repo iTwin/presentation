@@ -171,7 +171,7 @@ describe("Hierarchies", () => {
       });
       it("creates expected hierarchy", async () => {
         await main();
-        expect(logStub.mock.calls.length).toBe(4);
+        expect(logStub.mock.calls).toHaveLength(4);
         expect(logStub.mock.calls[0][0]).toMatch(/^Test model/);
         expect(logStub.mock.calls[1][0]).toMatch(/^  Physical Object/);
         expect(logStub.mock.calls[2][0]).toMatch(/^    Test element 1 \[[\d]+-[\w\d]+\]/);

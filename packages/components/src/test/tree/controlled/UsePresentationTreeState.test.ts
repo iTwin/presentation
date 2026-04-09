@@ -100,7 +100,7 @@ describe("usePresentationTreeState", () => {
   it("creates node loader", async () => {
     const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), { initialProps });
 
-    await waitFor(() => expect(result.current?.nodeLoader).to.not.be.undefined);
+    await waitFor(() => expect(result.current?.nodeLoader).toBeDefined());
   });
 
   it("creates new nodeLoader when imodel changes", async () => {
@@ -110,7 +110,7 @@ describe("usePresentationTreeState", () => {
     const newImodel = { key: "new-imodel-key", isBriefcaseConnection: () => false } as IModelConnection;
     rerender({ ...initialProps, imodel: newImodel });
 
-    await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+    await waitFor(() => expect(result.current?.nodeLoader).not.toBe(oldNodeLoader));
   });
 
   it("creates new nodeLoader when ruleset changes", async () => {
@@ -119,7 +119,7 @@ describe("usePresentationTreeState", () => {
 
     rerender({ ...initialProps, ruleset: "changed" });
 
-    await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+    await waitFor(() => expect(result.current?.nodeLoader).not.toBe(oldNodeLoader));
   });
 
   it("creates new nodeLoader when pagingSize changes", async () => {
@@ -128,7 +128,7 @@ describe("usePresentationTreeState", () => {
 
     rerender({ ...initialProps, pagingSize: 20 });
 
-    await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+    await waitFor(() => expect(result.current?.nodeLoader).not.toBe(oldNodeLoader));
   });
 
   it("creates new reporting nodeLoader when `onNodeLoaded` callback passed", async () => {
@@ -142,7 +142,7 @@ describe("usePresentationTreeState", () => {
 
     await waitFor(() => {
       expect(onNodeLoaded).toHaveBeenCalledOnce();
-      expect(result.current?.nodeLoader instanceof ReportingTreeNodeLoader).to.be.true;
+      expect(result.current?.nodeLoader instanceof ReportingTreeNodeLoader).toBe(true);
     });
   });
 
@@ -171,7 +171,7 @@ describe("usePresentationTreeState", () => {
 
       onIModelHierarchyChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey: imodel.key });
 
-      await waitFor(() => expect(result.current?.nodeLoader instanceof ReportingTreeNodeLoader).to.be.true);
+      await waitFor(() => expect(result.current?.nodeLoader instanceof ReportingTreeNodeLoader).toBe(true));
     });
 
     it("doesn't create a new nodeLoader when `PresentationManager` raises `onIModelHierarchyChanged` event with unrelated imodel", async () => {
@@ -180,7 +180,7 @@ describe("usePresentationTreeState", () => {
 
       onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: "unrelated" });
 
-      await waitFor(() => expect(result.current?.nodeLoader).to.eq(oldNodeLoader));
+      await waitFor(() => expect(result.current?.nodeLoader).toBe(oldNodeLoader));
     });
 
     it("creates a new nodeLoader when `PresentationManager` raises a related `onIModelHierarchyChanged event`", async () => {
@@ -191,7 +191,7 @@ describe("usePresentationTreeState", () => {
       const oldNodeLoader = await waitForState(result);
 
       onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: imodel.key });
-      await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+      await waitFor(() => expect(result.current?.nodeLoader).not.toBe(oldNodeLoader));
 
       const observable = result.current?.nodeLoader.loadNode({ id: undefined, depth: -1, numChildren: 1 }, 0);
       observable?.subscribe();
@@ -206,7 +206,7 @@ describe("usePresentationTreeState", () => {
       const currRuleset = new RegisteredRuleset({ id: "unrelated", rules: [] }, "", () => {});
       onRulesetModified.raiseEvent(currRuleset, { ...currRuleset.toJSON() });
 
-      await waitFor(() => expect(result.current?.nodeLoader).to.eq(oldNodeLoader));
+      await waitFor(() => expect(result.current?.nodeLoader).toBe(oldNodeLoader));
     });
 
     it("creates a new nodeLoader when `RulesetsManager` raises a related `onRulesetModified` event", async () => {
@@ -215,7 +215,7 @@ describe("usePresentationTreeState", () => {
 
       const currRuleset = new RegisteredRuleset({ id: rulesetId, rules: [] }, "", () => {});
       onRulesetModified.raiseEvent(currRuleset, currRuleset.toJSON());
-      await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+      await waitFor(() => expect(result.current?.nodeLoader).not.toBe(oldNodeLoader));
     });
 
     it("creates a new nodeLoader when `RulesetVariablesManager` raises an `onRulesetVariableChanged` event with a new value", async () => {
@@ -223,7 +223,7 @@ describe("usePresentationTreeState", () => {
       const oldNodeLoader = await waitForState(result);
 
       onRulesetVariableChanged.raiseEvent("var-id", undefined, "curr");
-      await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+      await waitFor(() => expect(result.current?.nodeLoader).not.toBe(oldNodeLoader));
     });
 
     it("creates a new nodeLoader when `RulesetVariablesManager` raises an `onRulesetVariableChanged` event with a changed value", async () => {
@@ -231,7 +231,7 @@ describe("usePresentationTreeState", () => {
       const oldNodeLoader = await waitForState(result);
 
       onRulesetVariableChanged.raiseEvent("var-id", "prev", "curr");
-      await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+      await waitFor(() => expect(result.current?.nodeLoader).not.toBe(oldNodeLoader));
     });
 
     it("creates a new nodeLoader when `RulesetVariablesManager` raises an `onRulesetVariableChanged` event with a removed value", async () => {
@@ -239,7 +239,7 @@ describe("usePresentationTreeState", () => {
       const oldNodeLoader = await waitForState(result);
 
       onRulesetVariableChanged.raiseEvent("var-id", "prev", undefined);
-      await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+      await waitFor(() => expect(result.current?.nodeLoader).not.toBe(oldNodeLoader));
     });
 
     it("creates a new nodeLoader when `QuantityFormatter` raises an `onActiveFormattingUnitSystemChanged` event", async () => {
@@ -247,7 +247,7 @@ describe("usePresentationTreeState", () => {
       const oldNodeLoader = await waitForState(result);
 
       onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
-      await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+      await waitFor(() => expect(result.current?.nodeLoader).not.toBe(oldNodeLoader));
     });
 
     it("does not create a new nodeLoader when `onRulesetModified` event is raised but there are no changes", async () => {
@@ -257,7 +257,7 @@ describe("usePresentationTreeState", () => {
       const currRuleset = new RegisteredRuleset({ id: rulesetId, rules: [] }, "", () => {});
       onRulesetModified.raiseEvent(currRuleset, currRuleset.toJSON());
 
-      await waitFor(() => expect(result.current?.nodeLoader).to.eq(oldNodeLoader));
+      await waitFor(() => expect(result.current?.nodeLoader).toBe(oldNodeLoader));
     });
 
     it("creates a fresh `TreeModelSource` when nodeLoader changes", async () => {
@@ -267,13 +267,13 @@ describe("usePresentationTreeState", () => {
       });
 
       await waitFor(() => {
-        expect(result.current).to.not.be.undefined;
+        expect(result.current).toBeDefined();
         expectTree(result.current!.nodeLoader.modelSource.getModel(), ["test"]);
       });
 
       rerender({ ...initialProps, ruleset: "updated", seedTreeModel });
       await waitFor(() => {
-        expect(result.current).to.not.be.undefined;
+        expect(result.current).toBeDefined();
         expectTree(result.current!.nodeLoader.modelSource.getModel(), []);
       });
     });
@@ -285,7 +285,7 @@ describe("usePresentationTreeState", () => {
 
       onChangesPulledEvent.raiseEvent();
 
-      await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+      await waitFor(() => expect(result.current?.nodeLoader).not.toBe(oldNodeLoader));
     });
 
     it("creates a new nodeLoader when briefcase `onChangesPushed` event is raised", async () => {
@@ -295,7 +295,7 @@ describe("usePresentationTreeState", () => {
 
       onChangesPushedEvent.raiseEvent();
 
-      await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+      await waitFor(() => expect(result.current?.nodeLoader).not.toBe(oldNodeLoader));
     });
   });
 
@@ -307,7 +307,7 @@ describe("usePresentationTreeState", () => {
         initialProps: { ...initialProps, seedTreeModel },
       });
       await waitFor(() => {
-        expect(result.current).to.not.be.undefined;
+        expect(result.current).toBeDefined();
         expectTree(result.current!.nodeLoader.modelSource.getModel(), treeHierarchy);
       });
     });
@@ -322,8 +322,8 @@ describe("usePresentationTreeState", () => {
         initialProps: { ...initialProps, eventHandlerFactory },
       });
       await waitFor(() => {
-        expect(result.current).to.not.be.undefined;
-        expect(result.current!.eventHandler).to.not.be.undefined;
+        expect(result.current).toBeDefined();
+        expect(result.current!.eventHandler).toBeDefined();
         expect(eventHandlerFactory).toHaveBeenCalled();
       });
     });
@@ -336,8 +336,8 @@ describe("usePresentationTreeState", () => {
         initialProps: { ...initialProps, eventHandlerFactory },
       });
       await waitFor(() => {
-        expect(result.current).to.not.be.undefined;
-        expect(result.current!.eventHandler).to.not.be.undefined;
+        expect(result.current).toBeDefined();
+        expect(result.current!.eventHandler).toBeDefined();
         expect(eventHandlerFactory).toHaveBeenCalled();
       });
 
@@ -345,8 +345,8 @@ describe("usePresentationTreeState", () => {
 
       rerender({ ...initialProps, eventHandlerFactory, ruleset: "new-ruleset" });
       await waitFor(() => {
-        expect(result.current).to.not.be.undefined;
-        expect(result.current!.eventHandler).to.not.be.undefined;
+        expect(result.current).toBeDefined();
+        expect(result.current!.eventHandler).toBeDefined();
         expect(eventHandlerFactory).toHaveBeenCalled();
       });
     });
@@ -363,10 +363,10 @@ describe("usePresentationTreeState", () => {
       });
 
       await waitFor(() => {
-        expect(result.current).to.not.be.undefined;
-        expect(result.current!.filteringResult).to.not.be.undefined;
-        expect(result.current!.filteringResult!.filteredProvider).to.not.be.undefined;
-        expect(result.current!.filteringResult!.matchesCount).to.be.eq(1);
+        expect(result.current).toBeDefined();
+        expect(result.current!.filteringResult).toBeDefined();
+        expect(result.current!.filteringResult!.filteredProvider).toBeDefined();
+        expect(result.current!.filteringResult!.matchesCount).toBe(1);
         expect(getFilteredPathsStub).toHaveBeenCalled();
       });
     });
@@ -376,7 +376,7 @@ describe("usePresentationTreeState", () => {
 async function waitForState(result: { current: UsePresentationTreeStateResult<TreeEventHandler> | undefined }) {
   return waitFor(() => {
     const loader = result.current?.nodeLoader;
-    expect(loader).to.not.be.undefined;
+    expect(loader).toBeDefined();
     return loader!;
   });
 }
@@ -422,7 +422,7 @@ type TreeHierarchy =
 
 function expectTree(model: TreeModel, expectedHierarchy: TreeHierarchy[]): void {
   const actualHierarchy = buildActualHierarchy(undefined);
-  expect(actualHierarchy).to.deep.equal(expectedHierarchy);
+  expect(actualHierarchy).toEqual(expectedHierarchy);
 
   function buildActualHierarchy(parentId: string | undefined): TreeHierarchy[] {
     const result: TreeHierarchy[] = [];

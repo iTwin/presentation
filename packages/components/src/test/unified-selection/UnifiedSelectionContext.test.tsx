@@ -41,7 +41,7 @@ describe("UnifiedSelectionContext", () => {
 
   it("uses selection level 0 by default", () => {
     const { result } = renderUnifiedSelectionContextHook();
-    expect(result.current.selectionLevel).to.be.equal(0);
+    expect(result.current.selectionLevel).toBe(0);
   });
 
   it("updates context when selection changes on one level above", async () => {
@@ -54,12 +54,12 @@ describe("UnifiedSelectionContext", () => {
 
     await waitFor(() => {
       const secondResult = result.current;
-      expect(firstResult).not.to.be.equal(secondResult);
-      expect(firstResult.getSelection).not.to.be.equal(secondResult.getSelection);
-      expect(firstResult.replaceSelection).to.be.equal(secondResult.replaceSelection);
-      expect(firstResult.addToSelection).to.be.equal(secondResult.addToSelection);
-      expect(firstResult.clearSelection).to.be.equal(secondResult.clearSelection);
-      expect(firstResult.removeFromSelection).to.be.equal(secondResult.removeFromSelection);
+      expect(firstResult).not.toBe(secondResult);
+      expect(firstResult.getSelection).not.toBe(secondResult.getSelection);
+      expect(firstResult.replaceSelection).toBe(secondResult.replaceSelection);
+      expect(firstResult.addToSelection).toBe(secondResult.addToSelection);
+      expect(firstResult.clearSelection).toBe(secondResult.clearSelection);
+      expect(firstResult.removeFromSelection).toBe(secondResult.removeFromSelection);
     });
   });
 
@@ -72,7 +72,7 @@ describe("UnifiedSelectionContext", () => {
     });
     const secondResult = result.current;
 
-    expect(firstResult.getSelection).to.be.equal(secondResult.getSelection);
+    expect(firstResult.getSelection).toBe(secondResult.getSelection);
   });
 
   it("updates context when receives different imodel connection", async () => {
@@ -105,12 +105,12 @@ describe("UnifiedSelectionContext", () => {
     await waitFor(() => expect(spy).toHaveBeenCalled());
     const secondResult = spy.mock.calls[spy.mock.calls.length - 1][0] as UnifiedSelectionContext;
 
-    expect(firstResult).not.to.be.equal(secondResult);
-    expect(firstResult.getSelection).not.to.be.equal(secondResult.getSelection);
-    expect(firstResult.replaceSelection).not.to.be.equal(secondResult.replaceSelection);
-    expect(firstResult.addToSelection).not.to.be.equal(secondResult.addToSelection);
-    expect(firstResult.clearSelection).not.to.be.equal(secondResult.clearSelection);
-    expect(firstResult.removeFromSelection).not.to.be.equal(secondResult.removeFromSelection);
+    expect(firstResult).not.toBe(secondResult);
+    expect(firstResult.getSelection).not.toBe(secondResult.getSelection);
+    expect(firstResult.replaceSelection).not.toBe(secondResult.replaceSelection);
+    expect(firstResult.addToSelection).not.toBe(secondResult.addToSelection);
+    expect(firstResult.clearSelection).not.toBe(secondResult.clearSelection);
+    expect(firstResult.removeFromSelection).not.toBe(secondResult.removeFromSelection);
   });
 
   describe("context", () => {
@@ -132,21 +132,21 @@ describe("UnifiedSelectionContext", () => {
       it("makes KeySet reference be different from global KeySet", () => {
         const { result } = renderUnifiedSelectionContextHook(testIModel);
         const returnedKeySet = result.current.getSelection();
-        expect(returnedKeySet).not.to.be.equal(keys);
+        expect(returnedKeySet).not.toBe(keys);
       });
 
       it("returns same KeySet reference for same selection level", () => {
         const { result } = renderUnifiedSelectionContextHook(testIModel);
         const firstKeySet = result.current.getSelection(10);
         const secondKeySet = result.current.getSelection(10);
-        expect(firstKeySet).to.be.equal(secondKeySet);
+        expect(firstKeySet).toBe(secondKeySet);
       });
 
       it("returns different KeySet reference for different selection level", () => {
         const { result } = renderUnifiedSelectionContextHook(testIModel);
         const firstKeySet = result.current.getSelection(10);
         const secondKeySet = result.current.getSelection(9);
-        expect(firstKeySet).not.to.be.equal(secondKeySet);
+        expect(firstKeySet).not.toBe(secondKeySet);
       });
 
       it("returns different KeySet reference after selection changes", async () => {
@@ -157,7 +157,7 @@ describe("UnifiedSelectionContext", () => {
 
         await waitFor(() => {
           const secondKeySet = result.current.getSelection();
-          expect(firstKeySet).not.to.be.equal(secondKeySet);
+          expect(firstKeySet).not.toBe(secondKeySet);
         });
       });
 
@@ -170,7 +170,7 @@ describe("UnifiedSelectionContext", () => {
 
         await waitFor(() => {
           const returnedKeySet = result.current.getSelection();
-          expect(returnedKeySet.has(key)).to.be.true;
+          expect(returnedKeySet.has(key)).toBe(true);
         });
       });
     });
@@ -231,7 +231,7 @@ describe("UnifiedSelectionContext", () => {
   describe("useUnifiedSelectionContext", () => {
     it("returns `undefined` context when there is no unified selection context", () => {
       const { result } = renderHook(() => useUnifiedSelectionContext());
-      expect(result.current).to.be.undefined;
+      expect(result.current).toBeUndefined();
     });
   });
 });

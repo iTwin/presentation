@@ -75,7 +75,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     const record = createRecord({ initialValue: 10 });
     const { getByDisplayValue } = render(<QuantityPropertyEditorInput propertyRecord={record} />);
 
-    expect(getByDisplayValue("10")).to.not.be.null;
+    expect(getByDisplayValue("10")).not.toBeNull();
   });
 
   it("renders numeric input if property does not have kindOfQuantityName", async () => {
@@ -86,7 +86,7 @@ describe("<QuantityPropertyEditorInput />", () => {
       </SchemaMetadataContextProvider>,
     );
 
-    expect(getByDisplayValue("10")).to.not.be.null;
+    expect(getByDisplayValue("10")).not.toBeNull();
   });
 
   it("renders formatted quantity value if schema context is available", async () => {
@@ -97,7 +97,7 @@ describe("<QuantityPropertyEditorInput />", () => {
       </SchemaMetadataContextProvider>,
     );
 
-    await waitFor(() => expect(getByDisplayValue("10 unit")).to.not.be.null);
+    await waitFor(() => expect(getByDisplayValue("10 unit")).not.toBeNull());
   });
 
   it("allows entering number when schema context is not available", async () => {
@@ -107,7 +107,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     const { getByRole, user } = render(<QuantityPropertyEditorInput ref={ref} propertyRecord={record} onCommit={spy} />);
 
     const input = await waitFor(() => getByRole("textbox"));
-    await waitFor(() => expect((input as HTMLInputElement).disabled).to.be.false);
+    await waitFor(() => expect((input as HTMLInputElement).disabled).toBe(false));
 
     await user.type(input, "123.4");
     await user.tab();
@@ -136,12 +136,12 @@ describe("<QuantityPropertyEditorInput />", () => {
     );
 
     const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
-    await waitFor(() => expect(input.disabled).to.be.false);
+    await waitFor(() => expect(input.disabled).toBe(false));
 
     await user.type(input, "123.4 ", { skipClick: true });
     await user.tab();
 
-    await waitFor(() => expect(input.value).to.eq("123.4 unit"));
+    await waitFor(() => expect(input.value).toBe("123.4 unit"));
     await waitFor(() => {
       expect(spy).toHaveBeenCalledWith({
         propertyRecord: record,
@@ -154,7 +154,7 @@ describe("<QuantityPropertyEditorInput />", () => {
       });
     });
 
-    expect(ref.current?.getValue()).to.deep.eq({
+    expect(ref.current?.getValue()).toEqual({
       valueFormat: PropertyValueFormat.Primitive,
       value: 123.4,
       displayValue: "123.4 unit",
@@ -174,11 +174,11 @@ describe("<QuantityPropertyEditorInput />", () => {
 
     const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
     await waitFor(() => {
-      expect(input).to.be.eq(document.activeElement);
+      expect(input).toBe(document.activeElement);
     });
 
     // Verify that selection logic is applied
-    await waitFor(() => expect(input.selectionEnd).to.eq(8));
+    await waitFor(() => expect(input.selectionEnd).toBe(8));
   });
 
   it("commits value and blurs input when Enter is pressed", async () => {

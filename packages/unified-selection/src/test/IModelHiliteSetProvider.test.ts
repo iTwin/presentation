@@ -101,9 +101,9 @@ describe("createIModelHiliteSetProvider", () => {
       const set2 = await loadHiliteSet();
 
       expect(provider.getHiliteSet).toHaveBeenCalledOnce();
-      expect(set1.models.length).toBe(3);
-      expect(set1.subCategories.length).toBe(3);
-      expect(set1.elements.length).toBe(3);
+      expect(set1.models).toHaveLength(3);
+      expect(set1.subCategories).toHaveLength(3);
+      expect(set1.elements).toHaveLength(3);
       expect(set2.models).toEqual(expect.arrayContaining(set1.models));
       expect(set2.subCategories).toEqual(expect.arrayContaining(set1.subCategories));
       expect(set2.elements).toEqual(expect.arrayContaining(set1.elements));
@@ -115,9 +115,9 @@ describe("createIModelHiliteSetProvider", () => {
       const set2 = await loadHiliteSet();
 
       expect(provider.getHiliteSet).toHaveBeenCalledTimes(2);
-      expect(set1.models.length).toBe(3);
-      expect(set1.subCategories.length).toBe(3);
-      expect(set1.elements.length).toBe(3);
+      expect(set1.models).toHaveLength(3);
+      expect(set1.subCategories).toHaveLength(3);
+      expect(set1.elements).toHaveLength(3);
       expect(set2.models).toEqual(expect.arrayContaining(set1.models));
       expect(set2.subCategories).toEqual(expect.arrayContaining(set1.subCategories));
       expect(set2.elements).toEqual(expect.arrayContaining(set1.elements));

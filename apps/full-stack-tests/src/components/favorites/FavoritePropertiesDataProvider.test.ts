@@ -54,9 +54,9 @@ describe("FavoritePropertiesDataProvider", async () => {
 
       const tooltipData = await provider.getData(imodel, "0x38");
 
-      expect(tooltipData.categories.length).toBe(1);
+      expect(tooltipData.categories).toHaveLength(1);
       const favoritesCategory = tooltipData.categories[0];
-      expect(tooltipData.records[favoritesCategory.name].length).toBe(2);
+      expect(tooltipData.records[favoritesCategory.name]).toHaveLength(2);
       expect(tooltipData.records[favoritesCategory.name].some((r) => r.property.displayLabel === "Model")).toBe(true);
       expect(tooltipData.records[favoritesCategory.name].some((r) => r.property.displayLabel === "Country")).toBe(true);
     });

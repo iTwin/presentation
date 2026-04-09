@@ -289,7 +289,7 @@ describe("ContentBuilder", () => {
       const dataProvider = new DataProvider();
       const builder = new ContentBuilder({ ...initialProps, dataProvider });
       const content = await builder.createContent("1", []);
-      expect(content.length).toBe(dataProvider.values.length * dataProvider.descriptor.fields.length);
+      expect(content).toHaveLength(dataProvider.values.length * dataProvider.descriptor.fields.length);
     });
 
     it("rounds raw numeric values to supplied decimal precision", async () => {
@@ -345,7 +345,7 @@ describe("ContentBuilder", () => {
       const dataProvider = new TestDataProvider();
       const builder = new ContentBuilder({ ...initialProps, dataProvider, decimalPrecision: 2 });
       const content = await builder.createContent("", []);
-      expect(content.length).toBe(testValues.length);
+      expect(content).toHaveLength(testValues.length);
       expect((content[0].value as PrimitiveValue).value).toBeUndefined();
       expect((content[1].value as PrimitiveValue).value).toBe(1);
       expect((content[2].value as PrimitiveValue).value).toBe(1.9);
@@ -387,7 +387,7 @@ describe("ContentBuilder", () => {
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       const content = await builder.createContentForAllInstances("1");
 
-      expect(content.length).toBe(2);
+      expect(content).toHaveLength(2);
 
       expect(content.find((c) => c.className === "Schema1:Class1")).toBeDefined();
       expect(content.find((c) => c.className === "Schema2:Class2")).toBeDefined();
@@ -428,7 +428,7 @@ describe("ContentBuilder", () => {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         const content = await builder.createContentForInstancePerClass("1");
 
-        expect(content.length).toBe(2);
+        expect(content).toHaveLength(2);
 
         expect(content.find((c) => c.className === "Schema1:Class1")).toBeDefined();
         expect(content.find((c) => c.className === "Schema2:Class2")).toBeDefined();

@@ -20,12 +20,12 @@ describe("<NumericPropertyEditor />", () => {
   it("renders input when property record is provided", async () => {
     const record = createRecord();
     const { getByTestId } = render(<NumericPropertyEditor propertyRecord={record} />);
-    expect(getByTestId("numeric-input")).to.not.be.null;
+    expect(getByTestId("numeric-input")).not.toBeNull();
   });
 
   it("renders nothing when property record is not provided", async () => {
     const { container } = render(<NumericPropertyEditor />);
-    expect(container.firstChild).to.be.null;
+    expect(container.firstChild).toBeNull();
   });
 
   it("Invokes `onCommit` with correct parameters only when input container gets blurred", async () => {
@@ -40,7 +40,7 @@ describe("<NumericPropertyEditor />", () => {
 
     await user.tab();
 
-    await waitFor(() => expect(queryByDisplayValue("1")).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue("1")).not.toBeNull());
     expect(spy).toHaveBeenCalledExactlyOnceWith({ propertyRecord: record, newValue: { valueFormat: 0, value: 1, displayValue: "1", roundingError: 0.5 } });
   });
 });

@@ -57,9 +57,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         initialProps: { dataProvider: getProvider() },
         wrapper: SelectionHandlerWrapper,
       });
-      expect(result.current).to.not.be.undefined;
-      expect(result.current.isOverLimit).to.be.false;
-      expect(result.current.numSelectedElements).to.be.equal(0);
+      expect(result.current).toBeDefined();
+      expect(result.current.isOverLimit).toBe(false);
+      expect(result.current.numSelectedElements).toEqual(0);
 
       expect(setKeysSpy).not.toHaveBeenCalled();
     });
@@ -72,9 +72,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         initialProps: { dataProvider: getProvider() },
         wrapper: SelectionHandlerWrapper,
       });
-      expect(result.current).to.not.be.undefined;
-      expect(result.current.isOverLimit).to.be.false;
-      expect(result.current.numSelectedElements).to.be.equal(0);
+      expect(result.current).toBeDefined();
+      expect(result.current.isOverLimit).toBe(false);
+      expect(result.current.numSelectedElements).toEqual(0);
 
       expect(setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0].isEmpty).toBe(true);
     });
@@ -89,9 +89,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         initialProps: { dataProvider: getProvider() },
         wrapper: SelectionHandlerWrapper,
       });
-      expect(result.current).to.not.be.undefined;
-      expect(result.current.isOverLimit).to.be.false;
-      expect(result.current.numSelectedElements).to.be.equal(2);
+      expect(result.current).toBeDefined();
+      expect(result.current.isOverLimit).toBe(false);
+      expect(result.current.numSelectedElements).toEqual(2);
 
       expect(equalKeySets(setKeys, setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
     });
@@ -108,9 +108,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         wrapper: SelectionHandlerWrapper,
       });
 
-      expect(result.current).to.not.be.undefined;
-      expect(result.current.isOverLimit).to.be.true;
-      expect(result.current.numSelectedElements).to.be.equal(2);
+      expect(result.current).toBeDefined();
+      expect(result.current.isOverLimit).toBe(true);
+      expect(result.current.numSelectedElements).toEqual(2);
 
       expect(setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0].isEmpty).toBe(true);
     });
@@ -147,10 +147,10 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
 
       expect(equalKeySets(keys0, setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
 
-      expect(selectionHandler.onSelect).to.not.be.undefined;
-      expect(result.current).to.not.be.undefined;
-      expect(result.current.isOverLimit).to.be.false;
-      expect(result.current.numSelectedElements).to.be.equal(2);
+      expect(selectionHandler.onSelect).toBeDefined();
+      expect(result.current).toBeDefined();
+      expect(result.current.isOverLimit).toBe(false);
+      expect(result.current.numSelectedElements).toEqual(2);
 
       act(() => {
         selectionHandler.onSelect!(selectionEvent, selectionProvider);
@@ -187,9 +187,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
         initialProps: { selectionStorage, dataProvider: getProvider() },
       });
-      expect(result.current).to.not.be.undefined;
-      expect(result.current.isOverLimit).to.be.false;
-      expect(result.current.numSelectedElements).to.be.equal(0);
+      expect(result.current).toBeDefined();
+      expect(result.current.isOverLimit).toBe(false);
+      expect(result.current.numSelectedElements).toEqual(0);
       expect(setKeysSpy).not.toHaveBeenCalled();
     });
 
@@ -201,9 +201,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         initialProps: { selectionStorage, dataProvider: getProvider() },
       });
       await waitFor(async () => {
-        expect(result.current).to.not.be.undefined;
-        expect(result.current.isOverLimit).to.be.false;
-        expect(result.current.numSelectedElements).to.be.equal(0);
+        expect(result.current).toBeDefined();
+        expect(result.current.isOverLimit).toBe(false);
+        expect(result.current.numSelectedElements).toEqual(0);
         expect(setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0].isEmpty).toBe(true);
       });
     });
@@ -216,9 +216,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         initialProps: { selectionStorage, dataProvider: getProvider() },
       });
       await waitFor(async () => {
-        expect(result.current).to.not.be.undefined;
-        expect(result.current.isOverLimit).to.be.false;
-        expect(result.current.numSelectedElements).to.be.equal(2);
+        expect(result.current).toBeDefined();
+        expect(result.current.isOverLimit).toBe(false);
+        expect(result.current.numSelectedElements).toEqual(2);
         expect(equalKeySets(new KeySet(selectedInstances), setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
       });
     });
@@ -231,9 +231,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         initialProps: { selectionStorage, requestedContentInstancesLimit: 1, dataProvider: getProvider() },
       });
       await waitFor(async () => {
-        expect(result.current).to.not.be.undefined;
-        expect(result.current.isOverLimit).to.be.true;
-        expect(result.current.numSelectedElements).to.be.equal(2);
+        expect(result.current).toBeDefined();
+        expect(result.current.isOverLimit).toBe(true);
+        expect(result.current.numSelectedElements).toEqual(2);
         expect(setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0].isEmpty).toBe(true);
       });
     });
@@ -249,9 +249,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       });
       await waitFor(async () => {
         expect(equalKeySets(new KeySet(selectedInstances1), setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0])).toBe(true);
-        expect(result.current).to.not.be.undefined;
-        expect(result.current.isOverLimit).to.be.false;
-        expect(result.current.numSelectedElements).to.be.equal(2);
+        expect(result.current).toBeDefined();
+        expect(result.current.isOverLimit).toBe(false);
+        expect(result.current.numSelectedElements).toEqual(2);
       });
 
       act(() => {

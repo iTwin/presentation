@@ -108,10 +108,10 @@ describe("PresentationInstanceFilterDialog", () => {
     );
 
     // verify class is selected
-    await waitFor(() => expect(queryByText(baseElement, classInfo.label)).to.not.be.null);
+    await waitFor(() => expect(queryByText(baseElement, classInfo.label)).not.toBeNull());
 
     // verify property is selected
-    await waitFor(() => expect(queryByDisplayValue(baseElement, stringField.label)).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(baseElement, stringField.label)).not.toBeNull());
   });
 
   it("displays warning message on class selector opening if filtering rules are set ", async () => {
@@ -131,13 +131,13 @@ describe("PresentationInstanceFilterDialog", () => {
     // enter value
     const inputContainer = await waitForElement<HTMLInputElement>(baseElement, ".fb-property-value input");
     await user.type(inputContainer, "test value");
-    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).not.toBeNull());
 
     // expand class selector
     const classListContainer = getByPlaceholderText(baseElement, "instance-filter-builder.selected-classes");
     await user.click(classListContainer);
 
-    expect(queryByText(baseElement, translate("instance-filter-builder.class-selection-warning"))).to.not.be.null;
+    expect(queryByText(baseElement, translate("instance-filter-builder.class-selection-warning"))).not.toBeNull();
   });
 
   it("hides warning message when class selection dropdown is hidden ", async () => {
@@ -157,21 +157,21 @@ describe("PresentationInstanceFilterDialog", () => {
     // enter value
     const inputContainer = await waitFor(() => getByTestId(baseElement, "components-text-editor"));
     await user.type(inputContainer, "test value");
-    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).not.toBeNull());
 
     // expand class selector
     const classListContainer = getByPlaceholderText(baseElement, "instance-filter-builder.selected-classes");
     await user.click(classListContainer);
 
     // assert that the warning is shown initially
-    expect(queryByText(baseElement, translate("instance-filter-builder.class-selection-warning"))).to.not.be.null;
+    expect(queryByText(baseElement, translate("instance-filter-builder.class-selection-warning"))).not.toBeNull();
 
     // click somewhere else to hide the dropdown
     const header = baseElement.querySelector(".presentation-instance-filter-title");
     await user.click(header!);
 
     // hiding the dropdown should also hide the warning
-    expect(queryByText(baseElement, translate("instance-filter-builder.class-selection-warning"))).to.be.null;
+    expect(queryByText(baseElement, translate("instance-filter-builder.class-selection-warning"))).toBeNull();
   });
 
   it("clears all filtering options on class list changing ", async () => {
@@ -191,7 +191,7 @@ describe("PresentationInstanceFilterDialog", () => {
     // enter value
     const inputContainer = await waitForElement<HTMLInputElement>(baseElement, ".fb-property-value input");
     await user.type(inputContainer, "test value");
-    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).not.toBeNull());
 
     // expand class selector
     const classListContainer = getByPlaceholderText(baseElement, "instance-filter-builder.selected-classes");
@@ -201,7 +201,7 @@ describe("PresentationInstanceFilterDialog", () => {
     await user.click(within(getByRole(baseElement, "option", { hidden: true })).getByText("Class Label"));
 
     // assert that filtering rule was cleared
-    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).to.be.null);
+    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).toBeNull());
   });
 
   it("invokes 'onApply' with string property filter rule", async () => {
@@ -220,7 +220,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const inputContainer = await waitForElement<HTMLInputElement>(baseElement, ".fb-property-value input");
     await user.type(inputContainer, "test value");
 
-    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).not.toBeNull());
     await user.tab();
 
     const applyButton = await getApplyButton(baseElement);
@@ -349,7 +349,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const applyButton = await getApplyButton(baseElement);
     await user.click(applyButton);
 
-    await waitFor(() => expect(queryByText(baseElement, "general.error")).to.not.be.null);
+    await waitFor(() => expect(queryByText(baseElement, "general.error")).not.toBeNull());
     fromComponentsPropertyFilterStub.mockRestore();
     consoleErrorStub.mockRestore();
   });
@@ -362,7 +362,7 @@ describe("PresentationInstanceFilterDialog", () => {
       <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} title={<div>{title}</div>} onApply={spy} isOpen={true} />,
     );
 
-    await waitFor(() => expect(queryByText(baseElement, title)).to.not.be.null);
+    await waitFor(() => expect(queryByText(baseElement, title)).not.toBeNull());
   });
 
   it("renders results count", async () => {
@@ -378,10 +378,10 @@ describe("PresentationInstanceFilterDialog", () => {
     );
 
     // wait for filter builder to render
-    await waitFor(() => expect(queryByDisplayValue(baseElement, stringField.label)).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(baseElement, stringField.label)).not.toBeNull());
 
     // verify results count renderer is used
-    await waitFor(() => expect(queryByText(baseElement, "Test Results")).to.not.be.null);
+    await waitFor(() => expect(queryByText(baseElement, "Test Results")).not.toBeNull());
   });
 
   it("renders error boundary if error is thrown", async () => {
@@ -395,7 +395,7 @@ describe("PresentationInstanceFilterDialog", () => {
       <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSourceGetter} onApply={() => {}} isOpen={true} />,
     );
 
-    await waitFor(() => expect(queryByText(baseElement, "general.error")).to.not.be.null);
+    await waitFor(() => expect(queryByText(baseElement, "general.error")).not.toBeNull());
     consoleErrorStub.mockRestore();
   });
 
@@ -425,7 +425,7 @@ describe("PresentationInstanceFilterDialog", () => {
       />,
     );
 
-    await waitFor(() => expect(queryByText(baseElement, "Click Me!")).to.not.be.null);
+    await waitFor(() => expect(queryByText(baseElement, "Click Me!")).not.toBeNull());
   });
 
   it("renders spinner while loading descriptor", async () => {
@@ -441,7 +441,7 @@ describe("PresentationInstanceFilterDialog", () => {
     );
 
     await waitFor(() => {
-      expect(baseElement.querySelector(".presentation-instance-filter-dialog-progress")).to.not.be.null;
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog-progress")).not.toBeNull();
     });
 
     await act(async () => {
@@ -449,7 +449,7 @@ describe("PresentationInstanceFilterDialog", () => {
     });
 
     await waitFor(() => {
-      expect(baseElement.querySelector(".presentation-instance-filter-dialog-progress")).to.be.null;
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog-progress")).toBeNull();
     });
   });
 
@@ -463,14 +463,14 @@ describe("PresentationInstanceFilterDialog", () => {
 
   async function getResetButton(container: HTMLElement) {
     return waitForElement<HTMLButtonElement>(container, ".presentation-instance-filter-dialog-reset-button", (e) => {
-      expect(e).to.not.be.null;
+      expect(e).not.toBeNull();
     });
   }
 
   async function getApplyButton(container: HTMLElement, enabled: boolean = false) {
     return waitForElement<HTMLButtonElement>(container, ".presentation-instance-filter-dialog-apply-button", (e) => {
-      expect(e).to.not.be.null;
-      expect(e?.disabled ?? false).to.be.eq(enabled);
+      expect(e).not.toBeNull();
+      expect(e?.disabled ?? false).toBe(enabled);
     });
   }
 });

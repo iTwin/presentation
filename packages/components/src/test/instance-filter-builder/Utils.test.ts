@@ -70,7 +70,7 @@ describe("createInstanceFilterPropertyInfos", () => {
     });
 
     const propertyInfos = createInstanceFilterPropertyInfos(descriptor);
-    expect(propertyInfos[0].categoryLabel).to.be.undefined;
+    expect(propertyInfos[0].categoryLabel).toBeUndefined();
   });
 
   it("creates property infos when fields are in different categories category", () => {
@@ -138,7 +138,7 @@ describe("createInstanceFilterPropertyInfos", () => {
     });
 
     const input = createInstanceFilterPropertyInfos(descriptor);
-    expect(input[0].className).to.be.eq("Schema:RelatedClass");
+    expect(input[0].className).toBe("Schema:RelatedClass");
   });
 });
 
@@ -173,7 +173,7 @@ describe("filterRuleValidator", () => {
           displayValue: "Invalid",
         },
       }),
-    ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
+    ).toBe("instance-filter-builder.error-messages.not-a-number");
   });
 
   it("does not return error message for invalid numeric value if operator is 'IsEqual' or 'IsNotEqual'", () => {
@@ -189,7 +189,7 @@ describe("filterRuleValidator", () => {
           displayValue: "[Invalid]",
         },
       }),
-    ).to.be.undefined;
+    ).toBeUndefined();
   });
 
   it("returns error message for invalid quantity rule", () => {
@@ -205,7 +205,7 @@ describe("filterRuleValidator", () => {
           displayValue: "Invalid",
         },
       }),
-    ).to.be.eq("instance-filter-builder.error-messages.invalid");
+    ).toBe("instance-filter-builder.error-messages.invalid");
   });
 
   it("returns error message for invalid from quantity value in between rule", () => {
@@ -228,7 +228,7 @@ describe("filterRuleValidator", () => {
           },
         }),
       }),
-    ).to.be.eq("instance-filter-builder.error-messages.invalid");
+    ).toBe("instance-filter-builder.error-messages.invalid");
   });
 
   it("returns error message for invalid to quantity value in between rule", () => {
@@ -251,7 +251,7 @@ describe("filterRuleValidator", () => {
           },
         }),
       }),
-    ).to.be.eq("instance-filter-builder.error-messages.invalid");
+    ).toBe("instance-filter-builder.error-messages.invalid");
   });
 
   it("does not return error message for valid numeric rule", () => {
@@ -267,7 +267,7 @@ describe("filterRuleValidator", () => {
           displayValue: "10",
         },
       }),
-    ).to.be.undefined;
+    ).toBeUndefined();
   });
 
   it("does not return error message for valid quantity rule", () => {
@@ -283,7 +283,7 @@ describe("filterRuleValidator", () => {
           displayValue: "10 unit",
         },
       }),
-    ).to.be.undefined;
+    ).toBeUndefined();
   });
 
   it("does not return error message for valid quantity value in between rule", () => {
@@ -306,7 +306,7 @@ describe("filterRuleValidator", () => {
           },
         }),
       }),
-    ).to.be.undefined;
+    ).toBeUndefined();
   });
 });
 
@@ -353,7 +353,7 @@ describe("useFilterBuilderNavigationPropertyEditorContextProviderProps", () => {
     });
 
     const info = await result.current.getNavigationPropertyInfo(propertyDescription);
-    expect(info).to.be.deep.eq(navigationPropertyInfo);
+    expect(info).toEqual(navigationPropertyInfo);
   });
 
   it("returns `undefined` for non properties field", async () => {
@@ -372,6 +372,6 @@ describe("useFilterBuilderNavigationPropertyEditorContextProviderProps", () => {
     });
 
     const info = await result.current.getNavigationPropertyInfo(propertyDescription);
-    expect(info).to.be.undefined;
+    expect(info).toBeUndefined();
   });
 });

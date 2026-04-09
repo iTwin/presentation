@@ -49,7 +49,7 @@ describe("<NumericPropertyInput />", () => {
       };
       const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={onCommit} />);
 
-      expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(2);
+      expect((ref.current?.getValue() as PrimitiveValue).value).toBe(2);
 
       const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -58,7 +58,7 @@ describe("<NumericPropertyInput />", () => {
       await user.type(inputContainer, testCase.input);
       await user.tab();
 
-      await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(testCase.expectedResult));
+      await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).toBe(testCase.expectedResult));
       expect(spy).toHaveBeenCalledExactlyOnceWith(testCase.expectedResult);
     }),
   );
@@ -75,7 +75,7 @@ describe("<NumericPropertyInput />", () => {
     };
     const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={onCommit} />);
 
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(2);
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBe(2);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -84,7 +84,7 @@ describe("<NumericPropertyInput />", () => {
     await user.type(inputContainer, "3");
     await user.tab();
 
-    await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(3));
+    await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).toBe(3));
     expect(spy).toHaveBeenCalledExactlyOnceWith(3);
   });
 
@@ -93,14 +93,14 @@ describe("<NumericPropertyInput />", () => {
     const ref = createRef<PropertyEditorAttributes>();
     const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} />);
 
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(1);
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBe(1);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.click(inputContainer);
     await user.type(inputContainer, "0");
 
-    await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(10));
+    await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).toBe(10));
   });
 
   it("get value from NumericPropertyInput reference returns undefined when input is not a number", async () => {
@@ -112,7 +112,7 @@ describe("<NumericPropertyInput />", () => {
 
     await user.type(inputContainer, "-");
 
-    await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.undefined);
+    await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).toBeUndefined());
   });
 
   it("returns new value after typing number", async () => {
@@ -124,8 +124,8 @@ describe("<NumericPropertyInput />", () => {
 
     await user.click(inputContainer);
     await user.type(inputContainer, "1");
-    expect(queryByDisplayValue("-101")).to.not.be.null;
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(-101);
+    expect(queryByDisplayValue("-101")).not.toBeNull();
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBe(-101);
   });
 
   it("returns undefined value when input is empty", async () => {
@@ -136,8 +136,8 @@ describe("<NumericPropertyInput />", () => {
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.clear(inputContainer);
-    expect(queryByDisplayValue("")).to.not.be.null;
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.undefined;
+    expect(queryByDisplayValue("")).not.toBeNull();
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBeUndefined();
   });
 
   it("allows typing `-1`", async () => {
@@ -148,8 +148,8 @@ describe("<NumericPropertyInput />", () => {
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, "-1");
-    expect(queryByDisplayValue("-1")).to.not.be.null;
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(-1);
+    expect(queryByDisplayValue("-1")).not.toBeNull();
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBe(-1);
   });
 
   it("allows typing `+1`", async () => {
@@ -160,8 +160,8 @@ describe("<NumericPropertyInput />", () => {
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, "+1");
-    expect(queryByDisplayValue("+1")).to.not.be.null;
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(1);
+    expect(queryByDisplayValue("+1")).not.toBeNull();
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBe(1);
   });
 
   it("allows typing `.1` ", async () => {
@@ -172,8 +172,8 @@ describe("<NumericPropertyInput />", () => {
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, ".1");
-    expect(queryByDisplayValue(".1")).to.not.be.null;
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(0.1);
+    expect(queryByDisplayValue(".1")).not.toBeNull();
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBe(0.1);
   });
 
   it("allows typing `+.1`", async () => {
@@ -184,8 +184,8 @@ describe("<NumericPropertyInput />", () => {
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, "+.1");
-    expect(queryByDisplayValue("+.1")).to.not.be.null;
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(0.1);
+    expect(queryByDisplayValue("+.1")).not.toBeNull();
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBe(0.1);
   });
 
   it("allows typing `-.1`", async () => {
@@ -196,8 +196,8 @@ describe("<NumericPropertyInput />", () => {
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, "-.1");
-    expect(queryByDisplayValue("-.1")).to.not.be.null;
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(-0.1);
+    expect(queryByDisplayValue("-.1")).not.toBeNull();
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBe(-0.1);
   });
 
   it("allows typing 1e5", async () => {
@@ -208,8 +208,8 @@ describe("<NumericPropertyInput />", () => {
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, "1e5");
-    expect(getByDisplayValue("1e5")).to.not.be.null;
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(100000);
+    expect(getByDisplayValue("1e5")).not.toBeNull();
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBe(100000);
   });
 
   it("allows typing 1e-5", async () => {
@@ -220,15 +220,15 @@ describe("<NumericPropertyInput />", () => {
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, "1e-5");
-    expect(getByDisplayValue("1e-5")).to.not.be.null;
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(0.00001);
+    expect(getByDisplayValue("1e-5")).not.toBeNull();
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBe(0.00001);
   });
 });
 
 describe("<NumericInput />", () => {
   it("renders NumericInput with initial value", () => {
     const { getByRole } = render(<NumericInput onChange={() => {}} value="1" />);
-    expect((getByRole("textbox") as HTMLInputElement).value).to.be.eq("1");
+    expect((getByRole("textbox") as HTMLInputElement).value).toBe("1");
   });
 
   it("does not fire `onChange` when input is a letter", async () => {
@@ -358,7 +358,7 @@ describe("<NumericInput />", () => {
     const { getByRole } = render(<NumericInput onChange={() => {}} value="1" setFocus={true} />);
 
     const input = await waitFor(() => getByRole("textbox"));
-    await waitFor(() => expect(input).to.be.eq(document.activeElement));
+    await waitFor(() => expect(input).toBe(document.activeElement));
   });
 
   it("commits undefined value when propertyRecord value is NaN on `onBlur` event", async () => {

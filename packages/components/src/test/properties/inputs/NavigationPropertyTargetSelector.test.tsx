@@ -72,7 +72,7 @@ describe("NavigationPropertyTargetSelector", () => {
     const inputContainer = await waitFor(() => getByRole("combobox"));
     await user.click(inputContainer);
 
-    expect(await waitFor(() => queryByText(contentItem.label.displayValue))).to.not.be.undefined;
+    await waitFor(() => expect(queryByText(contentItem.label.displayValue)).not.toBeNull());
   });
 
   it("invokes onCommit with selected target", async () => {
@@ -112,7 +112,7 @@ describe("NavigationPropertyTargetSelector", () => {
       />,
     );
 
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.undefined;
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBeUndefined();
 
     const inputContainer = await waitFor(() => getByRole("combobox"));
     await user.click(inputContainer);
@@ -120,7 +120,7 @@ describe("NavigationPropertyTargetSelector", () => {
     const target = await waitFor(() => getByText(contentItem.label.displayValue));
     await user.click(target);
 
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(contentItem.primaryKeys[0]);
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBe(contentItem.primaryKeys[0]);
   });
 
   it("sets initial value from property record", async () => {
@@ -270,7 +270,7 @@ describe("NavigationPropertyTargetSelector", () => {
     await waitFor(() => getByDisplayValue("H E"));
     // Check if the menu is closed after the `tab` key was pressed.
     await user.keyboard("{Tab}");
-    await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.be.null);
+    await waitFor(() => expect(queryByText(contentItem.label.displayValue)).toBeNull());
     await user.click(inputContainer);
     // Check if it's possible to type after option is selected and menu is opened again
     await user.keyboard("{Enter}");
