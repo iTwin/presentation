@@ -4,8 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { catchError, expand, from, map, mergeMap, Observable, of, toArray } from "rxjs";
-import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
-import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode, TreeModelRootNode } from "./TreeModel.js";
+import {
+  GenericInstanceFilter,
+  HierarchyNode,
+  HierarchyProvider,
+  RowsLimitExceededError,
+} from "@itwin/presentation-hierarchies";
+import {
+  isTreeModelHierarchyNode,
+  TreeModelHierarchyNode,
+  TreeModelInfoNode,
+  TreeModelNode,
+  TreeModelRootNode,
+} from "./TreeModel.js";
 import { createNodeId } from "./Utils.js";
 
 /** @internal */
@@ -40,7 +51,11 @@ export class TreeLoader implements ITreeLoader {
 
   constructor(
     private _hierarchyProvider: HierarchyProvider,
-    private _onHierarchyLimitExceeded: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void,
+    private _onHierarchyLimitExceeded: (props: {
+      parentId?: string;
+      filter?: GenericInstanceFilter;
+      limit?: number | "unbounded";
+    }) => void,
     private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void,
     treeNodeIdFactory?: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string,
   ) {
@@ -48,10 +63,18 @@ export class TreeLoader implements ITreeLoader {
     this._treeNodeIdFactory = treeNodeIdFactory ?? createNodeId;
   }
 
-  private loadChildren({ parent, getHierarchyLevelOptions, buildNode, ignoreCache }: Omit<LoadNodesOptions, "shouldLoadChildren">) {
+  private loadChildren({
+    parent,
+    getHierarchyLevelOptions,
+    buildNode,
+    ignoreCache,
+  }: Omit<LoadNodesOptions, "shouldLoadChildren">) {
     const { instanceFilter, hierarchyLevelSizeLimit } = getHierarchyLevelOptions(parent);
     const infoNodeIdBase = `${parent.id ?? "<root>"}`;
-    const treeModelNodesFactory = createTreeModelNodesFactory({ buildNode, treeNodeIdFactory: this._treeNodeIdFactory });
+    const treeModelNodesFactory = createTreeModelNodesFactory({
+      buildNode,
+      treeNodeIdFactory: this._treeNodeIdFactory,
+    });
     return from(
       this._hierarchyProvider.getNodes({
         parentNode: parent.nodeData,
@@ -62,10 +85,7 @@ export class TreeLoader implements ITreeLoader {
     ).pipe(
       toArray(),
       catchError((err) => {
-        const nodeProps = {
-          id: `${infoNodeIdBase}-Unknown`,
-          parentId: parent.id,
-        };
+        const nodeProps = { id: `${infoNodeIdBase}-Unknown`, parentId: parent.id };
         let hierarchyLoadErrorType: "unknown" | "timeout" = "unknown";
         if (err instanceof Error) {
           nodeProps.id = `${infoNodeIdBase}-${err.message}`;
@@ -79,26 +99,14 @@ export class TreeLoader implements ITreeLoader {
         }
 
         this._onHierarchyLoadError({ parentId: parent.id, type: hierarchyLoadErrorType, error: err });
-        return of([
-          {
-            ...nodeProps,
-            type: "Unknown" as const,
-            message: "Failed to create hierarchy level",
-          },
-        ]);
+        return of([{ ...nodeProps, type: "Unknown" as const, message: "Failed to create hierarchy level" }]);
       }),
       map(
         (childNodes): LoadedTreePart => ({
           parentId: parent.id,
           loadedNodes:
             instanceFilter && childNodes.length === 0
-              ? [
-                  {
-                    id: `${infoNodeIdBase}-no-filter-matches`,
-                    parentId: parent.id,
-                    type: "NoFilterMatches" as const,
-                  },
-                ]
+              ? [{ id: `${infoNodeIdBase}-no-filter-matches`, parentId: parent.id, type: "NoFilterMatches" as const }]
               : childNodes.map(treeModelNodesFactory),
         }),
       ),
@@ -108,9 +116,11 @@ export class TreeLoader implements ITreeLoader {
   public loadNodes({ shouldLoadChildren, ...options }: LoadNodesOptions) {
     return this.loadChildren(options).pipe(
       expand((loadedPart) =>
-        from(loadedPart.loadedNodes.filter((node): node is TreeModelHierarchyNode => isTreeModelHierarchyNode(node) && shouldLoadChildren(node))).pipe(
-          mergeMap((node) => this.loadChildren({ ...options, parent: node })),
-        ),
+        from(
+          loadedPart.loadedNodes.filter(
+            (node): node is TreeModelHierarchyNode => isTreeModelHierarchyNode(node) && shouldLoadChildren(node),
+          ),
+        ).pipe(mergeMap((node) => this.loadChildren({ ...options, parent: node }))),
       ),
     );
   }

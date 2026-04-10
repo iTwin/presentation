@@ -6,7 +6,12 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedHierarchies.Imports
 import { BeEvent } from "@itwin/core-bentley";
-import { GetHierarchyNodesProps, HierarchyNode, HierarchyProvider, mergeProviders } from "@itwin/presentation-hierarchies";
+import {
+  GetHierarchyNodesProps,
+  HierarchyNode,
+  HierarchyProvider,
+  mergeProviders,
+} from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collectHierarchy } from "./Utils.js";
@@ -25,7 +30,9 @@ describe("Hierarchies", () => {
       it("merges providers", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedHierarchies.Example
         // Create a very basic hierarchy provider factory
-        function createBasicHierarchyProvider(nodes: (parentNode: GetHierarchyNodesProps["parentNode"]) => HierarchyNode[]): HierarchyProvider {
+        function createBasicHierarchyProvider(
+          nodes: (parentNode: GetHierarchyNodesProps["parentNode"]) => HierarchyNode[],
+        ): HierarchyProvider {
           return {
             hierarchyChanged: new BeEvent(),
             async *getNodes({ parentNode }) {
@@ -55,7 +62,14 @@ describe("Hierarchies", () => {
         // A provider that returns no root nodes, but returns a single "Child node" for parent nodes "A" and "X"
         const childrenProvider = createBasicHierarchyProvider((parent) => {
           if (parent && HierarchyNode.isGeneric(parent) && (parent.key.id === "a" || parent.key.id === "x")) {
-            return [{ key: { type: "generic", id: "c" }, label: "Child node", children: false, parentKeys: [...parent.parentKeys, parent.key] }];
+            return [
+              {
+                key: { type: "generic", id: "c" },
+                label: "Child node",
+                children: false,
+                parentKeys: [...parent.parentKeys, parent.key],
+              },
+            ];
           }
           return [];
         });
@@ -67,22 +81,8 @@ describe("Hierarchies", () => {
         // - Root nodes are sorted by label
         // - "Child node" is placed under both "Node A" and "Node X"
         expect(await collectHierarchy(mergingProvider)).toMatchObject([
-          {
-            label: "Node A",
-            children: [
-              {
-                label: "Child node",
-              },
-            ],
-          },
-          {
-            label: "Node X",
-            children: [
-              {
-                label: "Child node",
-              },
-            ],
-          },
+          { label: "Node A", children: [{ label: "Child node" }] },
+          { label: "Node X", children: [{ label: "Child node" }] },
         ]);
         // __PUBLISH_EXTRACT_END__
       });

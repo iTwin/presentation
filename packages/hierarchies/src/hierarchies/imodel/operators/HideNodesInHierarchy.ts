@@ -6,11 +6,20 @@
 import { concat, defer, EMPTY, filter, finalize, map, merge, mergeAll, mergeMap, Observable, take } from "rxjs";
 import { assert } from "@itwin/core-bentley";
 import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "../../HierarchyNodeKey.js";
-import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, LOGGING_NAMESPACE_INTERNAL } from "../../internal/Common.js";
+import {
+  createNodeIdentifierForLogging,
+  createOperatorLoggingNamespace,
+  hasChildren,
+  LOGGING_NAMESPACE_INTERNAL,
+} from "../../internal/Common.js";
 import { doLog, log } from "../../internal/LoggingUtils.js";
 import { partition } from "../../internal/operators/Partition.js";
 import { reduceToMergeMapItem } from "../../internal/operators/ReduceToMergeMap.js";
-import { ProcessedGenericHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode.js";
+import {
+  ProcessedGenericHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "../IModelHierarchyNode.js";
 import { mergeInstanceNodes } from "../Utils.js";
 
 const OPERATOR_NAME = "HideNodesInHierarchy";
@@ -34,7 +43,8 @@ export function createHideNodesInHierarchyOperator(
     const [withFlag, withoutFlag] = partition(
       inputNodes,
       (n): n is ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode =>
-        (ProcessedHierarchyNode.isGeneric(n) || ProcessedHierarchyNode.isInstancesNode(n)) && !!n.processingParams?.hideInHierarchy,
+        (ProcessedHierarchyNode.isGeneric(n) || ProcessedHierarchyNode.isInstancesNode(n)) &&
+        !!n.processingParams?.hideInHierarchy,
     );
     // Defer to create a new seed for reduce on every subscribe
     const withLoadedChildren = defer(() =>
@@ -93,7 +103,8 @@ export function createHideNodesInHierarchyOperator(
                 /* v8 ignore next -- @preserve */
                 doLog({
                   category: LOGGING_NAMESPACE,
-                  message: () => `\`stopOnFirstChild = true\` but none of the nodes had children determined to \`true\` - do load children`,
+                  message: () =>
+                    `\`stopOnFirstChild = true\` but none of the nodes had children determined to \`true\` - do load children`,
                 });
               }),
             ),

@@ -33,7 +33,9 @@ export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit
   "model" | "nodeLoader" | "eventsHandler" | "onItemsRendered" | "nodeHighlightingProps" | "treeRenderer"
 > & {
   state: UsePresentationTreeStateResult<TEventHandler>;
-  treeRenderer?: (props: TreeRendererProps & { nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider> }) => ReactElement;
+  treeRenderer?: (
+    props: TreeRendererProps & { nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider> },
+  ) => ReactElement;
 };
 
 /**
@@ -55,7 +57,10 @@ export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit
  * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
  * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
-export function PresentationTree<TEventHandler extends TreeEventHandler>({ state, ...props }: PresentationTreeProps<TEventHandler>) {
+export function PresentationTree<TEventHandler extends TreeEventHandler>({
+  state,
+  ...props
+}: PresentationTreeProps<TEventHandler>) {
   const treeModel = useTreeModel(state.nodeLoader.modelSource);
 
   return (
@@ -66,7 +71,11 @@ export function PresentationTree<TEventHandler extends TreeEventHandler>({ state
       eventsHandler={state.eventHandler}
       onItemsRendered={state.onItemsRendered}
       nodeHighlightingProps={state.filteringResult?.highlightProps}
-      treeRenderer={props.treeRenderer ? (treeProps) => props.treeRenderer!({ ...treeProps, nodeLoader: state.nodeLoader }) : undefined}
+      treeRenderer={
+        props.treeRenderer
+          ? (treeProps) => props.treeRenderer!({ ...treeProps, nodeLoader: state.nodeLoader })
+          : undefined
+      }
     />
   );
 }

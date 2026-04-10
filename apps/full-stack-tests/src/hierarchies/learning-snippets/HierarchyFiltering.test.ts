@@ -5,13 +5,22 @@
 /* eslint-disable no-duplicate-imports */
 
 import { afterAll, describe, expect, it, test } from "vitest";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { expand, filter, first, firstValueFrom, from } from "rxjs";
 import { assert, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createBisInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyDefinitionImports
-import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  GroupingHierarchyNode,
+  HierarchyDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 import { ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.FindPathsImports
@@ -45,12 +54,48 @@ describe("Hierarchies", () => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "A" });
-          const b = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "B", parentId: a.id });
-          const c = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "C", parentId: b.id });
-          const d = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "D", parentId: b.id });
-          const e = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "E", parentId: a.id });
-          const f = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "F", parentId: e.id });
-          const g = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "G", parentId: a.id });
+          const b = insertPhysicalElement({
+            builder,
+            modelId: model.id,
+            categoryId: category.id,
+            userLabel: "B",
+            parentId: a.id,
+          });
+          const c = insertPhysicalElement({
+            builder,
+            modelId: model.id,
+            categoryId: category.id,
+            userLabel: "C",
+            parentId: b.id,
+          });
+          const d = insertPhysicalElement({
+            builder,
+            modelId: model.id,
+            categoryId: category.id,
+            userLabel: "D",
+            parentId: b.id,
+          });
+          const e = insertPhysicalElement({
+            builder,
+            modelId: model.id,
+            categoryId: category.id,
+            userLabel: "E",
+            parentId: a.id,
+          });
+          const f = insertPhysicalElement({
+            builder,
+            modelId: model.id,
+            categoryId: category.id,
+            userLabel: "F",
+            parentId: e.id,
+          });
+          const g = insertPhysicalElement({
+            builder,
+            modelId: model.id,
+            categoryId: category.id,
+            userLabel: "G",
+            parentId: a.id,
+          });
           return { a, b, c, d, e, f, g };
         });
         const { imodel: _, ...elements } = res;
@@ -59,7 +104,10 @@ describe("Hierarchies", () => {
           (acc, [name, instanceKey]) => ({ ...acc, [name]: { ...instanceKey, imodelKey: createIModelKey(imodel) } }),
           {} as { [name: string]: InstanceKey },
         );
-        elementIds = Object.entries(elements).reduce((acc, [name, instanceKey]) => ({ ...acc, [name]: instanceKey.id }), {} as { [name: string]: Id64String });
+        elementIds = Object.entries(elements).reduce(
+          (acc, [name, instanceKey]) => ({ ...acc, [name]: instanceKey.id }),
+          {} as { [name: string]: Id64String },
+        );
       });
 
       afterAll(async () => {
@@ -70,9 +118,17 @@ describe("Hierarchies", () => {
       function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinition {
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
-        const createHierarchyLevelDefinition = async ({ whereClause, bindings }: { whereClause?: string; bindings?: ECSqlBinding[] }) => [
+        const createHierarchyLevelDefinition = async ({
+          whereClause,
+          bindings,
+        }: {
+          whereClause?: string;
+          bindings?: ECSqlBinding[];
+        }) => [
           {
             fullClassName: "BisCore.PhysicalElement",
             query: {
@@ -119,17 +175,9 @@ describe("Hierarchies", () => {
           {
             label: "A",
             children: [
-              {
-                label: "B",
-                children: [{ label: "C" }, { label: "D" }],
-              },
-              {
-                label: "E",
-                children: [{ label: "F" }],
-              },
-              {
-                label: "G",
-              },
+              { label: "B", children: [{ label: "C" }, { label: "D" }] },
+              { label: "E", children: [{ label: "F" }] },
+              { label: "G" },
             ],
           },
         ]);
@@ -141,7 +189,9 @@ describe("Hierarchies", () => {
         // Define a function that returns `HierarchyNodeIdentifiersPath[]` based on given search string. In this case, we run
         // a query to find matching elements by their `UserLabel` property. Then, we construct paths to the root element using recursive
         // CTE. Finally, we return the paths in reverse order to start from the root element.
-        async function createFilteredNodeIdentifierPaths(searchStrings: string[]): Promise<HierarchyNodeIdentifiersPath[]> {
+        async function createFilteredNodeIdentifierPaths(
+          searchStrings: string[],
+        ): Promise<HierarchyNodeIdentifiersPath[]> {
           const query: ECSqlQueryDef = {
             ctes: [
               `MatchingElements(Path, ParentId) AS (
@@ -166,7 +216,11 @@ describe("Hierarchies", () => {
           };
           const result: HierarchyNodeIdentifiersPath[] = [];
           for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-            result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })));
+            result.push(
+              (JSON.parse(row.Path) as InstanceKey[])
+                .reverse()
+                .map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })),
+            );
           }
           return result;
         }
@@ -193,14 +247,8 @@ describe("Hierarchies", () => {
           {
             label: "A",
             children: [
-              {
-                label: "B",
-                children: [{ label: "C" }],
-              },
-              {
-                label: "E",
-                children: [{ label: "F" }],
-              },
+              { label: "B", children: [{ label: "C" }] },
+              { label: "E", children: [{ label: "F" }] },
             ],
           },
         ]);
@@ -213,7 +261,9 @@ describe("Hierarchies", () => {
         // Define a function that returns `HierarchyNodeIdentifiersPath[]` based on given target element IDs. In this case, we run
         // a query to find matching elements by their `ECInstanceId` property. Then, we construct paths to the root element using recursive
         // CTE. Finally, we return the paths in reverse order to start from the root element.
-        async function createFilteredNodeIdentifierPaths(targetElementIds: Id64String[]): Promise<HierarchyNodeIdentifiersPath[]> {
+        async function createFilteredNodeIdentifierPaths(
+          targetElementIds: Id64String[],
+        ): Promise<HierarchyNodeIdentifiersPath[]> {
           const query: ECSqlQueryDef = {
             ctes: [
               `MatchingElements(Path, ParentId) AS (
@@ -238,7 +288,11 @@ describe("Hierarchies", () => {
           };
           const result: HierarchyNodeIdentifiersPath[] = [];
           for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-            result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })));
+            result.push(
+              (JSON.parse(row.Path) as InstanceKey[])
+                .reverse()
+                .map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })),
+            );
           }
           return result;
         }
@@ -264,14 +318,8 @@ describe("Hierarchies", () => {
           {
             label: "A",
             children: [
-              {
-                label: "B",
-                children: [{ label: "C" }],
-              },
-              {
-                label: "E",
-                children: [{ label: "F" }],
-              },
+              { label: "B", children: [{ label: "C" }] },
+              { label: "E", children: [{ label: "F" }] },
             ],
           },
         ]);
@@ -297,29 +345,13 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-          filtering: {
-            paths: [filteringPath],
-          },
+          filtering: { paths: [filteringPath] },
         });
 
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
         // Note that all nodes except C have `autoExpand` flag.
         expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
-          {
-            label: "A",
-            autoExpand: true,
-            children: [
-              {
-                label: "B",
-                autoExpand: true,
-                children: [
-                  {
-                    label: "C",
-                  },
-                ],
-              },
-            ],
-          },
+          { label: "A", autoExpand: true, children: [{ label: "B", autoExpand: true, children: [{ label: "C" }] }] },
         ]);
       });
 
@@ -327,7 +359,9 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         // Define a hierarchy such that all elements except root are grouped by label.
         const hierarchyDefinition: HierarchyDefinition = {
@@ -409,9 +443,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition,
-          filtering: {
-            paths: [filteringPath],
-          },
+          filtering: { paths: [filteringPath] },
         });
 
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
@@ -452,12 +484,7 @@ describe("Hierarchies", () => {
                                 nodeType: "label-grouping",
                                 label: "C",
                                 // Child is the filter target
-                                children: [
-                                  {
-                                    nodeType: "instances",
-                                    label: "C",
-                                  },
-                                ],
+                                children: [{ nodeType: "instances", label: "C" }],
                               },
                             ],
                           },
@@ -476,7 +503,9 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         // Define a hierarchy such that all elements except root are grouped by label.
         const hierarchyDefinition: HierarchyDefinition = {
@@ -537,9 +566,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition,
-          filtering: {
-            paths: [filteringPath],
-          },
+          filtering: { paths: [filteringPath] },
         });
 
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
@@ -567,12 +594,7 @@ describe("Hierarchies", () => {
                         nodeType: "label-grouping",
                         label: "C",
                         // Child is the filter target
-                        children: [
-                          {
-                            nodeType: "instances",
-                            label: "C",
-                          },
-                        ],
+                        children: [{ nodeType: "instances", label: "C" }],
                       },
                     ],
                   },

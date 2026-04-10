@@ -83,10 +83,7 @@ function runHiliteTest(
       const selectables: Selectable[] = [];
       const imodelAccess = {
         ...createECSqlQueryExecutor(iModel),
-        ...createCachingECClassHierarchyInspector({
-          schemaProvider: createECSchemaProvider(schemas),
-          cacheSize: 100,
-        }),
+        ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(schemas), cacheSize: 100 }),
       };
 
       for await (const row of imodelAccess.createQueryReader({ ecsql: testProps.inputQuery })) {
@@ -101,11 +98,7 @@ function runHiliteTest(
     },
     test: async (props) => {
       const iterator = props.provider.getHiliteSet({ selectables: props.selection });
-      const counts = {
-        elements: 0,
-        subCategories: 0,
-        models: 0,
-      };
+      const counts = { elements: 0, subCategories: 0, models: 0 };
 
       for await (const set of iterator) {
         counts.elements += set.elements.length;

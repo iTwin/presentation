@@ -21,7 +21,10 @@ import {
  * A type for a function that parses a `SourceInstanceHierarchyNode` from provided ECSQL `row` object.
  * @internal
  */
-export type RxjsNodeParser = (row: { [columnName: string]: any }, parentNode?: HierarchyDefinitionParentNode) => Observable<SourceInstanceHierarchyNode>;
+export type RxjsNodeParser = (
+  row: { [columnName: string]: any },
+  parentNode?: HierarchyDefinitionParentNode,
+) => Observable<SourceInstanceHierarchyNode>;
 
 /**
  * A type for a function that pre-processes given node. Unless the function decides not to make any modifications,
@@ -30,7 +33,9 @@ export type RxjsNodeParser = (row: { [columnName: string]: any }, parentNode?: H
  *
  * @internal
  */
-export type RxjsNodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Observable<TNode>;
+export type RxjsNodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(
+  node: TNode,
+) => Observable<TNode>;
 
 /**
  * A type for a function that post-processes given node. Unless the function decides not to make any modifications,
@@ -92,7 +97,9 @@ export function getRxjsHierarchyDefinition(hierarchyDefinition: HierarchyDefinit
     preProcessNode: hierarchyDefinition.preProcessNode
       ? (node) => from(hierarchyDefinition.preProcessNode!(node)).pipe(filter((preprocessedNode) => !!preprocessedNode))
       : undefined,
-    postProcessNode: hierarchyDefinition.postProcessNode ? (node) => from(hierarchyDefinition.postProcessNode!(node)) : undefined,
+    postProcessNode: hierarchyDefinition.postProcessNode
+      ? (node) => from(hierarchyDefinition.postProcessNode!(node))
+      : undefined,
     defineHierarchyLevel: (props) => from(hierarchyDefinition.defineHierarchyLevel(props)),
   };
 }

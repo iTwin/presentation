@@ -27,8 +27,13 @@ interface TreeRendererOwnProps {
 
 /** @public */
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> &
-  Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> &
-  Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel" | "filterButtonsVisibility" | "getActions"> &
+  Partial<
+    Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">
+  > &
+  Pick<
+    TreeNodeRendererProps,
+    "onFilterClick" | "getIcon" | "getLabel" | "getSublabel" | "filterButtonsVisibility" | "getActions"
+  > &
   TreeRendererOwnProps &
   Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization"> &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
@@ -99,11 +104,21 @@ export function TreeRenderer({
     ],
   );
 
-  const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, isNodeSelected ?? noopIsNodeSelected), [isNodeSelected]);
+  const getNode = useCallback<TreeProps["getNode"]>(
+    (node) => createRenderedTreeNodeData(node, isNodeSelected ?? noopIsNodeSelected),
+    [isNodeSelected],
+  );
 
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
-      <Tree<RenderedTreeNode> {...treeProps} size={size} data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
+      <Tree<RenderedTreeNode>
+        {...treeProps}
+        size={size}
+        data={rootNodes}
+        nodeRenderer={nodeRenderer}
+        getNode={getNode}
+        enableVirtualization={true}
+      />
     </LocalizationContextProvider>
   );
 }
@@ -125,11 +140,7 @@ function noopIsNodeSelected() {
  */
 export type RenderedTreeNode =
   | PresentationTreeNode
-  | {
-      id: string;
-      parentNodeId: string | undefined;
-      type: "ChildrenPlaceholder";
-    };
+  | { id: string; parentNodeId: string | undefined; type: "ChildrenPlaceholder" };
 
 /**
  * An utility function that creates an `@itwin/itwinui-react` `NodeData` object for the `Tree` component from a
@@ -145,16 +156,12 @@ export type RenderedTreeNode =
  *
  * @public
  */
-export function createRenderedTreeNodeData(node: RenderedTreeNode, isNodeSelected: (nodeId: string) => boolean): NodeData<RenderedTreeNode> {
+export function createRenderedTreeNodeData(
+  node: RenderedTreeNode,
+  isNodeSelected: (nodeId: string) => boolean,
+): NodeData<RenderedTreeNode> {
   if ("type" in node) {
-    return {
-      nodeId: node.id,
-      node,
-      hasSubNodes: false,
-      isExpanded: false,
-      isSelected: false,
-      isDisabled: true,
-    };
+    return { nodeId: node.id, node, hasSubNodes: false, isExpanded: false, isSelected: false, isDisabled: true };
   }
   return {
     nodeId: node.id,
@@ -163,13 +170,7 @@ export function createRenderedTreeNodeData(node: RenderedTreeNode, isNodeSelecte
     subNodes:
       // returns placeholder node to show as child while children is loading.
       node.children === true
-        ? [
-            {
-              id: `Loading-${node.id}`,
-              parentNodeId: node.id,
-              type: "ChildrenPlaceholder",
-            },
-          ]
+        ? [{ id: `Loading-${node.id}`, parentNodeId: node.id, type: "ChildrenPlaceholder" }]
         : node.children,
     isExpanded: node.isExpanded,
     isSelected: isNodeSelected(node.id),

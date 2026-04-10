@@ -14,10 +14,7 @@ import { buildTestIModel, TestIModelConnection } from "../presentation-testing/I
 import { createStub } from "./Utils.js";
 
 describe("buildTestIModel", () => {
-  const snapshotDb = {
-    saveChanges: createStub<SnapshotDb["saveChanges"]>(),
-    close: createStub<SnapshotDb["close"]>(),
-  };
+  const snapshotDb = { saveChanges: createStub<SnapshotDb["saveChanges"]>(), close: createStub<SnapshotDb["close"]>() };
   const testIModelConnection = Object.create(TestIModelConnection.prototype);
   testIModelConnection._db = snapshotDb;
   testIModelConnection.onClose = new BeEvent();
@@ -97,7 +94,9 @@ describe("buildTestIModel", () => {
   it("calls `SnapshotDb.createEmpty` with correct parameters when using overload with test context", async () => {
     // Construct a fake test context-shaped object with a deterministic title.
     const testContext = {
-      test: { fullTitle: () => "calls `SnapshotDb.createEmpty` with correct parameters when using overload with test context" },
+      test: {
+        fullTitle: () => "calls `SnapshotDb.createEmpty` with correct parameters when using overload with test context",
+      },
     };
     const fileName = createFileNameFromString(testContext.test.fullTitle());
 

@@ -148,7 +148,11 @@ In order to debug packages from different repos using [`Visual Studio Code`](htt
     "compounds": [
       {
         "name": "[presentation-test-app] Debug Test App",
-        "configurations": ["[presentation-test-app] Start Web Backend", "[presentation-test-app] Start Web Server", "[presentation-test-app] Launch Browser"]
+        "configurations": [
+          "[presentation-test-app] Start Web Backend",
+          "[presentation-test-app] Start Web Server",
+          "[presentation-test-app] Launch Browser"
+        ]
       }
     ]
   }

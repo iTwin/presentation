@@ -8,7 +8,13 @@ import * as ECSql from "./shared/ecsql-snippets/index.js";
 export { ECSql };
 
 export { ConcatenatedValue, ConcatenatedValuePart } from "./shared/ConcatenatedValue.js";
-export { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "./shared/ECSqlCore.js";
+export {
+  ECSqlBinding,
+  ECSqlQueryDef,
+  ECSqlQueryExecutor,
+  ECSqlQueryReaderOptions,
+  ECSqlQueryRow,
+} from "./shared/ECSqlCore.js";
 export { createDefaultValueFormatter, formatConcatenatedValue, IPrimitiveValueFormatter } from "./shared/Formatting.js";
 export {
   IInstanceLabelSelectClauseFactory,
@@ -19,7 +25,13 @@ export {
 } from "./shared/InstanceLabelSelectClauseFactory.js";
 export { ILogger, NOOP_LOGGER, LogFunction, LogLevel } from "./shared/Logging.js";
 export { ArrayElement, EventArgs, EventListener, OmitOverUnion, Props } from "./shared/MappedTypes.js";
-export { createCachingECClassHierarchyInspector, EC, getClass, ECClassHierarchyInspector, ECSchemaProvider } from "./shared/Metadata.js";
+export {
+  createCachingECClassHierarchyInspector,
+  EC,
+  getClass,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+} from "./shared/Metadata.js";
 export {
   createMainThreadReleaseOnTimePassedHandler,
   julianToDateTime,

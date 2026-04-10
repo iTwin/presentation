@@ -11,7 +11,11 @@ import {
   PresentationInfoNode,
   PresentationTreeNode,
 } from "../presentation-hierarchies-react/TreeNode.js";
-import { SelectionChangeType, SelectionMode, useSelectionHandler } from "../presentation-hierarchies-react/UseSelectionHandler.js";
+import {
+  SelectionChangeType,
+  SelectionMode,
+  useSelectionHandler,
+} from "../presentation-hierarchies-react/UseSelectionHandler.js";
 import { render } from "./TestUtils.js";
 
 interface TestComponentProps {
@@ -56,7 +60,11 @@ describe("useSelectionHandler", () => {
     return { id, message: "message" } as PresentationInfoNode;
   };
 
-  const createProps = (rootNodes: Array<PresentationTreeNode> | undefined, selectionMode: SelectionMode, isSelected: boolean) => {
+  const createProps = (
+    rootNodes: Array<PresentationTreeNode> | undefined,
+    selectionMode: SelectionMode,
+    isSelected: boolean,
+  ) => {
     return { rootNodes, selectNodes: selectNodesStub, selectionMode, isSelected };
   };
 
@@ -325,7 +333,10 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node2);
         await user.keyboard(`{/Shift}`);
 
-        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-1", "child-outer", "child-inner", "node-2"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(
+          ["node-1", "child-outer", "child-inner", "node-2"],
+          "replace",
+        );
       });
 
       it("skips non visible children when selecting range", async () => {
@@ -352,7 +363,12 @@ describe("useSelectionHandler", () => {
       });
 
       it("subsequent range selections use the same starting point", async () => {
-        const nodes = [createHierarchyNode("node-1"), createHierarchyNode("node-2"), createHierarchyNode("node-3"), createHierarchyNode("node-4")];
+        const nodes = [
+          createHierarchyNode("node-1"),
+          createHierarchyNode("node-2"),
+          createHierarchyNode("node-3"),
+          createHierarchyNode("node-4"),
+        ];
         const { user, getByText } = render(<TestComponent {...createProps(nodes, selectionMode, true)} />);
 
         let node = getByText("node-2");

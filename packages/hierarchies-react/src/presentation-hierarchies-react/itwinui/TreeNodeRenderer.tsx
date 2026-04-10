@@ -6,9 +6,30 @@
 import "./TreeNodeRenderer.css";
 
 import cx from "classnames";
-import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, RefAttributes, useCallback, useEffect, useRef } from "react";
+import {
+  ComponentPropsWithoutRef,
+  forwardRef,
+  LegacyRef,
+  MutableRefObject,
+  ReactElement,
+  Ref,
+  RefAttributes,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 import { SvgFilter, SvgFilterHollow, SvgMore, SvgRemove } from "@itwin/itwinui-icons-react";
-import { Anchor, ButtonGroup, DropdownMenu, Flex, IconButton, MenuItem, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
+import {
+  Anchor,
+  ButtonGroup,
+  DropdownMenu,
+  Flex,
+  IconButton,
+  MenuItem,
+  ProgressRadial,
+  Text,
+  TreeNode,
+} from "@itwin/itwinui-react";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { useLocalizationContext } from "../LocalizationContext.js";
@@ -39,9 +60,17 @@ interface TreeNodeRendererOwnProps {
   /** Returns sublabel for a given node. */
   getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
   /** Action to perform when the node is clicked. */
-  onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+  onNodeClick?: (
+    node: PresentationHierarchyNode,
+    isSelected: boolean,
+    event: React.MouseEvent<HTMLElement, MouseEvent>,
+  ) => void;
   /** Action to perform when a key is pressed when the node is hovered on. */
-  onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+  onNodeKeyDown?: (
+    node: PresentationHierarchyNode,
+    isSelected: boolean,
+    event: React.KeyboardEvent<HTMLElement>,
+  ) => void;
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
   reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
   /** CSS class name for the action buttons. */
@@ -77,108 +106,109 @@ type TreeNodeRendererProps = Pick<UseTreeResult, "expandNode"> &
  * @see https://itwinui.bentley.com/docs/tree
  * @public
  */
-export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLDivElement>> = forwardRef(
-  (
-    {
-      node,
-      expandNode,
-      getIcon,
-      getLabel,
-      getSublabel,
-      onFilterClick,
-      onNodeClick,
-      onNodeKeyDown,
-      isSelected,
-      isDisabled,
-      actionButtonsClassName,
-      getHierarchyLevelDetails,
-      reloadTree,
-      size,
-      filterButtonsVisibility,
-      getActions,
-      ...treeNodeProps
-    },
-    forwardedRef,
-  ) => {
-    const { localizedStrings } = useLocalizationContext();
-    if ("type" in node && node.type === "ChildrenPlaceholder") {
-      return <PlaceholderNode {...treeNodeProps} ref={forwardedRef} size={size} />;
-    }
+export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLDivElement>> =
+  forwardRef(
+    (
+      {
+        node,
+        expandNode,
+        getIcon,
+        getLabel,
+        getSublabel,
+        onFilterClick,
+        onNodeClick,
+        onNodeKeyDown,
+        isSelected,
+        isDisabled,
+        actionButtonsClassName,
+        getHierarchyLevelDetails,
+        reloadTree,
+        size,
+        filterButtonsVisibility,
+        getActions,
+        ...treeNodeProps
+      },
+      forwardedRef,
+    ) => {
+      const { localizedStrings } = useLocalizationContext();
+      if ("type" in node && node.type === "ChildrenPlaceholder") {
+        return <PlaceholderNode {...treeNodeProps} ref={forwardedRef} size={size} />;
+      }
 
-    if (isPresentationHierarchyNode(node)) {
-      return (
-        <HierarchyNodeRenderer
-          {...treeNodeProps}
-          ref={forwardedRef}
-          node={node}
-          expandNode={expandNode}
-          getIcon={getIcon}
-          getLabel={getLabel}
-          getSublabel={getSublabel}
-          onFilterClick={onFilterClick}
-          onNodeClick={onNodeClick}
-          onNodeKeyDown={onNodeKeyDown}
-          isSelected={isSelected}
-          isDisabled={isDisabled}
-          actionButtonsClassName={actionButtonsClassName}
-          getHierarchyLevelDetails={getHierarchyLevelDetails}
-          filterButtonsVisibility={filterButtonsVisibility}
-          getActions={getActions}
-        />
-      );
-    }
+      if (isPresentationHierarchyNode(node)) {
+        return (
+          <HierarchyNodeRenderer
+            {...treeNodeProps}
+            ref={forwardedRef}
+            node={node}
+            expandNode={expandNode}
+            getIcon={getIcon}
+            getLabel={getLabel}
+            getSublabel={getSublabel}
+            onFilterClick={onFilterClick}
+            onNodeClick={onNodeClick}
+            onNodeKeyDown={onNodeKeyDown}
+            isSelected={isSelected}
+            isDisabled={isDisabled}
+            actionButtonsClassName={actionButtonsClassName}
+            getHierarchyLevelDetails={getHierarchyLevelDetails}
+            filterButtonsVisibility={filterButtonsVisibility}
+            getActions={getActions}
+          />
+        );
+      }
 
-    if (node.type === "ResultSetTooLarge") {
-      const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.parentNodeId);
-      const isFilterable =
-        hierarchyLevelDetails?.hierarchyNode &&
-        !HierarchyNode.isGroupingNode(hierarchyLevelDetails.hierarchyNode) &&
-        hierarchyLevelDetails.hierarchyNode.supportsFiltering;
-      return (
-        <ResultSetTooLargeNode
-          {...treeNodeProps}
-          ref={forwardedRef}
-          limit={node.resultSetSizeLimit}
-          onOverrideLimit={hierarchyLevelDetails ? (limit) => hierarchyLevelDetails.setSizeLimit(limit) : undefined}
-          onFilterClick={
-            onFilterClick && hierarchyLevelDetails && isFilterable
-              ? () => {
-                  onFilterClick(hierarchyLevelDetails);
-                }
-              : undefined
-          }
-        />
-      );
-    }
+      if (node.type === "ResultSetTooLarge") {
+        const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.parentNodeId);
+        const isFilterable =
+          hierarchyLevelDetails?.hierarchyNode &&
+          !HierarchyNode.isGroupingNode(hierarchyLevelDetails.hierarchyNode) &&
+          hierarchyLevelDetails.hierarchyNode.supportsFiltering;
+        return (
+          <ResultSetTooLargeNode
+            {...treeNodeProps}
+            ref={forwardedRef}
+            limit={node.resultSetSizeLimit}
+            onOverrideLimit={hierarchyLevelDetails ? (limit) => hierarchyLevelDetails.setSizeLimit(limit) : undefined}
+            onFilterClick={
+              onFilterClick && hierarchyLevelDetails && isFilterable
+                ? () => {
+                    onFilterClick(hierarchyLevelDetails);
+                  }
+                : undefined
+            }
+          />
+        );
+      }
 
-    if (node.type === "NoFilterMatches") {
+      if (node.type === "NoFilterMatches") {
+        /* v8 ignore next -- @preserve */
+        return (
+          <TreeNode
+            {...treeNodeProps}
+            className="stateless-tree-node"
+            ref={forwardedRef}
+            label={localizedStrings.noFilteredChildren}
+            isDisabled={true}
+            onExpanded={() => {}}
+          />
+        );
+      }
+
+      const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
       /* v8 ignore next -- @preserve */
       return (
         <TreeNode
           {...treeNodeProps}
           className="stateless-tree-node"
           ref={forwardedRef}
-          label={localizedStrings.noFilteredChildren}
+          label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />}
           isDisabled={true}
           onExpanded={() => {}}
         />
       );
-    }
-
-    const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
-    /* v8 ignore next -- @preserve */
-    return (
-      <TreeNode
-        {...treeNodeProps}
-        className="stateless-tree-node"
-        ref={forwardedRef}
-        label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />}
-        isDisabled={true}
-        onExpanded={() => {}}
-      />
-    );
-  },
-);
+    },
+  );
 TreeNodeRenderer.displayName = "TreeNodeRenderer";
 
 type HierarchyNodeRendererProps = Omit<TreeNodeRendererProps, "node" | "reloadTree" | "size"> & {
@@ -215,7 +245,10 @@ const HierarchyNodeRenderer = forwardRef<HTMLDivElement, HierarchyNodeRendererPr
         ref={ref}
         isSelected={isSelected}
         isDisabled={isDisabled}
-        className={cx(treeNodeProps.className, "stateless-tree-node", { filtered: node.isFiltered, selected: isSelected })}
+        className={cx(treeNodeProps.className, "stateless-tree-node", {
+          filtered: node.isFiltered,
+          selected: isSelected,
+        })}
         onClick={(event) => !isDisabled && onNodeClick?.(node, !isSelected, event)}
         onKeyDown={(event) => {
           // Ignore if it is called on the element inside, e.g. checkbox or expander
@@ -249,9 +282,7 @@ HierarchyNodeRenderer.displayName = "HierarchyNodeRenderer";
 
 const PlaceholderNode = forwardRef<
   HTMLDivElement,
-  Omit<TreeNodeProps, "onExpanded" | "label"> & {
-    size?: "default" | "small";
-  }
+  Omit<TreeNodeProps, "onExpanded" | "label"> & { size?: "default" | "small" }
 >(({ size, ...props }, forwardedRef) => {
   const { localizedStrings } = useLocalizationContext();
   /* v8 ignore next -- @preserve */
@@ -275,21 +306,24 @@ const PlaceholderNode = forwardRef<
 });
 PlaceholderNode.displayName = "PlaceholderNode";
 
-const ResultSetTooLargeNode = forwardRef<HTMLDivElement, Omit<TreeNodeProps, "onExpanded" | "label"> & ResultSetTooLargeNodeLabelProps>(
-  ({ onFilterClick, onOverrideLimit, limit, ...props }, forwardedRef) => {
-    /* v8 ignore next -- @preserve */
-    return (
-      <TreeNode
-        {...props}
-        ref={forwardedRef}
-        className="stateless-tree-node"
-        label={<ResultSetTooLargeNodeLabel limit={limit} onFilterClick={onFilterClick} onOverrideLimit={onOverrideLimit} />}
-        onExpanded={() => {}}
-        isDisabled={true}
-      />
-    );
-  },
-);
+const ResultSetTooLargeNode = forwardRef<
+  HTMLDivElement,
+  Omit<TreeNodeProps, "onExpanded" | "label"> & ResultSetTooLargeNodeLabelProps
+>(({ onFilterClick, onOverrideLimit, limit, ...props }, forwardedRef) => {
+  /* v8 ignore next -- @preserve */
+  return (
+    <TreeNode
+      {...props}
+      ref={forwardedRef}
+      className="stateless-tree-node"
+      label={
+        <ResultSetTooLargeNodeLabel limit={limit} onFilterClick={onFilterClick} onOverrideLimit={onOverrideLimit} />
+      }
+      onExpanded={() => {}}
+      isDisabled={true}
+    />
+  );
+});
 ResultSetTooLargeNode.displayName = "ResultSetTooLargeNode";
 
 function ErrorNodeLabel({ message, onRetry }: { message: string; onRetry?: () => void }) {
@@ -311,7 +345,12 @@ function TreeNodeActions({
   getActions,
 }: Pick<
   HierarchyNodeRendererProps,
-  "node" | "actionButtonsClassName" | "getHierarchyLevelDetails" | "filterButtonsVisibility" | "getActions" | "onFilterClick"
+  | "node"
+  | "actionButtonsClassName"
+  | "getHierarchyLevelDetails"
+  | "filterButtonsVisibility"
+  | "getActions"
+  | "onFilterClick"
 >) {
   const { localizedStrings } = useLocalizationContext();
   const applyFilterButtonRef = useRef<HTMLButtonElement>(null);
@@ -364,7 +403,12 @@ function TreeNodeActions({
             ))
           }
         >
-          <IconButton styleType="borderless" size="small" label={localizedStrings.more} onClick={(e) => e.stopPropagation()}>
+          <IconButton
+            styleType="borderless"
+            size="small"
+            label={localizedStrings.more}
+            onClick={(e) => e.stopPropagation()}
+          >
             <SvgMore />
           </IconButton>
         </DropdownMenu>
@@ -428,7 +472,9 @@ function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: R
   );
   const increaseLimitMessage = supportsLimitOverride
     ? createLocalizedMessage(
-        supportsFiltering ? localizedStrings.increaseHierarchyLimitWithFiltering : localizedStrings.increaseHierarchyLimit,
+        supportsFiltering
+          ? localizedStrings.increaseHierarchyLimitWithFiltering
+          : localizedStrings.increaseHierarchyLimit,
         MAX_LIMIT_OVERRIDE,
         () => onOverrideLimit(MAX_LIMIT_OVERRIDE),
       )

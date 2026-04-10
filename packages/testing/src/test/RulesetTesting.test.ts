@@ -26,13 +26,7 @@ const MY_HIERARCHY_RULESET: Ruleset = {
       specifications: [
         {
           specType: "InstanceNodesOfSpecificClasses",
-          classes: [
-            {
-              schemaName: "BisCore",
-              classNames: ["Subject"],
-              arePolymorphic: false,
-            },
-          ],
+          classes: [{ schemaName: "BisCore", classNames: ["Subject"], arePolymorphic: false }],
           instanceFilter: "this.Parent = NULL",
           groupByClass: false,
           groupByLabel: false,
@@ -47,36 +41,20 @@ const MY_HIERARCHY_RULESET: Ruleset = {
         {
           specType: "RelatedInstanceNodes",
           relationshipPaths: [
-            {
-              relationship: {
-                schemaName: "BisCore",
-                className: "SubjectOwnsSubjects",
-              },
-              direction: "Forward",
-            },
+            { relationship: { schemaName: "BisCore", className: "SubjectOwnsSubjects" }, direction: "Forward" },
           ],
           groupByClass: false,
           groupByLabel: false,
         },
         {
           specType: "InstanceNodesOfSpecificClasses",
-          classes: {
-            schemaName: "BisCore",
-            classNames: ["Model"],
-            arePolymorphic: true,
-          },
+          classes: { schemaName: "BisCore", classNames: ["Model"], arePolymorphic: true },
           relatedInstances: [
             {
               relationshipPath: {
-                relationship: {
-                  schemaName: "BisCore",
-                  className: "ModelModelsElement",
-                },
+                relationship: { schemaName: "BisCore", className: "ModelModelsElement" },
                 direction: "Forward",
-                targetClass: {
-                  schemaName: "BisCore",
-                  className: "InformationPartitionElement",
-                },
+                targetClass: { schemaName: "BisCore", className: "InformationPartitionElement" },
               },
               alias: "partition",
               isRequired: true,
@@ -96,13 +74,7 @@ const MY_HIERARCHY_RULESET: Ruleset = {
         {
           specType: "RelatedInstanceNodes",
           relationshipPaths: [
-            {
-              relationship: {
-                schemaName: "BisCore",
-                className: "ModelContainsElements",
-              },
-              direction: "Forward",
-            },
+            { relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" },
           ],
           instanceFilter: "this.Parent = NULL",
           groupByClass: false,
@@ -118,13 +90,7 @@ const MY_HIERARCHY_RULESET: Ruleset = {
         {
           specType: "RelatedInstanceNodes",
           relationshipPaths: [
-            {
-              relationship: {
-                schemaName: "BisCore",
-                className: "ElementOwnsChildElements",
-              },
-              direction: "Forward",
-            },
+            { relationship: { schemaName: "BisCore", className: "ElementOwnsChildElements" }, direction: "Forward" },
           ],
           groupByClass: false,
           groupByLabel: false,
@@ -137,53 +103,22 @@ const MY_HIERARCHY_RULESET: Ruleset = {
 const MY_CONTENT_RULESET: Ruleset = {
   id: "my-test-content",
   rules: [
-    {
-      ruleType: "Content",
-      specifications: [
-        {
-          specType: "SelectedNodeInstances",
-        },
-      ],
-    },
+    { ruleType: "Content", specifications: [{ specType: "SelectedNodeInstances" }] },
     {
       ruleType: "ContentModifier",
       class: { schemaName: "Generic", className: "PhysicalObject" },
       propertyOverrides: [
-        {
-          name: "Model",
-          isDisplayed: false,
-        },
-        {
-          name: "Category",
-          isDisplayed: false,
-        },
+        { name: "Model", isDisplayed: false },
+        { name: "Category", isDisplayed: false },
       ],
       relatedProperties: [
         {
           propertiesSource: [
+            { relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Backward" },
+            { relationship: { schemaName: "BisCore", className: "ModelModelsElement" }, direction: "Forward" },
             {
-              relationship: {
-                schemaName: "BisCore",
-                className: "ModelContainsElements",
-              },
-              direction: "Backward",
-            },
-            {
-              relationship: {
-                schemaName: "BisCore",
-                className: "ModelModelsElement",
-              },
-              direction: "Forward",
-            },
-            {
-              relationship: {
-                schemaName: "BisCore",
-                className: "ElementHasLinks",
-              },
-              targetClass: {
-                schemaName: "BisCore",
-                className: "RepositoryLink",
-              },
+              relationship: { schemaName: "BisCore", className: "ElementHasLinks" },
+              targetClass: { schemaName: "BisCore", className: "RepositoryLink" },
               direction: "Forward",
             },
           ],

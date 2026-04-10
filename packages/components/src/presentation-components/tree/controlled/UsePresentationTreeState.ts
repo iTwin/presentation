@@ -21,7 +21,10 @@ import {
   TreeModelSource,
 } from "@itwin/components-react";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider.js";
-import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import {
+  IFilteredPresentationTreeDataProvider,
+  IPresentationTreeDataProvider,
+} from "../IPresentationTreeDataProvider.js";
 import { ReportingTreeNodeLoader } from "../ReportingTreeNodeLoader.js";
 import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering.js";
 import { ReloadedTree, useTreeReload } from "./UseTreeReload.js";
@@ -32,7 +35,9 @@ import { ReloadedTree, useTreeReload } from "./UseTreeReload.js";
  * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
  * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
-export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {
+export interface UsePresentationTreeStateProps<
+  TEventHandler extends TreeEventHandler = TreeEventHandler,
+> extends PresentationTreeDataProviderProps {
   /**
    * Number of nodes in a single page. The created loader always requests at least
    * a page of nodes, so it should be optimized for usability vs performance (using
@@ -157,10 +162,7 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
 }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined {
   const firstRenderRef = useRef(true);
   const treeStateProps = useMemo(
-    (): TreeStateProps => ({
-      ...dataProviderProps,
-      treeModel: firstRenderRef.current ? seedTreeModel : undefined,
-    }),
+    (): TreeStateProps => ({ ...dataProviderProps, treeModel: firstRenderRef.current ? seedTreeModel : undefined }),
     Object.values(dataProviderProps), // eslint-disable-line react-hooks/exhaustive-deps
   );
 
@@ -223,15 +225,16 @@ function useTreeState(props: UseTreeStateProps) {
   useEffect(() => {
     const { treeModel, ...providerProps } = props.treeStateProps;
     const modelSource = new TreeModelSource(new MutableTreeModel(treeModel));
-    const dataProvider = new PresentationTreeDataProvider({ ...providerProps, onHierarchyLimitExceeded: () => onHierarchyLimitExceededRef.current?.() });
+    const dataProvider = new PresentationTreeDataProvider({
+      ...providerProps,
+      onHierarchyLimitExceeded: () => onHierarchyLimitExceededRef.current?.(),
+    });
     const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, providerProps.pagingSize);
-    const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, (nodeLoadedProps) => onNodeLoadedRef.current?.(nodeLoadedProps));
+    const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, (nodeLoadedProps) =>
+      onNodeLoadedRef.current?.(nodeLoadedProps),
+    );
 
-    const newState = {
-      modelSource,
-      nodeLoader,
-      dataProvider,
-    };
+    const newState = { modelSource, nodeLoader, dataProvider };
     setState(newState);
 
     return () => {
@@ -246,7 +249,9 @@ function useTreeState(props: UseTreeStateProps) {
 
       const { modelSource, dataProvider } = reloadedTree;
       const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, dataProvider.pagingSize!);
-      const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, (nodeLoadedProps) => onNodeLoadedRef.current?.(nodeLoadedProps));
+      const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, (nodeLoadedProps) =>
+        onNodeLoadedRef.current?.(nodeLoadedProps),
+      );
       setState({ dataProvider, nodeLoader });
     },
     [onNodeLoadedRef, prevStateRef],
@@ -281,13 +286,7 @@ function usePresentationTreeFiltering({ activeMatchIndex, ...rest }: Presentatio
   const { filteredNodeLoader, filteredProvider, isFiltering, matchesCount } = useFilteredNodeLoader(rest);
   const highlightProps = useNodeHighlightingProps(rest.filter, filteredProvider, activeMatchIndex);
   return rest.filter && rest.dataProvider
-    ? {
-        highlightProps,
-        filteredNodeLoader,
-        filteredProvider,
-        isFiltering,
-        matchesCount,
-      }
+    ? { highlightProps, filteredNodeLoader, filteredProvider, isFiltering, matchesCount }
     : undefined;
 }
 

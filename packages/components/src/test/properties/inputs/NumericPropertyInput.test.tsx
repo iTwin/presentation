@@ -12,12 +12,18 @@ import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { WithConstraints } from "../../../presentation-components/common/ContentBuilder.js";
 import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
-import { NumericInput, NumericPropertyInput } from "../../../presentation-components/properties/inputs/NumericPropertyInput.js";
+import {
+  NumericInput,
+  NumericPropertyInput,
+} from "../../../presentation-components/properties/inputs/NumericPropertyInput.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 
 const createRecord = (initialValue?: number) => {
-  return createTestPropertyRecord({ value: initialValue, displayValue: initialValue?.toString() }, { typename: StandardTypeNames.Double });
+  return createTestPropertyRecord(
+    { value: initialValue, displayValue: initialValue?.toString() },
+    { typename: StandardTypeNames.Double },
+  );
 };
 
 describe("<NumericPropertyInput />", () => {
@@ -31,7 +37,13 @@ describe("<NumericPropertyInput />", () => {
   afterEach(async () => {});
 
   [
-    { testName: "the input value if min and max are undefined", input: "0", expectedResult: 0, min: undefined, max: undefined },
+    {
+      testName: "the input value if min and max are undefined",
+      input: "0",
+      expectedResult: 0,
+      min: undefined,
+      max: undefined,
+    },
     { testName: "undefined if input value isn't a number", input: "+", expectedResult: undefined, min: 1, max: 2 },
     { testName: "the input value if value falls in min and max range", input: "1", expectedResult: 1, min: 1, max: 2 },
     { testName: "min when input value is less than min", input: "0", expectedResult: 1, min: 1, max: undefined },
@@ -47,7 +59,9 @@ describe("<NumericPropertyInput />", () => {
           spy(args.newValue.value);
         }
       };
-      const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={onCommit} />);
+      const { getByRole, user } = render(
+        <NumericPropertyInput ref={ref} propertyRecord={record} onCommit={onCommit} />,
+      );
 
       expect((ref.current?.getValue() as PrimitiveValue).value).toBe(2);
 
@@ -370,6 +384,9 @@ describe("<NumericInput />", () => {
     await user.click(inputContainer);
     await user.tab();
 
-    expect(spy).toHaveBeenCalledWith({ propertyRecord: record, newValue: { valueFormat: 0, value: undefined, displayValue: "NaN", roundingError: undefined } });
+    expect(spy).toHaveBeenCalledWith({
+      propertyRecord: record,
+      newValue: { valueFormat: 0, value: undefined, displayValue: "NaN", roundingError: undefined },
+    });
   });
 });

@@ -3,7 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createMainThreadReleaseOnTimePassedHandler, EC, ECClassHierarchyInspector, ECSchemaProvider, getClass } from "@itwin/presentation-shared";
+import {
+  createMainThreadReleaseOnTimePassedHandler,
+  EC,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+  getClass,
+} from "@itwin/presentation-shared";
 import { HierarchyNode, ParentHierarchyNode } from "../../../HierarchyNode.js";
 import { ClassGroupingNodeKey } from "../../../HierarchyNodeKey.js";
 import { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
@@ -27,7 +33,9 @@ export async function getBaseClassGroupingECClasses(
     await releaseMainThread();
     baseClasses.push(await getClass(schemaProvider, fullName));
   }
-  const sortedClasses = await sortByBaseClass(baseClasses.filter((baseClass) => baseClass.isRelationshipClass() || baseClass.isEntityClass()));
+  const sortedClasses = await sortByBaseClass(
+    baseClasses.filter((baseClass) => baseClass.isRelationshipClass() || baseClass.isEntityClass()),
+  );
 
   if (parentNode && HierarchyNode.isClassGroupingNode(parentNode)) {
     // if we have a class grouping node, we can cut the front of sortedClasses up to a point where our grouping class is
@@ -64,7 +72,8 @@ export async function createBaseClassGroupsForSingleBaseClass(
 
     const baseCheckerResult = classHierarchyInspector.classDerivesFrom(fullCurrentNodeClassName, baseClassFullName);
 
-    const isCurrentNodeClassOfBase = baseCheckerResult instanceof Promise ? await baseCheckerResult : /* v8 ignore next */ baseCheckerResult;
+    const isCurrentNodeClassOfBase =
+      baseCheckerResult instanceof Promise ? await baseCheckerResult : /* v8 ignore next */ baseCheckerResult;
 
     if (isCurrentNodeClassOfBase) {
       groupedNodes.push(node);
@@ -75,10 +84,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
 
   const result: GroupingHandlerResult = { grouped: [], ungrouped: ungroupedNodes, groupingType: "base-class" };
   if (groupedNodes.length > 0) {
-    const groupingNodeKey: ClassGroupingNodeKey = {
-      type: "class-grouping",
-      className: baseClassFullName,
-    };
+    const groupingNodeKey: ClassGroupingNodeKey = { type: "class-grouping", className: baseClassFullName };
     result.grouped.push({
       label: baseECClass.label ?? baseECClass.name,
       key: groupingNodeKey,
@@ -133,5 +139,7 @@ export async function createBaseClassGroupingHandlers(
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<GroupingHandler[]> {
   const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(imodelAccess, parentNode, nodes);
-  return baseClassGroupingECClasses.map((baseECClass) => async (allNodes) => createBaseClassGroupsForSingleBaseClass(allNodes, baseECClass, imodelAccess));
+  return baseClassGroupingECClasses.map(
+    (baseECClass) => async (allNodes) => createBaseClassGroupsForSingleBaseClass(allNodes, baseECClass, imodelAccess),
+  );
 }

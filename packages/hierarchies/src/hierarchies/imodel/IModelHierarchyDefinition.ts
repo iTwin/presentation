@@ -79,7 +79,9 @@ export type NodeParser = (
  *
  * @public
  */
-export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
+export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(
+  node: TNode,
+) => Promise<TNode | undefined>;
 
 /**
  * A type for a function that post-processes given node. Unless the function decides not to make any modifications,

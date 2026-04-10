@@ -116,7 +116,9 @@ describe("Hierarchies", () => {
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -157,11 +159,7 @@ describe("Hierarchies", () => {
             hierarchy,
             formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "metric" }),
           }),
-          expect: [
-            {
-              node: (node) => expect(node.label).toBe(`[123.5 m]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).toBe(`[123.5 m]`) }],
         });
         await validateHierarchy({
           provider: createProvider({
@@ -169,11 +167,7 @@ describe("Hierarchies", () => {
             hierarchy,
             formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "imperial" }),
           }),
-          expect: [
-            {
-              node: (node) => expect(node.label).toBe(`[405.0 ft]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).toBe(`[405.0 ft]`) }],
         });
         await validateHierarchy({
           provider: createProvider({
@@ -181,11 +175,7 @@ describe("Hierarchies", () => {
             hierarchy,
             formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "usCustomary" }),
           }),
-          expect: [
-            {
-              node: (node) => expect(node.label).toBe(`[405.0 ft]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).toBe(`[405.0 ft]`) }],
         });
         await validateHierarchy({
           provider: createProvider({
@@ -193,11 +183,7 @@ describe("Hierarchies", () => {
             hierarchy,
             formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "usSurvey" }),
           }),
-          expect: [
-            {
-              node: (node) => expect(node.label).toBe(`[405.04 ft (US Survey)]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).toBe(`[405.04 ft (US Survey)]`) }],
         });
       });
     });
@@ -245,7 +231,9 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(emptyIModel);
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -270,9 +258,7 @@ describe("Hierarchies", () => {
                           { type: "String", value: "]" },
                         ]),
                       },
-                      extendedData: {
-                        lastMod: { selector: ECSql.createRawPropertyValueSelector("this", "LastMod") },
-                      },
+                      extendedData: { lastMod: { selector: ECSql.createRawPropertyValueSelector("this", "LastMod") } },
                     })}
                     FROM ${subjectClassName} AS this
                   `,
@@ -384,7 +370,9 @@ describe("Hierarchies", () => {
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -422,12 +410,8 @@ describe("Hierarchies", () => {
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy }),
           expect: [
-            {
-              node: (node) => expect(node.label).toBe(`[false]`),
-            },
-            {
-              node: (node) => expect(node.label).toBe(`[true]`),
-            },
+            { node: (node) => expect(node.label).toBe(`[false]`) },
+            { node: (node) => expect(node.label).toBe(`[true]`) },
           ],
         });
       });
@@ -455,11 +439,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).toBe(`true-false`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).toBe(`true-false`) }],
         });
       });
     });
@@ -473,7 +453,9 @@ describe("Hierarchies", () => {
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -510,11 +492,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).toBe(`[2]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).toBe(`[2]`) }],
         });
       });
       it("formats generic node labels", async () => {
@@ -540,11 +518,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).toBe(`[124]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).toBe(`[124]`) }],
         });
       });
     });
@@ -559,12 +533,7 @@ describe("Hierarchies", () => {
             builder,
             modelId: model.id,
             categoryId: category.id,
-            placement: {
-              origin: { x: 1.23, y: 4.56, z: 7.89 },
-              angles: {
-                yaw: 90.789,
-              },
-            },
+            placement: { origin: { x: 1.23, y: 4.56, z: 7.89 }, angles: { yaw: 90.789 } },
           });
           return { model, category, element };
         });
@@ -572,7 +541,9 @@ describe("Hierarchies", () => {
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -609,11 +580,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).toBe(`[90.79]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).toBe(`[90.79]`) }],
         });
       });
 
@@ -640,11 +607,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).toBe(`[123.79]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).toBe(`[123.79]`) }],
         });
       });
     });
@@ -659,10 +622,7 @@ describe("Hierarchies", () => {
             builder,
             modelId: model.id,
             categoryId: category.id,
-            placement: {
-              origin: { x: 1.477, y: 2.588 },
-              angle: 0,
-            },
+            placement: { origin: { x: 1.477, y: 2.588 }, angle: 0 },
           });
           return { model, category, element };
         });
@@ -670,7 +630,9 @@ describe("Hierarchies", () => {
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -707,11 +669,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).toBe(`[(1.48, 2.59)]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).toBe(`[(1.48, 2.59)]`) }],
         });
       });
 
@@ -738,11 +696,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).toBe(`[(1.48, 2.59)]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).toBe(`[(1.48, 2.59)]`) }],
         });
       });
     });
@@ -757,10 +711,7 @@ describe("Hierarchies", () => {
             builder,
             modelId: model.id,
             categoryId: category.id,
-            placement: {
-              origin: { x: 1.234, y: 4.567, z: 7.89 },
-              angles: {},
-            },
+            placement: { origin: { x: 1.234, y: 4.567, z: 7.89 }, angles: {} },
           });
           return { model, category, element };
         });
@@ -768,7 +719,9 @@ describe("Hierarchies", () => {
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -805,11 +758,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).toBe(`[(1.23, 4.57, 7.89)]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).toBe(`[(1.23, 4.57, 7.89)]`) }],
         });
       });
 
@@ -836,11 +785,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel: emptyIModel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).toBe(`[(1.48, 2.59, 3.70)]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).toBe(`[(1.48, 2.59, 3.70)]`) }],
         });
       });
     });
@@ -864,7 +809,9 @@ describe("Hierarchies", () => {
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -901,11 +848,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy }),
-          expect: [
-            {
-              node: (node) => expect(node.label).toBe(`[${guid}]`),
-            },
-          ],
+          expect: [{ node: (node) => expect(node.label).toBe(`[${guid}]`) }],
         });
       });
     });
@@ -920,7 +863,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(emptyIModel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
@@ -947,25 +892,11 @@ describe("Hierarchies", () => {
 
       const provider = createProvider({ imodel: emptyIModel, hierarchy, queryCacheSize: 10 });
       const queryReaderSpy = vi.spyOn(emptyIModel, "createQueryReader");
-      await validateHierarchy({
-        provider,
-        expect: [
-          {
-            node: (node) => expect(node.label).toBe(""),
-          },
-        ],
-      });
+      await validateHierarchy({ provider, expect: [{ node: (node) => expect(node.label).toBe("") }] });
       expect(queryReaderSpy).toHaveBeenCalledOnce();
       queryReaderSpy.mockClear();
       provider.setFormatter(async () => "formatted");
-      await validateHierarchy({
-        provider,
-        expect: [
-          {
-            node: (node) => expect(node.label).toBe("formatted"),
-          },
-        ],
-      });
+      await validateHierarchy({ provider, expect: [{ node: (node) => expect(node.label).toBe("formatted") }] });
       expect(queryReaderSpy).not.toHaveBeenCalled();
     });
   });

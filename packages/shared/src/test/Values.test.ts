@@ -31,45 +31,46 @@ describe("TypedPrimitiveValue", () => {
     it("returns correct result when primitiveType is compatible with primitiveValue", () => {
       expect(TypedPrimitiveValue.create(1, "Long")).toEqual({ value: 1, type: "Long", extendedType: undefined });
       expect(TypedPrimitiveValue.create(1, "Integer")).toEqual({ value: 1, type: "Integer", extendedType: undefined });
-      expect(TypedPrimitiveValue.create(1, "Double")).toEqual({ value: 1, type: "Double", extendedType: undefined, koqName: undefined });
+      expect(TypedPrimitiveValue.create(1, "Double")).toEqual({
+        value: 1,
+        type: "Double",
+        extendedType: undefined,
+        koqName: undefined,
+      });
       expect(TypedPrimitiveValue.create("0x11", "Id")).toEqual({ value: "0x11", type: "Id", extendedType: undefined });
-      expect(TypedPrimitiveValue.create(true, "Boolean")).toEqual({ value: true, type: "Boolean", extendedType: undefined });
-      expect(TypedPrimitiveValue.create("someValue", "String")).toEqual({ value: "someValue", type: "String", extendedType: undefined });
-      expect(TypedPrimitiveValue.create("someValue", "DateTime")).toEqual({ value: "someValue", type: "DateTime", extendedType: undefined });
-      expect(TypedPrimitiveValue.create(1, "DateTime")).toEqual({ value: 1, type: "DateTime", extendedType: undefined });
+      expect(TypedPrimitiveValue.create(true, "Boolean")).toEqual({
+        value: true,
+        type: "Boolean",
+        extendedType: undefined,
+      });
+      expect(TypedPrimitiveValue.create("someValue", "String")).toEqual({
+        value: "someValue",
+        type: "String",
+        extendedType: undefined,
+      });
+      expect(TypedPrimitiveValue.create("someValue", "DateTime")).toEqual({
+        value: "someValue",
+        type: "DateTime",
+        extendedType: undefined,
+      });
+      expect(TypedPrimitiveValue.create(1, "DateTime")).toEqual({
+        value: 1,
+        type: "DateTime",
+        extendedType: undefined,
+      });
       const date = new Date();
-      expect(TypedPrimitiveValue.create(date, "DateTime")).toEqual({ value: date, type: "DateTime", extendedType: undefined });
-      expect(
-        TypedPrimitiveValue.create(
-          {
-            x: 1,
-            y: 2,
-          },
-          "Point2d",
-        ),
-      ).toEqual({
-        value: {
-          x: 1,
-          y: 2,
-        },
+      expect(TypedPrimitiveValue.create(date, "DateTime")).toEqual({
+        value: date,
+        type: "DateTime",
+        extendedType: undefined,
+      });
+      expect(TypedPrimitiveValue.create({ x: 1, y: 2 }, "Point2d")).toEqual({
+        value: { x: 1, y: 2 },
         type: "Point2d",
         extendedType: undefined,
       });
-      expect(
-        TypedPrimitiveValue.create(
-          {
-            x: 1,
-            y: 2,
-            z: 3,
-          },
-          "Point3d",
-        ),
-      ).toEqual({
-        value: {
-          x: 1,
-          y: 2,
-          z: 3,
-        },
+      expect(TypedPrimitiveValue.create({ x: 1, y: 2, z: 3 }, "Point3d")).toEqual({
+        value: { x: 1, y: 2, z: 3 },
         type: "Point3d",
         extendedType: undefined,
       });

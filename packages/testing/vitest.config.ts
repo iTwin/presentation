@@ -16,33 +16,16 @@ export default defineConfig({
     mockReset: true,
     css: false,
     environmentOptions: {
-      happyDOM: {
-        settings: {
-          disableCSSFileLoading: true,
-          handleDisabledFileLoadingAsSuccess: true,
-        },
-      },
+      happyDOM: { settings: { disableCSSFileLoading: true, handleDisabledFileLoadingAsSuccess: true } },
     },
-    snapshotFormat: {
-      escapeString: true,
-      printBasicPrototype: true,
-    },
+    snapshotFormat: { escapeString: true, printBasicPrototype: true },
     coverage: {
       provider: "v8",
       include: ["src/presentation-testing/**/*.{ts,tsx}"],
       reportsDirectory: "./lib/test/coverage",
       reporter: ["text-summary", "lcov", "cobertura"],
-      thresholds: {
-        statements: 100,
-        functions: 100,
-        branches: 100,
-        lines: 100,
-      },
+      thresholds: { statements: 100, functions: 100, branches: 100, lines: 100 },
     },
-    server: {
-      deps: {
-        inline: ["@itwin/core-react", "@itwin/components-react", "@itwin/presentation-components"],
-      },
-    },
+    server: { deps: { inline: ["@itwin/core-react", "@itwin/components-react", "@itwin/presentation-components"] } },
   },
 });

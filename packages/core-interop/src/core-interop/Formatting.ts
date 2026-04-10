@@ -3,7 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { FormatProps, FormatterSpec, Format as QuantityFormat, UnitsProvider, UnitSystemKey } from "@itwin/core-quantity";
+import {
+  FormatProps,
+  FormatterSpec,
+  Format as QuantityFormat,
+  UnitsProvider,
+  UnitSystemKey,
+} from "@itwin/core-quantity";
 import {
   Format,
   InvertedUnit,
@@ -16,7 +22,12 @@ import {
   SchemaUnitProvider,
   Unit,
 } from "@itwin/ecschema-metadata";
-import { createDefaultValueFormatter, IPrimitiveValueFormatter, parseFullClassName, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import {
+  createDefaultValueFormatter,
+  IPrimitiveValueFormatter,
+  parseFullClassName,
+  TypedPrimitiveValue,
+} from "@itwin/presentation-shared";
 
 /**
  * Props for `createValueFormatter` function.
@@ -86,7 +97,9 @@ async function getKindOfQuantity(schemas: SchemaContext, fullName: string) {
   // TODO: replace with `schema.getItem(koqName, KindOfQuantity)` when itwinjs-core 4.x is dropped
   const koq = await schema.getItem(koqName);
   if (!koq) {
-    throw new Error(`Invalid kind of quantity "${koqName}" specified in KoQ full name "${fullName}" - it does not exist in schema "${schemaName}"`);
+    throw new Error(
+      `Invalid kind of quantity "${koqName}" specified in KoQ full name "${fullName}" - it does not exist in schema "${schemaName}"`,
+    );
   }
   return koq as KindOfQuantity;
 }
@@ -107,7 +120,10 @@ interface FormattingProps {
   persistenceUnitName: string;
 }
 
-async function getFormattingProps(koq: KindOfQuantity, unitSystem?: UnitSystemKey): Promise<FormattingProps | undefined> {
+async function getFormattingProps(
+  koq: KindOfQuantity,
+  unitSystem?: UnitSystemKey,
+): Promise<FormattingProps | undefined> {
   const persistenceUnit = await koq.persistenceUnit;
   if (!persistenceUnit) {
     return undefined;
@@ -119,7 +135,11 @@ async function getFormattingProps(koq: KindOfQuantity, unitSystem?: UnitSystemKe
   return { formatProps, persistenceUnitName: persistenceUnit.fullName };
 }
 
-async function getKoqFormatProps(koq: KindOfQuantity, persistenceUnit: Unit | InvertedUnit, unitSystem?: UnitSystemKey) {
+async function getKoqFormatProps(
+  koq: KindOfQuantity,
+  persistenceUnit: Unit | InvertedUnit,
+  unitSystem?: UnitSystemKey,
+) {
   const unitSystems = getUnitSystemGroupNames(unitSystem);
   // use one of KOQ presentation format that matches requested unit system
   const presentationFormat = await getKoqPresentationFormat(koq, unitSystems);
@@ -168,14 +188,7 @@ function getPersistenceUnitFormatProps(persistenceUnit: Unit | InvertedUnit): Fo
     type: "Decimal",
     uomSeparator: " ",
     decimalSeparator: ".",
-    composite: {
-      units: [
-        {
-          name: persistenceUnit.fullName,
-          label: persistenceUnit.label,
-        },
-      ],
-    },
+    composite: { units: [{ name: persistenceUnit.fullName, label: persistenceUnit.label }] },
   };
 }
 

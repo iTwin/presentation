@@ -4,7 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { beforeEach, describe, expect, it, MockInstance, vi } from "vitest";
-import { createMainThreadReleaseOnTimePassedHandler, normalizeFullClassName, parseFullClassName, trimWhitespace } from "../shared/Utils.js";
+import {
+  createMainThreadReleaseOnTimePassedHandler,
+  normalizeFullClassName,
+  parseFullClassName,
+  trimWhitespace,
+} from "../shared/Utils.js";
 
 describe("parseFullClassName", () => {
   it("parses valid full class names", () => {

@@ -18,7 +18,10 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { InstanceFilterDefinition, Node, NodeKey, NodePathElement } from "@itwin/presentation-common";
 import { memoize } from "../common/Utils.js";
 import { PresentationTreeDataProvider } from "./DataProvider.js";
-import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider.js";
+import {
+  IFilteredPresentationTreeDataProvider,
+  IPresentationTreeDataProvider,
+} from "./IPresentationTreeDataProvider.js";
 import { PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
 import { createTreeNodeItem } from "./Utils.js";
 
@@ -104,26 +107,25 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     hierarchy.set(parentId, treeNodes);
   }
 
-  public getActiveMatch: (index: number) => ActiveMatchInfo | undefined = memoize((index: number): ActiveMatchInfo | undefined => {
-    let activeMatch: ActiveMatchInfo | undefined;
-    if (index <= 0) {
-      return undefined;
-    }
-
-    let i = 1;
-    for (const node of this._filteredResultMatches) {
-      if (index < i + node.matchesCount) {
-        activeMatch = {
-          nodeId: node.id,
-          matchIndex: index - i,
-        };
-        break;
+  public getActiveMatch: (index: number) => ActiveMatchInfo | undefined = memoize(
+    (index: number): ActiveMatchInfo | undefined => {
+      let activeMatch: ActiveMatchInfo | undefined;
+      if (index <= 0) {
+        return undefined;
       }
 
-      i += node.matchesCount;
-    }
-    return activeMatch;
-  });
+      let i = 1;
+      for (const node of this._filteredResultMatches) {
+        if (index < i + node.matchesCount) {
+          activeMatch = { nodeId: node.id, matchIndex: index - i };
+          break;
+        }
+
+        i += node.matchesCount;
+      }
+      return activeMatch;
+    },
+  );
 
   /** Count filtering results. Including multiple possible matches within node labels */
   public countFilteringResults(nodePaths: ReadonlyArray<Readonly<NodePathElement>>): number {

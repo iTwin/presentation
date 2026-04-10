@@ -41,11 +41,7 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
   nodesToGroupMap.forEach((entry) => {
     const byLabel = entry[0].processingParams?.grouping?.byLabel;
     const groupId = typeof byLabel === "object" ? byLabel.groupId : undefined;
-    const groupingNodeKey: LabelGroupingNodeKey = {
-      type: "label-grouping",
-      label: entry[0].label,
-      groupId,
-    };
+    const groupingNodeKey: LabelGroupingNodeKey = { type: "label-grouping", label: entry[0].label, groupId };
     const groupedNodeParentKeys = entry[0].parentKeys;
     groupedNodes.push({
       label: entry[0].label,
@@ -56,9 +52,5 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
     });
   });
 
-  return {
-    groupingType: "label",
-    grouped: groupedNodes,
-    ungrouped,
-  };
+  return { groupingType: "label", grouped: groupedNodes, ungrouped };
 }

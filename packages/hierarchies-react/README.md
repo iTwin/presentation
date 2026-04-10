@@ -76,7 +76,11 @@ The hook takes 2 required properties:
   import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
   import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
   import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-  import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+  import {
+    createLimitingECSqlQueryExecutor,
+    createNodesQueryClauseFactory,
+    HierarchyDefinition,
+  } from "@itwin/presentation-hierarchies";
 
   // Not really part of the package, but we need SchemaContext to create the tree state. It's
   // recommended to cache the schema context and reuse it across different application's components to
@@ -168,7 +172,11 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import {
+  createLimitingECSqlQueryExecutor,
+  createNodesQueryClauseFactory,
+  HierarchyDefinition,
+} from "@itwin/presentation-hierarchies";
 
 import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 
@@ -229,9 +237,14 @@ type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
 // The hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all `BisCore.PhysicalModel` instances
 function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }): HierarchyDefinition {
   // Create a factory for building labels SELECT query clauses according to BIS conventions
-  const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+  const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({
+    classHierarchyInspector: imodelAccess,
+  });
   // Create a factory for building nodes SELECT query clauses in a format understood by the provider
-  const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsQueryFactory });
+  const nodesQueryFactory = createNodesQueryClauseFactory({
+    imodelAccess,
+    instanceLabelSelectClauseFactory: labelsQueryFactory,
+  });
   return {
     defineHierarchyLevel: async () => [
       {
@@ -243,7 +256,10 @@ function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
-                  selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
+                  selector: await labelsQueryFactory.createSelectClause({
+                    classAlias: "this",
+                    className: "BisCore.PhysicalModel",
+                  }),
                 },
                 hasChildren: false,
               })}
@@ -256,7 +272,13 @@ function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }
 }
 
 /** Internal component that creates and renders tree state. */
-function MyTreeComponentInternal({ imodelAccess, selectionStorage }: { imodelAccess: IModelAccess; selectionStorage: SelectionStorage }) {
+function MyTreeComponentInternal({
+  imodelAccess,
+  selectionStorage,
+}: {
+  imodelAccess: IModelAccess;
+  selectionStorage: SelectionStorage;
+}) {
   const { rootNodes, setFormatter, isLoading, ...state } = useIModelUnifiedSelectionTree({
     // the unified selection storage used by all app components let them share selection state
     selectionStorage,
@@ -303,7 +325,8 @@ const localizedStrings = {
   clearHierarchyLevelFilter: "Clear active filter",
   noFilteredChildren: "No child nodes match current filter",
   resultLimitExceeded: "There are more items than allowed limit of {{limit}}.",
-  resultLimitExceededWithFiltering: "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
+  resultLimitExceededWithFiltering:
+    "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
   increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
   increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
 };
@@ -318,7 +341,14 @@ function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
   if (!rootNodes) {
     return localizedStrings.loading;
   }
-  return <TreeRenderer rootNodes={rootNodes} expandNode={expandNode} localizedStrings={localizedStrings} onFilterClick={() => {}} />;
+  return (
+    <TreeRenderer
+      rootNodes={rootNodes}
+      expandNode={expandNode}
+      localizedStrings={localizedStrings}
+      onFilterClick={() => {}}
+    />
+  );
 }
 ```
 
@@ -335,7 +365,12 @@ import { Props } from "@itwin/presentation-shared";
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react";
 import { LocalizationContextProvider } from "@itwin/presentation-hierarchies-react";
-import { createRenderedTreeNodeData, RenderedTreeNode, TreeNodeRenderer, TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
+import {
+  createRenderedTreeNodeData,
+  RenderedTreeNode,
+  TreeNodeRenderer,
+  TreeRenderer,
+} from "@itwin/presentation-hierarchies-react/itwinui";
 
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 type TreeRendererProps = Props<typeof TreeRenderer>;
@@ -349,7 +384,12 @@ function MyTreeRenderer({ rootNodes }: TreeRendererProps) {
 
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
-      <Tree<RenderedTreeNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
+      <Tree<RenderedTreeNode>
+        data={rootNodes}
+        nodeRenderer={nodeRenderer}
+        getNode={getNode}
+        enableVirtualization={true}
+      />
     </LocalizationContextProvider>
   );
 }

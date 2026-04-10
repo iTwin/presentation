@@ -5,8 +5,17 @@
 
 import { expect } from "vitest";
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
-import { createNodesQueryClauseFactory, DefineHierarchyLevelProps, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider, Props } from "@itwin/presentation-shared";
+import {
+  createNodesQueryClauseFactory,
+  DefineHierarchyLevelProps,
+  NodesQueryClauseFactory,
+} from "@itwin/presentation-hierarchies";
+import {
+  createBisInstanceLabelSelectClauseFactory,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+  Props,
+} from "@itwin/presentation-shared";
 import { Datasets, IModelName } from "../util/Datasets.js";
 import { run, RunOptions } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
@@ -40,7 +49,9 @@ export function runHierarchyTest(
 
             const query = createNodesQueryClauseFactory({
               imodelAccess,
-              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                classHierarchyInspector: imodelAccess,
+              }),
             });
             return [
               {

@@ -147,7 +147,9 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
       // load all placeholder nodes in visible range
       return from(notLoadedNode).pipe(
         mergeMap((placeholder) => {
-          const parentNode = placeholder.parentId ? this.modelSource.getModel().getNode(placeholder.parentId) : this.modelSource.getModel().getRootNode();
+          const parentNode = placeholder.parentId
+            ? this.modelSource.getModel().getNode(placeholder.parentId)
+            : this.modelSource.getModel().getRootNode();
           assert(parentNode !== undefined);
           return toRxjsObservable(super.loadNode(parentNode, placeholder.childIndex));
         }),
@@ -177,7 +179,10 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
   }
 
   /** Only loads the node if it is not present in the tree model already */
-  public override loadNode(parent: TreeModelNode | TreeModelRootNode, childIndex: number): Observable<TreeNodeLoadResult> {
+  public override loadNode(
+    parent: TreeModelNode | TreeModelRootNode,
+    childIndex: number,
+  ): Observable<TreeNodeLoadResult> {
     const node = this.modelSource.getModel().getNode(parent.id, childIndex);
     if (isTreeModelNode(node)) {
       return EMPTY;
@@ -225,8 +230,5 @@ function getVisibleRange(itemsRange: RenderedItemsRange, visibleNodes: VisibleTr
   const visibleNodesCount = itemsRange.visibleStopIndex - itemsRange.visibleStartIndex;
   const endPosition = visibleNodes.getNumNodes() - 1;
   const startPosition = endPosition - visibleNodesCount;
-  return {
-    start: startPosition < 0 ? 0 : startPosition,
-    end: endPosition < 0 ? 0 : endPosition,
-  };
+  return { start: startPosition < 0 ? 0 : startPosition, end: endPosition < 0 ? 0 : endPosition };
 }

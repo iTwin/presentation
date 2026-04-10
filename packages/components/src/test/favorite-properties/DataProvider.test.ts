@@ -32,10 +32,7 @@ describe("FavoritePropertiesDataProvider", () => {
 
   beforeEach(() => {
     presentationManager = createMocked(PresentationManager);
-    presentationPropertyDataProvider = {
-      getData: vi.fn<() => PropertyData>(),
-      [Symbol.dispose]: vi.fn<() => void>(),
-    };
+    presentationPropertyDataProvider = { getData: vi.fn<() => PropertyData>(), [Symbol.dispose]: vi.fn<() => void>() };
     favoritePropertiesManager = createMocked(FavoritePropertiesManager);
 
     const localization = new EmptyLocalization();
@@ -69,7 +66,10 @@ describe("FavoritePropertiesDataProvider", () => {
         .mockReturnValue(presentationPropertyDataProvider as unknown as PresentationPropertyDataProvider);
 
       const customRulesetId = "custom_ruleset_id";
-      provider = new FavoritePropertiesDataProvider({ ruleset: customRulesetId, activeScopeProvider: () => ({ id: "element" }) });
+      provider = new FavoritePropertiesDataProvider({
+        ruleset: customRulesetId,
+        activeScopeProvider: () => ({ id: "element" }),
+      });
       (provider as any).createPropertyDataProvider = factorySpy;
 
       await provider.getData(imodel, elementId);

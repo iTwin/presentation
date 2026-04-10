@@ -1,5 +1,5 @@
 diff --git a/apps/full-stack-tests/src/IModelUtils.ts b/apps/full-stack-tests/src/IModelUtils.ts
-index e4bb74e5..d18672aa 100644
+index 577eaaf9..72414a2f 100644
 --- a/apps/full-stack-tests/src/IModelUtils.ts
 +++ b/apps/full-stack-tests/src/IModelUtils.ts
 @@ -8,7 +8,7 @@ import * as fs from "fs";
@@ -11,7 +11,7 @@ index e4bb74e5..d18672aa 100644
  import { assert, BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
  import { IModelConnection } from "@itwin/core-frontend";
  import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
-@@ -47,7 +47,7 @@ export class ECDbBuilder {
+@@ -54,7 +54,7 @@ export class ECDbBuilder {
          .map(() => "?")
          .join(", ")})
      `;
@@ -20,8 +20,8 @@ index e4bb74e5..d18672aa 100644
        Object.values(props).forEach((value, i) => {
          const bindingIndex = i + 1;
          switch (typeof value) {
-@@ -119,7 +119,7 @@ export class ECDbBuilder {
-
+@@ -126,7 +126,7 @@ export class ECDbBuilder {
+ 
    public insertInstance(fullClassName: string, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
      const query = this.createInsertQuery(fullClassName, props);
 -    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
@@ -29,7 +29,7 @@ index e4bb74e5..d18672aa 100644
        try {
          query.binder(stmt);
          const res = stmt.stepForInsert();
-@@ -128,9 +128,6 @@ export class ECDbBuilder {
+@@ -138,9 +138,6 @@ export class ECDbBuilder {
          }
          return { className: fullClassName, id: res.id! };
        } finally {
@@ -39,7 +39,7 @@ index e4bb74e5..d18672aa 100644
        }
      });
    }
-@@ -141,7 +138,7 @@ export class ECDbBuilder {
+@@ -156,7 +153,7 @@ export class ECDbBuilder {
        sourceECInstanceId: sourceId,
        targetECInstanceId: targetId,
      });
@@ -48,7 +48,7 @@ index e4bb74e5..d18672aa 100644
        try {
          query.binder(stmt);
          const res = stmt.stepForInsert();
-@@ -150,9 +147,6 @@ export class ECDbBuilder {
+@@ -168,9 +165,6 @@ export class ECDbBuilder {
          }
          return { className: fullClassName, id: res.id! };
        } finally {
@@ -59,13 +59,13 @@ index e4bb74e5..d18672aa 100644
      });
    }
 diff --git a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
-index 112b41bf..cf1a51c5 100644
+index 649fbc75..40f99206 100644
 --- a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
 +++ b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
-@@ -4,14 +4,11 @@
-  *--------------------------------------------------------------------------------------------*/
-
- import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+@@ -8,14 +8,11 @@ import {
+   insertPhysicalModelWithPartition,
+   insertSpatialCategory,
+ } from "presentation-test-utilities";
 -import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 -import { PrimitiveValue } from "@itwin/appui-abstract";
 +import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -79,10 +79,10 @@ index 112b41bf..cf1a51c5 100644
  import { importSchema } from "../../IModelUtils.js";
  import { initialize, terminate } from "../../IntegrationTests.js";
  import { render, waitFor } from "../../RenderUtils.js";
-@@ -29,111 +26,6 @@ describe("Property editors", () => {
+@@ -33,102 +30,6 @@ describe("Property editors", () => {
      await terminate();
    });
-
+ 
 -  afterEach(() => {
 -    IModelApp.resetFormatsProvider();
 -  });
@@ -122,11 +122,7 @@ index 112b41bf..cf1a51c5 100644
 -          return {
 -            name: "TestFormat",
 -            label: "Test format override",
--            composite: {
--              includeZero: true,
--              spacer: "",
--              units: [{ label: "in", name: "Units.IN" }],
--            },
+-            composite: { includeZero: true, spacer: "", units: [{ label: "in", name: "Units.IN" }] },
 -            formatTraits: ["keepSingleZero", "showUnitLabel"],
 -            precision: 1,
 -            type: "Decimal",
@@ -145,12 +141,7 @@ index 112b41bf..cf1a51c5 100644
 -      {
 -        type: FieldDescriptorType.Properties,
 -        pathFromSelectToPropertyClass: [],
--        properties: [
--          {
--            class: schema.items.MyPhysicalObject.fullName.replaceAll(".", ":"),
--            name: "MyProperty",
--          },
--        ],
+-        properties: [{ class: schema.items.MyPhysicalObject.fullName.replaceAll(".", ":"), name: "MyProperty" }],
 -      },
 -      true,
 -    );
@@ -192,99 +183,96 @@ index 112b41bf..cf1a51c5 100644
      const { imodel, schema, ...imodelKeys } = await buildTestIModel(async (builder, testName) => {
        const mySchema = await importSchema(
 diff --git a/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts b/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts
-index c29808da..7bdc4246 100644
+index 0f2dcb8c..4cd9ae58 100644
 --- a/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts
 +++ b/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts
-@@ -14,7 +14,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
- import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+@@ -20,15 +20,7 @@ import {
+ } from "@itwin/appui-abstract";
  import { PropertyCategory } from "@itwin/components-react";
  import { assert } from "@itwin/core-bentley";
--import { ArrayPropertiesField, combineFieldNames, InstanceKey, KeySet, PropertiesField, RuleTypes, StructPropertiesField } from "@itwin/presentation-common";
+-import {
+-  ArrayPropertiesField,
+-  combineFieldNames,
+-  InstanceKey,
+-  KeySet,
+-  PropertiesField,
+-  RuleTypes,
+-  StructPropertiesField,
+-} from "@itwin/presentation-common";
 +import { combineFieldNames, InstanceKey, KeySet, PropertiesField, RuleTypes } from "@itwin/presentation-common";
- import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider, PresentationPropertyDataProviderProps } from "@itwin/presentation-components";
- import { Presentation } from "@itwin/presentation-frontend";
- import { importSchema } from "../../IModelUtils.js";
-@@ -321,7 +321,8 @@ describe("PropertyDataProvider", async () => {
+ import {
+   DEFAULT_PROPERTY_GRID_RULESET,
+   PresentationPropertyDataProvider,
+@@ -309,7 +301,8 @@ describe("PropertyDataProvider", async () => {
    runTests("with flat property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = false));
    runTests("with nested property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = true));
-
+ 
 -  it("finds array item & struct member fields", async () => {
 +  // requires iTwin.js@5.6
 +  it.skip("finds array item & struct member fields", async () => {
      const { imodel, ...keys } = await buildTestIModel(async (builder, testName) => {
        const schema = await importSchema(
          testName,
-@@ -445,14 +446,6 @@ describe("PropertyDataProvider", async () => {
-       name: "[*]",
-       label: "ArrayProperty",
-     });
+@@ -450,11 +443,6 @@ describe("PropertyDataProvider", async () => {
+     const arrayItemRecord = arrayRecord.value.items[0];
+     const arrayItemField = (await provider.getFieldByPropertyDescription(arrayItemRecord.property)) as PropertiesField;
+     expect(arrayItemField).toMatchObject({ name: "[*]", label: "ArrayProperty" });
 -    expect(arrayItemField.parentArrayField).toBeInstanceOf(ArrayPropertiesField);
 -    expect(arrayItemField.parentArrayField).toMatchObject({
 -      label: "ArrayProperty",
--      type: {
--        valueFormat: "Array",
--        typeName: "string[]",
--      },
+-      type: { valueFormat: "Array", typeName: "string[]" },
 -    });
-
+ 
      // test retrieving struct member field
      const structRecord = properties.records["/selected-item/"].find((r) => r.property.name.endsWith("StructProperty"));
-@@ -462,14 +455,6 @@ describe("PropertyDataProvider", async () => {
-     expect(structMemberField).toMatchObject({
-       name: "StringMember",
-     });
+@@ -464,11 +452,6 @@ describe("PropertyDataProvider", async () => {
+       structMemberRecord.property,
+     )) as PropertiesField;
+     expect(structMemberField).toMatchObject({ name: "StringMember" });
 -    expect(structMemberField.parentStructField).toBeInstanceOf(StructPropertiesField);
 -    expect(structMemberField.parentStructField).toMatchObject({
 -      label: "StructProperty",
--      type: {
--        valueFormat: "Struct",
--        typeName: "TestStruct",
--      },
+-      type: { valueFormat: "Struct", typeName: "TestStruct" },
 -    });
-
+ 
      // test retrieving struct array member field
-     const structArrayRecord = properties.records["/selected-item/"].find((r) => r.property.name.endsWith("StructArrayProperty"));
-@@ -481,22 +466,6 @@ describe("PropertyDataProvider", async () => {
-     expect(structArrayMemberField).toMatchObject({
-       name: "StringMember",
-     });
+     const structArrayRecord = properties.records["/selected-item/"].find((r) =>
+@@ -482,18 +465,6 @@ describe("PropertyDataProvider", async () => {
+       structArrayItemMemberRecord.property,
+     )) as PropertiesField;
+     expect(structArrayMemberField).toMatchObject({ name: "StringMember" });
 -    expect(structArrayMemberField.parentStructField).toBeInstanceOf(StructPropertiesField);
 -    expect(structArrayMemberField.parentStructField).toMatchObject({
 -      label: "StructArrayProperty",
--      type: {
--        valueFormat: "Struct",
--        typeName: "TestStruct",
--      },
+-      type: { valueFormat: "Struct", typeName: "TestStruct" },
 -    });
--    expect((structArrayMemberField.parentStructField as StructPropertiesField).parentArrayField).toBeInstanceOf(ArrayPropertiesField);
+-    expect((structArrayMemberField.parentStructField as StructPropertiesField).parentArrayField).toBeInstanceOf(
+-      ArrayPropertiesField,
+-    );
 -    expect((structArrayMemberField.parentStructField as StructPropertiesField).parentArrayField).toMatchObject({
 -      label: "StructArrayProperty",
--      type: {
--        valueFormat: "Array",
--        typeName: "TestStruct[]",
--      },
+-      type: { valueFormat: "Array", typeName: "TestStruct[]" },
 -    });
    });
-
+ 
    it("gets property data after re-initializing Presentation", async () => {
 diff --git a/apps/full-stack-tests/src/unified-selection/learning-snippets/HiliteSets.test.ts b/apps/full-stack-tests/src/unified-selection/learning-snippets/HiliteSets.test.ts
-index 5bf30008..aa57cfb9 100644
+index 7b4f75f9..7c00f68b 100644
 --- a/apps/full-stack-tests/src/unified-selection/learning-snippets/HiliteSets.test.ts
 +++ b/apps/full-stack-tests/src/unified-selection/learning-snippets/HiliteSets.test.ts
-@@ -18,6 +18,8 @@ import { createIModelKey } from "@itwin/presentation-core-interop";
+@@ -23,6 +23,8 @@ import { createIModelKey } from "@itwin/presentation-core-interop";
  import { createStorage, Selectables } from "@itwin/unified-selection";
  import { initialize, terminate } from "../../IntegrationTests.js";
  import { buildTestIModel } from "../../TestIModelSetup.js";
 +import { SchemaContext } from "@itwin/ecschema-metadata";
 +import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-
+ 
  describe("Unified selection", () => {
    describe("Learning snippets", () => {
-@@ -37,8 +39,15 @@ describe("Unified selection", () => {
-           const elementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
+@@ -48,7 +50,15 @@ describe("Unified selection", () => {
            return { modelKey, categoryKey, elementKey };
          });
--
+ 
 -        const getIModelConnection = () => imodel;
 +        // The accessor was introduced in iTwin.js Core 5.1.0
 +        Object.defineProperty(imodel, "schemaContext", {
@@ -296,41 +284,43 @@ index 5bf30008..aa57cfb9 100644
 +        });
 +        const getIModelConnection = (): any => imodel;
          const selectables = Selectables.create([keys.elementKey]);
-
+ 
          // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.BasicProvider
-@@ -70,6 +79,8 @@ describe("Unified selection", () => {
-           const elementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
+@@ -79,6 +89,8 @@ describe("Unified selection", () => {
+           });
            return { modelKey, categoryKey, elementKey };
          });
 +        const schemas = new SchemaContext();
 +        schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-
+ 
          const selectionStorage = createStorage();
-         selectionStorage.addToSelection({ imodelKey: createIModelKey(imodel), source: "test", selectables: [keys.elementKey] });
-@@ -78,7 +89,7 @@ describe("Unified selection", () => {
+         selectionStorage.addToSelection({
+@@ -91,9 +103,7 @@ describe("Unified selection", () => {
            if (imodelKey === createIModelKey(imodel)) {
              return {
                ...createECSqlQueryExecutor(imodel),
--              ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodel.schemaContext) }),
+-              ...createCachingECClassHierarchyInspector({
+-                schemaProvider: createECSchemaProvider(imodel.schemaContext),
+-              }),
 +              ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(schemas) }),
                key: imodelKey,
              };
            }
 diff --git a/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx b/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
-index 3c544e0e..81e74ce1 100644
+index 87f50924..73f709bf 100644
 --- a/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
 +++ b/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
-@@ -26,6 +26,8 @@ import { initialize, terminate } from "../../IntegrationTests.js";
+@@ -30,6 +30,8 @@ import { initialize, terminate } from "../../IntegrationTests.js";
  import { render, waitFor } from "../../RenderUtils.js";
  import { isSelectionStorageSupported, stubVirtualization } from "../../Utils.js";
  import { buildTestIModel } from "../../TestIModelSetup.js";
 +import { SchemaContext } from "@itwin/ecschema-metadata";
 +import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-
+ 
  describe("Unified selection", () => {
    describe("Learning snippets", () => {
-@@ -102,7 +104,15 @@ describe("Unified selection", () => {
-           const elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
+@@ -115,7 +117,15 @@ describe("Unified selection", () => {
+           });
            return { modelKey, categoryKey, elementKey };
          });
 -        function useActiveIModelConnection() {
@@ -345,13 +335,22 @@ index 3c544e0e..81e74ce1 100644
 +        function useActiveIModelConnection(): any {
            return imodel;
          }
-
-@@ -124,7 +134,7 @@ describe("Unified selection", () => {
+ 
+@@ -137,7 +147,7 @@ describe("Unified selection", () => {
          /** An iModel-based component that handles iModel selection directly, through its `SelectionSet` */
          function IModelComponent({ selectionStorage }: { selectionStorage: SelectionStorage }) {
            // get the active iModel connection (implementation is outside the scope of this example)
 -          const iModelConnection: IModelConnection = useActiveIModelConnection();
 +          const iModelConnection = useActiveIModelConnection();
-
+ 
            // enable unified selection sync with the iModel
            useEffect(
+@@ -218,7 +228,7 @@ describe("Unified selection", () => {
+           // __PUBLISH_EXTRACT_END__
+ 
+           expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key }))).toBe(true);
+-
++          
+           // eslint-disable-next-line @typescript-eslint/no-deprecated
+           Presentation.selection.addToSelection("test", imodel, new KeySet([keys.elementKey]));
+           await waitFor(() => {

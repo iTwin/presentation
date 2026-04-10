@@ -18,7 +18,12 @@ import {
   useNavigationPropertyEditorContextProviderProps,
 } from "../../../presentation-components/properties/editors/NavigationPropertyEditorContext.js";
 import { stubVirtualization } from "../../_helpers/Common.js";
-import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../../_helpers/Content.js";
+import {
+  createTestContentDescriptor,
+  createTestContentItem,
+  createTestPropertiesContentField,
+  createTestSimpleContentField,
+} from "../../_helpers/Content.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { renderHook, render as renderRTL, waitFor } from "../../TestUtils.js";
 
@@ -80,7 +85,9 @@ describe("<NavigationPropertyTargetEditor />", () => {
       values: {},
       displayValues: {},
     });
-    getContentStub.mockResolvedValue(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
+    getContentStub.mockResolvedValue(
+      new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]),
+    );
     const spy = vi.fn();
     const { getByPlaceholderText, getByText, getByDisplayValue, user } = render(
       <NavigationPropertyTargetEditor propertyRecord={testRecord} onCancel={() => {}} onCommit={spy} />,
@@ -133,7 +140,11 @@ describe("useNavigationPropertyEditorContextProviderProps", () => {
   });
 
   it("returns navigation property info", async () => {
-    const propertyDescription: PropertyDescription = { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
+    const propertyDescription: PropertyDescription = {
+      displayLabel: "TestProp",
+      name: "test_prop",
+      typename: "navigation",
+    };
     const navigationPropertyInfo: NavigationPropertyInfo = {
       classInfo: { id: "1", label: "Class Label", name: "TestSchema:TestClass" },
       targetClassInfo: { id: "2", label: "Target Label", name: "TestSchema:TargetClass" },
@@ -155,21 +166,27 @@ describe("useNavigationPropertyEditorContextProviderProps", () => {
         ],
       });
 
-    const { result } = renderHook(({ imodel, dataProvider }: Props) => useNavigationPropertyEditorContextProviderProps(imodel, dataProvider), {
-      initialProps: { imodel: testImodel, dataProvider: testDataProvider },
-    });
+    const { result } = renderHook(
+      ({ imodel, dataProvider }: Props) => useNavigationPropertyEditorContextProviderProps(imodel, dataProvider),
+      { initialProps: { imodel: testImodel, dataProvider: testDataProvider } },
+    );
 
     const info = await result.current.getNavigationPropertyInfo(propertyDescription);
     expect(info).toBe(navigationPropertyInfo);
   });
 
   it("returns undefined if non properties field is returned", async () => {
-    const propertyDescription: PropertyDescription = { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
+    const propertyDescription: PropertyDescription = {
+      displayLabel: "TestProp",
+      name: "test_prop",
+      typename: "navigation",
+    };
     testDataProvider.getFieldByPropertyDescription = async () => createTestSimpleContentField();
 
-    const { result } = renderHook(({ imodel, dataProvider }: Props) => useNavigationPropertyEditorContextProviderProps(imodel, dataProvider), {
-      initialProps: { imodel: testImodel, dataProvider: testDataProvider },
-    });
+    const { result } = renderHook(
+      ({ imodel, dataProvider }: Props) => useNavigationPropertyEditorContextProviderProps(imodel, dataProvider),
+      { initialProps: { imodel: testImodel, dataProvider: testDataProvider } },
+    );
 
     const info = await result.current.getNavigationPropertyInfo(propertyDescription);
     expect(info).toBeUndefined();

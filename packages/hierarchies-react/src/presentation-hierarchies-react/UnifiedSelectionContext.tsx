@@ -16,7 +16,9 @@ const deprecatedUnifiedSelectionContext = createContext<SelectionStorage | undef
  * @deprecated in 1.5.0. Use `UnifiedSelectionContextProvider` from `@itwin/unified-selection-react` instead.
  */
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{ storage: SelectionStorage }>) {
-  return <deprecatedUnifiedSelectionContext.Provider value={storage}>{children}</deprecatedUnifiedSelectionContext.Provider>;
+  return (
+    <deprecatedUnifiedSelectionContext.Provider value={storage}>{children}</deprecatedUnifiedSelectionContext.Provider>
+  );
 }
 
 /** @internal */

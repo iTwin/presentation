@@ -67,7 +67,10 @@ export function hasChildren<TNode extends { children?: boolean | Array<unknown> 
 }
 
 /** @internal */
-export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(lhs: TLhsNode, rhs: TRhsNode): number {
+export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(
+  lhs: TLhsNode,
+  rhs: TRhsNode,
+): number {
   return naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase());
 }
 

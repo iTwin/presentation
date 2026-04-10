@@ -58,10 +58,7 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
 
   const [itemsLoader, setItemsLoader] = useState<NavigationPropertyItemsLoader | undefined>();
 
-  const [state, setLoadedOptions] = useState<NavigationPropertyValuesLoaderState>({
-    options: [],
-    isLoading: false,
-  });
+  const [state, setLoadedOptions] = useState<NavigationPropertyValuesLoaderState>({ options: [], isLoading: false });
 
   // Get initial loader and values
   useEffect(() => {
@@ -75,10 +72,7 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
         setLoadedOptions((prev) => ({ ...prev, isLoading: true }));
       },
       (newItems) => {
-        setLoadedOptions((prev) => ({
-          options: [...prev.options, ...newItems],
-          isLoading: false,
-        }));
+        setLoadedOptions((prev) => ({ options: [...prev.options, ...newItems], isLoading: false }));
       },
       async (filter?: string) => getItems(imodel, ruleset, filter),
     );
@@ -108,10 +102,7 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
   return {
     selectOptions: useMemo<SelectOption<string>[]>(() => {
       const options: SelectOption<string>[] = state.options.map((option) => {
-        return {
-          label: option.label.displayValue,
-          value: option.label.displayValue,
-        };
+        return { label: option.label.displayValue, value: option.label.displayValue };
       });
 
       if (options.length >= VALUE_BATCH_SIZE) {
@@ -183,17 +174,13 @@ async function getItems(imodel: IModelConnection, ruleset: Ruleset, filter?: str
           toArray(),
         )
       : // eslint-disable-next-line @typescript-eslint/no-deprecated
-        from(Presentation.presentation.getContent(requestProps)).pipe(map((content) => (content ? content.contentSet : [])))
-    ).subscribe({
-      next: resolve,
-      error: reject,
-    });
+        from(Presentation.presentation.getContent(requestProps)).pipe(
+          map((content) => (content ? content.contentSet : [])),
+        )
+    ).subscribe({ next: resolve, error: reject });
   });
 
-  const results: NavigationPropertyTarget[] = items.map((item) => ({
-    label: item.label,
-    key: item.primaryKeys[0],
-  }));
+  const results: NavigationPropertyTarget[] = items.map((item) => ({ label: item.label, key: item.primaryKeys[0] }));
   return results;
 }
 
@@ -214,11 +201,17 @@ export class NavigationPropertyItemsLoader {
   }
 
   public async loadItems(filterText?: string) {
-    if (this._isLoading || filterText === undefined || (filterText === "" && this._loadedItems.length >= VALUE_BATCH_SIZE)) {
+    if (
+      this._isLoading ||
+      filterText === undefined ||
+      (filterText === "" && this._loadedItems.length >= VALUE_BATCH_SIZE)
+    ) {
       return;
     }
 
-    const filteredItems = this._loadedItems.filter((option) => option.label.displayValue.toLowerCase().includes(filterText.toLowerCase()));
+    const filteredItems = this._loadedItems.filter((option) =>
+      option.label.displayValue.toLowerCase().includes(filterText.toLowerCase()),
+    );
     if (filteredItems.length >= VALUE_BATCH_SIZE) {
       return;
     }

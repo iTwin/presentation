@@ -29,10 +29,18 @@ export class RulesetSelector extends Component<RulesetSelectorProps, RulesetSele
   }
   public override render() {
     if (!this.state.availableRulesets) {
-      return <div className="RulesetSelector">{IModelApp.localization.getLocalizedString("Sample:controls.notifications.loading")}</div>;
+      return (
+        <div className="RulesetSelector">
+          {IModelApp.localization.getLocalizedString("Sample:controls.notifications.loading")}
+        </div>
+      );
     }
     if (0 === this.state.availableRulesets.length) {
-      return <div className="RulesetSelector">{IModelApp.localization.getLocalizedString("Sample:controls.notifications.no-available-rulesets")}</div>;
+      return (
+        <div className="RulesetSelector">
+          {IModelApp.localization.getLocalizedString("Sample:controls.notifications.no-available-rulesets")}
+        </div>
+      );
     }
     return (
       <div className="RulesetSelector">

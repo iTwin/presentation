@@ -38,7 +38,10 @@ describe("Hierarchies", () => {
       });
       await validateHierarchy({
         provider,
-        expect: [NodeValidators.createForGenericNode({ label: "1" }), NodeValidators.createForGenericNode({ label: "2" })],
+        expect: [
+          NodeValidators.createForGenericNode({ label: "1" }),
+          NodeValidators.createForGenericNode({ label: "2" }),
+        ],
       });
     });
 
@@ -121,12 +124,7 @@ describe("Hierarchies", () => {
       });
       await validateHierarchy({
         provider,
-        expect: [
-          NodeValidators.createForGenericNode({
-            key: { type: "generic", id: "root" },
-            children: false,
-          }),
-        ],
+        expect: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "root" }, children: false })],
       });
     });
   });

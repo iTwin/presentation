@@ -19,9 +19,7 @@ interface TestInfo {
   symbol: string;
 }
 
-const tableFormatter = asTable.configure({
-  delimiter: " | ",
-});
+const tableFormatter = asTable.configure({ delimiter: " | " });
 
 /**
  * Measures test time and the amounts of time when the main thread was blocked.
@@ -122,12 +120,7 @@ export default class TestReporter implements Reporter {
         .join(", ");
 
       /* eslint-disable @typescript-eslint/naming-convention */
-      return {
-        Status: `${symbol} ${state}`,
-        Test: fullName,
-        Duration: `${duration} ms`,
-        Blocks: blockingInfo,
-      };
+      return { Status: `${symbol} ${state}`, Test: fullName, Duration: `${duration} ms`, Blocks: blockingInfo };
       /* eslint-enable @typescript-eslint/naming-convention */
     });
 
@@ -138,11 +131,7 @@ export default class TestReporter implements Reporter {
   /** Saves performance results in a format that is compatible with Github benchmark action. */
   private saveResults() {
     const data = this.#testInfo.flatMap(({ fullName, duration, blockingSummary }) => {
-      const durationEntry = {
-        name: fullName,
-        unit: "ms",
-        value: duration,
-      };
+      const durationEntry = { name: fullName, unit: "ms", value: duration };
 
       const blockingEntry = {
         name: `${fullName} (P95 of main thread blocks)`,

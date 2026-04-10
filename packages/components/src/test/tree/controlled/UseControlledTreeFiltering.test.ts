@@ -10,9 +10,15 @@ import { TreeModelNode, TreeNodeItem, UiComponents } from "@itwin/components-rea
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { NodePathElement } from "@itwin/presentation-common";
-import { useFilteredNodeLoader, useNodeHighlightingProps } from "../../../presentation-components/tree/controlled/UseControlledTreeFiltering.js";
+import {
+  useFilteredNodeLoader,
+  useNodeHighlightingProps,
+} from "../../../presentation-components/tree/controlled/UseControlledTreeFiltering.js";
 import { FilteredPresentationTreeDataProvider } from "../../../presentation-components/tree/FilteredDataProvider.js";
-import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
+import {
+  IFilteredPresentationTreeDataProvider,
+  IPresentationTreeDataProvider,
+} from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 import { createTestPropertyRecord, createTestTreeNodeItem } from "../../_helpers/UiComponents.js";
 import { act, createStub, renderHook, waitFor } from "../../TestUtils.js";
 
@@ -22,9 +28,7 @@ describe("useFilteredNodeLoader", () => {
     imodel,
     getFilteredNodePaths: createStub<IPresentationTreeDataProvider["getFilteredNodePaths"]>(),
   };
-  const initialProps = {
-    dataProvider: dataProvider as unknown as IPresentationTreeDataProvider,
-  };
+  const initialProps = { dataProvider: dataProvider as unknown as IPresentationTreeDataProvider };
 
   beforeAll(async () => {
     await UiComponents.initialize(new EmptyLocalization());
@@ -73,7 +77,9 @@ describe("useFilteredNodeLoader", () => {
       return [];
     });
 
-    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps: { ...initialProps, filter: "test" } });
+    const { result, rerender } = renderHook(useFilteredNodeLoader, {
+      initialProps: { ...initialProps, filter: "test" },
+    });
 
     // give time to start request
     await act(async () => {
@@ -136,7 +142,9 @@ describe("useFilteredNodeLoader", () => {
     const pathsResult = new ResolvablePromise<NodePathElement[]>();
     dataProvider.getFilteredNodePaths.mockReturnValue(pathsResult);
 
-    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps: { ...initialProps, filter: "test" } });
+    const { result, rerender } = renderHook(useFilteredNodeLoader, {
+      initialProps: { ...initialProps, filter: "test" },
+    });
 
     // give time to start request if necessary
     await act(async () => {
@@ -179,9 +187,7 @@ describe("useFilteredNodeLoader", () => {
     expect(result.current.filteredNodeLoader).toBeDefined();
     expect(dataProvider.getFilteredNodePaths).toHaveBeenCalledOnce();
 
-    const newProvider = {
-      getFilteredNodePaths: createStub<IPresentationTreeDataProvider["getFilteredNodePaths"]>(),
-    };
+    const newProvider = { getFilteredNodePaths: createStub<IPresentationTreeDataProvider["getFilteredNodePaths"]>() };
     const newPathsResult = new ResolvablePromise<NodePathElement[]>();
     newProvider.getFilteredNodePaths.mockReturnValue(newPathsResult);
 
@@ -196,11 +202,7 @@ describe("useFilteredNodeLoader", () => {
   it("returns `filteredNodeLoader` with model whose root node's `numRootNodes` is undefined and `loadNode` method returns result with an empty `loadedNodes` array when filtering", async () => {
     const testModelNode: TreeModelNode = {
       id: "test",
-      checkbox: {
-        isDisabled: false,
-        isVisible: true,
-        state: 0,
-      },
+      checkbox: { isDisabled: false, isVisible: true, state: 0 },
       depth: 0,
       description: "",
       isExpanded: false,
@@ -246,7 +248,9 @@ describe("useFilteredNodeLoader", () => {
       return [];
     });
 
-    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps: { ...initialProps, filter: "test" } });
+    const { result, rerender } = renderHook(useFilteredNodeLoader, {
+      initialProps: { ...initialProps, filter: "test" },
+    });
 
     await act(async () => initialPathsResult.resolve([]));
     await waitFor(() => expect(result.current.isFiltering).toBe(false));
@@ -277,51 +281,47 @@ describe("useNodeHighlightingProps", () => {
     activeMatchIndex?: number;
   }
   const getActiveMatchStub = vi.fn<IFilteredPresentationTreeDataProvider["getActiveMatch"]>();
-  const provider = {
-    getActiveMatch: getActiveMatchStub,
-  } as unknown as IFilteredPresentationTreeDataProvider;
+  const provider = { getActiveMatch: getActiveMatchStub } as unknown as IFilteredPresentationTreeDataProvider;
 
   beforeEach(() => {
     getActiveMatchStub.mockReset();
   });
 
   it("returns `undefined` if data provider is not supplied", () => {
-    const { result } = renderHook((props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex), {
-      initialProps: { filter: "test", activeMatchIndex: 1 },
-    });
+    const { result } = renderHook(
+      (props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex),
+      { initialProps: { filter: "test", activeMatchIndex: 1 } },
+    );
     expect(result.current).toBeUndefined();
   });
 
   it("returns `undefined` if filter is not supplied", () => {
-    const { result } = renderHook((props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex), {
-      initialProps: { dataProvider: provider, activeMatchIndex: 1 },
-    });
+    const { result } = renderHook(
+      (props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex),
+      { initialProps: { dataProvider: provider, activeMatchIndex: 1 } },
+    );
     expect(result.current).toBeUndefined();
   });
 
   it("returns highlighting props with active match `undefined` if active match index is not supplied", () => {
-    const { result } = renderHook((props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex), {
-      initialProps: { filter: "test", dataProvider: provider },
-    });
+    const { result } = renderHook(
+      (props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex),
+      { initialProps: { filter: "test", dataProvider: provider } },
+    );
     expect(result.current).toBeDefined();
     expect(result.current!.activeMatch).toBeUndefined();
     expect(result.current!.searchText).toBe("test");
   });
 
   it("returns highlighting props", () => {
-    getActiveMatchStub.mockReturnValue({
-      matchIndex: 2,
-      nodeId: "test-node",
-    });
+    getActiveMatchStub.mockReturnValue({ matchIndex: 2, nodeId: "test-node" });
 
-    const { result } = renderHook((props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex), {
-      initialProps: { filter: "test", dataProvider: provider, activeMatchIndex: 1 },
-    });
+    const { result } = renderHook(
+      (props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex),
+      { initialProps: { filter: "test", dataProvider: provider, activeMatchIndex: 1 } },
+    );
     expect(result.current).toBeDefined();
-    expect(result.current!.activeMatch).toEqual({
-      matchIndex: 2,
-      nodeId: "test-node",
-    });
+    expect(result.current!.activeMatch).toEqual({ matchIndex: 2, nodeId: "test-node" });
     expect(result.current!.searchText).toBe("test");
   });
 });

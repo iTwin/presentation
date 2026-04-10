@@ -18,12 +18,7 @@ export default defineConfig({
       include: ["src/hierarchies/**/*.ts"],
       reportsDirectory: "./lib/test/coverage",
       reporter: ["text-summary", "lcov", "cobertura"],
-      thresholds: {
-        statements: 100,
-        functions: 100,
-        branches: 100,
-        lines: 100,
-      },
+      thresholds: { statements: 100, functions: 100, branches: 100, lines: 100 },
     },
   },
 });

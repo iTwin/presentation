@@ -29,20 +29,8 @@ export function UnitSystemSelector(props: UnitSystemSelectorProps) {
 }
 
 const availableUnitSystems: SelectOption<UnitSystemKey>[] = [
-  {
-    value: "metric",
-    label: "Metric",
-  },
-  {
-    value: "imperial",
-    label: "British Imperial",
-  },
-  {
-    value: "usCustomary",
-    label: "US Customary",
-  },
-  {
-    value: "usSurvey",
-    label: "US Survey",
-  },
+  { value: "metric", label: "Metric" },
+  { value: "imperial", label: "British Imperial" },
+  { value: "usCustomary", label: "US Customary" },
+  { value: "usSurvey", label: "US Survey" },
 ];

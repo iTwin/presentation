@@ -228,11 +228,17 @@ abstract class ECPropertyImpl<TCoreProperty extends CoreProperty> implements EC.
     return this._coreProperty.label;
   }
   public get kindOfQuantity(): Promise<EC.KindOfQuantity | undefined> {
-    return createFromOptionalLazyLoaded(this._coreProperty.kindOfQuantity, (coreKindOfQuantity) => new ECKindOfQuantityImpl(coreKindOfQuantity));
+    return createFromOptionalLazyLoaded(
+      this._coreProperty.kindOfQuantity,
+      (coreKindOfQuantity) => new ECKindOfQuantityImpl(coreKindOfQuantity),
+    );
   }
 }
 
-class ECPrimitivePropertyImpl<TCoreProperty extends CorePrimitiveProperty> extends ECPropertyImpl<TCoreProperty> implements EC.PrimitiveProperty {
+class ECPrimitivePropertyImpl<TCoreProperty extends CorePrimitiveProperty>
+  extends ECPropertyImpl<TCoreProperty>
+  implements EC.PrimitiveProperty
+{
   constructor(coreProperty: TCoreProperty, c: EC.Class) {
     super(coreProperty, c);
   }
@@ -289,7 +295,10 @@ class ECNavigationPropertyImpl extends ECPropertyImpl<CoreNavigationProperty> im
   }
 }
 
-class ECEnumerationPropertyImpl<TCoreProperty extends CoreEnumerationProperty> extends ECPropertyImpl<TCoreProperty> implements EC.EnumerationProperty {
+class ECEnumerationPropertyImpl<TCoreProperty extends CoreEnumerationProperty>
+  extends ECPropertyImpl<TCoreProperty>
+  implements EC.EnumerationProperty
+{
   constructor(coreProperty: TCoreProperty, c: EC.Class) {
     super(coreProperty, c);
   }
@@ -297,14 +306,20 @@ class ECEnumerationPropertyImpl<TCoreProperty extends CoreEnumerationProperty> e
     return true;
   }
   public get enumeration() {
-    return createFromOptionalLazyLoaded(this._coreProperty.enumeration, (coreEnumeration) => new ECEnumerationImpl(coreEnumeration));
+    return createFromOptionalLazyLoaded(
+      this._coreProperty.enumeration,
+      (coreEnumeration) => new ECEnumerationImpl(coreEnumeration),
+    );
   }
   public get extendedTypeName() {
     return this._coreProperty.extendedTypeName;
   }
 }
 
-class ECStructPropertyImpl<TCoreProperty extends CoreStructProperty> extends ECPropertyImpl<TCoreProperty> implements EC.StructProperty {
+class ECStructPropertyImpl<TCoreProperty extends CoreStructProperty>
+  extends ECPropertyImpl<TCoreProperty>
+  implements EC.StructProperty
+{
   constructor(coreProperty: TCoreProperty, c: EC.Class) {
     super(coreProperty, c);
   }
@@ -316,7 +331,10 @@ class ECStructPropertyImpl<TCoreProperty extends CoreStructProperty> extends ECP
   }
 }
 
-class ECPrimitivesArrayPropertyImpl extends ECPrimitivePropertyImpl<CorePrimitiveArrayProperty> implements EC.PrimitiveArrayProperty {
+class ECPrimitivesArrayPropertyImpl
+  extends ECPrimitivePropertyImpl<CorePrimitiveArrayProperty>
+  implements EC.PrimitiveArrayProperty
+{
   constructor(coreProperty: CorePrimitiveArrayProperty, c: EC.Class) {
     super(coreProperty, c);
   }
@@ -331,7 +349,10 @@ class ECPrimitivesArrayPropertyImpl extends ECPrimitivePropertyImpl<CorePrimitiv
   }
 }
 
-class ECEnumerationArrayPropertyImpl extends ECEnumerationPropertyImpl<CoreEnumerationArrayProperty> implements EC.EnumerationArrayProperty {
+class ECEnumerationArrayPropertyImpl
+  extends ECEnumerationPropertyImpl<CoreEnumerationArrayProperty>
+  implements EC.EnumerationArrayProperty
+{
   constructor(coreProperty: CoreEnumerationArrayProperty, c: EC.Class) {
     super(coreProperty, c);
   }
@@ -346,7 +367,10 @@ class ECEnumerationArrayPropertyImpl extends ECEnumerationPropertyImpl<CoreEnume
   }
 }
 
-class ECStructArrayPropertyImpl extends ECStructPropertyImpl<CoreStructArrayProperty> implements EC.StructArrayProperty {
+class ECStructArrayPropertyImpl
+  extends ECStructPropertyImpl<CoreStructArrayProperty>
+  implements EC.StructArrayProperty
+{
   constructor(coreProperty: CoreStructArrayProperty, c: EC.Class) {
     super(coreProperty, c);
   }
@@ -395,7 +419,9 @@ class ECRelationshipConstraintImpl implements EC.RelationshipConstraint {
     return this._coreConstraint.polymorphic ?? false;
   }
   public get abstractConstraint(): Promise<EC.EntityClass | EC.Mixin | EC.RelationshipClass | undefined> {
-    return createFromOptionalLazyLoaded(this._coreConstraint.abstractConstraint, (coreConstraint) => createECClass(coreConstraint, this._schema));
+    return createFromOptionalLazyLoaded(this._coreConstraint.abstractConstraint, (coreConstraint) =>
+      createECClass(coreConstraint, this._schema),
+    );
   }
 }
 

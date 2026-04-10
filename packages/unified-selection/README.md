@@ -63,7 +63,11 @@ unifiedSelection.selectionChangeEvent.addListener(({ imodelKey, source, changeTy
 // An interactive component that allows selecting elements, representing something in an iModel, may want to
 // add that something to unified selection. For example:
 const elementKey = { className: "BisCore.PhysicalElement", id: "0x1" };
-unifiedSelection.addToSelection({ imodelKey: createIModelKey(imodel), source: "MyComponent", selectables: [elementKey] });
+unifiedSelection.addToSelection({
+  imodelKey: createIModelKey(imodel),
+  source: "MyComponent",
+  selectables: [elementKey],
+});
 ```
 
 <!-- END EXTRACTION -->

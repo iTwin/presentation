@@ -8,7 +8,12 @@
  */
 
 import { Primitives, PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { IPropertyValueRenderer, PropertyValueRendererContext, TypeConverterManager, useAsyncValue } from "@itwin/components-react";
+import {
+  IPropertyValueRenderer,
+  PropertyValueRendererContext,
+  TypeConverterManager,
+  useAsyncValue,
+} from "@itwin/components-react";
 import { Anchor } from "@itwin/itwinui-react";
 import { useOptionalUnifiedSelectionContext } from "../common/UnifiedSelection.js";
 import { translate, WithIModelKey } from "../common/Utils.js";
@@ -22,7 +27,10 @@ import { useUnifiedSelectionContext as useDeprecatedUnifiedSelectionContext } fr
  */
 export class InstanceKeyValueRenderer implements IPropertyValueRenderer {
   public canRender(record: PropertyRecord) {
-    return record.value.valueFormat === PropertyValueFormat.Primitive && (record.value.value === undefined || isInstanceKey(record.value.value));
+    return (
+      record.value.valueFormat === PropertyValueFormat.Primitive &&
+      (record.value.value === undefined || isInstanceKey(record.value.value))
+    );
   }
 
   public render(record: PropertyRecord, context?: PropertyValueRendererContext) {
@@ -51,7 +59,12 @@ const InstanceKeyValueRendererImpl: React.FC<InstanceKeyValueRendererImplProps> 
       handleClick = () => deprecatedSelectionContext.replaceSelection([instanceKey]);
     } else if (selectionContext && props.record.imodelKey?.length) {
       const imodelKey = props.record.imodelKey;
-      handleClick = () => selectionContext.storage.replaceSelection({ imodelKey, source: "InstanceKeyValueRenderer", selectables: [instanceKey] });
+      handleClick = () =>
+        selectionContext.storage.replaceSelection({
+          imodelKey,
+          source: "InstanceKeyValueRenderer",
+          selectables: [instanceKey],
+        });
     }
     if (handleClick) {
       return (
@@ -78,6 +91,9 @@ function convertRecordToString(record: PropertyRecord): string | Promise<string>
   const primitive = record.value as PrimitiveValue;
   return (
     primitive.displayValue ??
-    TypeConverterManager.getConverter(record.property.typename, record.property.converter?.name).convertPropertyToString(record.property, primitive.value)
+    TypeConverterManager.getConverter(
+      record.property.typename,
+      record.property.converter?.name,
+    ).convertPropertyToString(record.property, primitive.value)
   );
 }

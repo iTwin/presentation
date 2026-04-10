@@ -14,7 +14,10 @@ import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { Presentation, PresentationProps } from "@itwin/presentation-backend";
 // __PUBLISH_EXTRACT_END__
 // eslint-disable-next-line no-duplicate-imports
-import { PresentationBackendLoggerCategory, PresentationBackendNativeLoggerCategory } from "@itwin/presentation-backend";
+import {
+  PresentationBackendLoggerCategory,
+  PresentationBackendNativeLoggerCategory,
+} from "@itwin/presentation-backend";
 // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.OpenTelemetry.Imports
 import { exportDiagnostics } from "@itwin/presentation-opentelemetry";
 import { context } from "@opentelemetry/api";
@@ -51,9 +54,7 @@ void (async () => {
   // configure the OpenTelemetry data exporting to the console
   const telemetry = new opentelemetry.NodeSDK({
     traceExporter: new ConsoleSpanExporter(),
-    resource: new Resource({
-      [SEMRESATTRS_SERVICE_NAME]: "presentation-test-app",
-    }),
+    resource: new Resource({ [SEMRESATTRS_SERVICE_NAME]: "presentation-test-app" }),
   });
   telemetry.start();
   process.on("SIGTERM", () => {

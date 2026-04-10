@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createDefaultValueFormatter, formatConcatenatedValue, IPrimitiveValueFormatter } from "../shared/Formatting.js";
+import {
+  createDefaultValueFormatter,
+  formatConcatenatedValue,
+  IPrimitiveValueFormatter,
+} from "../shared/Formatting.js";
 import { julianToDateTime } from "../shared/Utils.js";
 import { TypedPrimitiveValue } from "../shared/Values.js";
 
@@ -30,7 +34,9 @@ describe("createDefaultValueFormatter", () => {
     expect(await valueFormatter({ type: "Long", value: 0 })).toBe("0");
     expect(await valueFormatter({ type: "Long", value: 1.23 })).toBe("1");
     expect(await valueFormatter({ type: "Long", value: 7.89 })).toBe("8");
-    expect(await valueFormatter({ type: "Long", value: Number.MAX_SAFE_INTEGER })).toBe(Number.MAX_SAFE_INTEGER.toLocaleString());
+    expect(await valueFormatter({ type: "Long", value: Number.MAX_SAFE_INTEGER })).toBe(
+      Number.MAX_SAFE_INTEGER.toLocaleString(),
+    );
   });
 
   it("formats double values", async () => {
@@ -46,7 +52,9 @@ describe("createDefaultValueFormatter", () => {
     expect(await valueFormatter({ type: "DateTime", value: 0 })).toBe(julianToDateTime(0).toLocaleString());
     expect(await valueFormatter({ type: "DateTime", value: date.toISOString() })).toBe(date.toLocaleString());
     expect(await valueFormatter({ type: "DateTime", value: date })).toBe(date.toLocaleString());
-    expect(await valueFormatter({ type: "DateTime", extendedType: "ShortDate", value: date })).toBe(date.toLocaleDateString());
+    expect(await valueFormatter({ type: "DateTime", extendedType: "ShortDate", value: date })).toBe(
+      date.toLocaleDateString(),
+    );
   });
 
   it("formats point2d values", async () => {

@@ -3,13 +3,20 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { useCallback, useState } from "react";
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey } from "@itwin/presentation-common";
-import { PresentationPropertyDataProvider, usePropertyDataProviderWithUnifiedSelection } from "@itwin/presentation-components";
+import {
+  PresentationPropertyDataProvider,
+  usePropertyDataProviderWithUnifiedSelection,
+} from "@itwin/presentation-components";
 import { createStorage } from "@itwin/unified-selection";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, getByText, render, waitFor } from "../../RenderUtils.js";
@@ -54,7 +61,10 @@ describe("Learning snippets", async () => {
       function MyPropertyGridWithProvider({ dataProvider }: { dataProvider: PresentationPropertyDataProvider }) {
         // set up the data provider to be notified about changes in unified selection, the provided
         // selection storage is used to synchronize selection between different components
-        const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({ dataProvider, selectionStorage });
+        const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({
+          dataProvider,
+          selectionStorage,
+        });
 
         // width and height should generally we computed using ResizeObserver API or one of its derivatives
         const [width] = useState(400);
@@ -82,8 +92,18 @@ describe("Learning snippets", async () => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
         elementKeys.push(
-          insertPhysicalElement({ builder, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id }),
-          insertPhysicalElement({ builder, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id }),
+          insertPhysicalElement({
+            builder,
+            userLabel: "My Element 1",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          }),
+          insertPhysicalElement({
+            builder,
+            userLabel: "My Element 2",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          }),
         );
       });
 
@@ -92,11 +112,15 @@ describe("Learning snippets", async () => {
       await waitFor(() => getByText(container, "Select an element to see its properties"));
 
       // test Unified Selection -> Property Grid content synchronization
-      act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[0]] }));
+      act(() =>
+        selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[0]] }),
+      );
       // cspell:disable-next-line
       await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element 1");
 
-      act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[1]] }));
+      act(() =>
+        selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[1]] }),
+      );
       // cspell:disable-next-line
       await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element 2");
     });

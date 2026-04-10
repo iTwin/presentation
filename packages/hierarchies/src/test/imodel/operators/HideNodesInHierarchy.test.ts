@@ -8,8 +8,17 @@ import { from, Observable } from "rxjs";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { LogLevel } from "@itwin/core-bentley";
 import { ProcessedHierarchyNode } from "../../../hierarchies/imodel/IModelHierarchyNode.js";
-import { createHideNodesInHierarchyOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/HideNodesInHierarchy.js";
-import { createTestGenericNodeKey, createTestInstanceKey, createTestProcessedGenericNode, createTestProcessedInstanceNode, setupLogging } from "../../Utils.js";
+import {
+  createHideNodesInHierarchyOperator,
+  LOGGING_NAMESPACE,
+} from "../../../hierarchies/imodel/operators/HideNodesInHierarchy.js";
+import {
+  createTestGenericNodeKey,
+  createTestInstanceKey,
+  createTestProcessedGenericNode,
+  createTestProcessedInstanceNode,
+  setupLogging,
+} from "../../Utils.js";
 
 describe("HideNodesInHierarchyOperator", () => {
   beforeAll(() => {
@@ -28,17 +37,13 @@ describe("HideNodesInHierarchyOperator", () => {
         key: createTestGenericNodeKey({ id: "custom1" }),
         label: "custom1",
         children: true,
-        processingParams: {
-          hideInHierarchy: true,
-        },
+        processingParams: { hideInHierarchy: true },
       }),
       createTestProcessedGenericNode({
         key: createTestGenericNodeKey({ id: "custom2" }),
         label: "custom2",
         children: true,
-        processingParams: {
-          hideInHierarchy: true,
-        },
+        processingParams: { hideInHierarchy: true },
       }),
     ];
     const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(vi.fn(), true)));
@@ -51,17 +56,13 @@ describe("HideNodesInHierarchyOperator", () => {
         key: createTestGenericNodeKey({ id: "custom1" }),
         label: "custom1",
         children: undefined,
-        processingParams: {
-          hideInHierarchy: true,
-        },
+        processingParams: { hideInHierarchy: true },
       }),
       createTestProcessedGenericNode({
         key: createTestGenericNodeKey({ id: "custom2" }),
         label: "custom2",
         children: undefined,
-        processingParams: {
-          hideInHierarchy: true,
-        },
+        processingParams: { hideInHierarchy: true },
       }),
     ];
     const childNode = createTestProcessedGenericNode();
@@ -72,14 +73,7 @@ describe("HideNodesInHierarchyOperator", () => {
 
   describe("instance nodes", () => {
     it("hides nodes without children", async () => {
-      const nodes = [
-        createTestProcessedGenericNode({
-          children: false,
-          processingParams: {
-            hideInHierarchy: true,
-          },
-        }),
-      ];
+      const nodes = [createTestProcessedGenericNode({ children: false, processingParams: { hideInHierarchy: true } })];
       const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(vi.fn(), false)));
       expect(result).toEqual([]);
     });
@@ -87,15 +81,10 @@ describe("HideNodesInHierarchyOperator", () => {
     it("hides nodes with undetermined children evaluating to empty array", async () => {
       const nodes: ProcessedHierarchyNode[] = [
         createTestProcessedInstanceNode({
-          key: {
-            type: "instances",
-            instanceKeys: [createTestInstanceKey()],
-          },
+          key: { type: "instances", instanceKeys: [createTestInstanceKey()] },
           label: "test",
           children: undefined,
-          processingParams: {
-            hideInHierarchy: true,
-          },
+          processingParams: { hideInHierarchy: true },
         }),
       ];
       const getNodes = vi.fn().mockImplementation(() => from([]));
@@ -106,23 +95,15 @@ describe("HideNodesInHierarchyOperator", () => {
     it("hides nodes with undetermined children evaluating to children array", async () => {
       const hiddenNodes: ProcessedHierarchyNode[] = [
         createTestProcessedInstanceNode({
-          key: {
-            type: "instances",
-            instanceKeys: [createTestInstanceKey({ id: "0x1" })],
-          },
+          key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
           label: "hidden",
           children: undefined,
-          processingParams: {
-            hideInHierarchy: true,
-          },
+          processingParams: { hideInHierarchy: true },
         }),
       ];
       const childNodes: ProcessedHierarchyNode[] = [
         createTestProcessedInstanceNode({
-          key: {
-            type: "instances",
-            instanceKeys: [createTestInstanceKey({ id: "0x2" })],
-          },
+          key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
           label: "visible",
           children: false,
         }),
@@ -135,24 +116,14 @@ describe("HideNodesInHierarchyOperator", () => {
     it("merges similar hidden nodes when requesting children", async () => {
       const hiddenNodes: ProcessedHierarchyNode[] = [
         createTestProcessedInstanceNode({
-          key: {
-            type: "instances",
-            instanceKeys: [createTestInstanceKey({ id: "0x1" })],
-          },
+          key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
           label: "a",
-          processingParams: {
-            hideInHierarchy: true,
-          },
+          processingParams: { hideInHierarchy: true },
         }),
         createTestProcessedInstanceNode({
-          key: {
-            type: "instances",
-            instanceKeys: [createTestInstanceKey({ id: "0x2" })],
-          },
+          key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
           label: "b",
-          processingParams: {
-            hideInHierarchy: true,
-          },
+          processingParams: { hideInHierarchy: true },
         }),
       ];
       const getNodes = vi.fn().mockImplementation(() => from([]));
@@ -164,9 +135,7 @@ describe("HideNodesInHierarchyOperator", () => {
         },
         parentKeys: [],
         label: "a",
-        processingParams: {
-          hideInHierarchy: true,
-        },
+        processingParams: { hideInHierarchy: true },
       });
       expect(result).toEqual([]);
     });
@@ -178,9 +147,7 @@ describe("HideNodesInHierarchyOperator", () => {
         createTestProcessedGenericNode({
           key: createTestGenericNodeKey({ id: "custom" }),
           label: "hidden",
-          processingParams: {
-            hideInHierarchy: true,
-          },
+          processingParams: { hideInHierarchy: true },
         }),
       ];
       const childNodes: ProcessedHierarchyNode[] = [
@@ -200,23 +167,17 @@ describe("HideNodesInHierarchyOperator", () => {
         createTestProcessedGenericNode({
           key: createTestGenericNodeKey({ id: "custom" }),
           label: "a",
-          processingParams: {
-            hideInHierarchy: true,
-          },
+          processingParams: { hideInHierarchy: true },
         }),
         createTestProcessedGenericNode({
           key: createTestGenericNodeKey({ id: "custom" }),
           label: "b",
-          processingParams: {
-            hideInHierarchy: true,
-          },
+          processingParams: { hideInHierarchy: true },
         }),
         createTestProcessedGenericNode({
           key: createTestGenericNodeKey({ id: "custom", source: "s" }),
           label: "c",
-          processingParams: {
-            hideInHierarchy: true,
-          },
+          processingParams: { hideInHierarchy: true },
         }),
       ];
       const getNodes = vi.fn().mockImplementation(() => from([]));
@@ -226,17 +187,13 @@ describe("HideNodesInHierarchyOperator", () => {
         key: createTestGenericNodeKey({ id: "custom" }),
         parentKeys: [],
         label: "a",
-        processingParams: {
-          hideInHierarchy: true,
-        },
+        processingParams: { hideInHierarchy: true },
       });
       expect(getNodes).toHaveBeenNthCalledWith(2, {
         key: createTestGenericNodeKey({ id: "custom", source: "s" }),
         parentKeys: [],
         label: "c",
-        processingParams: {
-          hideInHierarchy: true,
-        },
+        processingParams: { hideInHierarchy: true },
       });
       expect(result).toEqual([]);
     });

@@ -5,7 +5,12 @@
 
 import { useEffect, useState } from "react";
 import { assert } from "@itwin/core-bentley";
-import { GenericNodeKey, HierarchyNode, InstancesNodeKey, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  GenericNodeKey,
+  HierarchyNode,
+  InstancesNodeKey,
+  NonGroupingHierarchyNode,
+} from "@itwin/presentation-hierarchies";
 import { InstanceKey } from "@itwin/presentation-shared";
 import { Selectable, Selectables, SelectionStorage } from "@itwin/unified-selection";
 import { useUnifiedSelectionStorage } from "../UnifiedSelectionContext.js";
@@ -39,7 +44,10 @@ export interface UseUnifiedTreeSelectionProps {
    * @param node Hierarchy node to create a selectable for.
    * @param treeModelNodeId ID of the hierarchy node in the internal tree model. This ID uniquely identifies the node in the whole hierarchy, as opposed to `GenericNodeKey.id` contained within the `node`, which may not be unique.
    */
-  createSelectableForGenericNode?: (node: NonGroupingHierarchyNode & { key: GenericNodeKey }, treeModelNodeId: string) => Selectable;
+  createSelectableForGenericNode?: (
+    node: NonGroupingHierarchyNode & { key: GenericNodeKey },
+    treeModelNodeId: string,
+  ) => Selectable;
 
   /**
    * Unified selection storage to use for listening, getting and changing active selection.
@@ -57,7 +65,9 @@ export function useUnifiedTreeSelection({
   selectionStorage,
   getTreeModelNode,
   createSelectableForGenericNode,
-}: UseUnifiedTreeSelectionProps & { getTreeModelNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined }): TreeSelectionOptions {
+}: UseUnifiedTreeSelectionProps & {
+  getTreeModelNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined;
+}): TreeSelectionOptions {
   /* v8 ignore next -- @preserve */
   const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
     isNodeSelected: () => false,
@@ -72,10 +82,7 @@ export function useUnifiedTreeSelection({
   useEffect(() => {
     if (!selectionStorage) {
       // TODO: make selectionStorage prop required
-      setOptions({
-        isNodeSelected: () => false,
-        selectNodes: () => {},
-      });
+      setOptions({ isNodeSelected: () => false, selectNodes: () => {} });
       return;
     }
 
@@ -91,14 +98,9 @@ export function useUnifiedTreeSelection({
   return options;
 }
 
-const defaultCreateSelectableForGenericNode: NonNullable<UseUnifiedTreeSelectionProps["createSelectableForGenericNode"]> = (
-  node,
-  treeModelNodeId,
-): Selectable => ({
-  identifier: treeModelNodeId,
-  data: node,
-  async *loadInstanceKeys() {},
-});
+const defaultCreateSelectableForGenericNode: NonNullable<
+  UseUnifiedTreeSelectionProps["createSelectableForGenericNode"]
+> = (node, treeModelNodeId): Selectable => ({ identifier: treeModelNodeId, data: node, async *loadInstanceKeys() {} });
 
 function createOptions(
   source: string,
@@ -112,10 +114,12 @@ function createOptions(
       if (!node || !isTreeModelHierarchyNode(node)) {
         return false;
       }
-      return Object.entries(groupNodeSelectablesByIModelKey(node, createSelectableForGenericNode)).some(([imodelKey, nodeSelectables]) => {
-        const storageSelectables = storage.getSelection({ imodelKey, level: 0 });
-        return Selectables.hasAny(storageSelectables, nodeSelectables);
-      });
+      return Object.entries(groupNodeSelectablesByIModelKey(node, createSelectableForGenericNode)).some(
+        ([imodelKey, nodeSelectables]) => {
+          const storageSelectables = storage.getSelection({ imodelKey, level: 0 });
+          return Selectables.hasAny(storageSelectables, nodeSelectables);
+        },
+      );
     },
 
     selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => {
@@ -125,15 +129,17 @@ function createOptions(
         if (!node || !isTreeModelHierarchyNode(node)) {
           return;
         }
-        Object.entries(groupNodeSelectablesByIModelKey(node, createSelectableForGenericNode)).forEach(([imodelKey, nodeSelectables]) => {
-          let selectablesList = imodelSelectables[imodelKey];
-          /* v8 ignore else -- @preserve */
-          if (!selectablesList) {
-            selectablesList = [];
-            imodelSelectables[imodelKey] = selectablesList;
-          }
-          nodeSelectables.forEach((selectable) => selectablesList.push(selectable));
-        });
+        Object.entries(groupNodeSelectablesByIModelKey(node, createSelectableForGenericNode)).forEach(
+          ([imodelKey, nodeSelectables]) => {
+            let selectablesList = imodelSelectables[imodelKey];
+            /* v8 ignore else -- @preserve */
+            if (!selectablesList) {
+              selectablesList = [];
+              imodelSelectables[imodelKey] = selectablesList;
+            }
+            nodeSelectables.forEach((selectable) => selectablesList.push(selectable));
+          },
+        );
       }
       Object.entries(imodelSelectables).forEach(([imodelKey, selectables]) => {
         const actionProps = { imodelKey, source, selectables, level: 0 };

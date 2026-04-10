@@ -7,9 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createCachingECClassHierarchyInspector, getClass } from "../shared/Metadata.js";
 
 describe("createCachingECClassHierarchyInspector", () => {
-  const schemaProvider = {
-    getSchema: vi.fn(),
-  };
+  const schemaProvider = { getSchema: vi.fn() };
 
   beforeEach(() => {
     schemaProvider.getSchema.mockReset();
@@ -57,9 +55,7 @@ describe("createCachingECClassHierarchyInspector", () => {
       }
       return undefined;
     });
-    schemaProvider.getSchema.mockResolvedValue({
-      getClass: getClassStub,
-    });
+    schemaProvider.getSchema.mockResolvedValue({ getClass: getClassStub });
     const inspector = createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1 });
     const [p1, p2] = [inspector.classDerivesFrom("a.b", "c.d"), inspector.classDerivesFrom("a.b", "c.d")];
     expect(p1).toBeInstanceOf(Promise);
@@ -81,9 +77,7 @@ describe("createCachingECClassHierarchyInspector", () => {
       }
       return undefined;
     });
-    schemaProvider.getSchema.mockResolvedValue({
-      getClass: getClassStub,
-    });
+    schemaProvider.getSchema.mockResolvedValue({ getClass: getClassStub });
     const inspector = createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1 });
     const p1 = await inspector.classDerivesFrom("a.b", "c.d");
     const p2 = inspector.classDerivesFrom("a.b", "c.d");
@@ -96,9 +90,7 @@ describe("createCachingECClassHierarchyInspector", () => {
 });
 
 describe("getClass", () => {
-  const schemaProvider = {
-    getSchema: vi.fn(),
-  };
+  const schemaProvider = { getSchema: vi.fn() };
 
   beforeEach(() => {
     schemaProvider.getSchema.mockReset();
@@ -115,9 +107,7 @@ describe("getClass", () => {
   });
 
   it("throws when class does not exist", async () => {
-    schemaProvider.getSchema.mockResolvedValue({
-      getClass: async () => undefined,
-    });
+    schemaProvider.getSchema.mockResolvedValue({ getClass: async () => undefined });
     await expect(getClass(schemaProvider, "x.y")).rejects.toThrow();
   });
 
@@ -132,9 +122,7 @@ describe("getClass", () => {
 
   it("returns class", async () => {
     const getClassStub = vi.fn().mockResolvedValue({ fullName: "result class" });
-    schemaProvider.getSchema.mockResolvedValue({
-      getClass: getClassStub,
-    });
+    schemaProvider.getSchema.mockResolvedValue({ getClass: getClassStub });
     const result = await getClass(schemaProvider, "x.y");
     expect(schemaProvider.getSchema).toHaveBeenCalledExactlyOnceWith("x");
     expect(getClassStub).toHaveBeenCalledExactlyOnceWith("y");

@@ -48,9 +48,7 @@ export function createECSchemaProviderStub() {
     return schemaStub;
   };
   const createBaseClassProps = (props: StubClassFuncProps) => ({
-    schema: {
-      name: props.schemaName,
-    },
+    schema: { name: props.schemaName },
     fullName: `${props.schemaName}.${props.className}`,
     name: props.className,
     label: props.classLabel,
@@ -69,17 +67,16 @@ export function createECSchemaProviderStub() {
         return props.is(`${schemaName!}.${targetClassOrClassName}`);
       }
       // need this just to make sure `.` is used for separating schema and class names
-      const { schemaName: parsedSchemaName, className: parsedClassName } = parseFullClassName(targetClassOrClassName.fullName);
+      const { schemaName: parsedSchemaName, className: parsedClassName } = parseFullClassName(
+        targetClassOrClassName.fullName,
+      );
       return props.is(`${parsedSchemaName}.${parsedClassName}`);
     }),
     isEntityClass: () => false,
     isRelationshipClass: () => false,
   });
   const stubEntityClass: TStubEntityClassFunc = (props) => {
-    const res = {
-      ...createBaseClassProps(props),
-      isEntityClass: () => true,
-    } as unknown as EC.EntityClass;
+    const res = { ...createBaseClassProps(props), isEntityClass: () => true } as unknown as EC.EntityClass;
     getSchemaStub(props.schemaName).classes.set(props.className, res);
     return res;
   };
@@ -95,9 +92,7 @@ export function createECSchemaProviderStub() {
     return res;
   };
   const stubOtherClass: TStubClassFunc = (props) => {
-    const res = {
-      ...createBaseClassProps(props),
-    } as unknown as EC.Class;
+    const res = { ...createBaseClassProps(props) } as unknown as EC.Class;
     getSchemaStub(props.schemaName).classes.set(props.className, res);
     return res;
   };

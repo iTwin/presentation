@@ -9,8 +9,20 @@ import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } fr
 import { TreeNodeItem } from "@itwin/components-react";
 import { BeEvent, Guid } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { HierarchyRequestOptions, LabelDefinition, Node, NodeKey, RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
-import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import {
+  HierarchyRequestOptions,
+  LabelDefinition,
+  Node,
+  NodeKey,
+  RegisteredRuleset,
+  Ruleset,
+} from "@itwin/presentation-common";
+import {
+  Presentation,
+  PresentationManager,
+  RulesetManager,
+  RulesetVariablesManager,
+} from "@itwin/presentation-frontend";
 import { HierarchyBuilder, NodeMappingFunc } from "../presentation-testing/HierarchyBuilder.js";
 import { createStub } from "./Utils.js";
 
@@ -40,14 +52,8 @@ async function getChildrenNodes(opts: HierarchyRequestOptions<IModelConnection, 
 }
 
 describe("HierarchyBuilder", () => {
-  let presentationManager: {
-    rulesets: MockInstance;
-    vars: MockInstance;
-    getNodesIterator: MockInstance;
-  };
-  const rulesetManager = {
-    add: createStub<RulesetManager["add"]>(),
-  };
+  let presentationManager: { rulesets: MockInstance; vars: MockInstance; getNodesIterator: MockInstance };
+  const rulesetManager = { add: createStub<RulesetManager["add"]>() };
 
   const ruleset = { id: "1" } as Ruleset;
   const imodel = {} as IModelConnection;
@@ -57,9 +63,7 @@ describe("HierarchyBuilder", () => {
 
     presentationManager = {
       rulesets: vi.fn().mockReturnValue(rulesetManager as unknown as RulesetManager),
-      vars: vi.fn().mockReturnValue({
-        onVariableChanged: new BeEvent(),
-      } as RulesetVariablesManager),
+      vars: vi.fn().mockReturnValue({ onVariableChanged: new BeEvent() } as RulesetVariablesManager),
       getNodesIterator: vi.fn(),
     };
   });
@@ -71,7 +75,9 @@ describe("HierarchyBuilder", () => {
   describe("createHierarchy", () => {
     describe("without data", () => {
       beforeEach(() => {
-        vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as unknown as PresentationManager);
+        vi.spyOn(Presentation, "presentation", "get").mockReturnValue(
+          presentationManager as unknown as PresentationManager,
+        );
         presentationManager.getNodesIterator.mockResolvedValue({ items: createAsyncIterator([]), total: 0 });
       });
 
@@ -94,8 +100,12 @@ describe("HierarchyBuilder", () => {
 
     describe("with data", () => {
       beforeEach(() => {
-        vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager as unknown as PresentationManager);
-        presentationManager.getNodesIterator.mockImplementation(async (opts) => (opts.parentKey === undefined ? getRootNodes() : getChildrenNodes(opts)));
+        vi.spyOn(Presentation, "presentation", "get").mockReturnValue(
+          presentationManager as unknown as PresentationManager,
+        );
+        presentationManager.getNodesIterator.mockImplementation(async (opts) =>
+          opts.parentKey === undefined ? getRootNodes() : getChildrenNodes(opts),
+        );
       });
 
       afterEach(() => {
