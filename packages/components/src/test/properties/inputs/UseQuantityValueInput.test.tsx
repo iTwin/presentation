@@ -94,7 +94,9 @@ describe("UseQuantityValueInput", () => {
   });
 
   it("renders with formatted value when initial raw value is 0", async () => {
-    const { queryByDisplayValue } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={0} />);
+    const { queryByDisplayValue } = render(
+      <TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={0} />,
+    );
     await waitFor(() => expect(queryByDisplayValue("0 unit")).not.toBeNull());
   });
 
