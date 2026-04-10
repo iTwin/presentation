@@ -294,6 +294,6 @@ class RowsBuilder extends InternalPropertyRecordsBuilder {
   }
 }
 
-/* v8 ignore start */
+/* v8 ignore start -- @preserve */
 const noopRowsLoader: RowsLoader = { loadPage: () => {}, reload: () => {} };
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */

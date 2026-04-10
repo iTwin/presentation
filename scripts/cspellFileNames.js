@@ -14,6 +14,7 @@ const ignore = [
   "node_modules",
   ".git",
   "lib",
+  "build",
   "dist",
   ".husky",
   "pnpmfile",
@@ -21,6 +22,7 @@ const ignore = [
   "mocharc",
   "nycrc",
   "oxfmtrc",
+  "vitest",
   "sample_documents",
 ];
 

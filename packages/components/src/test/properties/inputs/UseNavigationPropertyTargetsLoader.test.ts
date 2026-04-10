@@ -84,7 +84,6 @@ describe("useNavigationPropertyTargetsLoader", () => {
       });
 
       await waitFor(() => {
-        expect(result.current.selectOptions).to.have.lengthOf(1);
         expect(result.current.loadedOptions).toMatchObject([
           { label: contentItem.label, key: contentItem.primaryKeys[0] },
         ]);

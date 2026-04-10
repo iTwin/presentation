@@ -41,7 +41,7 @@ const extractionStart = "<!-- BEGIN EXTRACTION -->";
 const extractionEnd = "<!-- END EXTRACTION -->";
 const targetFileExtensions = [".ts", ".tsx", ".md"];
 const re =
-  /^(\s*)(?:<!--|\/\/|\/\*)\s*\[\[include:\s*([\w\d\._-]+|\[(?:\s*,?\s*[\w\d\._-]+)+\])(?:,[\s]*([\w\d_]+))?\]\]/;
+  /^(\s*)(?:<!--|\/\/|\/\*)\s*\[\[include:\s*([A-Za-z0-9._-]+|\[\s*[A-Za-z0-9._-]+(?:\s*,\s*[A-Za-z0-9._-]+)*\s*\])(?:,[\s]*([\w\d_]+))?\]\]/;
 const reIndentIndex = 1;
 const reExtractionNameIndex = 2;
 const reExtractionTypeIndex = 3;

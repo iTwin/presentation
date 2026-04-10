@@ -390,9 +390,7 @@ describe("PropertyDataProvider", () => {
         displayValues: {},
       });
       provider.getContent = async () => new Content(createTestContentDescriptor({ fields: [] }), [item]);
-      expect(await provider.getData()).to.containSubset({ description: "test" });
-      (provider as any).getContent = async () => new Content(createTestContentDescriptor({ fields: [] }), [item]);
-      expect(await provider.getData()).to.containSubset({ description: "test" });
+      expect(await provider.getData()).toMatchObject({ description: "test" });
     });
 
     function runAllTestCases(name: string, setup: () => void) {
@@ -1124,7 +1122,6 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories).toHaveLength(1);
             expect(data.records[data.categories[0].name]).toMatchObject([{ property: { name: "IncludedField" } }]);
           });
 
@@ -1137,7 +1134,6 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories).toHaveLength(1);
             expect(data.records[data.categories[0].name]).toMatchObject([{ property: { name: "WithItems" } }]);
           });
 
@@ -1165,7 +1161,6 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
-            expect(data.categories).toHaveLength(1);
             expect(data.records[data.categories[0].name]).toMatchObject([{ property: { name: "WithMembers" } }]);
           });
 

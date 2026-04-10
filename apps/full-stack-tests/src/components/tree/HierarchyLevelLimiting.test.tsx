@@ -124,9 +124,10 @@ describe("Learning snippets", () => {
       for (let i = 0; i < 11; ++i) {
         expect(() => getNodeByLabel(container, `B element ${i + 1}`)).toThrow();
       }
-      // cspell:disable-next-line
+
       await waitFor(() =>
         expect(
+          // cspell:disable-next-line
           getByText(`thèré ârë möré îtëms thâñ älløwèd límît õf ${hierarchyLevelSizeLimit}`, { exact: false }),
         ).not.toBeNull(),
       );

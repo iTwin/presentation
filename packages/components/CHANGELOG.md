@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.13.3
+
+### Patch Changes
+
+- [#1294](https://github.com/iTwin/presentation/pull/1294): Fix quantities-enabled numeric property editor rendering just the unit when the raw value is `0`, e.g. "ft" instead of expected "0 ft".
+
 ## 5.13.2
 
 ### Patch Changes
