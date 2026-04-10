@@ -63,18 +63,18 @@ flowchart TB
 
   subgraph tier1[ ]
     direction LR
-    pkgUnifiedSelection["<div style='text-align:center;white-space:nowrap;'><b>@itwin/unified-selection</b></div><br/><div style='text-align:left;font-weight:normal;'>Provides APIs for maintaining a single source of truth for what's selected in the application.</div>"]
-    pkgUnifiedSelectionReact["<div style='text-align:center;white-space:nowrap;'><b>@itwin/unified-selection-react</b></div><br/><div style='text-align:left;font-weight:normal;'>Provides APIs for making it easier to implement unified selection-driven React components.</div>"]
-    pkgHierarchiesReact["<div style='text-align:center;white-space:nowrap;'><b>@itwin/presentation-hierarchies-react</b></div><br/><div style='text-align:left;font-weight:normal;'>Provides headless UI components for creating hierarchical React components as well as iTwinUI-based renderers.</div>"]
-    pkgHierarchies["<div style='text-align:center;white-space:nowrap;'><b>@itwin/presentation-hierarchies</b></div><br/><div style='text-align:left;font-weight:normal;'>Provides framework-agnostic APIs to create hierarchies. May be used on any frontend as well as backend.</div>"]
+    pkgUnifiedSelection["<div style='text-align:center;white-space:nowrap;'><a href='./packages/unified-selection/README.md'>@itwin/unified-selection</a></div><br/><div style='text-align:left;font-weight:normal;'>Provides APIs for maintaining a single source of truth for what's selected in the application.</div>"]
+    pkgUnifiedSelectionReact["<div style='text-align:center;white-space:nowrap;'><a href='./packages/unified-selection-react/README.md'>@itwin/unified-selection-react</a></div><br/><div style='text-align:left;font-weight:normal;'>Provides APIs for making it easier to implement unified selection-driven React components.</div>"]
+    pkgHierarchiesReact["<div style='text-align:center;white-space:nowrap;'><a href='./packages/hierarchies-react/README.md'>@itwin/presentation-hierarchies-react</a></div><br/><div style='text-align:left;font-weight:normal;'>Provides headless UI components for creating hierarchical React components as well as iTwinUI-based renderers.</div>"]
+    pkgHierarchies["<div style='text-align:center;white-space:nowrap;'><a href='./packages/hierarchies/README.md'>@itwin/presentation-hierarchies</a></div><br/><div style='text-align:left;font-weight:normal;'>Provides framework-agnostic APIs to create hierarchies. May be used on any frontend as well as backend.</div>"]
   end
 
-  pkgCoreInterop["<div style='text-align:center;white-space:nowrap;'><b>@itwin/presentation-core-interop</b></div><br/><div style='text-align:left;font-weight:normal;'>This interop package allows avoiding peer dependencies on core packages.</div>"]
+  pkgCoreInterop["<div style='text-align:center;white-space:nowrap;'><a href='./packages/core-interop/README.md'>@itwin/presentation-core-interop</a></div><br/><div style='text-align:left;font-weight:normal;'>This interop package allows avoiding peer dependencies on core packages.</div>"]
 
   subgraph tier3[ ]
     direction LR
-    pkgShared["<div style='text-align:center;white-space:nowrap;'><b>@itwin/presentation-shared</b></div><br/><div style='text-align:left;font-weight:normal;'>Provides types and utilities shared across multiple Presentation packages.</div>"]
-    pkgCoreLegacy["<div style='text-align:center;white-space:nowrap;'><b>@itwin/core-*</b><br/><b>@itwin/presentation-common</b></div>"]
+    pkgShared["<div style='text-align:center;white-space:nowrap;'><a href='./packages/shared/README.md'>@itwin/presentation-shared</a></div><br/><div style='text-align:left;font-weight:normal;'>Provides types and utilities shared across multiple Presentation packages.</div>"]
+    pkgCoreLegacy["<div style='text-align:center;white-space:nowrap;'><a href='https://www.itwinjs.org/learning/'>@itwin/core-*</a><br/><a href='https://www.npmjs.com/package/@itwin/presentation-common'>@itwin/presentation-common</a></div>"]
   end
 
   app -->|uses to provide selection storage to tree components| pkgUnifiedSelection
