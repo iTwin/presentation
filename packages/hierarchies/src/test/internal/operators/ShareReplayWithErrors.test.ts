@@ -25,16 +25,12 @@ describe("shareReplayWithErrors", () => {
     const shared = source.pipe(shareReplayWithErrors());
 
     const errorListener1 = vi.fn();
-    shared.subscribe({
-      error: errorListener1,
-    });
+    shared.subscribe({ error: errorListener1 });
     expect(impl).toHaveBeenCalledOnce();
     expect(errorListener1).toHaveBeenCalledOnce();
 
     const errorListener2 = vi.fn();
-    shared.subscribe({
-      error: errorListener2,
-    });
+    shared.subscribe({ error: errorListener2 });
     expect(impl).toHaveBeenCalledOnce();
     expect(errorListener2).toHaveBeenCalledOnce();
   });

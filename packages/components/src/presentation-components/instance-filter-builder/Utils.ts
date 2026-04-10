@@ -17,7 +17,15 @@ import {
   PropertyFilterBuilderRuleRangeValue,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
-import { CategoryDescription, ClassInfo, combineFieldNames, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
+import {
+  CategoryDescription,
+  ClassInfo,
+  combineFieldNames,
+  Descriptor,
+  Field,
+  NestedContentField,
+  PropertiesField,
+} from "@itwin/presentation-common";
 import { createFieldInfo, createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder.js";
 import { translate } from "../common/Utils.js";
 import { NavigationPropertyEditorContextProviderProps } from "../properties/editors/NavigationPropertyEditorContext.js";
@@ -128,7 +136,10 @@ function getCategorizedFieldName(fieldName: string, categoryName?: string) {
 }
 
 /** @internal */
-export function useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel: IModelConnection, descriptor: Descriptor) {
+export function useFilterBuilderNavigationPropertyEditorContextProviderProps(
+  imodel: IModelConnection,
+  descriptor: Descriptor,
+) {
   return useMemo<NavigationPropertyEditorContextProviderProps>(
     () => ({
       imodel,
@@ -148,7 +159,11 @@ export function useFilterBuilderNavigationPropertyEditorContextProviderProps(imo
 /** @internal */
 export function filterRuleValidator(item: PropertyFilterBuilderRule) {
   // skip empty rules and rules that do not require value
-  if (item.property === undefined || item.operator === undefined || isUnaryPropertyFilterBuilderOperator(item.operator)) {
+  if (
+    item.property === undefined ||
+    item.operator === undefined ||
+    isUnaryPropertyFilterBuilderOperator(item.operator)
+  ) {
     return undefined;
   }
 
@@ -157,11 +172,7 @@ export function filterRuleValidator(item: PropertyFilterBuilderRule) {
     return undefined;
   }
 
-  const error = numericPropertyValidator({
-    property: item.property,
-    operator: item.operator,
-    value: item.value,
-  });
+  const error = numericPropertyValidator({ property: item.property, operator: item.operator, value: item.value });
 
   if (error) {
     return error;
@@ -209,7 +220,10 @@ function isEqualityOperator(operator: PropertyFilterBuilderRuleOperator) {
 
 function isPropertyNumeric(typename: string) {
   return (
-    typename === StandardTypeNames.Number || typename === StandardTypeNames.Int || typename === StandardTypeNames.Float || typename === StandardTypeNames.Double
+    typename === StandardTypeNames.Number ||
+    typename === StandardTypeNames.Int ||
+    typename === StandardTypeNames.Float ||
+    typename === StandardTypeNames.Double
   );
 }
 

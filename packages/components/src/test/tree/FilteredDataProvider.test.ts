@@ -15,17 +15,18 @@ import { FilteredPresentationTreeDataProvider } from "../../presentation-compone
 import { IPresentationTreeDataProvider } from "../../presentation-components/tree/IPresentationTreeDataProvider.js";
 import { createTreeNodeItem } from "../../presentation-components/tree/Utils.js";
 import { createTestECInstanceKey } from "../_helpers/Common.js";
-import { createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy.js";
+import {
+  createTestECInstancesNode,
+  createTestECInstancesNodeKey,
+  createTestNodePathElement,
+} from "../_helpers/Hierarchy.js";
 import { createMocked, createStub } from "../TestUtils.js";
 
 describe("FilteredTreeDataProvider", () => {
   function createTestNodePathElementWithId(id: string) {
     return createTestNodePathElement({
       node: createTestECInstancesNode({
-        key: createTestECInstancesNodeKey({
-          instanceKeys: [createTestECInstanceKey({ id })],
-          pathFromRoot: [id],
-        }),
+        key: createTestECInstancesNodeKey({ instanceKeys: [createTestECInstanceKey({ id })], pathFromRoot: [id] }),
       }),
     });
   }
@@ -80,9 +81,7 @@ describe("FilteredTreeDataProvider", () => {
   beforeEach(() => {
     const onVariableChanged = new BeEvent();
     const presentationManager = createMocked(PresentationManager);
-    presentationManager.vars.mockReturnValue({
-      onVariableChanged,
-    } as RulesetVariablesManager);
+    presentationManager.vars.mockReturnValue({ onVariableChanged } as RulesetVariablesManager);
     vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
 
     filter = "test_filter";
@@ -183,7 +182,10 @@ describe("FilteredTreeDataProvider", () => {
       const key = createTestECInstancesNodeKey();
       const filterDefinition = {} as InstanceFilterDefinition;
 
-      parentProvider.createRequestOptions.mockReturnValue({ rulesetOrId: "test_ruleset", imodel: {} as IModelConnection });
+      parentProvider.createRequestOptions.mockReturnValue({
+        rulesetOrId: "test_ruleset",
+        imodel: {} as IModelConnection,
+      });
       const result = provider.createRequestOptions(key, filterDefinition);
       expect(result.rulesetOrId).toEqual("test_ruleset");
       expect(parentProvider.createRequestOptions).toHaveBeenCalledWith(key, filterDefinition);

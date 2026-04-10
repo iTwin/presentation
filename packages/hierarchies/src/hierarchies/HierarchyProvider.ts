@@ -45,14 +45,10 @@ export interface GetHierarchyNodesProps {
  */
 interface HierarchyChangedEventArgs {
   /** Set when the hierarchy change was caused by a formatter change. */
-  formatterChange?: {
-    newFormatter: IPrimitiveValueFormatter | undefined;
-  };
+  formatterChange?: { newFormatter: IPrimitiveValueFormatter | undefined };
 
   /** Set when the hierarchy change was caused by a hierarchy filter change. */
-  filterChange?: {
-    newFilter: Props<HierarchyProvider["setHierarchyFilter"]>;
-  };
+  filterChange?: { newFilter: Props<HierarchyProvider["setHierarchyFilter"]> };
 }
 
 /**

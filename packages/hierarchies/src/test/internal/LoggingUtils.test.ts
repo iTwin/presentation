@@ -12,13 +12,7 @@ import { setLogger } from "../../hierarchies/Logging.js";
 describe("LoggingUtils", () => {
   let logger: { [K in keyof ILogger]: ILogger[K] extends (...args: any[]) => any ? Mock : ILogger[K] };
   beforeEach(() => {
-    logger = {
-      isEnabled: vi.fn(),
-      logError: vi.fn(),
-      logWarning: vi.fn(),
-      logInfo: vi.fn(),
-      logTrace: vi.fn(),
-    };
+    logger = { isEnabled: vi.fn(), logError: vi.fn(), logWarning: vi.fn(), logInfo: vi.fn(), logTrace: vi.fn() };
     setLogger(logger as unknown as ILogger);
   });
 

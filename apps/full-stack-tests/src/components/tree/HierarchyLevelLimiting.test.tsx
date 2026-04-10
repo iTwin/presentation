@@ -3,7 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { useState } from "react";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
@@ -59,9 +63,19 @@ describe("Learning snippets", () => {
 
         // presentation-specific tree renderer should be used when limiting to allow filtering
         // down the results when the limit is exceeded
-        const treeRenderer = (treeRendererProps: TreeRendererProps) => <PresentationTreeRenderer {...treeRendererProps} nodeLoader={state.nodeLoader} />;
+        const treeRenderer = (treeRendererProps: TreeRendererProps) => (
+          <PresentationTreeRenderer {...treeRendererProps} nodeLoader={state.nodeLoader} />
+        );
 
-        return <PresentationTree width={width} height={height} state={state} selectionMode={SelectionMode.Extended} treeRenderer={treeRenderer} />;
+        return (
+          <PresentationTree
+            width={width}
+            height={height}
+            state={state}
+            selectionMode={SelectionMode.Extended}
+            treeRenderer={treeRenderer}
+          />
+        );
       }
       // __PUBLISH_EXTRACT_END__
 
@@ -70,11 +84,21 @@ describe("Learning snippets", () => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKeyA = insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
         for (let i = 0; i < 10; ++i) {
-          insertPhysicalElement({ builder, userLabel: `A element ${i + 1}`, modelId: modelKeyA.id, categoryId: categoryKey.id });
+          insertPhysicalElement({
+            builder,
+            userLabel: `A element ${i + 1}`,
+            modelId: modelKeyA.id,
+            categoryId: categoryKey.id,
+          });
         }
         const modelKeyB = insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
         for (let i = 0; i < 11; ++i) {
-          insertPhysicalElement({ builder, userLabel: `B element ${i + 1}`, modelId: modelKeyB.id, categoryId: categoryKey.id });
+          insertPhysicalElement({
+            builder,
+            userLabel: `B element ${i + 1}`,
+            modelId: modelKeyB.id,
+            categoryId: categoryKey.id,
+          });
         }
       });
 
@@ -98,8 +122,13 @@ describe("Learning snippets", () => {
       for (let i = 0; i < 11; ++i) {
         expect(() => getNodeByLabel(container, `B element ${i + 1}`)).toThrow();
       }
-      // cspell:disable-next-line
-      await waitFor(() => expect(getByText(`thèré ârë möré îtëms thâñ älløwèd límît õf ${hierarchyLevelSizeLimit}`, { exact: false })).not.toBeNull());
+
+      await waitFor(() =>
+        expect(
+          // cspell:disable-next-line
+          getByText(`thèré ârë möré îtëms thâñ älløwèd límît õf ${hierarchyLevelSizeLimit}`, { exact: false }),
+        ).not.toBeNull(),
+      );
 
       consoleStub.mockRestore();
     });
@@ -127,10 +156,7 @@ const ruleset: Ruleset = {
         {
           specType: "RelatedInstanceNodes",
           relationshipPaths: [
-            {
-              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-              direction: "Forward",
-            },
+            { relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" },
           ],
           groupByClass: false,
           groupByLabel: false,

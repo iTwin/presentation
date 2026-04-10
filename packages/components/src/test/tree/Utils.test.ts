@@ -6,7 +6,12 @@
 import { describe, expect, it } from "vitest";
 import { PageOptions } from "@itwin/components-react";
 import { LabelDefinition, Node } from "@itwin/presentation-common";
-import { createPartialTreeNodeItem, createTreeNodeItem, createTreeNodeItems, pageOptionsUiToPresentation } from "../../presentation-components/tree/Utils.js";
+import {
+  createPartialTreeNodeItem,
+  createTreeNodeItem,
+  createTreeNodeItems,
+  pageOptionsUiToPresentation,
+} from "../../presentation-components/tree/Utils.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNode } from "../_helpers/Hierarchy.js";
 
 describe("Utils", () => {
@@ -73,10 +78,7 @@ describe("Utils", () => {
   describe("createPartialTreeNodeItem", () => {
     it("assigns item id and label from loaded node", () => {
       const node = createPartialTreeNodeItem(
-        {
-          key: { type: "", version: 0, pathFromRoot: [] },
-          label: LabelDefinition.fromLabelString("test"),
-        },
+        { key: { type: "", version: 0, pathFromRoot: [] }, label: LabelDefinition.fromLabelString("test") },
         undefined,
         {},
       );
@@ -92,10 +94,7 @@ describe("Utils", () => {
 
     it("uses provided callback to customize tree node", () => {
       const treeNode = createPartialTreeNodeItem(
-        {
-          key: { type: "", version: 0, pathFromRoot: [] },
-          label: LabelDefinition.fromLabelString("test"),
-        },
+        { key: { type: "", version: 0, pathFromRoot: [] }, label: LabelDefinition.fromLabelString("test") },
         undefined,
         {
           customizeTreeNodeItem: (item) => {

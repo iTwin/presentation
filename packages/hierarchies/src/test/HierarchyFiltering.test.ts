@@ -16,24 +16,8 @@ describe("HierarchyFilteringPath", () => {
         { autoExpand: { depth: 1 } },
         { autoExpand: { depth: 6, includeGroupingNodes: true } },
         { autoExpand: { depthInHierarchy: 5 } },
-        {
-          autoExpand: {
-            key: {
-              type: "label-grouping",
-              label: "",
-            },
-            depth: 4,
-          },
-        },
-        {
-          autoExpand: {
-            key: {
-              type: "label-grouping",
-              label: "",
-            },
-            depth: 3,
-          },
-        },
+        { autoExpand: { key: { type: "label-grouping", label: "" }, depth: 4 } },
+        { autoExpand: { key: { type: "label-grouping", label: "" }, depth: 3 } },
         { autoExpand: false },
         undefined,
       ];
@@ -41,9 +25,9 @@ describe("HierarchyFilteringPath", () => {
       it("returns correct result for different autoExpand options", () => {
         for (let i = 0; i < optionsInOrderOfPriority.length; ++i) {
           for (let j = 0; j < optionsInOrderOfPriority.length; ++j) {
-            expect(HierarchyFilteringPath.mergeOptions(optionsInOrderOfPriority[i], optionsInOrderOfPriority[j])).toEqual(
-              i < j ? optionsInOrderOfPriority[i] : optionsInOrderOfPriority[j],
-            );
+            expect(
+              HierarchyFilteringPath.mergeOptions(optionsInOrderOfPriority[i], optionsInOrderOfPriority[j]),
+            ).toEqual(i < j ? optionsInOrderOfPriority[i] : optionsInOrderOfPriority[j]);
           }
         }
       });

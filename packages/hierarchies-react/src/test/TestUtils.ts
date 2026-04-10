@@ -26,10 +26,7 @@ import {
  * setup `userEvent` from `@testing-library/user-event`.
  */
 function customRender(ui: ReactElement, options?: RenderOptions): RenderResult & { user: UserEvent } {
-  return {
-    ...renderRTL(ui, options),
-    user: userEvent.setup(),
-  };
+  return { ...renderRTL(ui, options), user: userEvent.setup() };
 }
 
 export * from "@testing-library/react";
@@ -40,7 +37,9 @@ export function getHierarchyNode(model: TreeModel, id: string | undefined) {
   return node && isTreeModelHierarchyNode(node) ? node : undefined;
 }
 
-type ModelInputNode = (Partial<Omit<TreeModelHierarchyNode, "children" | "id">> & { id: string | undefined; children?: string[] }) | TreeModelInfoNode;
+type ModelInputNode =
+  | (Partial<Omit<TreeModelHierarchyNode, "children" | "id">> & { id: string | undefined; children?: string[] })
+  | TreeModelInfoNode;
 type ModelInput = Array<ModelInputNode>;
 
 function isModelInputInfoNode(node: ModelInputNode): node is TreeModelInfoNode {
@@ -65,7 +64,11 @@ export function createTreeModel(seed: ModelInput) {
     }
 
     if (input.id === undefined) {
-      model.rootNode = { ...model.rootNode, instanceFilter: input.instanceFilter, hierarchyLimit: input.hierarchyLimit };
+      model.rootNode = {
+        ...model.rootNode,
+        instanceFilter: input.instanceFilter,
+        hierarchyLimit: input.hierarchyLimit,
+      };
       continue;
     }
 
@@ -94,7 +97,10 @@ export function createTreeModelNode(props: Partial<TreeModelHierarchyNode> & { i
   };
 }
 
-export function createTestModelGenericInfoNode({ id, ...props }: Partial<TreeModelGenericInfoNode> & { id: string }): TreeModelGenericInfoNode {
+export function createTestModelGenericInfoNode({
+  id,
+  ...props
+}: Partial<TreeModelGenericInfoNode> & { id: string }): TreeModelGenericInfoNode {
   return {
     ...props,
     id,
@@ -108,12 +114,7 @@ export function createTestModelNoFilterMatchesInfoNode({
   id,
   ...props
 }: Partial<TreeModelNoFilterMatchesInfoNode> & { id: string }): TreeModelNoFilterMatchesInfoNode {
-  return {
-    ...props,
-    id,
-    parentId: props.parentId ?? undefined,
-    type: "NoFilterMatches",
-  };
+  return { ...props, id, parentId: props.parentId ?? undefined, type: "NoFilterMatches" };
 }
 
 export function createTestModelResultSetTooLargeInfoNode({
@@ -129,7 +130,10 @@ export function createTestModelResultSetTooLargeInfoNode({
   };
 }
 
-export function createTestHierarchyNode({ id, ...props }: Partial<NonGroupingHierarchyNode> & { id: string }): NonGroupingHierarchyNode {
+export function createTestHierarchyNode({
+  id,
+  ...props
+}: Partial<NonGroupingHierarchyNode> & { id: string }): NonGroupingHierarchyNode {
   return {
     ...props,
     key: props.key ?? { type: "generic", id },
@@ -139,7 +143,10 @@ export function createTestHierarchyNode({ id, ...props }: Partial<NonGroupingHie
   };
 }
 
-export function createTestGroupingNode({ id, ...props }: Partial<GroupingHierarchyNode> & { id: string }): GroupingHierarchyNode {
+export function createTestGroupingNode({
+  id,
+  ...props
+}: Partial<GroupingHierarchyNode> & { id: string }): GroupingHierarchyNode {
   return {
     ...props,
     key: props.key ?? { type: "class-grouping", className: id },
@@ -184,7 +191,11 @@ export function createHierarchyProviderStub(customizations?: Partial<StubbedHier
     [Symbol.dispose]: vi.fn<() => void>(),
     ...customizations,
   };
-  provider.setFormatter.mockImplementation((arg) => provider.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: arg } }));
-  provider.setHierarchyFilter.mockImplementation((arg) => provider.hierarchyChanged.raiseEvent({ filterChange: { newFilter: arg } }));
+  provider.setFormatter.mockImplementation((arg) =>
+    provider.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: arg } }),
+  );
+  provider.setHierarchyFilter.mockImplementation((arg) =>
+    provider.hierarchyChanged.raiseEvent({ filterChange: { newFilter: arg } }),
+  );
   return provider;
 }

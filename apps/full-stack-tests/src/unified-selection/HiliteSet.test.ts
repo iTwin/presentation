@@ -51,11 +51,7 @@ describe("HiliteSet", () => {
       elements.push(...set.elements);
     }
 
-    return {
-      models,
-      subCategories,
-      elements,
-    };
+    return { models, subCategories, elements };
   }
 
   describe("Hiliting selection", () => {
@@ -205,7 +201,12 @@ describe("HiliteSet", () => {
             const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
             await builder.importSchema(schema);
             const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-            assemblyKey = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id });
+            assemblyKey = insertPhysicalElement({
+              builder,
+              userLabel: "element 1",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
             const element2 = insertPhysicalElement({
               builder,
               userLabel: "element 2",
@@ -255,7 +256,12 @@ describe("HiliteSet", () => {
             const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
             await builder.importSchema(schema);
             const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-            elementKey = insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id });
+            elementKey = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
           })
         ).imodel;
 
@@ -277,9 +283,24 @@ describe("HiliteSet", () => {
             await builder.importSchema(schema);
             const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
             elementKeys = [
-              insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
-              insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
-              insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
+              insertPhysicalElement({
+                builder,
+                userLabel: "element",
+                modelId: modelKey.id,
+                categoryId: categoryKey.id,
+              }),
+              insertPhysicalElement({
+                builder,
+                userLabel: "element",
+                modelId: modelKey.id,
+                categoryId: categoryKey.id,
+              }),
+              insertPhysicalElement({
+                builder,
+                userLabel: "element",
+                modelId: modelKey.id,
+                categoryId: categoryKey.id,
+              }),
             ];
           })
         ).imodel;
@@ -304,9 +325,17 @@ describe("HiliteSet", () => {
             const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
             await builder.importSchema(schema);
             const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({
+              builder,
+              codeValue: "test functional model",
+            });
             const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-            physicalElement = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
+            physicalElement = insertPhysicalElement({
+              builder,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+            });
             const physicalElementChild = insertPhysicalElement({
               builder,
               userLabel: "child element 1",
@@ -334,7 +363,12 @@ describe("HiliteSet", () => {
               representedElementId: physicalElement.id,
               relationshipName: "PhysicalElementFulfillsFunction",
             });
-            expectedElements = [physicalElement, physicalElementChild, physicalElementChild2, physicalElementChildChild];
+            expectedElements = [
+              physicalElement,
+              physicalElementChild,
+              physicalElementChild2,
+              physicalElementChildChild,
+            ];
           })
         ).imodel;
 
@@ -356,9 +390,16 @@ describe("HiliteSet", () => {
             const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
             await builder.importSchema(schema);
             const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({
+              builder,
+              codeValue: "test functional model",
+            });
             const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-            graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            graphicsElement = insertDrawingGraphic({
+              builder,
+              modelId: drawingModelKey.id,
+              categoryId: categoryKey.id,
+            });
             const graphicsElementChild = insertDrawingGraphic({
               builder,
               modelId: drawingModelKey.id,
@@ -383,7 +424,12 @@ describe("HiliteSet", () => {
               representedElementId: graphicsElement.id,
               relationshipName: "DrawingGraphicRepresentsFunctionalElement",
             });
-            expectedElements = [graphicsElement, graphicsElementChild, graphicsElementChild2, graphicsElementChildChild];
+            expectedElements = [
+              graphicsElement,
+              graphicsElementChild,
+              graphicsElementChild2,
+              graphicsElementChildChild,
+            ];
           })
         ).imodel;
 
@@ -403,15 +449,15 @@ describe("HiliteSet", () => {
 
         iModel = (
           await buildTestIModel(async (builder) => {
-            const groupModel = insertGroupInformationModelWithPartition({ builder, codeValue: "group information model" });
+            const groupModel = insertGroupInformationModelWithPartition({
+              builder,
+              codeValue: "group information model",
+            });
             const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
             await builder.importSchema(schema);
             const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
             const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-            groupInformationElement = insertGroupInformationElement({
-              builder,
-              modelId: groupModel.id,
-            });
+            groupInformationElement = insertGroupInformationElement({ builder, modelId: groupModel.id });
             const physicalElementGroupMember = insertPhysicalElement({
               builder,
               userLabel: "child element 1",
@@ -441,7 +487,11 @@ describe("HiliteSet", () => {
               categoryId: categoryKey.id,
               parentId: physicalElementGroupMember.id,
             });
-            expectedElements = [physicalElementGroupMember, physicalElementGroupMember2, physicalElementGroupMemberChild];
+            expectedElements = [
+              physicalElementGroupMember,
+              physicalElementGroupMember2,
+              physicalElementGroupMemberChild,
+            ];
           })
         ).imodel;
 

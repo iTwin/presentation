@@ -18,9 +18,7 @@ beforeAll(async () => {
   Logger.setLevel("i18n", LogLevel.Error);
   Logger.setLevel("SQLite", LogLevel.Error);
 
-  await IModelHost.startup({
-    profileName: "presentation-performance-tests",
-  });
+  await IModelHost.startup({ profileName: "presentation-performance-tests" });
   await Datasets.initialize("./datasets");
 }, 60000);
 

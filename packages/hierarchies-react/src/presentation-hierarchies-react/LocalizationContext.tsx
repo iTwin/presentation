@@ -73,7 +73,8 @@ const defaultLocalizedStrings: LocalizedStrings = {
   clearHierarchyLevelFilter: "Clear active filter",
   noFilteredChildren: "No child nodes match current filter",
   resultLimitExceeded: "There are more items than allowed limit of {{limit}}.",
-  resultLimitExceededWithFiltering: "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
+  resultLimitExceededWithFiltering:
+    "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
   increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
   increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
   retry: "Retry",
@@ -95,7 +96,10 @@ interface LocalizationContextProviderProps {
  * Context provider for localized strings used in the components.
  * @public
  */
-export function LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren<LocalizationContextProviderProps>) {
+export function LocalizationContextProvider({
+  localizedStrings,
+  children,
+}: PropsWithChildren<LocalizationContextProviderProps>) {
   const [state, setState] = useState({ localizedStrings: { ...defaultLocalizedStrings, ...localizedStrings } });
 
   useEffect(() => {

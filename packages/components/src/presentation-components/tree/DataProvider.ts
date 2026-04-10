@@ -9,7 +9,12 @@
 
 import "../common/DisposePolyfill.js";
 
-import { DelayLoadedTreeNodeItem, PageOptions, PropertyFilterRuleGroupOperator, TreeNodeItem } from "@itwin/components-react";
+import {
+  DelayLoadedTreeNodeItem,
+  PageOptions,
+  PropertyFilterRuleGroupOperator,
+  TreeNodeItem,
+} from "@itwin/components-react";
 import { Logger } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
@@ -32,10 +37,17 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostics.js";
 import { getRulesetId, memoize, translate } from "../common/Utils.js";
 import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
-import { createInstanceFilterDefinition, PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder.js";
+import {
+  createInstanceFilterDefinition,
+  PresentationInstanceFilterInfo,
+} from "../instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationInstanceFilter } from "../instance-filter-builder/PresentationInstanceFilter.js";
 import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider.js";
-import { InfoTreeNodeItemType, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
+import {
+  InfoTreeNodeItemType,
+  isPresentationTreeNodeItem,
+  PresentationTreeNodeItem,
+} from "./PresentationTreeNodeItem.js";
 import { createInfoNode, createTreeNodeItem, pageOptionsUiToPresentation } from "./Utils.js";
 
 /**
@@ -120,11 +132,17 @@ export interface PresentationTreeDataProviderDataSourceEntryPoints {
   /** @deprecated in 4.0 The entry point is not used anymore, it's usage has been replaced by [[getNodesIterator]]. */
   getNodesCount?: (requestOptions: HierarchyRequestOptions<IModelConnection, NodeKey>) => Promise<number>;
   /** @deprecated in 5.2 The entry point is not used anymore, it's usage has been replaced by [[getNodesIterator]]. */
-  getNodesAndCount?: (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) => Promise<{ nodes: Node[]; count: number }>;
+  getNodesAndCount?: (
+    requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>,
+  ) => Promise<{ nodes: Node[]; count: number }>;
   getNodesIterator: (
-    requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey> & { maxParallelRequests?: number; batchSize?: number }>,
+    requestOptions: Paged<
+      HierarchyRequestOptions<IModelConnection, NodeKey> & { maxParallelRequests?: number; batchSize?: number }
+    >,
   ) => Promise<{ total: number; items: AsyncIterableIterator<Node> }>;
-  getFilteredNodePaths: (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) => Promise<NodePathElement[]>;
+  getFilteredNodePaths: (
+    requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>,
+  ) => Promise<NodePathElement[]>;
 }
 
 /**
@@ -148,7 +166,9 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
       getNodesIterator: async (requestOptions) => {
         // we can't just drop support for the `getNodesAndCount` override, so if it's set - need to take data from it
         if (props.dataSourceOverrides?.getNodesAndCount) {
-          return createNodesIteratorFromDeprecatedResponse(await props.dataSourceOverrides.getNodesAndCount(requestOptions));
+          return createNodesIteratorFromDeprecatedResponse(
+            await props.dataSourceOverrides.getNodesAndCount(requestOptions),
+          );
         }
 
         // the `PresentationManager.getNodesIterator` has only been added to @itwin/presentation-frontend in 4.5.1, and our peerDependency is
@@ -156,7 +176,9 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
         if (Presentation.presentation.getNodesIterator) {
           return Presentation.presentation.getNodesIterator(requestOptions);
         }
-        return createNodesIteratorFromDeprecatedResponse(await Presentation.presentation.getNodesAndCount(requestOptions));
+        return createNodesIteratorFromDeprecatedResponse(
+          await Presentation.presentation.getNodesAndCount(requestOptions),
+        );
       },
       getFilteredNodePaths: async (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) =>
         Presentation.presentation.getFilteredNodePaths(requestOptions),
@@ -218,7 +240,11 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   }
 
   /** Called to get options for node requests */
-  private createPagedRequestOptions(parentKey: NodeKey | undefined, pageOptions?: PageOptions, instanceFilter?: InstanceFilterDefinition) {
+  private createPagedRequestOptions(
+    parentKey: NodeKey | undefined,
+    pageOptions?: PageOptions,
+    instanceFilter?: InstanceFilterDefinition,
+  ) {
     const isPaging = pageOptions && (pageOptions.start || pageOptions.size !== undefined);
     return {
       ...this.createRequestOptions(parentKey, instanceFilter),
@@ -300,20 +326,19 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
    * @param filter Filter.
    */
   public async getFilteredNodePaths(filter: string): Promise<NodePathElement[]> {
-    return this._dataSource.getFilteredNodePaths({
-      ...this.createBaseRequestOptions(),
-      filterText: filter,
-    });
+    return this._dataSource.getFilteredNodePaths({ ...this.createBaseRequestOptions(), filterText: filter });
   }
 
   private setupRulesetVariablesListener() {
     if (this._unregisterVariablesChangeListener) {
       return;
     }
-    this._unregisterVariablesChangeListener = Presentation.presentation.vars(getRulesetId(this.props.ruleset)).onVariableChanged.addListener(() => {
-      this._getNodesAndCount.cache.values.length = 0;
-      this._getNodesAndCount.cache.keys.length = 0;
-    });
+    this._unregisterVariablesChangeListener = Presentation.presentation
+      .vars(getRulesetId(this.props.ruleset))
+      .onVariableChanged.addListener(() => {
+        this._getNodesAndCount.cache.values.length = 0;
+        this._getNodesAndCount.cache.keys.length = 0;
+      });
   }
 }
 
@@ -323,7 +348,10 @@ async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem
   }
 
   // combine ancestors and current filters
-  const allFilters: PresentationInstanceFilterInfo[] = [...node.filtering.ancestorFilters, ...(node.filtering.active ? [node.filtering.active] : [])];
+  const allFilters: PresentationInstanceFilterInfo[] = [
+    ...node.filtering.ancestorFilters,
+    ...(node.filtering.active ? [node.filtering.active] : []),
+  ];
 
   if (allFilters.length === 0) {
     return undefined;
@@ -333,7 +361,9 @@ async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem
     return createInstanceFilterDefinition(allFilters[0], imodel);
   }
 
-  const appliedFilters = allFilters.map((filterInfo) => filterInfo.filter).filter((filter): filter is PresentationInstanceFilter => filter !== undefined);
+  const appliedFilters = allFilters
+    .map((filterInfo) => filterInfo.filter)
+    .filter((filter): filter is PresentationInstanceFilter => filter !== undefined);
   const usedClasses = getConcatenatedDistinctClassInfos(allFilters);
 
   // if there are more than one filter applied, combine them using `AND` operator
@@ -341,10 +371,7 @@ async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem
   const info: PresentationInstanceFilterInfo = {
     filter:
       appliedFilters.length > 0
-        ? {
-            operator: PropertyFilterRuleGroupOperator.And,
-            conditions: appliedFilters,
-          }
+        ? { operator: PropertyFilterRuleGroupOperator.And, conditions: appliedFilters }
         : undefined,
     usedClasses,
   };
@@ -353,7 +380,10 @@ async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem
 }
 
 function getConcatenatedDistinctClassInfos(appliedFilters: PresentationInstanceFilterInfo[]) {
-  const concatenatedClassInfos = appliedFilters.reduce((accumulator, value) => [...accumulator, ...value.usedClasses], [] as ClassInfo[]);
+  const concatenatedClassInfos = appliedFilters.reduce(
+    (accumulator, value) => [...accumulator, ...value.usedClasses],
+    [] as ClassInfo[],
+  );
   return [...new Map(concatenatedClassInfos.map((item) => [item.id, item])).values()];
 }
 
@@ -387,7 +417,11 @@ async function createNodesAndCountResult(
             onHierarchyLimitExceeded?.();
             return {
               nodes: [
-                createInfoNode(parentNode, `${translate("tree.result-limit-exceeded")} ${hierarchyLevelSizeLimit!}.`, InfoTreeNodeItemType.ResultSetTooLarge),
+                createInfoNode(
+                  parentNode,
+                  `${translate("tree.result-limit-exceeded")} ${hierarchyLevelSizeLimit!}.`,
+                  InfoTreeNodeItemType.ResultSetTooLarge,
+                ),
               ],
               count: 1,
             };
@@ -402,10 +436,7 @@ async function createNodesAndCountResult(
 }
 
 function createStatusNodeResult(parentNode: TreeNodeItem | undefined, labelKey: string, type?: InfoTreeNodeItemType) {
-  return {
-    nodes: [createInfoNode(parentNode, translate(labelKey), type)],
-    count: 1,
-  };
+  return { nodes: [createInfoNode(parentNode, translate(labelKey), type)], count: 1 };
 }
 
 async function createTreeItems(
@@ -429,9 +460,15 @@ async function createTreeItems(
     if (node.supportsFiltering) {
       item.filtering = {
         descriptor: async () => {
-          const descriptor = await Presentation.presentation.getNodesDescriptor({ ...baseOptions, parentKey: node.key });
+          const descriptor = await Presentation.presentation.getNodesDescriptor({
+            ...baseOptions,
+            parentKey: node.key,
+          });
           if (!descriptor) {
-            throw new PresentationError(PresentationStatus.Error, `Failed to get descriptor for node - ${node.label.displayValue}`);
+            throw new PresentationError(
+              PresentationStatus.Error,
+              `Failed to get descriptor for node - ${node.label.displayValue}`,
+            );
           }
           return descriptor;
         },
@@ -464,7 +501,10 @@ class MemoizationHelpers {
   }
 }
 
-function createNodesIteratorFromDeprecatedResponse({ count, nodes }: { count: number; nodes: Node[] }): { total: number; items: AsyncIterableIterator<Node> } {
+function createNodesIteratorFromDeprecatedResponse({ count, nodes }: { count: number; nodes: Node[] }): {
+  total: number;
+  items: AsyncIterableIterator<Node>;
+} {
   return {
     total: count,
     items: (async function* () {

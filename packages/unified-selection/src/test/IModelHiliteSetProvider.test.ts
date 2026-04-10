@@ -20,9 +20,7 @@ describe("createIModelHiliteSetProvider", () => {
   let factory: Mock<(props: HiliteSetProviderProps) => HiliteSetProvider>;
   let selectionStorage: SelectionStorage;
   let hiliteSetCache: ReturnType<typeof createIModelHiliteSetProvider>;
-  const provider = {
-    getHiliteSet: vi.fn<(props: { imodelKey: string }) => AsyncIterableIterator<HiliteSet>>(),
-  };
+  const provider = { getHiliteSet: vi.fn<(props: { imodelKey: string }) => AsyncIterableIterator<HiliteSet>>() };
   const imodelProvider = vi.fn<(imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor>();
   const imodelKey = "iModelKey";
 
@@ -39,24 +37,19 @@ describe("createIModelHiliteSetProvider", () => {
       elements.push(...set.elements);
     }
 
-    return {
-      models,
-      subCategories,
-      elements,
-    };
+    return { models, subCategories, elements };
   }
 
   function stubIModelAccess() {
-    return {
-      createQueryReader: vi.fn(),
-      classDerivesFrom: vi.fn(),
-    };
+    return { createQueryReader: vi.fn(), classDerivesFrom: vi.fn() };
   }
 
   beforeEach(async () => {
     selectionStorage = createStorage();
 
-    factory = vi.fn<(props: HiliteSetProviderProps) => HiliteSetProvider>().mockReturnValue(provider as unknown as HiliteSetProvider);
+    factory = vi
+      .fn<(props: HiliteSetProviderProps) => HiliteSetProvider>()
+      .mockReturnValue(provider as unknown as HiliteSetProvider);
     hiliteSetCache = createIModelHiliteSetProvider({
       selectionStorage,
       imodelProvider,

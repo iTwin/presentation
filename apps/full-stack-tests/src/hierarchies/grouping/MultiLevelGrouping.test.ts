@@ -72,7 +72,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
@@ -95,14 +97,8 @@ describe("Hierarchies", () => {
                         byProperties: {
                           propertiesClassName: "BisCore.Subject",
                           propertyGroups: [
-                            {
-                              propertyName: "Description",
-                              propertyClassAlias: "this",
-                            },
-                            {
-                              propertyName: "UserLabel",
-                              propertyClassAlias: "this",
-                            },
+                            { propertyName: "Description", propertyClassAlias: "this" },
+                            { propertyName: "UserLabel", propertyClassAlias: "this" },
                           ],
                         },
                       },

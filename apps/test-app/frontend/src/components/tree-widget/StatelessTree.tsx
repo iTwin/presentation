@@ -16,10 +16,19 @@ import {
   PresentationInstanceFilterInfo,
   PresentationInstanceFilterPropertiesSource,
 } from "@itwin/presentation-components";
-import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey, registerTxnListeners } from "@itwin/presentation-core-interop";
+import {
+  createECSchemaProvider,
+  createECSqlQueryExecutor,
+  createIModelKey,
+  registerTxnListeners,
+} from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
-import { HierarchyLevelDetails, PresentationHierarchyNode, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import {
+  HierarchyLevelDetails,
+  PresentationHierarchyNode,
+  useIModelUnifiedSelectionTree,
+} from "@itwin/presentation-hierarchies-react";
 import { TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
@@ -50,7 +59,17 @@ export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection
   return <Tree {...props} imodel={imodel} imodelAccess={imodelAccess} />;
 }
 
-function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnection; imodelAccess: IModelAccess; height: number; width: number }) {
+function Tree({
+  imodel,
+  imodelAccess,
+  height,
+  width,
+}: {
+  imodel: IModelConnection;
+  imodelAccess: IModelAccess;
+  height: number;
+  width: number;
+}) {
   const [filter, setFilter] = useState("");
 
   const getFilteredPaths = useMemo<UseIModelTreeProps["getFilteredPaths"]>(() => {
@@ -119,16 +138,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         imodel,
         rulesetOrId: {
           id: `Hierarchy level descriptor ruleset`,
-          rules: [
-            {
-              ruleType: "Content",
-              specifications: [
-                {
-                  specType: "SelectedNodeInstances",
-                },
-              ],
-            },
-          ],
+          rules: [{ ruleType: "Content", specifications: [{ specType: "SelectedNodeInstances" }] }],
         },
         displayType: DefaultContentDisplayTypes.PropertyPane,
         keys: new KeySet(inputKeys),
@@ -210,7 +220,9 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
       <Flex style={{ width: "100%", padding: "0.5rem" }}>
         <DebouncedSearchBox onChange={setFilter} />
         <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
-        {imodel.isBriefcaseConnection() ? <Button onClick={() => void removeSelectedElements(imodel)}>Delete</Button> : null}
+        {imodel.isBriefcaseConnection() ? (
+          <Button onClick={() => void removeSelectedElements(imodel)}>Delete</Button>
+        ) : null}
       </Flex>
       {renderContent()}
       {renderLoadingOverlay()}
@@ -236,19 +248,25 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
 
 type SearchBoxProps = ComponentPropsWithoutRef<typeof SearchBox>;
 
-function DebouncedSearchBox({ onChange, ...props }: Omit<SearchBoxProps, "onChange"> & { onChange: (text: string) => void }) {
+function DebouncedSearchBox({
+  onChange,
+  ...props
+}: Omit<SearchBoxProps, "onChange"> & { onChange: (text: string) => void }) {
   const handleChange = useMemo(() => {
     return debounced(onChange, 500);
   }, [onChange]);
 
-  return <SearchBox {...props} inputProps={{ ...props.inputProps, value: undefined, onChange: (e) => handleChange(e.currentTarget.value) }} />;
+  return (
+    <SearchBox
+      {...props}
+      inputProps={{ ...props.inputProps, value: undefined, onChange: (e) => handleChange(e.currentTarget.value) }}
+    />
+  );
 }
 
 function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
   const subject = new Subject<() => void>();
-  subject.pipe(debounceTime(delay)).subscribe({
-    next: (invoke) => invoke(),
-  });
+  subject.pipe(debounceTime(delay)).subscribe({ next: (invoke) => invoke() });
 
   return (args: TArgs) => {
     subject.next(() => {
@@ -273,7 +291,10 @@ function fromGenericFilter(descriptor: Descriptor, filter: GenericInstanceFilter
   return {
     filter: presentationFilter,
     usedClasses: (filter.filteredClassNames ?? [])
-      .map((name) => descriptor.selectClasses.find((selectClass) => selectClass.selectClassInfo.name === name)?.selectClassInfo)
+      .map(
+        (name) =>
+          descriptor.selectClasses.find((selectClass) => selectClass.selectClassInfo.name === name)?.selectClassInfo,
+      )
       .filter((classInfo): classInfo is ClassInfo => classInfo !== undefined),
   };
 }

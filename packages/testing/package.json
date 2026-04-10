@@ -40,7 +40,7 @@
     "docs:changelog": "cpx ./CHANGELOG.md ./build/docs/reference/presentation-testing",
     "docs:reference": "cross-env NODE_PROJECT_ROOT_DIRECTORY=../../ betools docs --json=./build/docs/reference/presentation-testing/file.json --tsIndexFile=presentation-testing.ts --onlyJson --testExcludeGlob=./src/test/**",
     "docs:extract": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract",
-    "lint": "eslint ./src/**/*.ts",
+    "lint": "eslint \"./src/**/*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "extract-api": "betools extract-api --entry=lib/esm/presentation-testing --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",

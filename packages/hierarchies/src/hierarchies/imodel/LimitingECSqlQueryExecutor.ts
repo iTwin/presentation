@@ -13,7 +13,10 @@ import {
   trimWhitespace,
 } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../HierarchyErrors.js";
-import { LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE, LOGGING_NAMESPACE_PERFORMANCE as BASE_LOGGING_NAMESPACE_PERFORMANCE } from "../internal/Common.js";
+import {
+  LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE,
+  LOGGING_NAMESPACE_PERFORMANCE as BASE_LOGGING_NAMESPACE_PERFORMANCE,
+} from "../internal/Common.js";
 import { doLog } from "../internal/LoggingUtils.js";
 
 /**
@@ -36,9 +39,15 @@ export interface LimitingECSqlQueryExecutor {
  * Creates an `LimitingECSqlQueryExecutor` that throws `RowsLimitExceededError` if the query exceeds given amount of rows.
  * @public
  */
-export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor {
+export function createLimitingECSqlQueryExecutor(
+  baseExecutor: ECSqlQueryExecutor,
+  defaultLimit: number | "unbounded",
+): LimitingECSqlQueryExecutor {
   return {
-    async *createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" }) {
+    async *createQueryReader(
+      query: ECSqlQueryDef,
+      config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" },
+    ) {
       const { limit: configLimit, ...restConfig } = config ?? {};
       const limit = configLimit ?? defaultLimit;
       const queryLogger = createQueryLogger(query);

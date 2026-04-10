@@ -6,7 +6,14 @@
 import { OrderedId64Iterable } from "@itwin/core-bentley";
 import { ECSqlReader, QueryBinder, QueryOptions, QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
 import { Point2d, Point3d } from "@itwin/core-geometry";
-import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow, trimWhitespace } from "@itwin/presentation-shared";
+import {
+  ECSqlBinding,
+  ECSqlQueryDef,
+  ECSqlQueryExecutor,
+  ECSqlQueryReaderOptions,
+  ECSqlQueryRow,
+  trimWhitespace,
+} from "@itwin/presentation-shared";
 
 /**
  * Defines input for `createECSqlQueryExecutor`. Generally, this is an instance of either [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/)
@@ -73,10 +80,7 @@ class ECSqlQueryReaderImpl implements ReturnType<ECSqlQueryExecutor["createQuery
     if (res.done) {
       return { done: true, value: undefined };
     }
-    return {
-      done: false,
-      value: this._format === "array" ? res.value.toArray() : res.value.toRow(),
-    };
+    return { done: false, value: this._format === "array" ? res.value.toArray() : res.value.toRow() };
   }
 }
 

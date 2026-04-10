@@ -19,15 +19,8 @@ type TypedPrimitiveValueSelectorProps = {
       /** Type of the value. Defaults to `String`. */
       type?: undefined;
     }
-  | {
-      type: Exclude<PrimitiveValueType, "Double">;
-      extendedType?: string;
-    }
-  | {
-      type: Extract<PrimitiveValueType, "Double">;
-      extendedType?: string;
-      koqName?: string;
-    }
+  | { type: Exclude<PrimitiveValueType, "Double">; extendedType?: string }
+  | { type: Extract<PrimitiveValueType, "Double">; extendedType?: string; koqName?: string }
 );
 
 /**
@@ -42,7 +35,9 @@ export namespace TypedValueSelectClauseProps {
   export function isPrimitiveValue(props: TypedValueSelectClauseProps): props is TypedPrimitiveValue {
     return "value" in props;
   }
-  export function isPrimitiveValueSelector(props: TypedValueSelectClauseProps): props is TypedPrimitiveValueSelectorProps {
+  export function isPrimitiveValueSelector(
+    props: TypedValueSelectClauseProps,
+  ): props is TypedPrimitiveValueSelectorProps {
     return "selector" in props;
   }
 }
@@ -128,7 +123,11 @@ export async function createPrimitivePropertyValueSelectorProps({
  *
  * @public
  */
-export function createRawPropertyValueSelector(classAlias: string, propertyName: string, componentName?: string): string {
+export function createRawPropertyValueSelector(
+  classAlias: string,
+  propertyName: string,
+  componentName?: string,
+): string {
   let propertySelector = `[${classAlias}].[${propertyName}]`;
   if (componentName) {
     propertySelector += `.[${componentName}]`;
@@ -275,8 +274,13 @@ function createPrimitiveValueJsonSelector(value: PrimitiveValue): string {
  *
  * @public
  */
-export function createConcatenatedValueStringSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string) {
-  const combinedSelectors = selectors.length ? selectors.map((sel) => createTypedValueStringSelector(sel)).join(" || ") : "''";
+export function createConcatenatedValueStringSelector(
+  selectors: TypedValueSelectClauseProps[],
+  checkSelector?: string,
+) {
+  const combinedSelectors = selectors.length
+    ? selectors.map((sel) => createTypedValueStringSelector(sel)).join(" || ")
+    : "''";
   if (checkSelector) {
     return createNullableSelector({ checkSelector, valueSelector: combinedSelectors });
   }

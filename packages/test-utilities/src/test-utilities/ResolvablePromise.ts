@@ -24,7 +24,9 @@ export class ResolvablePromise<T> implements Promise<T> {
     return this._wrapped;
   }
 
-  public async catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined): Promise<T | TResult> {
+  public async catch<TResult = never>(
+    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined,
+  ): Promise<T | TResult> {
     return this._wrapped.catch(onrejected);
   }
 

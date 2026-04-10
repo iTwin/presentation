@@ -3,7 +3,20 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, toArray } from "rxjs";
+import {
+  EMPTY,
+  filter,
+  forkJoin,
+  from,
+  map,
+  merge,
+  mergeMap,
+  Observable,
+  scan,
+  shareReplay,
+  Subject,
+  toArray,
+} from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { Guid, GuidString, Id64String } from "@itwin/core-bentley";
 import {
@@ -187,11 +200,15 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
   private getInstancesByType(selectables: Selectables): InstancesByType {
     const keyTypeObs = merge(
       from(selectables.custom.values()).pipe(mergeMap((selectable) => selectable.loadInstanceKeys())),
-      from(selectables.instanceKeys).pipe(mergeMap(([className, idSet]) => from(idSet).pipe(map((id) => ({ className, id }))))),
+      from(selectables.instanceKeys).pipe(
+        mergeMap(([className, idSet]) => from(idSet).pipe(map((id) => ({ className, id })))),
+      ),
     ).pipe(
       releaseMainThreadOnItemsCount(500),
       // Get types for each instance key
-      mergeMap((instanceKey) => from(this.getType(instanceKey)).pipe(map((instanceIdType) => ({ instanceId: instanceKey.id, instanceIdType })))),
+      mergeMap((instanceKey) =>
+        from(this.getType(instanceKey)).pipe(map((instanceIdType) => ({ instanceId: instanceKey.id, instanceIdType }))),
+      ),
       // Cache the results
       shareReplay(),
     );
@@ -288,12 +305,16 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
             )
           `,
         ];
-        const ecsql = [`SELECT ECInstanceId FROM CategorySubCategories`, `SELECT ECInstanceId FROM SubCategories`].join(" UNION ");
+        const ecsql = [`SELECT ECInstanceId FROM CategorySubCategories`, `SELECT ECInstanceId FROM SubCategories`].join(
+          " UNION ",
+        );
         return from(
           executeQuery({
             queryExecutor: this._imodelAccess,
             query: { ctes, ecsql, bindings },
-            config: { restartToken: `${this.#componentName}/${this.#componentId}/sub-categories/${Guid.createValue()}` },
+            config: {
+              restartToken: `${this.#componentName}/${this.#componentId}/sub-categories/${Guid.createValue()}`,
+            },
           }),
         );
       }),
@@ -309,7 +330,12 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
     }).pipe(
       mergeMap(({ groupInformationElementKeys, geometricElementKeys, functionalElements, elementKeys }) => {
         const hasFunctionalElements = !!functionalElements.length;
-        if (!groupInformationElementKeys.length && !geometricElementKeys.length && !elementKeys.length && !hasFunctionalElements) {
+        if (
+          !groupInformationElementKeys.length &&
+          !geometricElementKeys.length &&
+          !elementKeys.length &&
+          !hasFunctionalElements
+        ) {
           return EMPTY;
         }
 
@@ -356,7 +382,11 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
           `,
         ];
         const ecsql = [
-          ...(hasFunctionalElements ? ["SELECT ECInstanceId FROM FunctionalElementChildGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)"] : []),
+          ...(hasFunctionalElements
+            ? [
+                "SELECT ECInstanceId FROM FunctionalElementChildGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
+              ]
+            : []),
           "SELECT ECInstanceId FROM GeometricElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
           "SELECT ECInstanceId FROM GroupGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
           "SELECT ECInstanceId FROM ElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",

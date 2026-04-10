@@ -23,10 +23,7 @@ describe("isPresentationTreeNodeItem", () => {
       key: createTestECInstancesNodeKey(),
       label: PropertyRecord.fromString("Presentation Item"),
     };
-    const simpleItem: TreeNodeItem = {
-      id: "simple_item_id",
-      label: PropertyRecord.fromString("Simple Item"),
-    };
+    const simpleItem: TreeNodeItem = { id: "simple_item_id", label: PropertyRecord.fromString("Simple Item") };
     expect(isPresentationTreeNodeItem(presentationItem)).toBe(true);
     expect(isPresentationTreeNodeItem(simpleItem)).toBe(false);
   });
@@ -47,10 +44,7 @@ describe("isPresentationInfoTreeNodeItem", () => {
       key: createTestECInstancesNodeKey(),
       label: PropertyRecord.fromString("Presentation Item"),
     };
-    const simpleItem: TreeNodeItem = {
-      id: "simple_item_id",
-      label: PropertyRecord.fromString("Simple Item"),
-    };
+    const simpleItem: TreeNodeItem = { id: "simple_item_id", label: PropertyRecord.fromString("Simple Item") };
     expect(isPresentationInfoTreeNodeItem(presentationInfoItem)).toBe(true);
     expect(isPresentationInfoTreeNodeItem(presentationItem)).toBe(false);
     expect(isPresentationInfoTreeNodeItem(simpleItem)).toBe(false);

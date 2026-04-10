@@ -7,13 +7,28 @@ import { useEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, QuantityFormatter } from "@itwin/core-frontend";
-import { Format, FormatsProvider, FormatterSpec, FormatType, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
+import {
+  Format,
+  FormatsProvider,
+  FormatterSpec,
+  FormatType,
+  ParseError,
+  ParserSpec,
+  QuantityParseResult,
+} from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
-import { QuantityValue, useQuantityValueInput, UseQuantityValueInputProps } from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
+import {
+  QuantityValue,
+  useQuantityValueInput,
+  UseQuantityValueInputProps,
+} from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
 import { render, waitFor } from "../../TestUtils.js";
 
-function TestInput({ onChange, ...restProps }: UseQuantityValueInputProps & { onChange?: (value: QuantityValue) => void }) {
+function TestInput({
+  onChange,
+  ...restProps
+}: UseQuantityValueInputProps & { onChange?: (value: QuantityValue) => void }) {
   const { quantityValue, inputProps } = useQuantityValueInput(restProps);
 
   useEffect(() => {
@@ -31,17 +46,10 @@ describe("UseQuantityValueInput", () => {
     unitConversions: [{ name: "test unit", label: "unit" }],
     format,
   };
-  const parserSpec = {
-    parseToQuantityValue: vi.fn<(value: string) => QuantityParseResult>(),
-    format,
-  };
-  const quantityFormatter = {
-    onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-  };
+  const parserSpec = { parseToQuantityValue: vi.fn<(value: string) => QuantityParseResult>(), format };
+  const quantityFormatter = { onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>() };
 
-  const formatProvider = {
-    onFormatsChanged: new BeUiEvent<void>(),
-  };
+  const formatProvider = { onFormatsChanged: new BeUiEvent<void>() };
 
   let getFormatterSpecStub: ReturnType<typeof vi.spyOn>;
   let getParserSpecStub: ReturnType<typeof vi.spyOn>;
@@ -79,7 +87,9 @@ describe("UseQuantityValueInput", () => {
   });
 
   it("renders with formatted initial raw value", async () => {
-    const { queryByDisplayValue } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />);
+    const { queryByDisplayValue } = render(
+      <TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />,
+    );
     await waitFor(() => expect(queryByDisplayValue("2.5 unit")).not.toBeNull());
   });
 
@@ -102,7 +112,9 @@ describe("UseQuantityValueInput", () => {
 
   it("parses entered value", async () => {
     const spy = vi.fn<(value: QuantityValue) => void>();
-    const { user, getByRole, queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" onChange={spy} />);
+    const { user, getByRole, queryByPlaceholderText } = render(
+      <TestInput schemaContext={schemaContext} koqName="testKOQ" onChange={spy} />,
+    );
     await waitFor(() => expect(queryByPlaceholderText("unit")).not.toBeNull());
 
     const input = getByRole("textbox");
@@ -144,10 +156,7 @@ describe("UseQuantityValueInput", () => {
   });
 
   it("sets precision to 12 for Decimal format types", async () => {
-    const decimalFormat = {
-      type: FormatType.Decimal,
-      precision: 6,
-    };
+    const decimalFormat = { type: FormatType.Decimal, precision: 6 };
     const decimalFormatterSpec = {
       applyFormatting: vi.fn<(raw: number) => string>(),
       unitConversions: [{ name: "test unit", label: "unit" }],
@@ -165,10 +174,7 @@ describe("UseQuantityValueInput", () => {
   });
 
   it("does not set precision to 12 for Fractional format types", async () => {
-    const fractionalFormat = {
-      type: FormatType.Fractional,
-      precision: 6,
-    };
+    const fractionalFormat = { type: FormatType.Fractional, precision: 6 };
     const fractionalFormatterSpec = {
       applyFormatting: vi.fn<(raw: number) => string>(),
       unitConversions: [{ name: "test unit", label: "unit" }],

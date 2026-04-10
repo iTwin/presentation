@@ -69,7 +69,10 @@ export interface PresentationGenericInfoNode {
  *
  * @public
  */
-export type PresentationInfoNode = PresentationGenericInfoNode | PresentationResultSetTooLargeInfoNode | PresentationNoFilterMatchesInfoNode;
+export type PresentationInfoNode =
+  | PresentationGenericInfoNode
+  | PresentationResultSetTooLargeInfoNode
+  | PresentationNoFilterMatchesInfoNode;
 
 /**
  * A type that defines a node in a UI tree component, built with `useTree` hook.

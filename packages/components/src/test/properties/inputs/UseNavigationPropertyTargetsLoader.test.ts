@@ -50,7 +50,9 @@ describe("useNavigationPropertyTargetsLoader", () => {
 
     it("returns empty targets array if there's no content", async () => {
       getContentIteratorStub.mockResolvedValue(undefined);
-      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, {
+        initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } },
+      });
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
@@ -66,13 +68,21 @@ describe("useNavigationPropertyTargetsLoader", () => {
         values: {},
       });
       getContentIteratorStub.mockImplementation(async () => {
-        return { total: 1, descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([contentItem]) };
+        return {
+          total: 1,
+          descriptor: createTestContentDescriptor({ fields: [] }),
+          items: createAsyncIterator([contentItem]),
+        };
       });
 
-      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, {
+        initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } },
+      });
 
       await waitFor(() => {
-        expect(result.current.loadedOptions).toMatchObject([{ label: contentItem.label, key: contentItem.primaryKeys[0] }]);
+        expect(result.current.loadedOptions).toMatchObject([
+          { label: contentItem.label, key: contentItem.primaryKeys[0] },
+        ]);
       });
     });
 
@@ -102,7 +112,11 @@ describe("useNavigationPropertyTargetsLoader", () => {
 
     it("loads targets using provided filter string", async () => {
       getContentIteratorStub.mockImplementation(async () => {
-        return { total: 0, descriptor: createTestContentDescriptor({ fields: [], categories: [] }), items: createAsyncIterator([]) };
+        return {
+          total: 0,
+          descriptor: createTestContentDescriptor({ fields: [], categories: [] }),
+          items: createAsyncIterator([]),
+        };
       });
 
       const { result } = renderHook(useNavigationPropertyTargetsLoader, {
@@ -155,11 +169,15 @@ describe("useNavigationPropertyTargetsLoader", () => {
       });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
-      expect(result.current.loadedOptions).toMatchObject([{ label: contentItem.label, key: contentItem.primaryKeys[0] }]);
+      expect(result.current.loadedOptions).toMatchObject([
+        { label: contentItem.label, key: contentItem.primaryKeys[0] },
+      ]);
     });
 
     it("loads full batch of targets", async () => {
-      const contentItems = Array.from({ length: VALUE_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
+      const contentItems = Array.from({ length: VALUE_BATCH_SIZE }, () =>
+        createTestContentItem({ displayValues: {}, values: {} }),
+      );
       getContentStub.mockImplementation(async () => {
         return new Content(createTestContentDescriptor({ fields: [], categories: [] }), contentItems);
       });
@@ -207,9 +225,14 @@ describe("useNavigationPropertyTargetsRuleset", () => {
       isTargetPolymorphic: true,
       targetClassInfo: { id: "2", label: "Target Class", name: "TestSchema:TargetClass" },
     };
-    const propertyDescription: PropertyDescription = { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
+    const propertyDescription: PropertyDescription = {
+      displayLabel: "TestProp",
+      name: "test_prop",
+      typename: "navigation",
+    };
     const { result } = renderHook(
-      ({ getNavigationPropertyInfo, property }: Props) => useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, property),
+      ({ getNavigationPropertyInfo, property }: Props) =>
+        useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, property),
       { initialProps: { getNavigationPropertyInfo: async () => testInfo, property: propertyDescription } },
     );
 
@@ -219,9 +242,7 @@ describe("useNavigationPropertyTargetsRuleset", () => {
       rules: [
         {
           specifications: [
-            {
-              classes: { schemaName: "TestSchema", classNames: ["TargetClass"], arePolymorphic: true },
-            },
+            { classes: { schemaName: "TestSchema", classNames: ["TargetClass"], arePolymorphic: true } },
           ],
         },
       ],
@@ -229,9 +250,14 @@ describe("useNavigationPropertyTargetsRuleset", () => {
   });
 
   it("returns undefined if navigation property info is undefined", () => {
-    const propertyDescription: PropertyDescription = { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
+    const propertyDescription: PropertyDescription = {
+      displayLabel: "TestProp",
+      name: "test_prop",
+      typename: "navigation",
+    };
     const { result } = renderHook(
-      ({ getNavigationPropertyInfo, property }: Props) => useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, property),
+      ({ getNavigationPropertyInfo, property }: Props) =>
+        useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, property),
       { initialProps: { getNavigationPropertyInfo: async () => undefined, property: propertyDescription } },
     );
 

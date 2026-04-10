@@ -9,13 +9,20 @@ import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
+import {
+  ECClassInfo,
+  getIModelMetadataProvider,
+} from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
 import {
   PresentationInstanceFilterBuilder,
   PresentationInstanceFilterInfo,
 } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { createTestECClassInfo, stubVirtualization } from "../_helpers/Common.js";
-import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
+import {
+  createTestCategoryDescription,
+  createTestContentDescriptor,
+  createTestPropertiesContentField,
+} from "../_helpers/Content.js";
 import { render, waitFor, waitForElement, within } from "../TestUtils.js";
 
 describe("PresentationInstanceFilter", () => {
@@ -52,10 +59,7 @@ describe("PresentationInstanceFilter", () => {
   });
 
   const onCloseEvent = new BeEvent<() => void>();
-  const imodel = {
-    key: "test_imodel",
-    onClose: onCloseEvent,
-  } as IModelConnection;
+  const imodel = { key: "test_imodel", onClose: onCloseEvent } as IModelConnection;
 
   beforeAll(async () => {
     await UiComponents.initialize(new EmptyLocalization());
@@ -107,11 +111,7 @@ describe("PresentationInstanceFilter", () => {
 
     await waitFor(() =>
       expect(spy).toHaveBeenCalledWith({
-        filter: {
-          field: propertiesField,
-          operator: PropertyFilterRuleOperator.IsNotNull,
-          value: undefined,
-        },
+        filter: { field: propertiesField, operator: PropertyFilterRuleOperator.IsNotNull, value: undefined },
         usedClasses: [classInfo],
       }),
     );
@@ -122,16 +122,8 @@ describe("PresentationInstanceFilter", () => {
       filter: {
         operator: PropertyFilterRuleGroupOperator.And,
         conditions: [
-          {
-            field: propertiesField,
-            operator: PropertyFilterRuleOperator.IsNull,
-            value: undefined,
-          },
-          {
-            field: propertiesField2,
-            operator: PropertyFilterRuleOperator.IsNull,
-            value: undefined,
-          },
+          { field: propertiesField, operator: PropertyFilterRuleOperator.IsNull, value: undefined },
+          { field: propertiesField2, operator: PropertyFilterRuleOperator.IsNull, value: undefined },
         ],
       },
       usedClasses: [classInfo],
@@ -139,7 +131,12 @@ describe("PresentationInstanceFilter", () => {
 
     const spy = vi.fn();
     const { queryByDisplayValue } = render(
-      <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
+      <PresentationInstanceFilterBuilder
+        imodel={imodel}
+        descriptor={descriptor}
+        onInstanceFilterChanged={spy}
+        initialFilter={initialFilter}
+      />,
     );
 
     await waitFor(() => {
@@ -155,23 +152,20 @@ describe("PresentationInstanceFilter", () => {
     const initialFilter: PresentationInstanceFilterInfo = {
       filter: {
         operator: PropertyFilterRuleGroupOperator.And,
-        conditions: [
-          {
-            field: propertiesField,
-            operator: PropertyFilterRuleOperator.IsNull,
-            value: undefined,
-          },
-        ],
+        conditions: [{ field: propertiesField, operator: PropertyFilterRuleOperator.IsNull, value: undefined }],
       },
       usedClasses: [classInfo, classInfo2],
     };
 
     const spy = vi.fn();
     const { queryByDisplayValue, user, getByPlaceholderText, getByRole } = render(
-      <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
-      {
-        addThemeProvider: true,
-      },
+      <PresentationInstanceFilterBuilder
+        imodel={imodel}
+        descriptor={descriptor}
+        onInstanceFilterChanged={spy}
+        initialFilter={initialFilter}
+      />,
+      { addThemeProvider: true },
     );
 
     // ensure there's a property filter

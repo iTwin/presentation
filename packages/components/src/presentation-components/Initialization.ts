@@ -26,7 +26,9 @@ export const initializeLocalization = async () => {
  * @internal
  */
 export const initializePropertyValueRenderers = async () => {
-  const customRenderers: Array<{ name: string; renderer: IPropertyValueRenderer }> = [{ name: "SelectableInstance", renderer: new InstanceKeyValueRenderer() }];
+  const customRenderers: Array<{ name: string; renderer: IPropertyValueRenderer }> = [
+    { name: "SelectableInstance", renderer: new InstanceKeyValueRenderer() },
+  ];
 
   for (const { name, renderer } of customRenderers) {
     PropertyValueRendererManager.defaultManager.registerRenderer(name, renderer);

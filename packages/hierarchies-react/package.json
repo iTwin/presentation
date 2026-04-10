@@ -55,7 +55,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "rimraf lib build",
     "cover": "vitest run --coverage",
-    "lint": "eslint ./src/**/*.{ts,tsx}",
+    "lint": "eslint \"./src/**/*.{ts,tsx}\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "extract-api": "betools extract-api --entry=lib/esm/presentation-hierarchies-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",

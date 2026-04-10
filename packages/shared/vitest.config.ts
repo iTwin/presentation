@@ -12,20 +12,13 @@ export default defineConfig({
     testTimeout: 60000,
     clearMocks: true,
     restoreMocks: true,
-    env: {
-      NODE_ENV: "development",
-    },
+    env: { NODE_ENV: "development" },
     coverage: {
       provider: "v8",
       include: ["src/shared/**/*.ts"],
       reportsDirectory: "./lib/test/coverage",
       reporter: ["text-summary", "lcov", "cobertura"],
-      thresholds: {
-        statements: 100,
-        functions: 100,
-        branches: 100,
-        lines: 100,
-      },
+      thresholds: { statements: 100, functions: 100, branches: 100, lines: 100 },
     },
   },
 });

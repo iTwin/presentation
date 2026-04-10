@@ -13,7 +13,11 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import {
+  createLimitingECSqlQueryExecutor,
+  createNodesQueryClauseFactory,
+  HierarchyDefinition,
+} from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.SelectionStorage.Imports
 import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
@@ -106,9 +110,14 @@ describe("Hierarchies React", () => {
         // The hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all `BisCore.PhysicalModel` instances
         function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }): HierarchyDefinition {
           // Create a factory for building labels SELECT query clauses according to BIS conventions
-          const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+          const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          });
           // Create a factory for building nodes SELECT query clauses in a format understood by the provider
-          const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsQueryFactory });
+          const nodesQueryFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: labelsQueryFactory,
+          });
           return {
             defineHierarchyLevel: async () => [
               {
@@ -120,7 +129,10 @@ describe("Hierarchies React", () => {
                         ecClassId: { selector: "this.ECClassId" },
                         ecInstanceId: { selector: "this.ECInstanceId" },
                         nodeLabel: {
-                          selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
+                          selector: await labelsQueryFactory.createSelectClause({
+                            classAlias: "this",
+                            className: "BisCore.PhysicalModel",
+                          }),
                         },
                         hasChildren: false,
                       })}
@@ -133,7 +145,13 @@ describe("Hierarchies React", () => {
         }
 
         /** Internal component that creates and renders tree state. */
-        function MyTreeComponentInternal({ imodelAccess, selectionStorage }: { imodelAccess: IModelAccess; selectionStorage: SelectionStorage }) {
+        function MyTreeComponentInternal({
+          imodelAccess,
+          selectionStorage,
+        }: {
+          imodelAccess: IModelAccess;
+          selectionStorage: SelectionStorage;
+        }) {
           const { rootNodes, setFormatter, isLoading, ...state } = useIModelUnifiedSelectionTree({
             // the unified selection storage used by all app components let them share selection state
             selectionStorage,

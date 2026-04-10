@@ -5,17 +5,32 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyDescription } from "@itwin/appui-abstract";
-import { PropertyFilterBuilderActions, PropertyFilterBuilderRuleGroup, PropertyFilterRuleGroupOperator, UiComponents } from "@itwin/components-react";
+import {
+  PropertyFilterBuilderActions,
+  PropertyFilterBuilderRuleGroup,
+  PropertyFilterRuleGroupOperator,
+  UiComponents,
+} from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../presentation-components/common/Utils.js";
-import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
-import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "../../presentation-components/instance-filter-builder/InstanceFilterBuilder.js";
+import {
+  ECClassInfo,
+  getIModelMetadataProvider,
+} from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
+import {
+  InstanceFilterBuilder,
+  usePresentationInstanceFilteringProps,
+} from "../../presentation-components/instance-filter-builder/InstanceFilterBuilder.js";
 import { createTestECClassInfo, stubVirtualization } from "../_helpers/Common.js";
-import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
+import {
+  createTestCategoryDescription,
+  createTestContentDescriptor,
+  createTestPropertiesContentField,
+} from "../_helpers/Content.js";
 import { act, fireEvent, render, renderHook, waitFor } from "../TestUtils.js";
 
 describe("InstanceFilterBuilder", () => {
@@ -130,24 +145,13 @@ describe("InstanceFilterBuilder", () => {
   });
 
   describe("UniqueValuesRenderer", () => {
-    const property: PropertyDescription = {
-      displayLabel: "Test Prop",
-      name: "testProp",
-      typename: "double",
-    };
+    const property: PropertyDescription = { displayLabel: "Test Prop", name: "testProp", typename: "double" };
 
     it("renders <UniquePropertyValuesSelector /> when operator is `IsEqual`", async () => {
       const rootGroup: PropertyFilterBuilderRuleGroup = {
         id: "root-id",
         operator: PropertyFilterRuleGroupOperator.And,
-        items: [
-          {
-            id: "item-id",
-            groupId: "root-id",
-            property,
-            operator: "is-equal",
-          },
-        ],
+        items: [{ id: "item-id", groupId: "root-id", property, operator: "is-equal" }],
       };
 
       const { getByPlaceholderText } = render(
@@ -169,14 +173,7 @@ describe("InstanceFilterBuilder", () => {
       const rootGroup: PropertyFilterBuilderRuleGroup = {
         id: "root-id",
         operator: PropertyFilterRuleGroupOperator.And,
-        items: [
-          {
-            id: "item-id",
-            groupId: "root-id",
-            property,
-            operator: "is-not-equal",
-          },
-        ],
+        items: [{ id: "item-id", groupId: "root-id", property, operator: "is-not-equal" }],
       };
 
       const { getByPlaceholderText } = render(
@@ -246,36 +243,60 @@ describe("usePresentationInstanceFilteringProps", () => {
       { selectClassInfo: concreteClass2, isSelectPolymorphic: false },
     ],
     categories: [category],
-    fields: [basePropertiesField, concretePropertiesField1, concretePropertiesField2, mergedPropertiesField, derivedPropertiesField],
+    fields: [
+      basePropertiesField,
+      concretePropertiesField1,
+      concretePropertiesField2,
+      mergedPropertiesField,
+      derivedPropertiesField,
+    ],
   });
 
   const onCloseEvent = new BeEvent<() => void>();
-  const imodelStub = {
-    key: "test_imodel",
-    onClose: onCloseEvent,
-  };
+  const imodelStub = { key: "test_imodel", onClose: onCloseEvent };
   let initialProps: HookProps;
 
   beforeEach(() => {
     const imodel = imodelStub as unknown as IModelConnection;
 
-    initialProps = {
-      descriptor,
-      imodel,
-    };
+    initialProps = { descriptor, imodel };
 
     // stub metadataProvider for test imodel
     const metadataProvider = getIModelMetadataProvider(imodel);
     vi.spyOn(metadataProvider, "getECClassInfo").mockImplementation(async (id) => {
       switch (id) {
         case baseClass.id:
-          return new ECClassInfo(baseClass.id, baseClass.name, baseClass.label, new Set(), new Set([concreteClass1.id, concreteClass2.id, derivedClass.id]));
+          return new ECClassInfo(
+            baseClass.id,
+            baseClass.name,
+            baseClass.label,
+            new Set(),
+            new Set([concreteClass1.id, concreteClass2.id, derivedClass.id]),
+          );
         case concreteClass1.id:
-          return new ECClassInfo(concreteClass1.id, concreteClass1.name, concreteClass1.label, new Set([baseClass.id]), new Set([derivedClass.id]));
+          return new ECClassInfo(
+            concreteClass1.id,
+            concreteClass1.name,
+            concreteClass1.label,
+            new Set([baseClass.id]),
+            new Set([derivedClass.id]),
+          );
         case concreteClass2.id:
-          return new ECClassInfo(concreteClass2.id, concreteClass2.name, concreteClass2.label, new Set([baseClass.id]), new Set());
+          return new ECClassInfo(
+            concreteClass2.id,
+            concreteClass2.name,
+            concreteClass2.label,
+            new Set([baseClass.id]),
+            new Set(),
+          );
         case derivedClass.id:
-          return new ECClassInfo(derivedClass.id, derivedClass.name, derivedClass.label, new Set([baseClass.id, concreteClass1.id]), new Set());
+          return new ECClassInfo(
+            derivedClass.id,
+            derivedClass.name,
+            derivedClass.label,
+            new Set([baseClass.id, concreteClass1.id]),
+            new Set(),
+          );
       }
       return undefined;
     });
@@ -286,7 +307,10 @@ describe("usePresentationInstanceFilteringProps", () => {
   });
 
   it("initializes class list from descriptor", () => {
-    const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
+    const { result } = renderHook(
+      (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
+      { initialProps },
+    );
 
     expect(result.current.classes).toMatchObject([concreteClass1, concreteClass2]);
   });
@@ -301,13 +325,19 @@ describe("usePresentationInstanceFilteringProps", () => {
       categories: [category],
       fields: [basePropertiesField],
     });
-    const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
+    const { result } = renderHook(
+      (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
+      { initialProps },
+    );
 
     expect(result.current.classes).toMatchObject([concreteClass1]);
   });
 
   it("updates selected classes when 'onSelectedClassesChange' is called", async () => {
-    const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
+    const { result } = renderHook(
+      (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
+      { initialProps },
+    );
 
     act(() => {
       result.current.onSelectedClassesChanged([concreteClass1.id]);
@@ -318,7 +348,10 @@ describe("usePresentationInstanceFilteringProps", () => {
   });
 
   it("clears selected classes when new descriptor is provided", async () => {
-    const { result, rerender } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
+    const { result, rerender } = renderHook(
+      (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
+      { initialProps },
+    );
 
     act(() => {
       result.current.onSelectedClassesChanged([concreteClass1.id]);
@@ -338,7 +371,10 @@ describe("usePresentationInstanceFilteringProps", () => {
   });
 
   it("does not clear selected classes on rerender when descriptor does not change", async () => {
-    const { result, rerender } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
+    const { result, rerender } = renderHook(
+      (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
+      { initialProps },
+    );
 
     act(() => {
       result.current.onSelectedClassesChanged([concreteClass1.id]);
@@ -353,7 +389,10 @@ describe("usePresentationInstanceFilteringProps", () => {
 
   describe("properties filtering", () => {
     it("returns properties only of selected class", async () => {
-      const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
+      const { result } = renderHook(
+        (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
+        { initialProps },
+      );
 
       act(() => {
         result.current.onSelectedClassesChanged([concreteClass2.id]);
@@ -367,9 +406,10 @@ describe("usePresentationInstanceFilteringProps", () => {
         categories: [category],
         fields: [basePropertiesField, concretePropertiesField1],
       });
-      const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), {
-        initialProps: { ...initialProps, descriptor: testDescriptor },
-      });
+      const { result } = renderHook(
+        (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
+        { initialProps: { ...initialProps, descriptor: testDescriptor } },
+      );
 
       await waitFor(() => expect(result.current.properties).toHaveLength(2));
 
@@ -389,9 +429,10 @@ describe("usePresentationInstanceFilteringProps", () => {
         fields: [basePropertiesField, concretePropertiesField1, concretePropertiesField2],
       });
 
-      const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), {
-        initialProps: { ...initialProps, descriptor: testDescriptor },
-      });
+      const { result } = renderHook(
+        (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
+        { initialProps: { ...initialProps, descriptor: testDescriptor } },
+      );
 
       act(() => {
         result.current.onSelectedClassesChanged([concreteClass1.id, concreteClass2.id]);
@@ -401,9 +442,14 @@ describe("usePresentationInstanceFilteringProps", () => {
     });
 
     it("selects classes that have selected property", async () => {
-      const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
+      const { result } = renderHook(
+        (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
+        { initialProps },
+      );
 
-      const property = result.current.properties.find((prop) => prop.displayLabel === concretePropertiesField2.label) as PropertyDescription;
+      const property = result.current.properties.find(
+        (prop) => prop.displayLabel === concretePropertiesField2.label,
+      ) as PropertyDescription;
 
       act(() => {
         result.current.onRulePropertySelected(property);
@@ -414,9 +460,14 @@ describe("usePresentationInstanceFilteringProps", () => {
     });
 
     it("selects all derived classes that have selected property", async () => {
-      const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
+      const { result } = renderHook(
+        (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
+        { initialProps },
+      );
 
-      const property = result.current.properties.find((prop) => prop.displayLabel === basePropertiesField.label) as PropertyDescription;
+      const property = result.current.properties.find(
+        (prop) => prop.displayLabel === basePropertiesField.label,
+      ) as PropertyDescription;
 
       act(() => {
         result.current.onRulePropertySelected(property);
@@ -427,9 +478,14 @@ describe("usePresentationInstanceFilteringProps", () => {
     });
 
     it("selects all classes that have selected property", async () => {
-      const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
+      const { result } = renderHook(
+        (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
+        { initialProps },
+      );
 
-      const property = result.current.properties.find((prop) => prop.displayLabel === mergedPropertiesField.label) as PropertyDescription;
+      const property = result.current.properties.find(
+        (prop) => prop.displayLabel === mergedPropertiesField.label,
+      ) as PropertyDescription;
 
       act(() => {
         result.current.onRulePropertySelected(property);
@@ -440,7 +496,10 @@ describe("usePresentationInstanceFilteringProps", () => {
     });
 
     it("does not change selected classes when selected property class is already selected", async () => {
-      const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
+      const { result } = renderHook(
+        (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
+        { initialProps },
+      );
 
       act(() => {
         result.current.onSelectedClassesChanged([concreteClass2.id]);
@@ -449,7 +508,9 @@ describe("usePresentationInstanceFilteringProps", () => {
         expect(result.current.selectedClasses).toMatchObject([concreteClass2]);
       });
 
-      const property = result.current.properties.find((prop) => prop.displayLabel === concretePropertiesField2.label) as PropertyDescription;
+      const property = result.current.properties.find(
+        (prop) => prop.displayLabel === concretePropertiesField2.label,
+      ) as PropertyDescription;
 
       act(() => {
         result.current.onRulePropertySelected(property);
@@ -460,7 +521,10 @@ describe("usePresentationInstanceFilteringProps", () => {
     });
 
     it("does not change selected classes when 'onPropertySelected' is invoked with invalid property", () => {
-      const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
+      const { result } = renderHook(
+        (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
+        { initialProps },
+      );
 
       act(() => {
         result.current.onRulePropertySelected({ name: "invalidProp", displayLabel: "InvalidProp", typename: "string" });

@@ -34,10 +34,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     unitConversions: [{ name: "test unit", label: "unit" }],
     format,
   };
-  const parserSpec = {
-    parseToQuantityValue: vi.fn<(value: string) => QuantityParseResult>(),
-    format,
-  };
+  const parserSpec = { parseToQuantityValue: vi.fn<(value: string) => QuantityParseResult>(), format };
 
   let getFormatterSpecStub: ReturnType<typeof vi.spyOn>;
   let getParserSpecStub: ReturnType<typeof vi.spyOn>;
@@ -102,9 +99,16 @@ describe("<QuantityPropertyEditorInput />", () => {
 
   it("allows entering number when schema context is not available", async () => {
     const ref = createRef<PropertyEditorAttributes>();
-    const spy = vi.fn<(args: Parameters<Required<PropertyEditorProps>["onCommit"]>[0]) => ReturnType<Required<PropertyEditorProps>["onCommit"]>>();
+    const spy =
+      vi.fn<
+        (
+          args: Parameters<Required<PropertyEditorProps>["onCommit"]>[0],
+        ) => ReturnType<Required<PropertyEditorProps>["onCommit"]>
+      >();
     const record = createRecord({ initialValue: undefined, kindOfQuantityName: "TestKOQ" });
-    const { getByRole, user } = render(<QuantityPropertyEditorInput ref={ref} propertyRecord={record} onCommit={spy} />);
+    const { getByRole, user } = render(
+      <QuantityPropertyEditorInput ref={ref} propertyRecord={record} onCommit={spy} />,
+    );
 
     const input = await waitFor(() => getByRole("textbox"));
     await waitFor(() => expect((input as HTMLInputElement).disabled).toBe(false));

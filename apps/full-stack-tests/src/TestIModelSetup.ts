@@ -6,7 +6,16 @@
 import { expect } from "vitest";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
-import { BisCodeSpec, Code, CodeScopeProps, CodeSpec, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
+import {
+  BisCodeSpec,
+  Code,
+  CodeScopeProps,
+  CodeSpec,
+  ElementAspectProps,
+  ElementProps,
+  ModelProps,
+  RelationshipProps,
+} from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createFileNameFromString, setupOutputFileLocation } from "./FilenameUtils.js";
 
@@ -68,7 +77,9 @@ export async function buildTestIModel<TResult extends {} | void>(
   name: string,
   cb: (builder: TestIModelBuilder, testName: string) => TResult | Promise<TResult>,
 ): Promise<TResult & { imodel: IModelConnection }>;
-export async function buildTestIModel(cb?: (builder: TestIModelBuilder, testName: string) => void | Promise<void>): Promise<{ imodel: IModelConnection }>;
+export async function buildTestIModel(
+  cb?: (builder: TestIModelBuilder, testName: string) => void | Promise<void>,
+): Promise<{ imodel: IModelConnection }>;
 export async function buildTestIModel(
   name: string,
   cb?: (builder: TestIModelBuilder, testName: string) => void | Promise<void>,

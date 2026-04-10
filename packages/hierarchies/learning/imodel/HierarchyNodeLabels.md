@@ -12,7 +12,11 @@ In case of generic nodes, the hierarchy definition returns the node object direc
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createIModelHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import {
+  createIModelHierarchyProvider,
+  createNodesQueryClauseFactory,
+  HierarchyDefinition,
+} from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 
 const hierarchyProvider = createIModelHierarchyProvider({
@@ -27,18 +31,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
               key: "root",
               label: [
                 "Example | ",
-                {
-                  type: "Integer",
-                  value: 123,
-                },
-                {
-                  type: "String",
-                  value: " | ",
-                },
-                {
-                  type: "Point2d",
-                  value: { x: 1, y: 2 },
-                },
+                { type: "Integer", value: 123 },
+                { type: "String", value: " | " },
+                { type: "Point2d", value: { x: 1, y: 2 } },
               ],
             },
           },
@@ -71,14 +66,20 @@ The `NodesQueryClauseFactory.createSelectClause` function has a required `nodeLa
   <!-- BEGIN EXTRACTION -->
 
   ```ts
-  import { createIModelHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+  import {
+    createIModelHierarchyProvider,
+    createNodesQueryClauseFactory,
+    HierarchyDefinition,
+  } from "@itwin/presentation-hierarchies";
   import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 
   const hierarchyDefinition: HierarchyDefinition = {
     async defineHierarchyLevel({ parentNode }) {
       // For root nodes, return a query that selects all physical elements
       if (!parentNode) {
-        const labelSelectorsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+        const labelSelectorsFactory = createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        });
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
           instanceLabelSelectClauseFactory: labelSelectorsFactory,
@@ -118,15 +119,9 @@ The `NodesQueryClauseFactory.createSelectClause` function has a required `nodeLa
   // | 0x16       | <NULL>     | <NULL>     |
   //
   expect(await collectHierarchy(createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }))).toMatchObject([
-    {
-      label: "A",
-    },
-    {
-      label: "B [0-L]",
-    },
-    {
-      label: "Physical Object [0-M]",
-    },
+    { label: "A" },
+    { label: "B [0-L]" },
+    { label: "Physical Object [0-M]" },
   ]);
   ```
 
@@ -138,7 +133,11 @@ The `NodesQueryClauseFactory.createSelectClause` function has a required `nodeLa
   <!-- BEGIN EXTRACTION -->
 
   ```ts
-  import { createIModelHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+  import {
+    createIModelHierarchyProvider,
+    createNodesQueryClauseFactory,
+    HierarchyDefinition,
+  } from "@itwin/presentation-hierarchies";
   import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 
   nodeLabel: {
@@ -176,7 +175,11 @@ By a request of `HierarchyDefinition`, the hierarchy provider groups instance no
   <!-- BEGIN EXTRACTION -->
 
   ```ts
-  import { createIModelHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+  import {
+    createIModelHierarchyProvider,
+    createNodesQueryClauseFactory,
+    HierarchyDefinition,
+  } from "@itwin/presentation-hierarchies";
   import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 
   const hierarchyProvider = createIModelHierarchyProvider({
@@ -192,7 +195,9 @@ By a request of `HierarchyDefinition`, the hierarchy provider groups instance no
                 ecsql: `
                   SELECT ${await createNodesQueryClauseFactory({
                     imodelAccess,
-                    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                      classHierarchyInspector: imodelAccess,
+                    }),
                   }).createSelectClause({
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
@@ -219,10 +224,7 @@ By a request of `HierarchyDefinition`, the hierarchy provider groups instance no
   // are `123.450` and `123.454`. After passing through formatter, they both become equal to `123.45`,
   // so we get one property grouping node for the two nodes:
   expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
-    {
-      label: "123.45",
-      children: [{ label: "Example element 1" }, { label: "Example element 2" }],
-    },
+    { label: "123.45", children: [{ label: "Example element 1" }, { label: "Example element 2" }] },
   ]);
   ```
 

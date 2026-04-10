@@ -19,7 +19,10 @@ import { act, render, renderHook, RenderHookResult, waitFor } from "../TestUtils
 describe("UnifiedSelectionContext", () => {
   const testIModel = { key: "" } as IModelConnection;
 
-  function renderUnifiedSelectionContextHook(imodel = {} as IModelConnection, selectionLevel?: number): RenderHookResult<UnifiedSelectionContext, unknown> {
+  function renderUnifiedSelectionContextHook(
+    imodel = {} as IModelConnection,
+    selectionLevel?: number,
+  ): RenderHookResult<UnifiedSelectionContext, unknown> {
     const Wrapper = ({ children }: PropsWithChildren<unknown>) => {
       return (
         <UnifiedSelectionContextProvider imodel={imodel} selectionLevel={selectionLevel}>
@@ -28,9 +31,7 @@ describe("UnifiedSelectionContext", () => {
       );
     };
 
-    return renderHook(() => useUnifiedSelectionContext()!, {
-      wrapper: Wrapper,
-    });
+    return renderHook(() => useUnifiedSelectionContext()!, { wrapper: Wrapper });
   }
 
   beforeEach(() => {

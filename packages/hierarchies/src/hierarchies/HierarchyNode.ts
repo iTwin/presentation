@@ -123,19 +123,27 @@ export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNode {
   /** Checks whether the given node is a generic node */
-  export function isGeneric<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & NonGroupingHierarchyNode & { key: GenericNodeKey } {
+  export function isGeneric<TNode extends { key: HierarchyNodeKey }>(
+    node: TNode,
+  ): node is TNode & NonGroupingHierarchyNode & { key: GenericNodeKey } {
     return HierarchyNodeKey.isGeneric(node.key);
   }
   /** Checks whether the given node is a standard (iModel content based) node */
-  export function isIModelNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & { key: IModelHierarchyNodeKey } {
+  export function isIModelNode<TNode extends { key: HierarchyNodeKey }>(
+    node: TNode,
+  ): node is TNode & { key: IModelHierarchyNodeKey } {
     return HierarchyNodeKey.isIModelNodeKey(node.key);
   }
   /** Checks whether the given node is an ECInstances-based node */
-  export function isInstancesNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & NonGroupingHierarchyNode & { key: InstancesNodeKey } {
+  export function isInstancesNode<TNode extends { key: HierarchyNodeKey }>(
+    node: TNode,
+  ): node is TNode & NonGroupingHierarchyNode & { key: InstancesNodeKey } {
     return HierarchyNodeKey.isInstances(node.key);
   }
   /** Checks whether the given node is a grouping node */
-  export function isGroupingNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & GroupingHierarchyNode {
+  export function isGroupingNode<TNode extends { key: HierarchyNodeKey }>(
+    node: TNode,
+  ): node is TNode & GroupingHierarchyNode {
     return HierarchyNodeKey.isGrouping(node.key);
   }
   /** Checks whether the given node is a class grouping node */
@@ -153,7 +161,10 @@ export namespace HierarchyNode {
   /** Checks whether the given node is property grouping node for other values  */
   export function isPropertyOtherValuesGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: PropertyOtherValuesGroupingNodeKey; supportsFiltering?: undefined } & GroupingHierarchyNode {
+  ): node is TNode & {
+    key: PropertyOtherValuesGroupingNodeKey;
+    supportsFiltering?: undefined;
+  } & GroupingHierarchyNode {
     return HierarchyNodeKey.isPropertyOtherValuesGrouping(node.key);
   }
   /** Checks whether the given node is a property value grouping node */

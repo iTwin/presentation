@@ -7,7 +7,14 @@
 import { Observable } from "rxjs/internal/Observable";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { DelayLoadedTreeNodeItem, MutableTreeModel, RenderedItemsRange, TreeModelNodeInput, TreeModelSource, UiComponents } from "@itwin/components-react";
+import {
+  DelayLoadedTreeNodeItem,
+  MutableTreeModel,
+  RenderedItemsRange,
+  TreeModelNodeInput,
+  TreeModelSource,
+  UiComponents,
+} from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { reloadTree } from "../../../presentation-components/tree/controlled/TreeReloader.js";
@@ -53,8 +60,16 @@ describe("reloadTree", () => {
 
   it("loads first page in expanded nodes", async () => {
     const initialTreeModel = new MutableTreeModel();
-    initialTreeModel.setChildren(undefined, [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")], 0);
-    initialTreeModel.setChildren("root-0", [createTreeModelNodeInput("root-0-0"), createTreeModelNodeInput("root-0-1")], 0);
+    initialTreeModel.setChildren(
+      undefined,
+      [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")],
+      0,
+    );
+    initialTreeModel.setChildren(
+      "root-0",
+      [createTreeModelNodeInput("root-0-0"), createTreeModelNodeInput("root-0-1")],
+      0,
+    );
     initialTreeModel.getNode("root-0")!.isExpanded = true;
 
     const modelSource = await waitForReload(reloadTree(initialTreeModel, dataProvider, 1));
@@ -76,8 +91,16 @@ describe("reloadTree", () => {
 
   it("looks for an expanded node at its original place", async () => {
     const initialTreeModel = new MutableTreeModel();
-    initialTreeModel.setChildren(undefined, [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")], 0);
-    initialTreeModel.setChildren("root-1", [createTreeModelNodeInput("root-1-0"), createTreeModelNodeInput("root-1-1")], 0);
+    initialTreeModel.setChildren(
+      undefined,
+      [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")],
+      0,
+    );
+    initialTreeModel.setChildren(
+      "root-1",
+      [createTreeModelNodeInput("root-1-0"), createTreeModelNodeInput("root-1-1")],
+      0,
+    );
     initialTreeModel.getNode("root-1")!.isExpanded = true;
 
     const modelSource = await waitForReload(reloadTree(initialTreeModel, dataProvider, 1));
@@ -102,7 +125,11 @@ describe("reloadTree", () => {
     const initialTreeModel = new MutableTreeModel();
     initialTreeModel.setChildren(undefined, [createTreeModelNodeInput("root-0")], 0);
     initialTreeModel.setChildren(undefined, [createTreeModelNodeInput("root-1")], 2);
-    initialTreeModel.setChildren("root-1", [createTreeModelNodeInput("root-1-0"), createTreeModelNodeInput("root-1-1")], 0);
+    initialTreeModel.setChildren(
+      "root-1",
+      [createTreeModelNodeInput("root-1-0"), createTreeModelNodeInput("root-1-1")],
+      0,
+    );
     initialTreeModel.getNode("root-1")!.isExpanded = true;
 
     const modelSource = await waitForReload(reloadTree(initialTreeModel, dataProvider, 1));
@@ -125,7 +152,11 @@ describe("reloadTree", () => {
   it("looks for an expanded node a page after its original position", async () => {
     // Simulating root-2 node moving from first to second index after the update
     const initialTreeModel = new MutableTreeModel();
-    initialTreeModel.setChildren(undefined, [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-2")], 0);
+    initialTreeModel.setChildren(
+      undefined,
+      [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-2")],
+      0,
+    );
     initialTreeModel.getNode("root-2")!.isExpanded = true;
 
     const modelSource = await waitForReload(reloadTree(initialTreeModel, dataProvider, 1));
@@ -148,8 +179,16 @@ describe("reloadTree", () => {
   it("handles not being able to find the expanded node", async () => {
     // Simulating root-3 node being replaced with root-1 node
     const initialTreeModel = new MutableTreeModel();
-    initialTreeModel.setChildren(undefined, [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-3"), createTreeModelNodeInput("root-2")], 0);
-    initialTreeModel.setChildren("root-3", [createTreeModelNodeInput("root-3-0"), createTreeModelNodeInput("root-3-1")], 0);
+    initialTreeModel.setChildren(
+      undefined,
+      [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-3"), createTreeModelNodeInput("root-2")],
+      0,
+    );
+    initialTreeModel.setChildren(
+      "root-3",
+      [createTreeModelNodeInput("root-3-0"), createTreeModelNodeInput("root-3-1")],
+      0,
+    );
     initialTreeModel.getNode("root-3")!.isExpanded = true;
 
     const modelSource = await waitForReload(reloadTree(initialTreeModel, dataProvider, 1));
@@ -170,7 +209,11 @@ describe("reloadTree", () => {
     dataProvider.getNodesCount = async (parent) => (parent === undefined ? 3 : (undefined as any));
 
     const initialTreeModel = new MutableTreeModel();
-    initialTreeModel.setChildren(undefined, [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")], 0);
+    initialTreeModel.setChildren(
+      undefined,
+      [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")],
+      0,
+    );
     initialTreeModel.setChildren("root-0", [createTreeModelNodeInput("root-0-0")], 0);
     initialTreeModel.setChildren("root-0-0", [createTreeModelNodeInput("root-0-0-0")], 0);
     initialTreeModel.getNode("root-0")!.isExpanded = true;
@@ -218,14 +261,25 @@ describe("reloadTree", () => {
   });
 
   describe("visible range", () => {
-    const itemsRange: RenderedItemsRange = { visibleStartIndex: 0, visibleStopIndex: 0, overscanStartIndex: 0, overscanStopIndex: 0 };
+    const itemsRange: RenderedItemsRange = {
+      visibleStartIndex: 0,
+      visibleStopIndex: 0,
+      overscanStartIndex: 0,
+      overscanStopIndex: 0,
+    };
 
     it("reload nodes in visible range", async () => {
       const initialTreeModel = new MutableTreeModel();
-      initialTreeModel.setChildren(undefined, [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")], 0);
+      initialTreeModel.setChildren(
+        undefined,
+        [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")],
+        0,
+      );
 
       // simulate that "root-2" are visible
-      const modelSource = await waitForReload(reloadTree(initialTreeModel, dataProvider, 1, { ...itemsRange, visibleStartIndex: 2, visibleStopIndex: 2 }));
+      const modelSource = await waitForReload(
+        reloadTree(initialTreeModel, dataProvider, 1, { ...itemsRange, visibleStartIndex: 2, visibleStopIndex: 2 }),
+      );
       const treeModel = modelSource.getModel();
 
       const rootNodes = treeModel.getChildren(undefined)!;
@@ -239,12 +293,19 @@ describe("reloadTree", () => {
       const initialTreeModel = new MutableTreeModel();
       initialTreeModel.setChildren(
         undefined,
-        [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2"), createTreeModelNodeInput("root-3")],
+        [
+          createTreeModelNodeInput("root-0"),
+          createTreeModelNodeInput("root-1"),
+          createTreeModelNodeInput("root-2"),
+          createTreeModelNodeInput("root-3"),
+        ],
         0,
       );
 
       // simulate that "root-3" is visible
-      const modelSource = await waitForReload(reloadTree(initialTreeModel, dataProvider, 1, { ...itemsRange, visibleStartIndex: 3, visibleStopIndex: 3 }));
+      const modelSource = await waitForReload(
+        reloadTree(initialTreeModel, dataProvider, 1, { ...itemsRange, visibleStartIndex: 3, visibleStopIndex: 3 }),
+      );
       const treeModel = modelSource.getModel();
 
       // expect visible range to be adjusted and one last node to be loaded
@@ -257,10 +318,18 @@ describe("reloadTree", () => {
 
     it("reloads child nodes in visible range", async () => {
       const initialTreeModel = new MutableTreeModel();
-      initialTreeModel.setChildren(undefined, [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")], 0);
+      initialTreeModel.setChildren(
+        undefined,
+        [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")],
+        0,
+      );
       initialTreeModel.setChildren(
         "root-1",
-        [createTreeModelNodeInput("root-1-0"), createTreeModelNodeInput("root-1-1"), createTreeModelNodeInput("root-1-2")],
+        [
+          createTreeModelNodeInput("root-1-0"),
+          createTreeModelNodeInput("root-1-1"),
+          createTreeModelNodeInput("root-1-2"),
+        ],
         0,
       );
       initialTreeModel.getNode("root-1")!.isExpanded = true;
@@ -270,7 +339,9 @@ describe("reloadTree", () => {
       // - root-1
       //   - root-1-0
       //   - root-1-1
-      const modelSource = await waitForReload(reloadTree(initialTreeModel, dataProvider, 1, { ...itemsRange, visibleStartIndex: 0, visibleStopIndex: 3 }));
+      const modelSource = await waitForReload(
+        reloadTree(initialTreeModel, dataProvider, 1, { ...itemsRange, visibleStartIndex: 0, visibleStopIndex: 3 }),
+      );
       const treeModel = modelSource.getModel();
 
       const rootNodes = treeModel.getChildren(undefined)!;
@@ -291,13 +362,19 @@ describe("reloadTree", () => {
       dataProvider.getNodesCount = async () => 0;
 
       const initialTreeModel = new MutableTreeModel();
-      initialTreeModel.setChildren(undefined, [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")], 0);
+      initialTreeModel.setChildren(
+        undefined,
+        [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")],
+        0,
+      );
 
       // simulate visible range:
       // - root-0
       // - root-1
       // - root-2
-      const modelSource = await waitForReload(reloadTree(initialTreeModel, dataProvider, 1, { ...itemsRange, visibleStartIndex: 0, visibleStopIndex: 2 }));
+      const modelSource = await waitForReload(
+        reloadTree(initialTreeModel, dataProvider, 1, { ...itemsRange, visibleStartIndex: 0, visibleStopIndex: 2 }),
+      );
       const treeModel = modelSource.getModel();
 
       const rootNodes = treeModel.getChildren(undefined)!;
@@ -321,7 +398,10 @@ describe("reloadTree", () => {
   }
 
   function createPropertyRecord(value: string): PropertyRecord {
-    return new PropertyRecord({ valueFormat: PropertyValueFormat.Primitive, value }, { name: value, typename: value, displayLabel: value });
+    return new PropertyRecord(
+      { valueFormat: PropertyValueFormat.Primitive, value },
+      { name: value, typename: value, displayLabel: value },
+    );
   }
 
   async function waitForReload(observable: Observable<TreeModelSource>): Promise<TreeModelSource> {

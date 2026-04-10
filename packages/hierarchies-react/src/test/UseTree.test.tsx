@@ -8,7 +8,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeEvent } from "@itwin/core-bentley";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
 import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
-import { createStorage, Selectable, Selectables, SelectionStorage, StorageSelectionChangesListener } from "@itwin/unified-selection";
+import {
+  createStorage,
+  Selectable,
+  Selectables,
+  SelectionStorage,
+  StorageSelectionChangesListener,
+} from "@itwin/unified-selection";
 import { createNodeId } from "../presentation-hierarchies-react/internal/Utils.js";
 import {
   PresentationGenericInfoNode,
@@ -73,7 +79,11 @@ describe("useTree", () => {
 
   it("loads root nodes", async () => {
     hierarchyProvider.getNodes.mockImplementation((props) => {
-      return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })] : []);
+      return createAsyncIterator(
+        props.parentNode === undefined
+          ? [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })]
+          : [],
+      );
     });
     const { result } = renderHook(useTree, { initialProps });
 
@@ -94,9 +104,7 @@ describe("useTree", () => {
       hierarchyChanged,
     };
 
-    const customProps: UseTreeProps = {
-      getHierarchyProvider: () => customHierarchyProvider,
-    };
+    const customProps: UseTreeProps = { getHierarchyProvider: () => customHierarchyProvider };
 
     const { result } = renderHook(useTree, { initialProps: customProps });
 
@@ -200,7 +208,9 @@ describe("useTree", () => {
     const promise1 = new ResolvablePromise<hierarchiesModule.HierarchyNodeIdentifiersPath[]>();
     const getFilteredPaths1 = vi.fn().mockImplementation(async () => promise1);
 
-    const { result, rerender } = renderHook(useTree, { initialProps: { ...initialProps, getFilteredPaths: getFilteredPaths1 } });
+    const { result, rerender } = renderHook(useTree, {
+      initialProps: { ...initialProps, getFilteredPaths: getFilteredPaths1 },
+    });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(true);
@@ -248,7 +258,10 @@ describe("useTree", () => {
       if (props.parentNode === undefined) {
         return createAsyncIterator(rootNodes1);
       }
-      return createAsyncIterator([createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })]);
+      return createAsyncIterator([
+        createTestHierarchyNode({ id: "child-1" }),
+        createTestHierarchyNode({ id: "child-2" }),
+      ]);
     });
 
     const { result, rerender } = renderHook(useTree, { initialProps: { ...initialProps } });
@@ -268,7 +281,10 @@ describe("useTree", () => {
       if (props.parentNode === undefined) {
         return createAsyncIterator(rootNodes2);
       }
-      return createAsyncIterator([createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })]);
+      return createAsyncIterator([
+        createTestHierarchyNode({ id: "child-1" }),
+        createTestHierarchyNode({ id: "child-2" }),
+      ]);
     });
 
     rerender({ ...initialProps, getFilteredPaths: async () => [] });
@@ -423,7 +439,11 @@ describe("useTree", () => {
       expect(result.current.rootNodes).toHaveLength(2);
     });
 
-    const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
+    const filter: hierarchiesModule.GenericInstanceFilter = {
+      propertyClassNames: [],
+      relatedInstances: [],
+      rules: { operator: "and", rules: [] },
+    };
 
     act(() => {
       result.current.getHierarchyLevelDetails(undefined)?.setInstanceFilter(filter);
@@ -443,7 +463,9 @@ describe("useTree", () => {
   });
 
   it("applies and removes instance filter", async () => {
-    const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, supportsFiltering: true, children: true })];
+    const rootNodes = [
+      createTestHierarchyNode({ id: "root-1", autoExpand: true, supportsFiltering: true, children: true }),
+    ];
     const childNodes = [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-1" })];
 
     hierarchyProvider.getNodes.mockImplementation((props) => {
@@ -462,7 +484,11 @@ describe("useTree", () => {
       expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).toHaveLength(2);
     });
 
-    const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
+    const filter: hierarchiesModule.GenericInstanceFilter = {
+      propertyClassNames: [],
+      relatedInstances: [],
+      rules: { operator: "and", rules: [] },
+    };
 
     act(() => {
       result.current.getHierarchyLevelDetails(createNodeId(rootNodes[0]))?.setInstanceFilter(filter);
@@ -484,7 +510,9 @@ describe("useTree", () => {
   });
 
   it("applies instance filter on grouping node parent", async () => {
-    const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, children: true, supportsFiltering: true })];
+    const rootNodes = [
+      createTestHierarchyNode({ id: "root-1", autoExpand: true, children: true, supportsFiltering: true }),
+    ];
     const groupingNode = createTestGroupingNode({
       id: "grouping-node",
       key: { type: "class-grouping", className: "Schema:Class" },
@@ -514,7 +542,11 @@ describe("useTree", () => {
       expect(groupingTreeNode.children).toHaveLength(2);
     });
 
-    const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
+    const filter: hierarchiesModule.GenericInstanceFilter = {
+      propertyClassNames: [],
+      relatedInstances: [],
+      rules: { operator: "and", rules: [] },
+    };
 
     act(() => {
       result.current.getHierarchyLevelDetails(createNodeId(rootNodes[0]))?.setInstanceFilter(filter);
@@ -543,7 +575,11 @@ describe("useTree", () => {
       expect(result.current.rootNodes![0].id).toBe(createNodeId(rootNode));
     });
 
-    const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
+    const filter: hierarchiesModule.GenericInstanceFilter = {
+      propertyClassNames: [],
+      relatedInstances: [],
+      rules: { operator: "and", rules: [] },
+    };
     act(() => {
       result.current.getHierarchyLevelDetails(undefined)?.setInstanceFilter(filter);
     });
@@ -572,7 +608,10 @@ describe("useTree", () => {
 
   it("`getHierarchyLevelDetails` returns undefined for grouping node", async () => {
     const rootNodes = [createTestGroupingNode({ id: "grouping-node", children: true, autoExpand: true })];
-    const childNodes = [createTestHierarchyNode({ id: "grouped-node-1" }), createTestHierarchyNode({ id: "grouped-node-1" })];
+    const childNodes = [
+      createTestHierarchyNode({ id: "grouped-node-1" }),
+      createTestHierarchyNode({ id: "grouped-node-1" }),
+    ];
 
     hierarchyProvider.getNodes.mockImplementation((props) => {
       if (props.parentNode === undefined) {
@@ -598,7 +637,9 @@ describe("useTree", () => {
   it("`getHierarchyLevelDetails` returns options for hierarchy node", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1" })];
 
-    hierarchyProvider.getNodes.mockImplementation((props) => createAsyncIterator(props.parentNode === undefined ? rootNodes : []));
+    hierarchyProvider.getNodes.mockImplementation((props) =>
+      createAsyncIterator(props.parentNode === undefined ? rootNodes : []),
+    );
     hierarchyProvider.getNodeInstanceKeys.mockImplementation(() =>
       createAsyncIterator([
         { id: "0x1", className: "Schema:Class" },
@@ -615,10 +656,18 @@ describe("useTree", () => {
     const details = result.current.getHierarchyLevelDetails(nodeId);
     expect(details).toBeDefined();
     expect(details?.hierarchyNode).toBe(rootNodes[0]);
-    const filter = { rules: { rules: [], operator: "and" }, propertyClassNames: [], relatedInstances: [] } satisfies hierarchiesModule.GenericInstanceFilter;
-    const keys = await collect(details?.getInstanceKeysIterator({ instanceFilter: filter, hierarchyLevelSizeLimit: 100 }) ?? []);
+    const filter = {
+      rules: { rules: [], operator: "and" },
+      propertyClassNames: [],
+      relatedInstances: [],
+    } satisfies hierarchiesModule.GenericInstanceFilter;
+    const keys = await collect(
+      details?.getInstanceKeysIterator({ instanceFilter: filter, hierarchyLevelSizeLimit: 100 }) ?? [],
+    );
     expect(keys).toHaveLength(2);
-    expect(hierarchyProvider.getNodeInstanceKeys).toHaveBeenCalledWith(expect.objectContaining({ instanceFilter: filter, hierarchyLevelSizeLimit: 100 }));
+    expect(hierarchyProvider.getNodeInstanceKeys).toHaveBeenCalledWith(
+      expect.objectContaining({ instanceFilter: filter, hierarchyLevelSizeLimit: 100 }),
+    );
   });
 
   it("reloads tree when `reloadTree` is called", async () => {
@@ -665,7 +714,9 @@ describe("useTree", () => {
   it("reports nodes load performance", async () => {
     hierarchyProvider.getNodes.mockImplementation(() => createAsyncIterator([]));
     const onPerformanceMeasuredSpy = vi.fn();
-    const { result } = renderHook(useTree, { initialProps: { ...initialProps, onPerformanceMeasured: onPerformanceMeasuredSpy } });
+    const { result } = renderHook(useTree, {
+      initialProps: { ...initialProps, onPerformanceMeasured: onPerformanceMeasuredSpy },
+    });
 
     await waitFor(() => {
       expect(result.current.rootNodes).toEqual([]);
@@ -678,7 +729,9 @@ describe("useTree", () => {
       return throwingAsyncIterator(new hierarchiesModule.RowsLimitExceededError(555));
     });
     const onHierarchyLimitExceededSpy = vi.fn();
-    const { result } = renderHook(useTree, { initialProps: { ...initialProps, onHierarchyLimitExceeded: onHierarchyLimitExceededSpy } });
+    const { result } = renderHook(useTree, {
+      initialProps: { ...initialProps, onHierarchyLimitExceeded: onHierarchyLimitExceededSpy },
+    });
 
     await waitFor(() => {
       expect(result.current.rootNodes).toHaveLength(1);
@@ -719,7 +772,9 @@ describe("useTree", () => {
   });
 
   it("sets formatter initially to `undefined` and allows overriding it", async () => {
-    hierarchyProvider.getNodes.mockImplementation(() => createAsyncIterator([createTestHierarchyNode({ id: "root-1" })]));
+    hierarchyProvider.getNodes.mockImplementation(() =>
+      createAsyncIterator([createTestHierarchyNode({ id: "root-1" })]),
+    );
     const { result } = renderHook(useTree, { initialProps });
 
     await waitFor(() => {
@@ -762,7 +817,10 @@ describe("useTree", () => {
         return createAsyncIterator(childNodes.slice(0, 1));
       }),
     });
-    rerender({ ...initialProps, getHierarchyProvider: () => newProvider as unknown as hierarchiesModule.HierarchyProvider });
+    rerender({
+      ...initialProps,
+      getHierarchyProvider: () => newProvider as unknown as hierarchiesModule.HierarchyProvider,
+    });
 
     await waitFor(() => {
       expect(result.current.rootNodes).toHaveLength(1);
@@ -785,7 +843,9 @@ describe("useTree", () => {
     await waitFor(() => {
       expect(result.current.rootNodes).toHaveLength(1);
       expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).toHaveLength(1);
-      const childNode = ((result.current.rootNodes![0] as PresentationHierarchyNode).children as PresentationTreeNode[])[0] as PresentationGenericInfoNode;
+      const childNode = (
+        (result.current.rootNodes![0] as PresentationHierarchyNode).children as PresentationTreeNode[]
+      )[0] as PresentationGenericInfoNode;
       expect(childNode.type).toBe("Unknown");
     });
 
@@ -852,14 +912,15 @@ describe("useUnifiedSelectionTree", () => {
   function createNodeKey(id: string) {
     const imodelKey = "test-imodel-key";
     const instanceKey = { id, className: "Schema:Class", imodelKey };
-    const instancesNodeKey: hierarchiesModule.InstancesNodeKey = {
-      type: "instances",
-      instanceKeys: [instanceKey],
-    };
+    const instancesNodeKey: hierarchiesModule.InstancesNodeKey = { type: "instances", instanceKeys: [instanceKey] };
     return { instanceKey, instancesNodeKey, imodelKey };
   }
 
-  function createHierarchyNodeWithKey(key: hierarchiesModule.NonGroupingHierarchyNode["key"], name: string, children = false) {
+  function createHierarchyNodeWithKey(
+    key: hierarchiesModule.NonGroupingHierarchyNode["key"],
+    name: string,
+    children = false,
+  ) {
     const node = createTestHierarchyNode({ id: name, key, autoExpand: true, children });
     const nodeId = createNodeId(node);
     return { nodeId, node };
@@ -919,17 +980,10 @@ describe("useUnifiedSelectionTree", () => {
       return createAsyncIterator(props.parentNode === undefined ? [node] : []);
     });
 
-    const testSelectable: Selectable = {
-      identifier: "test-selectable",
-      data: {},
-      async *loadInstanceKeys() {},
-    };
+    const testSelectable: Selectable = { identifier: "test-selectable", data: {}, async *loadInstanceKeys() {} };
 
     const { result } = renderHook(useUnifiedSelectionTree, {
-      initialProps: {
-        ...initialProps,
-        createSelectableForGenericNode: () => testSelectable,
-      },
+      initialProps: { ...initialProps, createSelectableForGenericNode: () => testSelectable },
     });
 
     await waitFor(() => {

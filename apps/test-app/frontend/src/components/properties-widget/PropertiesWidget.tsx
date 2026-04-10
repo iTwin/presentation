@@ -51,7 +51,10 @@ export interface Props {
 
 export function PropertiesWidget(props: Props) {
   const { imodel, rulesetId } = props;
-  const [diagnosticsOptions, setDiagnosticsOptions] = useState<DiagnosticsProps>({ ruleDiagnostics: undefined, devDiagnostics: undefined });
+  const [diagnosticsOptions, setDiagnosticsOptions] = useState<DiagnosticsProps>({
+    ruleDiagnostics: undefined,
+    devDiagnostics: undefined,
+  });
 
   const [filterText, setFilterText] = useState("");
   const [isFavoritesFilterActive, setIsFavoritesFilterActive] = useState(false);
@@ -107,7 +110,9 @@ export function PropertiesWidget(props: Props) {
             }}
             style={{ flex: "auto" }}
             resultSelectorProps={resultSelectorProps}
-            status={filterText.length !== 0 ? FilteringInputStatus.FilteringFinished : FilteringInputStatus.ReadyToFilter}
+            status={
+              filterText.length !== 0 ? FilteringInputStatus.FilteringFinished : FilteringInputStatus.ReadyToFilter
+            }
           />
           <ToggleSwitch
             className="FavoritesToggle"
@@ -123,7 +128,12 @@ export function PropertiesWidget(props: Props) {
             height={height}
             imodel={imodel}
             rulesetId={rulesetId}
-            filtering={{ filter: filterText, onlyFavorites: isFavoritesFilterActive, activeHighlight, onFilteringStateChanged }}
+            filtering={{
+              filter: filterText,
+              onlyFavorites: isFavoritesFilterActive,
+              activeHighlight,
+              onFilteringStateChanged,
+            }}
             diagnostics={diagnosticsOptions}
           />
         ) : null}
@@ -177,7 +187,10 @@ function FilterablePropertyGrid({
     throw new Error("Unified selection context is not available");
   }
 
-  const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({ dataProvider, selectionStorage: unifiedSelectionContext.storage });
+  const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({
+    dataProvider,
+    selectionStorage: unifiedSelectionContext.storage,
+  });
 
   const { filter: filterText, onlyFavorites, activeHighlight, onFilteringStateChanged } = filtering;
   const [filteringProvDataChanged, setFilteringProvDataChanged] = useState({});
@@ -186,11 +199,19 @@ function FilterablePropertyGrid({
     const valueFilterer = new DisplayValuePropertyDataFilterer(filterText);
     const labelFilterer = new LabelPropertyDataFilterer(filterText);
     const categoryFilterer = new PropertyCategoryLabelFilterer(filterText);
-    const favoriteFilterer = new FavoritePropertiesDataFilterer({ source: dataProvider, favoritesScope: FAVORITES_SCOPE, isActive: onlyFavorites });
+    const favoriteFilterer = new FavoritePropertiesDataFilterer({
+      source: dataProvider,
+      favoritesScope: FAVORITES_SCOPE,
+      isActive: onlyFavorites,
+    });
 
     const recordFilterer = new CompositePropertyDataFilterer(labelFilterer, CompositeFilterType.Or, valueFilterer);
     const textFilterer = new CompositePropertyDataFilterer(recordFilterer, CompositeFilterType.Or, categoryFilterer);
-    const favoriteTextFilterer = new CompositePropertyDataFilterer(textFilterer, CompositeFilterType.And, favoriteFilterer);
+    const favoriteTextFilterer = new CompositePropertyDataFilterer(
+      textFilterer,
+      CompositeFilterType.And,
+      favoriteFilterer,
+    );
     const filteringDataProv = new FilteringPropertyDataProvider(dataProvider, favoriteTextFilterer);
     filteringDataProv.onDataChanged.addListener(() => {
       setFilteringProvDataChanged({});
@@ -211,7 +232,9 @@ function FilterablePropertyGrid({
   }, [filteringResult, onFilteringStateChanged]);
 
   const renderFavoritesActionButton = useCallback(
-    (buttonProps: ActionButtonRendererProps) => <FavoritePropertyActionButton {...buttonProps} dataProvider={dataProvider} />,
+    (buttonProps: ActionButtonRendererProps) => (
+      <FavoritePropertyActionButton {...buttonProps} dataProvider={dataProvider} />
+    ),
     [dataProvider],
   );
   const renderCopyActionButton = useCallback(() => <CopyActionButton />, []);
@@ -224,7 +247,10 @@ function FilterablePropertyGrid({
   const onCloseContextMenu = useCallback(() => {
     setContextMenuArgs(undefined);
   }, []);
-  const navigationPropertyEditorContextProviderProps = useNavigationPropertyEditorContextProviderProps(imodel, dataProvider);
+  const navigationPropertyEditorContextProviderProps = useNavigationPropertyEditorContextProviderProps(
+    imodel,
+    dataProvider,
+  );
 
   if (!filteringDataProvider) {
     return null;
@@ -259,7 +285,9 @@ function FilterablePropertyGrid({
           orientation={Orientation.Horizontal}
           horizontalOrientationMinWidth={500}
           highlight={
-            filterText && filterText.length !== 0 ? { highlightedText: filterText, activeHighlight, filteredTypes: filteringResult?.filteredTypes } : undefined
+            filterText && filterText.length !== 0
+              ? { highlightedText: filterText, activeHighlight, filteredTypes: filteringResult?.filteredTypes }
+              : undefined
           }
           isPropertyEditingEnabled={true}
           onPropertyUpdated={async ({ newValue }) => {
@@ -269,7 +297,13 @@ function FilterablePropertyGrid({
           editorSystem="new"
         />
       </NavigationPropertyEditorContextProvider>
-      {contextMenuArgs && <PropertiesWidgetContextMenu args={contextMenuArgs} dataProvider={dataProvider} onCloseContextMenu={onCloseContextMenu} />}
+      {contextMenuArgs && (
+        <PropertiesWidgetContextMenu
+          args={contextMenuArgs}
+          dataProvider={dataProvider}
+          onCloseContextMenu={onCloseContextMenu}
+        />
+      )}
     </>
   );
 }
@@ -312,15 +346,23 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
           items.push({
             id: "remove-favorite",
             onClick: async () => removeFavorite(field),
-            title: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.remove-favorite.description"),
-            children: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.remove-favorite.label"),
+            title: IModelApp.localization.getLocalizedString(
+              "Sample:controls.properties.context-menu.remove-favorite.description",
+            ),
+            children: IModelApp.localization.getLocalizedString(
+              "Sample:controls.properties.context-menu.remove-favorite.label",
+            ),
           });
         } else {
           items.push({
             id: "add-favorite",
             onClick: async () => addFavorite(field),
-            title: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.add-favorite.description"),
-            children: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.add-favorite.label"),
+            title: IModelApp.localization.getLocalizedString(
+              "Sample:controls.properties.context-menu.add-favorite.description",
+            ),
+            children: IModelApp.localization.getLocalizedString(
+              "Sample:controls.properties.context-menu.add-favorite.label",
+            ),
           });
         }
       }
@@ -349,16 +391,28 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
   );
 }
 
-function FavoritePropertyActionButton(props: ActionButtonRendererProps & { dataProvider: PresentationPropertyDataProvider }) {
+function FavoritePropertyActionButton(
+  props: ActionButtonRendererProps & { dataProvider: PresentationPropertyDataProvider },
+) {
   const { property: record, dataProvider } = props;
   const { value: field } = useDebouncedAsyncValue(
-    useCallback(async () => dataProvider.getFieldByPropertyDescription(record.property), [dataProvider, record.property]),
+    useCallback(
+      async () => dataProvider.getFieldByPropertyDescription(record.property),
+      [dataProvider, record.property],
+    ),
   );
   const { value: isFieldFavorite } = useDebouncedAsyncValue(
-    useCallback(async () => field && Presentation.favoriteProperties.hasAsync(field, dataProvider.imodel, FAVORITES_SCOPE), [field, dataProvider]),
+    useCallback(
+      async () => field && Presentation.favoriteProperties.hasAsync(field, dataProvider.imodel, FAVORITES_SCOPE),
+      [field, dataProvider],
+    ),
   );
   return (
-    <div>{field && (isFieldFavorite || props.isPropertyHovered) ? <FavoriteFieldActionButton field={field} imodel={dataProvider.imodel} /> : undefined}</div>
+    <div>
+      {field && (isFieldFavorite || props.isPropertyHovered) ? (
+        <FavoriteFieldActionButton field={field} imodel={dataProvider.imodel} />
+      ) : undefined}
+    </div>
   );
 }
 
@@ -372,10 +426,19 @@ function FavoriteFieldActionButton(props: { imodel: IModelConnection; field: Fie
     }
   }, [field, imodel]);
   const { value: isFieldFavorite } = useDebouncedAsyncValue(
-    useCallback(async () => field && Presentation.favoriteProperties.hasAsync(field, props.imodel, FAVORITES_SCOPE), [field, props.imodel]),
+    useCallback(
+      async () => field && Presentation.favoriteProperties.hasAsync(field, props.imodel, FAVORITES_SCOPE),
+      [field, props.imodel],
+    ),
   );
   return (
-    <div className="favorite-action-button" onClick={toggleFavoriteProperty} onKeyDown={toggleFavoriteProperty} role="button" tabIndex={0}>
+    <div
+      className="favorite-action-button"
+      onClick={toggleFavoriteProperty}
+      onKeyDown={toggleFavoriteProperty}
+      role="button"
+      tabIndex={0}
+    >
       {isFieldFavorite ? (
         <div style={{ width: "20px", height: "20px", background: "orange" }} />
       ) : (

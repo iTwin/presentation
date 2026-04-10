@@ -8,7 +8,7 @@
     "build": "tsc -b",
     "clean": "rimraf lib build",
     "cover": "npm run test",
-    "lint": "eslint ./src/**/*.{ts,tsx}",
+    "lint": "eslint \"./src/**/*.{ts,tsx}\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=./build/docs/extract"

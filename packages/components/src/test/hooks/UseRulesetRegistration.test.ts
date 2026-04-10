@@ -16,17 +16,14 @@ describe("[deprecated] useRulesetRegistration", () => {
   interface HookProps {
     ruleset: Ruleset;
   }
-  const initialProps: HookProps = {
-    ruleset: { id: "test-ruleset", rules: [] },
-  };
+  const initialProps: HookProps = { ruleset: { id: "test-ruleset", rules: [] } };
 
-  const rulesetManagerStub = {
-    add: vi.fn<RulesetManager["add"]>(),
-    remove: vi.fn<RulesetManager["remove"]>(),
-  };
+  const rulesetManagerStub = { add: vi.fn<RulesetManager["add"]>(), remove: vi.fn<RulesetManager["remove"]>() };
 
   beforeEach(() => {
-    vi.spyOn(Presentation, "presentation", "get").mockReturnValue({ rulesets: () => rulesetManagerStub } as unknown as PresentationManager);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
+      rulesets: () => rulesetManagerStub,
+    } as unknown as PresentationManager);
   });
 
   afterEach(() => {
@@ -39,7 +36,9 @@ describe("[deprecated] useRulesetRegistration", () => {
     rulesetManagerStub.add.mockReturnValue(registeredRulesetPromise);
     const { unmount } = renderHook((props: HookProps) => useRulesetRegistration(props.ruleset), { initialProps });
 
-    const registered = new RegisteredRuleset(initialProps.ruleset, "testId", async (r) => Presentation.presentation.rulesets().remove(r));
+    const registered = new RegisteredRuleset(initialProps.ruleset, "testId", async (r) =>
+      Presentation.presentation.rulesets().remove(r),
+    );
     await registeredRulesetPromise.resolve(registered);
 
     expect(rulesetManagerStub.add).toHaveBeenCalledWith(initialProps.ruleset);
@@ -57,7 +56,9 @@ describe("[deprecated] useRulesetRegistration", () => {
     rulesetManagerStub.add.mockReturnValue(registeredRulesetPromise);
     const { unmount } = renderHook((props: HookProps) => useRulesetRegistration(props.ruleset), { initialProps });
 
-    const registered = new RegisteredRuleset(initialProps.ruleset, "testId", async (r) => Presentation.presentation.rulesets().remove(r));
+    const registered = new RegisteredRuleset(initialProps.ruleset, "testId", async (r) =>
+      Presentation.presentation.rulesets().remove(r),
+    );
     unmount();
 
     expect(rulesetManagerStub.add).toHaveBeenCalledWith(initialProps.ruleset);

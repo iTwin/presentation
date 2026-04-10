@@ -4,7 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { ArrayValue, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat, StructValue } from "@itwin/appui-abstract";
+import {
+  ArrayValue,
+  PrimitiveValue,
+  PropertyDescription,
+  PropertyRecord,
+  PropertyValue,
+  PropertyValueFormat,
+  StructValue,
+} from "@itwin/appui-abstract";
 import { TableCellRenderer } from "../../presentation-components/table/CellRenderer.js";
 import { render, waitFor } from "../TestUtils.js";
 
@@ -21,10 +29,7 @@ describe("TableCellRenderer", () => {
 
   it("renders primitive value", async () => {
     const stringValue = "test_value";
-    const value: PrimitiveValue = {
-      valueFormat: PropertyValueFormat.Primitive,
-      value: stringValue,
-    };
+    const value: PrimitiveValue = { valueFormat: PropertyValueFormat.Primitive, value: stringValue };
     const record = createRecord(value, { typename: "string" });
 
     const { queryByText } = render(<TableCellRenderer record={record} />);
@@ -52,11 +57,7 @@ describe("TableCellRenderer", () => {
 
   it("renders empty array value as button that opens dialog", async () => {
     // needs fixing. Modal causes findDOMNode warning https://github.com/iTwin/iTwinUI/issues/2199
-    const value: ArrayValue = {
-      valueFormat: PropertyValueFormat.Array,
-      itemsTypeName: "TestArrayTypeName",
-      items: [],
-    };
+    const value: ArrayValue = { valueFormat: PropertyValueFormat.Array, itemsTypeName: "TestArrayTypeName", items: [] };
     const record = createRecord(value, { typename: "array" });
 
     const { getByText, queryByText, user } = render(<TableCellRenderer record={record} />);
@@ -73,9 +74,7 @@ describe("TableCellRenderer", () => {
     const structMemberValue = "FirstMemberValue";
     const value: StructValue = {
       valueFormat: PropertyValueFormat.Struct,
-      members: {
-        firstMember: createRecord({ valueFormat: PropertyValueFormat.Primitive, value: structMemberValue }),
-      },
+      members: { firstMember: createRecord({ valueFormat: PropertyValueFormat.Primitive, value: structMemberValue }) },
     };
     const record = createRecord(value, { typename: "TestStruct" });
 
