@@ -73,7 +73,7 @@ flowchart TB
 
   subgraph tier3[ ]
     direction LR
-    pkgShared["<div style='text-align:center;white-space:nowrap;'><a href='./packages/shared/README.md'>@itwin/presentation-shared</a></div><br/><div style='text-align:left;font-weight:normal;'>Provides types and utilities shared across multiple Presentation packages.</div>"]
+    pkgShared["<div style='text-align:center;white-space:nowrap;'><a href='./packages/shared/README.md'>@itwin/presentation-shared</a></div><br/><div style='text-align:left;font-weight:normal;'>Provides types and utilities shared across multiple Presentation packages. Some of them may be useful for consumers as well.</div>"]
     pkgCoreLegacy["<div style='text-align:center;white-space:nowrap;'><a href='https://www.itwinjs.org/learning/'>@itwin/core-*</a><br/><a href='https://www.npmjs.com/package/@itwin/presentation-common'>@itwin/presentation-common</a></div>"]
   end
 
@@ -81,7 +81,9 @@ flowchart TB
   app -->|may use to provide unified selection React context| pkgUnifiedSelectionReact
   app -->|uses to create tree components| pkgHierarchiesReact
   app -->|uses to define hierarchies for tree components| pkgHierarchies
+  app -->|uses to define hierarchies for tree components| pkgShared
   app -->|uses to map itwinjs-core types to Presentation ones| pkgCoreInterop
+  app -->|uses| pkgCoreLegacy
 
   pkgUnifiedSelectionReact -.->|uses| pkgUnifiedSelection
   pkgHierarchiesReact -->|uses to manage tree selection| pkgUnifiedSelection
@@ -92,7 +94,7 @@ flowchart TB
 
   subgraph Legend["<div style='font-weight: bold; padding: 10px'>Legend</div>"]
     direction TB
-    lGray["Platform-agnostic packages<br/>(any UI framework)"]:::clsPlatformAgnosticPackageNode
+    lGray["Platform-agnostic packages that can be used on the frontend with any UI components library as well as the backend"]:::clsPlatformAgnosticPackageNode
     lRed["React-based frontend package"]:::clsReactPackageNode
 
     subgraph legendRegular[ ]
