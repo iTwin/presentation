@@ -964,6 +964,418 @@ Object {
 }
 `;
 
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > returns nested content with a single primitives' array property having multiple array items 1`] = `
+Object {
+  "categories": Array [
+    Object {
+      "expand": false,
+      "label": "Nested content",
+      "name": "nested-content",
+    },
+  ],
+  "description": undefined,
+  "label": PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
+    "isReadonly": undefined,
+    "links": undefined,
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "",
+      "value": "",
+      "valueFormat": 0,
+    },
+  },
+  "records": Object {
+    "nested-content": Array [
+      PropertyRecord {
+        "autoExpand": undefined,
+        "description": undefined,
+        "extendedData": undefined,
+        "imodelKey": "test-imodel",
+        "isDisabled": undefined,
+        "isMerged": undefined,
+        "isReadonly": undefined,
+        "links": undefined,
+        "property": Object {
+          "displayLabel": "My array properties field",
+          "name": "root-field$array-field",
+          "typename": "MyArrayItemType[]",
+        },
+        "value": Object {
+          "items": Array [
+            PropertyRecord {
+              "autoExpand": undefined,
+              "description": "display value 1",
+              "extendedData": undefined,
+              "imodelKey": "test-imodel",
+              "isDisabled": undefined,
+              "isMerged": undefined,
+              "isReadonly": undefined,
+              "links": undefined,
+              "property": Object {
+                "displayLabel": "Properties Field",
+                "name": "root-field$array-field$array-item-field",
+                "typename": "string",
+              },
+              "value": Object {
+                "displayValue": "display value 1",
+                "value": "value 1",
+                "valueFormat": 0,
+              },
+            },
+            PropertyRecord {
+              "autoExpand": undefined,
+              "description": "display value 2",
+              "extendedData": undefined,
+              "imodelKey": "test-imodel",
+              "isDisabled": undefined,
+              "isMerged": undefined,
+              "isReadonly": undefined,
+              "links": undefined,
+              "property": Object {
+                "displayLabel": "Properties Field",
+                "name": "root-field$array-field$array-item-field",
+                "typename": "string",
+              },
+              "value": Object {
+                "displayValue": "display value 2",
+                "value": "value 2",
+                "valueFormat": 0,
+              },
+            },
+          ],
+          "itemsTypeName": "string",
+          "valueFormat": 1,
+        },
+      },
+    ],
+  },
+  "reusePropertyDataState": true,
+}
+`;
+
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > returns nested content with a single primitives' array property having one array item 1`] = `
+Object {
+  "categories": Array [
+    Object {
+      "expand": false,
+      "label": "Nested content",
+      "name": "nested-content",
+    },
+  ],
+  "description": undefined,
+  "label": PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
+    "isReadonly": undefined,
+    "links": undefined,
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "",
+      "value": "",
+      "valueFormat": 0,
+    },
+  },
+  "records": Object {
+    "nested-content": Array [
+      PropertyRecord {
+        "autoExpand": undefined,
+        "description": undefined,
+        "extendedData": undefined,
+        "imodelKey": "test-imodel",
+        "isDisabled": undefined,
+        "isMerged": undefined,
+        "isReadonly": undefined,
+        "links": undefined,
+        "property": Object {
+          "displayLabel": "My array properties field",
+          "name": "root-field$array-field",
+          "typename": "MyArrayItemType[]",
+        },
+        "value": Object {
+          "items": Array [
+            PropertyRecord {
+              "autoExpand": undefined,
+              "description": "display value 1",
+              "extendedData": undefined,
+              "imodelKey": "test-imodel",
+              "isDisabled": undefined,
+              "isMerged": undefined,
+              "isReadonly": undefined,
+              "links": undefined,
+              "property": Object {
+                "displayLabel": "Properties Field",
+                "name": "root-field$array-field$array-item-field",
+                "typename": "string",
+              },
+              "value": Object {
+                "displayValue": "display value 1",
+                "value": "value 1",
+                "valueFormat": 0,
+              },
+            },
+          ],
+          "itemsTypeName": "string",
+          "valueFormat": 1,
+        },
+      },
+    ],
+  },
+  "reusePropertyDataState": true,
+}
+`;
+
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > returns nested content with a single structs' array property having multiple array items 1`] = `
+Object {
+  "categories": Array [
+    Object {
+      "expand": false,
+      "label": "Nested content",
+      "name": "nested-content",
+    },
+  ],
+  "description": undefined,
+  "label": PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
+    "isReadonly": undefined,
+    "links": undefined,
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "",
+      "value": "",
+      "valueFormat": 0,
+    },
+  },
+  "records": Object {
+    "nested-content": Array [
+      PropertyRecord {
+        "autoExpand": undefined,
+        "description": undefined,
+        "extendedData": undefined,
+        "imodelKey": "test-imodel",
+        "isDisabled": undefined,
+        "isMerged": undefined,
+        "isReadonly": undefined,
+        "links": undefined,
+        "property": Object {
+          "displayLabel": "My array properties field",
+          "name": "root-field$array-field",
+          "typename": "MyArrayItemType[]",
+        },
+        "value": Object {
+          "items": Array [
+            PropertyRecord {
+              "autoExpand": undefined,
+              "description": undefined,
+              "extendedData": undefined,
+              "imodelKey": "test-imodel",
+              "isDisabled": undefined,
+              "isMerged": undefined,
+              "isReadonly": undefined,
+              "links": undefined,
+              "property": Object {
+                "displayLabel": "My struct properties field",
+                "name": "root-field$array-field$array-item-field",
+                "typename": "MyStructType",
+              },
+              "value": Object {
+                "members": Object {
+                  "struct-member-field": PropertyRecord {
+                    "autoExpand": undefined,
+                    "description": "display value 1",
+                    "extendedData": undefined,
+                    "imodelKey": "test-imodel",
+                    "isDisabled": undefined,
+                    "isMerged": undefined,
+                    "isReadonly": undefined,
+                    "links": undefined,
+                    "property": Object {
+                      "displayLabel": "Properties Field",
+                      "name": "root-field$array-field$array-item-field$struct-member-field",
+                      "typename": "string",
+                    },
+                    "value": Object {
+                      "displayValue": "display value 1",
+                      "value": "value 1",
+                      "valueFormat": 0,
+                    },
+                  },
+                },
+                "valueFormat": 2,
+              },
+            },
+            PropertyRecord {
+              "autoExpand": undefined,
+              "description": undefined,
+              "extendedData": undefined,
+              "imodelKey": "test-imodel",
+              "isDisabled": undefined,
+              "isMerged": undefined,
+              "isReadonly": undefined,
+              "links": undefined,
+              "property": Object {
+                "displayLabel": "My struct properties field",
+                "name": "root-field$array-field$array-item-field",
+                "typename": "MyStructType",
+              },
+              "value": Object {
+                "members": Object {
+                  "struct-member-field": PropertyRecord {
+                    "autoExpand": undefined,
+                    "description": "display value 2",
+                    "extendedData": undefined,
+                    "imodelKey": "test-imodel",
+                    "isDisabled": undefined,
+                    "isMerged": undefined,
+                    "isReadonly": undefined,
+                    "links": undefined,
+                    "property": Object {
+                      "displayLabel": "Properties Field",
+                      "name": "root-field$array-field$array-item-field$struct-member-field",
+                      "typename": "string",
+                    },
+                    "value": Object {
+                      "displayValue": "display value 2",
+                      "value": "value 2",
+                      "valueFormat": 0,
+                    },
+                  },
+                },
+                "valueFormat": 2,
+              },
+            },
+          ],
+          "itemsTypeName": "MyStructType",
+          "valueFormat": 1,
+        },
+      },
+    ],
+  },
+  "reusePropertyDataState": true,
+}
+`;
+
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > returns nested content with a single structs' array property having one array item 1`] = `
+Object {
+  "categories": Array [
+    Object {
+      "expand": false,
+      "label": "Nested content",
+      "name": "nested-content",
+    },
+  ],
+  "description": undefined,
+  "label": PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
+    "isReadonly": undefined,
+    "links": undefined,
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "",
+      "value": "",
+      "valueFormat": 0,
+    },
+  },
+  "records": Object {
+    "nested-content": Array [
+      PropertyRecord {
+        "autoExpand": undefined,
+        "description": undefined,
+        "extendedData": undefined,
+        "imodelKey": "test-imodel",
+        "isDisabled": undefined,
+        "isMerged": undefined,
+        "isReadonly": undefined,
+        "links": undefined,
+        "property": Object {
+          "displayLabel": "My array properties field",
+          "name": "root-field$array-field",
+          "typename": "MyArrayItemType[]",
+        },
+        "value": Object {
+          "items": Array [
+            PropertyRecord {
+              "autoExpand": undefined,
+              "description": undefined,
+              "extendedData": undefined,
+              "imodelKey": "test-imodel",
+              "isDisabled": undefined,
+              "isMerged": undefined,
+              "isReadonly": undefined,
+              "links": undefined,
+              "property": Object {
+                "displayLabel": "My struct properties field",
+                "name": "root-field$array-field$array-item-field",
+                "typename": "MyStructType",
+              },
+              "value": Object {
+                "members": Object {
+                  "struct-member-field": PropertyRecord {
+                    "autoExpand": undefined,
+                    "description": "display value 1",
+                    "extendedData": undefined,
+                    "imodelKey": "test-imodel",
+                    "isDisabled": undefined,
+                    "isMerged": undefined,
+                    "isReadonly": undefined,
+                    "links": undefined,
+                    "property": Object {
+                      "displayLabel": "Properties Field",
+                      "name": "root-field$array-field$array-item-field$struct-member-field",
+                      "typename": "string",
+                    },
+                    "value": Object {
+                      "displayValue": "display value 1",
+                      "value": "value 1",
+                      "valueFormat": 0,
+                    },
+                  },
+                },
+                "valueFormat": 2,
+              },
+            },
+          ],
+          "itemsTypeName": "MyStructType",
+          "valueFormat": 1,
+        },
+      },
+    ],
+  },
+  "reusePropertyDataState": true,
+}
+`;
+
 exports[`PropertyDataProvider > getData > with flat categories > nested content handling > returns nested content with deeply nested content as structs array when there are multiple nested content items 1`] = `
 Object {
   "categories": Array [
@@ -1710,7 +2122,7 @@ Object {
         "isReadonly": undefined,
         "links": undefined,
         "property": Object {
-          "displayLabel": "Properties Field",
+          "displayLabel": "My array properties field",
           "name": "MyArray",
           "typename": "MyArrayItemType[]",
         },
@@ -1865,7 +2277,7 @@ Object {
         "isReadonly": undefined,
         "links": undefined,
         "property": Object {
-          "displayLabel": "Properties Field",
+          "displayLabel": "My struct properties field",
           "name": "MyStruct",
           "typename": "MyStructType",
         },
@@ -2865,6 +3277,418 @@ Object {
 }
 `;
 
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > returns nested content with a single primitives' array property having multiple array items 1`] = `
+Object {
+  "categories": Array [
+    Object {
+      "expand": false,
+      "label": "Nested content",
+      "name": "nested-content",
+    },
+  ],
+  "description": undefined,
+  "label": PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
+    "isReadonly": undefined,
+    "links": undefined,
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "",
+      "value": "",
+      "valueFormat": 0,
+    },
+  },
+  "records": Object {
+    "nested-content": Array [
+      PropertyRecord {
+        "autoExpand": undefined,
+        "description": undefined,
+        "extendedData": undefined,
+        "imodelKey": "test-imodel",
+        "isDisabled": undefined,
+        "isMerged": undefined,
+        "isReadonly": undefined,
+        "links": undefined,
+        "property": Object {
+          "displayLabel": "My array properties field",
+          "name": "root-field$array-field",
+          "typename": "MyArrayItemType[]",
+        },
+        "value": Object {
+          "items": Array [
+            PropertyRecord {
+              "autoExpand": undefined,
+              "description": "display value 1",
+              "extendedData": undefined,
+              "imodelKey": "test-imodel",
+              "isDisabled": undefined,
+              "isMerged": undefined,
+              "isReadonly": undefined,
+              "links": undefined,
+              "property": Object {
+                "displayLabel": "Properties Field",
+                "name": "root-field$array-field$array-item-field",
+                "typename": "string",
+              },
+              "value": Object {
+                "displayValue": "display value 1",
+                "value": "value 1",
+                "valueFormat": 0,
+              },
+            },
+            PropertyRecord {
+              "autoExpand": undefined,
+              "description": "display value 2",
+              "extendedData": undefined,
+              "imodelKey": "test-imodel",
+              "isDisabled": undefined,
+              "isMerged": undefined,
+              "isReadonly": undefined,
+              "links": undefined,
+              "property": Object {
+                "displayLabel": "Properties Field",
+                "name": "root-field$array-field$array-item-field",
+                "typename": "string",
+              },
+              "value": Object {
+                "displayValue": "display value 2",
+                "value": "value 2",
+                "valueFormat": 0,
+              },
+            },
+          ],
+          "itemsTypeName": "string",
+          "valueFormat": 1,
+        },
+      },
+    ],
+  },
+  "reusePropertyDataState": true,
+}
+`;
+
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > returns nested content with a single primitives' array property having one array item 1`] = `
+Object {
+  "categories": Array [
+    Object {
+      "expand": false,
+      "label": "Nested content",
+      "name": "nested-content",
+    },
+  ],
+  "description": undefined,
+  "label": PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
+    "isReadonly": undefined,
+    "links": undefined,
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "",
+      "value": "",
+      "valueFormat": 0,
+    },
+  },
+  "records": Object {
+    "nested-content": Array [
+      PropertyRecord {
+        "autoExpand": undefined,
+        "description": undefined,
+        "extendedData": undefined,
+        "imodelKey": "test-imodel",
+        "isDisabled": undefined,
+        "isMerged": undefined,
+        "isReadonly": undefined,
+        "links": undefined,
+        "property": Object {
+          "displayLabel": "My array properties field",
+          "name": "root-field$array-field",
+          "typename": "MyArrayItemType[]",
+        },
+        "value": Object {
+          "items": Array [
+            PropertyRecord {
+              "autoExpand": undefined,
+              "description": "display value 1",
+              "extendedData": undefined,
+              "imodelKey": "test-imodel",
+              "isDisabled": undefined,
+              "isMerged": undefined,
+              "isReadonly": undefined,
+              "links": undefined,
+              "property": Object {
+                "displayLabel": "Properties Field",
+                "name": "root-field$array-field$array-item-field",
+                "typename": "string",
+              },
+              "value": Object {
+                "displayValue": "display value 1",
+                "value": "value 1",
+                "valueFormat": 0,
+              },
+            },
+          ],
+          "itemsTypeName": "string",
+          "valueFormat": 1,
+        },
+      },
+    ],
+  },
+  "reusePropertyDataState": true,
+}
+`;
+
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > returns nested content with a single structs' array property having multiple array items 1`] = `
+Object {
+  "categories": Array [
+    Object {
+      "expand": false,
+      "label": "Nested content",
+      "name": "nested-content",
+    },
+  ],
+  "description": undefined,
+  "label": PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
+    "isReadonly": undefined,
+    "links": undefined,
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "",
+      "value": "",
+      "valueFormat": 0,
+    },
+  },
+  "records": Object {
+    "nested-content": Array [
+      PropertyRecord {
+        "autoExpand": undefined,
+        "description": undefined,
+        "extendedData": undefined,
+        "imodelKey": "test-imodel",
+        "isDisabled": undefined,
+        "isMerged": undefined,
+        "isReadonly": undefined,
+        "links": undefined,
+        "property": Object {
+          "displayLabel": "My array properties field",
+          "name": "root-field$array-field",
+          "typename": "MyArrayItemType[]",
+        },
+        "value": Object {
+          "items": Array [
+            PropertyRecord {
+              "autoExpand": undefined,
+              "description": undefined,
+              "extendedData": undefined,
+              "imodelKey": "test-imodel",
+              "isDisabled": undefined,
+              "isMerged": undefined,
+              "isReadonly": undefined,
+              "links": undefined,
+              "property": Object {
+                "displayLabel": "My struct properties field",
+                "name": "root-field$array-field$array-item-field",
+                "typename": "MyStructType",
+              },
+              "value": Object {
+                "members": Object {
+                  "struct-member-field": PropertyRecord {
+                    "autoExpand": undefined,
+                    "description": "display value 1",
+                    "extendedData": undefined,
+                    "imodelKey": "test-imodel",
+                    "isDisabled": undefined,
+                    "isMerged": undefined,
+                    "isReadonly": undefined,
+                    "links": undefined,
+                    "property": Object {
+                      "displayLabel": "Properties Field",
+                      "name": "root-field$array-field$array-item-field$struct-member-field",
+                      "typename": "string",
+                    },
+                    "value": Object {
+                      "displayValue": "display value 1",
+                      "value": "value 1",
+                      "valueFormat": 0,
+                    },
+                  },
+                },
+                "valueFormat": 2,
+              },
+            },
+            PropertyRecord {
+              "autoExpand": undefined,
+              "description": undefined,
+              "extendedData": undefined,
+              "imodelKey": "test-imodel",
+              "isDisabled": undefined,
+              "isMerged": undefined,
+              "isReadonly": undefined,
+              "links": undefined,
+              "property": Object {
+                "displayLabel": "My struct properties field",
+                "name": "root-field$array-field$array-item-field",
+                "typename": "MyStructType",
+              },
+              "value": Object {
+                "members": Object {
+                  "struct-member-field": PropertyRecord {
+                    "autoExpand": undefined,
+                    "description": "display value 2",
+                    "extendedData": undefined,
+                    "imodelKey": "test-imodel",
+                    "isDisabled": undefined,
+                    "isMerged": undefined,
+                    "isReadonly": undefined,
+                    "links": undefined,
+                    "property": Object {
+                      "displayLabel": "Properties Field",
+                      "name": "root-field$array-field$array-item-field$struct-member-field",
+                      "typename": "string",
+                    },
+                    "value": Object {
+                      "displayValue": "display value 2",
+                      "value": "value 2",
+                      "valueFormat": 0,
+                    },
+                  },
+                },
+                "valueFormat": 2,
+              },
+            },
+          ],
+          "itemsTypeName": "MyStructType",
+          "valueFormat": 1,
+        },
+      },
+    ],
+  },
+  "reusePropertyDataState": true,
+}
+`;
+
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > returns nested content with a single structs' array property having one array item 1`] = `
+Object {
+  "categories": Array [
+    Object {
+      "expand": false,
+      "label": "Nested content",
+      "name": "nested-content",
+    },
+  ],
+  "description": undefined,
+  "label": PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
+    "isReadonly": undefined,
+    "links": undefined,
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "",
+      "value": "",
+      "valueFormat": 0,
+    },
+  },
+  "records": Object {
+    "nested-content": Array [
+      PropertyRecord {
+        "autoExpand": undefined,
+        "description": undefined,
+        "extendedData": undefined,
+        "imodelKey": "test-imodel",
+        "isDisabled": undefined,
+        "isMerged": undefined,
+        "isReadonly": undefined,
+        "links": undefined,
+        "property": Object {
+          "displayLabel": "My array properties field",
+          "name": "root-field$array-field",
+          "typename": "MyArrayItemType[]",
+        },
+        "value": Object {
+          "items": Array [
+            PropertyRecord {
+              "autoExpand": undefined,
+              "description": undefined,
+              "extendedData": undefined,
+              "imodelKey": "test-imodel",
+              "isDisabled": undefined,
+              "isMerged": undefined,
+              "isReadonly": undefined,
+              "links": undefined,
+              "property": Object {
+                "displayLabel": "My struct properties field",
+                "name": "root-field$array-field$array-item-field",
+                "typename": "MyStructType",
+              },
+              "value": Object {
+                "members": Object {
+                  "struct-member-field": PropertyRecord {
+                    "autoExpand": undefined,
+                    "description": "display value 1",
+                    "extendedData": undefined,
+                    "imodelKey": "test-imodel",
+                    "isDisabled": undefined,
+                    "isMerged": undefined,
+                    "isReadonly": undefined,
+                    "links": undefined,
+                    "property": Object {
+                      "displayLabel": "Properties Field",
+                      "name": "root-field$array-field$array-item-field$struct-member-field",
+                      "typename": "string",
+                    },
+                    "value": Object {
+                      "displayValue": "display value 1",
+                      "value": "value 1",
+                      "valueFormat": 0,
+                    },
+                  },
+                },
+                "valueFormat": 2,
+              },
+            },
+          ],
+          "itemsTypeName": "MyStructType",
+          "valueFormat": 1,
+        },
+      },
+    ],
+  },
+  "reusePropertyDataState": true,
+}
+`;
+
 exports[`PropertyDataProvider > getData > with nested categories > nested content handling > returns nested content with deeply nested content as structs array when there are multiple nested content items 1`] = `
 Object {
   "categories": Array [
@@ -3611,7 +4435,7 @@ Object {
         "isReadonly": undefined,
         "links": undefined,
         "property": Object {
-          "displayLabel": "Properties Field",
+          "displayLabel": "My array properties field",
           "name": "MyArray",
           "typename": "MyArrayItemType[]",
         },
@@ -3766,7 +4590,7 @@ Object {
         "isReadonly": undefined,
         "links": undefined,
         "property": Object {
-          "displayLabel": "Properties Field",
+          "displayLabel": "My struct properties field",
           "name": "MyStruct",
           "typename": "MyStructType",
         },

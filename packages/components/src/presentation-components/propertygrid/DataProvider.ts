@@ -871,7 +871,11 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
         /* v8 ignore else -- @preserve */
         if (entry.record.value.items.length > 0) {
           const item = entry.record.value.items[0];
-          records.splice(i, 0, { ...entry, fieldHierarchy: entry.fieldHierarchy, record: item });
+          const fieldHierarchy =
+            entry.fieldHierarchy.field.isPropertiesField() && entry.fieldHierarchy.field.isArrayPropertiesField()
+              ? { ...entry.fieldHierarchy, field: entry.fieldHierarchy.field.itemsField }
+              : entry.fieldHierarchy;
+          records.splice(i, 0, { ...entry, fieldHierarchy, record: item });
         }
         continue;
       }
