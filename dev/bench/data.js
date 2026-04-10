@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775735456011,
+  "lastUpdate": 1775804105203,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -47345,6 +47345,162 @@ window.BENCHMARK_DATA = {
             "value": 66,
             "unit": "ms",
             "extra": "count: 19\nmax: 66\np95: 66\nmedian: 31"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3f5da1d197ae729a9113f37dfa8e39dc8eb12dab",
+          "message": "Update formatting config to match `next` branch (#1293)\n\n* Update formatting config\n\n* Fix assertion\n\n* Update extractions\n\n* Core 4.4.0 regression\n\n* core 4.10.7 regression\n\n* cspell\n\n* lint\n\n* Potential fix for pull request finding 'CodeQL / Inefficient regular expression'\n\nCo-authored-by: Copilot Autofix powered by AI <62310815+github-advanced-security[bot]@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot Autofix powered by AI <62310815+github-advanced-security[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-10T09:51:23+03:00",
+          "tree_id": "45fe920e65784dfe5174bbd92b244e886dc5740a",
+          "url": "https://github.com/iTwin/presentation/commit/3f5da1d197ae729a9113f37dfa8e39dc8eb12dab"
+        },
+        "date": 1775804104138,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "filtering filters with 50000 paths",
+            "value": 8310,
+            "unit": "ms"
+          },
+          {
+            "name": "filtering filters with 50000 paths (P95 of main thread blocks)",
+            "value": 145,
+            "unit": "ms",
+            "extra": "count: 15\nmax: 145\np95: 145\nmedian: 28"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 34946,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 39,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 39\np95: 39\nmedian: 30"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 173,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 82,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 31\np95: 31\nmedian: 31"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 6717,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 89,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 89\np95: 89\nmedian: 88.5"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 2246,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 198,
+            "unit": "ms",
+            "extra": "count: 11\nmax: 198\np95: 198\nmedian: 44"
+          },
+          {
+            "name": "grouping by label",
+            "value": 10386,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 54,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 54\np95: 54\nmedian: 34"
+          },
+          {
+            "name": "grouping by class",
+            "value": 10305,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 40,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 40\np95: 40\nmedian: 31"
+          },
+          {
+            "name": "grouping by property",
+            "value": 10783,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 45,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 45\np95: 45\nmedian: 34"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 7462,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 59,
+            "unit": "ms",
+            "extra": "count: 21\nmax: 72\np95: 59\nmedian: 34"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 26678,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 49,
+            "unit": "ms",
+            "extra": "count: 10\nmax: 49\np95: 49\nmedian: 35.5"
+          },
+          {
+            "name": "flat 50k elements list",
+            "value": 4722,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 69,
+            "unit": "ms",
+            "extra": "count: 19\nmax: 69\np95: 69\nmedian: 32"
           }
         ]
       }
