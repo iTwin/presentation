@@ -93,7 +93,7 @@ flowchart TB
   pkgCoreInterop -.->|creates Presentation types from| pkgCoreLegacy
 
   subgraph Legend["<div style='font-weight: bold; padding: 10px'>Legend</div>"]
-    direction TB
+    direction LR
     lGray["Platform-agnostic packages that can be used on the frontend with any UI components library as well as the backend"]:::clsPlatformAgnosticPackageNode
     lRed["React-based frontend package"]:::clsReactPackageNode
 
@@ -108,7 +108,7 @@ flowchart TB
     end
   end
 
-  tier3 ~~~ Legend
+  tier1 ~~~ Legend
 
   style tier1 fill:none,stroke:none
   style tier3 fill:none,stroke:none
