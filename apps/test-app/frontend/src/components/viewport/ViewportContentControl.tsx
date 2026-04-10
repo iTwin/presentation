@@ -13,7 +13,10 @@ import { MyAppFrontend } from "../../api/MyAppFrontend";
 import { SelectionScopePicker } from "./SelectionScopePicker";
 import ViewDefinitionSelector from "./ViewDefinitionSelector";
 
-export interface ViewportContentComponentProps extends Pick<ComponentProps<typeof SelectionScopePicker>, "onSelectionScopeChanged"> {
+export interface ViewportContentComponentProps extends Pick<
+  ComponentProps<typeof SelectionScopePicker>,
+  "onSelectionScopeChanged"
+> {
   imodel: IModelConnection;
 }
 
@@ -38,8 +41,14 @@ export default function ViewportContentComponent(props: ViewportContentComponent
 
   return (
     <div className="ViewportContentComponent" style={{ height: "100%" }}>
-      {selectedViewDefinitionId ? <ViewportComponent imodel={props.imodel} viewDefinitionId={selectedViewDefinitionId} /> : undefined}
-      <ViewDefinitionSelector imodel={props.imodel} selectedViewDefinition={selectedViewDefinitionId} onViewDefinitionSelected={onViewDefinitionChanged} />
+      {selectedViewDefinitionId ? (
+        <ViewportComponent imodel={props.imodel} viewDefinitionId={selectedViewDefinitionId} />
+      ) : undefined}
+      <ViewDefinitionSelector
+        imodel={props.imodel}
+        selectedViewDefinition={selectedViewDefinitionId}
+        onViewDefinitionSelected={onViewDefinitionChanged}
+      />
       <SelectionScopePicker onSelectionScopeChanged={props.onSelectionScopeChanged} />
     </div>
   );

@@ -31,14 +31,22 @@ describe("PresentationLabelsProvider", () => {
       const key = createTestECInstanceKey();
       const result = "Label";
 
-      presentationManager.getDisplayLabelDefinition.mockResolvedValue({ displayValue: result, rawValue: result, typeName: "string" });
+      presentationManager.getDisplayLabelDefinition.mockResolvedValue({
+        displayValue: result,
+        rawValue: result,
+        typeName: "string",
+      });
       expect(await provider.getLabel(key)).toBe(result);
     });
 
     it("calls manager only once for the same key", async () => {
       const key = createTestECInstanceKey();
       const result = "Label";
-      presentationManager.getDisplayLabelDefinition.mockResolvedValue({ displayValue: result, rawValue: result, typeName: "string" });
+      presentationManager.getDisplayLabelDefinition.mockResolvedValue({
+        displayValue: result,
+        rawValue: result,
+        typeName: "string",
+      });
 
       expect(await provider.getLabel(key)).toBe(result);
       expect(await provider.getLabel(key)).toBe(result);
@@ -74,7 +82,9 @@ describe("PresentationLabelsProvider", () => {
 
         presentationManager.getDisplayLabelDefinitionsIterator.mockResolvedValue({
           total: result.length,
-          items: createAsyncIterator(result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" }))),
+          items: createAsyncIterator(
+            result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })),
+          ),
         });
         expect(await provider.getLabels(keys)).toEqual(result);
       });
@@ -85,7 +95,9 @@ describe("PresentationLabelsProvider", () => {
 
         presentationManager.getDisplayLabelDefinitionsIterator.mockResolvedValue({
           total: result.length,
-          items: createAsyncIterator(result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" }))),
+          items: createAsyncIterator(
+            result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })),
+          ),
         });
         expect(await provider.getLabels(keys)).toEqual(result);
         expect(await provider.getLabels(keys)).toEqual(result);
@@ -102,13 +114,17 @@ describe("PresentationLabelsProvider", () => {
           if (sameKeys(keys, keys1)) {
             return {
               total: result1.length,
-              items: createAsyncIterator(result1.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" }))),
+              items: createAsyncIterator(
+                result1.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })),
+              ),
             };
           }
           if (sameKeys(keys, keys2)) {
             return {
               total: result2.length,
-              items: createAsyncIterator(result2.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" }))),
+              items: createAsyncIterator(
+                result2.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })),
+              ),
             };
           }
           return { total: 0, items: createAsyncIterator([]) };
@@ -138,19 +154,25 @@ describe("PresentationLabelsProvider", () => {
           if (sameKeys(keys, keys1)) {
             return {
               total: result1.length,
-              items: createAsyncIterator(result1.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" }))),
+              items: createAsyncIterator(
+                result1.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })),
+              ),
             };
           }
           if (sameKeys(keys, keys2)) {
             return {
               total: result2.length,
-              items: createAsyncIterator(result2.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" }))),
+              items: createAsyncIterator(
+                result2.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })),
+              ),
             };
           }
           if (sameKeys(keys, keys3)) {
             return {
               total: result3.length,
-              items: createAsyncIterator(result3.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" }))),
+              items: createAsyncIterator(
+                result3.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })),
+              ),
             };
           }
           return { total: 0, items: createAsyncIterator([]) };
@@ -173,7 +195,9 @@ describe("PresentationLabelsProvider", () => {
         const keys = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
         const result = ["Label 1", "Label 2"];
 
-        presentationManager.getDisplayLabelDefinitions.mockResolvedValue(result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })));
+        presentationManager.getDisplayLabelDefinitions.mockResolvedValue(
+          result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })),
+        );
         expect(await provider.getLabels(keys)).toEqual(result);
       });
 
@@ -181,7 +205,9 @@ describe("PresentationLabelsProvider", () => {
         const keys = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
         const result = ["Label 1", "Label 2"];
 
-        presentationManager.getDisplayLabelDefinitions.mockResolvedValue(result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })));
+        presentationManager.getDisplayLabelDefinitions.mockResolvedValue(
+          result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })),
+        );
         expect(await provider.getLabels(keys)).toEqual(result);
         expect(await provider.getLabels(keys)).toEqual(result);
         expect(presentationManager.getDisplayLabelDefinitions).toHaveBeenCalledOnce();

@@ -26,7 +26,8 @@ export async function createClassGroups(
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<GroupingHandlerResult> {
-  const parentNodeClass = parentNode && HierarchyNode.isClassGroupingNode(parentNode) ? parentNode.key.className : undefined;
+  const parentNodeClass =
+    parentNode && HierarchyNode.isClassGroupingNode(parentNode) ? parentNode.key.className : undefined;
   const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Map() };
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   for (const node of nodes) {
@@ -36,10 +37,7 @@ export async function createClassGroups(
       let groupingInfo = groupings.grouped.get(nodeClassName);
       if (!groupingInfo) {
         const nodeClass = await getClass(schemaProvider, nodeClassName);
-        groupingInfo = {
-          class: nodeClass,
-          groupedNodes: [],
-        };
+        groupingInfo = { class: nodeClass, groupedNodes: [] };
         groupings.grouped.set(nodeClassName, groupingInfo);
       }
       groupingInfo.groupedNodes.push(node);
@@ -55,17 +53,16 @@ async function createGroupingNodes(groupings: ClassGroupingInformation): Promise
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   for (const [, entry] of groupings.grouped) {
     await releaseMainThread();
-    const groupingNodeKey: ClassGroupingNodeKey = {
-      type: "class-grouping",
-      className: entry.class.fullName,
-    };
+    const groupingNodeKey: ClassGroupingNodeKey = { type: "class-grouping", className: entry.class.fullName };
     const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
     groupedNodes.push({
       label: entry.class.label ?? entry.class.name,
       key: groupingNodeKey,
       parentKeys: groupedNodeParentKeys,
       groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
-      children: entry.groupedNodes.map((gn) => Object.assign(gn, { parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
+      children: entry.groupedNodes.map((gn) =>
+        Object.assign(gn, { parentKeys: [...groupedNodeParentKeys, groupingNodeKey] }),
+      ),
     });
   }
   return { grouped: groupedNodes, ungrouped: groupings.ungrouped, groupingType: "class" };

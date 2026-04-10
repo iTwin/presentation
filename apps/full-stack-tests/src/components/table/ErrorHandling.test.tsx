@@ -3,7 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it, vi } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager, UiComponents } from "@itwin/components-react";
@@ -159,10 +163,7 @@ const ruleset: Ruleset = {
         {
           specType: "ContentRelatedInstances",
           relationshipPaths: [
-            {
-              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-              direction: "Forward",
-            },
+            { relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" },
           ],
         },
       ],

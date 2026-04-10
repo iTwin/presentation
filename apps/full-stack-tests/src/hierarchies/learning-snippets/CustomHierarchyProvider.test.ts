@@ -28,7 +28,12 @@ import {
 } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports
-import { createHierarchyFilteringHelper, GenericNodeKey, HierarchyFilteringPath, HierarchyNodeIdentifier } from "@itwin/presentation-hierarchies";
+import {
+  createHierarchyFilteringHelper,
+  GenericNodeKey,
+  HierarchyFilteringPath,
+  HierarchyNodeIdentifier,
+} from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports
 import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
@@ -57,12 +62,7 @@ describe("Hierarchies", () => {
         const provider: HierarchyProvider = {
           async *getNodes({ parentNode }) {
             yield !parentNode
-              ? {
-                  key: { type: "generic", id: `root` },
-                  label: `Root node`,
-                  children: true,
-                  parentKeys: [],
-                }
+              ? { key: { type: "generic", id: `root` }, label: `Root node`, children: true, parentKeys: [] }
               : {
                   key: { type: "generic", id: `child-${parentNode.parentKeys.length + 1}` },
                   label: `Child ${parentNode.parentKeys.length + 1}`,
@@ -78,26 +78,11 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
 
         const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
-        expect(rootNodes).toMatchObject([
-          {
-            label: "Root node",
-            children: true,
-          },
-        ]);
+        expect(rootNodes).toMatchObject([{ label: "Root node", children: true }]);
         const childNodes1 = await collect(provider.getNodes({ parentNode: rootNodes[0] }));
-        expect(childNodes1).toMatchObject([
-          {
-            label: "Child 1",
-            children: true,
-          },
-        ]);
+        expect(childNodes1).toMatchObject([{ label: "Child 1", children: true }]);
         const childNodes2 = await collect(provider.getNodes({ parentNode: childNodes1[0] }));
-        expect(childNodes2).toMatchObject([
-          {
-            label: "Child 2",
-            children: true,
-          },
-        ]);
+        expect(childNodes2).toMatchObject([{ label: "Child 2", children: true }]);
       });
 
       it("creates iModel provider", async () => {
@@ -115,7 +100,9 @@ describe("Hierarchies", () => {
               // Briefcase connections support data modifications - the provider should listen to txn changes
               // and raise `hierarchyChanged` event when the hierarchy should be refreshed. `BriefcaseTxns` has a number
               // of events that we should listen to - here we're using `registerTxnListeners` helper to simplify subscription.
-              this._disposeTxnListeners = registerTxnListeners(this._imodel.txns, () => this.hierarchyChanged.raiseEvent());
+              this._disposeTxnListeners = registerTxnListeners(this._imodel.txns, () =>
+                this.hierarchyChanged.raiseEvent(),
+              );
             }
           }
 
@@ -126,7 +113,9 @@ describe("Hierarchies", () => {
             this._disposeTxnListeners?.();
           }
 
-          public async *getNodes({ parentNode }: Props<HierarchyProvider["getNodes"]>): AsyncIterableIterator<HierarchyNode> {
+          public async *getNodes({
+            parentNode,
+          }: Props<HierarchyProvider["getNodes"]>): AsyncIterableIterator<HierarchyNode> {
             if (!parentNode) {
               // Query and return root bis.Subject node
               for await (const row of this._imodel.createQueryReader(
@@ -139,7 +128,10 @@ describe("Hierarchies", () => {
                 `,
               )) {
                 yield {
-                  key: { type: "instances", instanceKeys: [{ className: "BisCore.Subject", id: "0x1", imodelKey: this._imodel.key }] },
+                  key: {
+                    type: "instances",
+                    instanceKeys: [{ className: "BisCore.Subject", id: "0x1", imodelKey: this._imodel.key }],
+                  },
                   label: row.label,
                   children: !!row.hasChildren,
                   parentKeys: [],
@@ -165,7 +157,10 @@ describe("Hierarchies", () => {
                 `,
               )) {
                 yield {
-                  key: { type: "instances", instanceKeys: [{ className: row.className, id: row.id, imodelKey: this._imodel.key }] },
+                  key: {
+                    type: "instances",
+                    instanceKeys: [{ className: row.className, id: row.id, imodelKey: this._imodel.key }],
+                  },
                   label: row.label,
                   children: !!row.hasChildren,
                   parentKeys: [...parentNode.parentKeys, parentNode.key],
@@ -384,7 +379,10 @@ describe("Hierarchies", () => {
         // to create.
         async function createFilterPaths(filter: string): Promise<HierarchyFilteringPath[]> {
           const results: HierarchyFilteringPath[] = [];
-          const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: filter }), booksService.getBooks({ title: filter })]);
+          const [matchingAuthors, matchingBooks] = await Promise.all([
+            booksService.getAuthors({ name: filter }),
+            booksService.getBooks({ title: filter }),
+          ]);
           for (const author of matchingAuthors) {
             results.push([{ type: "generic", id: `author:${author.key}` }]);
           }
@@ -411,7 +409,9 @@ describe("Hierarchies", () => {
                 targetNodeKeys
                   ? {
                       rules: targetNodeKeys
-                        .filter((key) => HierarchyNodeIdentifier.isGenericNodeIdentifier(key) && key.id.startsWith("author:"))
+                        .filter(
+                          (key) => HierarchyNodeIdentifier.isGenericNodeIdentifier(key) && key.id.startsWith("author:"),
+                        )
                         .map(({ id }) => ({ key: id.slice(7) })),
                       operator: "or",
                     }
@@ -436,7 +436,10 @@ describe("Hierarchies", () => {
                     ? [
                         {
                           rules: targetNodeKeys
-                            .filter((key) => HierarchyNodeIdentifier.isGenericNodeIdentifier(key) && key.id.startsWith("book:"))
+                            .filter(
+                              (key) =>
+                                HierarchyNodeIdentifier.isGenericNodeIdentifier(key) && key.id.startsWith("book:"),
+                            )
                             .map(({ id }) => ({ key: id.slice(5) })),
                           operator: "or" as const,
                         },
@@ -520,21 +523,29 @@ describe("Hierarchies", () => {
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Filter
         // A function that creates a books service - specific filter, based on the given parent node and children filters
-        function createBooksServiceFilter(parentNodeFilter: Record<string, unknown> | undefined, genericChildrenFilter: GenericInstanceFilter | undefined) {
+        function createBooksServiceFilter(
+          parentNodeFilter: Record<string, unknown> | undefined,
+          genericChildrenFilter: GenericInstanceFilter | undefined,
+        ) {
           function createRuleFilter(rule: GenericInstanceFilterRule): Record<string, unknown> {
             // note: this is a very simplistic implementation that doesn't support different operators, value types, etc.
             return { [rule.propertyName]: rule.value?.rawValue ?? "" };
           }
-          function createGroupFilter(group: GenericInstanceFilterRuleGroup): BooksServiceFilter<Record<string, unknown>> {
-            return {
-              operator: group.operator,
-              rules: group.rules.map(createRuleOrGroupFilter),
-            };
+          function createGroupFilter(
+            group: GenericInstanceFilterRuleGroup,
+          ): BooksServiceFilter<Record<string, unknown>> {
+            return { operator: group.operator, rules: group.rules.map(createRuleOrGroupFilter) };
           }
-          function createRuleOrGroupFilter(ruleOrGroup: GenericInstanceFilter["rules"]): BooksServiceFilter<Record<string, unknown>> {
-            return GenericInstanceFilter.isFilterRuleGroup(ruleOrGroup) ? createGroupFilter(ruleOrGroup) : createRuleFilter(ruleOrGroup);
+          function createRuleOrGroupFilter(
+            ruleOrGroup: GenericInstanceFilter["rules"],
+          ): BooksServiceFilter<Record<string, unknown>> {
+            return GenericInstanceFilter.isFilterRuleGroup(ruleOrGroup)
+              ? createGroupFilter(ruleOrGroup)
+              : createRuleFilter(ruleOrGroup);
           }
-          const childrenFilter = genericChildrenFilter ? createRuleOrGroupFilter(genericChildrenFilter.rules) : undefined;
+          const childrenFilter = genericChildrenFilter
+            ? createRuleOrGroupFilter(genericChildrenFilter.rules)
+            : undefined;
           if (parentNodeFilter && childrenFilter) {
             return { rules: [parentNodeFilter, childrenFilter], operator: "and" };
           }
@@ -561,7 +572,9 @@ describe("Hierarchies", () => {
               }
             } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
               // For author parent node, query books and return nodes based on them
-              const books = await booksService.getBooks(createBooksServiceFilter({ authorKey: parentNode.key.id.slice(7) }, instanceFilter));
+              const books = await booksService.getBooks(
+                createBooksServiceFilter({ authorKey: parentNode.key.id.slice(7) }, instanceFilter),
+              );
               for (const book of books) {
                 const nodeKey: GenericNodeKey = { type: "generic", id: `book:${book.key}` };
                 yield {
@@ -593,20 +606,14 @@ describe("Hierarchies", () => {
                 operator: "like",
                 propertyTypeName: "string",
                 sourceAlias: "",
-                value: {
-                  displayValue: "Mark",
-                  rawValue: "Mark",
-                },
+                value: { displayValue: "Mark", rawValue: "Mark" },
               },
               {
                 propertyName: "hasBooks",
                 operator: "is-equal",
                 propertyTypeName: "boolean",
                 sourceAlias: "",
-                value: {
-                  displayValue: "False",
-                  rawValue: false,
-                },
+                value: { displayValue: "False", rawValue: false },
               },
             ],
           },
@@ -634,20 +641,14 @@ describe("Hierarchies", () => {
                 operator: "like",
                 propertyTypeName: "string",
                 sourceAlias: "",
-                value: {
-                  displayValue: "OL274",
-                  rawValue: "OL274",
-                },
+                value: { displayValue: "OL274", rawValue: "OL274" },
               },
               {
                 propertyName: "title",
                 operator: "like",
                 propertyTypeName: "string",
                 sourceAlias: "",
-                value: {
-                  displayValue: "Hobbit",
-                  rawValue: "Hobbit",
-                },
+                value: { displayValue: "Hobbit", rawValue: "Hobbit" },
               },
             ],
           },
@@ -673,7 +674,9 @@ describe("Hierarchies", () => {
 
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.BooksService
 // Define a type for a filter that can be applied to books service queries.
-type BooksServiceFilter<TEntry> = { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" } | Partial<TEntry>;
+type BooksServiceFilter<TEntry> =
+  | { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" }
+  | Partial<TEntry>;
 
 // Creates a books service that provides authors and books data. The service has two methods:
 // - `getAuthors` - returns authors based on the provided query.
@@ -746,7 +749,11 @@ function createBooksService() {
 
 async function traverseHierarchy(provider: HierarchyProvider): Promise<void>;
 async function traverseHierarchy(provider: HierarchyProvider, parentNode: HierarchyNode, level: number): Promise<void>;
-async function traverseHierarchy(provider: HierarchyProvider, parentNode: HierarchyNode | undefined = undefined, level: number = 0): Promise<void> {
+async function traverseHierarchy(
+  provider: HierarchyProvider,
+  parentNode: HierarchyNode | undefined = undefined,
+  level: number = 0,
+): Promise<void> {
   for await (const node of provider.getNodes({ parentNode })) {
     console.log(`${" ".repeat(level * 2)}${node.label}`);
     if (node.children) {

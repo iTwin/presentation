@@ -60,8 +60,11 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
 const SelectionHandlerContext = createContext<SelectionHandler | undefined>(undefined);
 
 /** @internal */
-// eslint-disable-next-line @typescript-eslint/no-deprecated
-export function SelectionHandlerContextProvider({ selectionHandler, children }: PropsWithChildren<{ selectionHandler: SelectionHandler }>) {
+export function SelectionHandlerContextProvider({
+  selectionHandler,
+  children,
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+}: PropsWithChildren<{ selectionHandler: SelectionHandler }>) {
   return <SelectionHandlerContext.Provider value={selectionHandler}>{children}</SelectionHandlerContext.Provider>;
 }
 
@@ -79,7 +82,8 @@ export function usePropertyDataProviderWithUnifiedSelection(
 ): UsePropertyDataProviderWithUnifiedSelectionResult {
   const { dataProvider, selectionStorage } = props;
   const { imodel, rulesetId } = dataProvider;
-  const requestedContentInstancesLimit = props.requestedContentInstancesLimit ?? DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT;
+  const requestedContentInstancesLimit =
+    props.requestedContentInstancesLimit ?? DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT;
   const [numSelectedElements, setNumSelectedElements] = useState(0);
 
   const suppliedSelectionHandler = useSelectionHandlerContext();
@@ -119,9 +123,7 @@ function initUnifiedSelectionFromStorage({
       map((level) => selectionStorage.getSelection({ imodelKey, level })),
       switchMap(async (selectables) => createKeySetFromSelectables(selectables)),
     )
-    .subscribe({
-      next: onSelectionChanged,
-    });
+    .subscribe({ next: onSelectionChanged });
   const removeSelectionChangesListener = selectionStorage.selectionChangeEvent.addListener((args) => {
     const isMyIModel = args.imodelKey === imodelKey;
     isMyIModel && update.next(args.level);
@@ -129,9 +131,7 @@ function initUnifiedSelectionFromStorage({
 
   from(selectionStorage.getSelectionLevels({ imodelKey }))
     .pipe(takeLast(1))
-    .subscribe({
-      next: (level) => update.next(level),
-    });
+    .subscribe({ next: (level) => update.next(level) });
 
   return () => {
     removeSelectionChangesListener();

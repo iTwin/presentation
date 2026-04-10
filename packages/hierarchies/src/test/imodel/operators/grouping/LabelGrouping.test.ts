@@ -7,7 +7,12 @@ import { describe, expect, it } from "vitest";
 import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
 import { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping.js";
 import { createLabelGroups } from "../../../../hierarchies/imodel/operators/grouping/LabelGrouping.js";
-import { createTestGenericNodeKey, createTestInstanceKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils.js";
+import {
+  createTestGenericNodeKey,
+  createTestInstanceKey,
+  createTestProcessedGroupingNode,
+  createTestProcessedInstanceNode,
+} from "../../../Utils.js";
 
 describe("LabelGrouping", () => {
   it("groups one node", async () => {
@@ -19,11 +24,7 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: true } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: undefined,
-    };
+    const expectedGroupingNodeKey: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: undefined };
     expect(await createLabelGroups(nodes)).toEqual({
       groupingType: "label",
       grouped: [
@@ -32,7 +33,10 @@ describe("LabelGrouping", () => {
           key: expectedGroupingNodeKey,
           parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-          children: nodes.map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({
+            ...n,
+            parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey],
+          })),
         }),
       ],
       ungrouped: [],
@@ -48,11 +52,7 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: { action: "group" } } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: undefined,
-    };
+    const expectedGroupingNodeKey: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: undefined };
     expect(await createLabelGroups(nodes)).toEqual({
       groupingType: "label",
       grouped: [
@@ -61,7 +61,10 @@ describe("LabelGrouping", () => {
           key: expectedGroupingNodeKey,
           parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-          children: nodes.map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({
+            ...n,
+            parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey],
+          })),
         }),
       ],
       ungrouped: [],
@@ -77,11 +80,7 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: {} } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: undefined,
-    };
+    const expectedGroupingNodeKey: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: undefined };
     expect(await createLabelGroups(nodes)).toEqual({
       groupingType: "label",
       grouped: [
@@ -90,7 +89,10 @@ describe("LabelGrouping", () => {
           key: expectedGroupingNodeKey,
           parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-          children: nodes.map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({
+            ...n,
+            parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey],
+          })),
         }),
       ],
       ungrouped: [],
@@ -112,16 +114,8 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: { groupId: "groupId2" } } },
       }),
     ];
-    const expectedGroupingNodeKey1: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: "groupId1",
-    };
-    const expectedGroupingNodeKey2: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: "groupId2",
-    };
+    const expectedGroupingNodeKey1: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: "groupId1" };
+    const expectedGroupingNodeKey2: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: "groupId2" };
     expect(await createLabelGroups(nodes)).toEqual({
       groupingType: "label",
       grouped: [
@@ -159,11 +153,7 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: { groupId: "groupId1" } } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: "groupId1",
-    };
+    const expectedGroupingNodeKey: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: "groupId1" };
     expect(await createLabelGroups(nodes)).toEqual({
       groupingType: "label",
       grouped: [
@@ -172,7 +162,10 @@ describe("LabelGrouping", () => {
           key: expectedGroupingNodeKey,
           parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-          children: nodes.map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({
+            ...n,
+            parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey],
+          })),
         }),
       ],
       ungrouped: [],
@@ -194,11 +187,7 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: true } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: undefined,
-    };
+    const expectedGroupingNodeKey: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: undefined };
     expect(await createLabelGroups(nodes)).toEqual({
       groupingType: "label",
       grouped: [
@@ -207,7 +196,10 @@ describe("LabelGrouping", () => {
           key: expectedGroupingNodeKey,
           parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-          children: nodes.map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({
+            ...n,
+            parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey],
+          })),
         }),
       ],
       ungrouped: [],
@@ -229,16 +221,8 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: true } },
       }),
     ];
-    const expectedGroupingNodeKey1: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "1",
-      groupId: undefined,
-    };
-    const expectedGroupingNodeKey2: GroupingNodeKey = {
-      type: "label-grouping",
-      label: "2",
-      groupId: undefined,
-    };
+    const expectedGroupingNodeKey1: GroupingNodeKey = { type: "label-grouping", label: "1", groupId: undefined };
+    const expectedGroupingNodeKey2: GroupingNodeKey = { type: "label-grouping", label: "2", groupId: undefined };
     expect(await createLabelGroups(nodes)).toEqual({
       groupingType: "label",
       grouped: [
@@ -247,14 +231,20 @@ describe("LabelGrouping", () => {
           key: expectedGroupingNodeKey1,
           parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes[0].key.instanceKeys,
-          children: [nodes[0]].map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey1] })),
+          children: [nodes[0]].map((n) => ({
+            ...n,
+            parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey1],
+          })),
         }),
         createTestProcessedGroupingNode({
           label: "2",
           key: expectedGroupingNodeKey2,
           parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes[1].key.instanceKeys,
-          children: [nodes[1]].map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey2] })),
+          children: [nodes[1]].map((n) => ({
+            ...n,
+            parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey2],
+          })),
         }),
       ],
       ungrouped: [],
@@ -275,8 +265,12 @@ describe("LabelGrouping", () => {
 
   it("doesn't merge nodes that don't have `mergeId` set", async () => {
     const nodes = [
-      createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] } }),
-      createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] } }),
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
+      }),
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
+      }),
     ];
     const result = await createLabelGroups(nodes);
     expect(result.ungrouped).toEqual(nodes);
@@ -354,9 +348,7 @@ describe("LabelGrouping", () => {
           instanceKeys: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x3" })],
         },
         label: "a",
-        processingParams: {
-          grouping: { byLabel: { action: "merge", groupId: "x" } },
-        },
+        processingParams: { grouping: { byLabel: { action: "merge", groupId: "x" } } },
       }),
       createTestProcessedInstanceNode({
         key: {
@@ -364,9 +356,7 @@ describe("LabelGrouping", () => {
           instanceKeys: [createTestInstanceKey({ id: "0x2" }), createTestInstanceKey({ id: "0x4" })],
         },
         label: "b",
-        processingParams: {
-          grouping: { byLabel: { action: "merge", groupId: "y" } },
-        },
+        processingParams: { grouping: { byLabel: { action: "merge", groupId: "y" } } },
       }),
     ]);
     expect(result.grouped).toEqual([]);

@@ -4,10 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { defer, filter, map, merge, mergeMap, Observable } from "rxjs";
-import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, LOGGING_NAMESPACE_INTERNAL } from "../../internal/Common.js";
+import {
+  createNodeIdentifierForLogging,
+  createOperatorLoggingNamespace,
+  hasChildren,
+  LOGGING_NAMESPACE_INTERNAL,
+} from "../../internal/Common.js";
 import { doLog, log } from "../../internal/LoggingUtils.js";
 import { partition } from "../../internal/operators/Partition.js";
-import { ProcessedGenericHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode.js";
+import {
+  ProcessedGenericHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "../IModelHierarchyNode.js";
 
 // cspell:words doesnt
 
@@ -33,7 +42,8 @@ export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarc
     const [needsHide, doesntNeedHide] = partition(
       inputNodes,
       (n): n is ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode =>
-        (ProcessedHierarchyNode.isGeneric(n) || ProcessedHierarchyNode.isInstancesNode(n)) && !!n.processingParams?.hideIfNoChildren,
+        (ProcessedHierarchyNode.isGeneric(n) || ProcessedHierarchyNode.isInstancesNode(n)) &&
+        !!n.processingParams?.hideIfNoChildren,
     );
     const [determinedChildren, undeterminedChildren] = partition(needsHide, (n) => n.children !== undefined);
     return merge(
@@ -44,11 +54,17 @@ export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarc
       merge(
         determinedChildren.pipe(
           /* v8 ignore next -- @preserve */
-          log({ category: LOGGING_NAMESPACE, message: (n) => `${createNodeIdentifierForLogging(n)}: needs hide, has children` }),
+          log({
+            category: LOGGING_NAMESPACE,
+            message: (n) => `${createNodeIdentifierForLogging(n)}: needs hide, has children`,
+          }),
         ),
         undeterminedChildren.pipe(
           /* v8 ignore next -- @preserve */
-          log({ category: LOGGING_NAMESPACE, message: (n) => `${createNodeIdentifierForLogging(n)}: needs hide, needs children` }),
+          log({
+            category: LOGGING_NAMESPACE,
+            message: (n) => `${createNodeIdentifierForLogging(n)}: needs hide, needs children`,
+          }),
           mergeMap(
             (n) =>
               defer(() => {
@@ -61,7 +77,8 @@ export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarc
                   /* v8 ignore next -- @preserve */
                   log({
                     category: LOGGING_NAMESPACE,
-                    message: (childrenFlag) => `${createNodeIdentifierForLogging(n)}: determined children: ${childrenFlag}`,
+                    message: (childrenFlag) =>
+                      `${createNodeIdentifierForLogging(n)}: determined children: ${childrenFlag}`,
                   }),
                   map((children) => Object.assign(n, { children })),
                 );

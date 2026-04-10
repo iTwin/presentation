@@ -5,7 +5,10 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Format, FormatType, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
-import { getDecimalRoundingError, getPersistenceUnitRoundingError } from "../../../presentation-components/properties/inputs/Utils.js";
+import {
+  getDecimalRoundingError,
+  getPersistenceUnitRoundingError,
+} from "../../../presentation-components/properties/inputs/Utils.js";
 
 describe("getDecimalRoundingError", () => {
   it("returns correct results", () => {
@@ -18,10 +21,7 @@ describe("getDecimalRoundingError", () => {
 
 describe("getPersistenceUnitRoundingError", () => {
   const format = new Format("test format");
-  const parserSpec = {
-    parseToQuantityValue: vi.fn<(value: string) => QuantityParseResult>(),
-    format,
-  };
+  const parserSpec = { parseToQuantityValue: vi.fn<(value: string) => QuantityParseResult>(), format };
 
   beforeEach(() => {
     parserSpec.parseToQuantityValue.mockReset();

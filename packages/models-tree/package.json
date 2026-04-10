@@ -36,7 +36,7 @@
     "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
     "clean": "rimraf lib",
-    "lint": "eslint ./src/**/*.ts"
+    "lint": "eslint \"./src/**/*.ts\""
   },
   "dependencies": {
     "@itwin/core-bentley": "catalog:itwinjs-core-dev",

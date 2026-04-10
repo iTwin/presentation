@@ -15,7 +15,9 @@ export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> :
  * An utility generic type to get array element's type.
  * @public
  */
-export type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+export type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[]
+  ? ElementType
+  : never;
 
 /**
  * Returns type of the first `TFunc` parameter.

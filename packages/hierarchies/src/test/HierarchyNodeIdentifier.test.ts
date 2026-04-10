@@ -10,15 +10,8 @@ import { GenericNodeKey } from "../hierarchies/HierarchyNodeKey.js";
 import { createTestGenericNodeKey } from "./Utils.js";
 
 describe("HierarchyNodeIdentifier", () => {
-  const instanceNodeIdentifier: InstanceKey = {
-    className: "a",
-    id: "0x1",
-  };
-  const genericNodeIdentifier: GenericNodeKey = {
-    type: "generic",
-    id: "x",
-    source: "s",
-  };
+  const instanceNodeIdentifier: InstanceKey = { className: "a", id: "0x1" };
+  const genericNodeIdentifier: GenericNodeKey = { type: "generic", id: "x", source: "s" };
   describe("isInstanceNodeIdentifier", () => {
     it("returns correct result for different types of identifiers", () => {
       expect(HierarchyNodeIdentifier.isInstanceNodeIdentifier(instanceNodeIdentifier)).toBe(true);
@@ -34,10 +27,16 @@ describe("HierarchyNodeIdentifier", () => {
 
   describe("equal", () => {
     it("compares generic node identifiers", () => {
-      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey({ id: "y", source: "s" }))).toBe(false);
-      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey({ id: "x", source: "s2" }))).toBe(false);
+      expect(
+        HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey({ id: "y", source: "s" })),
+      ).toBe(false);
+      expect(
+        HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey({ id: "x", source: "s2" })),
+      ).toBe(false);
       expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey({ id: "x" }))).toBe(false);
-      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey({ id: "x", source: "s" }))).toBe(true);
+      expect(
+        HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey({ id: "x", source: "s" })),
+      ).toBe(true);
     });
 
     it("compares instance node identifiers", () => {

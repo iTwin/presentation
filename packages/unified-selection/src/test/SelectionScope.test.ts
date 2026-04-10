@@ -11,11 +11,16 @@ import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
 describe("SelectionScope", () => {
   const queryExecutor = {
-    createQueryReader: vi.fn<(query: ECSqlQueryDef, options?: ECSqlQueryReaderOptions) => ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
+    createQueryReader:
+      vi.fn<
+        (query: ECSqlQueryDef, options?: ECSqlQueryReaderOptions) => ReturnType<ECSqlQueryExecutor["createQueryReader"]>
+      >(),
   };
 
   describe("computeSelection", () => {
-    function createFakeQueryReader<TRow extends object>(rows: TRow[]): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
+    function createFakeQueryReader<TRow extends object>(
+      rows: TRow[],
+    ): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
       return (async function* () {
         for (const row of rows) {
           yield row;
@@ -26,20 +31,21 @@ describe("SelectionScope", () => {
     function mockQuery(targetECSqlContent: string, result: SelectableInstanceKey[]) {
       queryExecutor.createQueryReader.mockImplementation((query: ECSqlQueryDef) => {
         if (query.ecsql.includes(targetECSqlContent)) {
-          // eslint-disable-next-line @typescript-eslint/naming-convention
-          return createFakeQueryReader<ECSqlQueryRow>(result.map((key) => ({ ECInstanceId: key.id, ClassName: key.className })));
+          return createFakeQueryReader<ECSqlQueryRow>(
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            result.map((key) => ({ ECInstanceId: key.id, ClassName: key.className })),
+          );
         }
         return createFakeQueryReader([]);
       });
     }
 
-    async function getSelection(keys: SelectableInstanceKey[], scope: SelectionScope): Promise<SelectableInstanceKey[]> {
+    async function getSelection(
+      keys: SelectableInstanceKey[],
+      scope: SelectionScope,
+    ): Promise<SelectableInstanceKey[]> {
       const selectables: SelectableInstanceKey[] = [];
-      for await (const selectable of computeSelection({
-        queryExecutor,
-        elementIds: keys.map((k) => k.id),
-        scope,
-      })) {
+      for await (const selectable of computeSelection({ queryExecutor, elementIds: keys.map((k) => k.id), scope })) {
         selectables.push(selectable);
       }
       return selectables;

@@ -10,10 +10,25 @@ import "../common/DisposePolyfill.js";
 
 import * as mm from "micro-memoize";
 import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useState } from "react";
-import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
+import {
+  Primitives,
+  PrimitiveValue,
+  PropertyDescription,
+  PropertyRecord,
+  PropertyValueFormat,
+} from "@itwin/appui-abstract";
 import { Guid, GuidString } from "@itwin/core-bentley";
 import { TranslationOptions } from "@itwin/core-common";
-import { Descriptor, Field, KeySet, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames, Ruleset, Value } from "@itwin/presentation-common";
+import {
+  Descriptor,
+  Field,
+  KeySet,
+  LabelCompositeValue,
+  LabelDefinition,
+  parseCombinedFieldNames,
+  Ruleset,
+  Value,
+} from "@itwin/presentation-common";
 import { createSelectionScopeProps, Presentation, SelectionScopesManager } from "@itwin/presentation-frontend";
 import { computeSelection, Selectables } from "@itwin/unified-selection";
 
@@ -84,11 +99,7 @@ export const createLabelRecord = (label: LabelDefinition, name: string): Propert
     value: createPrimitiveLabelValue(label),
     valueFormat: PropertyValueFormat.Primitive,
   };
-  const property: PropertyDescription = {
-    displayLabel: "Label",
-    typename: label.typeName,
-    name,
-  };
+  const property: PropertyDescription = { displayLabel: "Label", typename: label.typeName, name };
 
   return new PropertyRecord(value, property);
 };
@@ -141,9 +152,7 @@ export class AsyncTasksTracker {
   public trackAsyncTask(): Disposable {
     const id = Guid.createValue();
     this._asyncsInProgress.add(id);
-    return {
-      [Symbol.dispose]: () => this._asyncsInProgress.delete(id),
-    };
+    return { [Symbol.dispose]: () => this._asyncsInProgress.delete(id) };
   }
 }
 
@@ -214,9 +223,7 @@ export interface UniqueValue {
  */
 export function serializeUniqueValues(values: UniqueValue[]): { displayValues: string; groupedRawValues: string } {
   const displayValues: string[] = [];
-  const groupedRawValues: {
-    [key: string]: Value[];
-  } = {};
+  const groupedRawValues: { [key: string]: Value[] } = {};
   values.forEach((item) => {
     displayValues.push(item.displayValue);
     groupedRawValues[item.displayValue] = [...item.groupedRawValues];
@@ -228,7 +235,10 @@ export function serializeUniqueValues(values: UniqueValue[]): { displayValues: s
  * Function for deserializing `displayValues` and `groupedRawValues`.
  * Returns an array of `UniqueValue` or undefined if parsing fails.
  */
-export function deserializeUniqueValues(serializedDisplayValues: string, serializedGroupedRawValues: string): UniqueValue[] | undefined {
+export function deserializeUniqueValues(
+  serializedDisplayValues: string,
+  serializedGroupedRawValues: string,
+): UniqueValue[] | undefined {
   const tryParseJSON = (value: string) => {
     try {
       return JSON.parse(value);
@@ -239,7 +249,12 @@ export function deserializeUniqueValues(serializedDisplayValues: string, seriali
   const displayValues = tryParseJSON(serializedDisplayValues);
   const groupedRawValues = tryParseJSON(serializedGroupedRawValues);
 
-  if (!displayValues || !groupedRawValues || !Array.isArray(displayValues) || Object.keys(groupedRawValues).length !== displayValues.length) {
+  if (
+    !displayValues ||
+    !groupedRawValues ||
+    !Array.isArray(displayValues) ||
+    Object.keys(groupedRawValues).length !== displayValues.length
+  ) {
     return undefined;
   }
 

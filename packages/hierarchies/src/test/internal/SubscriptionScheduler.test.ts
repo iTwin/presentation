@@ -65,7 +65,9 @@ describe("SubscriptionScheduler", () => {
 
           await waitForUnsubscription(secondObservableSubscription);
           await waitForUnsubscription(firstObservableSubscription);
-          expect(secondSubscriptionSpy.mock.invocationCallOrder[0]).toBeLessThan(firstSubscriptionSpy.mock.invocationCallOrder[0]);
+          expect(secondSubscriptionSpy.mock.invocationCallOrder[0]).toBeLessThan(
+            firstSubscriptionSpy.mock.invocationCallOrder[0],
+          );
           expect(firstSubscriptionSpy).toHaveBeenCalledOnce();
           expect(secondSubscriptionSpy).toHaveBeenCalledOnce();
         });
@@ -84,9 +86,13 @@ describe("SubscriptionScheduler", () => {
         });
 
         it("does not subscribe to the next observable until the started ones are resolved", async () => {
-          const initialPromises = Array.from({ length: concurrentSubscriptions + 1 }).map(() => new ResolvablePromise<number>());
+          const initialPromises = Array.from({ length: concurrentSubscriptions + 1 }).map(
+            () => new ResolvablePromise<number>(),
+          );
           const initialSources = initialPromises.map((p) => createScheduledObservable(p, scheduler));
-          const initialSubscriptions = initialSources.map((initialSource) => subscriptionScheduler.scheduleSubscription(initialSource).subscribe());
+          const initialSubscriptions = initialSources.map((initialSource) =>
+            subscriptionScheduler.scheduleSubscription(initialSource).subscribe(),
+          );
 
           const checkSource = createScheduledObservable(sequence, scheduler);
           const checkSourceSpy = vi.spyOn(checkSource, "subscribe");
@@ -132,10 +138,14 @@ describe("SubscriptionScheduler", () => {
           const secondSource = createScheduledObservable(sequence, scheduler);
 
           const errorSpy = vi.fn();
-          const firstSubscription = subscriptionScheduler.scheduleSubscription(firstSource).subscribe({ error: errorSpy });
+          const firstSubscription = subscriptionScheduler
+            .scheduleSubscription(firstSource)
+            .subscribe({ error: errorSpy });
           const nextSpy = vi.fn();
           const completeSpy = vi.fn();
-          const secondSubscription = subscriptionScheduler.scheduleSubscription(secondSource).subscribe({ next: nextSpy, complete: completeSpy });
+          const secondSubscription = subscriptionScheduler
+            .scheduleSubscription(secondSource)
+            .subscribe({ next: nextSpy, complete: completeSpy });
 
           await waitForUnsubscription(firstSubscription);
           await waitForUnsubscription(secondSubscription);
@@ -158,7 +168,10 @@ describe("SubscriptionScheduler", () => {
 });
 
 // Creates an observable which emits values using the specified `rxjs` scheduler
-function createScheduledObservable<T>(sequence: ObservableInput<T>, scheduler: undefined | SchedulerLike): Observable<T> {
+function createScheduledObservable<T>(
+  sequence: ObservableInput<T>,
+  scheduler: undefined | SchedulerLike,
+): Observable<T> {
   return scheduler ? scheduled(sequence, scheduler) : from(sequence);
 }
 

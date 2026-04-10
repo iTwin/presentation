@@ -38,7 +38,8 @@ const BACKEND_PROPS = process.env.USE_GPB
       hostname: "127.0.0.1",
       port: BACKEND_PORT,
       authToken: "",
-      createPath: (operation: string) => `/presentation-test-app/v1.0/mode/1/context/${EMPTY_GUID}/imodel/${EMPTY_GUID}/changeset/0/${operation}`,
+      createPath: (operation: string) =>
+        `/presentation-test-app/v1.0/mode/1/context/${EMPTY_GUID}/imodel/${EMPTY_GUID}/changeset/0/${operation}`,
       imodelRpcProps: (context: VUContext) => ({
         iTwinId: EMPTY_GUID,
         iModelId: EMPTY_GUID,

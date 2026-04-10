@@ -9,8 +9,18 @@ import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { assert, Guid } from "@itwin/core-bentley";
 import { RpcManager } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ChildNodeSpecificationTypes, NodeKey, PresentationRpcInterface, Ruleset, RuleTypes } from "@itwin/presentation-common";
-import { isPresentationInfoTreeNodeItem, PresentationTreeDataProvider, PresentationTreeNodeItem } from "@itwin/presentation-components";
+import {
+  ChildNodeSpecificationTypes,
+  NodeKey,
+  PresentationRpcInterface,
+  Ruleset,
+  RuleTypes,
+} from "@itwin/presentation-common";
+import {
+  isPresentationInfoTreeNodeItem,
+  PresentationTreeDataProvider,
+  PresentationTreeNodeItem,
+} from "@itwin/presentation-components";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { TestIModelConnection } from "../../TestIModelSetup.js";
 
@@ -168,7 +178,9 @@ describe("TreeDataProvider", async () => {
       const key = (item as PresentationTreeNodeItem).key;
       assert(NodeKey.isClassGroupingNodeKey(key));
       assert(item.label.value.valueFormat === PropertyValueFormat.Primitive);
-      expect(item.label.value.displayValue).toMatch(new RegExp(`^[\\w\\d_ ]+ \\(${key.groupedInstancesCount}\\)$`, "i"));
+      expect(item.label.value.displayValue).toMatch(
+        new RegExp(`^[\\w\\d_ ]+ \\(${key.groupedInstancesCount}\\)$`, "i"),
+      );
     });
   });
 });

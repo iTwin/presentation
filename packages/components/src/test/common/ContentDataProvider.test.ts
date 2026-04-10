@@ -26,8 +26,18 @@ import {
   TypeDescription,
   VariableValue,
 } from "@itwin/presentation-common";
-import { IModelContentChangeEventArgs, Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
-import { CacheInvalidationProps, ContentDataProvider, ContentDataProviderProps } from "../../presentation-components/common/ContentDataProvider.js";
+import {
+  IModelContentChangeEventArgs,
+  Presentation,
+  PresentationManager,
+  RulesetManager,
+  RulesetVariablesManager,
+} from "@itwin/presentation-frontend";
+import {
+  CacheInvalidationProps,
+  ContentDataProvider,
+  ContentDataProviderProps,
+} from "../../presentation-components/common/ContentDataProvider.js";
 import { createTestECInstanceKey, createTestPropertyInfo, createTestRuleset } from "../_helpers/Common.js";
 import {
   createTestContentDescriptor,
@@ -67,39 +77,36 @@ describe("ContentDataProvider", () => {
   let invalidateCacheSpy: ReturnType<typeof vi.spyOn>;
 
   let presentationManager: Mocked<PresentationManager>;
-  const onIModelContentChanged: PresentationManager["onIModelContentChanged"] = new BeEvent<(args: IModelContentChangeEventArgs) => void>();
+  const onIModelContentChanged: PresentationManager["onIModelContentChanged"] = new BeEvent<
+    (args: IModelContentChangeEventArgs) => void
+  >();
   const onVariableChanged: RulesetVariablesManager["onVariableChanged"] = new BeEvent<
     (variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void
   >();
-  const onRulesetModified: RulesetManager["onRulesetModified"] = new BeEvent<(curr: RegisteredRuleset, prev: Ruleset) => void>();
-  const onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"] = new BeUiEvent<FormattingUnitSystemChangedArgs>();
+  const onRulesetModified: RulesetManager["onRulesetModified"] = new BeEvent<
+    (curr: RegisteredRuleset, prev: Ruleset) => void
+  >();
+  const onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"] =
+    new BeUiEvent<FormattingUnitSystemChangedArgs>();
   const onFormatsChanged: FormatsProvider["onFormatsChanged"] = new BeUiEvent<FormatsChangedArgs>();
 
-  const rulesetManager = {
-    onRulesetModified,
-  };
+  const rulesetManager = { onRulesetModified };
 
   const imodelKey = "test-imodel-Key";
-  const imodel = {
-    key: imodelKey,
-  } as IModelConnection;
+  const imodel = { key: imodelKey } as IModelConnection;
 
   beforeEach(() => {
     presentationManager = createMocked(PresentationManager);
     Object.assign(presentationManager, { onIModelContentChanged });
 
     presentationManager.rulesets.mockReturnValue(rulesetManager as RulesetManager);
-    presentationManager.vars.mockReturnValue({
-      onVariableChanged,
-    } as RulesetVariablesManager);
+    presentationManager.vars.mockReturnValue({ onVariableChanged } as RulesetVariablesManager);
 
     vi.spyOn(Presentation, "presentation", "get").mockReturnValue(presentationManager);
     vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged,
     } as QuantityFormatter);
-    vi.spyOn(IModelApp, "formatsProvider", "get").mockReturnValue({
-      onFormatsChanged,
-    } as FormatsProvider);
+    vi.spyOn(IModelApp, "formatsProvider", "get").mockReturnValue({ onFormatsChanged } as FormatsProvider);
 
     provider = new Provider({ imodel, ruleset: rulesetId, displayType });
     invalidateCacheSpy = vi.spyOn(provider, "invalidateCache");
@@ -229,7 +236,11 @@ describe("ContentDataProvider", () => {
 
       expect(presentationManager.getContentDescriptor).toHaveBeenCalledWith(
         matchOptions<ContentDescriptorOptions>(
-          (options) => options.imodel === imodel && options.rulesetOrId === rulesetId && options.displayType === displayType && options.selection === selection,
+          (options) =>
+            options.imodel === imodel &&
+            options.rulesetOrId === rulesetId &&
+            options.displayType === displayType &&
+            options.selection === selection,
         ),
       );
       expect(descriptor).not.toBe(result);
@@ -286,36 +297,64 @@ describe("ContentDataProvider", () => {
 
     describe("when `getContentIterator` is available", () => {
       it("requests presentation manager for size", async () => {
-        const result = new ResolvablePromise<{ total: number; descriptor: Descriptor; items: AsyncIterableIterator<Item> }>();
+        const result = new ResolvablePromise<{
+          total: number;
+          descriptor: Descriptor;
+          items: AsyncIterableIterator<Item>;
+        }>();
         presentationManager.getContentIterator.mockReturnValue(result.promise);
 
         provider.pagingSize = 10;
-        const contentAndContentSize = { total: 2, descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([]) };
+        const contentAndContentSize = {
+          total: 2,
+          descriptor: createTestContentDescriptor({ fields: [] }),
+          items: createAsyncIterator([]),
+        };
         result.resolveSync(contentAndContentSize);
         const size = await provider.getContentSetSize();
         expect(size).toBe(contentAndContentSize.total);
-        expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
+        expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(
+          matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10),
+        );
       });
 
       it("memoizes result", async () => {
-        const resultPromiseContainer = new ResolvablePromise<{ total: number; descriptor: Descriptor; items: AsyncIterableIterator<Item> }>();
+        const resultPromiseContainer = new ResolvablePromise<{
+          total: number;
+          descriptor: Descriptor;
+          items: AsyncIterableIterator<Item>;
+        }>();
         presentationManager.getContentIterator.mockReturnValue(resultPromiseContainer.promise);
         provider.pagingSize = 10;
         const requests = [provider.getContentSetSize(), provider.getContentSetSize()];
-        const result = { descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([]), total: 2 };
+        const result = {
+          descriptor: createTestContentDescriptor({ fields: [] }),
+          items: createAsyncIterator([]),
+          total: 2,
+        };
         resultPromiseContainer.resolveSync(result);
         const sizes = await Promise.all(requests);
         sizes.forEach((size) => expect(size).toBe(result.total));
-        expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
+        expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(
+          matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10),
+        );
       });
 
       it("requests size and first page when paging size is set", async () => {
-        const resultPromiseContainer = new ResolvablePromise<{ total: number; descriptor: Descriptor; items: AsyncIterableIterator<Item> }>();
+        const resultPromiseContainer = new ResolvablePromise<{
+          total: number;
+          descriptor: Descriptor;
+          items: AsyncIterableIterator<Item>;
+        }>();
         const pagingSize = 20;
         presentationManager.getContentIterator.mockReturnValue(resultPromiseContainer.promise);
 
         provider.pagingSize = pagingSize;
-        const result = { descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([]), total: 2 };
+        const result = {
+          descriptor: createTestContentDescriptor({ fields: [] }),
+          items: createAsyncIterator([]),
+          total: 2,
+        };
         resultPromiseContainer.resolveSync(result);
         const size = await provider.getContentSetSize();
         expect(size).toBe(result.total);
@@ -335,7 +374,9 @@ describe("ContentDataProvider", () => {
         const size = await provider.getContentSetSize();
         expect(size).toEqual(1);
         expect(presentationManager.getContentSetSize).not.toHaveBeenCalled();
-        expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging === undefined));
+        expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(
+          matchOptions(({ paging }) => paging === undefined),
+        );
       });
     });
 
@@ -346,12 +387,17 @@ describe("ContentDataProvider", () => {
 
       it("requests presentation manager for size", async () => {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        presentationManager.getContentAndSize.mockResolvedValue({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 });
+        presentationManager.getContentAndSize.mockResolvedValue({
+          content: new Content(createTestContentDescriptor({ fields: [] }), []),
+          size: 2,
+        });
         provider.pagingSize = 10;
         const size = await provider.getContentSetSize();
         expect(size).toBe(2);
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
+        expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(
+          matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10),
+        );
       });
 
       it("memoizes result", async () => {
@@ -365,7 +411,9 @@ describe("ContentDataProvider", () => {
         const sizes = await Promise.all(requests);
         sizes.forEach((size) => expect(size).toBe(result.size));
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
+        expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(
+          matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10),
+        );
       });
 
       it("requests size and first page when paging size is set", async () => {
@@ -395,7 +443,9 @@ describe("ContentDataProvider", () => {
         expect(size).toEqual(content.contentSet.length);
         expect(presentationManager.getContentSetSize).not.toHaveBeenCalled();
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        expect(presentationManager.getContent).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging === undefined));
+        expect(presentationManager.getContent).toHaveBeenCalledExactlyOnceWith(
+          matchOptions(({ paging }) => paging === undefined),
+        );
       });
     });
   });
@@ -422,16 +472,30 @@ describe("ContentDataProvider", () => {
 
         presentationManager.getContentIterator.mockResolvedValue(result);
         const c = await provider.getContent({ start: 0, size: 10 });
-        expect(presentationManager.getContentIterator).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
+        expect(presentationManager.getContentIterator).toHaveBeenCalledWith(
+          matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10),
+        );
         expect(c).toEqual(new Content(result.descriptor, []));
       });
 
       it("memoizes result", async () => {
         const descriptor = createTestContentDescriptor({ fields: [] });
 
-        const resultNoPageOptions = new ResolvablePromise<{ total: number; descriptor: Descriptor; items: AsyncIterableIterator<Item> }>();
-        const resultNoPageStartWithSize = new ResolvablePromise<{ total: number; descriptor: Descriptor; items: AsyncIterableIterator<Item> }>();
-        const resultWithPageStart = new ResolvablePromise<{ total: number; descriptor: Descriptor; items: AsyncIterableIterator<Item> }>();
+        const resultNoPageOptions = new ResolvablePromise<{
+          total: number;
+          descriptor: Descriptor;
+          items: AsyncIterableIterator<Item>;
+        }>();
+        const resultNoPageStartWithSize = new ResolvablePromise<{
+          total: number;
+          descriptor: Descriptor;
+          items: AsyncIterableIterator<Item>;
+        }>();
+        const resultWithPageStart = new ResolvablePromise<{
+          total: number;
+          descriptor: Descriptor;
+          items: AsyncIterableIterator<Item>;
+        }>();
 
         presentationManager.getContentIterator.mockImplementation(async (options) => {
           if (!options.paging?.start && !options.paging?.size) {
@@ -463,23 +527,38 @@ describe("ContentDataProvider", () => {
         const withPageStartResponse = [createTestContentItem({ label: "3", values: {}, displayValues: {} })];
 
         resultNoPageOptions.resolveSync({ total: 1, descriptor, items: createAsyncIterator(noPageOptionsResponse) });
-        resultNoPageStartWithSize.resolveSync({ total: 1, descriptor, items: createAsyncIterator(noPageStartWithSizeResponse) });
+        resultNoPageStartWithSize.resolveSync({
+          total: 1,
+          descriptor,
+          items: createAsyncIterator(noPageStartWithSizeResponse),
+        });
         resultWithPageStart.resolveSync({ total: 1, descriptor, items: createAsyncIterator(withPageStartResponse) });
         const responses = await Promise.all(requests);
 
         expect(responses[0], "responses[1] should eq responses[0]").toEqual(responses[1]);
         expect(responses[0], "responses[2] should eq responses[0]").toEqual(responses[2]);
         expect(responses[0], "responses[3] should eq responses[0]").toEqual(responses[3]);
-        expect(responses[0], "responses[0], responses[1], responses[2] and responses[3] should eq noPageOptionsResponse").toEqual(
-          new Content(descriptor, noPageOptionsResponse),
+        expect(
+          responses[0],
+          "responses[0], responses[1], responses[2] and responses[3] should eq noPageOptionsResponse",
+        ).toEqual(new Content(descriptor, noPageOptionsResponse));
+        expect(responses[4], "responses[4] should eq noPageStartWithSizeResponse").toEqual(
+          new Content(descriptor, noPageStartWithSizeResponse),
         );
-        expect(responses[4], "responses[4] should eq noPageStartWithSizeResponse").toEqual(new Content(descriptor, noPageStartWithSizeResponse));
-        expect(responses[5], "responses[5] should eq withPageStartResponse").toEqual(new Content(descriptor, withPageStartResponse));
+        expect(responses[5], "responses[5] should eq withPageStartResponse").toEqual(
+          new Content(descriptor, withPageStartResponse),
+        );
 
         expect(presentationManager.getContentIterator).toHaveBeenCalledTimes(3);
-        expect(presentationManager.getContentIterator).toHaveBeenCalledWith(matchOptions(({ paging }) => paging === undefined));
-        expect(presentationManager.getContentIterator).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 1 && paging.size === 0));
-        expect(presentationManager.getContentIterator).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 1));
+        expect(presentationManager.getContentIterator).toHaveBeenCalledWith(
+          matchOptions(({ paging }) => paging === undefined),
+        );
+        expect(presentationManager.getContentIterator).toHaveBeenCalledWith(
+          matchOptions(({ paging }) => paging?.start === 1 && paging.size === 0),
+        );
+        expect(presentationManager.getContentIterator).toHaveBeenCalledWith(
+          matchOptions(({ paging }) => paging?.start === 0 && paging.size === 1),
+        );
       });
 
       it("doesn't request for content when keyset is empty and `shouldRequestContentForEmptyKeyset()` returns `false`", async () => {
@@ -505,16 +584,15 @@ describe("ContentDataProvider", () => {
 
       it("requests presentation manager for content", async () => {
         const descriptor = createTestContentDescriptor({ fields: [] });
-        const result: { content: Content; size: number } = {
-          content: new Content(descriptor, []),
-          size: 1,
-        };
+        const result: { content: Content; size: number } = { content: new Content(descriptor, []), size: 1 };
 
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         presentationManager.getContentAndSize.mockResolvedValue(result);
         const c = await provider.getContent({ start: 0, size: 10 });
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        expect(presentationManager.getContentAndSize).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
+        expect(presentationManager.getContentAndSize).toHaveBeenCalledWith(
+          matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10),
+        );
         expect(c).toEqual(result.content);
       });
 
@@ -548,14 +626,18 @@ describe("ContentDataProvider", () => {
 
         // for first 4 requests
         const descriptor = createTestContentDescriptor({ fields: [] });
-        const nonPagedContentStartingAt0Response = new Content(descriptor, [createTestContentItem({ label: "1", values: {}, displayValues: {} })]);
+        const nonPagedContentStartingAt0Response = new Content(descriptor, [
+          createTestContentItem({ label: "1", values: {}, displayValues: {} }),
+        ]);
         // for 5'th request
         const pagedContentAndSizeResponse = {
           content: new Content(descriptor, [createTestContentItem({ label: "2", values: {}, displayValues: {} })]),
           size: 1,
         };
         // for 6'th request
-        const nonPagedContentStartingAt1Response = new Content(descriptor, [createTestContentItem({ label: "3", values: {}, displayValues: {} })]);
+        const nonPagedContentStartingAt1Response = new Content(descriptor, [
+          createTestContentItem({ label: "3", values: {}, displayValues: {} }),
+        ]);
 
         resultContentFirstPagePromise0.resolveSync(nonPagedContentStartingAt0Response);
         resultContentFirstPagePromise1.resolveSync(pagedContentAndSizeResponse);
@@ -566,21 +648,30 @@ describe("ContentDataProvider", () => {
         expect(responses[0], "responses[2] should eq responses[0]").toEqual(responses[2]);
         expect(responses[0], "responses[3] should eq responses[0]").toEqual(responses[3]);
 
-        expect(responses[0], "responses[0], responses[1], responses[2] and responses[3] should eq nonPagedContentStartingAt0Response").toEqual(
-          nonPagedContentStartingAt0Response,
+        expect(
+          responses[0],
+          "responses[0], responses[1], responses[2] and responses[3] should eq nonPagedContentStartingAt0Response",
+        ).toEqual(nonPagedContentStartingAt0Response);
+        expect(responses[4], "responses[4] should eq pagedContentAndSizeResponse.content").toEqual(
+          pagedContentAndSizeResponse.content,
         );
-        expect(responses[4], "responses[4] should eq pagedContentAndSizeResponse.content").toEqual(pagedContentAndSizeResponse.content);
-        expect(responses[5], "responses[5] should eq nonPagedContentStartingAt1Response").toEqual(nonPagedContentStartingAt1Response);
+        expect(responses[5], "responses[5] should eq nonPagedContentStartingAt1Response").toEqual(
+          nonPagedContentStartingAt1Response,
+        );
 
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContent).toHaveBeenCalledTimes(2);
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContent).toHaveBeenCalledWith(matchOptions(({ paging }) => paging === undefined));
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        expect(presentationManager.getContent).toHaveBeenCalledWith(matchOptions(({ paging }) => paging?.start === 1 && paging.size === 0));
+        expect(presentationManager.getContent).toHaveBeenCalledWith(
+          matchOptions(({ paging }) => paging?.start === 1 && paging.size === 0),
+        );
 
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 1));
+        expect(presentationManager.getContentAndSize).toHaveBeenCalledExactlyOnceWith(
+          matchOptions(({ paging }) => paging?.start === 0 && paging.size === 1),
+        );
       });
 
       it("doesn't request for content when keyset is empty and `shouldRequestContentForEmptyKeyset()` returns `false`", async () => {
@@ -597,11 +688,7 @@ describe("ContentDataProvider", () => {
 
   describe("[deprecated] getFieldByPropertyRecord", () => {
     it("passes record's description to `getFieldByPropertyDescription`", async () => {
-      const value: PrimitiveValue = {
-        displayValue: "displayValue",
-        value: "rawValue",
-        valueFormat: 0,
-      };
+      const value: PrimitiveValue = { displayValue: "displayValue", value: "rawValue", valueFormat: 0 };
       const description: PropertyDescription = {
         name: "propertyName",
         displayLabel: "labelString",
@@ -612,11 +699,7 @@ describe("ContentDataProvider", () => {
 
       const field = createTestPropertiesContentField({
         name: "test-field",
-        properties: [
-          {
-            property: createTestPropertyInfo({ name: "test-property" }),
-          },
-        ],
+        properties: [{ property: createTestPropertyInfo({ name: "test-property" }) }],
       });
       provider.getFieldByPropertyDescription = vi.fn(async () => field);
 
@@ -664,11 +747,7 @@ describe("ContentDataProvider", () => {
     it("return a field", async () => {
       const field = createTestPropertiesContentField({
         name: "test-field",
-        properties: [
-          {
-            property: createTestPropertyInfo({ name: "test-property" }),
-          },
-        ],
+        properties: [{ property: createTestPropertyInfo({ name: "test-property" }) }],
       });
       const descriptor = createTestContentDescriptor({ fields: [field] });
       propertyDescription.name = "test-field";
@@ -682,10 +761,7 @@ describe("ContentDataProvider", () => {
 
     it("return a nested field", async () => {
       const nestedField = createTestSimpleContentField({ name: "nested-field" });
-      const nestingField = createTestNestedContentField({
-        name: "nesting-field",
-        nestedFields: [nestedField],
-      });
+      const nestingField = createTestNestedContentField({ name: "nesting-field", nestedFields: [nestedField] });
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
       propertyDescription.name = combineFieldNames(nestedField.name, nestingField.name);
 
@@ -697,37 +773,22 @@ describe("ContentDataProvider", () => {
     });
 
     it("return a struct member field", async () => {
-      const memberFieldType: TypeDescription = {
-        valueFormat: PropertyValueFormat.Primitive,
-        typeName: "string",
-      };
+      const memberFieldType: TypeDescription = { valueFormat: PropertyValueFormat.Primitive, typeName: "string" };
       const memberField = createTestPropertiesContentField({
         name: "member-field",
         type: memberFieldType,
-        properties: [
-          {
-            property: createTestPropertyInfo({ name: "test-member-property" }),
-          },
-        ],
+        properties: [{ property: createTestPropertyInfo({ name: "test-member-property" }) }],
       });
       const structFieldType: TypeDescription = {
         valueFormat: PropertyValueFormat.Struct,
         typeName: "TestStruct",
-        members: [
-          {
-            name: "member",
-            label: "Struct Member",
-            type: memberFieldType,
-          },
-        ],
+        members: [{ name: "member", label: "Struct Member", type: memberFieldType }],
       };
       const structField = createTestPropertiesContentField({
         name: "struct-field",
         type: structFieldType,
         properties: [
-          {
-            property: createTestPropertyInfo({ name: "test-struct-property", type: structFieldType.typeName }),
-          },
+          { property: createTestPropertyInfo({ name: "test-struct-property", type: structFieldType.typeName }) },
         ],
         memberFields: [memberField],
       });
@@ -742,18 +803,11 @@ describe("ContentDataProvider", () => {
     });
 
     it("return an array item field", async () => {
-      const itemsFieldType: TypeDescription = {
-        valueFormat: PropertyValueFormat.Primitive,
-        typeName: "string",
-      };
+      const itemsFieldType: TypeDescription = { valueFormat: PropertyValueFormat.Primitive, typeName: "string" };
       const itemsField = createTestPropertiesContentField({
         name: "items-field",
         type: itemsFieldType,
-        properties: [
-          {
-            property: createTestPropertyInfo({ name: "test-items-property" }),
-          },
-        ],
+        properties: [{ property: createTestPropertyInfo({ name: "test-items-property" }) }],
       });
       const arrayFieldType: TypeDescription = {
         valueFormat: PropertyValueFormat.Array,
@@ -764,9 +818,7 @@ describe("ContentDataProvider", () => {
         name: "array-field",
         type: arrayFieldType,
         properties: [
-          {
-            property: createTestPropertyInfo({ name: "test-array-property", type: arrayFieldType.typeName }),
-          },
+          { property: createTestPropertyInfo({ name: "test-array-property", type: arrayFieldType.typeName }) },
         ],
         itemsField,
       });
@@ -855,7 +907,9 @@ describe("ContentDataProvider", () => {
 
       await provider.getContentSetSize();
       expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(
-        matchOptions((options) => options.diagnostics?.editor === "error" && options.diagnostics?.handler === diagnosticsHandler),
+        matchOptions(
+          (options) => options.diagnostics?.editor === "error" && options.diagnostics?.handler === diagnosticsHandler,
+        ),
       );
     });
 
@@ -867,12 +921,7 @@ describe("ContentDataProvider", () => {
         imodel,
         ruleset: rulesetId,
         displayType,
-        devDiagnostics: {
-          backendVersion: true,
-          perf: true,
-          severity: "error",
-          handler: diagnosticsHandler,
-        },
+        devDiagnostics: { backendVersion: true, perf: true, severity: "error", handler: diagnosticsHandler },
       });
       vi.spyOn(provider, "shouldRequestContentForEmptyKeyset").mockReturnValue(true);
 

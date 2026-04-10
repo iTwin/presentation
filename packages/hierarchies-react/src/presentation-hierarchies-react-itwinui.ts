@@ -4,4 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 export { TreeNodeRenderer } from "./presentation-hierarchies-react/itwinui/TreeNodeRenderer.js";
-export { RenderedTreeNode, TreeRenderer, createRenderedTreeNodeData } from "./presentation-hierarchies-react/itwinui/TreeRenderer.js";
+export {
+  RenderedTreeNode,
+  TreeRenderer,
+  createRenderedTreeNodeData,
+} from "./presentation-hierarchies-react/itwinui/TreeRenderer.js";

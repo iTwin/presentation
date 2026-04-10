@@ -7,7 +7,11 @@
 
 // Test-specific imports should be kept out of extracted code
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { Logger } from "@itwin/core-bentley";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccessImports
 import { IModelConnection } from "@itwin/core-frontend";
@@ -72,7 +76,10 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
   const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
 
   // Create a factory for building nodes SELECT query clauses in a format understood by the provider
-  const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsQueryFactory });
+  const nodesQueryFactory = createNodesQueryClauseFactory({
+    imodelAccess,
+    instanceLabelSelectClauseFactory: labelsQueryFactory,
+  });
 
   // Then, define the hierarchy
   const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
@@ -89,7 +96,10 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: {
-                    selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.GeometricModel3d" }),
+                    selector: await labelsQueryFactory.createSelectClause({
+                      classAlias: "this",
+                      className: "BisCore.GeometricModel3d",
+                    }),
                   },
                 })}
               FROM BisCore.GeometricModel3d this
@@ -111,11 +121,12 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: {
-                        selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.Element" }),
+                        selector: await labelsQueryFactory.createSelectClause({
+                          classAlias: "this",
+                          className: "BisCore.Element",
+                        }),
                       },
-                      grouping: {
-                        byClass: true,
-                      },
+                      grouping: { byClass: true },
                     })}
                   FROM BisCore.Element this
                   WHERE this.Model.Id IN (${parentNodeInstanceIds.map(() => "?").join(",")})

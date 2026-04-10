@@ -31,7 +31,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -98,16 +100,14 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
-                  grouping: {
-                    byLabel: {
-                      action: "merge",
-                    },
-                  },
+                  grouping: { byLabel: { action: "merge" } },
                 })}
                 FROM BisCore.PhysicalElement this
               `,
@@ -163,7 +163,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -239,7 +241,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -320,7 +324,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -328,12 +334,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
                   grouping: {
                     byProperties: {
                       propertiesClassName: "BisCore.RepositoryLink",
-                      propertyGroups: [
-                        {
-                          propertyClassAlias: "this",
-                          propertyName: "Format",
-                        },
-                      ],
+                      propertyGroups: [{ propertyClassAlias: "this", propertyName: "Format" }],
                       // create a grouping node for instances whose `Format` property value is not specified
                       createGroupForUnspecifiedValues: true,
                     },
@@ -419,7 +420,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -510,27 +513,22 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
                   grouping: {
                     // create two levels of class grouping
-                    byBaseClasses: {
-                      fullClassNames: ["BisCore.Element", "BisCore.UrlLink"],
-                    },
+                    byBaseClasses: { fullClassNames: ["BisCore.Element", "BisCore.UrlLink"] },
                     // create a level for specific element's class
                     byClass: true,
                     // create a level of Format property value grouping
                     byProperties: {
                       propertiesClassName: "BisCore.RepositoryLink",
-                      propertyGroups: [
-                        {
-                          propertyClassAlias: "this",
-                          propertyName: "Format",
-                        },
-                      ],
+                      propertyGroups: [{ propertyClassAlias: "this", propertyName: "Format" }],
                     },
                     // create a level of label grouping
                     byLabel: true,
@@ -651,17 +649,14 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
-                  grouping: {
-                    byLabel: {
-                      action: "group",
-                      hideIfOneGroupedNode: true,
-                    },
-                  },
+                  grouping: { byLabel: { action: "group", hideIfOneGroupedNode: true } },
                 })}
                 FROM BisCore.RepositoryLink this
               `,
@@ -685,10 +680,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 // As requested by hierarchy definition, the provider didn't place "Example link 1" under a grouping node:
 expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   { label: "Example link 1" },
-  {
-    label: "Example link 2",
-    children: [{ label: "Example link 2" }, { label: "Example link 2" }],
-  },
+  { label: "Example link 2", children: [{ label: "Example link 2" }, { label: "Example link 2" }] },
 ]);
 ```
 
@@ -719,16 +711,14 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
-                  grouping: {
-                    byClass: {
-                      hideIfNoSiblings: true,
-                    },
-                  },
+                  grouping: { byClass: { hideIfNoSiblings: true } },
                 })}
                 FROM BisCore.RepositoryLink this
               `,
@@ -770,7 +760,9 @@ In certain scenarios it may be required to automatically expand the grouping nod
 `
   SELECT ${await createNodesQueryClauseFactory({
     imodelAccess,
-    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+      classHierarchyInspector: imodelAccess,
+    }),
   }).createSelectClause({
     ecClassId: { selector: "this.ECClassId" },
     ecInstanceId: { selector: "this.ECInstanceId" },

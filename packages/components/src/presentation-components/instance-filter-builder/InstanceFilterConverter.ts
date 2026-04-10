@@ -179,7 +179,11 @@ function escapeString(str: string) {
   return str.replace(/"/g, `""`);
 }
 
-function createPointComparison(point: { x: number; y: number } | { x: number; y: number; z: number }, operatorExpression: string, propertyAccessor: string) {
+function createPointComparison(
+  point: { x: number; y: number } | { x: number; y: number; z: number },
+  operatorExpression: string,
+  propertyAccessor: string,
+) {
   const logicalOperator = operatorExpression === "=" ? "AND" : "OR";
   return `(CompareDoubles(${propertyAccessor}.x, ${point.x}) ${operatorExpression} 0) ${logicalOperator} (CompareDoubles(${propertyAccessor}.y, ${
     point.y

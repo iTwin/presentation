@@ -74,15 +74,17 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: TreeReloadParams): 
     }
 
     let subscription: Subscription | undefined;
-    const removeListener = Presentation.presentation.onIModelHierarchyChanged.addListener((args: IModelHierarchyChangeEventArgs) => {
-      if (args.rulesetId !== getRulesetId(ruleset) || args.imodelKey !== dataProviderProps.imodel.key) {
-        return;
-      }
+    const removeListener = Presentation.presentation.onIModelHierarchyChanged.addListener(
+      (args: IModelHierarchyChangeEventArgs) => {
+        if (args.rulesetId !== getRulesetId(ruleset) || args.imodelKey !== dataProviderProps.imodel.key) {
+          return;
+        }
 
-      /* v8 ignore next -- @preserve */
-      subscription?.unsubscribe();
-      subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
-    });
+        /* v8 ignore next -- @preserve */
+        subscription?.unsubscribe();
+        subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
+      },
+    );
 
     return () => {
       removeListener();
@@ -108,7 +110,14 @@ function useModelSourceUpdateOnRulesetModification(params: TreeReloadParams): vo
       // use ruleset id as only registered rulesets can be modified.
       /* v8 ignore next -- @preserve */
       subscription?.unsubscribe();
-      subscription = startTreeReload({ dataProviderProps, ruleset: modifiedRuleset.id, pageSize, modelSource, renderedItems, onReload });
+      subscription = startTreeReload({
+        dataProviderProps,
+        ruleset: modifiedRuleset.id,
+        pageSize,
+        modelSource,
+        renderedItems,
+        onReload,
+      });
     });
 
     return () => {
@@ -163,13 +172,16 @@ function useModelSourceUpdateOnUnitSystemChange(params: TreeReloadParams): void 
   }, [dataProviderProps, modelSource, pageSize, ruleset, onReload, renderedItems]);
 }
 
-function startTreeReload({ dataProviderProps, ruleset, modelSource, pageSize, renderedItems, onReload }: Required<TreeReloadParams>): Subscription {
+function startTreeReload({
+  dataProviderProps,
+  ruleset,
+  modelSource,
+  pageSize,
+  renderedItems,
+  onReload,
+}: Required<TreeReloadParams>): Subscription {
   const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset });
   return reloadTree(modelSource.getModel(), dataProvider, pageSize, renderedItems.current).subscribe({
-    next: (newModelSource) =>
-      onReload({
-        modelSource: newModelSource,
-        dataProvider,
-      }),
+    next: (newModelSource) => onReload({ modelSource: newModelSource, dataProvider }),
   });
 }

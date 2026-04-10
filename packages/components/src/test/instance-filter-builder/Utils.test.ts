@@ -75,9 +75,21 @@ describe("createInstanceFilterPropertyInfos", () => {
 
   it("creates property infos when fields are in different categories category", () => {
     const rootCategory = createTestCategoryDescription({ name: "root", label: "Root Category" });
-    const nestedCategory1 = createTestCategoryDescription({ name: "nested1", label: "Nested Category 1", parent: rootCategory });
-    const nestedCategory2 = createTestCategoryDescription({ name: "nested2", label: "Nested Category 2", parent: rootCategory });
-    const nestedCategory21 = createTestCategoryDescription({ name: "nested21", label: "Nested Category 2 1", parent: nestedCategory2 });
+    const nestedCategory1 = createTestCategoryDescription({
+      name: "nested1",
+      label: "Nested Category 1",
+      parent: rootCategory,
+    });
+    const nestedCategory2 = createTestCategoryDescription({
+      name: "nested2",
+      label: "Nested Category 2",
+      parent: rootCategory,
+    });
+    const nestedCategory21 = createTestCategoryDescription({
+      name: "nested21",
+      label: "Nested Category 2 1",
+      parent: nestedCategory2,
+    });
     const descriptor = createTestContentDescriptor({
       categories: [rootCategory, nestedCategory1, nestedCategory2, nestedCategory21],
       fields: [
@@ -122,7 +134,11 @@ describe("createInstanceFilterPropertyInfos", () => {
   it("creates property info with nested field content class name", () => {
     const rootCategory = createTestCategoryDescription({ name: "root", label: "Root Category" });
     const propertyField = createTestPropertiesContentField({
-      properties: [{ property: { classInfo: createTestECClassInfo({ name: "Schema:PropClass " }), name: "prop1", type: "string" } }],
+      properties: [
+        {
+          property: { classInfo: createTestECClassInfo({ name: "Schema:PropClass " }), name: "prop1", type: "string" },
+        },
+      ],
       category: rootCategory,
     });
 
@@ -167,11 +183,7 @@ describe("filterRuleValidator", () => {
         groupId: "test-group-id",
         property: numericProperty,
         operator: "less",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: undefined,
-          displayValue: "Invalid",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: undefined, displayValue: "Invalid" },
       }),
     ).toBe("instance-filter-builder.error-messages.not-a-number");
   });
@@ -183,11 +195,7 @@ describe("filterRuleValidator", () => {
         groupId: "test-group-id",
         property: numericProperty,
         operator: "is-equal",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: "[Invalid]",
-          displayValue: "[Invalid]",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: "[Invalid]", displayValue: "[Invalid]" },
       }),
     ).toBeUndefined();
   });
@@ -199,11 +207,7 @@ describe("filterRuleValidator", () => {
         groupId: "test-group-id",
         property: quantityProperty,
         operator: "less",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: undefined,
-          displayValue: "Invalid",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: undefined, displayValue: "Invalid" },
       }),
     ).toBe("instance-filter-builder.error-messages.invalid");
   });
@@ -216,16 +220,8 @@ describe("filterRuleValidator", () => {
         property: quantityProperty,
         operator: "between",
         value: PropertyFilterBuilderRuleRangeValue.serialize({
-          from: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: undefined,
-            displayValue: "Invalid",
-          },
-          to: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: 123,
-            displayValue: "123 unit",
-          },
+          from: { valueFormat: PropertyValueFormat.Primitive, value: undefined, displayValue: "Invalid" },
+          to: { valueFormat: PropertyValueFormat.Primitive, value: 123, displayValue: "123 unit" },
         }),
       }),
     ).toBe("instance-filter-builder.error-messages.invalid");
@@ -239,16 +235,8 @@ describe("filterRuleValidator", () => {
         property: quantityProperty,
         operator: "between",
         value: PropertyFilterBuilderRuleRangeValue.serialize({
-          from: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: 123,
-            displayValue: "123 unit",
-          },
-          to: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: undefined,
-            displayValue: "Invalid",
-          },
+          from: { valueFormat: PropertyValueFormat.Primitive, value: 123, displayValue: "123 unit" },
+          to: { valueFormat: PropertyValueFormat.Primitive, value: undefined, displayValue: "Invalid" },
         }),
       }),
     ).toBe("instance-filter-builder.error-messages.invalid");
@@ -261,11 +249,7 @@ describe("filterRuleValidator", () => {
         groupId: "test-group-id",
         property: numericProperty,
         operator: "greater",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: 10,
-          displayValue: "10",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: 10, displayValue: "10" },
       }),
     ).toBeUndefined();
   });
@@ -277,11 +261,7 @@ describe("filterRuleValidator", () => {
         groupId: "test-group-id",
         property: quantityProperty,
         operator: "less",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: 10,
-          displayValue: "10 unit",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: 10, displayValue: "10 unit" },
       }),
     ).toBeUndefined();
   });
@@ -294,16 +274,8 @@ describe("filterRuleValidator", () => {
         property: quantityProperty,
         operator: "between",
         value: PropertyFilterBuilderRuleRangeValue.serialize({
-          from: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: 123,
-            displayValue: "123 unit",
-          },
-          to: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: 456,
-            displayValue: "456 unit",
-          },
+          from: { valueFormat: PropertyValueFormat.Primitive, value: 123, displayValue: "123 unit" },
+          to: { valueFormat: PropertyValueFormat.Primitive, value: 456, displayValue: "456 unit" },
         }),
       }),
     ).toBeUndefined();
@@ -348,9 +320,11 @@ describe("useFilterBuilderNavigationPropertyEditorContextProviderProps", () => {
       typename: "navigation",
     };
 
-    const { result } = renderHook(({ imodel, descriptor }: Props) => useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor), {
-      initialProps: { imodel: testImodel, descriptor: testDescriptor },
-    });
+    const { result } = renderHook(
+      ({ imodel, descriptor }: Props) =>
+        useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor),
+      { initialProps: { imodel: testImodel, descriptor: testDescriptor } },
+    );
 
     const info = await result.current.getNavigationPropertyInfo(propertyDescription);
     expect(info).toEqual(navigationPropertyInfo);
@@ -358,18 +332,18 @@ describe("useFilterBuilderNavigationPropertyEditorContextProviderProps", () => {
 
   it("returns `undefined` for non properties field", async () => {
     const fieldName = "field_name";
-    const testDescriptor = createTestContentDescriptor({
-      fields: [createTestSimpleContentField({ name: fieldName })],
-    });
+    const testDescriptor = createTestContentDescriptor({ fields: [createTestSimpleContentField({ name: fieldName })] });
     const propertyDescription: PropertyDescription = {
       displayLabel: "TestProp",
       name: `test_category${INSTANCE_FILTER_FIELD_SEPARATOR}${fieldName}`,
       typename: "navigation",
     };
 
-    const { result } = renderHook(({ imodel, descriptor }: Props) => useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor), {
-      initialProps: { imodel: testImodel, descriptor: testDescriptor },
-    });
+    const { result } = renderHook(
+      ({ imodel, descriptor }: Props) =>
+        useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor),
+      { initialProps: { imodel: testImodel, descriptor: testDescriptor } },
+    );
 
     const info = await result.current.getNavigationPropertyInfo(propertyDescription);
     expect(info).toBeUndefined();

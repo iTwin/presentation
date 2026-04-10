@@ -11,11 +11,29 @@ import {
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import {
+  PrimitiveValue,
+  PropertyDescription,
+  PropertyRecord,
+  PropertyValue,
+  PropertyValueFormat,
+} from "@itwin/appui-abstract";
 import { PropertyCategory } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
-import { ArrayPropertiesField, combineFieldNames, InstanceKey, KeySet, PropertiesField, RuleTypes, StructPropertiesField } from "@itwin/presentation-common";
-import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider, PresentationPropertyDataProviderProps } from "@itwin/presentation-components";
+import {
+  ArrayPropertiesField,
+  combineFieldNames,
+  InstanceKey,
+  KeySet,
+  PropertiesField,
+  RuleTypes,
+  StructPropertiesField,
+} from "@itwin/presentation-common";
+import {
+  DEFAULT_PROPERTY_GRID_RULESET,
+  PresentationPropertyDataProvider,
+  PresentationPropertyDataProviderProps,
+} from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { importSchema } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -76,26 +94,17 @@ describe("PropertyDataProvider", async () => {
           {
             propName: "CodeValue",
             valueComparer: (value) =>
-              expect(value).toMatchObject({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: undefined,
-              }),
+              expect(value).toMatchObject({ valueFormat: PropertyValueFormat.Primitive, value: undefined }),
           },
           {
             propName: "UserLabel",
             valueComparer: (value) =>
-              expect(value).toMatchObject({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: "My Element",
-              }),
+              expect(value).toMatchObject({ valueFormat: PropertyValueFormat.Primitive, value: "My Element" }),
           },
           {
             propName: "Model",
             valueComparer: (value) =>
-              expect(value).toMatchObject({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: { id: modelKey.id },
-              }),
+              expect(value).toMatchObject({ valueFormat: PropertyValueFormat.Primitive, value: { id: modelKey.id } }),
           },
           {
             propName: "Category",
@@ -132,26 +141,17 @@ describe("PropertyDataProvider", async () => {
           {
             propName: "CodeValue",
             valueComparer: (value) =>
-              expect(value).toMatchObject({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: undefined,
-              }),
+              expect(value).toMatchObject({ valueFormat: PropertyValueFormat.Primitive, value: undefined }),
           },
           {
             propName: "UserLabel",
             valueComparer: (value) =>
-              expect(value).toMatchObject({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: "My Element",
-              }),
+              expect(value).toMatchObject({ valueFormat: PropertyValueFormat.Primitive, value: "My Element" }),
           },
           {
             propName: "Model",
             valueComparer: (value) =>
-              expect(value).toMatchObject({
-                valueFormat: PropertyValueFormat.Primitive,
-                value: { id: modelKey.id },
-              }),
+              expect(value).toMatchObject({ valueFormat: PropertyValueFormat.Primitive, value: { id: modelKey.id } }),
           },
           {
             propName: "Category",
@@ -174,28 +174,18 @@ describe("PropertyDataProvider", async () => {
         vi.spyOn(provider as any, "isFieldFavorite").mockReturnValue(true);
         provider.keys = new KeySet([categoryKey!]);
         const properties = await provider.getData();
-        const favoriteCategoryName = provider.isNestedPropertyCategoryGroupingEnabled ? "Favorite-/selected-item/" : "Favorite";
+        const favoriteCategoryName = provider.isNestedPropertyCategoryGroupingEnabled
+          ? "Favorite-/selected-item/"
+          : "Favorite";
         validateRecords(properties.records["/selected-item/"], [
-          {
-            propName: "CodeValue",
-          },
-          {
-            propName: "UserLabel",
-          },
-          {
-            propName: "Model",
-          },
+          { propName: "CodeValue" },
+          { propName: "UserLabel" },
+          { propName: "Model" },
         ]);
         validateRecords(properties.records[favoriteCategoryName], [
-          {
-            propName: "CodeValue",
-          },
-          {
-            propName: "UserLabel",
-          },
-          {
-            propName: "Model",
-          },
+          { propName: "CodeValue" },
+          { propName: "UserLabel" },
+          { propName: "Model" },
         ]);
       });
 
@@ -227,15 +217,9 @@ describe("PropertyDataProvider", async () => {
         const properties = await provider.getData();
         expect(properties.categories.find((category) => category.name === "default")?.label).toBe("Custom Category");
         validateRecords(properties.records.default, [
-          {
-            propName: "CodeValue",
-          },
-          {
-            propName: "UserLabel",
-          },
-          {
-            propName: "Model",
-          },
+          { propName: "CodeValue" },
+          { propName: "UserLabel" },
+          { propName: "Model" },
         ]);
       });
 
@@ -266,7 +250,11 @@ describe("PropertyDataProvider", async () => {
 
         const { imodel } = await buildTestIModel(async (builder) => {
           const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
-          const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
+          const modelKey = insertPhysicalModelWithPartition({
+            builder,
+            fullClassNameSeparator: ":",
+            codeValue: "My Model",
+          });
           elementKey = insertPhysicalElement({
             builder,
             fullClassNameSeparator: ":",
@@ -341,7 +329,11 @@ describe("PropertyDataProvider", async () => {
         `,
       );
       const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
-      const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
+      const modelKey = insertPhysicalModelWithPartition({
+        builder,
+        fullClassNameSeparator: ":",
+        codeValue: "My Model",
+      });
       const elementKey = insertPhysicalElement({
         builder,
         classFullName: `${schema.schemaAlias}:TestPhysicalObject`,
@@ -370,8 +362,14 @@ describe("PropertyDataProvider", async () => {
           assert(value.valueFormat === PropertyValueFormat.Array);
           expect(value.itemsTypeName).toBe("string");
           expect(value.items).toMatchObject([
-            { property: { name: combineFieldNames("[*]", property.name), typename: "string" }, value: { value: "Item 1" } },
-            { property: { name: combineFieldNames("[*]", property.name), typename: "string" }, value: { value: "Item 2" } },
+            {
+              property: { name: combineFieldNames("[*]", property.name), typename: "string" },
+              value: { value: "Item 1" },
+            },
+            {
+              property: { name: combineFieldNames("[*]", property.name), typename: "string" },
+              value: { value: "Item 2" },
+            },
           ]);
         },
       },
@@ -403,11 +401,17 @@ describe("PropertyDataProvider", async () => {
                 valueFormat: PropertyValueFormat.Struct,
                 members: {
                   StringMember: {
-                    property: { name: combineFieldNames("StringMember", combineFieldNames("[*]", property.name)), typename: "string" },
+                    property: {
+                      name: combineFieldNames("StringMember", combineFieldNames("[*]", property.name)),
+                      typename: "string",
+                    },
                     value: { value: "Item 1" },
                   },
                   NumericMember: {
-                    property: { name: combineFieldNames("NumericMember", combineFieldNames("[*]", property.name)), typename: "int" },
+                    property: {
+                      name: combineFieldNames("NumericMember", combineFieldNames("[*]", property.name)),
+                      typename: "int",
+                    },
                     value: { value: 456 },
                   },
                 },
@@ -419,11 +423,17 @@ describe("PropertyDataProvider", async () => {
                 valueFormat: PropertyValueFormat.Struct,
                 members: {
                   StringMember: {
-                    property: { name: combineFieldNames("StringMember", combineFieldNames("[*]", property.name)), typename: "string" },
+                    property: {
+                      name: combineFieldNames("StringMember", combineFieldNames("[*]", property.name)),
+                      typename: "string",
+                    },
                     value: { value: "Item 2" },
                   },
                   NumericMember: {
-                    property: { name: combineFieldNames("NumericMember", combineFieldNames("[*]", property.name)), typename: "int" },
+                    property: {
+                      name: combineFieldNames("NumericMember", combineFieldNames("[*]", property.name)),
+                      typename: "int",
+                    },
                     value: { value: 789 },
                   },
                 },
@@ -439,61 +449,50 @@ describe("PropertyDataProvider", async () => {
     assert(arrayRecord?.value.valueFormat === PropertyValueFormat.Array);
     const arrayItemRecord = arrayRecord.value.items[0];
     const arrayItemField = (await provider.getFieldByPropertyDescription(arrayItemRecord.property)) as PropertiesField;
-    expect(arrayItemField).toMatchObject({
-      name: "[*]",
-      label: "ArrayProperty",
-    });
+    expect(arrayItemField).toMatchObject({ name: "[*]", label: "ArrayProperty" });
     expect(arrayItemField.parentArrayField).toBeInstanceOf(ArrayPropertiesField);
     expect(arrayItemField.parentArrayField).toMatchObject({
       label: "ArrayProperty",
-      type: {
-        valueFormat: "Array",
-        typeName: "string[]",
-      },
+      type: { valueFormat: "Array", typeName: "string[]" },
     });
 
     // test retrieving struct member field
     const structRecord = properties.records["/selected-item/"].find((r) => r.property.name.endsWith("StructProperty"));
     assert(structRecord?.value.valueFormat === PropertyValueFormat.Struct);
     const structMemberRecord = structRecord.value.members.StringMember;
-    const structMemberField = (await provider.getFieldByPropertyDescription(structMemberRecord.property)) as PropertiesField;
-    expect(structMemberField).toMatchObject({
-      name: "StringMember",
-    });
+    const structMemberField = (await provider.getFieldByPropertyDescription(
+      structMemberRecord.property,
+    )) as PropertiesField;
+    expect(structMemberField).toMatchObject({ name: "StringMember" });
     expect(structMemberField.parentStructField).toBeInstanceOf(StructPropertiesField);
     expect(structMemberField.parentStructField).toMatchObject({
       label: "StructProperty",
-      type: {
-        valueFormat: "Struct",
-        typeName: "TestStruct",
-      },
+      type: { valueFormat: "Struct", typeName: "TestStruct" },
     });
 
     // test retrieving struct array member field
-    const structArrayRecord = properties.records["/selected-item/"].find((r) => r.property.name.endsWith("StructArrayProperty"));
+    const structArrayRecord = properties.records["/selected-item/"].find((r) =>
+      r.property.name.endsWith("StructArrayProperty"),
+    );
     assert(structArrayRecord?.value.valueFormat === PropertyValueFormat.Array);
     const structArrayItemRecord = structArrayRecord.value.items[0];
     assert(structArrayItemRecord?.value.valueFormat === PropertyValueFormat.Struct);
     const structArrayItemMemberRecord = structArrayItemRecord.value.members.StringMember;
-    const structArrayMemberField = (await provider.getFieldByPropertyDescription(structArrayItemMemberRecord.property)) as PropertiesField;
-    expect(structArrayMemberField).toMatchObject({
-      name: "StringMember",
-    });
+    const structArrayMemberField = (await provider.getFieldByPropertyDescription(
+      structArrayItemMemberRecord.property,
+    )) as PropertiesField;
+    expect(structArrayMemberField).toMatchObject({ name: "StringMember" });
     expect(structArrayMemberField.parentStructField).toBeInstanceOf(StructPropertiesField);
     expect(structArrayMemberField.parentStructField).toMatchObject({
       label: "StructArrayProperty",
-      type: {
-        valueFormat: "Struct",
-        typeName: "TestStruct",
-      },
+      type: { valueFormat: "Struct", typeName: "TestStruct" },
     });
-    expect((structArrayMemberField.parentStructField as StructPropertiesField).parentArrayField).toBeInstanceOf(ArrayPropertiesField);
+    expect((structArrayMemberField.parentStructField as StructPropertiesField).parentArrayField).toBeInstanceOf(
+      ArrayPropertiesField,
+    );
     expect((structArrayMemberField.parentStructField as StructPropertiesField).parentArrayField).toMatchObject({
       label: "StructArrayProperty",
-      type: {
-        valueFormat: "Array",
-        typeName: "TestStruct[]",
-      },
+      type: { valueFormat: "Array", typeName: "TestStruct[]" },
     });
   });
 
@@ -515,11 +514,7 @@ describe("PropertyDataProvider", async () => {
 
     // re-initialize
     Presentation.terminate();
-    await Presentation.initialize({
-      presentation: {
-        activeLocale: "en-pseudo",
-      },
-    });
+    await Presentation.initialize({ presentation: { activeLocale: "en-pseudo" } });
 
     // repeat request
     await checkDataProvider();
@@ -528,7 +523,10 @@ describe("PropertyDataProvider", async () => {
 
 function validateRecords(
   records: PropertyRecord[],
-  expectations: Array<{ propName: string; valueComparer?: (value: PropertyValue, property: PropertyDescription) => void }>,
+  expectations: Array<{
+    propName: string;
+    valueComparer?: (value: PropertyValue, property: PropertyDescription) => void;
+  }>,
 ) {
   for (const { propName, valueComparer } of expectations) {
     const record = records.find((rec) => rec.property.name.endsWith(propName));

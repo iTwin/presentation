@@ -78,12 +78,14 @@ class IModelHiliteSetProviderImpl implements IModelHiliteSetProvider {
   constructor(props: IModelHiliteSetProviderProps) {
     this._selectionStorage = props.selectionStorage;
     this._imodelProvider = props.imodelProvider;
-    this._removeListener = this._selectionStorage.selectionChangeEvent.addListener((args: StorageSelectionChangeEventArgs) => {
-      this._cache.delete(args.imodelKey);
-      if (args.changeType === "clear" && args.source === IMODEL_CLOSE_SELECTION_CLEAR_SOURCE) {
-        this._hiliteSetProviders.delete(args.imodelKey);
-      }
-    });
+    this._removeListener = this._selectionStorage.selectionChangeEvent.addListener(
+      (args: StorageSelectionChangeEventArgs) => {
+        this._cache.delete(args.imodelKey);
+        if (args.changeType === "clear" && args.source === IMODEL_CLOSE_SELECTION_CLEAR_SOURCE) {
+          this._hiliteSetProviders.delete(args.imodelKey);
+        }
+      },
+    );
     /* v8 ignore next -- @preserve */
     this._createHiliteSetProvider = props.createHiliteSetProvider ?? createHiliteSetProvider;
   }
@@ -101,7 +103,9 @@ class IModelHiliteSetProviderImpl implements IModelHiliteSetProvider {
     let hiliteSet = this._cache.get(imodelKey);
     if (!hiliteSet) {
       const selectables = this._selectionStorage.getSelection({ imodelKey });
-      hiliteSet = from(this.getHiliteSetProvider({ imodelKey }).getHiliteSet({ selectables })).pipe(shareReplay({ refCount: true }));
+      hiliteSet = from(this.getHiliteSetProvider({ imodelKey }).getHiliteSet({ selectables })).pipe(
+        shareReplay({ refCount: true }),
+      );
       this._cache.set(imodelKey, hiliteSet);
     }
     return eachValueFrom(hiliteSet);

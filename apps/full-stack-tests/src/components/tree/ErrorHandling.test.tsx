@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { useState } from "react";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
@@ -38,11 +42,7 @@ describe("Learning snippets", () => {
       const consoleStub = vi.spyOn(console, "error").mockImplementation(() => {});
       // __PUBLISH_EXTRACT_START__ Presentation.Components.Tree.ErrorHandling
       function MyTree(props: { imodel: IModelConnection }) {
-        const state = usePresentationTreeState({
-          imodel: props.imodel,
-          ruleset,
-          pagingSize: 100,
-        });
+        const state = usePresentationTreeState({ imodel: props.imodel, ruleset, pagingSize: 100 });
 
         // width and height should generally we computed using ResizeObserver API or one of its derivatives
         const [width] = useState(400);
@@ -53,9 +53,19 @@ describe("Learning snippets", () => {
         }
 
         // presentation-specific tree renderer takes care of handling errors when requesting nodes
-        const treeRenderer = (treeRendererProps: TreeRendererProps) => <PresentationTreeRenderer {...treeRendererProps} nodeLoader={state.nodeLoader} />;
+        const treeRenderer = (treeRendererProps: TreeRendererProps) => (
+          <PresentationTreeRenderer {...treeRendererProps} nodeLoader={state.nodeLoader} />
+        );
 
-        return <PresentationTree width={width} height={height} state={state} selectionMode={SelectionMode.Extended} treeRenderer={treeRenderer} />;
+        return (
+          <PresentationTree
+            width={width}
+            height={height}
+            state={state}
+            selectionMode={SelectionMode.Extended}
+            treeRenderer={treeRenderer}
+          />
+        );
       }
       // __PUBLISH_EXTRACT_END__
 
@@ -65,8 +75,18 @@ describe("Learning snippets", () => {
         const modelKeyA = insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
         const modelKeyB = insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
         for (let i = 0; i < 2; ++i) {
-          insertPhysicalElement({ builder, userLabel: `A element ${i + 1}`, modelId: modelKeyA.id, categoryId: categoryKey.id });
-          insertPhysicalElement({ builder, userLabel: `B element ${i + 1}`, modelId: modelKeyB.id, categoryId: categoryKey.id });
+          insertPhysicalElement({
+            builder,
+            userLabel: `A element ${i + 1}`,
+            modelId: modelKeyA.id,
+            categoryId: categoryKey.id,
+          });
+          insertPhysicalElement({
+            builder,
+            userLabel: `B element ${i + 1}`,
+            modelId: modelKeyB.id,
+            categoryId: categoryKey.id,
+          });
         }
       });
 
@@ -137,10 +157,7 @@ const ruleset: Ruleset = {
         {
           specType: "RelatedInstanceNodes",
           relationshipPaths: [
-            {
-              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-              direction: "Forward",
-            },
+            { relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" },
           ],
           groupByClass: false,
           groupByLabel: false,

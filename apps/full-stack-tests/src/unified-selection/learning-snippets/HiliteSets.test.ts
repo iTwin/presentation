@@ -5,7 +5,12 @@
 /* eslint-disable no-duplicate-imports */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { collect, insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  collect,
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.BasicProviderImports
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
@@ -34,7 +39,12 @@ describe("Unified selection", () => {
         const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const elementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
+          const elementKey = insertPhysicalElement({
+            builder,
+            userLabel: "test element",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          });
           return { modelKey, categoryKey, elementKey };
         });
 
@@ -54,31 +64,36 @@ describe("Unified selection", () => {
         // __PUBLISH_EXTRACT_END__
 
         const hiliteSet = await collect(hiliteSetIterator);
-        expect(hiliteSet).toEqual([
-          {
-            elements: [keys.elementKey.id],
-            models: [],
-            subCategories: [],
-          },
-        ]);
+        expect(hiliteSet).toEqual([{ elements: [keys.elementKey.id], models: [], subCategories: [] }]);
       });
 
       it("iModel hilite set provider", async () => {
         const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const elementKey = insertPhysicalElement({ builder, userLabel: "test element", modelId: modelKey.id, categoryId: categoryKey.id });
+          const elementKey = insertPhysicalElement({
+            builder,
+            userLabel: "test element",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          });
           return { modelKey, categoryKey, elementKey };
         });
 
         const selectionStorage = createStorage();
-        selectionStorage.addToSelection({ imodelKey: createIModelKey(imodel), source: "test", selectables: [keys.elementKey] });
+        selectionStorage.addToSelection({
+          imodelKey: createIModelKey(imodel),
+          source: "test",
+          selectables: [keys.elementKey],
+        });
 
         function getIModelByKey(imodelKey: string) {
           if (imodelKey === createIModelKey(imodel)) {
             return {
               ...createECSqlQueryExecutor(imodel),
-              ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodel.schemaContext) }),
+              ...createCachingECClassHierarchyInspector({
+                schemaProvider: createECSchemaProvider(imodel.schemaContext),
+              }),
               key: imodelKey,
             };
           }
@@ -98,13 +113,7 @@ describe("Unified selection", () => {
         // __PUBLISH_EXTRACT_END__
 
         const hiliteSet = await collect(hiliteSetIterator);
-        expect(hiliteSet).toEqual([
-          {
-            elements: [keys.elementKey.id],
-            models: [],
-            subCategories: [],
-          },
-        ]);
+        expect(hiliteSet).toEqual([{ elements: [keys.elementKey.id], models: [], subCategories: [] }]);
       });
     });
   });

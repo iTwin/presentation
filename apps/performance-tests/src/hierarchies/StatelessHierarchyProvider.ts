@@ -6,7 +6,14 @@
 import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
 import { BeDuration } from "@itwin/core-bentley";
-import { Schema, SchemaContext, SchemaJsonLocater, SchemaKey, SchemaMatchType, SchemaPropsGetter } from "@itwin/ecschema-metadata";
+import {
+  Schema,
+  SchemaContext,
+  SchemaJsonLocater,
+  SchemaKey,
+  SchemaMatchType,
+  SchemaPropsGetter,
+} from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
   createIModelHierarchyProvider,
@@ -30,9 +37,7 @@ import { LOGGER } from "../util/Logging.js";
 interface ProviderOptionsBase {
   rowLimit?: number | "unbounded";
   getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): HierarchyDefinition;
-  filtering?: {
-    paths: HierarchyFilteringPath[];
-  };
+  filtering?: { paths: HierarchyFilteringPath[] };
 }
 type ProviderOptionsWithIModel = { iModel: IModelDb } & ProviderOptionsBase;
 
@@ -53,9 +58,7 @@ const DEFAULT_ROW_LIMIT = 1000;
 export interface IModelAccess {
   createQueryReader(
     query: ECSqlQueryDef,
-    config?: ECSqlQueryReaderOptions & {
-      limit?: number | "unbounded";
-    },
+    config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" },
   ): ReturnType<ECSqlQueryExecutor["createQueryReader"]>;
   classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
   getSchema(schemaName: string): Promise<EC.Schema | undefined>;
@@ -88,10 +91,7 @@ export class StatelessHierarchyProvider {
           );
         }, 1),
       );
-      nodesObservable.subscribe({
-        complete: () => resolve(nodeCount),
-        error: reject,
-      });
+      nodesObservable.subscribe({ complete: () => resolve(nodeCount), error: reject });
     });
   }
 
@@ -104,7 +104,9 @@ export class StatelessHierarchyProvider {
 
   private createProvider() {
     const imodelAccess =
-      "iModel" in this._props ? StatelessHierarchyProvider.createIModelAccess(this._props.iModel, this._props.rowLimit) : this._props.imodelAccess;
+      "iModel" in this._props
+        ? StatelessHierarchyProvider.createIModelAccess(this._props.iModel, this._props.rowLimit)
+        : this._props.imodelAccess;
     return createIModelHierarchyProvider({
       imodelAccess,
       hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),

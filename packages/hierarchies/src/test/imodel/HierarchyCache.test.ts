@@ -79,7 +79,11 @@ describe("HierarchyCache", () => {
 
       const variationProps = {
         ...primaryProps,
-        instanceFilter: { propertyClassNames: ["x"], relatedInstances: [], rules: { operator: "and" as const, rules: [] } },
+        instanceFilter: {
+          propertyClassNames: ["x"],
+          relatedInstances: [],
+          rules: { operator: "and" as const, rules: [] },
+        },
       };
       const value = "variation";
       cache.set(variationProps, value);
@@ -94,10 +98,7 @@ describe("HierarchyCache", () => {
       const primaryProps = { parentNode: createTestProcessedGenericNode() };
       cache.set(primaryProps, "primary");
 
-      const variationProps: GetHierarchyNodesProps = {
-        ...primaryProps,
-        hierarchyLevelSizeLimit: 999,
-      };
+      const variationProps: GetHierarchyNodesProps = { ...primaryProps, hierarchyLevelSizeLimit: 999 };
       const result = cache.get(variationProps);
       expect(result).toBeUndefined();
     });
@@ -108,10 +109,7 @@ describe("HierarchyCache", () => {
       const primaryProps = { parentNode: createTestProcessedGenericNode() };
       cache.set(primaryProps, "primary");
 
-      const variationProps = {
-        ...primaryProps,
-        hierarchyLevelSizeLimit: 999,
-      };
+      const variationProps = { ...primaryProps, hierarchyLevelSizeLimit: 999 };
       const value = "variation";
       cache.set(variationProps, value);
 
@@ -126,10 +124,7 @@ describe("HierarchyCache", () => {
       const primaryValue = "primary";
       cache.set(primaryProps, primaryValue);
 
-      const variationProps = {
-        ...primaryProps,
-        hierarchyLevelSizeLimit: 111,
-      };
+      const variationProps = { ...primaryProps, hierarchyLevelSizeLimit: 111 };
       const value = "variation";
       cache.set(variationProps, value);
 
@@ -143,19 +138,13 @@ describe("HierarchyCache", () => {
       const primaryProps = { parentNode: undefined };
       cache.set(primaryProps, "primary");
 
-      const variationProps1 = {
-        ...primaryProps,
-        hierarchyLevelSizeLimit: 111,
-      };
+      const variationProps1 = { ...primaryProps, hierarchyLevelSizeLimit: 111 };
       const value1 = "variation 1";
       cache.set(variationProps1, value1);
 
       expect(cache.get(variationProps1)).toBe(value1);
 
-      const variationProps2 = {
-        ...primaryProps,
-        hierarchyLevelSizeLimit: 222,
-      };
+      const variationProps2 = { ...primaryProps, hierarchyLevelSizeLimit: 222 };
       const value2 = "variation 2";
       cache.set(variationProps2, value2);
 

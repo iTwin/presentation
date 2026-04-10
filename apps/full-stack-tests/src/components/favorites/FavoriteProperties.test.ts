@@ -6,10 +6,22 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyData } from "@itwin/components-react";
-import { IModelApp, IModelConnection, ITwinIdArg, PreferenceArg, PreferenceKeyArg, TokenArg } from "@itwin/core-frontend";
+import {
+  IModelApp,
+  IModelConnection,
+  ITwinIdArg,
+  PreferenceArg,
+  PreferenceKeyArg,
+  TokenArg,
+} from "@itwin/core-frontend";
 import { Field, KeySet } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "@itwin/presentation-components";
-import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
+import {
+  createFavoritePropertiesStorage,
+  DefaultFavoritePropertiesStorageTypes,
+  FavoritePropertiesScope,
+  Presentation,
+} from "@itwin/presentation-frontend";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { TestIModelConnection } from "../../TestIModelSetup.js";
 
@@ -145,7 +157,9 @@ describe("Favorite properties", () => {
       propertyData = await propertiesDataProvider.getData();
       expect(propertyData.categories).toHaveLength(categoriesCountBefore + 1);
       expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).toBe(true);
-      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe(sourceFileNameRecord.property.displayLabel);
+      expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe(
+        sourceFileNameRecord.property.displayLabel,
+      );
     });
   });
 
@@ -180,13 +194,20 @@ describe("Favorite properties", () => {
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).toBe("Category");
 
       const visibleFavoriteFields = await Promise.all(
-        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
+        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) =>
+          propertiesDataProvider.getFieldByPropertyDescription(r.property),
+        ),
       );
       expect(visibleFavoriteFields.every((f) => f !== undefined)).toBe(true);
 
       const record = getPropertyRecordByLabel(propertyData, "Category")!;
       const field = await propertiesDataProvider.getFieldByPropertyDescription(record.property);
-      await Presentation.favoriteProperties.changeFieldPriority(imodel, field!, undefined, visibleFavoriteFields as Field[]);
+      await Presentation.favoriteProperties.changeFieldPriority(
+        imodel,
+        field!,
+        undefined,
+        visibleFavoriteFields as Field[],
+      );
 
       propertyData = await propertiesDataProvider.getData();
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).toBe("Category");
@@ -214,7 +235,9 @@ describe("Favorite properties", () => {
       propertyData = await propertiesDataProvider.getData();
 
       const visibleFavoriteFields = await Promise.all(
-        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
+        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) =>
+          propertiesDataProvider.getFieldByPropertyDescription(r.property),
+        ),
       );
       expect(visibleFavoriteFields.every((f) => f !== undefined)).toBe(true);
 
@@ -222,7 +245,12 @@ describe("Favorite properties", () => {
       const codeField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
       record = getPropertyRecordByLabel(propertyData, "Model")!;
       const modelField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
-      await Presentation.favoriteProperties.changeFieldPriority(imodel, codeField, modelField, visibleFavoriteFields as Field[]);
+      await Presentation.favoriteProperties.changeFieldPriority(
+        imodel,
+        codeField,
+        modelField,
+        visibleFavoriteFields as Field[],
+      );
 
       propertiesDataProvider.keys = new KeySet([
         { className: "PCJ_TestSchema:TestClass", id: "0x65" },
@@ -255,7 +283,9 @@ describe("Favorite properties", () => {
       propertyData = await propertiesDataProvider.getData();
 
       const visibleFavoriteFields = await Promise.all(
-        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
+        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) =>
+          propertiesDataProvider.getFieldByPropertyDescription(r.property),
+        ),
       );
       expect(visibleFavoriteFields.every((f) => f !== undefined)).toBe(true);
 
@@ -263,7 +293,12 @@ describe("Favorite properties", () => {
       const codeField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
       record = getPropertyRecordByLabel(propertyData, "Country")!;
       const modelField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
-      await Presentation.favoriteProperties.changeFieldPriority(imodel, codeField, modelField, visibleFavoriteFields as Field[]);
+      await Presentation.favoriteProperties.changeFieldPriority(
+        imodel,
+        codeField,
+        modelField,
+        visibleFavoriteFields as Field[],
+      );
 
       propertiesDataProvider.keys = new KeySet([
         { className: "PCJ_TestSchema:TestClass", id: "0x65" },
@@ -288,9 +323,7 @@ describe("Favorite properties", () => {
           storage.delete(arg.key);
         },
       });
-      vi.spyOn(IModelApp, "authorizationClient", "get").mockReturnValue({
-        getAccessToken: async () => "accessToken",
-      });
+      vi.spyOn(IModelApp, "authorizationClient", "get").mockReturnValue({ getAccessToken: async () => "accessToken" });
       Presentation.terminate();
       await Presentation.initialize({
         favorites: {

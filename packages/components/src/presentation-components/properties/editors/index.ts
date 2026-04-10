@@ -40,8 +40,9 @@ const NavigationPropertyEditor: new () => PropertyEditorBase = NavigationPropert
  * [[PropertyEditorManager]] system where it's automatically registered as a default editor for all
  * [[StandardTypeNames.Navigation]] properties.
  */
-const NavigationPropertyTargetEditor: new (props: PropertyEditorProps) => TypeEditor & PureComponent<PropertyEditorProps> =
-  NavigationPropertyTargetEditorInternal;
+const NavigationPropertyTargetEditor: new (
+  props: PropertyEditorProps,
+) => TypeEditor & PureComponent<PropertyEditorProps> = NavigationPropertyTargetEditorInternal;
 
 // eslint-disable-next-line @typescript-eslint/no-deprecated
 export { NavigationPropertyEditor, NavigationPropertyTargetEditor };

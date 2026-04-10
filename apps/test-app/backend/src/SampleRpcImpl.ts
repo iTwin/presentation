@@ -21,7 +21,9 @@ export default class SampleRpcImpl extends SampleRpcInterface {
   public override async getSampleImodels(): Promise<string[]> {
     const dir = path.join(this.getAssetsDir(), "sample_documents");
     const files = fs.readdirSync(dir);
-    return files.filter((name) => name.endsWith(".ibim") || name.endsWith(".bim")).map((name) => path.resolve(dir, name));
+    return files
+      .filter((name) => name.endsWith(".ibim") || name.endsWith(".bim"))
+      .map((name) => path.resolve(dir, name));
   }
 
   public override async getAvailableRulesets(): Promise<string[]> {

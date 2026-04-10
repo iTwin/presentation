@@ -88,16 +88,7 @@ interface ModelsTreeDefinitionProps {
 
 /** @beta */
 export interface ElementsGroupInfo {
-  parent:
-    | {
-        ids: Id64String[];
-        type: "element";
-      }
-    | {
-        ids: Id64String[];
-        modelIds: Id64String[];
-        type: "category";
-      };
+  parent: { ids: Id64String[]; type: "element" } | { ids: Id64String[]; modelIds: Id64String[]; type: "category" };
   groupingNode: ClassGroupingHierarchyNode;
 }
 
@@ -112,18 +103,20 @@ type ModelsTreeInstanceKeyPathsFromTargetItemsProps = {
   targetItems: Array<InstanceKey | ElementsGroupInfo>;
 } & ModelsTreeInstanceKeyPathsBaseProps;
 
-type ModelsTreeInstanceKeyPathsFromInstanceLabelProps = {
-  label: string;
-} & ModelsTreeInstanceKeyPathsBaseProps;
+type ModelsTreeInstanceKeyPathsFromInstanceLabelProps = { label: string } & ModelsTreeInstanceKeyPathsBaseProps;
 
-export type ModelsTreeInstanceKeyPathsProps = ModelsTreeInstanceKeyPathsFromTargetItemsProps | ModelsTreeInstanceKeyPathsFromInstanceLabelProps;
+export type ModelsTreeInstanceKeyPathsProps =
+  | ModelsTreeInstanceKeyPathsFromTargetItemsProps
+  | ModelsTreeInstanceKeyPathsFromInstanceLabelProps;
 type HierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
 type HierarchyFilteringPath = HierarchyFilteringPaths[number];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ModelsTreeInstanceKeyPathsProps {
-  export function isLabelProps(props: ModelsTreeInstanceKeyPathsProps): props is ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
+  export function isLabelProps(
+    props: ModelsTreeInstanceKeyPathsProps,
+  ): props is ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
     return !!(props as ModelsTreeInstanceKeyPathsFromInstanceLabelProps).label;
   }
 }
@@ -145,23 +138,28 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         childNodes: [
           {
             parentInstancesNodePredicate: "BisCore.Subject",
-            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createSubjectChildrenQuery(requestProps),
+            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) =>
+              this.createSubjectChildrenQuery(requestProps),
           },
           {
             parentInstancesNodePredicate: "BisCore.ISubModeledElement",
-            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createISubModeledElementChildrenQuery(requestProps),
+            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) =>
+              this.createISubModeledElementChildrenQuery(requestProps),
           },
           {
             parentInstancesNodePredicate: "BisCore.GeometricModel3d",
-            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createGeometricModel3dChildrenQuery(requestProps),
+            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) =>
+              this.createGeometricModel3dChildrenQuery(requestProps),
           },
           {
             parentInstancesNodePredicate: "BisCore.SpatialCategory",
-            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createSpatialCategoryChildrenQuery(requestProps),
+            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) =>
+              this.createSpatialCategoryChildrenQuery(requestProps),
           },
           {
             parentInstancesNodePredicate: "BisCore.GeometricElement3d",
-            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createGeometricElement3dChildrenQuery(requestProps),
+            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) =>
+              this.createGeometricElement3dChildrenQuery(requestProps),
           },
         ],
       },
@@ -169,7 +167,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     this._queryExecutor = props.imodelAccess;
     this._hierarchyConfig = props.hierarchyConfig ?? defaultHierarchyConfiguration;
     this._idsCache = props.idsCache ?? new ModelsTreeIdsCache(props.imodelAccess, this._hierarchyConfig);
-    this._nodeLabelSelectClauseFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: props.imodelAccess });
+    this._nodeLabelSelectClauseFactory = createBisInstanceLabelSelectClauseFactory({
+      classHierarchyInspector: props.imodelAccess,
+    });
     this._selectQueryFactory = createNodesQueryClauseFactory({
       imodelAccess: props.imodelAccess,
       instanceLabelSelectClauseFactory: this._nodeLabelSelectClauseFactory,
@@ -180,7 +180,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     if (ProcessedHierarchyNode.isGroupingNode(node)) {
       return {
         ...node,
-        label: this._hierarchyConfig.elementClassGrouping === "enableWithCounts" ? `${node.label} (${node.children.length})` : node.label,
+        label:
+          this._hierarchyConfig.elementClassGrouping === "enableWithCounts"
+            ? `${node.label} (${node.children.length})`
+            : node.label,
         extendedData: {
           ...node.extendedData,
           // add `modelId` and `categoryId` from the first grouped element
@@ -206,7 +209,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     return this._impl.defineHierarchyLevel(props);
   }
 
-  private async createRootHierarchyLevelDefinition(props: DefineRootHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
+  private async createRootHierarchyLevelDefinition(
+    props: DefineRootHierarchyLevelProps,
+  ): Promise<HierarchyLevelDefinition> {
     const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses({
       filter: props.instanceFilter,
       contentClass: { fullName: "BisCore.Subject", alias: "this" },
@@ -226,10 +231,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                     className: "BisCore.Subject",
                   }),
                 },
-                extendedData: {
-                  imageId: "icon-imodel-hollow-2",
-                  isSubject: true,
-                },
+                extendedData: { imageId: "icon-imodel-hollow-2", isSubject: true },
                 autoExpand: true,
                 supportsFiltering: true,
               })}
@@ -281,10 +283,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                 hideIfNoChildren: true,
                 hasChildren: { selector: `InVirtualSet(?, this.ECInstanceId)` },
                 grouping: { byLabel: { action: "merge", groupId: "subject" } },
-                extendedData: {
-                  imageId: "icon-folder",
-                  isSubject: true,
-                },
+                extendedData: { imageId: "icon-folder", isSubject: true },
                 supportsFiltering: true,
               })}
             FROM ${subjectFilterClauses.from} this
@@ -339,10 +338,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                         `,
                       }
                     : true,
-                  extendedData: {
-                    imageId: "icon-model",
-                    isModel: true,
-                  },
+                  extendedData: { imageId: "icon-model", isModel: true },
                   supportsFiltering: true,
                 })}
               FROM Bis.GeometricModel3d m
@@ -468,9 +464,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                     className: this._hierarchyConfig.elementClassSpecification,
                   }),
                 },
-                grouping: {
-                  byClass: this._hierarchyConfig.elementClassGrouping !== "disable",
-                },
+                grouping: { byClass: this._hierarchyConfig.elementClassGrouping !== "disable" },
                 hasChildren: {
                   selector: `
                     IFNULL((
@@ -500,7 +494,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
               AND this.Parent.Id IS NULL
               ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
-          bindings: [...categoryIds.map((id) => ({ type: "id", value: id })), ...modelIds.map((id) => ({ type: "id", value: id }))] as ECSqlBinding[],
+          bindings: [
+            ...categoryIds.map((id) => ({ type: "id", value: id })),
+            ...modelIds.map((id) => ({ type: "id", value: id })),
+          ] as ECSqlBinding[],
         },
       },
     ];
@@ -529,9 +526,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                     className: this._hierarchyConfig.elementClassSpecification,
                   }),
                 },
-                grouping: {
-                  byClass: this._hierarchyConfig.elementClassGrouping !== "disable",
-                },
+                grouping: { byClass: this._hierarchyConfig.elementClassGrouping !== "disable" },
                 hasChildren: {
                   selector: `
                     IFNULL((
@@ -677,7 +672,11 @@ function createGeometricElementInstanceKeyPaths(
 
     return imodelAccess.createQueryReader(
       { ctes, ecsql },
-      { rowFormat: "Indexes", limit: "unbounded", restartToken: `ModelsTreeDefinition/${Guid.createValue()}/geometric-element-paths` },
+      {
+        rowFormat: "Indexes",
+        limit: "unbounded",
+        restartToken: `ModelsTreeDefinition/${Guid.createValue()}/geometric-element-paths`,
+      },
     );
   }).pipe(
     releaseMainThreadOnItemsCount(300),
@@ -693,15 +692,7 @@ function createGeometricElementInstanceKeyPaths(
           if (!groupingNode) {
             return path;
           }
-          return {
-            path,
-            options: {
-              autoExpand: {
-                key: groupingNode.key,
-                depth: groupingNode.parentKeys.length,
-              },
-            },
-          };
+          return { path, options: { autoExpand: { key: groupingNode.key, depth: groupingNode.parentKeys.length } } };
         }),
       ),
     ),
@@ -724,7 +715,12 @@ function releaseMainThreadOnItemsCount<T>(elementCount: number) {
   };
 }
 
-function parseQueryRow(row: ECSqlQueryRow, groupInfos: ElementsGroupInfo[], separator: string, elementClassName: string) {
+function parseQueryRow(
+  row: ECSqlQueryRow,
+  groupInfos: ElementsGroupInfo[],
+  separator: string,
+  elementClassName: string,
+) {
   const rowElements: string[] = row[1].split(separator);
   const path = new Array<InstanceKey>();
   for (let i = 0; i < rowElements.length; i += 2) {
@@ -811,11 +807,16 @@ async function createInstanceKeyPathsFromTargetItems({
           merge(
             from(ids.subjects).pipe(mergeMap((id) => from(idsCache.createSubjectInstanceKeysPath(id)))),
             from(ids.models).pipe(mergeMap((id) => from(idsCache.createModelInstanceKeyPaths(id)).pipe(mergeAll()))),
-            from(ids.categories).pipe(mergeMap((id) => from(idsCache.createCategoryInstanceKeyPaths(id)).pipe(mergeAll()))),
+            from(ids.categories).pipe(
+              mergeMap((id) => from(idsCache.createCategoryInstanceKeyPaths(id)).pipe(mergeAll())),
+            ),
             from(ids.elements).pipe(
               bufferCount(Math.ceil(elementsLength / Math.ceil(elementsLength / 5000))),
               releaseMainThreadOnItemsCount(1),
-              mergeMap((block) => createGeometricElementInstanceKeyPaths(imodelAccess, idsCache, hierarchyConfig, block), 10),
+              mergeMap(
+                (block) => createGeometricElementInstanceKeyPaths(imodelAccess, idsCache, hierarchyConfig, block),
+                10,
+              ),
             ),
           ),
         );
@@ -864,7 +865,11 @@ async function createInstanceKeyPathsFromInstanceLabel(
       `,
       bindings: [{ type: "string", value: props.label.replace(/[%_\\]/g, "\\$&") }],
     },
-    { rowFormat: "Indexes", restartToken: `ModelsTreeDefinition/${Guid.createValue()}/filter-by-label`, limit: props.limit },
+    {
+      rowFormat: "Indexes",
+      restartToken: `ModelsTreeDefinition/${Guid.createValue()}/filter-by-label`,
+      limit: props.limit,
+    },
   );
 
   const targetKeys = new Array<InstanceKey>();
@@ -912,5 +917,8 @@ function parseIdsSelectorResult(selectorResult: any): Id64Array {
   if (!Array.isArray(selectorResult)) {
     return [];
   }
-  return selectorResult.reduce((arr, ids: Id64String | Id64String[]) => [...arr, ...(Array.isArray(ids) ? ids : [ids])], new Array<Id64String>());
+  return selectorResult.reduce(
+    (arr, ids: Id64String | Id64String[]) => [...arr, ...(Array.isArray(ids) ? ids : [ids])],
+    new Array<Id64String>(),
+  );
 }

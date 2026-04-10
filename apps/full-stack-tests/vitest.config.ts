@@ -15,10 +15,7 @@ export default defineConfig({
     setupFiles: ["./src/setup.ts"],
     globalSetup: ["./scripts/setup-tests.js"],
     css: false,
-    snapshotFormat: {
-      escapeString: true,
-      printBasicPrototype: true,
-    },
+    snapshotFormat: { escapeString: true, printBasicPrototype: true },
     environmentOptions: {
       happyDOM: {
         settings: {
