@@ -76,7 +76,7 @@ describe("NodesQueryClauseFactory", () => {
     });
   });
 
-  it("creates correct labels when outer query uses alias 'c' (same as default label factory's internal alias)", async () => {
+  it("creates correct labels when outer query uses common alias 'c'", async () => {
     const { imodel } = await buildTestIModel(async (builder) => {
       insertPhysicalModelWithPartition({ builder, codeValue: "Test model" });
     });
