@@ -770,7 +770,7 @@ function shouldDestructureArrayField(field: Field) {
   return (
     field.isNestedContentField() ||
     /* This is only needed for pre-5.8.1 iTwin.js core */
-    (field.parent && (!field.isPropertiesField() || !field.isArrayPropertiesField()))
+    (field.parent && (!field.isPropertiesField() || (field.isArrayPropertiesField && !field.isArrayPropertiesField())))
   );
 }
 
