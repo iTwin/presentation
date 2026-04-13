@@ -10,6 +10,7 @@ import {
   createRawPropertyValueSelector,
 } from "../shared/ecsql-snippets/ECSqlValueSelectorSnippets.js";
 import {
+  ALIAS_PREFIX,
   createBisInstanceLabelSelectClauseFactory,
   createClassBasedInstanceLabelSelectClauseFactory,
   createDefaultInstanceLabelSelectClauseFactory,
@@ -62,8 +63,8 @@ describe("createDefaultInstanceLabelSelectClauseFactory", () => {
         SELECT ${createConcatenatedValueJsonSelector([
           {
             selector: `COALESCE(
-              ${createRawPropertyValueSelector("c", "DisplayLabel")},
-              ${createRawPropertyValueSelector("c", "Name")}
+              ${createRawPropertyValueSelector(`${ALIAS_PREFIX}c`, "DisplayLabel")},
+              ${createRawPropertyValueSelector(`${ALIAS_PREFIX}c`, "Name")}
             )`,
           },
           { value: ` [`, type: "String" },
@@ -74,8 +75,8 @@ describe("createDefaultInstanceLabelSelectClauseFactory", () => {
           },
           { value: `]`, type: "String" },
         ])}
-        FROM [meta].[ECClassDef] AS [c]
-        WHERE [c].[ECInstanceId] = [test].[ECClassId]
+        FROM [meta].[ECClassDef] AS [${ALIAS_PREFIX}c]
+        WHERE [${ALIAS_PREFIX}c].[ECInstanceId] = [test].[ECClassId]
       )`),
     );
   });
@@ -306,9 +307,9 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.Model),
             (
-              SELECT ${await factory.createSelectClause({ classAlias: "e", className: "BisCore.Element" })}
-              FROM [bis].[Element] AS [e]
-              WHERE [e].[ECInstanceId] = [test].[ModeledElement].[Id]
+              SELECT ${await factory.createSelectClause({ classAlias: `${ALIAS_PREFIX}e`, className: "BisCore.Element" })}
+              FROM [bis].[Element] AS [${ALIAS_PREFIX}e]
+              WHERE [${ALIAS_PREFIX}e].[ECInstanceId] = [test].[ModeledElement].[Id]
             ),
             NULL
           ),
