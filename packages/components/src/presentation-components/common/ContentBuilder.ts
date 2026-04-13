@@ -75,9 +75,8 @@ export interface FieldInfo {
 
 /** @internal */
 export function createFieldInfo(field: Field, parentFieldName?: string): FieldInfo {
-  const property: undefined | WithConstraints<PropertyInfo> = field.isPropertiesField()
-    ? field.properties[0].property
-    : undefined;
+  const property: undefined | WithConstraints<PropertyInfo> =
+    field.isPropertiesField() && field.properties.length > 0 ? field.properties[0].property : undefined;
   return {
     name: combineFieldNames(field.name, parentFieldName),
     type: field.isNestedContentField() ? field.type : { ...field.type, typeName: field.type.typeName.toLowerCase() },

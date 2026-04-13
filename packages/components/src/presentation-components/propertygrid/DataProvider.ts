@@ -767,7 +767,11 @@ class PropertyCategoriesCache {
 
 function shouldDestructureArrayField(field: Field) {
   // destructure arrays if they're based on nested content field or nested under a nested content field
-  return field.isNestedContentField() || field.parent;
+  return (
+    field.isNestedContentField() ||
+    /* This is only needed for pre-5.8.1 iTwin.js core */
+    (field.parent && (!field.isPropertiesField() || !field.isArrayPropertiesField()))
+  );
 }
 
 function shouldDestructureStructField(field: Field, totalRecordsCount: number | undefined) {
@@ -860,10 +864,8 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
       entry.record.value.valueFormat === UiPropertyValueFormat.Array &&
       shouldDestructureArrayField(entry.fieldHierarchy.field)
     ) {
-      if (shouldDestructureStructField(entry.fieldHierarchy.field, 1)) {
-        // destructure individual array items
-        destructureStructArrayItems(entry.record.value.items, entry.fieldHierarchy);
-      }
+      // destructure individual array items
+      destructureStructArrayItems(entry.record.value.items, entry.fieldHierarchy);
 
       // destructure 0 or 1 sized arrays by removing the array record and putting its first item in its place (if any)
       if (entry.record.value.items.length <= 1) {
@@ -871,7 +873,11 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
         /* v8 ignore else -- @preserve */
         if (entry.record.value.items.length > 0) {
           const item = entry.record.value.items[0];
-          records.splice(i, 0, { ...entry, fieldHierarchy: entry.fieldHierarchy, record: item });
+          const fieldHierarchy =
+            entry.fieldHierarchy.field.isPropertiesField() && entry.fieldHierarchy.field.isArrayPropertiesField()
+              ? { ...entry.fieldHierarchy, field: entry.fieldHierarchy.field.itemsField }
+              : entry.fieldHierarchy;
+          records.splice(i, 0, { ...entry, fieldHierarchy, record: item });
         }
         continue;
       }
@@ -887,7 +893,6 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
         assert(entry.record.value.members[nestedFieldHierarchy.field.name] !== undefined);
         const member = {
           fieldHierarchy: nestedFieldHierarchy,
-          field: nestedFieldHierarchy.field,
           record: entry.record.value.members[nestedFieldHierarchy.field.name],
         };
         list.push(...destructureStructMember(member));
