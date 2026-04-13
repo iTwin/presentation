@@ -693,6 +693,31 @@ describe("PropertyDataProvider", () => {
             expect(await provider.getData()).toMatchSnapshot();
           });
 
+          it("doesn't destructure nested array properties with one value", async () => {
+            const category = createTestCategoryDescription();
+            const arrayField = createArrayField({ name: "array-field", category });
+            const rootField = createTestNestedContentField({
+              name: "root-field",
+              category,
+              nestedFields: [arrayField],
+            });
+            const descriptor = createTestContentDescriptor({ fields: [rootField] });
+            const values = {
+              [rootField.name]: [
+                {
+                  primaryKeys: [createTestECInstanceKey({ id: "0x1" })],
+                  values: { [arrayField.name]: ["test value"] },
+                  displayValues: { [arrayField.name]: ["test value"] },
+                  mergedFieldNames: [],
+                },
+              ],
+            };
+            const displayValues = { [rootField.name]: [{ displayValues: { [arrayField.name]: ["test value"] } }] };
+            const record = createTestContentItem({ values, displayValues });
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
+          });
+
           it("returns nested content with deeply nested content as structs array when there are multiple nested content items", async () => {
             const category = createTestCategoryDescription();
             const primitiveField1 = createPrimitiveField({ name: "primitive-field-1", category });

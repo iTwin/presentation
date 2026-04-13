@@ -117,6 +117,84 @@ Object {
 }
 `;
 
+exports[`PropertyDataProvider > getData > with flat categories > nested content handling > doesn't destructure nested array properties with one value 1`] = `
+Object {
+  "categories": Array [
+    Object {
+      "expand": false,
+      "label": "Test Category",
+      "name": "test-category",
+    },
+  ],
+  "description": undefined,
+  "label": PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
+    "isReadonly": undefined,
+    "links": undefined,
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "",
+      "value": "",
+      "valueFormat": 0,
+    },
+  },
+  "records": Object {
+    "test-category": Array [
+      PropertyRecord {
+        "autoExpand": undefined,
+        "description": undefined,
+        "extendedData": undefined,
+        "imodelKey": "test-imodel",
+        "isDisabled": undefined,
+        "isMerged": undefined,
+        "isReadonly": undefined,
+        "links": undefined,
+        "property": Object {
+          "displayLabel": "My array properties field",
+          "name": "root-field$array-field",
+          "typename": "MyArrayItemType[]",
+        },
+        "value": Object {
+          "items": Array [
+            PropertyRecord {
+              "autoExpand": undefined,
+              "description": "test value",
+              "extendedData": undefined,
+              "imodelKey": "test-imodel",
+              "isDisabled": undefined,
+              "isMerged": undefined,
+              "isReadonly": undefined,
+              "links": undefined,
+              "property": Object {
+                "displayLabel": "Properties Field",
+                "name": "root-field$array-field$MyArrayItem",
+                "typename": "MyArrayItemType",
+              },
+              "value": Object {
+                "displayValue": "test value",
+                "value": "test value",
+                "valueFormat": 0,
+              },
+            },
+          ],
+          "itemsTypeName": "MyArrayItemType",
+          "valueFormat": 1,
+        },
+      },
+    ],
+  },
+  "reusePropertyDataState": true,
+}
+`;
+
 exports[`PropertyDataProvider > getData > with flat categories > nested content handling > merges parent field when child field's category is different and parent is merged 1`] = `
 Object {
   "categories": Array [
@@ -2422,6 +2500,84 @@ Object {
           "displayValue": "",
           "value": undefined,
           "valueFormat": 0,
+        },
+      },
+    ],
+  },
+  "reusePropertyDataState": true,
+}
+`;
+
+exports[`PropertyDataProvider > getData > with nested categories > nested content handling > doesn't destructure nested array properties with one value 1`] = `
+Object {
+  "categories": Array [
+    Object {
+      "expand": false,
+      "label": "Test Category",
+      "name": "test-category",
+    },
+  ],
+  "description": undefined,
+  "label": PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
+    "isReadonly": undefined,
+    "links": undefined,
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "",
+      "value": "",
+      "valueFormat": 0,
+    },
+  },
+  "records": Object {
+    "test-category": Array [
+      PropertyRecord {
+        "autoExpand": undefined,
+        "description": undefined,
+        "extendedData": undefined,
+        "imodelKey": "test-imodel",
+        "isDisabled": undefined,
+        "isMerged": undefined,
+        "isReadonly": undefined,
+        "links": undefined,
+        "property": Object {
+          "displayLabel": "My array properties field",
+          "name": "root-field$array-field",
+          "typename": "MyArrayItemType[]",
+        },
+        "value": Object {
+          "items": Array [
+            PropertyRecord {
+              "autoExpand": undefined,
+              "description": "test value",
+              "extendedData": undefined,
+              "imodelKey": "test-imodel",
+              "isDisabled": undefined,
+              "isMerged": undefined,
+              "isReadonly": undefined,
+              "links": undefined,
+              "property": Object {
+                "displayLabel": "Properties Field",
+                "name": "root-field$array-field$MyArrayItem",
+                "typename": "MyArrayItemType",
+              },
+              "value": Object {
+                "displayValue": "test value",
+                "value": "test value",
+                "valueFormat": 0,
+              },
+            },
+          ],
+          "itemsTypeName": "MyArrayItemType",
+          "valueFormat": 1,
         },
       },
     ],
