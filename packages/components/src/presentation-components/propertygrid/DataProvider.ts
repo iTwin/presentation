@@ -770,7 +770,7 @@ function shouldDestructureArrayField(field: Field) {
   return (
     field.isNestedContentField() ||
     /* This is only needed for pre-5.8.1 iTwin.js core */
-    (field.parent && (!field.isPropertiesField() || !field.isArrayPropertiesField || !field.isArrayPropertiesField()))
+    (field.parent && (!field.isPropertiesField() || !field.isArrayPropertiesField?.()))
   );
 }
 
@@ -874,7 +874,7 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
         if (entry.record.value.items.length > 0) {
           const item = entry.record.value.items[0];
           const fieldHierarchy =
-            entry.fieldHierarchy.field.isPropertiesField() && entry.fieldHierarchy.field.isArrayPropertiesField()
+            entry.fieldHierarchy.field.isPropertiesField() && entry.fieldHierarchy.field.isArrayPropertiesField?.()
               ? { ...entry.fieldHierarchy, field: entry.fieldHierarchy.field.itemsField }
               : entry.fieldHierarchy;
           records.splice(i, 0, { ...entry, fieldHierarchy, record: item });
