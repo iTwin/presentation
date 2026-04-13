@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.13.4
+
+### Patch Changes
+
+- [#1296](https://github.com/iTwin/presentation/pull/1296): `PresentationPropertyDataProvider`: Fix nested array properties being mistakenly destructured when there was only 1 array item.
+
 ## 5.13.3
 
 ### Patch Changes
