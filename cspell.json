@@ -65,7 +65,7 @@
     "viewport",
     "viewports",
     "vite",
-    "vusers",
+    "vusers"
   ],
   "ignorePaths": [
     "lib",
@@ -80,6 +80,6 @@
     "sample_documents",
     "**/*.patch",
     ".oxfmtrc.json",
-    "cspell.json",
-  ],
+    "cspell.json"
+  ]
 }
