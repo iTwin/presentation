@@ -111,18 +111,18 @@ describe("Learning snippets", async () => {
       let modelKey: InstanceKey;
       const elementKeys: InstanceKey[] = [];
 
-      const { imodel } = await buildTestIModel((builder) => {
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
-        modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
+      const { imodelConnection } = await buildTestIModel((imodel) => {
+        const categoryKey = insertSpatialCategory({ imodel, codeValue: "My Category" });
+        modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "My Model" });
         elementKeys.push(
           insertPhysicalElement({
-            builder,
+            imodel,
             userLabel: "My Element 1",
             modelId: modelKey.id,
             categoryId: categoryKey.id,
           }),
           insertPhysicalElement({
-            builder,
+            imodel,
             userLabel: "My Element 2",
             modelId: modelKey.id,
             categoryId: categoryKey.id,
@@ -136,7 +136,7 @@ describe("Learning snippets", async () => {
 
       function App() {
         // pass selection storage to the component to hook into it
-        return <MyTable imodel={imodel} selectionStorage={selectionStorage} />;
+        return <MyTable imodel={imodelConnection} selectionStorage={selectionStorage} />;
       }
       // __PUBLISH_EXTRACT_END__
 
@@ -147,28 +147,38 @@ describe("Learning snippets", async () => {
 
       // test Unified Selection -> Table content synchronization
       act(() =>
-        selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[0]] }),
+        selectionStorage.replaceSelection({
+          imodelKey: imodelConnection.key,
+          source: "",
+          selectables: [elementKeys[0]],
+        }),
       );
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1"]);
 
       act(() =>
-        selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[1]] }),
+        selectionStorage.replaceSelection({
+          imodelKey: imodelConnection.key,
+          source: "",
+          selectables: [elementKeys[1]],
+        }),
       );
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 2"]);
 
       act(() =>
         selectionStorage.replaceSelection({
-          imodelKey: imodel.key,
+          imodelKey: imodelConnection.key,
           source: "",
           selectables: [elementKeys[0], elementKeys[1]],
         }),
       );
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1", "My Element 2"]);
 
-      act(() => selectionStorage.clearSelection({ imodelKey: imodel.key, source: "" }));
+      act(() => selectionStorage.clearSelection({ imodelKey: imodelConnection.key, source: "" }));
       await waitFor(() => getByText(container, "Select something to see properties"));
 
-      act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [modelKey] }));
+      act(() =>
+        selectionStorage.replaceSelection({ imodelKey: imodelConnection.key, source: "", selectables: [modelKey] }),
+      );
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1", "My Element 2"]);
     });
   });

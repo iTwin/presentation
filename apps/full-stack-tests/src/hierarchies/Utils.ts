@@ -44,10 +44,8 @@ export function createProvider(
         search?: HierarchySearchPaths;
         queryCacheSize?: number;
       }
-    | {
-        imodel: IModelConnection | IModelDb | ECDb;
-        formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter;
-      }
+    | { imodel: IModelConnection | IModelDb; formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter }
+    | { ecdb: ECDb; formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter }
   ) & {
     imodelChanged?: Event<() => void>;
     hierarchy: HierarchyDefinition;
@@ -59,9 +57,12 @@ export function createProvider(
 ) {
   const { imodelChanged, hierarchy, localizedStrings, search, queryCacheSize } = props;
   const formatter =
-    "imodel" in props && props.formatterFactory ? props.formatterFactory(createSchemaContext(props.imodel)) : undefined;
+    "formatterFactory" in props && props.formatterFactory
+      ? props.formatterFactory(createSchemaContext("imodel" in props ? props.imodel : props.ecdb))
+      : undefined;
   return createIModelHierarchyProvider({
-    imodelAccess: "imodelAccess" in props ? props.imodelAccess : createIModelAccess(props.imodel),
+    imodelAccess:
+      "imodelAccess" in props ? props.imodelAccess : createIModelAccess("imodel" in props ? props.imodel : props.ecdb),
     imodelChanged,
     hierarchyDefinition: hierarchy,
     formatter,

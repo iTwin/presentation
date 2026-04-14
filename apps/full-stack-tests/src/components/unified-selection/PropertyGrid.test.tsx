@@ -90,18 +90,18 @@ describe("Learning snippets", async () => {
       // set up imodel for the test
       const elementKeys: InstanceKey[] = [];
 
-      const { imodel } = await buildTestIModel((builder) => {
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
-        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
+      const { imodelConnection } = await buildTestIModel((imodel) => {
+        const categoryKey = insertSpatialCategory({ imodel, codeValue: "My Category" });
+        const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "My Model" });
         elementKeys.push(
           insertPhysicalElement({
-            builder,
+            imodel,
             userLabel: "My Element 1",
             modelId: modelKey.id,
             categoryId: categoryKey.id,
           }),
           insertPhysicalElement({
-            builder,
+            imodel,
             userLabel: "My Element 2",
             modelId: modelKey.id,
             categoryId: categoryKey.id,
@@ -110,18 +110,26 @@ describe("Learning snippets", async () => {
       });
 
       // render the component
-      const { container } = render(<MyPropertyGrid imodel={imodel} />);
+      const { container } = render(<MyPropertyGrid imodel={imodelConnection} />);
       await waitFor(() => getByText(container, "Select an element to see its properties"));
 
       // test Unified Selection -> Property Grid content synchronization
       act(() =>
-        selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[0]] }),
+        selectionStorage.replaceSelection({
+          imodelKey: imodelConnection.key,
+          source: "",
+          selectables: [elementKeys[0]],
+        }),
       );
       // cspell:disable-next-line
       await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element 1");
 
       act(() =>
-        selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[1]] }),
+        selectionStorage.replaceSelection({
+          imodelKey: imodelConnection.key,
+          source: "",
+          selectables: [elementKeys[1]],
+        }),
       );
       // cspell:disable-next-line
       await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element 2");

@@ -3,12 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.Imports
 import {
   createIModelHierarchyProvider,
@@ -17,11 +17,11 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
-import { buildTestIModel } from "../../IModelUtils.js";
-import { importSchema } from "../../SchemaUtils.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -35,8 +35,8 @@ describe("Hierarchies", () => {
       });
 
       it("formats generic node's concatenated value label", async () => {
-        const { imodel } = await buildTestIModel();
-        const imodelAccess = createIModelAccess(imodel);
+        const { imodelConnection } = await buildTestIModel();
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.GenericHierarchyNodeDefinitionLabelFormattingExample
         const hierarchyProvider = createIModelHierarchyProvider({
@@ -70,15 +70,15 @@ describe("Hierarchies", () => {
       });
 
       it("creates a hierarchy using labels from `createBisInstanceLabelSelectClauseFactory`", async () => {
-        const { imodel } = await buildTestIModel(async (builder) => {
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
-          const category = insertSpatialCategory({ builder, codeValue: "category" });
-          const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, codeValue: "A" });
-          const b = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "B" });
-          const c = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id });
+        const { imodelConnection } = await buildTestIModel(async (imodel) => {
+          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
+          const category = insertSpatialCategory({ imodel, codeValue: "category" });
+          const a = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, codeValue: "A" });
+          const b = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, userLabel: "B" });
+          const c = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id });
           return { a, b, c };
         });
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.BisInstanceLabelSelectClauseFactory
         const hierarchyDefinition: HierarchyDefinition = {
@@ -133,15 +133,15 @@ describe("Hierarchies", () => {
       });
 
       it("creates a hierarchy using labels from custom selector", async () => {
-        const { imodel } = await buildTestIModel(async (builder) => {
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
-          const category = insertSpatialCategory({ builder, codeValue: "category" });
-          const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, codeValue: "A" });
-          const b = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, codeValue: "B" });
-          const c = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, codeValue: "C" });
+        const { imodelConnection } = await buildTestIModel(async (imodel) => {
+          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
+          const category = insertSpatialCategory({ imodel, codeValue: "category" });
+          const a = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, codeValue: "A" });
+          const b = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, codeValue: "B" });
+          const c = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, codeValue: "C" });
           return { a, b, c };
         });
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
@@ -201,10 +201,10 @@ describe("Hierarchies", () => {
       });
 
       it("formats property grouping node's label", async () => {
-        const { imodel, myPhysicalObjectClassName } = await buildTestIModel(async (builder, testName) => {
+        const { imodelConnection, myPhysicalObjectClassName } = await buildTestIModel(async (imodel, testName) => {
           const schema = await importSchema(
             testName,
-            builder,
+            imodel,
             `
               <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
               <ECEntityClass typeName="MyPhysicalObject">
@@ -213,10 +213,10 @@ describe("Hierarchies", () => {
               </ECEntityClass>
             `,
           );
-          const category = insertSpatialCategory({ builder, codeValue: "Category" });
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "Model" });
+          const category = insertSpatialCategory({ imodel, codeValue: "Category" });
+          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Model" });
           insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             classFullName: schema.items.MyPhysicalObject.fullName,
@@ -224,7 +224,7 @@ describe("Hierarchies", () => {
             doubleProperty: 123.45,
           });
           insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             classFullName: schema.items.MyPhysicalObject.fullName,
@@ -233,7 +233,7 @@ describe("Hierarchies", () => {
           });
           return { myPhysicalObjectClassName: schema.items.MyPhysicalObject.fullName };
         });
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.PropertyGroupsFormattingExample
         const hierarchyProvider = createIModelHierarchyProvider({

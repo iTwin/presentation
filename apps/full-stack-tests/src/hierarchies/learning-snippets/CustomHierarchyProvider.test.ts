@@ -5,8 +5,8 @@
 /* eslint-disable no-console */
 /* eslint-disable no-duplicate-imports */
 
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { collect } from "presentation-test-utilities";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.Imports
 import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
@@ -35,8 +35,8 @@ import {
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports
 import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
 // __PUBLISH_EXTRACT_END__
-import { initialize, terminate } from "../../IntegrationTests.js";
 import { buildTestIModel } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -79,7 +79,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates iModel provider", async () => {
-        const { imodel } = await buildTestIModel();
+        const { imodelConnection } = await buildTestIModel();
         const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.CustomIModelProviderExample
@@ -90,8 +90,8 @@ describe("Hierarchies", () => {
           // and raise `hierarchyChanged` event when the hierarchy should be refreshed. `BriefcaseTxns` has a number
           // of events that we should listen to - here we're using `registerTxnListeners` helper to simplify subscription.
           const disposeTxnListeners =
-            imodel instanceof BriefcaseConnection
-              ? registerTxnListeners(imodel.txns, () => hierarchyChanged.raiseEvent({}))
+            imodelConnection instanceof BriefcaseConnection
+              ? registerTxnListeners(imodelConnection.txns, () => hierarchyChanged.raiseEvent({}))
               : undefined;
           return {
             // Make this provider disposable. Owners of the provider should make sure `Symbol.dispose` is called when the
@@ -106,7 +106,7 @@ describe("Hierarchies", () => {
             }: Props<HierarchyProvider["getNodes"]>): AsyncIterableIterator<HierarchyNode> {
               if (!parentNode) {
                 // Query and return root bis.Subject node
-                for await (const row of imodel.createQueryReader(
+                for await (const row of imodelConnection.createQueryReader(
                   `
                     SELECT
                       COALESCE(s.UserLabel, s.CodeValue, ec_classname(s.ECClassId, 'c')) label,
@@ -118,7 +118,7 @@ describe("Hierarchies", () => {
                   yield {
                     key: {
                       type: "instances",
-                      instanceKeys: [{ className: "BisCore.Subject", id: "0x1", imodelKey: imodel.key }],
+                      instanceKeys: [{ className: "BisCore.Subject", id: "0x1", imodelKey: imodelConnection.key }],
                     },
                     label: row.label,
                     children: !!row.hasChildren,
@@ -131,9 +131,9 @@ describe("Hierarchies", () => {
               if (
                 HierarchyNode.isInstancesNode(parentNode) &&
                 parentNode.key.instanceKeys.length > 0 &&
-                parentNode.key.instanceKeys.every((k) => k.imodelKey === imodel.key)
+                parentNode.key.instanceKeys.every((k) => k.imodelKey === imodelConnection.key)
               ) {
-                for await (const row of imodel.createQueryReader(
+                for await (const row of imodelConnection.createQueryReader(
                   `
                     SELECT
                       ec_classname(e.ECClassId, 's.c') className,
@@ -147,7 +147,7 @@ describe("Hierarchies", () => {
                   yield {
                     key: {
                       type: "instances",
-                      instanceKeys: [{ className: row.className, id: row.id, imodelKey: imodel.key }],
+                      instanceKeys: [{ className: row.className, id: row.id, imodelKey: imodelConnection.key }],
                     },
                     label: row.label,
                     children: !!row.hasChildren,
@@ -162,23 +162,23 @@ describe("Hierarchies", () => {
             async *getNodeInstanceKeys({ parentNode }: Props<HierarchyProvider["getNodeInstanceKeys"]>) {
               if (!parentNode) {
                 // Don't need to run a query here - we know all iModels have one root Subject with `0x1` id
-                yield { className: "BisCore.Subject", id: "0x1", imodelKey: imodel.key };
+                yield { className: "BisCore.Subject", id: "0x1", imodelKey: imodelConnection.key };
                 return;
               }
               // Query and return children instance keys for the given parent node
               if (
                 HierarchyNode.isInstancesNode(parentNode) &&
                 parentNode.key.instanceKeys.length > 0 &&
-                parentNode.key.instanceKeys.every((k) => k.imodelKey === imodel.key)
+                parentNode.key.instanceKeys.every((k) => k.imodelKey === imodelConnection.key)
               ) {
-                for await (const row of imodel.createQueryReader(
+                for await (const row of imodelConnection.createQueryReader(
                   `
                     SELECT ec_classname(e.ECClassId, 's.c') className, e.ECInstanceId id
                     FROM bis.Element e
                     WHERE e.Parent.Id IN (${parentNode.key.instanceKeys.map((key) => key.id).join(",")})
                   `,
                 )) {
-                  yield { className: row.className, id: row.id, imodelKey: imodel.key };
+                  yield { className: row.className, id: row.id, imodelKey: imodelConnection.key };
                 }
               }
             },
@@ -191,7 +191,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
 
         expect(consoleLogSpy.mock.calls).toHaveLength(3);
-        expect(consoleLogSpy.mock.calls[0][0]).toBe(imodel.rootSubject.name);
+        expect(consoleLogSpy.mock.calls[0][0]).toBe(imodelConnection.rootSubject.name);
         expect(consoleLogSpy.mock.calls[1][0]).toBe("  BisCore.RealityDataSources");
         expect(consoleLogSpy.mock.calls[2][0]).toBe("  BisCore.DictionaryModel");
       });

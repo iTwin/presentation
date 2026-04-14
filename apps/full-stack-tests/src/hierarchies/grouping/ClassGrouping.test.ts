@@ -32,15 +32,15 @@ describe("Hierarchies", () => {
     });
 
     it("creates different groups for different classes", async () => {
-      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: IModel.rootSubjectId });
-        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "2", parentId: IModel.rootSubjectId });
-        const childSubject3 = insertSubject({ builder, codeValue: "3", parentId: IModel.rootSubjectId });
-        const childPartition4 = insertPhysicalPartition({ builder, codeValue: "4", parentId: IModel.rootSubjectId });
+      const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
+        const childSubject1 = insertSubject({ imodel, codeValue: "1", parentId: IModel.rootSubjectId });
+        const childPartition2 = insertPhysicalPartition({ imodel, codeValue: "2", parentId: IModel.rootSubjectId });
+        const childSubject3 = insertSubject({ imodel, codeValue: "3", parentId: IModel.rootSubjectId });
+        const childPartition4 = insertPhysicalPartition({ imodel, codeValue: "4", parentId: IModel.rootSubjectId });
         return { childSubject1, childPartition2, childSubject3, childPartition4 };
       });
 
-      const imodelAccess = createIModelAccess(imodel);
+      const imodelAccess = createIModelAccess(imodelConnection);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
         instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
@@ -79,7 +79,7 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ imodel: imodelConnection, hierarchy }),
         expect: [
           NodeValidators.createForClassGroupingNode({
             children: [

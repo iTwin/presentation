@@ -18,7 +18,7 @@ describe("Hierarchies", () => {
 
     test.beforeAll(async (_, suite) => {
       await initialize();
-      emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodel;
+      emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodelConnection;
     });
 
     afterAll(async () => {

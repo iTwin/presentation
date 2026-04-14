@@ -16,9 +16,9 @@ import {
   insertRepositoryLink,
   insertSpatialCategory,
 } from "presentation-test-utilities";
+import { afterAll, describe, it, test } from "vitest";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { afterAll, describe, it, test } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.HierarchyProviderImports
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
@@ -40,11 +40,11 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { NodeValidators, validateHierarchy, validateHierarchyLevel } from "../HierarchyValidation.js";
 import { createIModelAccess } from "../Utils.js";
-import { buildTestIModel } from "../../IModelUtils.js";
-import { importSchema } from "../../SchemaUtils.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -53,7 +53,7 @@ describe("Hierarchies", () => {
 
       test.beforeAll(async (_, suite) => {
         await initialize();
-        emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodel;
+        emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodelConnection;
       });
 
       afterAll(async () => {
@@ -175,20 +175,20 @@ describe("Hierarchies", () => {
         });
 
         it("creates instance nodes of specific classes definition", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            insertPhysicalModelWithPartition({ builder, codeValue: "Non-private physical model" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            insertPhysicalModelWithPartition({ imodel, codeValue: "Non-private physical model" });
             insertPhysicalSubModel({
-              builder,
+              imodel,
               modeledElementId: insertPhysicalPartition({
-                builder,
+                imodel,
                 codeValue: "Private physical model",
                 parentId: IModel.rootSubjectId,
               }).id,
               isPrivate: true,
             });
-            insertDrawingModelWithPartition({ builder, codeValue: "Drawing model" });
+            insertDrawingModelWithPartition({ imodel, codeValue: "Drawing model" });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.InstanceNodesOfSpecificClassesDefinition
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
@@ -237,19 +237,19 @@ describe("Hierarchies", () => {
         });
 
         it("creates related instance nodes definition", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
-            const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
-            const type = insertPhysicalType({ builder, codeValue: "Physical type" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Physical model" });
+            const category = insertSpatialCategory({ imodel, codeValue: "Spatial category" });
+            const type = insertPhysicalType({ imodel, codeValue: "Physical type" });
             insertPhysicalElement({
-              builder,
+              imodel,
               modelId: model.id,
               categoryId: category.id,
               typeDefinitionId: type.id,
               codeValue: "Physical element",
             });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.RelatedInstanceNodesDefinition
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
@@ -324,10 +324,10 @@ describe("Hierarchies", () => {
         });
 
         it("creates custom query instance nodes definition", async () => {
-          const { imodel, schema } = await buildTestIModel(async (builder, testName) => {
+          const { imodelConnection, schema } = await buildTestIModel(async (imodel, testName) => {
             const importedSchema = await importSchema(
               testName,
-              builder,
+              imodel,
               `
                 <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
                 <ECEntityClass typeName="MyParentElement">
@@ -339,10 +339,10 @@ describe("Hierarchies", () => {
                 </ECEntityClass>
               `,
             );
-            const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
-            const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
+            const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Physical model" });
+            const category = insertSpatialCategory({ imodel, codeValue: "Spatial category" });
             insertPhysicalElement({
-              builder,
+              imodel,
               classFullName: importedSchema.items.MyParentElement.fullName,
               modelId: model.id,
               categoryId: category.id,
@@ -350,7 +350,7 @@ describe("Hierarchies", () => {
               ["ChildrenQuery"]: `SELECT ECClassId, ECInstanceId FROM ${importedSchema.items.MyChildElement.fullName}`,
             });
             insertPhysicalElement({
-              builder,
+              imodel,
               classFullName: importedSchema.items.MyChildElement.fullName,
               modelId: model.id,
               categoryId: category.id,
@@ -358,7 +358,7 @@ describe("Hierarchies", () => {
             });
             return { schema: importedSchema };
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.CustomQueryInstanceNodesDefinition
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
@@ -460,17 +460,17 @@ describe("Hierarchies", () => {
 
       describe("Migrating grouping specifications", () => {
         it("groups by base class", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
-            const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Physical model" });
+            const category = insertSpatialCategory({ imodel, codeValue: "Spatial category" });
             insertPhysicalElement({
-              builder,
+              imodel,
               modelId: model.id,
               categoryId: category.id,
               codeValue: "Physical element",
             });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.BaseClassGrouping
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
@@ -575,18 +575,18 @@ describe("Hierarchies", () => {
         });
 
         it("groups by properties", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
-            const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Physical model" });
+            const category = insertSpatialCategory({ imodel, codeValue: "Spatial category" });
             insertPhysicalElement({
-              builder,
+              imodel,
               modelId: model.id,
               categoryId: category.id,
               codeValue: "Physical element",
               placement: { origin: { x: 0, y: 0, z: 0 }, angles: { yaw: 180 } },
             });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.PropertyGrouping
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
@@ -649,11 +649,11 @@ describe("Hierarchies", () => {
         });
 
         it("groups by label", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            insertRepositoryLink({ builder, repositoryLabel: "Test repository link" });
-            insertRepositoryLink({ builder, repositoryLabel: "Test repository link" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            insertRepositoryLink({ imodel, repositoryLabel: "Test repository link" });
+            insertRepositoryLink({ imodel, repositoryLabel: "Test repository link" });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.LabelGrouping
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
@@ -690,7 +690,7 @@ describe("Hierarchies", () => {
               NodeValidators.createForInstanceNode({ label: "BisCore.DictionaryModel" }),
               NodeValidators.createForInstanceNode({ label: "BisCore.RealityDataSources" }),
               NodeValidators.createForInstanceNode({
-                label: imodel.name,
+                label: imodelConnection.name,
                 instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
               }),
               NodeValidators.createForLabelGroupingNode({
@@ -705,15 +705,15 @@ describe("Hierarchies", () => {
         });
 
         it("merges by label", async () => {
-          const { imodel, repoLinkKeys } = await buildTestIModel(async (builder) => {
+          const { imodelConnection, repoLinkKeys } = await buildTestIModel(async (imodel) => {
             return {
               repoLinkKeys: [
-                insertRepositoryLink({ builder, repositoryLabel: "Test repository link" }),
-                insertRepositoryLink({ builder, repositoryLabel: "Test repository link" }),
+                insertRepositoryLink({ imodel, repositoryLabel: "Test repository link" }),
+                insertRepositoryLink({ imodel, repositoryLabel: "Test repository link" }),
               ],
             };
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.SameLabelGrouping
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
@@ -750,7 +750,7 @@ describe("Hierarchies", () => {
               NodeValidators.createForInstanceNode({ label: "BisCore.DictionaryModel" }),
               NodeValidators.createForInstanceNode({ label: "BisCore.RealityDataSources" }),
               NodeValidators.createForInstanceNode({
-                label: imodel.name,
+                label: imodelConnection.name,
                 instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
               }),
               NodeValidators.createForInstanceNode({ label: "Test repository link", instanceKeys: repoLinkKeys }),

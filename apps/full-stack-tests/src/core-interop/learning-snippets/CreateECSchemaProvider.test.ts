@@ -8,8 +8,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createECSchemaProvider } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
-import { initialize, terminate } from "../../IntegrationTests.js";
 import { buildTestIModel } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
 
 describe("Core interop", () => {
   describe("Learning snippets", () => {
@@ -23,7 +23,7 @@ describe("Core interop", () => {
       });
 
       it("creates provider that returns BisCore schema from iModel", async function () {
-        const { imodel: emptyIModel } = await buildTestIModel(async () => {});
+        const { imodelConnection: emptyIModel } = await buildTestIModel(async () => {});
         function getIModelConnection(): IModelConnection {
           return emptyIModel;
         }

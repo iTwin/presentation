@@ -14,7 +14,6 @@ import {
   limitFilePathLength,
   setupOutputFileLocation,
 } from "./FilenameUtils.js";
-import { safeDispose } from "./Utils.js";
 
 import type { ECSqlWriteStatement } from "@itwin/core-backend";
 import type { Id64String } from "@itwin/core-bentley";
@@ -207,7 +206,7 @@ function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding 
   return typeof value === "object" && "type" in value && "value" in value;
 }
 
-export async function createECDb<TResult extends {}>(
+async function createECDb<TResult extends {}>(
   testName: string | undefined,
   setup: (db: ECDbBuilder) => Promise<TResult>,
 ): Promise<TResult & { ecdb: ECDb; ecdbPath: string }> {
@@ -282,26 +281,27 @@ export async function createChangedDbs<
   };
 }
 
-export async function withECDb(
-  setup: (db: ECDbBuilder, testName: string) => Promise<void>,
-  use: (db: ECDb) => Promise<void>,
-): Promise<void>;
-export async function withECDb<TResult extends {}>(
-  setup: (db: ECDbBuilder, testName: string) => Promise<TResult>,
-  use: (db: ECDb, res: TResult) => Promise<void>,
-): Promise<void>;
-export async function withECDb<TResult extends {} | undefined>(
-  setup: (db: ECDbBuilder, testName: string) => Promise<TResult | undefined>,
-  use: (db: ECDb, res: TResult | undefined) => Promise<void>,
-) {
+export async function buildTestECDb<TResult extends {} | undefined>(
+  setup: (ecdbBuilder: ECDbBuilder, testName: string) => TResult | Promise<TResult>,
+): Promise<TResult & { ecdb: ECDb } & Disposable>;
+export async function buildTestECDb(
+  setup?: (ecdbBuilder: ECDbBuilder, testName: string) => void | Promise<void>,
+): Promise<{ ecdb: ECDb } & Disposable>;
+export async function buildTestECDb<TResult extends {} | undefined>(
+  setup?: (ecdbBuilder: ECDbBuilder, testName: string) => TResult | Promise<TResult>,
+): Promise<TResult & { ecdb: ECDb } & Disposable> {
   const testName = getTestName();
   const name = createFileNameFromString(testName);
-  const outputFile = setupOutputFileLocation(name);
-  using db = new ECDb();
-
-  db.createDb(outputFile);
-  const res = await setup(new ECDbBuilder(db, outputFile), testName);
-  db.saveChanges("Created test ECDb");
-  await use(db, res);
-  safeDispose(db);
+  const outputFilePath = setupOutputFileLocation(name);
+  const ecdb = new ECDb();
+  ecdb.createDb(outputFilePath);
+  const res = await setup?.(new ECDbBuilder(ecdb, outputFilePath), testName);
+  ecdb.saveChanges("Created test ECDb");
+  return {
+    ...(res as TResult),
+    ecdb,
+    [Symbol.dispose]() {
+      ecdb[Symbol.dispose]();
+    },
+  };
 }

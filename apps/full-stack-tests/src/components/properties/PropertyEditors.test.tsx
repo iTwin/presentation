@@ -39,10 +39,10 @@ describe("Property editors", () => {
   });
 
   it("renders property values with koq's overridden through `IModelApp.formatsProvider`", async () => {
-    const { imodel, schema, ...imodelKeys } = await buildTestIModel(async (builder, testName) => {
+    const { imodelConnection, schema, ...imodelKeys } = await buildTestIModel(async (imodel, testName) => {
       const mySchema = await importSchema(
         testName,
-        builder,
+        imodel,
         `
           <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
           <ECSchemaReference name="Units" version="01.00.09" alias="u" />
@@ -54,10 +54,10 @@ describe("Property editors", () => {
           </ECEntityClass>
         `,
       );
-      const model = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
-      const category = insertSpatialCategory({ builder, codeValue: "TestSpatialCategory" });
+      const model = insertPhysicalModelWithPartition({ imodel, codeValue: "TestPhysicalModel" });
+      const category = insertSpatialCategory({ imodel, codeValue: "TestSpatialCategory" });
       const element = insertPhysicalElement({
-        builder,
+        imodel,
         modelId: model.id,
         categoryId: category.id,
         classFullName: mySchema.items.MyPhysicalObject.fullName,
@@ -84,7 +84,7 @@ describe("Property editors", () => {
       onFormatsChanged: new BeEvent(),
     };
 
-    const provider = new PresentationPropertyDataProvider({ imodel });
+    const provider = new PresentationPropertyDataProvider({ imodel: imodelConnection });
     provider.keys = new KeySet([imodelKeys.element]);
 
     const descriptor = await provider.getContentDescriptor();
@@ -110,7 +110,7 @@ describe("Property editors", () => {
     const commitSpy = vi.fn();
     const cancelSpy = vi.fn();
     const { getByPlaceholderText, findByRole, user } = render(
-      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={(x) => x.schemaContext}>
+      <SchemaMetadataContextProvider imodel={imodelConnection} schemaContextProvider={(x) => x.schemaContext}>
         <EditorContainer propertyRecord={propertyRecord!} onCommit={commitSpy} onCancel={cancelSpy} />
       </SchemaMetadataContextProvider>,
     );
@@ -131,10 +131,10 @@ describe("Property editors", () => {
   });
 
   it("edits merged values", async () => {
-    const { imodel, schema, ...imodelKeys } = await buildTestIModel(async (builder, testName) => {
+    const { imodelConnection, schema, ...imodelKeys } = await buildTestIModel(async (imodel, testName) => {
       const mySchema = await importSchema(
         testName,
-        builder,
+        imodel,
         `
           <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
           <ECEntityClass typeName="MyPhysicalObject">
@@ -143,10 +143,10 @@ describe("Property editors", () => {
           </ECEntityClass>
         `,
       );
-      const model = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
-      const category = insertSpatialCategory({ builder, codeValue: "TestSpatialCategory" });
+      const model = insertPhysicalModelWithPartition({ imodel, codeValue: "TestPhysicalModel" });
+      const category = insertSpatialCategory({ imodel, codeValue: "TestSpatialCategory" });
       const element1 = insertPhysicalElement({
-        builder,
+        imodel,
         modelId: model.id,
         categoryId: category.id,
         classFullName: mySchema.items.MyPhysicalObject.fullName,
@@ -154,7 +154,7 @@ describe("Property editors", () => {
         ["MyProperty"]: 1.23,
       });
       const element2 = insertPhysicalElement({
-        builder,
+        imodel,
         modelId: model.id,
         categoryId: category.id,
         classFullName: mySchema.items.MyPhysicalObject.fullName,
@@ -163,7 +163,7 @@ describe("Property editors", () => {
       return { element1, element2, schema: mySchema };
     });
 
-    const provider = new PresentationPropertyDataProvider({ imodel });
+    const provider = new PresentationPropertyDataProvider({ imodel: imodelConnection });
     provider.keys = new KeySet([imodelKeys.element1, imodelKeys.element2]);
 
     const descriptor = await provider.getContentDescriptor();

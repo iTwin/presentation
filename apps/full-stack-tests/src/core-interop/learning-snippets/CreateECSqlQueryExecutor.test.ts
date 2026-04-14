@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
 
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.CreateECSqlQueryExecutor.Imports
 import { IModelConnection } from "@itwin/core-frontend";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
-import { initialize, terminate } from "../../IntegrationTests.js";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { buildTestIModel } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
 
 describe("Core interop", () => {
   describe("Learning snippets", () => {
@@ -24,7 +24,7 @@ describe("Core interop", () => {
       });
 
       it("creates executor that can run ECSql queries", async function () {
-        const { imodel: emptyIModel } = await buildTestIModel(async () => {});
+        const { imodelConnection: emptyIModel } = await buildTestIModel(async () => {});
         function getIModelConnection(): IModelConnection {
           return emptyIModel;
         }

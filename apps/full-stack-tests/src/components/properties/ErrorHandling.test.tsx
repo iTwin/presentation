@@ -76,11 +76,11 @@ describe("Learning snippets", () => {
       // set up imodel for the test
       let elementKey: InstanceKey | undefined;
 
-      const { imodel } = await buildTestIModel(async (builder) => {
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
-        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
+      const { imodelConnection } = await buildTestIModel(async (imodel) => {
+        const categoryKey = insertSpatialCategory({ imodel, codeValue: "My Category" });
+        const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "My Model" });
         elementKey = insertPhysicalElement({
-          builder,
+          imodel,
           userLabel: "My Element",
           modelId: modelKey.id,
           categoryId: categoryKey.id,
@@ -89,7 +89,7 @@ describe("Learning snippets", () => {
       assert(elementKey !== undefined);
 
       // render the component
-      const { container, rerender } = render(<MyPropertyGrid imodel={imodel} elementKey={elementKey} />);
+      const { container, rerender } = render(<MyPropertyGrid imodel={imodelConnection} elementKey={elementKey} />);
       // cspell:disable-next-line
       await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element");
 
@@ -106,7 +106,7 @@ describe("Learning snippets", () => {
       }
 
       // re-render the component, ensure we now get an error
-      rerender(<MyPropertyGrid imodel={imodel} elementKey={{ ...elementKey }} />);
+      rerender(<MyPropertyGrid imodel={imodelConnection} elementKey={{ ...elementKey }} />);
       await ensureHasError(container, "Network error");
       consoleStub.mockRestore();
     });

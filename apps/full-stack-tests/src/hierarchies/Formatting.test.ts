@@ -42,7 +42,7 @@ describe("Hierarchies", () => {
 
   test.beforeAll(async (_, suite) => {
     await initialize();
-    emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodel;
+    emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodelConnection;
     subjectClassName = normalizeFullClassName(Subject.classFullName);
   });
 
@@ -93,11 +93,11 @@ describe("Hierarchies", () => {
 
     describe("KindOfQuantity", () => {
       it("formats instance node labels", async () => {
-        const { imodel, schema } = await buildTestIModel(async (builder, testName) => {
+        const { imodelConnection, schema } = await buildTestIModel(async (imodel, testName) => {
           // eslint-disable-next-line @typescript-eslint/no-shadow
           const schema = await importSchema(
             testName,
-            builder,
+            imodel,
             `
               <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
               <ECSchemaReference name="Units" version="01.00.07" alias="u" />
@@ -109,10 +109,10 @@ describe("Hierarchies", () => {
               </ECEntityClass>
             `,
           );
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
-          const category = insertSpatialCategory({ builder, codeValue: "category" });
+          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
+          const category = insertSpatialCategory({ imodel, codeValue: "category" });
           const element = insertPhysicalElement({
-            builder,
+            imodel,
             classFullName: schema.items.ClassX.fullName,
             modelId: model.id,
             categoryId: category.id,
@@ -120,7 +120,7 @@ describe("Hierarchies", () => {
           });
           return { schema, model, category, element };
         });
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -163,7 +163,7 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({
-            imodel,
+            imodel: imodelConnection,
             hierarchy,
             formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "metric" }),
           }),
@@ -171,7 +171,7 @@ describe("Hierarchies", () => {
         });
         await validateHierarchy({
           provider: createProvider({
-            imodel,
+            imodel: imodelConnection,
             hierarchy,
             formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "imperial" }),
           }),
@@ -179,7 +179,7 @@ describe("Hierarchies", () => {
         });
         await validateHierarchy({
           provider: createProvider({
-            imodel,
+            imodel: imodelConnection,
             hierarchy,
             formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "usCustomary" }),
           }),
@@ -187,7 +187,7 @@ describe("Hierarchies", () => {
         });
         await validateHierarchy({
           provider: createProvider({
-            imodel,
+            imodel: imodelConnection,
             hierarchy,
             formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "usSurvey" }),
           }),
@@ -367,14 +367,14 @@ describe("Hierarchies", () => {
 
     describe("Boolean", () => {
       it("formats instance node labels", async () => {
-        const { imodel, modelClassName } = await buildTestIModel(async (builder) => {
-          const p1 = insertPhysicalPartition({ builder, codeValue: "p1", parentId: IModel.rootSubjectId });
-          insertPhysicalSubModel({ builder, modeledElementId: p1.id, isPrivate: false });
-          const p2 = insertPhysicalPartition({ builder, codeValue: "p2", parentId: IModel.rootSubjectId });
-          const m2 = insertPhysicalSubModel({ builder, modeledElementId: p2.id, isPrivate: true });
+        const { imodelConnection, modelClassName } = await buildTestIModel(async (imodel) => {
+          const p1 = insertPhysicalPartition({ imodel, codeValue: "p1", parentId: IModel.rootSubjectId });
+          insertPhysicalSubModel({ imodel, modeledElementId: p1.id, isPrivate: false });
+          const p2 = insertPhysicalPartition({ imodel, codeValue: "p2", parentId: IModel.rootSubjectId });
+          const m2 = insertPhysicalSubModel({ imodel, modeledElementId: p2.id, isPrivate: true });
           return { modelClassName: m2.className };
         });
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -416,7 +416,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
+          provider: createProvider({ imodel: imodelConnection, hierarchy }),
           expect: [
             { node: (node) => expect(node.label).toBe(`[false]`) },
             { node: (node) => expect(node.label).toBe(`[true]`) },
@@ -454,10 +454,10 @@ describe("Hierarchies", () => {
 
     describe("Integer", () => {
       it("formats instance node labels", async () => {
-        const { imodel, sheetIndexFolder } = await buildTestIModel(async (builder) => {
-          return { sheetIndexFolder: insertSheetIndexFolder({ builder, entryPriority: 2 }) };
+        const { imodelConnection, sheetIndexFolder } = await buildTestIModel(async (imodel) => {
+          return { sheetIndexFolder: insertSheetIndexFolder({ imodel, entryPriority: 2 }) };
         });
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -499,7 +499,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
+          provider: createProvider({ imodel: imodelConnection, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`[2]`) }],
         });
       });
@@ -533,19 +533,19 @@ describe("Hierarchies", () => {
 
     describe("Double", () => {
       it("formats instance node labels", async () => {
-        const { imodel, element } = await buildTestIModel(async (builder) => {
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
-          const category = insertSpatialCategory({ builder, codeValue: "category" });
+        const { imodelConnection, element } = await buildTestIModel(async (imodel) => {
+          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
+          const category = insertSpatialCategory({ imodel, codeValue: "category" });
           // eslint-disable-next-line @typescript-eslint/no-shadow
           const element = insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             placement: { origin: { x: 1.23, y: 4.56, z: 7.89 }, angles: { yaw: 90.789 } },
           });
           return { model, category, element };
         });
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -587,7 +587,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
+          provider: createProvider({ imodel: imodelConnection, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`[90.79]`) }],
         });
       });
@@ -622,19 +622,19 @@ describe("Hierarchies", () => {
 
     describe("Point2d", () => {
       it("formats instance node labels", async () => {
-        const { imodel, element } = await buildTestIModel(async (builder) => {
-          const model = insertDrawingModelWithPartition({ builder, codeValue: "model" });
-          const category = insertDrawingCategory({ builder, codeValue: "category" });
+        const { imodelConnection, element } = await buildTestIModel(async (imodel) => {
+          const model = insertDrawingModelWithPartition({ imodel, codeValue: "model" });
+          const category = insertDrawingCategory({ imodel, codeValue: "category" });
           // eslint-disable-next-line @typescript-eslint/no-shadow
           const element = insertDrawingGraphic({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             placement: { origin: { x: 1.477, y: 2.588 }, angle: 0 },
           });
           return { model, category, element };
         });
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -676,7 +676,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
+          provider: createProvider({ imodel: imodelConnection, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`[(1.48, 2.59)]`) }],
         });
       });
@@ -711,19 +711,19 @@ describe("Hierarchies", () => {
 
     describe("Point3d", () => {
       it("formats instance node labels", async () => {
-        const { imodel, element } = await buildTestIModel(async (builder) => {
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
-          const category = insertSpatialCategory({ builder, codeValue: "category" });
+        const { imodelConnection, element } = await buildTestIModel(async (imodel) => {
+          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
+          const category = insertSpatialCategory({ imodel, codeValue: "category" });
           // eslint-disable-next-line @typescript-eslint/no-shadow
           const element = insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             placement: { origin: { x: 1.234, y: 4.567, z: 7.89 }, angles: {} },
           });
           return { model, category, element };
         });
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -765,7 +765,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
+          provider: createProvider({ imodel: imodelConnection, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`[(1.23, 4.57, 7.89)]`) }],
         });
       });
@@ -801,19 +801,19 @@ describe("Hierarchies", () => {
     describe("Guid", () => {
       it("formats instance node labels", async () => {
         const guid = Guid.createValue();
-        const { imodel, element } = await buildTestIModel(async (builder) => {
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
-          const category = insertSpatialCategory({ builder, codeValue: "category" });
+        const { imodelConnection, element } = await buildTestIModel(async (imodel) => {
+          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
+          const category = insertSpatialCategory({ imodel, codeValue: "category" });
           // eslint-disable-next-line @typescript-eslint/no-shadow
           const element = insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             federationGuid: guid,
           });
           return { model, category, element };
         });
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         const selectQueryFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -855,7 +855,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
+          provider: createProvider({ imodel: imodelConnection, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`[${guid}]`) }],
         });
       });
