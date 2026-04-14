@@ -42,23 +42,23 @@ describe("Learning snippets", async () => {
       const UnifiedSelectionViewport = viewWithUnifiedSelection(ViewportComponent);
       // besides the above line, the component may be used just like the general `ViewportComponent` from `@itwin/imodel-components-react`
       function MyViewport(props: { imodel: IModelConnection; initialViewState: ViewState }) {
-        return <UnifiedSelectionViewport imodel={imodel} viewState={props.initialViewState} />;
+        return <UnifiedSelectionViewport imodel={imodelConnection} viewState={props.initialViewState} />;
       }
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
       const elementKeys: InstanceKey[] = [];
 
-      const { imodel } = await buildTestIModel(async (builder) => {
-        const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
+      const { imodelConnection } = await buildTestIModel(async (imodel) => {
+        const categoryKey = insertSpatialCategory({ imodel, fullClassNameSeparator: ":", codeValue: "My Category" });
         const modelKey = insertPhysicalModelWithPartition({
-          builder,
+          imodel,
           fullClassNameSeparator: ":",
           codeValue: "My Model",
         });
         (elementKeys.push(
           insertPhysicalElement({
-            builder,
+            imodel,
             fullClassNameSeparator: ":",
             userLabel: "My Assembly Element",
             modelId: modelKey.id,
@@ -67,7 +67,7 @@ describe("Learning snippets", async () => {
         ),
           elementKeys.push(
             insertPhysicalElement({
-              builder,
+              imodel,
               fullClassNameSeparator: ":",
               userLabel: "My Child Element 1",
               modelId: modelKey.id,
@@ -75,7 +75,7 @@ describe("Learning snippets", async () => {
               parentId: elementKeys[0].id,
             }),
             insertPhysicalElement({
-              builder,
+              imodel,
               fullClassNameSeparator: ":",
               userLabel: "My Child Element 2",
               modelId: modelKey.id,
@@ -91,42 +91,50 @@ describe("Learning snippets", async () => {
       // render the component
       const { getByTestId } = render(
         <MyViewport
-          imodel={imodel}
-          initialViewState={SpatialViewState.createBlank(imodel, Point3d.createZero(), Vector3d.create(400, 400))}
+          imodel={imodelConnection}
+          initialViewState={SpatialViewState.createBlank(
+            imodelConnection,
+            Point3d.createZero(),
+            Vector3d.create(400, 400),
+          )}
         />,
       );
       await waitFor(() => getByTestId("viewport-component"));
 
       // test Unified Selection -> Hilited elements synchronization
-      Presentation.selection.replaceSelection("", imodel, new KeySet([elementKeys[0]]));
+      Presentation.selection.replaceSelection("", imodelConnection, new KeySet([elementKeys[0]]));
       await waitFor(() => {
-        expect(imodel.hilited.models.isEmpty).toBe(true);
-        expect(imodel.hilited.subcategories.isEmpty).toBe(true);
-        expect(imodel.hilited.elements.toId64Array()).toHaveLength(3);
-        expect(imodel.hilited.elements.toId64Array()).toEqual(expect.arrayContaining(elementKeys.map((k) => k.id)));
-        expect([...imodel.selectionSet.elements]).toHaveLength(3);
-        expect([...imodel.selectionSet.elements]).toEqual(expect.arrayContaining(elementKeys.map((k) => k.id)));
+        expect(imodelConnection.hilited.models.isEmpty).toBe(true);
+        expect(imodelConnection.hilited.subcategories.isEmpty).toBe(true);
+        expect(imodelConnection.hilited.elements.toId64Array()).toHaveLength(3);
+        expect(imodelConnection.hilited.elements.toId64Array()).toEqual(
+          expect.arrayContaining(elementKeys.map((k) => k.id)),
+        );
+        expect([...imodelConnection.selectionSet.elements]).toHaveLength(3);
+        expect([...imodelConnection.selectionSet.elements]).toEqual(
+          expect.arrayContaining(elementKeys.map((k) => k.id)),
+        );
       });
 
-      Presentation.selection.clearSelection("", imodel);
+      Presentation.selection.clearSelection("", imodelConnection);
       await waitFor(() => {
-        expect(imodel.hilited.models.isEmpty).toBe(true);
-        expect(imodel.hilited.subcategories.isEmpty).toBe(true);
-        expect(imodel.hilited.elements.isEmpty).toBe(true);
-        expect(imodel.selectionSet.size).toBe(0);
+        expect(imodelConnection.hilited.models.isEmpty).toBe(true);
+        expect(imodelConnection.hilited.subcategories.isEmpty).toBe(true);
+        expect(imodelConnection.hilited.elements.isEmpty).toBe(true);
+        expect(imodelConnection.selectionSet.size).toBe(0);
       });
 
       // test Viewport elements selection => Unified Selection synchronization
-      imodel.selectionSet.replace(elementKeys[2].id);
+      imodelConnection.selectionSet.replace(elementKeys[2].id);
       await waitFor(() => {
-        const selection = Presentation.selection.getSelection(imodel);
+        const selection = Presentation.selection.getSelection(imodelConnection);
         expect(selection.size).toBe(1);
         expect(selection.has(elementKeys[2])).toBe(true);
       });
 
-      imodel.selectionSet.emptyAll();
+      imodelConnection.selectionSet.emptyAll();
       await waitFor(() => {
-        const selection = Presentation.selection.getSelection(imodel);
+        const selection = Presentation.selection.getSelection(imodelConnection);
         expect(selection.isEmpty).toBe(true);
       });
     });

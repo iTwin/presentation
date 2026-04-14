@@ -3,21 +3,21 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Localization.Imports
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
-import { buildTestIModel } from "../../IModelUtils.js";
-import { importSchema } from "../../SchemaUtils.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -31,10 +31,10 @@ describe("Hierarchies", () => {
       });
 
       it("localizes property grouping node labels", async () => {
-        const { imodel, myPhysicalObjectClassName } = await buildTestIModel(async (builder, testName) => {
+        const { imodelConnection, myPhysicalObjectClassName } = await buildTestIModel(async (imodel, testName) => {
           const schema = await importSchema(
             testName,
-            builder,
+            imodel,
             `
               <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
               <ECEntityClass typeName="MyPhysicalObject">
@@ -43,10 +43,10 @@ describe("Hierarchies", () => {
               </ECEntityClass>
             `,
           );
-          const category = insertSpatialCategory({ builder, codeValue: "Category" });
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "Model" });
+          const category = insertSpatialCategory({ imodel, codeValue: "Category" });
+          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Model" });
           insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             classFullName: schema.items.MyPhysicalObject.fullName,
@@ -54,7 +54,7 @@ describe("Hierarchies", () => {
             intProperty: 2,
           });
           insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             classFullName: schema.items.MyPhysicalObject.fullName,
@@ -62,7 +62,7 @@ describe("Hierarchies", () => {
             intProperty: 4,
           });
           insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             classFullName: schema.items.MyPhysicalObject.fullName,
@@ -70,7 +70,7 @@ describe("Hierarchies", () => {
             intProperty: 6,
           });
           insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             classFullName: schema.items.MyPhysicalObject.fullName,
@@ -78,7 +78,7 @@ describe("Hierarchies", () => {
           });
           return { myPhysicalObjectClassName: schema.items.MyPhysicalObject.fullName };
         });
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Localization.PropertyGroupsLocalizationExample
         const hierarchyProvider = createIModelHierarchyProvider({

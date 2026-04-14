@@ -72,11 +72,11 @@ describe("Learning snippets", async () => {
       // set up imodel for the test
       let modelKey: InstanceKey;
       let elementKey: InstanceKey;
-      const { imodel } = await buildTestIModel(async (builder) => {
-        const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
-        modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
+      const { imodelConnection } = await buildTestIModel(async (imodel) => {
+        const categoryKey = insertSpatialCategory({ imodel, fullClassNameSeparator: ":", codeValue: "My Category" });
+        modelKey = insertPhysicalModelWithPartition({ imodel, fullClassNameSeparator: ":", codeValue: "My Model" });
         elementKey = insertPhysicalElement({
-          builder,
+          imodel,
           fullClassNameSeparator: ":",
           userLabel: "My Element",
           modelId: modelKey.id,
@@ -85,7 +85,7 @@ describe("Learning snippets", async () => {
       });
 
       // render the component
-      const { container, getByRole } = render(<MyTree imodel={imodel} />);
+      const { container, getByRole } = render(<MyTree imodel={imodelConnection} />);
       await waitFor(() => getByRole("tree"));
 
       // find & expand the model node
@@ -95,12 +95,12 @@ describe("Learning snippets", async () => {
       const elementNode = await waitFor(() => getNodeByLabel(container, "My Element"));
 
       // test Unified Selection -> Tree selection synchronization
-      act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([modelKey!])));
+      act(() => Presentation.selection.replaceSelection("", imodelConnection, new KeySet([modelKey!])));
       await waitFor(() => {
         expect(isNodeSelectedInTree(modelNode)).toBe(true);
         expect(isNodeSelectedInTree(elementNode)).toBe(false);
       });
-      act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([elementKey!])));
+      act(() => Presentation.selection.replaceSelection("", imodelConnection, new KeySet([elementKey!])));
       await waitFor(() => {
         expect(isNodeSelectedInTree(modelNode)).toBe(false);
         expect(isNodeSelectedInTree(elementNode)).toBe(true);
@@ -109,11 +109,11 @@ describe("Learning snippets", async () => {
       // test Tree selection -> Unified Selection synchronization
       fireEvent.click(modelNode);
       await waitFor(() => {
-        expect(getInstanceKeysInUnifiedSelection(imodel)).toEqual([modelKey]);
+        expect(getInstanceKeysInUnifiedSelection(imodelConnection)).toEqual([modelKey]);
       });
       fireEvent.click(elementNode);
       await waitFor(() => {
-        expect(getInstanceKeysInUnifiedSelection(imodel)).toEqual([elementKey]);
+        expect(getInstanceKeysInUnifiedSelection(imodelConnection)).toEqual([elementKey]);
       });
     });
   });

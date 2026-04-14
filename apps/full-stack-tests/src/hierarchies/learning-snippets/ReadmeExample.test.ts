@@ -5,13 +5,12 @@
 /* eslint-disable no-console */
 /* eslint-disable no-duplicate-imports */
 
-// Test-specific imports should be kept out of extracted code
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@itwin/core-bentley";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccessImports
 import { IModelConnection } from "@itwin/core-frontend";
@@ -19,7 +18,6 @@ import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } fro
 import { createLimitingECSqlQueryExecutor, HierarchyLevelDefinition } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.ReadmeExampleImports
 import {
   createIModelHierarchyProvider,
@@ -31,9 +29,8 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-
-import { initialize, terminate } from "../../IntegrationTests.js";
 import { buildTestIModel } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
 
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccess
 function createIModelAccess(imodel: IModelConnection) {
@@ -141,13 +138,13 @@ async function main() {
 // __PUBLISH_EXTRACT_END__
 
 async function getIModelConnection(): Promise<IModelConnection> {
-  const { imodel } = await buildTestIModel(async (builder) => {
-    const category = insertSpatialCategory({ builder, codeValue: "Test category" });
-    const model = insertPhysicalModelWithPartition({ builder, codeValue: "Test model" });
-    insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "Test element 1" });
-    insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "Test element 2" });
+  const { imodelConnection } = await buildTestIModel(async (imodel) => {
+    const category = insertSpatialCategory({ imodel, codeValue: "Test category" });
+    const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Test model" });
+    insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, userLabel: "Test element 1" });
+    insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, userLabel: "Test element 2" });
   });
-  return imodel;
+  return imodelConnection;
 }
 
 describe("Hierarchies", () => {

@@ -15,7 +15,9 @@ export async function importSchema(
   testNameOrSchemaProps:
     | string
     | { schemaName: string; schemaAlias: string; schemaVersion?: `${string}.${string}.${string}` },
-  imodel: { importSchema: (xml: string) => Promise<void> | void },
+  imodel:
+    | { importSchemaStrings: (xmls: string[]) => Promise<void> }
+    | { importSchema: (xml: string) => Promise<void> | void },
   schemaContentXml: string,
 ) {
   const schemaProps = ((): {
@@ -36,7 +38,11 @@ export async function importSchema(
   })();
 
   const schemaXml = getFullSchemaXml({ ...schemaProps, schemaContentXml });
-  await imodel.importSchema(schemaXml);
+  if ("importSchemaStrings" in imodel) {
+    await imodel.importSchemaStrings([schemaXml]);
+  } else {
+    await imodel.importSchema(schemaXml);
+  }
 
   const parsedSchema = new XMLParser({
     ignoreAttributes: false,

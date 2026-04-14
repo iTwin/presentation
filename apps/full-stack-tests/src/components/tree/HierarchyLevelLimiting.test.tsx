@@ -82,21 +82,21 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      const { imodel } = await buildTestIModel(async (builder) => {
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
-        const modelKeyA = insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
+      const { imodelConnection } = await buildTestIModel(async (imodel) => {
+        const categoryKey = insertSpatialCategory({ imodel, codeValue: "My Category" });
+        const modelKeyA = insertPhysicalModelWithPartition({ imodel, codeValue: "My Model A" });
         for (let i = 0; i < 10; ++i) {
           insertPhysicalElement({
-            builder,
+            imodel,
             userLabel: `A element ${i + 1}`,
             modelId: modelKeyA.id,
             categoryId: categoryKey.id,
           });
         }
-        const modelKeyB = insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
+        const modelKeyB = insertPhysicalModelWithPartition({ imodel, codeValue: "My Model B" });
         for (let i = 0; i < 11; ++i) {
           insertPhysicalElement({
-            builder,
+            imodel,
             userLabel: `B element ${i + 1}`,
             modelId: modelKeyB.id,
             categoryId: categoryKey.id,
@@ -105,7 +105,7 @@ describe("Learning snippets", () => {
       });
 
       // render the component
-      const { container, getByText } = render(<MyTree imodel={imodel} />, { addThemeProvider: true });
+      const { container, getByText } = render(<MyTree imodel={imodelConnection} />, { addThemeProvider: true });
       await waitFor(() => getByRole(container, "tree"));
 
       // find & expand both model nodes

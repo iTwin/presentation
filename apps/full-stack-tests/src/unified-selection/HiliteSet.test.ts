@@ -29,7 +29,7 @@ import type { IModelConnection } from "@itwin/core-frontend";
 import type { SelectableInstanceKey } from "@itwin/unified-selection";
 
 describe("HiliteSet", () => {
-  let iModel: IModelConnection;
+  let imodelConnection: IModelConnection;
 
   beforeAll(async () => {
     await initialize();
@@ -40,7 +40,7 @@ describe("HiliteSet", () => {
   });
 
   async function loadHiliteSet(selectables: Selectables) {
-    const provider = createHiliteSetProvider({ imodelAccess: createIModelAccess(iModel) });
+    const provider = createHiliteSetProvider({ imodelAccess: createIModelAccess(imodelConnection) });
     const iterator = provider.getHiliteSet({ selectables });
 
     const models: string[] = [];
@@ -62,15 +62,15 @@ describe("HiliteSet", () => {
         let subjectKey: SelectableInstanceKey;
         let modelKeys: SelectableInstanceKey[];
 
-        iModel = (
-          await buildTestIModel(async (builder) => {
-            subjectKey = insertSubject({ builder, codeValue: "test subject" });
+        imodelConnection = (
+          await buildTestIModel(async (imodel) => {
+            subjectKey = insertSubject({ imodel, codeValue: "test subject" });
             modelKeys = [
-              insertPhysicalModelWithPartition({ builder, codeValue: "model 1", partitionParentId: subjectKey.id }),
-              insertPhysicalModelWithPartition({ builder, codeValue: "model 2", partitionParentId: subjectKey.id }),
+              insertPhysicalModelWithPartition({ imodel, codeValue: "model 1", partitionParentId: subjectKey.id }),
+              insertPhysicalModelWithPartition({ imodel, codeValue: "model 2", partitionParentId: subjectKey.id }),
             ];
           })
-        ).imodel;
+        ).imodelConnection;
 
         const hiliteSet = await loadHiliteSet(Selectables.create([subjectKey!]));
 
@@ -78,25 +78,25 @@ describe("HiliteSet", () => {
         expect(hiliteSet.models).toEqual(expect.arrayContaining(modelKeys!.map((k) => k.id)));
         expect(hiliteSet.subCategories).toHaveLength(0);
         expect(hiliteSet.elements).toHaveLength(0);
-        expect(iModel.selectionSet.size).toBe(0);
+        expect(imodelConnection.selectionSet.size).toBe(0);
       });
 
       it("hilites models nested deeply under subject", async () => {
         let subjectKey: SelectableInstanceKey;
         let modelKeys: SelectableInstanceKey[];
 
-        iModel = (
-          await buildTestIModel(async (builder) => {
-            subjectKey = insertSubject({ builder, codeValue: "test subject" });
-            const subject2 = insertSubject({ builder, codeValue: "subject 2", parentId: subjectKey.id });
-            const subject3 = insertSubject({ builder, codeValue: "subject 3", parentId: subjectKey.id });
-            const subject4 = insertSubject({ builder, codeValue: "subject 4", parentId: subject3.id });
+        imodelConnection = (
+          await buildTestIModel(async (imodel) => {
+            subjectKey = insertSubject({ imodel, codeValue: "test subject" });
+            const subject2 = insertSubject({ imodel, codeValue: "subject 2", parentId: subjectKey.id });
+            const subject3 = insertSubject({ imodel, codeValue: "subject 3", parentId: subjectKey.id });
+            const subject4 = insertSubject({ imodel, codeValue: "subject 4", parentId: subject3.id });
             modelKeys = [
-              insertPhysicalModelWithPartition({ builder, codeValue: "model 1", partitionParentId: subject2.id }),
-              insertPhysicalModelWithPartition({ builder, codeValue: "model 2", partitionParentId: subject4.id }),
+              insertPhysicalModelWithPartition({ imodel, codeValue: "model 1", partitionParentId: subject2.id }),
+              insertPhysicalModelWithPartition({ imodel, codeValue: "model 2", partitionParentId: subject4.id }),
             ];
           })
-        ).imodel;
+        ).imodelConnection;
         const hiliteSet = await loadHiliteSet(Selectables.create([subjectKey!]));
 
         expect(hiliteSet.models).toHaveLength(modelKeys!.length);
@@ -110,11 +110,11 @@ describe("HiliteSet", () => {
       it("hilites model", async () => {
         let modelKey: SelectableInstanceKey;
 
-        iModel = (
-          await buildTestIModel(async (builder) => {
-            modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+        imodelConnection = (
+          await buildTestIModel(async (imodel) => {
+            modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
           })
-        ).imodel;
+        ).imodelConnection;
 
         const hiliteSet = await loadHiliteSet(Selectables.create([modelKey!]));
 
@@ -122,7 +122,7 @@ describe("HiliteSet", () => {
         expect(hiliteSet.models).toContain(modelKey!.id);
         expect(hiliteSet.subCategories).toHaveLength(0);
         expect(hiliteSet.elements).toHaveLength(0);
-        expect(iModel.selectionSet.size).toBe(0);
+        expect(imodelConnection.selectionSet.size).toBe(0);
       });
     });
 
@@ -131,16 +131,16 @@ describe("HiliteSet", () => {
         let categoryKey: SelectableInstanceKey;
         let subCategoryKeys: SelectableInstanceKey[];
 
-        iModel = (
-          await buildTestIModel(async (builder) => {
-            categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+        imodelConnection = (
+          await buildTestIModel(async (imodel) => {
+            categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
             subCategoryKeys = [
               getDefaultSubcategoryKey(categoryKey.id),
-              insertSubCategory({ builder, codeValue: "sub 1", parentCategoryId: categoryKey.id }),
-              insertSubCategory({ builder, codeValue: "sub 2", parentCategoryId: categoryKey.id }),
+              insertSubCategory({ imodel, codeValue: "sub 1", parentCategoryId: categoryKey.id }),
+              insertSubCategory({ imodel, codeValue: "sub 2", parentCategoryId: categoryKey.id }),
             ];
           })
-        ).imodel;
+        ).imodelConnection;
 
         const hiliteSet = await loadHiliteSet(Selectables.create([categoryKey!]));
 
@@ -153,11 +153,11 @@ describe("HiliteSet", () => {
       it("hilites subcategory", async () => {
         let categoryKey: SelectableInstanceKey;
 
-        iModel = (
-          await buildTestIModel(async (builder) => {
-            categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+        imodelConnection = (
+          await buildTestIModel(async (imodel) => {
+            categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
           })
-        ).imodel;
+        ).imodelConnection;
 
         const subCategoryKey = getDefaultSubcategoryKey(categoryKey!.id);
         const hiliteSet = await loadHiliteSet(Selectables.create([subCategoryKey]));
@@ -172,16 +172,16 @@ describe("HiliteSet", () => {
         let categoryKey: SelectableInstanceKey;
         let subCategoryKeys: SelectableInstanceKey[];
 
-        iModel = (
-          await buildTestIModel(async (builder) => {
-            categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+        imodelConnection = (
+          await buildTestIModel(async (imodel) => {
+            categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
             subCategoryKeys = [
               getDefaultSubcategoryKey(categoryKey.id),
-              insertSubCategory({ builder, codeValue: "sub 1", parentCategoryId: categoryKey.id }),
-              insertSubCategory({ builder, codeValue: "sub 2", parentCategoryId: categoryKey.id }),
+              insertSubCategory({ imodel, codeValue: "sub 1", parentCategoryId: categoryKey.id }),
+              insertSubCategory({ imodel, codeValue: "sub 2", parentCategoryId: categoryKey.id }),
             ];
           })
-        ).imodel;
+        ).imodelConnection;
 
         const hiliteSet = await loadHiliteSet(Selectables.create([categoryKey!, subCategoryKeys![0]]));
 
@@ -197,41 +197,41 @@ describe("HiliteSet", () => {
         let assemblyKey: SelectableInstanceKey;
         let expectedHighlightedElementKeys: SelectableInstanceKey[];
 
-        iModel = (
-          await buildTestIModel(async (builder) => {
-            const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+        imodelConnection = (
+          await buildTestIModel(async (imodel) => {
+            const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
             const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await builder.importSchema(schema);
-            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            await imodel.importSchemaStrings([schema]);
+            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
             assemblyKey = insertPhysicalElement({
-              builder,
+              imodel,
               userLabel: "element 1",
               modelId: modelKey.id,
               categoryId: categoryKey.id,
             });
             const element2 = insertPhysicalElement({
-              builder,
+              imodel,
               userLabel: "element 2",
               modelId: modelKey.id,
               categoryId: categoryKey.id,
               parentId: assemblyKey.id,
             });
             const element3 = insertPhysicalElement({
-              builder,
+              imodel,
               userLabel: "element 3",
               modelId: modelKey.id,
               categoryId: categoryKey.id,
               parentId: assemblyKey.id,
             });
             const element4 = insertPhysicalElement({
-              builder,
+              imodel,
               userLabel: "element 4",
               modelId: modelKey.id,
               categoryId: categoryKey.id,
               parentId: element3.id,
             });
             const element5 = insertPhysicalElement({
-              builder,
+              imodel,
               userLabel: "element 5",
               modelId: modelKey.id,
               categoryId: categoryKey.id,
@@ -239,7 +239,7 @@ describe("HiliteSet", () => {
             });
             expectedHighlightedElementKeys = [assemblyKey, element2, element3, element4, element5];
           })
-        ).imodel;
+        ).imodelConnection;
 
         const hiliteSet = await loadHiliteSet(Selectables.create([assemblyKey!]));
 
@@ -252,20 +252,20 @@ describe("HiliteSet", () => {
       it("hilites leaf element", async () => {
         let elementKey: SelectableInstanceKey;
 
-        iModel = (
-          await buildTestIModel(async (builder) => {
-            const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+        imodelConnection = (
+          await buildTestIModel(async (imodel) => {
+            const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
             const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await builder.importSchema(schema);
-            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            await imodel.importSchemaStrings([schema]);
+            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
             elementKey = insertPhysicalElement({
-              builder,
+              imodel,
               userLabel: "element",
               modelId: modelKey.id,
               categoryId: categoryKey.id,
             });
           })
-        ).imodel;
+        ).imodelConnection;
 
         const hiliteSet = await loadHiliteSet(Selectables.create([elementKey!]));
 
@@ -278,34 +278,19 @@ describe("HiliteSet", () => {
       it("hilites all selected elements", async () => {
         let elementKeys: SelectableInstanceKey[];
 
-        iModel = (
-          await buildTestIModel(async (builder) => {
-            const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+        imodelConnection = (
+          await buildTestIModel(async (imodel) => {
+            const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
             const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await builder.importSchema(schema);
-            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            await imodel.importSchemaStrings([schema]);
+            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
             elementKeys = [
-              insertPhysicalElement({
-                builder,
-                userLabel: "element",
-                modelId: modelKey.id,
-                categoryId: categoryKey.id,
-              }),
-              insertPhysicalElement({
-                builder,
-                userLabel: "element",
-                modelId: modelKey.id,
-                categoryId: categoryKey.id,
-              }),
-              insertPhysicalElement({
-                builder,
-                userLabel: "element",
-                modelId: modelKey.id,
-                categoryId: categoryKey.id,
-              }),
+              insertPhysicalElement({ imodel, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
+              insertPhysicalElement({ imodel, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
+              insertPhysicalElement({ imodel, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
             ];
           })
-        ).imodel;
+        ).imodelConnection;
 
         const hiliteSet = await loadHiliteSet(Selectables.create(elementKeys!));
 
@@ -322,45 +307,45 @@ describe("HiliteSet", () => {
         let physicalElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
 
-        iModel = (
-          await buildTestIModel(async (builder) => {
+        imodelConnection = (
+          await buildTestIModel(async (imodel) => {
             const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await builder.importSchema(schema);
-            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+            await imodel.importSchemaStrings([schema]);
+            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
             const functionalModelKey = insertFunctionalModelWithPartition({
-              builder,
+              imodel,
               codeValue: "test functional model",
             });
-            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
             physicalElement = insertPhysicalElement({
-              builder,
+              imodel,
               userLabel: "element",
               modelId: physicalModelKey.id,
               categoryId: categoryKey.id,
             });
             const physicalElementChild = insertPhysicalElement({
-              builder,
+              imodel,
               userLabel: "child element 1",
               modelId: physicalModelKey.id,
               categoryId: categoryKey.id,
               parentId: physicalElement.id,
             });
             const physicalElementChild2 = insertPhysicalElement({
-              builder,
+              imodel,
               userLabel: "child element 2",
               modelId: physicalModelKey.id,
               categoryId: categoryKey.id,
               parentId: physicalElement.id,
             });
             const physicalElementChildChild = insertPhysicalElement({
-              builder,
+              imodel,
               userLabel: "child 1 child element",
               modelId: physicalModelKey.id,
               categoryId: categoryKey.id,
               parentId: physicalElementChild.id,
             });
             functionalElement = insertFunctionalElement({
-              builder,
+              imodel,
               modelId: functionalModelKey.id,
               representedElementId: physicalElement.id,
               relationshipName: "PhysicalElementFulfillsFunction",
@@ -372,7 +357,7 @@ describe("HiliteSet", () => {
               physicalElementChildChild,
             ];
           })
-        ).imodel;
+        ).imodelConnection;
 
         const hiliteSet = await loadHiliteSet(Selectables.create([functionalElement!]));
 
@@ -387,41 +372,37 @@ describe("HiliteSet", () => {
         let graphicsElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
 
-        iModel = (
-          await buildTestIModel(async (builder) => {
+        imodelConnection = (
+          await buildTestIModel(async (imodel) => {
             const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await builder.importSchema(schema);
-            const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+            await imodel.importSchemaStrings([schema]);
+            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
             const functionalModelKey = insertFunctionalModelWithPartition({
-              builder,
+              imodel,
               codeValue: "test functional model",
             });
-            const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-            graphicsElement = insertDrawingGraphic({
-              builder,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-            });
+            const categoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
+            graphicsElement = insertDrawingGraphic({ imodel, modelId: drawingModelKey.id, categoryId: categoryKey.id });
             const graphicsElementChild = insertDrawingGraphic({
-              builder,
+              imodel,
               modelId: drawingModelKey.id,
               categoryId: categoryKey.id,
               parentId: graphicsElement.id,
             });
             const graphicsElementChild2 = insertDrawingGraphic({
-              builder,
+              imodel,
               modelId: drawingModelKey.id,
               categoryId: categoryKey.id,
               parentId: graphicsElementChild.id,
             });
             const graphicsElementChildChild = insertDrawingGraphic({
-              builder,
+              imodel,
               modelId: drawingModelKey.id,
               categoryId: categoryKey.id,
               parentId: graphicsElementChild.id,
             });
             functionalElement = insertFunctionalElement({
-              builder,
+              imodel,
               modelId: functionalModelKey.id,
               representedElementId: graphicsElement.id,
               relationshipName: "DrawingGraphicRepresentsFunctionalElement",
@@ -433,7 +414,7 @@ describe("HiliteSet", () => {
               graphicsElementChildChild,
             ];
           })
-        ).imodel;
+        ).imodelConnection;
 
         const hiliteSet = await loadHiliteSet(Selectables.create([functionalElement!]));
 
@@ -449,41 +430,41 @@ describe("HiliteSet", () => {
         let groupInformationElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
 
-        iModel = (
-          await buildTestIModel(async (builder) => {
+        imodelConnection = (
+          await buildTestIModel(async (imodel) => {
             const groupModel = insertGroupInformationModelWithPartition({
-              builder,
+              imodel,
               codeValue: "group information model",
             });
             const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await builder.importSchema(schema);
-            const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-            groupInformationElement = insertGroupInformationElement({ builder, modelId: groupModel.id });
+            await imodel.importSchemaStrings([schema]);
+            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
+            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
+            groupInformationElement = insertGroupInformationElement({ imodel, modelId: groupModel.id });
             const physicalElementGroupMember = insertPhysicalElement({
-              builder,
+              imodel,
               userLabel: "child element 1",
               modelId: physicalModelKey.id,
               categoryId: categoryKey.id,
             });
-            builder.insertRelationship({
+            imodel.relationships.insertInstance({
               sourceId: groupInformationElement.id,
               targetId: physicalElementGroupMember.id,
               classFullName: "BisCore.ElementGroupsMembers",
             });
             const physicalElementGroupMember2 = insertPhysicalElement({
-              builder,
+              imodel,
               userLabel: "child element 2",
               modelId: physicalModelKey.id,
               categoryId: categoryKey.id,
             });
-            builder.insertRelationship({
+            imodel.relationships.insertInstance({
               sourceId: groupInformationElement.id,
               targetId: physicalElementGroupMember2.id,
               classFullName: "BisCore.ElementGroupsMembers",
             });
             const physicalElementGroupMemberChild = insertPhysicalElement({
-              builder,
+              imodel,
               userLabel: "child 1 child element",
               modelId: physicalModelKey.id,
               categoryId: categoryKey.id,
@@ -495,7 +476,7 @@ describe("HiliteSet", () => {
               physicalElementGroupMemberChild,
             ];
           })
-        ).imodel;
+        ).imodelConnection;
 
         const hiliteSet = await loadHiliteSet(Selectables.create([groupInformationElement!]));
 

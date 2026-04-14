@@ -5,74 +5,12 @@
 
 import { IModelDb, IModelJsFs, SnapshotDb, StandaloneDb } from "@itwin/core-backend";
 import { OpenMode } from "@itwin/core-bentley";
-import { Code } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Schema, SchemaContext } from "@itwin/ecschema-metadata";
 import { createFileNameFromString, getTestName, setupOutputFileLocation } from "./FilenameUtils.js";
 
 import type { ECDb } from "@itwin/core-backend";
-import type { Id64String } from "@itwin/core-bentley";
-import type {
-  BisCodeSpec,
-  CodeScopeProps,
-  ElementAspectProps,
-  ElementProps,
-  ModelProps,
-  RelationshipProps,
-} from "@itwin/core-common";
 import type { SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
-
-export interface IIModelBuilder {
-  insertModel<TProps extends ModelProps>(props: TProps): Id64String;
-  insertElement<TProps extends ElementProps>(props: TProps): Id64String;
-  insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String;
-  insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String;
-  createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code;
-  importSchema(schemaXml: string): Promise<void>;
-  deleteElement(elementId: Id64String): void;
-  updateElement<TProps extends ElementProps>(props: Partial<Omit<TProps, "id">> & { id: Id64String }): void;
-}
-
-export class TestIModelBuilderImpl implements IIModelBuilder {
-  private _imodel: IModelDb;
-
-  constructor(iModel: IModelDb) {
-    this._imodel = iModel;
-  }
-
-  public insertModel<TProps extends ModelProps>(props: TProps): Id64String {
-    return this._imodel.models.insertModel(props);
-  }
-
-  public insertElement<TProps extends ElementProps>(props: TProps): Id64String {
-    return this._imodel.elements.insertElement(props);
-  }
-
-  public insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String {
-    return this._imodel.elements.insertAspect(props);
-  }
-
-  public insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String {
-    return this._imodel.relationships.insertInstance(props);
-  }
-
-  public deleteElement(elementId: Id64String): void {
-    this._imodel.elements.deleteElement(elementId);
-  }
-
-  public updateElement<TProps extends ElementProps>(props: Partial<Omit<TProps, "id">> & { id: Id64String }): void {
-    this._imodel.elements.updateElement(props);
-  }
-
-  public createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code {
-    const codeSpec = this._imodel.codeSpecs.getByName(codeSpecName);
-    return new Code({ spec: codeSpec.id, scope: scopeModelId, value: codeValue });
-  }
-
-  public async importSchema(schemaXml: string) {
-    await this._imodel.importSchemaStrings([schemaXml]);
-  }
-}
 
 /**
  * Create test iModel and returns a connection to it.
@@ -80,55 +18,58 @@ export class TestIModelBuilderImpl implements IIModelBuilder {
  * **Note:** do not call this function outside `it` block without name. It uses `expect.getState().currentTestName` to determine the test name.
  */
 export async function buildTestIModel<TResult extends {} | void>(
-  cb: (builder: IIModelBuilder, testName: string) => TResult | Promise<TResult>,
-): Promise<TResult & { imodel: TestIModelConnection }>;
+  cb: (imodel: IModelDb, testName: string) => TResult | Promise<TResult>,
+): Promise<TResult & { imodelConnection: TestIModelConnection }>;
 export async function buildTestIModel<TResult extends {} | void>(
   name: string,
-  cb: (builder: IIModelBuilder, testName: string) => TResult | Promise<TResult>,
-): Promise<TResult & { imodel: TestIModelConnection }>;
+  cb: (imodel: IModelDb, testName: string) => TResult | Promise<TResult>,
+): Promise<TResult & { imodelConnection: TestIModelConnection }>;
 export async function buildTestIModel(
-  cb?: (builder: IIModelBuilder, testName: string) => void | Promise<void>,
-): Promise<{ imodel: TestIModelConnection }>;
+  cb?: (imodel: IModelDb, testName: string) => void | Promise<void>,
+): Promise<{ imodelConnection: TestIModelConnection }>;
 export async function buildTestIModel(
   name: string,
-  cb?: (builder: IIModelBuilder, testName: string) => void | Promise<void>,
-): Promise<{ imodel: TestIModelConnection }>;
+  cb?: (imodel: IModelDb, testName: string) => void | Promise<void>,
+): Promise<{ imodelConnection: TestIModelConnection }>;
 export async function buildTestIModel<TResult extends {} | void>(
-  nameOrCb?: string | ((builder: IIModelBuilder, testName: string) => TResult | Promise<TResult>),
-  cb?: (builder: IIModelBuilder, testName: string) => TResult | Promise<TResult>,
-): Promise<TResult & { imodel: TestIModelConnection }> {
+  nameOrCb?: string | ((imodel: IModelDb, testName: string) => TResult | Promise<TResult>),
+  cb?: (imodel: IModelDb, testName: string) => TResult | Promise<TResult>,
+): Promise<TResult & { imodelConnection: TestIModelConnection }> {
   const name = typeof nameOrCb === "string" ? nameOrCb : getTestName();
   const callback = typeof nameOrCb === "function" ? nameOrCb : cb;
   const fileName = createFileNameFromString(`${name}.bim`);
   const outputFile = setupOutputFileLocation(fileName);
   const db = SnapshotDb.createEmpty(outputFile, { rootSubject: { name } });
-  const builder = new TestIModelBuilderImpl(db);
   let result!: TResult;
   try {
     if (callback) {
-      result = await callback(builder, name);
+      result = await callback(db, name);
     }
   } finally {
     db.saveChanges("Created test IModel");
     db.close();
   }
-  return { ...result, imodel: TestIModelConnection.openFile(outputFile) };
+  return { ...result, imodelConnection: TestIModelConnection.openFile(outputFile) };
 }
 
 async function cloneIModel<TResult extends {}>(
   sourceIModelPath: string,
   targetIModelName: string,
-  setup: (db: IIModelBuilder) => Promise<TResult>,
-): Promise<TResult & { imodel: IModelConnection; imodelPath: string }> {
+  setup: (db: IModelDb) => Promise<TResult>,
+): Promise<TResult & { imodelConnection: IModelConnection; imodelPath: string }> {
   const targetIModelPath = setupOutputFileLocation(`${targetIModelName}.bim`);
   IModelJsFs.existsSync(targetIModelPath) && IModelJsFs.unlinkSync(targetIModelPath);
   IModelJsFs.copySync(sourceIModelPath, targetIModelPath);
 
   const imodel = StandaloneDb.openFile(targetIModelPath, OpenMode.ReadWrite);
   try {
-    const res = await setup(new TestIModelBuilderImpl(imodel));
+    const res = await setup(imodel);
     imodel.saveChanges("Updated cloned iModel");
-    return { ...res, imodel: new TestIModelConnection(imodel, targetIModelPath), imodelPath: targetIModelPath };
+    return {
+      ...res,
+      imodelConnection: new TestIModelConnection(imodel, targetIModelPath),
+      imodelPath: targetIModelPath,
+    };
   } catch (e) {
     imodel.close();
     throw e;
@@ -136,12 +77,12 @@ async function cloneIModel<TResult extends {}>(
 }
 
 export async function createChangedIModels<TResultBase extends {}, TResultChangeset1 extends {}>(
-  setupBase: (imodel: IIModelBuilder) => Promise<TResultBase>,
-  setupChangeset1: (imodel: IIModelBuilder, before: TResultBase) => Promise<TResultChangeset1>,
+  setupBase: (imodel: IModelDb) => Promise<TResultBase>,
+  setupChangeset1: (imodel: IModelDb, before: TResultBase) => Promise<TResultChangeset1>,
 ) {
   const testName = getTestName();
   const base = await buildTestIModel(`${testName}-base`, setupBase);
-  const baseIModelPath = base.imodel.filePath;
+  const baseIModelPath = base.imodelConnection.filePath;
   const changeset1 = await cloneIModel(baseIModelPath, `${testName}-changeset1`, async (ecdb) =>
     setupChangeset1(ecdb, base),
   );
@@ -149,8 +90,8 @@ export async function createChangedIModels<TResultBase extends {}, TResultChange
     base,
     changeset1,
     async [Symbol.asyncDispose]() {
-      await base.imodel.close();
-      await changeset1.imodel.close();
+      await base.imodelConnection.close();
+      await changeset1.imodelConnection.close();
     },
   };
 }

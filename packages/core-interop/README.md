@@ -84,12 +84,12 @@ Example:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { IModelConnection } from "@itwin/core-frontend";
+import { SchemaContext } from "@itwin/ecschema-metadata";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 
-const imodel: IModelConnection = getIModelConnection();
-const metricFormatter = createValueFormatter({ schemaContext: imodel.schemaContext, unitSystem: "metric" });
-const imperialFormatter = createValueFormatter({ schemaContext: imodel.schemaContext, unitSystem: "imperial" });
+const schemaContext: SchemaContext = getIModelConnection().schemaContext;
+const metricFormatter = createValueFormatter({ schemaContext, unitSystem: "metric" });
+const imperialFormatter = createValueFormatter({ schemaContext, unitSystem: "imperial" });
 
 // Define the raw value to be formatted
 const value = 1.234;

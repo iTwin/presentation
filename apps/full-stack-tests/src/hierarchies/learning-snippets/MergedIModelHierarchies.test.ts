@@ -3,6 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { BisCodeSpec, Code } from "@itwin/core-common";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedIModelHierarchies.Imports
 import {
   createIModelHierarchyProvider,
@@ -13,17 +20,10 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, EC } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-import { BisCodeSpec } from "@itwin/core-common";
-import {
-  insertPhysicalElement,
-  insertPhysicalModelWithPartition,
-  insertSpatialCategory,
-} from "presentation-test-utilities";
 import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -38,45 +38,49 @@ describe("Hierarchies", () => {
 
       it("creates merged iModel hierarchy", async function () {
         await using changesets = await createChangedIModels(
-          async (builder) => {
-            const model1 = insertPhysicalModelWithPartition({ builder, codeValue: "Model 1" });
-            const category = insertSpatialCategory({ builder, codeValue: "Category" });
+          async (imodel) => {
+            const model1 = insertPhysicalModelWithPartition({ imodel, codeValue: "Model 1" });
+            const category = insertSpatialCategory({ imodel, codeValue: "Category" });
             const element1 = insertPhysicalElement({
-              builder,
+              imodel,
               modelId: model1.id,
               categoryId: category.id,
               codeValue: "Element 1",
             });
             const element2 = insertPhysicalElement({
-              builder,
+              imodel,
               modelId: model1.id,
               categoryId: category.id,
               codeValue: "Element 2",
             });
             const element3 = insertPhysicalElement({
-              builder,
+              imodel,
               modelId: model1.id,
               categoryId: category.id,
               codeValue: "Element 3",
             });
             return { model1, category, element1, element2, element3 };
           },
-          async (builder, base) => {
+          async (imodel, base) => {
             const { element2, ...restKeys } = base;
-            builder.deleteElement(element2.id);
-            builder.updateElement({
+            imodel.elements.deleteElement(element2.id);
+            imodel.elements.updateElement({
               id: base.element3.id,
-              code: builder.createCode(base.model1.id, BisCodeSpec.nullCodeSpec, "Updated element 3"),
+              code: new Code({
+                spec: imodel.codeSpecs.getByName(BisCodeSpec.nullCodeSpec).id,
+                scope: base.model1.id,
+                value: "Updated element 3",
+              }),
             });
             const element4 = insertPhysicalElement({
-              builder,
+              imodel,
               modelId: base.model1.id,
               categoryId: base.category.id,
               codeValue: "Element 4",
             });
-            const model2 = insertPhysicalModelWithPartition({ builder, codeValue: "Model 2" });
+            const model2 = insertPhysicalModelWithPartition({ imodel, codeValue: "Model 2" });
             const element5 = insertPhysicalElement({
-              builder,
+              imodel,
               modelId: model2.id,
               categoryId: base.category.id,
               codeValue: "Element 5",
@@ -90,8 +94,8 @@ describe("Hierarchies", () => {
         // both versions - `base` and `changeset1`. The order is important - we want the changesets to be from oldest to
         // newest.
         const imodels = [
-          { imodelAccess: createIModelAccess(changesets.base.imodel) },
-          { imodelAccess: createIModelAccess(changesets.changeset1.imodel) },
+          { imodelAccess: createIModelAccess(changesets.base.imodelConnection) },
+          { imodelAccess: createIModelAccess(changesets.changeset1.imodelConnection) },
         ];
 
         // Define an utility for creating instance nodes query definitions, that we'll use in our hierarchy definition.

@@ -73,19 +73,19 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      const { imodel } = await buildTestIModel((builder) => {
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
-        const modelKeyA = insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
-        const modelKeyB = insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
+      const { imodelConnection } = await buildTestIModel((imodel) => {
+        const categoryKey = insertSpatialCategory({ imodel, codeValue: "My Category" });
+        const modelKeyA = insertPhysicalModelWithPartition({ imodel, codeValue: "My Model A" });
+        const modelKeyB = insertPhysicalModelWithPartition({ imodel, codeValue: "My Model B" });
         for (let i = 0; i < 2; ++i) {
           insertPhysicalElement({
-            builder,
+            imodel,
             userLabel: `A element ${i + 1}`,
             modelId: modelKeyA.id,
             categoryId: categoryKey.id,
           });
           insertPhysicalElement({
-            builder,
+            imodel,
             userLabel: `B element ${i + 1}`,
             modelId: modelKeyB.id,
             categoryId: categoryKey.id,
@@ -94,7 +94,7 @@ describe("Learning snippets", () => {
       });
 
       // render the component
-      const { container, getByText, rerender } = render(<MyTree imodel={imodel} />);
+      const { container, getByText, rerender } = render(<MyTree imodel={imodelConnection} />);
       await waitFor(() => getByRole(container, "tree"));
 
       // find & expand model A node
@@ -128,7 +128,7 @@ describe("Learning snippets", () => {
       expect(() => getNodeByLabel(container, `B element 2`)).toThrow();
 
       // now try to force-rerender the tree to see how the error is handled at the root nodes' level
-      rerender(<MyTree key={Guid.createValue()} imodel={imodel} />);
+      rerender(<MyTree key={Guid.createValue()} imodel={imodelConnection} />);
       await waitFor(() => getByRole(container, "tree"));
       expect(() => getNodeByLabel(container, `My Model A`)).toThrow();
       expect(() => getNodeByLabel(container, `My Model B`)).toThrow();

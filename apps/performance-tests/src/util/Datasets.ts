@@ -6,6 +6,7 @@
 import fs from "fs";
 import path from "path";
 import {
+  getFullSchemaXml,
   insertDrawingCategory,
   insertDrawingGraphic,
   insertDrawingModelWithPartition,
@@ -162,22 +163,22 @@ export class Datasets {
       `).join("")}
     `;
 
-    await createIModel(name, localPath, async (builder) => {
-      await builder.importSchema(schemaName, schema);
+    await createIModel(name, localPath, async (imodel) => {
+      await imodel.importSchemaStrings([getFullSchemaXml({ schemaName, schemaContentXml: schema })]);
       const { id: categoryId } = insertSpatialCategory({
-        builder,
+        imodel,
         fullClassNameSeparator: ":",
         codeValue: "My Category",
       });
       const { id: modelId } = insertPhysicalModelWithPartition({
-        builder,
+        imodel,
         fullClassNameSeparator: ":",
         codeValue: "My Model",
       });
       for (let groupIdx = 0; groupIdx < numGroups; ++groupIdx) {
         for (let j = 0; j < elementsPerGroup; ++j) {
           insertPhysicalElement({
-            builder,
+            imodel,
             classFullName: `${schemaName}:${defaultClassName}_${groupIdx}` satisfies EC.FullClassName,
             fullClassNameSeparator: ":",
             userLabel: `${defaultUserLabel}_${groupIdx}`,
@@ -200,19 +201,19 @@ export class Datasets {
   private static async createElementIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
 
-    await createIModel(name, localPath, async (builder) => {
+    await createIModel(name, localPath, async (imodel) => {
       const { id: spatialCategoryId } = insertSpatialCategory({
-        builder,
+        imodel,
         fullClassNameSeparator: ":",
         codeValue: "My Category",
       });
       const { id: physicalModelId } = insertPhysicalModelWithPartition({
-        builder,
+        imodel,
         fullClassNameSeparator: ":",
         codeValue: "My Model",
       });
-      const { id: drawingModelId } = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-      const { id: drawingCategoryId } = insertDrawingCategory({ builder, codeValue: "test drawing category" });
+      const { id: drawingModelId } = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
+      const { id: drawingCategoryId } = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
 
       const numberOfGroups = 1000;
       const elementsPerGroup = numElements / numberOfGroups;
@@ -223,14 +224,14 @@ export class Datasets {
 
         for (let j = 0; j < elementsPerGroup / 2; ++j) {
           physicalParentId = insertPhysicalElement({
-            builder,
+            imodel,
             parentId: physicalParentId,
             modelId: physicalModelId,
             categoryId: spatialCategoryId,
             userLabel: `test_element`,
           }).id;
           drawingParentId = insertDrawingGraphic({
-            builder,
+            imodel,
             parentId: drawingParentId,
             modelId: drawingModelId,
             categoryId: drawingCategoryId,
@@ -250,7 +251,7 @@ export class Datasets {
   private static async createSubjectIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
 
-    await createIModel(name, localPath, async (builder) => {
+    await createIModel(name, localPath, async (imodel) => {
       const numberOfGroups = 20;
       const elementsPerGroup = numElements / numberOfGroups;
 
@@ -258,10 +259,10 @@ export class Datasets {
         let parentId: string | undefined;
 
         for (let j = 0; j < elementsPerGroup; ++j) {
-          parentId = insertSubject({ parentId, builder, codeValue: `subject_${i}_${j}`, userLabel: "test_subject" }).id;
+          parentId = insertSubject({ parentId, imodel, codeValue: `subject_${i}_${j}`, userLabel: "test_subject" }).id;
         }
 
-        insertPhysicalModelWithPartition({ builder, codeValue: `model_${i}`, partitionParentId: parentId });
+        insertPhysicalModelWithPartition({ imodel, codeValue: `model_${i}`, partitionParentId: parentId });
       }
     });
 
@@ -273,9 +274,9 @@ export class Datasets {
    */
   private static async createCategoryIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
-    await createIModel(name, localPath, async (builder) => {
+    await createIModel(name, localPath, async (imodel) => {
       const { id: categoryId } = insertSpatialCategory({
-        builder,
+        imodel,
         fullClassNameSeparator: ":",
         codeValue: "My Category",
         userLabel: "test_category",
@@ -283,7 +284,7 @@ export class Datasets {
 
       // Insert `numElements` - 1 subcategories as `insertSpatialCategory` provides one additional subcategory
       for (let i = 0; i < numElements - 1; ++i) {
-        insertSubCategory({ parentCategoryId: categoryId, builder, codeValue: `${i}` });
+        insertSubCategory({ parentCategoryId: categoryId, imodel, codeValue: `${i}` });
       }
     });
 
@@ -302,21 +303,21 @@ export class Datasets {
     const membersPerGroup = 1000;
     const elementsPerMember = numElements / (numGroups * membersPerGroup);
 
-    await createIModel(name, localPath, async (builder) => {
+    await createIModel(name, localPath, async (imodel) => {
       const { id: groupModelId } = insertGroupInformationModelWithPartition({
-        builder,
+        imodel,
         codeValue: "group information model",
       });
-      const { id: modelId } = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+      const { id: modelId } = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
       const { id: categoryId } = insertSpatialCategory({
-        builder,
+        imodel,
         fullClassNameSeparator: ":",
         codeValue: "My Category",
       });
 
       for (let groupIdx = 0; groupIdx < numGroups; ++groupIdx) {
         const { id: groupId } = insertGroupInformationElement({
-          builder,
+          imodel,
           modelId: groupModelId,
           userLabel: "test_group",
         });
@@ -325,9 +326,9 @@ export class Datasets {
           let parentId: string | undefined;
 
           for (let j = 0; j < elementsPerMember; ++j) {
-            parentId = insertPhysicalElement({ builder, parentId, modelId, categoryId }).id;
+            parentId = insertPhysicalElement({ imodel, parentId, modelId, categoryId }).id;
             if (j === 0) {
-              builder.insertRelationship({
+              imodel.relationships.insertInstance({
                 sourceId: groupId,
                 targetId: parentId,
                 classFullName: "BisCore.ElementGroupsMembers",
@@ -350,14 +351,14 @@ export class Datasets {
     console.log(`${numElements} elements: Creating...`);
     const schema = await this.getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
 
-    await createIModel(name, localPath, async (builder) => {
-      await builder.importFullSchema(schema);
-      const { id: physicalModelId } = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+    await createIModel(name, localPath, async (imodel) => {
+      await imodel.importSchemaStrings([schema]);
+      const { id: physicalModelId } = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
       const { id: functionalModelId } = insertFunctionalModelWithPartition({
-        builder,
+        imodel,
         codeValue: "test functional model",
       });
-      const { id: categoryId } = insertSpatialCategory({ builder, codeValue: "test category" });
+      const { id: categoryId } = insertSpatialCategory({ imodel, codeValue: "test category" });
 
       const numberOfGroups = 1000;
       const elementsPerGroup = numElements / numberOfGroups;
@@ -368,14 +369,14 @@ export class Datasets {
 
         for (let j = 0; j < elementsPerGroup; ++j) {
           physicalElementParentId = insertPhysicalElement({
-            builder,
+            imodel,
             parentId: physicalElementParentId,
             modelId: physicalModelId,
             categoryId,
             userLabel: "test_element",
           }).id;
           functionalElementParentId = insertFunctionalElement({
-            builder,
+            imodel,
             parentId: functionalElementParentId,
             modelId: functionalModelId,
             representedElementId: physicalElementParentId,
@@ -401,16 +402,16 @@ export class Datasets {
     console.log(`${numElements} elements: Creating...`);
     const schema = await this.getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
 
-    await createIModel(name, localPath, async (builder) => {
-      await builder.importFullSchema(schema);
+    await createIModel(name, localPath, async (imodel) => {
+      await imodel.importSchemaStrings([schema]);
 
-      const { id: drawingModelId } = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
+      const { id: drawingModelId } = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
       const { id: functionalModelId } = insertFunctionalModelWithPartition({
-        builder,
+        imodel,
         codeValue: "test functional model",
       });
-      const { id: categoryId } = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-      const { id: graphicsElementId } = insertDrawingGraphic({ builder, modelId: drawingModelId, categoryId });
+      const { id: categoryId } = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
+      const { id: graphicsElementId } = insertDrawingGraphic({ imodel, modelId: drawingModelId, categoryId });
 
       const numberOfGroups = 1000;
       const elementsPerGroup = numElements / numberOfGroups;
@@ -423,7 +424,7 @@ export class Datasets {
         for (let j = 0; j < elementsPerGroup; ++j) {
           graphicsElementParentId = insertDrawingGraphic({
             parentId: graphicsElementParentId,
-            builder,
+            imodel,
             categoryId,
             modelId: drawingModelId,
             userLabel: "test_element",
@@ -435,7 +436,7 @@ export class Datasets {
 
           functionalElementParentId = insertFunctionalElement({
             parentId: functionalElementParentId,
-            builder,
+            imodel,
             modelId: functionalModelId,
             // Last functional element in the chain represents the first graphics element, others represent an element outside the chain.
             representedElementId: j === elementsPerGroup - 1 ? firstGraphicsElementId! : graphicsElementId,

@@ -91,16 +91,16 @@ describe("Hierarchies", () => {
       };
 
       it("hides base class groups when there're no siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
+          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
+          const childSubject2 = insertSubject({ imodel, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfNoSiblingsGrouping),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodelConnection, baseClassHideIfNoSiblingsGrouping),
           }),
           expect: [
             NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
@@ -110,36 +110,36 @@ describe("Hierarchies", () => {
       });
 
       it("hides base class groups when there's only 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
+          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
           return { childSubject1 };
         });
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfOneGroupedNodeGrouping),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodelConnection, baseClassHideIfOneGroupedNodeGrouping),
           }),
           expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
         });
       });
 
       it("doesn't hide base class groups when there are siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
           const childSubject1 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A1",
             parentId: IModel.rootSubjectId,
             userLabel: groupName,
           });
-          const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
+          const childPartition2 = insertPhysicalPartition({ imodel, codeValue: "B1", parentId: IModel.rootSubjectId });
           return { childSubject1, childPartition2 };
         });
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfNoSiblingsGrouping),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodelConnection, baseClassHideIfNoSiblingsGrouping),
           }),
           expect: [
             NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2], children: false }),
@@ -153,16 +153,16 @@ describe("Hierarchies", () => {
       });
 
       it("doesn't hide base class groups when there's more than 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
+          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
+          const childSubject2 = insertSubject({ imodel, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfOneGroupedNodeGrouping),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodelConnection, baseClassHideIfOneGroupedNodeGrouping),
           }),
           expect: [
             NodeValidators.createForClassGroupingNode({
@@ -186,16 +186,16 @@ describe("Hierarchies", () => {
       };
 
       it("hides class groups when there're no siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
+          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
+          const childSubject2 = insertSubject({ imodel, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classHideIfNoSiblingsGrouping),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodelConnection, classHideIfNoSiblingsGrouping),
           }),
           expect: [
             NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
@@ -205,31 +205,31 @@ describe("Hierarchies", () => {
       });
 
       it("hides class groups when there's only 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
+          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
           return { childSubject1 };
         });
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classHideIfOneGroupedNodeGrouping),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodelConnection, classHideIfOneGroupedNodeGrouping),
           }),
           expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
         });
       });
 
       it("doesn't hide class groups when there are siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
+          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
+          const childPartition2 = insertPhysicalPartition({ imodel, codeValue: "B1", parentId: IModel.rootSubjectId });
           return { childSubject1, childPartition2 };
         });
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classHideIfNoSiblingsGrouping),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodelConnection, classHideIfNoSiblingsGrouping),
           }),
           expect: [
             NodeValidators.createForClassGroupingNode({
@@ -247,16 +247,16 @@ describe("Hierarchies", () => {
       });
 
       it("doesn't hide class groups when there's more than 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
+          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
+          const childSubject2 = insertSubject({ imodel, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classHideIfOneGroupedNodeGrouping),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodelConnection, classHideIfOneGroupedNodeGrouping),
           }),
           expect: [
             NodeValidators.createForClassGroupingNode({
@@ -279,15 +279,15 @@ describe("Hierarchies", () => {
       const labelHideIfNoSiblingsGrouping: ECSqlSelectClauseGroupingParams = { byLabel: { hideIfNoSiblings: true } };
 
       it("hides label groups when there're no siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
           const childSubject1 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A1",
             parentId: IModel.rootSubjectId,
             userLabel: groupName,
           });
           const childSubject2 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A2",
             parentId: IModel.rootSubjectId,
             userLabel: groupName,
@@ -297,8 +297,12 @@ describe("Hierarchies", () => {
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfNoSiblingsGrouping, "UserLabel"),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(
+              imodelConnection,
+              labelHideIfNoSiblingsGrouping,
+              "UserLabel",
+            ),
           }),
           expect: [
             NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
@@ -308,9 +312,9 @@ describe("Hierarchies", () => {
       });
 
       it("hides label groups when there's only 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
           const childSubject1 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A1",
             parentId: IModel.rootSubjectId,
             userLabel: groupName,
@@ -320,23 +324,27 @@ describe("Hierarchies", () => {
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfOneGroupedNodeGrouping, "UserLabel"),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(
+              imodelConnection,
+              labelHideIfOneGroupedNodeGrouping,
+              "UserLabel",
+            ),
           }),
           expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
         });
       });
 
       it("doesn't hide label groups when there are siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
           const childSubject1 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A1",
             parentId: IModel.rootSubjectId,
             userLabel: groupName,
           });
           const childSubject2 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A2",
             parentId: IModel.rootSubjectId,
             userLabel: "test2",
@@ -346,8 +354,12 @@ describe("Hierarchies", () => {
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfNoSiblingsGrouping, "UserLabel"),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(
+              imodelConnection,
+              labelHideIfNoSiblingsGrouping,
+              "UserLabel",
+            ),
           }),
           expect: [
             NodeValidators.createForLabelGroupingNode({
@@ -363,15 +375,15 @@ describe("Hierarchies", () => {
       });
 
       it("doesn't hide label groups when there's more than 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
           const childSubject1 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A1",
             parentId: IModel.rootSubjectId,
             userLabel: groupName,
           });
           const childSubject2 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A2",
             parentId: IModel.rootSubjectId,
             userLabel: groupName,
@@ -381,8 +393,12 @@ describe("Hierarchies", () => {
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfOneGroupedNodeGrouping, "UserLabel"),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(
+              imodelConnection,
+              labelHideIfOneGroupedNodeGrouping,
+              "UserLabel",
+            ),
           }),
           expect: [
             NodeValidators.createForLabelGroupingNode({
@@ -415,15 +431,15 @@ describe("Hierarchies", () => {
       };
 
       it("hides property groups when there're no siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
           const childSubject1 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A1",
             parentId: IModel.rootSubjectId,
             userLabel: groupName,
           });
           const childSubject2 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A2",
             parentId: IModel.rootSubjectId,
             userLabel: groupName,
@@ -433,8 +449,8 @@ describe("Hierarchies", () => {
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfNoSiblingsGrouping),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodelConnection, propertiesHideIfNoSiblingsGrouping),
           }),
           expect: [
             NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
@@ -444,9 +460,9 @@ describe("Hierarchies", () => {
       });
 
       it("hides property groups when there's only 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
           const childSubject1 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A1",
             parentId: IModel.rootSubjectId,
             userLabel: groupName,
@@ -456,23 +472,23 @@ describe("Hierarchies", () => {
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfOneGroupedNodeGrouping),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodelConnection, propertiesHideIfOneGroupedNodeGrouping),
           }),
           expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
         });
       });
 
       it("doesn't hide property groups when there are siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
           const childSubject1 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A1",
             parentId: IModel.rootSubjectId,
             userLabel: groupName,
           });
           const childSubject2 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A2",
             parentId: IModel.rootSubjectId,
             userLabel: `${groupName}2`,
@@ -482,8 +498,8 @@ describe("Hierarchies", () => {
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfNoSiblingsGrouping),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodelConnection, propertiesHideIfNoSiblingsGrouping),
           }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
@@ -503,15 +519,15 @@ describe("Hierarchies", () => {
       });
 
       it("doesn't hide base class groups when there's more than 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
           const childSubject1 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A1",
             parentId: IModel.rootSubjectId,
             userLabel: groupName,
           });
           const childSubject2 = insertSubject({
-            builder,
+            imodel,
             codeValue: "A2",
             parentId: IModel.rootSubjectId,
             userLabel: groupName,
@@ -521,8 +537,8 @@ describe("Hierarchies", () => {
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfOneGroupedNodeGrouping),
+            imodel: imodelConnection,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodelConnection, propertiesHideIfOneGroupedNodeGrouping),
           }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({

@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
 
-import { afterAll, describe, expect, it, test } from "vitest";
 import {
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
+import { afterAll, describe, expect, it, test } from "vitest";
 import { assert, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createBisInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
@@ -34,63 +34,63 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport
 import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
-import { buildTestIModel } from "../../IModelUtils.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Hierarchy search", () => {
       type IModelAccess = ReturnType<typeof createIModelAccess>;
-      let imodel: IModelConnection;
+      let imodelConnection: IModelConnection;
       let elementIds: { [name: string]: Id64String };
       let elementKeys: { [name: string]: InstanceKey };
 
       test.beforeAll(async (_context, suite) => {
         await initialize();
 
-        const res = await buildTestIModel(suite.fullTestName!, async (builder) => {
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
-          const category = insertSpatialCategory({ builder, codeValue: "category" });
-          const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "A" });
+        const res = await buildTestIModel(suite.fullTestName!, async (imodel) => {
+          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
+          const category = insertSpatialCategory({ imodel, codeValue: "category" });
+          const a = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, userLabel: "A" });
           const b = insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             userLabel: "B",
             parentId: a.id,
           });
           const c = insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             userLabel: "C",
             parentId: b.id,
           });
           const d = insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             userLabel: "D",
             parentId: b.id,
           });
           const e = insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             userLabel: "E",
             parentId: a.id,
           });
           const f = insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             userLabel: "F",
             parentId: e.id,
           });
           const g = insertPhysicalElement({
-            builder,
+            imodel,
             modelId: model.id,
             categoryId: category.id,
             userLabel: "G",
@@ -98,10 +98,13 @@ describe("Hierarchies", () => {
           });
           return { a, b, c, d, e, f, g };
         });
-        const { imodel: _, ...elements } = res;
-        imodel = res.imodel;
+        const { imodelConnection: _, ...elements } = res;
+        imodelConnection = res.imodelConnection;
         elementKeys = Object.entries(elements).reduce(
-          (acc, [name, instanceKey]) => ({ ...acc, [name]: { ...instanceKey, imodelKey: createIModelKey(imodel) } }),
+          (acc, [name, instanceKey]) => ({
+            ...acc,
+            [name]: { ...instanceKey, imodelKey: createIModelKey(imodelConnection) },
+          }),
           {} as { [name: string]: InstanceKey },
         );
         elementIds = Object.entries(elements).reduce(
@@ -165,7 +168,7 @@ describe("Hierarchies", () => {
       // __PUBLISH_EXTRACT_END__
 
       it("creates expected default hierarchy", async () => {
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
@@ -184,7 +187,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates hierarchy searched by label", async () => {
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.FindPathsByLabel
         // Define a function that returns `HierarchySearchTree[]` based on given search string. In this case, we run
         // a query to find matching elements by their `UserLabel` property. Then, we construct paths to the root element using recursive
@@ -217,7 +220,7 @@ describe("Hierarchies", () => {
             searchTreeBuilder.accept({
               path: (JSON.parse(row.Path) as InstanceKey[])
                 .reverse()
-                .map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })),
+                .map((key) => ({ ...key, imodelKey: createIModelKey(imodelConnection) })),
             });
           }
           return searchTreeBuilder.getTree();
@@ -259,7 +262,7 @@ describe("Hierarchies", () => {
       });
 
       it("creates hierarchy searched by target instance ids", async () => {
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.FindPathsByTargetElementId
         // Define a function that returns `HierarchyNodeIdentifiersPath[]` based on given target element IDs. In this case, we run
         // a query to find matching elements by their `ECInstanceId` property. Then, we construct paths to the root element using recursive
@@ -294,7 +297,7 @@ describe("Hierarchies", () => {
             result.push(
               (JSON.parse(row.Path) as InstanceKey[])
                 .reverse()
-                .map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })),
+                .map((key) => ({ ...key, imodelKey: createIModelKey(imodelConnection) })),
             );
           }
           return result;
@@ -329,7 +332,7 @@ describe("Hierarchies", () => {
       });
 
       it("sets auto-expand flag to parent nodes of the revealed search target", async () => {
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.Reveal.SearchPath
         const searchPath: HierarchySearchPath = {
@@ -358,7 +361,7 @@ describe("Hierarchies", () => {
       });
 
       it("sets auto-expand flag to parent nodes of the search target until specified groupingLevel", async () => {
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
           instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
@@ -484,7 +487,7 @@ describe("Hierarchies", () => {
       });
 
       it("sets auto-expand flag to parent nodes of the search target until specified depthInPath", async () => {
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
           instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
@@ -591,7 +594,7 @@ describe("Hierarchies", () => {
       });
 
       it("sets auto-expand flag on search target when `HierarchySearchPathOptions.autoExpand` flag is set", async function () {
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
           instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({

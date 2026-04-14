@@ -21,8 +21,8 @@ import { createIModelHiliteSetProvider } from "@itwin/unified-selection";
 import { createIModelKey } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
 import { createStorage, Selectables } from "@itwin/unified-selection";
-import { initialize, terminate } from "../../IntegrationTests.js";
 import { buildTestIModel } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
 
 describe("Unified selection", () => {
   describe("Learning snippets", () => {
@@ -36,11 +36,11 @@ describe("Unified selection", () => {
       });
 
       it("Basic hilite set provider", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
+          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
+          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
           const elementKey = insertPhysicalElement({
-            builder,
+            imodel,
             userLabel: "test element",
             modelId: modelKey.id,
             categoryId: categoryKey.id,
@@ -48,7 +48,7 @@ describe("Unified selection", () => {
           return { modelKey, categoryKey, elementKey };
         });
 
-        const getIModelConnection = () => imodel;
+        const getIModelConnection = () => imodelConnection;
         const selectables = Selectables.create([keys.elementKey]);
 
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.BasicProvider
@@ -57,7 +57,7 @@ describe("Unified selection", () => {
           imodelAccess: {
             ...schemaProvider,
             ...createCachingECClassHierarchyInspector({ schemaProvider }),
-            ...createECSqlQueryExecutor(imodel),
+            ...createECSqlQueryExecutor(getIModelConnection()),
           },
         });
         const hiliteSetIterator = hiliteProvider.getHiliteSet({ selectables });
@@ -68,11 +68,11 @@ describe("Unified selection", () => {
       });
 
       it("iModel hilite set provider", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
+          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
+          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
           const elementKey = insertPhysicalElement({
-            builder,
+            imodel,
             userLabel: "test element",
             modelId: modelKey.id,
             categoryId: categoryKey.id,
@@ -82,17 +82,17 @@ describe("Unified selection", () => {
 
         const selectionStorage = createStorage();
         selectionStorage.addToSelection({
-          imodelKey: createIModelKey(imodel),
+          imodelKey: createIModelKey(imodelConnection),
           source: "test",
           selectables: [keys.elementKey],
         });
 
         function getIModelByKey(imodelKey: string) {
-          if (imodelKey === createIModelKey(imodel)) {
+          if (imodelKey === createIModelKey(imodelConnection)) {
             return {
-              ...createECSqlQueryExecutor(imodel),
+              ...createECSqlQueryExecutor(imodelConnection),
               ...createCachingECClassHierarchyInspector({
-                schemaProvider: createECSchemaProvider(imodel.schemaContext),
+                schemaProvider: createECSchemaProvider(imodelConnection.schemaContext),
               }),
               key: imodelKey,
             };
@@ -109,7 +109,9 @@ describe("Unified selection", () => {
           // this is called to get iModel accessor based on the iModel key
           imodelProvider: (imodelKey) => getIModelByKey(imodelKey),
         });
-        const hiliteSetIterator = selectionHiliteProvider.getCurrentHiliteSet({ imodelKey: createIModelKey(imodel) });
+        const hiliteSetIterator = selectionHiliteProvider.getCurrentHiliteSet({
+          imodelKey: createIModelKey(imodelConnection),
+        });
         // __PUBLISH_EXTRACT_END__
 
         const hiliteSet = await collect(hiliteSetIterator);

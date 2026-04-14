@@ -3,14 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.CreateValueFormatter.Imports
-import { IModelConnection } from "@itwin/core-frontend";
+import { SchemaContext } from "@itwin/ecschema-metadata";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
-import { importSchema } from "../../SchemaUtils.js";
-import { initialize, terminate } from "../../IntegrationTests.js";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { buildTestIModel } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { importSchema } from "../../SchemaUtils.js";
 
 describe("Core interop", () => {
   describe("Learning snippets", () => {
@@ -24,11 +24,11 @@ describe("Core interop", () => {
       });
 
       it("creates formatter that formats values with units", async function () {
-        const { imodel: testIModel, schema } = await buildTestIModel(async (builder, testName) => {
+        const { imodelConnection, schema } = await buildTestIModel(async (imodel, testName) => {
           return {
             schema: await importSchema(
               testName,
-              builder,
+              imodel,
               `
                 <ECSchemaReference name="Formats" version="01.00.00" alias="f"/>
                 <ECSchemaReference name="Units" version="01.00.03" alias="u"/>
@@ -39,13 +39,13 @@ describe("Core interop", () => {
         });
         const KOQ_SCHEMA_NAME = schema.schemaName;
         function getIModelConnection() {
-          return testIModel;
+          return imodelConnection;
         }
 
         // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.CreateValueFormatter.Example
-        const imodel: IModelConnection = getIModelConnection();
-        const metricFormatter = createValueFormatter({ schemaContext: imodel.schemaContext, unitSystem: "metric" });
-        const imperialFormatter = createValueFormatter({ schemaContext: imodel.schemaContext, unitSystem: "imperial" });
+        const schemaContext: SchemaContext = getIModelConnection().schemaContext;
+        const metricFormatter = createValueFormatter({ schemaContext, unitSystem: "metric" });
+        const imperialFormatter = createValueFormatter({ schemaContext, unitSystem: "imperial" });
 
         // Define the raw value to be formatted
         const value = 1.234;

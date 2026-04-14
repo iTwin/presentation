@@ -33,27 +33,27 @@ describe("Hierarchies", () => {
     it("creates different groups for different labels", async () => {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
-      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+      const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
         const childSubject1 = insertSubject({
-          builder,
+          imodel,
           codeValue: "1",
           parentId: IModel.rootSubjectId,
           userLabel: labelGroupName1,
         });
         const childSubject2 = insertSubject({
-          builder,
+          imodel,
           codeValue: "2",
           parentId: IModel.rootSubjectId,
           userLabel: labelGroupName2,
         });
         const childSubject3 = insertSubject({
-          builder,
+          imodel,
           codeValue: "3",
           parentId: IModel.rootSubjectId,
           userLabel: labelGroupName1,
         });
         const childSubject4 = insertSubject({
-          builder,
+          imodel,
           codeValue: "4",
           parentId: IModel.rootSubjectId,
           userLabel: labelGroupName2,
@@ -61,7 +61,7 @@ describe("Hierarchies", () => {
         return { childSubject1, childSubject2, childSubject3, childSubject4 };
       });
 
-      const imodelAccess = createIModelAccess(imodel);
+      const imodelAccess = createIModelAccess(imodelConnection);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
         instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
@@ -94,7 +94,7 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ imodel: imodelConnection, hierarchy }),
         expect: [
           NodeValidators.createForLabelGroupingNode({
             label: labelGroupName1,
@@ -117,30 +117,30 @@ describe("Hierarchies", () => {
     it("creates different groups for same labels and different groupIds", async () => {
       const descriptionGroupName1 = "test1";
       const descriptionGroupName2 = "test2";
-      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+      const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
         const childSubject1 = insertSubject({
-          builder,
+          imodel,
           codeValue: "1",
           parentId: IModel.rootSubjectId,
           userLabel: "test",
           description: descriptionGroupName1,
         });
         const childSubject2 = insertSubject({
-          builder,
+          imodel,
           codeValue: "2",
           parentId: IModel.rootSubjectId,
           userLabel: "test",
           description: descriptionGroupName2,
         });
         const childSubject3 = insertSubject({
-          builder,
+          imodel,
           codeValue: "3",
           parentId: IModel.rootSubjectId,
           userLabel: "test",
           description: descriptionGroupName1,
         });
         const childSubject4 = insertSubject({
-          builder,
+          imodel,
           codeValue: "4",
           parentId: IModel.rootSubjectId,
           userLabel: "test",
@@ -149,7 +149,7 @@ describe("Hierarchies", () => {
         return { childSubject1, childSubject2, childSubject3, childSubject4 };
       });
 
-      const imodelAccess = createIModelAccess(imodel);
+      const imodelAccess = createIModelAccess(imodelConnection);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
         instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
@@ -182,7 +182,7 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ imodel: imodelConnection, hierarchy }),
         expect: [
           NodeValidators.createForLabelGroupingNode({
             label: "test",
@@ -207,24 +207,24 @@ describe("Hierarchies", () => {
 
   describe("Label merging", () => {
     it("doesn't merge when different groupIds or labels are provided", async () => {
-      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+      const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
         const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
         const childSubject1 = insertSubject({
-          builder,
+          imodel,
           codeValue: "1",
           parentId: rootSubject.id,
           userLabel: "label1",
           description: "description1",
         });
         const childSubject2 = insertSubject({
-          builder,
+          imodel,
           codeValue: "2",
           parentId: rootSubject.id,
           userLabel: "label1",
           description: "description2",
         });
         const childSubject3 = insertSubject({
-          builder,
+          imodel,
           codeValue: "3",
           parentId: rootSubject.id,
           userLabel: "label2",
@@ -233,7 +233,7 @@ describe("Hierarchies", () => {
         return { rootSubject, childSubject1, childSubject2, childSubject3 };
       });
 
-      const imodelAccess = createIModelAccess(imodel);
+      const imodelAccess = createIModelAccess(imodelConnection);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
         instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
@@ -266,7 +266,7 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ imodel: imodelConnection, hierarchy }),
         expect: [
           NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
           NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
@@ -276,14 +276,14 @@ describe("Hierarchies", () => {
     });
 
     it("merges instance nodes with same merge id", async () => {
-      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+      const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
         const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: rootSubject.id });
-        const childSubject2 = insertSubject({ builder, codeValue: "2", parentId: rootSubject.id });
+        const childSubject1 = insertSubject({ imodel, codeValue: "1", parentId: rootSubject.id });
+        const childSubject2 = insertSubject({ imodel, codeValue: "2", parentId: rootSubject.id });
         return { rootSubject, childSubject1, childSubject2 };
       });
 
-      const imodelAccess = createIModelAccess(imodel);
+      const imodelAccess = createIModelAccess(imodelConnection);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
         instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
@@ -316,7 +316,7 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ imodel: imodelConnection, hierarchy }),
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.childSubject1, keys.childSubject2],
@@ -328,15 +328,15 @@ describe("Hierarchies", () => {
     });
 
     it("merges instance nodes from different hidden parent hierarchy levels ", async () => {
-      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+      const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
         const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const visibleSubject1 = insertSubject({ builder, codeValue: "merged", parentId: rootSubject.id });
-        const hiddenSubject = insertSubject({ builder, codeValue: "hide", parentId: rootSubject.id });
-        const visibleSubject2 = insertSubject({ builder, codeValue: "merged", parentId: hiddenSubject.id });
+        const visibleSubject1 = insertSubject({ imodel, codeValue: "merged", parentId: rootSubject.id });
+        const hiddenSubject = insertSubject({ imodel, codeValue: "hide", parentId: rootSubject.id });
+        const visibleSubject2 = insertSubject({ imodel, codeValue: "merged", parentId: hiddenSubject.id });
         return { rootSubject, visibleSubject1, visibleSubject2 };
       });
 
-      const imodelAccess = createIModelAccess(imodel);
+      const imodelAccess = createIModelAccess(imodelConnection);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
         instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
@@ -390,7 +390,7 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ imodel: imodelConnection, hierarchy }),
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.visibleSubject1, keys.visibleSubject2],

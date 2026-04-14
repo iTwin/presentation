@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   insertDrawingCategory,
   insertPhysicalElement,
@@ -12,15 +11,16 @@ import {
   insertRepositoryLink,
   insertSpatialCategory,
 } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.Imports
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
-import { buildTestIModel } from "../../IModelUtils.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -35,23 +35,13 @@ describe("Hierarchies", () => {
 
       describe("By label", () => {
         it("groups by label", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            const category = insertSpatialCategory({ builder, codeValue: "Category" });
-            const model = insertPhysicalModelWithPartition({ builder, codeValue: "Model" });
-            insertPhysicalElement({
-              builder,
-              modelId: model.id,
-              categoryId: category.id,
-              userLabel: "Example element",
-            });
-            insertPhysicalElement({
-              builder,
-              modelId: model.id,
-              categoryId: category.id,
-              userLabel: "Example element",
-            });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            const category = insertSpatialCategory({ imodel, codeValue: "Category" });
+            const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Model" });
+            insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, userLabel: "Example element" });
+            insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, userLabel: "Example element" });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.LabelGroupingExample
           const hierarchyProvider = createIModelHierarchyProvider({
@@ -112,24 +102,24 @@ describe("Hierarchies", () => {
         });
 
         it("merges by label", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            const category = insertSpatialCategory({ builder, codeValue: "Category" });
-            const model = insertPhysicalModelWithPartition({ builder, codeValue: "Model" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            const category = insertSpatialCategory({ imodel, codeValue: "Category" });
+            const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Model" });
             const element1 = insertPhysicalElement({
-              builder,
+              imodel,
               modelId: model.id,
               categoryId: category.id,
               userLabel: "Example element",
             });
             const element2 = insertPhysicalElement({
-              builder,
+              imodel,
               modelId: model.id,
               categoryId: category.id,
               userLabel: "Example element",
             });
             return { element1, element2 };
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.LabelMergingExample
           const hierarchyProvider = createIModelHierarchyProvider({
@@ -180,12 +170,12 @@ describe("Hierarchies", () => {
 
       describe("By class", () => {
         it("groups by node's class", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            const drawingCategory = insertDrawingCategory({ builder, codeValue: "Example drawing category" });
-            const spatialCategory = insertSpatialCategory({ builder, codeValue: "Example spatial category" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            const drawingCategory = insertDrawingCategory({ imodel, codeValue: "Example drawing category" });
+            const spatialCategory = insertSpatialCategory({ imodel, codeValue: "Example spatial category" });
             return { spatialCategory, drawingCategory };
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.ClassGroupingExample
           const hierarchyProvider = createIModelHierarchyProvider({
@@ -252,12 +242,12 @@ describe("Hierarchies", () => {
         });
 
         it("groups by base classes", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            const drawingCategory = insertDrawingCategory({ builder, codeValue: "Example drawing category" });
-            const spatialCategory = insertSpatialCategory({ builder, codeValue: "Example spatial category" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            const drawingCategory = insertDrawingCategory({ imodel, codeValue: "Example drawing category" });
+            const spatialCategory = insertSpatialCategory({ imodel, codeValue: "Example spatial category" });
             return { spatialCategory, drawingCategory };
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.BaseClassGroupingExample
           const hierarchyProvider = createIModelHierarchyProvider({
@@ -327,13 +317,13 @@ describe("Hierarchies", () => {
 
       describe("By properties", () => {
         it("groups by property value", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            insertRepositoryLink({ builder, repositoryLabel: "Example iModel link 1", format: "iModel" });
-            insertRepositoryLink({ builder, repositoryLabel: "Example iModel link 2", format: "iModel" });
-            insertRepositoryLink({ builder, repositoryLabel: "Example DGN link", format: "DGN" });
-            insertRepositoryLink({ builder, repositoryLabel: "Example link with no format" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            insertRepositoryLink({ imodel, repositoryLabel: "Example iModel link 1", format: "iModel" });
+            insertRepositoryLink({ imodel, repositoryLabel: "Example iModel link 2", format: "iModel" });
+            insertRepositoryLink({ imodel, repositoryLabel: "Example DGN link", format: "DGN" });
+            insertRepositoryLink({ imodel, repositoryLabel: "Example link with no format" });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.PropertyValueGroupingExample
           const hierarchyProvider = createIModelHierarchyProvider({
@@ -415,13 +405,13 @@ describe("Hierarchies", () => {
         });
 
         it("groups by property value ranges", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            insertPhysicalMaterial({ builder, userLabel: "Material 1", density: 4 });
-            insertPhysicalMaterial({ builder, userLabel: "Material 2", density: 7 });
-            insertPhysicalMaterial({ builder, userLabel: "Material 3", density: 11 });
-            insertPhysicalMaterial({ builder, userLabel: "Material 4", density: 200 });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            insertPhysicalMaterial({ imodel, userLabel: "Material 1", density: 4 });
+            insertPhysicalMaterial({ imodel, userLabel: "Material 2", density: 7 });
+            insertPhysicalMaterial({ imodel, userLabel: "Material 3", density: 11 });
+            insertPhysicalMaterial({ imodel, userLabel: "Material 4", density: 200 });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.PropertyValueRangesGroupingExample
           const hierarchyProvider = createIModelHierarchyProvider({
@@ -507,13 +497,13 @@ describe("Hierarchies", () => {
       });
 
       it("creates multi-level grouping hierarchy", async () => {
-        const { imodel } = await buildTestIModel(async (builder) => {
-          insertRepositoryLink({ builder, repositoryLabel: "Example iModel link", format: "iModel" });
-          insertRepositoryLink({ builder, repositoryLabel: "Example iModel link", format: "iModel" });
-          insertRepositoryLink({ builder, repositoryLabel: "Example DGN link 1", format: "DGN" });
-          insertRepositoryLink({ builder, repositoryLabel: "Example DGN link 2", format: "DGN" });
+        const { imodelConnection } = await buildTestIModel(async (imodel) => {
+          insertRepositoryLink({ imodel, repositoryLabel: "Example iModel link", format: "iModel" });
+          insertRepositoryLink({ imodel, repositoryLabel: "Example iModel link", format: "iModel" });
+          insertRepositoryLink({ imodel, repositoryLabel: "Example DGN link 1", format: "DGN" });
+          insertRepositoryLink({ imodel, repositoryLabel: "Example DGN link 2", format: "DGN" });
         });
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.MultiLevelGroupingExample
         const hierarchyProvider = createIModelHierarchyProvider({
@@ -634,12 +624,12 @@ describe("Hierarchies", () => {
 
       describe("Customization options", () => {
         it("doesn't return grouping node if there's only one grouped instance and `hideIfOneGroupedNode = true`", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            insertRepositoryLink({ builder, repositoryLabel: "Example link 1" });
-            insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
-            insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            insertRepositoryLink({ imodel, repositoryLabel: "Example link 1" });
+            insertRepositoryLink({ imodel, repositoryLabel: "Example link 2" });
+            insertRepositoryLink({ imodel, repositoryLabel: "Example link 2" });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.HideIfOneGroupedNodeExample
           const hierarchyProvider = createIModelHierarchyProvider({
@@ -693,11 +683,11 @@ describe("Hierarchies", () => {
         });
 
         it("doesn't return grouping node if it has no siblings and `hideIfNoSiblings = true`", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            insertRepositoryLink({ builder, repositoryLabel: "Example link 1" });
-            insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            insertRepositoryLink({ imodel, repositoryLabel: "Example link 1" });
+            insertRepositoryLink({ imodel, repositoryLabel: "Example link 2" });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.HideIfNoSiblingsExample
           const hierarchyProvider = createIModelHierarchyProvider({
@@ -752,11 +742,11 @@ describe("Hierarchies", () => {
         });
 
         it("sets auto-expand flag on grouping nodes when `autoExpand = true`", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            insertRepositoryLink({ builder, repositoryLabel: "Example link 1" });
-            insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            insertRepositoryLink({ imodel, repositoryLabel: "Example link 1" });
+            insertRepositoryLink({ imodel, repositoryLabel: "Example link 2" });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,

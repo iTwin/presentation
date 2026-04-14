@@ -129,7 +129,7 @@ Let's consider two cases - searching by label and by target element ID:
       searchTreeBuilder.accept({
         path: (JSON.parse(row.Path) as InstanceKey[])
           .reverse()
-          .map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })),
+          .map((key) => ({ ...key, imodelKey: createIModelKey(imodelConnection) })),
       });
     }
     return searchTreeBuilder.getTree();
@@ -191,7 +191,7 @@ Let's consider two cases - searching by label and by target element ID:
       result.push(
         (JSON.parse(row.Path) as InstanceKey[])
           .reverse()
-          .map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })),
+          .map((key) => ({ ...key, imodelKey: createIModelKey(imodelConnection) })),
       );
     }
     return result;

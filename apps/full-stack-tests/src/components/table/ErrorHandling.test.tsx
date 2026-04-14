@@ -125,16 +125,16 @@ describe("Learning snippets", () => {
 
       // set up imodel for the test
       let modelKey: InstanceKey | undefined;
-      const { imodel } = await buildTestIModel(async (builder) => {
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
-        modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
-        insertPhysicalElement({ builder, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
-        insertPhysicalElement({ builder, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id });
+      const { imodelConnection } = await buildTestIModel(async (imodel) => {
+        const categoryKey = insertSpatialCategory({ imodel, codeValue: "My Category" });
+        modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "My Model" });
+        insertPhysicalElement({ imodel, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
+        insertPhysicalElement({ imodel, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id });
       });
       assert(modelKey !== undefined);
 
       // render the component
-      const { container, rerender } = render(<MyTable imodel={imodel} keys={new KeySet([modelKey])} />);
+      const { container, rerender } = render(<MyTable imodel={imodelConnection} keys={new KeySet([modelKey])} />);
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1", "My Element 2"]);
 
       // simulate a network error in RPC request
@@ -150,7 +150,7 @@ describe("Learning snippets", () => {
       }
 
       // re-render the component, ensure we now get an error
-      rerender(<MyTable imodel={imodel} keys={new KeySet([modelKey])} />);
+      rerender(<MyTable imodel={imodelConnection} keys={new KeySet([modelKey])} />);
       await ensureHasError(container, "Network error");
       consoleStub.mockRestore();
     });

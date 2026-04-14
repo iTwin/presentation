@@ -26,10 +26,10 @@ import { enableUnifiedSelectionSyncWithIModel, SelectionStorage } from "@itwin/u
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.LegacySelectionManagerSelectionSync.Imports
 import { Presentation } from "@itwin/presentation-frontend";
 // __PUBLISH_EXTRACT_END__
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
 import { isSelectionStorageSupported, stubVirtualization } from "../../Utils.js";
-import { buildTestIModel } from "../../IModelUtils.js";
 
 describe("Unified selection", () => {
   describe("Learning snippets", () => {
@@ -45,7 +45,7 @@ describe("Unified selection", () => {
       stubVirtualization();
 
       it("Basic usage example", async () => {
-        const { imodel } = await buildTestIModel();
+        const { imodelConnection } = await buildTestIModel();
 
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.CreateStorage
         // Create a global selection store (generally, somewhere in main.ts or similar). This store
@@ -83,32 +83,36 @@ describe("Unified selection", () => {
         // __PUBLISH_EXTRACT_END__
 
         // Verify selection is initially empty
-        expect(Selectables.isEmpty(unifiedSelection.getSelection({ imodelKey: createIModelKey(imodel) }))).toBe(true);
+        expect(
+          Selectables.isEmpty(unifiedSelection.getSelection({ imodelKey: createIModelKey(imodelConnection) })),
+        ).toBe(true);
 
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.Example.InteractiveComponent
         // An interactive component that allows selecting elements, representing something in an iModel, may want to
         // add that something to unified selection. For example:
         const elementKey = { className: "BisCore.PhysicalElement", id: "0x1" };
         unifiedSelection.addToSelection({
-          imodelKey: createIModelKey(imodel),
+          imodelKey: createIModelKey(imodelConnection),
           source: "MyComponent",
           selectables: [elementKey],
         });
         // __PUBLISH_EXTRACT_END__
 
         // Verify selection was added
-        expect(Selectables.size(unifiedSelection.getSelection({ imodelKey: createIModelKey(imodel) }))).toBe(1);
+        expect(Selectables.size(unifiedSelection.getSelection({ imodelKey: createIModelKey(imodelConnection) }))).toBe(
+          1,
+        );
       });
 
       it("Unified selection sync with iModel selection", async () => {
         const {
-          imodel,
+          imodelConnection,
           elementKey: { id: geometricElementId },
-        } = await buildTestIModel(async (builder) => {
-          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+        } = await buildTestIModel(async (imodel) => {
+          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
+          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
           const elementKey = insertPhysicalElement({
-            builder,
+            imodel,
             userLabel: "root element",
             modelId: modelKey.id,
             categoryId: categoryKey.id,
@@ -116,7 +120,7 @@ describe("Unified selection", () => {
           return { modelKey, categoryKey, elementKey };
         });
         function useActiveIModelConnection() {
-          return imodel;
+          return imodelConnection;
         }
 
         /**
@@ -172,7 +176,7 @@ describe("Unified selection", () => {
         /** A simple component that listens to selection changes and prints selected items count */
         function SelectedItemsWidget({ selectionStorage }: { selectionStorage: SelectionStorage }) {
           function getSelectedElementsCount(storage: SelectionStorage) {
-            return Selectables.size(storage.getSelection({ imodelKey: createIModelKey(imodel) }));
+            return Selectables.size(storage.getSelection({ imodelKey: createIModelKey(imodelConnection) }));
           }
 
           const [selectedElementsCount, setSelectedElementsCount] = useState(() =>
@@ -197,11 +201,11 @@ describe("Unified selection", () => {
         it("Unified selection sync with legacy SelectionManager", async () => {
           Presentation.terminate();
 
-          const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-            const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+          const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
+            const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
             const elementKey = insertPhysicalElement({
-              builder,
+              imodel,
               userLabel: "root element",
               modelId: modelKey.id,
               categoryId: categoryKey.id,
@@ -217,12 +221,12 @@ describe("Unified selection", () => {
           await Presentation.initialize({ selection: { selectionStorage } });
           // __PUBLISH_EXTRACT_END__
 
-          expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key }))).toBe(true);
+          expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodelConnection.key }))).toBe(true);
 
           // eslint-disable-next-line @typescript-eslint/no-deprecated
-          Presentation.selection.addToSelection("test", imodel, new KeySet([keys.elementKey]));
+          Presentation.selection.addToSelection("test", imodelConnection, new KeySet([keys.elementKey]));
           await waitFor(() => {
-            expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key }))).toBe(1);
+            expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodelConnection.key }))).toBe(1);
           });
         });
       }

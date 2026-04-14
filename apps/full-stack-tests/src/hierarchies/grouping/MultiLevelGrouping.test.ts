@@ -35,35 +35,35 @@ describe("Hierarchies", () => {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
       const description1 = "test description1";
-      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+      const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
         const childSubject1 = insertSubject({
-          builder,
+          imodel,
           codeValue: "A1",
           parentId: IModel.rootSubjectId,
           userLabel: labelGroupName1,
           description: description1,
         });
         const childSubject2 = insertSubject({
-          builder,
+          imodel,
           codeValue: "A2",
           parentId: IModel.rootSubjectId,
           userLabel: labelGroupName1,
           description: description1,
         });
         const childPartition3 = insertPhysicalPartition({
-          builder,
+          imodel,
           codeValue: "B3",
           parentId: IModel.rootSubjectId,
           userLabel: labelGroupName1,
         });
         const childPartition4 = insertPhysicalPartition({
-          builder,
+          imodel,
           codeValue: "B4",
           parentId: IModel.rootSubjectId,
           userLabel: labelGroupName2,
         });
         const childPartition5 = insertPhysicalPartition({
-          builder,
+          imodel,
           codeValue: "B5",
           parentId: IModel.rootSubjectId,
           userLabel: labelGroupName2,
@@ -71,7 +71,7 @@ describe("Hierarchies", () => {
         return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
       });
 
-      const imodelAccess = createIModelAccess(imodel);
+      const imodelAccess = createIModelAccess(imodelConnection);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
         instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
@@ -138,7 +138,7 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy: customHierarchy }),
+        provider: createProvider({ imodel: imodelConnection, hierarchy: customHierarchy }),
         expect: [
           NodeValidators.createForClassGroupingNode({
             label: "Information Content Element",

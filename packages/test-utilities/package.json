@@ -22,6 +22,7 @@
     "./node-hooks/ignore-styles": "./node-hooks/ignore-styles.cjs"
   },
   "devDependencies": {
+    "@itwin/core-backend": "catalog:itwinjs-core-dev",
     "@itwin/core-bentley": "catalog:itwinjs-core-dev",
     "@itwin/core-common": "catalog:itwinjs-core-dev",
     "@itwin/core-geometry": "catalog:itwinjs-core-dev",
