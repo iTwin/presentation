@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776153043281,
+  "lastUpdate": 1776153081236,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -47712,6 +47712,162 @@ window.BENCHMARK_DATA = {
             "value": 69,
             "unit": "ms",
             "extra": "count: 19\nmax: 69\np95: 69\nmedian: 32"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "332463ddece3876760c442b27a5dafac5abb8d56",
+          "message": "[shared] Use more unique alias for label select clause (#1300)\n\n* Use more unique alias for label select clause\n\n* change\n\n* Update apps/full-stack-tests/src/hierarchies/NodesQueryClauseFactory.test.ts\n\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>\n\n* simplify tests\n\n---------\n\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>",
+          "timestamp": "2026-04-14T10:48:01+03:00",
+          "tree_id": "9ad3bf3b0fcff3aa2cad61869e20eba1863eba1b",
+          "url": "https://github.com/iTwin/presentation/commit/332463ddece3876760c442b27a5dafac5abb8d56"
+        },
+        "date": 1776153080209,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "filtering filters with 50000 paths",
+            "value": 9061,
+            "unit": "ms"
+          },
+          {
+            "name": "filtering filters with 50000 paths (P95 of main thread blocks)",
+            "value": 219,
+            "unit": "ms",
+            "extra": "count: 14\nmax: 219\np95: 219\nmedian: 28.5"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 39525,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 44,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 44\np95: 44\nmedian: 25"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 183,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 89,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 36,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 36\np95: 36\nmedian: 36"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 7257,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 98,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 98\np95: 98\nmedian: 96"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 2296,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 347,
+            "unit": "ms",
+            "extra": "count: 11\nmax: 347\np95: 347\nmedian: 31"
+          },
+          {
+            "name": "grouping by label",
+            "value": 10830,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 60,
+            "unit": "ms",
+            "extra": "count: 8\nmax: 60\np95: 60\nmedian: 37.5"
+          },
+          {
+            "name": "grouping by class",
+            "value": 10777,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 39,
+            "unit": "ms",
+            "extra": "count: 8\nmax: 39\np95: 39\nmedian: 33.5"
+          },
+          {
+            "name": "grouping by property",
+            "value": 11172,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 53,
+            "unit": "ms",
+            "extra": "count: 10\nmax: 53\np95: 53\nmedian: 34.5"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 7915,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 59,
+            "unit": "ms",
+            "extra": "count: 20\nmax: 59\np95: 59\nmedian: 32.5"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 27890,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 51,
+            "unit": "ms",
+            "extra": "count: 12\nmax: 51\np95: 51\nmedian: 34"
+          },
+          {
+            "name": "flat 50k elements list",
+            "value": 4798,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 48,
+            "unit": "ms",
+            "extra": "count: 21\nmax: 68\np95: 48\nmedian: 31"
           }
         ]
       }
