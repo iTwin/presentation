@@ -11,6 +11,9 @@ import {
 } from "./ecsql-snippets/ECSqlValueSelectorSnippets.js";
 import { ECClassHierarchyInspector } from "./Metadata.js";
 
+/** @internal */
+export const ALIAS_PREFIX = "pres_";
+
 /**
  * Props for `IInstanceLabelSelectClauseFactory.createSelectClause`.
  * @public
@@ -108,6 +111,7 @@ export function parseInstanceLabel(value: string | undefined): ConcatenatedValue
  * @public
  */
 export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelSelectClauseFactory {
+  const alias = `${ALIAS_PREFIX}c`;
   return {
     async createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string> {
       return `(
@@ -115,14 +119,14 @@ export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelS
           ${concatenate(props, [
             {
               selector: `COALESCE(
-                ${createRawPropertyValueSelector("c", "DisplayLabel")},
-                ${createRawPropertyValueSelector("c", "Name")}
+                ${createRawPropertyValueSelector(alias, "DisplayLabel")},
+                ${createRawPropertyValueSelector(alias, "Name")}
               )`,
             },
             ...createECInstanceIdSuffixSelectors(props.classAlias),
           ])}
-        FROM [meta].[ECClassDef] AS [c]
-        WHERE [c].[ECInstanceId] = ${createRawPropertyValueSelector(props.classAlias, "ECClassId")}
+        FROM [meta].[ECClassDef] AS [${alias}]
+        WHERE [${alias}].[ECInstanceId] = ${createRawPropertyValueSelector(props.classAlias, "ECClassId")}
       )`;
     },
   };
@@ -249,6 +253,7 @@ export function createBisInstanceLabelSelectClauseFactory(
     classHierarchyInspector: props.classHierarchyInspector,
     clauses,
   });
+  const elementAlias = `${ALIAS_PREFIX}e`;
   clauses.push(
     {
       className: "BisCore.GeometricElement",
@@ -278,9 +283,9 @@ export function createBisInstanceLabelSelectClauseFactory(
     {
       className: "BisCore.Model",
       clause: async ({ classAlias, ...rest }) => `(
-        SELECT ${await factory.createSelectClause({ ...rest, classAlias: "e", className: "BisCore.Element" })}
-        FROM [bis].[Element] AS [e]
-        WHERE [e].[ECInstanceId] = ${createRawPropertyValueSelector(classAlias, "ModeledElement", "Id")}
+        SELECT ${await factory.createSelectClause({ ...rest, classAlias: elementAlias, className: "BisCore.Element" })}
+        FROM [bis].[Element] AS [${elementAlias}]
+        WHERE [${elementAlias}].[ECInstanceId] = ${createRawPropertyValueSelector(classAlias, "ModeledElement", "Id")}
       )`,
     },
   );
