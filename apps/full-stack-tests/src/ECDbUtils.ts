@@ -294,11 +294,17 @@ export async function buildTestECDb<TResult extends {} | undefined>(
   const name = createFileNameFromString(testName);
   const outputFilePath = setupOutputFileLocation(name);
   const ecdb = new ECDb();
-  ecdb.createDb(outputFilePath);
-  const res = await setup?.(new ECDbBuilder(ecdb, outputFilePath), testName);
-  ecdb.saveChanges("Created test ECDb");
+  let setupResult: TResult | undefined;
+  try {
+    ecdb.createDb(outputFilePath);
+    setupResult = await setup?.(new ECDbBuilder(ecdb, outputFilePath), testName);
+    ecdb.saveChanges("Created test ECDb");
+  } catch (e) {
+    ecdb[Symbol.dispose]();
+    throw e;
+  }
   return {
-    ...(res as TResult),
+    ...(setupResult as TResult),
     ecdb,
     [Symbol.dispose]() {
       ecdb[Symbol.dispose]();
