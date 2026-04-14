@@ -30,8 +30,8 @@ import { createBisInstanceLabelSelectClauseFactory, EC } from "@itwin/presentati
 // both versions - `base` and `changeset1`. The order is important - we want the changesets to be from oldest to
 // newest.
 const imodels = [
-  { imodelAccess: createIModelAccess(changesets.base.imodel) },
-  { imodelAccess: createIModelAccess(changesets.changeset1.imodel) },
+  { imodelAccess: createIModelAccess(changesets.base.imodelConnection) },
+  { imodelAccess: createIModelAccess(changesets.changeset1.imodelConnection) },
 ];
 
 // Define an utility for creating instance nodes query definitions, that we'll use in our hierarchy definition.

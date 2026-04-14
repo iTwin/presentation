@@ -64,7 +64,7 @@ unifiedSelection.selectionChangeEvent.addListener(({ imodelKey, source, changeTy
 // add that something to unified selection. For example:
 const elementKey = { className: "BisCore.PhysicalElement", id: "0x1" };
 unifiedSelection.addToSelection({
-  imodelKey: createIModelKey(imodel),
+  imodelKey: createIModelKey(imodelConnection),
   source: "MyComponent",
   selectables: [elementKey],
 });
