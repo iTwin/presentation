@@ -39,7 +39,7 @@ describe("Hierarchies", () => {
               </ECEntityClass>
             `,
           );
-          const x = builder.insertInstance(schema.items.X.fullName);
+          const x = builder.insertInstance(s.items.X.fullName);
           return { schema: s, x };
         });
         const { ecdb, schema, ...keys } = setup;
