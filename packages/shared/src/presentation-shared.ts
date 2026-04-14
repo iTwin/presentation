@@ -18,12 +18,10 @@ export type {
 export type { IPrimitiveValueFormatter } from "./shared/Formatting.js";
 export { createDefaultValueFormatter, formatConcatenatedValue } from "./shared/Formatting.js";
 export type { IInstanceLabelSelectClauseFactory } from "./shared/InstanceLabelSelectClauseFactory.js";
-export {
-  createDefaultInstanceLabelSelectClauseFactory,
-  createClassBasedInstanceLabelSelectClauseFactory,
-  createBisInstanceLabelSelectClauseFactory,
-  parseInstanceLabel,
-} from "./shared/InstanceLabelSelectClauseFactory.js";
+export { parseInstanceLabel } from "./shared/InstanceLabelSelectClauseFactory.js";
+export { createDefaultInstanceLabelSelectClauseFactory } from "./shared/instance-label-factory-impls/DefaultInstanceLabelSelectClauseFactory.js";
+export { createClassBasedInstanceLabelSelectClauseFactory } from "./shared/instance-label-factory-impls/ClassBasedInstanceLabelSelectClauseFactory.js";
+export { createBisInstanceLabelSelectClauseFactory } from "./shared/instance-label-factory-impls/BisInstanceLabelSelectClauseFactory.js";
 export type { ILogger, LogFunction, LogLevel } from "./shared/Logging.js";
 export { NOOP_LOGGER } from "./shared/Logging.js";
 export type { ArrayElement, OmitOverUnion, Props } from "./shared/MappedTypes.js";
