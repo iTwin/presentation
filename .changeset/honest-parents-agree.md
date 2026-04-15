@@ -4,4 +4,4 @@
 
 Remove `@stratakit/icons`, `@stratakit/bricks` and `@stratakit/structures` from peer dependencies list.
 
-Only `@stratakit/foundations` is required as a peer dependency, the rest of Stratakit packages can be used as direct dependencies.
+Only `@stratakit/foundations` is required as a peer dependency when using StrataKit components, the rest of `@stratakit` packages can be used as direct dependencies.
