@@ -64,7 +64,6 @@
     "@itwin/presentation-shared": "workspace:*",
     "@itwin/unified-selection": "workspace:^",
     "@stratakit/bricks": "catalog:stratakit",
-    "@stratakit/icons": "catalog:stratakit",
     "@stratakit/structures": "catalog:stratakit",
     "@tanstack/react-virtual": "^3.13.13",
     "classnames": "catalog:react",
@@ -75,11 +74,15 @@
   },
   "peerDependencies": {
     "@stratakit/foundations": "^0.4.7",
+    "@stratakit/icons": "^0.3.1",
     "react": "^17.0 || ^18.0",
     "react-dom": "^17.0 || ^18.0"
   },
   "peerDependenciesMeta": {
     "@stratakit/foundations": {
+      "optional": true
+    },
+    "@stratakit/icons": {
       "optional": true
     }
   },
@@ -88,6 +91,7 @@
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@rolldown/plugin-babel": "catalog:build-tools",
     "@stratakit/foundations": "catalog:stratakit",
+    "@stratakit/icons": "catalog:stratakit",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
     "@testing-library/user-event": "catalog:test-tools",

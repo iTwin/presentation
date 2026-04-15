@@ -2,6 +2,6 @@
 "@itwin/presentation-hierarchies-react": patch
 ---
 
-Remove `@stratakit/icons`, `@stratakit/bricks` and `@stratakit/structures` from peer dependencies list.
+Remove `@stratakit/bricks` and `@stratakit/structures` from peer dependencies list.
 
-Only `@stratakit/foundations` is required as a peer dependency when using StrataKit components, the rest of `@stratakit` packages can be used as direct dependencies.
+Only `@stratakit/foundations` and `@stratakit/icons` are required as peer dependencies when using StrataKit components, the rest of `@stratakit` packages can be used as direct dependencies.
