@@ -40,7 +40,6 @@
     "@itwin/presentation-shared": "workspace:*",
     "@itwin/unified-selection": "workspace:*",
     "@itwin/unified-selection-react": "workspace:*",
-    "@stratakit/bricks": "catalog:stratakit",
     "@stratakit/foundations": "catalog:stratakit",
     "@stratakit/icons": "catalog:stratakit",
     "@stratakit/structures": "catalog:stratakit",
