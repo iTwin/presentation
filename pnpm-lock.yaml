@@ -799,9 +799,6 @@ importers:
       '@rolldown/plugin-babel':
         specifier: catalog:build-tools
         version: 0.2.2(@babel/core@7.29.0)(@babel/runtime@7.28.6)(rolldown@1.0.0-rc.13)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
-      '@stratakit/bricks':
-        specifier: catalog:stratakit
-        version: 0.5.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@stratakit/foundations':
         specifier: catalog:stratakit
         version: 0.4.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1135,6 +1132,12 @@ importers:
       '@itwin/unified-selection':
         specifier: workspace:^
         version: link:../unified-selection
+      '@stratakit/bricks':
+        specifier: catalog:stratakit
+        version: 0.5.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@stratakit/structures':
+        specifier: catalog:stratakit
+        version: 0.5.6(@types/react@18.3.28)(immer@10.2.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
       '@tanstack/react-virtual':
         specifier: ^3.13.13
         version: 3.13.13(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1163,18 +1166,12 @@ importers:
       '@rolldown/plugin-babel':
         specifier: catalog:build-tools
         version: 0.2.2(@babel/core@7.29.0)(@babel/runtime@7.28.6)(rolldown@1.0.0-rc.13)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
-      '@stratakit/bricks':
-        specifier: catalog:stratakit
-        version: 0.5.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@stratakit/foundations':
         specifier: catalog:stratakit
         version: 0.4.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@stratakit/icons':
         specifier: catalog:stratakit
         version: 0.3.1
-      '@stratakit/structures':
-        specifier: catalog:stratakit
-        version: 0.5.6(@types/react@18.3.28)(immer@10.2.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
       '@testing-library/dom':
         specifier: catalog:test-tools
         version: 10.4.1
