@@ -9,8 +9,6 @@
 /**
  * This specification is designed for specifying schema requirements for the [[Ruleset]] or specific
  * presentation rules.
- *
- * @see [Required schema specification reference documentation page]($docs/presentation/RequiredSchemaSpecification.md)
  */
 export interface RequiredSchemaSpecification {
   /** Specifies the schema to whom the requirement is being set. */
@@ -50,7 +48,7 @@ export interface RuleBase {
 
   /**
    * Tells the library that the rule should only be handled if no other rule of the same type was handled previously (based on rule
-   * priorities and definition order). This allows adding fallback rules which can be overriden by higher-priority rules.
+   * priorities and definition order). This allows adding fallback rules which can be overridden by higher-priority rules.
    */
   onlyIfNotHandled?: boolean;
 
@@ -63,8 +61,6 @@ export interface RuleBase {
 /**
  * Instance label override rule provides a way to set instance label to one of its property values,
  * other attributes and/or combination of them.
- *
- * @see [Instance label override reference documentation page]($docs/presentation/customization/InstanceLabelOverride.md)
  */
 export interface InstanceLabelOverride extends RuleBase {
   /** Used for serializing to JSON. */
@@ -98,17 +94,12 @@ type InstanceLabelOverrideValueSpecificationType =
  * Base interface for all [[InstanceLabelOverrideValueSpecification]] implementations.
  */
 export interface InstanceLabelOverrideValueSpecificationBase {
-  /**
-   * Type of the specification
-   * @see InstanceLabelOverrideValueSpecificationType
-   */
+  /** Type of the specification */
   specType: `${InstanceLabelOverrideValueSpecificationType}`;
 }
 
 /**
  * Specification allows creating a label value composited using multiple other specifications.
- *
- * @see [Composite value specification reference documentation page]($docs/presentation/customization/InstanceLabelOverride.md#composite-value-specification)
  */
 export interface InstanceLabelOverrideCompositeValueSpecification extends InstanceLabelOverrideValueSpecificationBase {
   specType: "Composite";
@@ -127,8 +118,6 @@ export interface InstanceLabelOverrideCompositeValueSpecification extends Instan
 
 /**
  * Specification uses property value as the label content.
- *
- * @see [Property value specification reference documentation page]($docs/presentation/customization/InstanceLabelOverride.md#property-value-specification)
  */
 export interface InstanceLabelOverridePropertyValueSpecification extends InstanceLabelOverrideValueSpecificationBase {
   specType: "Property";
@@ -148,8 +137,6 @@ export interface InstanceLabelOverridePropertyValueSpecification extends Instanc
 
 /**
  * Specification uses ECClass name as the label content.
- *
- * @see [Class name value specification reference documentation page]($docs/presentation/customization/InstanceLabelOverride.md#class-name-value-specification)
  */
 export interface InstanceLabelOverrideClassNameSpecification extends InstanceLabelOverrideValueSpecificationBase {
   specType: "ClassName";
@@ -160,8 +147,6 @@ export interface InstanceLabelOverrideClassNameSpecification extends InstanceLab
 
 /**
  * Specification uses ECClass display label as the label content.
- *
- * @see [Class label value specification reference documentation page]($docs/presentation/customization/InstanceLabelOverride.md#class-label-value-specification)
  */
 export interface InstanceLabelOverrideClassLabelSpecification extends InstanceLabelOverrideValueSpecificationBase {
   specType: "ClassLabel";
@@ -169,8 +154,6 @@ export interface InstanceLabelOverrideClassLabelSpecification extends InstanceLa
 
 /**
  * Specification returns ECInstance's briefcase ID in base36 format.
- *
- * @see [BriefcaseId value specification reference documentation page]($docs/presentation/customization/InstanceLabelOverride.md#briefcaseid-value-specification)
  */
 export interface InstanceLabelOverrideBriefcaseIdSpecification extends InstanceLabelOverrideValueSpecificationBase {
   specType: "BriefcaseId";
@@ -178,8 +161,6 @@ export interface InstanceLabelOverrideBriefcaseIdSpecification extends InstanceL
 
 /**
  * Specification returns ECInstance's local ID in base36 format.
- *
- * @see [LocalId value specification reference documentation page]($docs/presentation/customization/InstanceLabelOverride.md#localid-value-specification)
  */
 export interface InstanceLabelOverrideLocalIdSpecification extends InstanceLabelOverrideValueSpecificationBase {
   specType: "LocalId";
@@ -187,8 +168,6 @@ export interface InstanceLabelOverrideLocalIdSpecification extends InstanceLabel
 
 /**
  * Specification uses the specified value as the label content.
- *
- * @see [String value specification reference documentation page]($docs/presentation/customization/InstanceLabelOverride.md#string-value-specification)
  */
 export interface InstanceLabelOverrideStringValueSpecification extends InstanceLabelOverrideValueSpecificationBase {
   specType: "String";
@@ -199,8 +178,6 @@ export interface InstanceLabelOverrideStringValueSpecification extends InstanceL
 
 /**
  * Specification uses label of another related instance as the label content.
- *
- * @see [Related instance label value specification reference documentation page]($docs/presentation/customization/InstanceLabelOverride.md#related-instance-label-value-specification)
  */
 export interface InstanceLabelOverrideRelatedInstanceLabelSpecification extends InstanceLabelOverrideValueSpecificationBase {
   specType: "RelatedInstanceLabel";
@@ -232,17 +209,12 @@ type RelationshipDirection = "Forward" | "Backward";
 
 /**
  * Specification of a single step in [[RelationshipPathSpecification]].
- *
- * @see [Relationship path specification reference documentation page]($docs/presentation/RelationshipPathSpecification.md)
  */
 export interface RelationshipStepSpecification {
   /** This attribute specifies the ECRelationship that should be used to traverse to target class. */
   relationship: SingleSchemaClassSpecification;
 
-  /**
-   * This attribute specifies the direction in which the [[relationship]] should be followed.
-   * @see RelationshipDirection
-   */
+  /** This attribute specifies the direction in which the [[relationship]] should be followed. */
   direction: `${RelationshipDirection}`;
 
   /**
@@ -253,15 +225,11 @@ export interface RelationshipStepSpecification {
 
 /**
  * Relationship path specification is used to define a relationship path to an ECClass.
- *
- * @see [Relationship path specification reference documentation page]($docs/presentation/RelationshipPathSpecification.md)
  */
 export type RelationshipPathSpecification = RelationshipStepSpecification | RelationshipStepSpecification[];
 
 /**
  * This specification is used to point to specific ECClass.
- *
- * @see [Single schema class specification reference documentation page]($docs/presentation/SingleSchemaClassSpecification.md)
  */
 export interface SingleSchemaClassSpecification {
   /**
