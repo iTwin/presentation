@@ -13,15 +13,14 @@ import { afterAll, describe, it, test } from "vitest";
 import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Imports
 import {
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  DefineGenericNodeChildHierarchyLevelProps,
   HierarchyDefinition,
   HierarchyLevelDefinition,
   HierarchyNode,
 } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -52,25 +51,20 @@ describe("Hierarchies", () => {
       it("creates a hierarchy using simple hierarchy definition", async () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Simple
-        const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
             // For root nodes, simply return one generic node
             if (!parentNode) {
               return [{ node: { key: "physical-elements", label: "Physical elements" } }];
             }
             // For the root node, return a query that selects all physical elements
             if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "physical-elements") {
-              const queryClauseFactory = createNodesQueryClauseFactory({
-                imodelAccess,
-                instanceLabelSelectClauseFactory,
-              });
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await queryClauseFactory.createSelectClause({
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
                         ecClassId: { selector: "x.ECClassId" },
                         ecInstanceId: { selector: "x.ECInstanceId" },
                         nodeLabel: { selector: "x.UserLabel" },
@@ -158,21 +152,16 @@ describe("Hierarchies", () => {
           },
         };
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PreProcessNode
-        const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
             // For root nodes, return all physical elements
             if (!parentNode) {
-              const queryClauseFactory = createNodesQueryClauseFactory({
-                imodelAccess,
-                instanceLabelSelectClauseFactory,
-              });
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await queryClauseFactory.createSelectClause({
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
                         ecClassId: { selector: "x.ECClassId" },
                         ecInstanceId: { selector: "x.ECInstanceId" },
                         nodeLabel: { selector: "x.UserLabel" },
@@ -209,21 +198,16 @@ describe("Hierarchies", () => {
       it("uses hierarchy definition's postProcessNode callback", async () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PostProcessNode
-        const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
             // For root nodes, return all physical elements grouped by class
             if (!parentNode) {
-              const queryClauseFactory = createNodesQueryClauseFactory({
-                imodelAccess,
-                instanceLabelSelectClauseFactory,
-              });
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await queryClauseFactory.createSelectClause({
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
                         ecClassId: { selector: "x.ECClassId" },
                         ecInstanceId: { selector: "x.ECInstanceId" },
                         nodeLabel: { selector: "x.UserLabel" },
@@ -269,10 +253,6 @@ describe("Hierarchies", () => {
       it("creates hierarchy using predicate based hierarchy definition", async () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PredicateBasedHierarchyDefinition
-        const queryClauseFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-        });
         const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
           classHierarchyInspector: imodelAccess,
           hierarchy: {
@@ -282,12 +262,14 @@ describe("Hierarchies", () => {
               {
                 // For the root node, return a query that selects all physical elements
                 parentGenericNodePredicate: async (parentKey) => parentKey.id === "physical-elements",
-                definitions: async (): Promise<HierarchyLevelDefinition> => [
+                definitions: async ({
+                  nodeSelectClauseFactory,
+                }: DefineGenericNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
                   {
                     fullClassName: "BisCore.PhysicalElement",
                     query: {
                       ecsql: `
-                      SELECT ${await queryClauseFactory.createSelectClause({
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
                         ecClassId: { selector: "x.ECClassId" },
                         ecInstanceId: { selector: "x.ECInstanceId" },
                         nodeLabel: { selector: "x.UserLabel" },

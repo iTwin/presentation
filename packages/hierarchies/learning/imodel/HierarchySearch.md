@@ -23,7 +23,6 @@ The hierarchy definition that creates such a hierarchy would look like this:
 
 ```ts
 import {
-  createNodesQueryClauseFactory,
   HierarchyDefinition,
   HierarchyLevelDefinition,
   HierarchyNode,
@@ -31,36 +30,32 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { ECSqlBinding } from "@itwin/presentation-shared";
 
-function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinition {
-  const queryClauseFactory = createNodesQueryClauseFactory({
-    imodelAccess,
-    instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-  });
-  const createHierarchyLevelDefinition = async ({
-    whereClause,
-    bindings,
-  }: {
-    whereClause?: string;
-    bindings?: ECSqlBinding[];
-  }): Promise<HierarchyLevelDefinition> => [
-    {
-      fullClassName: "BisCore.PhysicalElement",
-      query: {
-        ecsql: `
-          SELECT ${await queryClauseFactory.createSelectClause({
-            ecClassId: { selector: "this.ECClassId" },
-            ecInstanceId: { selector: "this.ECInstanceId" },
-            nodeLabel: { selector: "this.UserLabel" },
-          })}
-          FROM BisCore.PhysicalElement this
-          ${whereClause ? `WHERE ${whereClause}` : ""}
-        `,
-        bindings,
-      },
-    },
-  ];
+function createHierarchyDefinition(): HierarchyDefinition {
   return {
-    defineHierarchyLevel: async ({ parentNode }) => {
+    defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+      const createHierarchyLevelDefinition = async ({
+        whereClause,
+        bindings,
+      }: {
+        whereClause?: string;
+        bindings?: ECSqlBinding[];
+      }): Promise<HierarchyLevelDefinition> => [
+        {
+          fullClassName: "BisCore.PhysicalElement",
+          query: {
+            ecsql: `
+              SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                ecClassId: { selector: "this.ECClassId" },
+                ecInstanceId: { selector: "this.ECInstanceId" },
+                nodeLabel: { selector: "this.UserLabel" },
+              })}
+              FROM BisCore.PhysicalElement this
+              ${whereClause ? `WHERE ${whereClause}` : ""}
+            `,
+            bindings,
+          },
+        },
+      ];
       if (!parentNode) {
         // For root nodes, return root BisCore.PhysicalElement instances
         return createHierarchyLevelDefinition({ whereClause: "this.Parent IS NULL" });
@@ -220,7 +215,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // Construct a hierarchy provider for the searched hierarchy
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
-  hierarchyDefinition: createHierarchyDefinition(imodelAccess),
+  hierarchyDefinition: createHierarchyDefinition(),
   search: { paths: searchPaths },
 });
 // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".

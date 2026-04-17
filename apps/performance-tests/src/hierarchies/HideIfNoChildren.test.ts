@@ -5,11 +5,7 @@
 
 import { describe, expect } from "vitest";
 import { SnapshotDb } from "@itwin/core-backend";
-import {
-  createNodesQueryClauseFactory,
-  createPredicateBasedHierarchyDefinition,
-} from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createPredicateBasedHierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { Datasets } from "../util/Datasets.js";
 import { run } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
@@ -33,20 +29,18 @@ describe("hide if no children", () => {
       const provider = new StatelessHierarchyProvider({
         iModel,
         getHierarchyFactory: (imodelAccess) => {
-          const queryFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-              classHierarchyInspector: imodelAccess,
-            }),
-          });
           return createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
-              rootNodes: async () => createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
+              rootNodes: async ({ nodeSelectClauseFactory: queryFactory }) =>
+                createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
               childNodes: [
                 {
                   parentInstancesNodePredicate: `BisCore.PhysicalElement`,
-                  definitions: async ({ parentNode }: DefineInstanceNodeChildHierarchyLevelProps) => {
+                  definitions: async ({
+                    parentNode,
+                    nodeSelectClauseFactory: queryFactory,
+                  }: DefineInstanceNodeChildHierarchyLevelProps) => {
                     const depth = parentNode.parentKeys.length + 1;
                     return createPhysicalElementsHierarchyLevelDefinition({
                       queryFactory,
@@ -75,20 +69,18 @@ describe("hide if no children", () => {
       const provider = new StatelessHierarchyProvider({
         iModel,
         getHierarchyFactory: (imodelAccess) => {
-          const queryFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-              classHierarchyInspector: imodelAccess,
-            }),
-          });
           return createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
-              rootNodes: async () => createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
+              rootNodes: async ({ nodeSelectClauseFactory: queryFactory }) =>
+                createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
               childNodes: [
                 {
                   parentInstancesNodePredicate: `BisCore.PhysicalElement`,
-                  definitions: async ({ parentNode }: DefineInstanceNodeChildHierarchyLevelProps) => {
+                  definitions: async ({
+                    parentNode,
+                    nodeSelectClauseFactory: queryFactory,
+                  }: DefineInstanceNodeChildHierarchyLevelProps) => {
                     const depth = parentNode.parentKeys.length + 1;
                     return createPhysicalElementsHierarchyLevelDefinition({
                       queryFactory,

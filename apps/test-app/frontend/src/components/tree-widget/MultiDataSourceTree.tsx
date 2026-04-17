@@ -15,7 +15,6 @@ import {
   createHierarchySearchHelper,
   createIModelHierarchyProvider,
   createLimitingECSqlQueryExecutor,
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
   HierarchyNode,
   HierarchyNodeIdentifier,
@@ -258,21 +257,22 @@ function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
 }
 
 function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }) {
-  const labels = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-  const clauses = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labels });
   return createPredicateBasedHierarchyDefinition({
     classHierarchyInspector: imodelAccess,
     hierarchy: {
-      rootNodes: async () => [
+      rootNodes: async ({ instanceLabelSelectClauseFactory, nodeSelectClauseFactory }) => [
         {
           fullClassName: "BisCore.Subject",
           query: {
             ecsql: `
-              SELECT ${await clauses.createSelectClause({
+              SELECT ${await nodeSelectClauseFactory.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
-                  selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Subject" }),
+                  selector: await instanceLabelSelectClauseFactory.createSelectClause({
+                    classAlias: "this",
+                    className: "BisCore.Subject",
+                  }),
                 },
                 hasChildren: true,
                 extendedData: { nodeType: "root-subject" },
@@ -286,16 +286,22 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
       childNodes: [
         {
           parentInstancesNodePredicate: "BisCore.Subject",
-          definitions: async (): Promise<HierarchyLevelDefinition> => [
+          definitions: async ({
+            instanceLabelSelectClauseFactory,
+            nodeSelectClauseFactory,
+          }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
             {
               fullClassName: "BisCore.Model",
               query: {
                 ecsql: `
-                  SELECT ${await clauses.createSelectClause({
+                  SELECT ${await nodeSelectClauseFactory.createSelectClause({
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
                     nodeLabel: {
-                      selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Model" }),
+                      selector: await instanceLabelSelectClauseFactory.createSelectClause({
+                        classAlias: "this",
+                        className: "BisCore.Model",
+                      }),
                     },
                     grouping: { byClass: true },
                     extendedData: { nodeType: "model" },
@@ -308,16 +314,23 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
         },
         {
           parentInstancesNodePredicate: "BisCore.Model",
-          definitions: async ({ parentNode }: DefineInstanceNodeChildHierarchyLevelProps) => [
+          definitions: async ({
+            parentNode,
+            instanceLabelSelectClauseFactory,
+            nodeSelectClauseFactory,
+          }: DefineInstanceNodeChildHierarchyLevelProps) => [
             {
               fullClassName: "BisCore.Model" as const,
               query: {
                 ecsql: `
-                  SELECT ${await clauses.createSelectClause({
+                  SELECT ${await nodeSelectClauseFactory.createSelectClause({
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
                     nodeLabel: {
-                      selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Model" }),
+                      selector: await instanceLabelSelectClauseFactory.createSelectClause({
+                        classAlias: "this",
+                        className: "BisCore.Model",
+                      }),
                     },
                     grouping: { byClass: true },
                     extendedData: { nodeType: "model" },

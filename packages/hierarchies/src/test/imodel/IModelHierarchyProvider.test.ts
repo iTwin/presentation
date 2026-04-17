@@ -594,10 +594,14 @@ describe("createIModelHierarchyProvider", () => {
       expect(hierarchyDefinition.defineHierarchyLevel).toHaveBeenNthCalledWith(1, {
         imodelAccess,
         parentNode: undefined,
+        instanceLabelSelectClauseFactory: expect.anything(),
+        nodeSelectClauseFactory: expect.anything(),
       });
       expect(hierarchyDefinition.defineHierarchyLevel).toHaveBeenNthCalledWith(2, {
         imodelAccess,
         parentNode: rootNodes[0],
+        instanceLabelSelectClauseFactory: expect.anything(),
+        nodeSelectClauseFactory: expect.anything(),
       });
     });
   });

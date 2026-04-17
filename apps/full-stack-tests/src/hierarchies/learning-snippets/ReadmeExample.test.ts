@@ -21,13 +21,12 @@ import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentati
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.ReadmeExampleImports
 import {
   createIModelHierarchyProvider,
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
   HierarchyNode,
   HierarchyProvider,
 } from "@itwin/presentation-hierarchies";
-import { createIModelInstanceLabelSelectClauseFactory, ECSqlBinding } from "@itwin/presentation-shared";
+import { ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -51,31 +50,22 @@ function createIModelAccess(imodel: IModelConnection) {
 
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.ReadmeExample
 function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider>["imodelAccess"]): HierarchyProvider {
-  // Create a factory for building labels SELECT query clauses according to iModel / BIS conventions
-  const labelsQueryFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
-
-  // Create a factory for building nodes SELECT query clauses in a format understood by the provider
-  const nodesQueryFactory = createNodesQueryClauseFactory({
-    imodelAccess,
-    instanceLabelSelectClauseFactory: labelsQueryFactory,
-  });
-
-  // Then, define the hierarchy
+  // Define the hierarchy
   const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
     classHierarchyInspector: imodelAccess,
     hierarchy: {
       // For root nodes, select all BisCore.GeometricModel3d instances
-      rootNodes: async () => [
+      rootNodes: async ({ instanceLabelSelectClauseFactory, nodeSelectClauseFactory }) => [
         {
           fullClassName: "BisCore.GeometricModel3d",
           query: {
             ecsql: `
               SELECT
-                ${await nodesQueryFactory.createSelectClause({
+                ${await nodeSelectClauseFactory.createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: {
-                    selector: await labelsQueryFactory.createSelectClause({
+                    selector: await instanceLabelSelectClauseFactory.createSelectClause({
                       classAlias: "this",
                       className: "BisCore.GeometricModel3d",
                     }),
@@ -92,17 +82,19 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
           parentInstancesNodePredicate: "BisCore.Model",
           definitions: async ({
             parentNodeInstanceIds,
+            instanceLabelSelectClauseFactory,
+            nodeSelectClauseFactory,
           }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
             {
               fullClassName: "BisCore.Element",
               query: {
                 ecsql: `
                   SELECT
-                    ${await nodesQueryFactory.createSelectClause({
+                    ${await nodeSelectClauseFactory.createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: {
-                        selector: await labelsQueryFactory.createSelectClause({
+                        selector: await instanceLabelSelectClauseFactory.createSelectClause({
                           classAlias: "this",
                           className: "BisCore.Element",
                         }),

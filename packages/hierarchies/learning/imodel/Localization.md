@@ -10,14 +10,12 @@ Example:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 
-const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
-    defineHierarchyLevel: async ({ parentNode }) => {
+    defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
       if (!parentNode) {
         // The hierarchy definition returns nodes for `myPhysicalObjectClassName` element type, grouped by `IntProperty` property value,
         // with options to create groups for out-of-range and unspecified values - labels of those grouping nodes get localized
@@ -26,10 +24,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
             fullClassName: myPhysicalObjectClassName,
             query: {
               ecsql: `
-                SELECT ${await createNodesQueryClauseFactory({
-                  imodelAccess,
-                  instanceLabelSelectClauseFactory,
-                }).createSelectClause({
+                SELECT ${await nodeSelectClauseFactory.createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },

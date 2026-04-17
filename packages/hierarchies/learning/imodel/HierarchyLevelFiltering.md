@@ -14,8 +14,7 @@ To make a generic node filterable, the hierarchy definition should set `supports
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
@@ -35,22 +34,17 @@ To make an instance node filterable, the hierarchy definition should set `suppor
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
-const queryClauseFactory = createNodesQueryClauseFactory({
-  imodelAccess,
-  instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-});
 const hierarchyDefinition: HierarchyDefinition = {
-  async defineHierarchyLevel({ parentNode }) {
+  async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
     if (!parentNode) {
       return [
         {
           fullClassName: "BisCore.PhysicalElement",
           query: {
             ecsql: `
-              SELECT ${await queryClauseFactory.createSelectClause({
+              SELECT ${await nodeSelectClauseFactory.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: { selector: "this.UserLabel" },
@@ -91,18 +85,13 @@ While the library can't do that automatically, it does provide a helper function
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
-const queryClauseFactory = createNodesQueryClauseFactory({
-  imodelAccess,
-  instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-});
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel(props) {
     // `createFilterClauses` function returns `from`, `joins`, and `where` clauses which need to be used in the
     // query in appropriate places
-    const { from, joins, where } = await queryClauseFactory.createFilterClauses({
+    const { from, joins, where } = await props.nodeSelectClauseFactory.createFilterClauses({
       // specify the content class whose instances are used to build nodes - this should
       // generally match the instance whose ECClassId and ECInstanceId are used in the SELECT clause
       contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
@@ -114,7 +103,7 @@ const hierarchyDefinition: HierarchyDefinition = {
         fullClassName: "BisCore.PhysicalElement",
         query: {
           ecsql: `
-            SELECT ${await queryClauseFactory.createSelectClause({
+            SELECT ${await props.nodeSelectClauseFactory.createSelectClause({
               ecClassId: { selector: "this.ECClassId" },
               ecInstanceId: { selector: "this.ECInstanceId" },
               nodeLabel: { selector: "this.UserLabel" },

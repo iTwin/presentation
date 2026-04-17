@@ -7,20 +7,35 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createPredicateBasedHierarchyDefinition } from "../../hierarchies/imodel/PredicateBasedHierarchyDefinition.js";
 import { createIModelAccessStub, createTestGenericNodeKey, createTestSourceGenericNode } from "../Utils.js";
 
+import type { IInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import type {
   DefineHierarchyLevelProps,
   GenericHierarchyNodeDefinition,
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
+import type { NodesQueryClauseFactory } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
 
 describe("createPredicateBasedHierarchyDefinition", () => {
   const imodelKey = "test-imodel-key";
 
   let imodelAccess: ReturnType<typeof createIModelAccessStub> & { imodelKey: string };
+  const instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory = { createSelectClause: vi.fn() };
+  const nodeSelectClauseFactory: NodesQueryClauseFactory = {
+    createSelectClause: vi.fn(),
+    createFilterClauses: vi.fn(),
+  };
+
   beforeEach(() => {
     imodelAccess = { ...createIModelAccessStub(), imodelKey };
   });
+
+  function constProps(): Pick<
+    DefineHierarchyLevelProps,
+    "imodelAccess" | "instanceLabelSelectClauseFactory" | "nodeSelectClauseFactory"
+  > {
+    return { imodelAccess, instanceLabelSelectClauseFactory, nodeSelectClauseFactory };
+  }
 
   it("returns root hierarchy level definition", async () => {
     const rootHierarchyLevel: HierarchyLevelDefinition = [
@@ -31,7 +46,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       classHierarchyInspector: imodelAccess,
       hierarchy: { rootNodes: async () => rootHierarchyLevel, childNodes: [] },
     });
-    const result = await factory.defineHierarchyLevel({ imodelAccess, parentNode: undefined });
+    const result = await factory.defineHierarchyLevel({ ...constProps(), parentNode: undefined });
     expect(result).toEqual(rootHierarchyLevel);
   });
 
@@ -70,7 +85,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    const result = await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
+    const result = await factory.defineHierarchyLevel({ ...constProps(), parentNode: rootNode });
     expect(result).toEqual([...def2, ...def4]);
   });
 
@@ -121,7 +136,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    const result = await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
+    const result = await factory.defineHierarchyLevel({ ...constProps(), parentNode: rootNode });
     expect(result).toEqual([...def2, ...def5]);
   });
 
@@ -147,9 +162,9 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    const result = await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
+    const result = await factory.defineHierarchyLevel({ ...constProps(), parentNode: rootNode });
     expect(spy).toHaveBeenCalledExactlyOnceWith({
-      imodelAccess,
+      ...constProps(),
       parentNodeClassName: "TestSchema.ClassX",
       parentNodeInstanceIds: ["0x1", "0x2"],
       parentNode: rootNode,
@@ -184,9 +199,9 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
+    await factory.defineHierarchyLevel({ ...constProps(), parentNode: rootNode });
     expect(derivedClassDefs).toHaveBeenCalledExactlyOnceWith({
-      imodelAccess,
+      ...constProps(),
       parentNodeClassName: "TestSchema.ClassX",
       parentNodeInstanceIds: ["0x1"],
       parentNode: rootNode,
@@ -204,9 +219,9 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
+    await factory.defineHierarchyLevel({ ...constProps(), parentNode: rootNode });
     expect(baseClassDefs).toHaveBeenCalledExactlyOnceWith({
-      imodelAccess,
+      ...constProps(),
       parentNodeClassName: "TestSchema.ClassX",
       parentNodeInstanceIds: ["0x1"],
       parentNode: rootNode,

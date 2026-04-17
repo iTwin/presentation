@@ -12,10 +12,9 @@ import {
 import { afterAll, describe, expect, it, test } from "vitest";
 import { assert, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { createIModelInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
+import { InstanceKey } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.HierarchyDefinitionImports
 import {
-  createNodesQueryClauseFactory,
   HierarchyDefinition,
   HierarchyLevelDefinition,
   HierarchyNode,
@@ -42,7 +41,6 @@ import { collectHierarchy } from "./Utils.js";
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Hierarchy search", () => {
-      type IModelAccess = ReturnType<typeof createIModelAccess>;
       let imodelConnection: IModelConnection;
       let elementIds: { [name: string]: Id64String };
       let elementKeys: { [name: string]: InstanceKey };
@@ -118,36 +116,32 @@ describe("Hierarchies", () => {
       });
 
       // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.HierarchyDefinition
-      function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinition {
-        const queryClauseFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-        });
-        const createHierarchyLevelDefinition = async ({
-          whereClause,
-          bindings,
-        }: {
-          whereClause?: string;
-          bindings?: ECSqlBinding[];
-        }): Promise<HierarchyLevelDefinition> => [
-          {
-            fullClassName: "BisCore.PhysicalElement",
-            query: {
-              ecsql: `
-                SELECT ${await queryClauseFactory.createSelectClause({
-                  ecClassId: { selector: "this.ECClassId" },
-                  ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: { selector: "this.UserLabel" },
-                })}
-                FROM BisCore.PhysicalElement this
-                ${whereClause ? `WHERE ${whereClause}` : ""}
-              `,
-              bindings,
-            },
-          },
-        ];
+      function createHierarchyDefinition(): HierarchyDefinition {
         return {
-          defineHierarchyLevel: async ({ parentNode }) => {
+          defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+            const createHierarchyLevelDefinition = async ({
+              whereClause,
+              bindings,
+            }: {
+              whereClause?: string;
+              bindings?: ECSqlBinding[];
+            }): Promise<HierarchyLevelDefinition> => [
+              {
+                fullClassName: "BisCore.PhysicalElement",
+                query: {
+                  ecsql: `
+                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      ecClassId: { selector: "this.ECClassId" },
+                      ecInstanceId: { selector: "this.ECInstanceId" },
+                      nodeLabel: { selector: "this.UserLabel" },
+                    })}
+                    FROM BisCore.PhysicalElement this
+                    ${whereClause ? `WHERE ${whereClause}` : ""}
+                  `,
+                  bindings,
+                },
+              },
+            ];
             if (!parentNode) {
               // For root nodes, return root BisCore.PhysicalElement instances
               return createHierarchyLevelDefinition({ whereClause: "this.Parent IS NULL" });
@@ -169,7 +163,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
-          hierarchyDefinition: createHierarchyDefinition(imodelAccess),
+          hierarchyDefinition: createHierarchyDefinition(),
           search: undefined,
         });
         expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
@@ -241,7 +235,7 @@ describe("Hierarchies", () => {
         // Construct a hierarchy provider for the searched hierarchy
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
-          hierarchyDefinition: createHierarchyDefinition(imodelAccess),
+          hierarchyDefinition: createHierarchyDefinition(),
           search: { paths: searchPaths },
         });
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
@@ -312,7 +306,7 @@ describe("Hierarchies", () => {
         // Construct a hierarchy provider for the searched hierarchy
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
-          hierarchyDefinition: createHierarchyDefinition(imodelAccess),
+          hierarchyDefinition: createHierarchyDefinition(),
           search: { paths: await HierarchySearchTree.createFromPathsList(searchPaths) },
         });
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
@@ -347,7 +341,7 @@ describe("Hierarchies", () => {
         // Construct a hierarchy provider for the searched hierarchy
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
-          hierarchyDefinition: createHierarchyDefinition(imodelAccess),
+          hierarchyDefinition: createHierarchyDefinition(),
           search: { paths: await HierarchySearchTree.createFromPathsList([searchPath]) },
         });
 
@@ -360,20 +354,16 @@ describe("Hierarchies", () => {
 
       it("sets auto-expand flag to parent nodes of the search target until specified groupingLevel", async () => {
         const imodelAccess = createIModelAccess(imodelConnection);
-        const queryClauseFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-        });
         // Define a hierarchy such that all elements except root are grouped by label.
         const hierarchyDefinition: HierarchyDefinition = {
-          defineHierarchyLevel: async ({ parentNode }) => {
+          defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
             if (!parentNode) {
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await queryClauseFactory.createSelectClause({
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
                         ecClassId: { selector: "this.ECClassId" },
                         ecInstanceId: { selector: "this.ECInstanceId" },
                         nodeLabel: { selector: "this.UserLabel" },
@@ -392,7 +382,7 @@ describe("Hierarchies", () => {
                 fullClassName: "BisCore.PhysicalElement",
                 query: {
                   ecsql: `
-                    SELECT ${await queryClauseFactory.createSelectClause({
+                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: { selector: "this.UserLabel" },
@@ -484,20 +474,16 @@ describe("Hierarchies", () => {
 
       it("sets auto-expand flag to parent nodes of the search target until specified depthInPath", async () => {
         const imodelAccess = createIModelAccess(imodelConnection);
-        const queryClauseFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-        });
         // Define a hierarchy such that all elements except root are grouped by label.
         const hierarchyDefinition: HierarchyDefinition = {
-          defineHierarchyLevel: async ({ parentNode }) => {
+          defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
             if (!parentNode) {
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await queryClauseFactory.createSelectClause({
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
                         ecClassId: { selector: "this.ECClassId" },
                         ecInstanceId: { selector: "this.ECInstanceId" },
                         nodeLabel: { selector: "this.UserLabel" },
@@ -516,7 +502,7 @@ describe("Hierarchies", () => {
                 fullClassName: "BisCore.PhysicalElement",
                 query: {
                   ecsql: `
-                    SELECT ${await queryClauseFactory.createSelectClause({
+                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: { selector: "this.UserLabel" },
@@ -589,20 +575,16 @@ describe("Hierarchies", () => {
 
       it("sets auto-expand flag on search target when `HierarchySearchPathOptions.autoExpand` flag is set", async function () {
         const imodelAccess = createIModelAccess(imodelConnection);
-        const queryClauseFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-        });
         // Define a hierarchy such that all elements except root are grouped by label.
         const hierarchyDefinition: HierarchyDefinition = {
-          defineHierarchyLevel: async ({ parentNode }) => {
+          defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
             if (!parentNode) {
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await queryClauseFactory.createSelectClause({
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
                         ecClassId: { selector: "this.ECClassId" },
                         ecInstanceId: { selector: "this.ECInstanceId" },
                         nodeLabel: { selector: "this.UserLabel" },
@@ -621,7 +603,7 @@ describe("Hierarchies", () => {
                 fullClassName: "BisCore.PhysicalElement",
                 query: {
                   ecsql: `
-                    SELECT ${await queryClauseFactory.createSelectClause({
+                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: { selector: "this.UserLabel" },

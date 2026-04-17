@@ -11,7 +11,7 @@
 // import { IModelConnection } from "@itwin/core-frontend";
 // import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 // import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-// import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+// import { createLimitingECSqlQueryExecutor, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 // // __PUBLISH_EXTRACT_END__
 // // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.SelectionStorage.Imports
 // import { TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
@@ -19,7 +19,7 @@
 // import { useEffect, useState } from "react";
 // // __PUBLISH_EXTRACT_END__
 // // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.CustomTreeExample.Imports
-// import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
+// import { Props } from "@itwin/presentation-shared";
 // // __PUBLISH_EXTRACT_END__
 // import { buildIModel } from "../../IModelUtils.js";
 // import { initialize, terminate } from "../../IntegrationTests.js";
@@ -84,23 +84,19 @@
 //         type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
 
 //         // The hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all `BisCore.PhysicalModel` instances
-//         function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }): HierarchyDefinition {
-//           // Create a factory for building labels SELECT query clauses according to BIS conventions
-//           const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-//           // Create a factory for building nodes SELECT query clauses in a format understood by the provider
-//           const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsQueryFactory });
+//         function getHierarchyDefinition(): HierarchyDefinition {
 //           return {
-//             defineHierarchyLevel: async () => [
+//             defineHierarchyLevel: async ({ instanceLabelSelectClauseFactory, nodeSelectClauseFactory }) => [
 //               {
 //                 fullClassName: "BisCore.PhysicalModel",
 //                 query: {
 //                   ecsql: `
 //                     SELECT
-//                       ${await nodesQueryFactory.createSelectClause({
+//                       ${await nodeSelectClauseFactory.createSelectClause({
 //                         ecClassId: { selector: "this.ECClassId" },
 //                         ecInstanceId: { selector: "this.ECInstanceId" },
 //                         nodeLabel: {
-//                           selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
+//                           selector: await instanceLabelSelectClauseFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
 //                         },
 //                         hasChildren: false,
 //                       })}

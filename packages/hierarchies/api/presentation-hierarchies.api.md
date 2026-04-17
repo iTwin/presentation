@@ -97,6 +97,8 @@ export interface DefineHierarchyLevelProps {
         imodelKey: string;
     };
     instanceFilter?: GenericInstanceFilter;
+    instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
+    nodeSelectClauseFactory: NodesQueryClauseFactory;
     parentNode: HierarchyDefinitionParentNode | undefined;
 }
 

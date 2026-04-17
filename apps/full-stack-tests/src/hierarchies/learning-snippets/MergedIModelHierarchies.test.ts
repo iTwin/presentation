@@ -14,11 +14,10 @@ import { BisCodeSpec, Code } from "@itwin/core-common";
 import {
   createIModelHierarchyProvider,
   createMergedIModelHierarchyProvider,
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
 } from "@itwin/presentation-hierarchies";
-import { createIModelInstanceLabelSelectClauseFactory, EC } from "@itwin/presentation-shared";
+import { EC } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -100,29 +99,27 @@ describe("Hierarchies", () => {
 
         // Define an utility for creating instance nodes query definitions, that we'll use in our hierarchy definition.
         async function createInstanceNodesQueryDefinition({
-          imodelAccess,
+          instanceLabelSelectClauseFactory,
+          nodeSelectClauseFactory,
           fullClassName,
           whereClauseFactory,
-        }: {
-          imodelAccess: DefineInstanceNodeChildHierarchyLevelProps["imodelAccess"];
-          fullClassName: EC.FullClassName;
-          whereClauseFactory?: (props: { alias: string }) => Promise<string>;
-        }) {
-          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
-          const queryClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
+        }: Pick<
+          DefineInstanceNodeChildHierarchyLevelProps,
+          "instanceLabelSelectClauseFactory" | "nodeSelectClauseFactory"
+        > & { fullClassName: EC.FullClassName; whereClauseFactory?: (props: { alias: string }) => Promise<string> }) {
           const whereClause = whereClauseFactory ? await whereClauseFactory({ alias: "this" }) : undefined;
           return {
             fullClassName,
             query: {
               ecsql: `
-                SELECT ${await queryClauseFactory.createSelectClause({
+                SELECT ${await nodeSelectClauseFactory.createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: {
-                    selector: await labelsFactory.createSelectClause({ classAlias: "this", className: fullClassName }),
+                    selector: await instanceLabelSelectClauseFactory.createSelectClause({
+                      classAlias: "this",
+                      className: fullClassName,
+                    }),
                   },
                 })}
                 FROM ${fullClassName} AS this
@@ -139,21 +136,18 @@ describe("Hierarchies", () => {
           // ensures we can find all classes even if they were not present in the base iModel
           classHierarchyInspector: imodels[imodels.length - 1].imodelAccess,
           hierarchy: {
-            rootNodes: async ({ imodelAccess }) => [
-              await createInstanceNodesQueryDefinition({ imodelAccess, fullClassName: "BisCore.PhysicalModel" }),
+            rootNodes: async (props) => [
+              await createInstanceNodesQueryDefinition({ ...props, fullClassName: "BisCore.PhysicalModel" }),
             ],
             childNodes: [
               {
                 parentInstancesNodePredicate: "BisCore.PhysicalModel",
-                definitions: async ({
-                  imodelAccess,
-                  parentNodeInstanceIds,
-                }: DefineInstanceNodeChildHierarchyLevelProps) => [
+                definitions: async (props: DefineInstanceNodeChildHierarchyLevelProps) => [
                   await createInstanceNodesQueryDefinition({
-                    imodelAccess,
+                    ...props,
                     fullClassName: "BisCore.PhysicalElement",
                     whereClauseFactory: async ({ alias }) =>
-                      `${alias}.Model.Id IN (${parentNodeInstanceIds.join(", ")})`,
+                      `${alias}.Model.Id IN (${props.parentNodeInstanceIds.join(", ")})`,
                   }),
                 ],
               },
