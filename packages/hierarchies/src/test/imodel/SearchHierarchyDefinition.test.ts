@@ -452,6 +452,9 @@ describe("SearchHierarchyDefinition", () => {
     });
 
     it("skips instance definitions with non-matching class", async () => {
+      stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Class" });
+      stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Other" });
+
       const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema:Other", id: "0x1" } }];
       const instanceDef: InstanceNodesQueryDefinition = {
         fullClassName: "Schema:Class",
