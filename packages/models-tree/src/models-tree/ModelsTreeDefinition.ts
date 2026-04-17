@@ -30,7 +30,7 @@ import {
   ProcessedHierarchyNode,
   RowsLimitExceededError,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 import { ModelsTreeIdsCache } from "./ModelsTreeIdsCache.js";
 
 import type { Observable, ObservableInput } from "rxjs";
@@ -96,7 +96,7 @@ export interface ElementsGroupInfo {
 }
 
 interface ModelsTreeInstanceKeyPathsBaseProps {
-  imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
+  imodelAccess: ECClassHierarchyInspector & ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsCache?: ModelsTreeIdsCache;
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
   limit?: number | "unbounded";
@@ -167,8 +167,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     this._queryExecutor = props.imodelAccess;
     this._hierarchyConfig = props.hierarchyConfig ?? defaultHierarchyConfiguration;
     this._idsCache = props.idsCache ?? new ModelsTreeIdsCache(props.imodelAccess, this._hierarchyConfig);
-    this._nodeLabelSelectClauseFactory = createBisInstanceLabelSelectClauseFactory({
-      classHierarchyInspector: props.imodelAccess,
+    this._nodeLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({
+      imodelAccess: props.imodelAccess,
     });
     this._selectQueryFactory = createNodesQueryClauseFactory({
       imodelAccess: props.imodelAccess,
@@ -562,7 +562,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
 
   public static async createInstanceKeyPaths(props: ModelsTreeInstanceKeyPathsProps) {
     if (ModelsTreeInstanceKeyPathsProps.isLabelProps(props)) {
-      const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: props.imodelAccess });
+      const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess });
       return createInstanceKeyPathsFromInstanceLabel({ ...props, labelsFactory });
     }
     return createInstanceKeyPathsFromTargetItems(props);

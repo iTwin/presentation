@@ -5,7 +5,7 @@
 
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { createNodesQueryClauseFactory, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { buildTestECDb } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { importSchema } from "../../SchemaUtils.js";
@@ -49,9 +49,7 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(db);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
+        instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {

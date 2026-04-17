@@ -22,6 +22,7 @@ export { parseInstanceLabel } from "./shared/InstanceLabelSelectClauseFactory.js
 export { createDefaultInstanceLabelSelectClauseFactory } from "./shared/instance-label-factory-impls/DefaultInstanceLabelSelectClauseFactory.js";
 export { createClassBasedInstanceLabelSelectClauseFactory } from "./shared/instance-label-factory-impls/ClassBasedInstanceLabelSelectClauseFactory.js";
 export { createBisInstanceLabelSelectClauseFactory } from "./shared/instance-label-factory-impls/BisInstanceLabelSelectClauseFactory.js";
+export { createIModelInstanceLabelSelectClauseFactory } from "./shared/instance-label-factory-impls/IModelInstanceLabelSelectClauseFactory.js";
 export type { ILogger, LogFunction, LogLevel } from "./shared/Logging.js";
 export { NOOP_LOGGER } from "./shared/Logging.js";
 export type { ArrayElement, OmitOverUnion, Props } from "./shared/MappedTypes.js";

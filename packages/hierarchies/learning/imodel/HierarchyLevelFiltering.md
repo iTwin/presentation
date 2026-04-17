@@ -15,7 +15,7 @@ To make a generic node filterable, the hierarchy definition should set `supports
 
 ```ts
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
@@ -36,13 +36,11 @@ To make an instance node filterable, the hierarchy definition should set `suppor
 
 ```ts
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const queryClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
-  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-    classHierarchyInspector: imodelAccess,
-  }),
+  instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
 });
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
@@ -94,13 +92,11 @@ While the library can't do that automatically, it does provide a helper function
 
 ```ts
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const queryClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
-  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-    classHierarchyInspector: imodelAccess,
-  }),
+  instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
 });
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel(props) {

@@ -87,7 +87,7 @@ import {
   HierarchyNode,
   HierarchyProvider,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory, ECSqlBinding } from "@itwin/presentation-shared";
 
 function createIModelAccess(imodel: IModelConnection) {
   const schemaProvider = createECSchemaProvider(imodel.schemaContext);
@@ -105,8 +105,8 @@ function createIModelAccess(imodel: IModelConnection) {
 }
 
 function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider>["imodelAccess"]): HierarchyProvider {
-  // Create a factory for building labels SELECT query clauses according to BIS conventions
-  const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+  // Create a factory for building labels SELECT query clauses according to iModel / BIS conventions
+  const labelsQueryFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 
   // Create a factory for building nodes SELECT query clauses in a format understood by the provider
   const nodesQueryFactory = createNodesQueryClauseFactory({

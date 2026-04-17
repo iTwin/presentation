@@ -14,7 +14,7 @@ import {
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.Imports
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -44,6 +44,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.LabelGroupingExample
+          const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
@@ -58,9 +59,7 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
+                            instanceLabelSelectClauseFactory,
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -122,6 +121,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.LabelMergingExample
+          const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
@@ -136,9 +136,7 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
+                            instanceLabelSelectClauseFactory,
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -178,6 +176,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.ClassGroupingExample
+          const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
@@ -192,9 +191,7 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
+                            instanceLabelSelectClauseFactory,
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -250,6 +247,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.BaseClassGroupingExample
+          const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
@@ -265,9 +263,7 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
+                            instanceLabelSelectClauseFactory,
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -326,6 +322,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.PropertyValueGroupingExample
+          const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
@@ -340,9 +337,7 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
+                            instanceLabelSelectClauseFactory,
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -414,6 +409,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.PropertyValueRangesGroupingExample
+          const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
@@ -428,9 +424,7 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
+                            instanceLabelSelectClauseFactory,
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -506,6 +500,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodelConnection);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.MultiLevelGroupingExample
+        const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
@@ -520,9 +515,7 @@ describe("Hierarchies", () => {
                       ecsql: `
                         SELECT ${await createNodesQueryClauseFactory({
                           imodelAccess,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                            classHierarchyInspector: imodelAccess,
-                          }),
+                          instanceLabelSelectClauseFactory,
                         }).createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },
@@ -632,6 +625,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.HideIfOneGroupedNodeExample
+          const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
@@ -646,9 +640,7 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
+                            instanceLabelSelectClauseFactory,
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -690,6 +682,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.HideIfNoSiblingsExample
+          const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
@@ -704,9 +697,7 @@ describe("Hierarchies", () => {
                         ecsql: `
                           SELECT ${await createNodesQueryClauseFactory({
                             imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
+                            instanceLabelSelectClauseFactory,
                           }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
@@ -748,6 +739,7 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
 
+          const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
@@ -762,9 +754,7 @@ describe("Hierarchies", () => {
                           `
                             SELECT ${await createNodesQueryClauseFactory({
                               imodelAccess,
-                              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                                classHierarchyInspector: imodelAccess,
-                              }),
+                              instanceLabelSelectClauseFactory,
                             }).createSelectClause({
                               ecClassId: { selector: "this.ECClassId" },
                               ecInstanceId: { selector: "this.ECInstanceId" },

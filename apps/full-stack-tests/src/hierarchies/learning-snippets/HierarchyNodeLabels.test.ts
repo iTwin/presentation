@@ -15,7 +15,7 @@ import {
   createNodesQueryClauseFactory,
   HierarchyDefinition,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -69,7 +69,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
       });
 
-      it("creates a hierarchy using labels from `createBisInstanceLabelSelectClauseFactory`", async () => {
+      it("creates a hierarchy using labels from `createIModelInstanceLabelSelectClauseFactory`", async () => {
         const { imodelConnection } = await buildTestIModel(async (imodel) => {
           const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
           const category = insertSpatialCategory({ imodel, codeValue: "category" });
@@ -80,18 +80,13 @@ describe("Hierarchies", () => {
         });
         const imodelAccess = createIModelAccess(imodelConnection);
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.BisInstanceLabelSelectClauseFactory
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.IModelInstanceLabelSelectClauseFactory
+        const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
+        const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory });
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             // For root nodes, return a query that selects all physical elements
             if (!parentNode) {
-              const labelSelectorsFactory = createBisInstanceLabelSelectClauseFactory({
-                classHierarchyInspector: imodelAccess,
-              });
-              const queryClauseFactory = createNodesQueryClauseFactory({
-                imodelAccess,
-                instanceLabelSelectClauseFactory: labelSelectorsFactory,
-              });
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
@@ -101,8 +96,8 @@ describe("Hierarchies", () => {
                         ecClassId: { selector: "x.ECClassId" },
                         ecInstanceId: { selector: "x.ECInstanceId" },
                         nodeLabel: {
-                          // Use BIS instance label select clause factory to create the label selector
-                          selector: await labelSelectorsFactory.createSelectClause({
+                          // Use iModel instance label select clause factory to create the label selector
+                          selector: await instanceLabelSelectClauseFactory.createSelectClause({
                             classAlias: "x",
                             className: "BisCore.PhysicalElement", // This is optional, but helps create a more optimal selector
                           }),
@@ -142,7 +137,7 @@ describe("Hierarchies", () => {
           return { a, b, c };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
-
+        const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
@@ -155,9 +150,7 @@ describe("Hierarchies", () => {
                       ecsql: `
                         SELECT ${await createNodesQueryClauseFactory({
                           imodelAccess,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                            classHierarchyInspector: imodelAccess,
-                          }),
+                          instanceLabelSelectClauseFactory,
                         }).createSelectClause({
                           ecClassId: { selector: "x.ECClassId" },
                           ecInstanceId: { selector: "x.ECInstanceId" },
@@ -236,6 +229,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodelConnection);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.PropertyGroupsFormattingExample
+        const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
@@ -249,9 +243,7 @@ describe("Hierarchies", () => {
                       ecsql: `
                         SELECT ${await createNodesQueryClauseFactory({
                           imodelAccess,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                            classHierarchyInspector: imodelAccess,
-                          }),
+                          instanceLabelSelectClauseFactory,
                         }).createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },

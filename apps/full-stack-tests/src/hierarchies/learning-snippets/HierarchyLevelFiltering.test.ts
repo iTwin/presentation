@@ -14,7 +14,7 @@ import { afterAll, describe, it, test } from "vitest";
 import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.Imports
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { createIModelHierarchyProvider, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { buildTestIModel } from "../../IModelUtils.js";
@@ -84,9 +84,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.InstanceNodesQueryDefinition
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
+          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
         });
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -127,9 +125,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.ApplyFilter
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
+          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
         });
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel(props) {

@@ -18,7 +18,7 @@ import {
   createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, EC } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory, EC } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -108,7 +108,7 @@ describe("Hierarchies", () => {
           fullClassName: EC.FullClassName;
           whereClauseFactory?: (props: { alias: string }) => Promise<string>;
         }) {
-          const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const queryClauseFactory = createNodesQueryClauseFactory({
             imodelAccess,
             instanceLabelSelectClauseFactory: labelsFactory,

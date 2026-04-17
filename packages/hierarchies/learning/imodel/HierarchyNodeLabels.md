@@ -17,7 +17,7 @@ import {
   createNodesQueryClauseFactory,
   HierarchyDefinition,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
@@ -60,9 +60,9 @@ The `NodesQueryClauseFactory.createSelectClause` function has a required `nodeLa
 
 - The ECSQL selector object generally looks like this: `{ selector: "class_alias.PropertyName" }`. This results in an ECSQL query like `SELECT class_alias.PropertyName FROM ...`, which suggests the selector has to be a valid ECSQL clause to add to a SELECT clause.
 
-  While consumers are free to specify any ECSQL selector for their nodes, the library provides a few helper functions to make it easier to create the selector. The functions are delivered with the `@itwin/presentation-shared` package and are documented in its [README](https://github.com/iTwin/presentation/blob/master/packages/shared/README.md#instance-labels). The most commonly used one is the [BIS instance label select clause factory](https://github.com/iTwin/presentation/blob/master/packages/shared/README.md#createbisinstancelabelselectclausefactory), which knows how to create unique labels for [BIS](https://www.itwinjs.org/bis/guide/intro/overview/)-based instances. A quick example of its usage for hierarchies:
+  While consumers are free to specify any ECSQL selector for their nodes, the library provides a few helper functions to make it easier to create the selector. The functions are delivered with the `@itwin/presentation-shared` package and are documented in its [README](https://github.com/iTwin/presentation/blob/master/packages/shared/README.md#instance-labels). The recommended one for iModel instances' labels is the [iModel instance label select clause factory](https://github.com/iTwin/presentation/blob/master/packages/shared/README.md#createimodelinstancelabelselectclausefactory), which knows how to create unique labels for iModel instances. A quick example of its usage for hierarchies:
 
-  <!-- [[include: [Presentation.Hierarchies.NodeLabels.Imports, Presentation.Hierarchies.NodeLabels.BisInstanceLabelSelectClauseFactory], ts]] -->
+  <!-- [[include: [Presentation.Hierarchies.NodeLabels.Imports, Presentation.Hierarchies.NodeLabels.IModelInstanceLabelSelectClauseFactory], ts]] -->
   <!-- BEGIN EXTRACTION -->
 
   ```ts
@@ -71,19 +71,14 @@ The `NodesQueryClauseFactory.createSelectClause` function has a required `nodeLa
     createNodesQueryClauseFactory,
     HierarchyDefinition,
   } from "@itwin/presentation-hierarchies";
-  import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
+  import { createIModelInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 
+  const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
+  const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory });
   const hierarchyDefinition: HierarchyDefinition = {
     async defineHierarchyLevel({ parentNode }) {
       // For root nodes, return a query that selects all physical elements
       if (!parentNode) {
-        const labelSelectorsFactory = createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        });
-        const queryClauseFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: labelSelectorsFactory,
-        });
         return [
           {
             fullClassName: "BisCore.PhysicalElement",
@@ -93,8 +88,8 @@ The `NodesQueryClauseFactory.createSelectClause` function has a required `nodeLa
                   ecClassId: { selector: "x.ECClassId" },
                   ecInstanceId: { selector: "x.ECInstanceId" },
                   nodeLabel: {
-                    // Use BIS instance label select clause factory to create the label selector
-                    selector: await labelSelectorsFactory.createSelectClause({
+                    // Use iModel instance label select clause factory to create the label selector
+                    selector: await instanceLabelSelectClauseFactory.createSelectClause({
                       classAlias: "x",
                       className: "BisCore.PhysicalElement", // This is optional, but helps create a more optimal selector
                     }),
@@ -138,7 +133,7 @@ The `NodesQueryClauseFactory.createSelectClause` function has a required `nodeLa
     createNodesQueryClauseFactory,
     HierarchyDefinition,
   } from "@itwin/presentation-hierarchies";
-  import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
+  import { createIModelInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 
   nodeLabel: {
     selector: ECSql.createConcatenatedValueJsonSelector([
@@ -180,8 +175,9 @@ By a request of `HierarchyDefinition`, the hierarchy provider groups instance no
     createNodesQueryClauseFactory,
     HierarchyDefinition,
   } from "@itwin/presentation-hierarchies";
-  import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
+  import { createIModelInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 
+  const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
   const hierarchyProvider = createIModelHierarchyProvider({
     imodelAccess,
     hierarchyDefinition: {
@@ -195,9 +191,7 @@ By a request of `HierarchyDefinition`, the hierarchy provider groups instance no
                 ecsql: `
                   SELECT ${await createNodesQueryClauseFactory({
                     imodelAccess,
-                    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                      classHierarchyInspector: imodelAccess,
-                    }),
+                    instanceLabelSelectClauseFactory,
                   }).createSelectClause({
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },

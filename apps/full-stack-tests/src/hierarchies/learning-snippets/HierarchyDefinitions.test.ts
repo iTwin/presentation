@@ -21,7 +21,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -52,6 +52,7 @@ describe("Hierarchies", () => {
       it("creates a hierarchy using simple hierarchy definition", async () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Simple
+        const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             // For root nodes, simply return one generic node
@@ -62,9 +63,7 @@ describe("Hierarchies", () => {
             if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "physical-elements") {
               const queryClauseFactory = createNodesQueryClauseFactory({
                 imodelAccess,
-                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                  classHierarchyInspector: imodelAccess,
-                }),
+                instanceLabelSelectClauseFactory,
               });
               return [
                 {
@@ -159,15 +158,14 @@ describe("Hierarchies", () => {
           },
         };
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PreProcessNode
+        const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             // For root nodes, return all physical elements
             if (!parentNode) {
               const queryClauseFactory = createNodesQueryClauseFactory({
                 imodelAccess,
-                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                  classHierarchyInspector: imodelAccess,
-                }),
+                instanceLabelSelectClauseFactory,
               });
               return [
                 {
@@ -211,15 +209,14 @@ describe("Hierarchies", () => {
       it("uses hierarchy definition's postProcessNode callback", async () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PostProcessNode
+        const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             // For root nodes, return all physical elements grouped by class
             if (!parentNode) {
               const queryClauseFactory = createNodesQueryClauseFactory({
                 imodelAccess,
-                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                  classHierarchyInspector: imodelAccess,
-                }),
+                instanceLabelSelectClauseFactory,
               });
               return [
                 {
@@ -274,9 +271,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PredicateBasedHierarchyDefinition
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
+          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
         });
         const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
           classHierarchyInspector: imodelAccess,

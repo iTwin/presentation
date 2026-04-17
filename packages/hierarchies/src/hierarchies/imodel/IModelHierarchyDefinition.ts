@@ -13,6 +13,7 @@ import type {
   SourceGenericHierarchyNode,
   SourceInstanceHierarchyNode,
 } from "./IModelHierarchyNode.js";
+import type { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
 
 /**
  * A nodes definition that returns a single generic node.
@@ -122,7 +123,7 @@ export type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "chil
  */
 export interface DefineHierarchyLevelProps {
   /** The iModel for which the hierarchy definition is being requested for. */
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & { imodelKey: string };
+  imodelAccess: LimitingECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector & { imodelKey: string };
 
   /** Parent node to get children for. Pass `undefined` to get root nodes. */
   parentNode: HierarchyDefinitionParentNode | undefined;

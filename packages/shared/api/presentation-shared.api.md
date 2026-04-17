@@ -81,6 +81,9 @@ export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelS
 export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
 
 // @public
+export function createIModelInstanceLabelSelectClauseFactory(props: IModelInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
+
+// @public
 function createInstanceKeySelector(props: {
     alias: string;
 }): string;
@@ -423,6 +426,12 @@ export interface ILogger {
     logTrace: LogFunction;
     // (undocumented)
     logWarning: LogFunction;
+}
+
+// @public
+interface IModelInstanceLabelSelectClauseFactoryProps {
+    defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
+    imodelAccess: ECSqlQueryExecutor & ECClassHierarchyInspector & ECSchemaProvider;
 }
 
 // @public

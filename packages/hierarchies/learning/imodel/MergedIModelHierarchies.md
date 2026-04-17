@@ -24,7 +24,7 @@ import {
   createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, EC } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory, EC } from "@itwin/presentation-shared";
 
 // Each version of the iModel already has an open `IModelConnection`. Create iModel access objects for
 // both versions - `base` and `changeset1`. The order is important - we want the changesets to be from oldest to
@@ -44,7 +44,7 @@ async function createInstanceNodesQueryDefinition({
   fullClassName: EC.FullClassName;
   whereClauseFactory?: (props: { alias: string }) => Promise<string>;
 }) {
-  const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+  const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
   const queryClauseFactory = createNodesQueryClauseFactory({
     imodelAccess,
     instanceLabelSelectClauseFactory: labelsFactory,

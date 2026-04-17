@@ -34,9 +34,7 @@ import { ECSqlBinding } from "@itwin/presentation-shared";
 function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinition {
   const queryClauseFactory = createNodesQueryClauseFactory({
     imodelAccess,
-    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-      classHierarchyInspector: imodelAccess,
-    }),
+    instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
   });
   const createHierarchyLevelDefinition = async ({
     whereClause,

@@ -12,7 +12,7 @@ import {
 import { afterAll, describe, expect, it, test } from "vitest";
 import { assert, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { createBisInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.HierarchyDefinitionImports
 import {
   createNodesQueryClauseFactory,
@@ -121,9 +121,7 @@ describe("Hierarchies", () => {
       function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinition {
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
+          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
         });
         const createHierarchyLevelDefinition = async ({
           whereClause,
@@ -364,9 +362,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
+          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
         });
         // Define a hierarchy such that all elements except root are grouped by label.
         const hierarchyDefinition: HierarchyDefinition = {
@@ -490,9 +486,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
+          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
         });
         // Define a hierarchy such that all elements except root are grouped by label.
         const hierarchyDefinition: HierarchyDefinition = {
@@ -597,9 +591,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
+          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
         });
         // Define a hierarchy such that all elements except root are grouped by label.
         const hierarchyDefinition: HierarchyDefinition = {

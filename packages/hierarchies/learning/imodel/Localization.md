@@ -11,8 +11,9 @@ Example:
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
+const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
@@ -27,9 +28,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                    classHierarchyInspector: imodelAccess,
-                  }),
+                  instanceLabelSelectClauseFactory,
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },

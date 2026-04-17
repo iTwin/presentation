@@ -3,9 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { vi } from "vitest";
 import { Dictionary, Logger } from "@itwin/core-bentley";
 import { compareFullClassNames, getClass, normalizeFullClassName } from "@itwin/presentation-shared";
 
+import type { Mock } from "vitest";
 import type { LogLevel } from "@itwin/core-bentley";
 import type { EC, ECClassHierarchyInspector } from "@itwin/presentation-shared";
 import type { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
@@ -26,6 +28,7 @@ import type {
   SourceGenericHierarchyNode,
   SourceInstanceHierarchyNode,
 } from "../hierarchies/imodel/IModelHierarchyNode.js";
+import type { LimitingECSqlQueryExecutor } from "../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
   Logger.initializeToConsole();
@@ -314,8 +317,9 @@ export function createClassHierarchyInspectorStub(
 }
 
 export function createIModelAccessStub() {
+  const createQueryReader: Mock<LimitingECSqlQueryExecutor["createQueryReader"]> = vi.fn();
   const schemaProvider = createECSchemaProviderStub();
-  return { ...schemaProvider, ...createClassHierarchyInspectorStub(schemaProvider) };
+  return { ...schemaProvider, ...createClassHierarchyInspectorStub(schemaProvider), createQueryReader };
 }
 
 export function createInstanceLabelSelectClauseFactoryStub() {

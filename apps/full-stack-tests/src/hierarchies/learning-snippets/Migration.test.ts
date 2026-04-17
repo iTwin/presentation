@@ -38,7 +38,7 @@ import {
   HierarchyNodesDefinition,
   InstancesNodeKey,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -190,7 +190,7 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.InstanceNodesOfSpecificClassesDefinition
-          const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
             imodelAccess,
             instanceLabelSelectClauseFactory: labelsFactory,
@@ -251,7 +251,7 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.RelatedInstanceNodesDefinition
-          const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
             imodelAccess,
             instanceLabelSelectClauseFactory: labelsFactory,
@@ -360,7 +360,7 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.CustomQueryInstanceNodesDefinition
-          const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
             imodelAccess,
             instanceLabelSelectClauseFactory: labelsFactory,
@@ -472,7 +472,7 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.BaseClassGrouping
-          const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
             imodelAccess,
             instanceLabelSelectClauseFactory: labelsFactory,
@@ -522,7 +522,7 @@ describe("Hierarchies", () => {
         it("groups by class", async () => {
           const imodelAccess = createIModelAccess(emptyIModel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.ClassGrouping
-          const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
             imodelAccess,
             instanceLabelSelectClauseFactory: labelsFactory,
@@ -588,7 +588,7 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.PropertyGrouping
-          const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
             imodelAccess,
             instanceLabelSelectClauseFactory: labelsFactory,
@@ -655,7 +655,7 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.LabelGrouping
-          const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
             imodelAccess,
             instanceLabelSelectClauseFactory: labelsFactory,
@@ -715,7 +715,7 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.SameLabelGrouping
-          const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
           const selectClauseFactory = createNodesQueryClauseFactory({
             imodelAccess,
             instanceLabelSelectClauseFactory: labelsFactory,

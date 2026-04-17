@@ -15,8 +15,9 @@ When using the `grouping` action, the library will create a new grouping node fo
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
+const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
@@ -31,9 +32,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                    classHierarchyInspector: imodelAccess,
-                  }),
+                  instanceLabelSelectClauseFactory,
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -84,8 +83,9 @@ When using the `merging` action, the library merges all nodes with the same labe
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
+const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
@@ -100,9 +100,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                    classHierarchyInspector: imodelAccess,
-                  }),
+                  instanceLabelSelectClauseFactory,
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -147,8 +145,9 @@ Example:
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
+const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
@@ -163,9 +162,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                    classHierarchyInspector: imodelAccess,
-                  }),
+                  instanceLabelSelectClauseFactory,
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -224,8 +221,9 @@ Example:
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
+const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
@@ -241,9 +239,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                    classHierarchyInspector: imodelAccess,
-                  }),
+                  instanceLabelSelectClauseFactory,
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -308,8 +304,9 @@ Example:
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
+const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
@@ -324,9 +321,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                    classHierarchyInspector: imodelAccess,
-                  }),
+                  instanceLabelSelectClauseFactory,
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -404,8 +399,9 @@ Example:
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
+const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
@@ -420,9 +416,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                    classHierarchyInspector: imodelAccess,
-                  }),
+                  instanceLabelSelectClauseFactory,
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -497,8 +491,9 @@ Using a combination of the grouping types described above is also possible. The 
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
+const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
@@ -513,9 +508,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                    classHierarchyInspector: imodelAccess,
-                  }),
+                  instanceLabelSelectClauseFactory,
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -633,8 +626,9 @@ In certain scenarios the purpose of grouping nodes is make hierarchy levels smal
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
+const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
@@ -649,9 +643,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                    classHierarchyInspector: imodelAccess,
-                  }),
+                  instanceLabelSelectClauseFactory,
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -695,8 +687,9 @@ Similar to above, if the purpose of grouping to is to make hierarchy level small
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
+const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
@@ -711,9 +704,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                    classHierarchyInspector: imodelAccess,
-                  }),
+                  instanceLabelSelectClauseFactory,
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -760,9 +751,7 @@ In certain scenarios it may be required to automatically expand the grouping nod
 `
   SELECT ${await createNodesQueryClauseFactory({
     imodelAccess,
-    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-      classHierarchyInspector: imodelAccess,
-    }),
+    instanceLabelSelectClauseFactory,
   }).createSelectClause({
     ecClassId: { selector: "this.ECClassId" },
     ecInstanceId: { selector: "this.ECInstanceId" },
