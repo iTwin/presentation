@@ -451,7 +451,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       targetInstanceKeys?: InstanceKey[];
     } & RequestContextProp,
   ): SourceNodesObservable {
-    const createSourceNodeObservable = (
+    const createSourceNodesFromDefinition = (
       imodelAccess: IModelAccess,
       def: GenericHierarchyNodeDefinition | InstanceNodesQueryDefinition,
     ): Observable<SourceHierarchyNode> => {
@@ -489,13 +489,13 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     if (this._imodels.length === 1) {
       sourceNodes = definitions.pipe(
         mergeMap(({ imodelAccess, hierarchyNodesDefinition: def }) =>
-          defer(() => createSourceNodeObservable(imodelAccess, def)),
+          createSourceNodesFromDefinition(imodelAccess, def),
         ),
       );
     } else {
       sourceNodes = definitions.pipe(
         mergeMap(({ imodelAccess, imodelAccessIndex, hierarchyNodesDefinition: def }) =>
-          defer(() => createSourceNodeObservable(imodelAccess, def)).pipe(
+          createSourceNodesFromDefinition(imodelAccess, def).pipe(
             map((node: SourceHierarchyNode) => ({ imodelAccess, imodelAccessIndex, node })),
           ),
         ),
