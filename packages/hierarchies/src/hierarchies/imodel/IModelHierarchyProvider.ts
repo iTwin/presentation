@@ -9,7 +9,6 @@ import {
   catchError,
   concat,
   defaultIfEmpty,
-  defer,
   EMPTY,
   filter,
   finalize,
