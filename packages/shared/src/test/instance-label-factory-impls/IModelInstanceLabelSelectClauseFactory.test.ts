@@ -1221,6 +1221,27 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         `),
       );
     });
+
+    it("throws when pathToRelatedInstance references a non-relationship class and targetClass is omitted", async () => {
+      schemaProvider.stubEntityClass({ schemaName: "S", className: "A" });
+      schemaProvider.stubEntityClass({ schemaName: "S", className: "NotARel" });
+      const ruleset = makeRuleset([
+        {
+          ruleType: "InstanceLabelOverride",
+          class: { schemaName: "S", className: "A" },
+          values: [
+            {
+              specType: "RelatedInstanceLabel",
+              pathToRelatedInstance: { relationship: { schemaName: "S", className: "NotARel" }, direction: "Forward" },
+            },
+          ],
+        },
+      ]);
+      createQueryReaderMock.mockReturnValue(mockQueryRows([wrapRulesetInRow(ruleset)]));
+      const factory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess, defaultClauseFactory });
+      await expect(factory.createSelectClause({ classAlias: "test" })).rejects.toThrow("is not a relationship class");
+    });
+
     it("returns NULL when pathToRelatedInstance is an empty array", async () => {
       const ruleset = makeRuleset([
         {

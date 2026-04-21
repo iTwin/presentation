@@ -278,7 +278,10 @@ async function compileValueSpec(spec: InstanceLabelOverrideValueSpecification, c
         targetClassName = `${lastStep.targetClass.schemaName}.${lastStep.targetClass.className}`;
       } else {
         const relName: EC.FullClassName = `${lastStep.relationship.schemaName}.${lastStep.relationship.className}`;
-        const relClass = (await getClass(ctx.schemaProvider, relName)) as EC.RelationshipClass;
+        const relClass = await getClass(ctx.schemaProvider, relName);
+        if (!relClass.isRelationshipClass()) {
+          throw new Error(`Class ${relName} is not a relationship class`);
+        }
         const endpoint = lastStep.direction === "Backward" ? relClass.source : relClass.target;
         const constraintClass = await endpoint.abstractConstraint;
         if (!constraintClass) {
