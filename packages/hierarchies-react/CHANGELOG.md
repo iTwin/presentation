@@ -1,5 +1,18 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.62
+
+### Patch Changes
+
+- [#1304](https://github.com/iTwin/presentation/pull/1304): Remove `@stratakit/bricks` and `@stratakit/structures` from peer dependencies list.
+
+  Only `@stratakit/foundations` and `@stratakit/icons` are required as peer dependencies when using StrataKit components, the rest of `@stratakit` packages can be used as direct dependencies.
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.15
+  - @itwin/presentation-shared@2.0.0-alpha.10
+  - @itwin/unified-selection@1.7.1-alpha.0
+
 ## 2.0.0-alpha.61
 
 ### Minor Changes

@@ -1,5 +1,12 @@
 # @itwin/unified-selection
 
+## 1.7.1-alpha.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.10
+
 ## 1.7.0
 
 ### Minor Changes
