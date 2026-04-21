@@ -9,7 +9,6 @@ import {
   catchError,
   concat,
   defaultIfEmpty,
-  defer,
   EMPTY,
   filter,
   finalize,
@@ -451,44 +450,60 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       targetInstanceKeys?: InstanceKey[];
     } & RequestContextProp,
   ): SourceNodesObservable {
-    // pipe definitions to nodes and put "share replay" on it
-    return this.createHierarchyLevelDefinitionsObservable(props).pipe(
-      mergeMap(({ imodelAccess, imodelAccessIndex, hierarchyNodesDefinition: def }) =>
-        defer((): Observable<SourceHierarchyNode> => {
-          if (HierarchyNodesDefinition.isGenericNode(def)) {
-            return of({ ...def.node, key: { type: "generic" as const, id: def.node.key, source: this.#sourceName } });
-          }
-          return this.getQueryScheduler(imodelAccess.imodelKey).scheduleSubscription(
-            of(def.query).pipe(
-              map((query) => createInstanceKeysFilteredQuery(query, props.targetInstanceKeys)),
-              mergeMap((query) =>
-                readNodes({
-                  queryExecutor: imodelAccess,
-                  query,
-                  limit: props.hierarchyLevelSizeLimit,
-                  parser: this._activeHierarchyDefinition.parseNode
-                    ? ({ row }) =>
-                        this._activeHierarchyDefinition.parseNode!({
-                          row,
-                          parentNode: props.parentNode,
-                          imodelKey: imodelAccess.imodelKey,
-                        })
-                    : undefined,
-                }),
-              ),
-              map((node) => ({
-                ...node,
-                key: {
-                  ...node.key,
-                  instanceKeys: node.key.instanceKeys.map((key) => ({ ...key, imodelKey: imodelAccess.imodelKey })),
-                },
-              })),
-            ),
-          );
-        }).pipe(map((node: SourceHierarchyNode) => ({ imodelAccess, imodelAccessIndex, node }))),
-      ),
-      mergeNodes,
-      map(({ node }) => node),
+    const createSourceNodesFromDefinition = (
+      imodelAccess: IModelAccess,
+      def: GenericHierarchyNodeDefinition | InstanceNodesQueryDefinition,
+    ): Observable<SourceHierarchyNode> => {
+      if (HierarchyNodesDefinition.isGenericNode(def)) {
+        return of({ ...def.node, key: { type: "generic" as const, id: def.node.key, source: this.#sourceName } });
+      }
+      const query = createInstanceKeysFilteredQuery(def.query, props.targetInstanceKeys);
+      return this.getQueryScheduler(imodelAccess.imodelKey).scheduleSubscription(
+        readNodes({
+          queryExecutor: imodelAccess,
+          query,
+          limit: props.hierarchyLevelSizeLimit,
+          parser: this._activeHierarchyDefinition.parseNode
+            ? ({ row }) =>
+                this._activeHierarchyDefinition.parseNode!({
+                  row,
+                  parentNode: props.parentNode,
+                  imodelKey: imodelAccess.imodelKey,
+                })
+            : undefined,
+        }).pipe(
+          map((node) => ({
+            ...node,
+            key: {
+              ...node.key,
+              instanceKeys: node.key.instanceKeys.map((key) => ({ ...key, imodelKey: imodelAccess.imodelKey })),
+            },
+          })),
+        ),
+      );
+    };
+
+    const definitions = this.createHierarchyLevelDefinitionsObservable(props);
+    let sourceNodes: Observable<SourceHierarchyNode>;
+    if (this._imodels.length === 1) {
+      sourceNodes = definitions.pipe(
+        mergeMap(({ imodelAccess, hierarchyNodesDefinition: def }) =>
+          createSourceNodesFromDefinition(imodelAccess, def),
+        ),
+      );
+    } else {
+      sourceNodes = definitions.pipe(
+        mergeMap(({ imodelAccess, imodelAccessIndex, hierarchyNodesDefinition: def }) =>
+          createSourceNodesFromDefinition(imodelAccess, def).pipe(
+            map((node: SourceHierarchyNode) => ({ imodelAccess, imodelAccessIndex, node })),
+          ),
+        ),
+        mergeNodes,
+        map(({ node }) => node),
+      );
+    }
+
+    return sourceNodes.pipe(
       finalize(() => {
         /* v8 ignore next -- @preserve */
         doLog({
