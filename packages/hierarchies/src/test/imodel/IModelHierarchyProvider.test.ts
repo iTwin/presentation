@@ -26,7 +26,6 @@ import {
   createTestSourceGenericNode,
 } from "../Utils.js";
 
-import type { Mock } from "vitest";
 import type { GenericInstanceFilter } from "@itwin/core-common";
 import type { EC, ECSqlQueryDef, TypedPrimitiveValue } from "@itwin/presentation-shared";
 import type { GroupingHierarchyNode, ParentHierarchyNode } from "../../hierarchies/HierarchyNode.js";
@@ -41,14 +40,10 @@ import type {
   ProcessedHierarchyNode,
   SourceInstanceHierarchyNode,
 } from "../../hierarchies/imodel/IModelHierarchyNode.js";
-import type { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 import type { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 
 describe("createIModelHierarchyProvider", () => {
-  let imodelAccess: ReturnType<typeof createIModelAccessStub> & {
-    createQueryReader: Mock<LimitingECSqlQueryExecutor["createQueryReader"]>;
-    imodelKey: string;
-  };
+  let imodelAccess: ReturnType<typeof createIModelAccessStub> & { imodelKey: string };
   const sourceName = "test-source-name";
 
   const createIModelHierarchyProvider: typeof origCreateIModelHierarchyProvider = (props) =>
@@ -59,7 +54,7 @@ describe("createIModelHierarchyProvider", () => {
     });
 
   beforeEach(() => {
-    imodelAccess = { ...createIModelAccessStub(), createQueryReader: vi.fn(), imodelKey: "test-imodel" };
+    imodelAccess = { ...createIModelAccessStub(), imodelKey: "test-imodel" };
   });
 
   it("loads root generic nodes", async () => {
@@ -599,10 +594,14 @@ describe("createIModelHierarchyProvider", () => {
       expect(hierarchyDefinition.defineHierarchyLevel).toHaveBeenNthCalledWith(1, {
         imodelAccess,
         parentNode: undefined,
+        instanceLabelSelectClauseFactory: expect.anything(),
+        nodeSelectClauseFactory: expect.anything(),
       });
       expect(hierarchyDefinition.defineHierarchyLevel).toHaveBeenNthCalledWith(2, {
         imodelAccess,
         parentNode: rootNodes[0],
+        instanceLabelSelectClauseFactory: expect.anything(),
+        nodeSelectClauseFactory: expect.anything(),
       });
     });
   });
@@ -1735,40 +1734,30 @@ describe("createMergedIModelHierarchyProvider", () => {
   });
 
   it("merges instance nodes from different providers", async () => {
-    const imodelAccess1 = {
-      ...createIModelAccessStub(),
-      createQueryReader: vi
-        .fn()
-        .mockReturnValue(
-          createAsyncIterator([
-            {
-              [NodeSelectClauseColumnNames.FullClassName]: "a.b",
-              [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
-              [NodeSelectClauseColumnNames.DisplayLabel]: "test label 1",
-              [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x123",
-              [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
-            },
-          ]),
-        ),
-      imodelKey: "imodel 1",
-    };
-    const imodelAccess2 = {
-      ...createIModelAccessStub(),
-      createQueryReader: vi
-        .fn()
-        .mockReturnValue(
-          createAsyncIterator([
-            {
-              [NodeSelectClauseColumnNames.FullClassName]: "a.b",
-              [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
-              [NodeSelectClauseColumnNames.DisplayLabel]: "test label 2",
-              [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x123",
-              [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
-            },
-          ]),
-        ),
-      imodelKey: "imodel 2",
-    };
+    const imodelAccess1 = { ...createIModelAccessStub(), imodelKey: "imodel 1" };
+    imodelAccess1.createQueryReader.mockReturnValue(
+      createAsyncIterator([
+        {
+          [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+          [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
+          [NodeSelectClauseColumnNames.DisplayLabel]: "test label 1",
+          [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x123",
+          [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
+        },
+      ]),
+    );
+    const imodelAccess2 = { ...createIModelAccessStub(), imodelKey: "imodel 2" };
+    imodelAccess2.createQueryReader.mockReturnValue(
+      createAsyncIterator([
+        {
+          [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+          [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
+          [NodeSelectClauseColumnNames.DisplayLabel]: "test label 2",
+          [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x123",
+          [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
+        },
+      ]),
+    );
 
     using provider = createMergedIModelHierarchyProvider({
       imodels: [{ imodelAccess: imodelAccess1 }, { imodelAccess: imodelAccess2 }],

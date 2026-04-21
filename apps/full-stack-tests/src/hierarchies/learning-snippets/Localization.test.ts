@@ -10,8 +10,7 @@ import {
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Localization.Imports
-import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -84,7 +83,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
-            defineHierarchyLevel: async ({ parentNode }) => {
+            defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
               if (!parentNode) {
                 // The hierarchy definition returns nodes for `myPhysicalObjectClassName` element type, grouped by `IntProperty` property value,
                 // with options to create groups for out-of-range and unspecified values - labels of those grouping nodes get localized
@@ -93,12 +92,7 @@ describe("Hierarchies", () => {
                     fullClassName: myPhysicalObjectClassName,
                     query: {
                       ecsql: `
-                        SELECT ${await createNodesQueryClauseFactory({
-                          imodelAccess,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                            classHierarchyInspector: imodelAccess,
-                          }),
-                        }).createSelectClause({
+                        SELECT ${await nodeSelectClauseFactory.createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },
                           nodeLabel: { selector: "this.UserLabel" },

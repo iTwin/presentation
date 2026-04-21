@@ -13,8 +13,7 @@ import {
 import { afterAll, describe, it, test } from "vitest";
 import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.Imports
-import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { createIModelHierarchyProvider, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { buildTestIModel } from "../../IModelUtils.js";
@@ -80,23 +79,16 @@ describe("Hierarchies", () => {
       });
 
       it("creates filterable instances node", async () => {
-        const imodelAccess = createIModelAccess(imodelConnection);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.InstanceNodesQueryDefinition
-        const queryClauseFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
-        });
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await queryClauseFactory.createSelectClause({
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
                         ecClassId: { selector: "this.ECClassId" },
                         ecInstanceId: { selector: "this.ECInstanceId" },
                         nodeLabel: { selector: "this.UserLabel" },
@@ -123,19 +115,12 @@ describe("Hierarchies", () => {
       });
 
       it("applies filter", async () => {
-        const imodelAccess = createIModelAccess(imodelConnection);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.ApplyFilter
-        const queryClauseFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
-        });
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel(props) {
             // `createFilterClauses` function returns `from`, `joins`, and `where` clauses which need to be used in the
             // query in appropriate places
-            const { from, joins, where } = await queryClauseFactory.createFilterClauses({
+            const { from, joins, where } = await props.nodeSelectClauseFactory.createFilterClauses({
               // specify the content class whose instances are used to build nodes - this should
               // generally match the instance whose ECClassId and ECInstanceId are used in the SELECT clause
               contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
@@ -147,7 +132,7 @@ describe("Hierarchies", () => {
                 fullClassName: "BisCore.PhysicalElement",
                 query: {
                   ecsql: `
-                    SELECT ${await queryClauseFactory.createSelectClause({
+                    SELECT ${await props.nodeSelectClauseFactory.createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: { selector: "this.UserLabel" },

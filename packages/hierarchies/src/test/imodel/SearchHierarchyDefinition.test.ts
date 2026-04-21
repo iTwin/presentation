@@ -15,17 +15,17 @@ import {
   SearchHierarchyDefinition,
 } from "../../hierarchies/imodel/SearchHierarchyDefinition.js";
 import {
+  createIModelAccessStub,
   createTestInstanceKey,
   createTestInstanceNodeKey,
   createTestProcessedGroupingNode,
   createTestProcessedInstanceNode,
 } from "../Utils.js";
 
-import type { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { ECClassHierarchyInspector, IInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import type { HierarchyNodeIdentifier } from "../../hierarchies/HierarchyNodeIdentifier.js";
 import type { HierarchySearchTree } from "../../hierarchies/HierarchySearch.js";
 import type {
-  DefineHierarchyLevelProps,
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
@@ -34,6 +34,7 @@ import type {
   ProcessedInstanceHierarchyNode,
   SourceInstanceHierarchyNode,
 } from "../../hierarchies/imodel/IModelHierarchyNode.js";
+import type { NodesQueryClauseFactory } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
 import type { RxjsHierarchyDefinition } from "../../hierarchies/internal/RxjsHierarchyDefinition.js";
 
 describe("SearchHierarchyDefinition", () => {
@@ -371,11 +372,13 @@ describe("SearchHierarchyDefinition", () => {
   });
 
   describe("defineHierarchyLevel", () => {
-    const stubIModelAccess: DefineHierarchyLevelProps["imodelAccess"] = {
-      classDerivesFrom: vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>().mockResolvedValue(false),
-      getSchema: vi.fn<ECSchemaProvider["getSchema"]>().mockResolvedValue(undefined),
-      imodelKey: "test-imodel",
-    } as unknown as DefineHierarchyLevelProps["imodelAccess"];
+    const stubIModelAccess = { ...createIModelAccessStub(), imodelKey: "test-imodel" };
+    const instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory = { createSelectClause: vi.fn() };
+    const nodeSelectClauseFactory: NodesQueryClauseFactory = {
+      createSelectClause: vi.fn(),
+      createFilterClauses: vi.fn(),
+    };
+    const constProps = { imodelAccess: stubIModelAccess, instanceLabelSelectClauseFactory, nodeSelectClauseFactory };
 
     it("returns source definitions when search identifiers are not applicable to the level", async () => {
       const sourceDefs: HierarchyLevelDefinition = [{ fullClassName: "Schema:Class", query: { ecsql: "SELECT *" } }];
@@ -389,7 +392,7 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths: [{ identifier: { className: "Schema:Class", id: "0x1" } }],
         source: { defineHierarchyLevel: () => of(sourceDefs) },
       });
-      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode, imodelAccess: stubIModelAccess }));
+      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode, ...constProps }));
       expect(result).toEqual(sourceDefs);
     });
 
@@ -401,9 +404,7 @@ describe("SearchHierarchyDefinition", () => {
         sourceName: "test-source",
         source: { defineHierarchyLevel: () => of([genericDef]) },
       });
-      const result = await firstValueFrom(
-        def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }),
-      );
+      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, ...constProps }));
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty("node.key", "test-key");
     });
@@ -415,9 +416,7 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths,
         source: { defineHierarchyLevel: () => of([genericDef]) },
       });
-      const result = await firstValueFrom(
-        def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }),
-      );
+      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, ...constProps }));
       expect(result).toHaveLength(0);
     });
 
@@ -431,9 +430,7 @@ describe("SearchHierarchyDefinition", () => {
         sourceName: "test-source",
         source: { defineHierarchyLevel: () => of([genericDef]) },
       });
-      const result = await firstValueFrom(
-        def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }),
-      );
+      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, ...constProps }));
       expect(result).toHaveLength(0);
     });
 
@@ -443,67 +440,50 @@ describe("SearchHierarchyDefinition", () => {
         fullClassName: "Schema:Class",
         query: { ecsql: "SELECT * FROM Schema.Class" },
       };
-      const classDerivesFrom = vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>();
-      classDerivesFrom.mockResolvedValue(false);
       const def = createSearchHierarchyDefinition({
         targetPaths,
         source: { defineHierarchyLevel: () => of([instanceDef]) },
-        imodelAccess: { classDerivesFrom },
+        imodelAccess: stubIModelAccess,
       });
-      const imodelAccess = {
-        ...stubIModelAccess,
-        classDerivesFrom,
-      } as unknown as DefineHierarchyLevelProps["imodelAccess"];
-      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess }));
+      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, ...constProps }));
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty("query.ecsql");
       expect(trimWhitespace((result[0] as InstanceNodesQueryDefinition).query.ecsql)).toContain("SearchInfo");
     });
 
     it("skips instance definitions with non-matching class", async () => {
+      stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Class" });
+      stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Other" });
+
       const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema:Other", id: "0x1" } }];
       const instanceDef: InstanceNodesQueryDefinition = {
         fullClassName: "Schema:Class",
         query: { ecsql: "SELECT * FROM Schema.Class" },
       };
-      const classDerivesFrom = vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>();
-      classDerivesFrom.mockResolvedValue(false);
       const def = createSearchHierarchyDefinition({
         targetPaths,
         source: { defineHierarchyLevel: () => of([instanceDef]) },
-        imodelAccess: { classDerivesFrom },
+        imodelAccess: stubIModelAccess,
       });
-      const imodelAccess = {
-        ...stubIModelAccess,
-        classDerivesFrom,
-      } as unknown as DefineHierarchyLevelProps["imodelAccess"];
-      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess }));
+      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, ...constProps }));
       expect(result).toHaveLength(0);
     });
 
     it("includes instance definitions when classDerivesFrom returns true", async () => {
+      const baseClass = stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Base" });
+      stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Derived", baseClass });
+
       const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema:Derived", id: "0x1" } }];
       const instanceDef: InstanceNodesQueryDefinition = {
         fullClassName: "Schema:Base",
         query: { ecsql: "SELECT * FROM Schema.Base" },
       };
-      const classDerivesFrom = vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>();
-      classDerivesFrom.mockImplementation(async (derived, candidate) => {
-        if (derived === "Schema:Derived" && candidate === "Schema:Base") {
-          return true;
-        }
-        return false;
-      });
       const def = createSearchHierarchyDefinition({
         targetPaths,
         source: { defineHierarchyLevel: () => of([instanceDef]) },
-        imodelAccess: { classDerivesFrom },
+        imodelAccess: stubIModelAccess,
       });
-      const imodelAccess = {
-        ...stubIModelAccess,
-        classDerivesFrom,
-      } as unknown as DefineHierarchyLevelProps["imodelAccess"];
-      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess }));
+      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, ...constProps }));
       expect(result).toHaveLength(1);
     });
 
@@ -519,20 +499,14 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths,
         source: { defineHierarchyLevel: () => of([instanceDef]) },
       });
-      const result = await firstValueFrom(
-        def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }),
-      );
+      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, ...constProps }));
       expect(result).toHaveLength(0);
     });
 
     it("deduplicates instance keys with same id and related classes", async () => {
-      const classDerivesFrom = vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>();
-      classDerivesFrom.mockImplementation(async (derived, candidate) => {
-        if (derived === "Schema:Derived" && candidate === "Schema:Base") {
-          return true;
-        }
-        return false;
-      });
+      const baseClass = stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Base" });
+      stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Derived", baseClass });
+
       const targetPaths: HierarchySearchTree[] = [
         { identifier: { className: "Schema:Derived", id: "0x1" } },
         { identifier: { className: "Schema:Base", id: "0x1" } },
@@ -544,13 +518,9 @@ describe("SearchHierarchyDefinition", () => {
       const def = createSearchHierarchyDefinition({
         targetPaths,
         source: { defineHierarchyLevel: () => of([instanceDef]) },
-        imodelAccess: { classDerivesFrom },
+        imodelAccess: stubIModelAccess,
       });
-      const imodelAccess = {
-        ...stubIModelAccess,
-        classDerivesFrom,
-      } as unknown as DefineHierarchyLevelProps["imodelAccess"];
-      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess }));
+      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, ...constProps }));
       expect(result).toHaveLength(1);
       // The search CTE should contain only one ECInstanceId, not duplicated
       const searchCte = (result[0] as InstanceNodesQueryDefinition).query.ctes!.find((cte) =>
@@ -561,15 +531,9 @@ describe("SearchHierarchyDefinition", () => {
     });
 
     it("deduplicates instance keys via reverse class hierarchy check", async () => {
-      const classDerivesFrom = vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>();
-      // Only the reverse direction succeeds — entry.className doesn't derive from x.className, but x.className derives from entry.className
-      classDerivesFrom.mockImplementation(async (derived, candidate) => {
-        if (derived === "Schema:Derived" && candidate === "Schema:Base") {
-          return true;
-        }
+      const baseClass = stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Base" });
+      stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Derived", baseClass });
 
-        return false;
-      });
       const targetPaths: HierarchySearchTree[] = [
         { identifier: { className: "Schema:Base", id: "0x1" } },
         { identifier: { className: "Schema:Derived", id: "0x1" } },
@@ -581,13 +545,9 @@ describe("SearchHierarchyDefinition", () => {
       const def = createSearchHierarchyDefinition({
         targetPaths,
         source: { defineHierarchyLevel: () => of([instanceDef]) },
-        imodelAccess: { classDerivesFrom },
+        imodelAccess: stubIModelAccess,
       });
-      const imodelAccess = {
-        ...stubIModelAccess,
-        classDerivesFrom,
-      } as unknown as DefineHierarchyLevelProps["imodelAccess"];
-      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, imodelAccess }));
+      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, ...constProps }));
       expect(result).toHaveLength(1);
     });
 
@@ -607,7 +567,7 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths,
         source: { defineHierarchyLevel: () => of([instanceDef]) },
       });
-      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode, imodelAccess: stubIModelAccess }));
+      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode, ...constProps }));
       expect(result).toHaveLength(1);
       // Should use selector (IdToHex + FullClassName) instead of search CTE
       const ecsql = trimWhitespace((result[0] as InstanceNodesQueryDefinition).query.ecsql);
@@ -624,9 +584,7 @@ describe("SearchHierarchyDefinition", () => {
         targetPaths,
         source: { defineHierarchyLevel: () => of([instanceDef]) },
       });
-      const result = await firstValueFrom(
-        def.defineHierarchyLevel({ parentNode: undefined, imodelAccess: stubIModelAccess }),
-      );
+      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode: undefined, ...constProps }));
       expect(result).toHaveLength(0);
     });
   });

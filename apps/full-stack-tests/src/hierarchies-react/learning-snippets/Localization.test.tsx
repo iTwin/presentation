@@ -8,8 +8,8 @@
 // import { IModelConnection } from "@itwin/core-frontend";
 // import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 // import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-// import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-// import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+// import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+// import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 // // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.CommonImports
 // import { Props } from "@itwin/presentation-shared";
 // // __PUBLISH_EXTRACT_END__
@@ -69,23 +69,18 @@
 //           ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
 //           ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
 //         };
-//         const nodesQueryFactory = createNodesQueryClauseFactory({
-//           imodelAccess: access,
-//           instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: access }),
-//         });
-//         const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: access });
 //         getHierarchyDefinition = () => ({
-//           defineHierarchyLevel: async () => [
+//           defineHierarchyLevel: async ({ instanceLabelSelectClauseFactory, nodeSelectClauseFactory }) => [
 //             {
 //               fullClassName: "BisCore.PhysicalModel",
 //               query: {
 //                 ecsql: `
 //                   SELECT
-//                     ${await nodesQueryFactory.createSelectClause({
+//                     ${await nodeSelectClauseFactory.createSelectClause({
 //                       ecClassId: { selector: "this.ECClassId" },
 //                       ecInstanceId: { selector: "this.ECInstanceId" },
 //                       nodeLabel: {
-//                         selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
+//                         selector: await instanceLabelSelectClauseFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
 //                       },
 //                       hasChildren: true,
 //                       hideIfNoChildren: false,

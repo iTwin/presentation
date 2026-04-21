@@ -20,11 +20,10 @@ First, we define the hierarchy definition:
 import {
   createIModelHierarchyProvider,
   createMergedIModelHierarchyProvider,
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, EC } from "@itwin/presentation-shared";
+import { EC } from "@itwin/presentation-shared";
 
 // Each version of the iModel already has an open `IModelConnection`. Create iModel access objects for
 // both versions - `base` and `changeset1`. The order is important - we want the changesets to be from oldest to
@@ -36,29 +35,27 @@ const imodels = [
 
 // Define an utility for creating instance nodes query definitions, that we'll use in our hierarchy definition.
 async function createInstanceNodesQueryDefinition({
-  imodelAccess,
+  instanceLabelSelectClauseFactory,
+  nodeSelectClauseFactory,
   fullClassName,
   whereClauseFactory,
-}: {
-  imodelAccess: DefineInstanceNodeChildHierarchyLevelProps["imodelAccess"];
+}: Pick<DefineInstanceNodeChildHierarchyLevelProps, "instanceLabelSelectClauseFactory" | "nodeSelectClauseFactory"> & {
   fullClassName: EC.FullClassName;
   whereClauseFactory?: (props: { alias: string }) => Promise<string>;
 }) {
-  const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-  const queryClauseFactory = createNodesQueryClauseFactory({
-    imodelAccess,
-    instanceLabelSelectClauseFactory: labelsFactory,
-  });
   const whereClause = whereClauseFactory ? await whereClauseFactory({ alias: "this" }) : undefined;
   return {
     fullClassName,
     query: {
       ecsql: `
-        SELECT ${await queryClauseFactory.createSelectClause({
+        SELECT ${await nodeSelectClauseFactory.createSelectClause({
           ecClassId: { selector: "this.ECClassId" },
           ecInstanceId: { selector: "this.ECInstanceId" },
           nodeLabel: {
-            selector: await labelsFactory.createSelectClause({ classAlias: "this", className: fullClassName }),
+            selector: await instanceLabelSelectClauseFactory.createSelectClause({
+              classAlias: "this",
+              className: fullClassName,
+            }),
           },
         })}
         FROM ${fullClassName} AS this
@@ -75,17 +72,17 @@ const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
   // ensures we can find all classes even if they were not present in the base iModel
   classHierarchyInspector: imodels[imodels.length - 1].imodelAccess,
   hierarchy: {
-    rootNodes: async ({ imodelAccess }) => [
-      await createInstanceNodesQueryDefinition({ imodelAccess, fullClassName: "BisCore.PhysicalModel" }),
+    rootNodes: async (props) => [
+      await createInstanceNodesQueryDefinition({ ...props, fullClassName: "BisCore.PhysicalModel" }),
     ],
     childNodes: [
       {
         parentInstancesNodePredicate: "BisCore.PhysicalModel",
-        definitions: async ({ imodelAccess, parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps) => [
+        definitions: async (props: DefineInstanceNodeChildHierarchyLevelProps) => [
           await createInstanceNodesQueryDefinition({
-            imodelAccess,
+            ...props,
             fullClassName: "BisCore.PhysicalElement",
-            whereClauseFactory: async ({ alias }) => `${alias}.Model.Id IN (${parentNodeInstanceIds.join(", ")})`,
+            whereClauseFactory: async ({ alias }) => `${alias}.Model.Id IN (${props.parentNodeInstanceIds.join(", ")})`,
           }),
         ],
       },

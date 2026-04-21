@@ -19,33 +19,27 @@ In its most simple form, a hierarchy definition may just have one `defineHierarc
 
 ```ts
 import {
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  DefineGenericNodeChildHierarchyLevelProps,
   HierarchyDefinition,
   HierarchyLevelDefinition,
   HierarchyNode,
 } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
-  async defineHierarchyLevel({ parentNode }) {
+  async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
     // For root nodes, simply return one generic node
     if (!parentNode) {
       return [{ node: { key: "physical-elements", label: "Physical elements" } }];
     }
     // For the root node, return a query that selects all physical elements
     if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "physical-elements") {
-      const queryClauseFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
-      });
       return [
         {
           fullClassName: "BisCore.PhysicalElement",
           query: {
             ecsql: `
-              SELECT ${await queryClauseFactory.createSelectClause({
+              SELECT ${await nodeSelectClauseFactory.createSelectClause({
                 ecClassId: { selector: "x.ECClassId" },
                 ecInstanceId: { selector: "x.ECInstanceId" },
                 nodeLabel: { selector: "x.UserLabel" },
@@ -75,8 +69,8 @@ However, some hierarchy definitions may choose to write SELECT clause manually a
 
 ```ts
 import {
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  DefineGenericNodeChildHierarchyLevelProps,
   HierarchyDefinition,
   HierarchyLevelDefinition,
   HierarchyNode,
@@ -130,29 +124,23 @@ For example, the following code snippet shows how to use the `preProcessNode` ca
 
 ```ts
 import {
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  DefineGenericNodeChildHierarchyLevelProps,
   HierarchyDefinition,
   HierarchyLevelDefinition,
   HierarchyNode,
 } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
-  async defineHierarchyLevel({ parentNode }) {
+  async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
     // For root nodes, return all physical elements
     if (!parentNode) {
-      const queryClauseFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
-      });
       return [
         {
           fullClassName: "BisCore.PhysicalElement",
           query: {
             ecsql: `
-              SELECT ${await queryClauseFactory.createSelectClause({
+              SELECT ${await nodeSelectClauseFactory.createSelectClause({
                 ecClassId: { selector: "x.ECClassId" },
                 ecInstanceId: { selector: "x.ECInstanceId" },
                 nodeLabel: { selector: "x.UserLabel" },
@@ -192,29 +180,23 @@ For example, the following code snippet shows how to use the `postProcessNode` c
 
 ```ts
 import {
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  DefineGenericNodeChildHierarchyLevelProps,
   HierarchyDefinition,
   HierarchyLevelDefinition,
   HierarchyNode,
 } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
-  async defineHierarchyLevel({ parentNode }) {
+  async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
     // For root nodes, return all physical elements grouped by class
     if (!parentNode) {
-      const queryClauseFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
-      });
       return [
         {
           fullClassName: "BisCore.PhysicalElement",
           query: {
             ecsql: `
-              SELECT ${await queryClauseFactory.createSelectClause({
+              SELECT ${await nodeSelectClauseFactory.createSelectClause({
                 ecClassId: { selector: "x.ECClassId" },
                 ecInstanceId: { selector: "x.ECInstanceId" },
                 nodeLabel: { selector: "x.UserLabel" },
@@ -256,19 +238,13 @@ For example, the following code snippet shows how to define a hierarchy, similar
 
 ```ts
 import {
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  DefineGenericNodeChildHierarchyLevelProps,
   HierarchyDefinition,
   HierarchyLevelDefinition,
   HierarchyNode,
 } from "@itwin/presentation-hierarchies";
 
-const queryClauseFactory = createNodesQueryClauseFactory({
-  imodelAccess,
-  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-    classHierarchyInspector: imodelAccess,
-  }),
-});
 const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
   classHierarchyInspector: imodelAccess,
   hierarchy: {
@@ -278,12 +254,14 @@ const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
       {
         // For the root node, return a query that selects all physical elements
         parentGenericNodePredicate: async (parentKey) => parentKey.id === "physical-elements",
-        definitions: async (): Promise<HierarchyLevelDefinition> => [
+        definitions: async ({
+          nodeSelectClauseFactory,
+        }: DefineGenericNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
           {
             fullClassName: "BisCore.PhysicalElement",
             query: {
               ecsql: `
-              SELECT ${await queryClauseFactory.createSelectClause({
+              SELECT ${await nodeSelectClauseFactory.createSelectClause({
                 ecClassId: { selector: "x.ECClassId" },
                 ecInstanceId: { selector: "x.ECInstanceId" },
                 nodeLabel: { selector: "x.UserLabel" },

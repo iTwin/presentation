@@ -6,15 +6,14 @@
 import { describe, expect } from "vitest";
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
-import { createNodesQueryClauseFactory, HierarchyNode, HierarchySearchTree } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, normalizeFullClassName } from "@itwin/presentation-shared";
+import { HierarchyNode, HierarchySearchTree } from "@itwin/presentation-hierarchies";
+import { normalizeFullClassName } from "@itwin/presentation-shared";
 import { Datasets } from "../util/Datasets.js";
 import { run } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
 import type { IModelDb } from "@itwin/core-backend";
 import type { DefineHierarchyLevelProps, HierarchySearchPath } from "@itwin/presentation-hierarchies";
-import type { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 
 describe("search", () => {
   const totalNumberOfSearchPaths = 50000;
@@ -54,21 +53,15 @@ describe("search", () => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
       const fullClassName = normalizeFullClassName(PhysicalElement.classFullName);
       const createHierarchyLevelDefinition = async (
-        imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
+        nodeSelectClauseFactory: DefineHierarchyLevelProps["nodeSelectClauseFactory"],
         whereClause: (alias: string) => string,
       ) => {
-        const query = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
-        });
         return [
           {
             fullClassName,
             query: {
               ecsql: `
-                SELECT ${await query.createSelectClause({
+                SELECT ${await nodeSelectClauseFactory.createSelectClause({
                   ecClassId: { selector: `this.ECClassId` },
                   ecInstanceId: { selector: `this.ECInstanceId` },
                   nodeLabel: { selector: `this.UserLabel` },
@@ -82,7 +75,7 @@ describe("search", () => {
       };
       return {
         iModel,
-        getHierarchyFactory: (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector) => ({
+        getHierarchyFactory: () => ({
           async defineHierarchyLevel(props: DefineHierarchyLevelProps) {
             // A hierarchy with this structure is created:
             //
@@ -96,7 +89,7 @@ describe("search", () => {
 
             if (!props.parentNode) {
               return createHierarchyLevelDefinition(
-                imodelAccess,
+                props.nodeSelectClauseFactory,
                 (alias) => `WHERE ${alias}.ECInstanceId = ${physicalElementsSmallestDecimalId}`,
               );
             }
@@ -107,7 +100,7 @@ describe("search", () => {
               )
             ) {
               return createHierarchyLevelDefinition(
-                imodelAccess,
+                props.nodeSelectClauseFactory,
                 (alias) => `WHERE ${alias}.ECInstanceId IN (${parentIdsArr.join(", ")})`,
               );
             }
@@ -117,7 +110,7 @@ describe("search", () => {
               props.parentNode.key.instanceKeys.some(({ id }) => parentIdsArr.includes(Id64.getLocalId(id)))
             ) {
               return createHierarchyLevelDefinition(
-                imodelAccess,
+                props.nodeSelectClauseFactory,
                 (alias) =>
                   `WHERE ${alias}.ECInstanceId NOT IN (${physicalElementsSmallestDecimalId}, ${parentIdsArr.join(", ")})`,
               );

@@ -29,6 +29,7 @@ import {
 import { assert, BeEvent, Guid, StopWatch } from "@itwin/core-bentley";
 import {
   createDefaultValueFormatter,
+  createIModelInstanceLabelSelectClauseFactory,
   formatConcatenatedValue,
   InstanceKey,
   normalizeFullClassName,
@@ -54,7 +55,7 @@ import { getRxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.
 import { SubscriptionScheduler } from "../internal/SubscriptionScheduler.js";
 import { HierarchyCache } from "./HierarchyCache.js";
 import { HierarchyNodesDefinition } from "./IModelHierarchyDefinition.js";
-import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
+import { createNodesQueryClauseFactory, NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
 import { createDetermineChildrenOperator } from "./operators/DetermineChildren.js";
 import { createGroupingOperator } from "./operators/Grouping.js";
 import { createHideIfNoChildrenOperator } from "./operators/HideIfNoChildren.js";
@@ -72,6 +73,7 @@ import type {
   ECSqlQueryDef,
   Event,
   EventArgs,
+  IInstanceLabelSelectClauseFactory,
   IPrimitiveValueFormatter,
 } from "@itwin/presentation-shared";
 import type { NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
@@ -91,6 +93,7 @@ import type {
   SourceInstanceHierarchyNode,
 } from "./IModelHierarchyNode.js";
 import type { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
+import type { NodesQueryClauseFactory } from "./NodeSelectQueryFactory.js";
 
 const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.IModelHierarchyProvider`;
 const LOGGING_NAMESPACE_INTERNAL = `${BASE_LOGGING_NAMESPACE_INTERNAL}.IModelHierarchyProvider`;
@@ -241,7 +244,12 @@ interface RequestContextProp {
 type WithSourceNameOverride<T> = T & { sourceName?: string };
 
 class IModelHierarchyProviderImpl implements HierarchyProvider {
-  private _imodels: Array<{ imodelAccess: IModelAccess; imodelChanged?: Event<() => void> }>;
+  private _imodels: Array<
+    MergedIModelHierarchyProviderProps["imodels"][number] & {
+      instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
+      nodeSelectClauseFactory: NodesQueryClauseFactory;
+    }
+  >;
   private _hierarchyChanged: BeEvent<(args: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _sourceHierarchyDefinition: RxjsHierarchyDefinition;
@@ -264,7 +272,11 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this.#componentId = Guid.createValue();
     this.#componentName = "IModelHierarchyProviderImpl";
     this.#sourceName = props.sourceName ?? `${this.#componentName}:${this.#componentId}`;
-    this._imodels = props.imodels;
+    this._imodels = props.imodels.map(({ imodelAccess, imodelChanged }) => {
+      const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
+      const nodeSelectClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory });
+      return { imodelAccess, imodelChanged, instanceLabelSelectClauseFactory, nodeSelectClauseFactory };
+    });
     this._hierarchyChanged = new BeEvent();
     this._activeHierarchyDefinition = this._sourceHierarchyDefinition = getRxjsHierarchyDefinition(
       props.hierarchyDefinition,
@@ -379,7 +391,11 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 
   private createHierarchyLevelDefinitionsObservable(
-    props: Omit<DefineHierarchyLevelProps, "imodelAccess"> & RequestContextProp,
+    props: Omit<
+      DefineHierarchyLevelProps,
+      "imodelAccess" | "instanceLabelSelectClauseFactory" | "nodeSelectClauseFactory"
+    > &
+      RequestContextProp,
   ): Observable<
     { imodelAccess: IModelAccess; imodelAccessIndex: number } & (
       | { hierarchyNodesDefinition: GenericHierarchyNodeDefinition }
@@ -395,7 +411,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     });
 
     return from(this._imodels).pipe(
-      mergeMap(({ imodelAccess }, imodelAccessIndex) => {
+      mergeMap(({ imodelAccess, instanceLabelSelectClauseFactory, nodeSelectClauseFactory }, imodelAccessIndex) => {
         let parentNode = props.parentNode;
         if (
           parentNode &&
@@ -421,7 +437,13 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
           }
         }
         return this._activeHierarchyDefinition
-          .defineHierarchyLevel({ ...defineHierarchyLevelProps, parentNode, imodelAccess })
+          .defineHierarchyLevel({
+            ...defineHierarchyLevelProps,
+            parentNode,
+            imodelAccess,
+            instanceLabelSelectClauseFactory,
+            nodeSelectClauseFactory,
+          })
           .pipe(
             mergeAll(),
             map(
@@ -445,10 +467,10 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 
   private createSourceNodesObservable(
-    props: Omit<DefineHierarchyLevelProps, "imodelAccess"> & {
-      hierarchyLevelSizeLimit?: number | "unbounded";
-      targetInstanceKeys?: InstanceKey[];
-    } & RequestContextProp,
+    props: Omit<
+      DefineHierarchyLevelProps,
+      "imodelAccess" | "instanceLabelSelectClauseFactory" | "nodeSelectClauseFactory"
+    > & { hierarchyLevelSizeLimit?: number | "unbounded"; targetInstanceKeys?: InstanceKey[] } & RequestContextProp,
   ): SourceNodesObservable {
     const createSourceNodesFromDefinition = (
       imodelAccess: IModelAccess,

@@ -197,7 +197,7 @@ import {
   HierarchyNodesDefinition,
   InstancesNodeKey,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const definition: HierarchyNodesDefinition = {
   node: {
@@ -262,9 +262,9 @@ import {
   HierarchyNodesDefinition,
   InstancesNodeKey,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const selectClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
   instanceLabelSelectClauseFactory: labelsFactory,
@@ -355,9 +355,9 @@ import {
   HierarchyNodesDefinition,
   InstancesNodeKey,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const selectClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
   instanceLabelSelectClauseFactory: labelsFactory,
@@ -456,9 +456,9 @@ The purpose of a custom query instance nodes specification in Presentation Rules
     HierarchyNodesDefinition,
     InstancesNodeKey,
   } from "@itwin/presentation-hierarchies";
-  import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+  import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-  const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+  const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
   const selectClauseFactory = createNodesQueryClauseFactory({
     imodelAccess,
     instanceLabelSelectClauseFactory: labelsFactory,
@@ -590,9 +590,9 @@ import {
   HierarchyNodesDefinition,
   InstancesNodeKey,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const selectClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
   instanceLabelSelectClauseFactory: labelsFactory,
@@ -650,9 +650,9 @@ import {
   HierarchyNodesDefinition,
   InstancesNodeKey,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const selectClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
   instanceLabelSelectClauseFactory: labelsFactory,
@@ -745,9 +745,9 @@ import {
   HierarchyNodesDefinition,
   InstancesNodeKey,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const selectClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
   instanceLabelSelectClauseFactory: labelsFactory,
@@ -820,9 +820,9 @@ import {
   HierarchyNodesDefinition,
   InstancesNodeKey,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const selectClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
   instanceLabelSelectClauseFactory: labelsFactory,
@@ -913,9 +913,9 @@ import {
   HierarchyNodesDefinition,
   InstancesNodeKey,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const selectClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
   instanceLabelSelectClauseFactory: labelsFactory,

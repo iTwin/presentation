@@ -32,8 +32,7 @@ import { BriefcaseConnection, IpcApp, NullRenderSystem } from "@itwin/core-front
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
-import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSql, normalizeFullClassName } from "@itwin/presentation-shared";
+import { ECSql, normalizeFullClassName } from "@itwin/presentation-shared";
 import { createFileNameFromString, setupOutputFileLocation } from "../FilenameUtils.js";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation.js";
 import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils.js";
@@ -417,21 +416,14 @@ describe("Hierarchies", () => {
         function createRootSubjectChildrenProvider(
           props: { label: "codeValue" | "aspectIdentifier" } = { label: "codeValue" },
         ) {
-          const imodelAccess = createIModelAccess(imodel);
-          const selectQueryFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-              classHierarchyInspector: imodelAccess,
-            }),
-          });
           const hierarchy: HierarchyDefinition = {
-            async defineHierarchyLevel() {
+            async defineHierarchyLevel({ nodeSelectClauseFactory }) {
               return [
                 {
                   fullClassName: normalizeFullClassName(Subject.classFullName),
                   query: {
                     ecsql: `
-                      SELECT ${await selectQueryFactory.createSelectClause({
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: props.label === "codeValue" ? `this.CodeValue` : `aspect.Identifier` },
@@ -452,21 +444,14 @@ describe("Hierarchies", () => {
         }
 
         function createRootSubjectReferredElementsProvider() {
-          const imodelAccess = createIModelAccess(imodel);
-          const selectQueryFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-              classHierarchyInspector: imodelAccess,
-            }),
-          });
           const hierarchy: HierarchyDefinition = {
-            async defineHierarchyLevel() {
+            async defineHierarchyLevel({ nodeSelectClauseFactory }) {
               return [
                 {
                   fullClassName: normalizeFullClassName(Element.classFullName),
                   query: {
                     ecsql: `
-                      SELECT ${await selectQueryFactory.createSelectClause({
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.CodeValue` },
@@ -488,20 +473,14 @@ describe("Hierarchies", () => {
 
         function createPhysicalModelsProvider() {
           const imodelAccess = createIModelAccess(imodel);
-          const selectQueryFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-              classHierarchyInspector: imodelAccess,
-            }),
-          });
           const hierarchy: HierarchyDefinition = {
-            async defineHierarchyLevel() {
+            async defineHierarchyLevel({ nodeSelectClauseFactory }) {
               return [
                 {
                   fullClassName: normalizeFullClassName(Subject.classFullName),
                   query: {
                     ecsql: `
-                      SELECT ${await selectQueryFactory.createSelectClause({
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: {

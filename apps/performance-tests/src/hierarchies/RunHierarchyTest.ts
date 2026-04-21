@@ -5,14 +5,13 @@
 
 import { expect } from "vitest";
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
-import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, normalizeFullClassName } from "@itwin/presentation-shared";
+import { normalizeFullClassName } from "@itwin/presentation-shared";
 import { Datasets } from "../util/Datasets.js";
 import { run } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
 import type { DefineHierarchyLevelProps, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import type { EC, ECClassHierarchyInspector, ECSchemaProvider, Props } from "@itwin/presentation-shared";
+import type { EC, Props } from "@itwin/presentation-shared";
 import type { IModelName } from "../util/Datasets.js";
 import type { RunOptions } from "../util/TestUtilities.js";
 
@@ -37,24 +36,18 @@ export function runHierarchyTest(
       const fullClassName = testProps.fullClassName ?? normalizeFullClassName(PhysicalElement.classFullName);
       return {
         iModel,
-        getHierarchyFactory: (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector) => ({
+        getHierarchyFactory: () => ({
           async defineHierarchyLevel(props: DefineHierarchyLevelProps) {
             if (props.parentNode) {
               return [];
             }
 
-            const query = createNodesQueryClauseFactory({
-              imodelAccess,
-              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                classHierarchyInspector: imodelAccess,
-              }),
-            });
             return [
               {
                 fullClassName,
                 query: {
                   ecsql: `
-                    SELECT ${await query.createSelectClause({
+                    SELECT ${await props.nodeSelectClauseFactory.createSelectClause({
                       ...nodeSelectProps,
                       ecClassId: nodeSelectProps?.ecClassId ?? { selector: `this.ECClassId` },
                       ecInstanceId: nodeSelectProps?.ecInstanceId ?? { selector: `this.ECInstanceId` },

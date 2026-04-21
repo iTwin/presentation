@@ -64,11 +64,7 @@ The hook takes 2 required properties:
   import { IModelConnection } from "@itwin/core-frontend";
   import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
   import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-  import {
-    createLimitingECSqlQueryExecutor,
-    createNodesQueryClauseFactory,
-    HierarchyDefinition,
-  } from "@itwin/presentation-hierarchies";
+  import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 
   function createIModelAccess(imodel: IModelConnection) {
     const schemaProvider = createECSchemaProvider(imodel.schemaContext);
@@ -105,15 +101,9 @@ The component renders a virtualized tree using the `Tree` component from `@strat
 
 ```tsx
 import { IModelConnection } from "@itwin/core-frontend";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import {
-  createLimitingECSqlQueryExecutor,
-  createNodesQueryClauseFactory,
-  HierarchyDefinition,
-} from "@itwin/presentation-hierarchies";
-
-import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
+import { createLimitingECSqlQueryExecutor, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { StrataKitTreeRenderer, StrataKitRootErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
@@ -154,27 +144,19 @@ type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
 
 // The hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all `BisCore.PhysicalModel` instances
 function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }): HierarchyDefinition {
-  // Create a factory for building labels SELECT query clauses according to BIS conventions
-  const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({
-    classHierarchyInspector: imodelAccess,
-  });
-  // Create a factory for building nodes SELECT query clauses in a format understood by the provider
-  const nodesQueryFactory = createNodesQueryClauseFactory({
-    imodelAccess,
-    instanceLabelSelectClauseFactory: labelsQueryFactory,
-  });
   return {
-    defineHierarchyLevel: async () => [
+    // The `instanceLabelSelectClauseFactory` and `nodeSelectClauseFactory` are provided automatically by the hierarchy provider
+    defineHierarchyLevel: async ({ instanceLabelSelectClauseFactory, nodeSelectClauseFactory }) => [
       {
         fullClassName: "BisCore.PhysicalModel",
         query: {
           ecsql: `
             SELECT
-              ${await nodesQueryFactory.createSelectClause({
+              ${await nodeSelectClauseFactory.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
-                  selector: await labelsQueryFactory.createSelectClause({
+                  selector: await instanceLabelSelectClauseFactory.createSelectClause({
                     classAlias: "this",
                     className: "BisCore.PhysicalModel",
                   }),

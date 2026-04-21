@@ -315,7 +315,7 @@ The APIs in Values group contain various value types and utilities to work with 
   }
   ```
 
-The package delivers 3 implementations of `IInstanceLabelSelectClauseFactory` that can be created using the following factory methods: `createDefaultInstanceLabelSelectClauseFactory`, `createClassBasedInstanceLabelSelectClauseFactory`, `createBisInstanceLabelSelectClauseFactory`.
+The package delivers 4 implementations of `IInstanceLabelSelectClauseFactory` that can be created using the following factory methods: `createDefaultInstanceLabelSelectClauseFactory`, `createClassBasedInstanceLabelSelectClauseFactory`, `createBisInstanceLabelSelectClauseFactory`, `createIModelInstanceLabelSelectClauseFactory`.
 
 ### `createDefaultInstanceLabelSelectClauseFactory`
 
@@ -381,6 +381,24 @@ import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector } 
 
 const classHierarchyInspector: ECClassHierarchyInspector = getClassHierarchyInspector();
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector });
+const ecsql = `SELECT ${await labelsFactory.createSelectClause({ classAlias: "element" })} AS [Label] FROM [BisCore].[Element] AS [element]`;
+// ...
+```
+
+### `createIModelInstanceLabelSelectClauseFactory`
+
+This label selectors factory reads `InstanceLabelOverride` rules from `PresentationRules` rulesets embedded in
+the iModel and compiles them into ECSQL label selectors. Rules are loaded lazily on first use and cached per
+factory instance. When the `PresentationRules` schema is absent from the iModel, the factory transparently
+falls back to a configurable default (by default `createBisInstanceLabelSelectClauseFactory`).
+
+Example usage:
+
+```ts
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+
+// `imodelAccess` must satisfy `ECSqlQueryExecutor & ECClassHierarchyInspector & ECSchemaProvider`
+const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const ecsql = `SELECT ${await labelsFactory.createSelectClause({ classAlias: "element" })} AS [Label] FROM [BisCore].[Element] AS [element]`;
 // ...
 ```

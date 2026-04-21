@@ -23,14 +23,13 @@ import {
 } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
 import {
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
   HierarchyNode,
   NodeSelectClauseColumnNames,
   ProcessedHierarchyNode,
   RowsLimitExceededError,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
+import { createIModelInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 import { ModelsTreeIdsCache } from "./ModelsTreeIdsCache.js";
 
 import type { Observable, ObservableInput } from "rxjs";
@@ -46,7 +45,6 @@ import type {
   HierarchyNodesDefinition,
   HierarchySearchPath,
   LimitingECSqlQueryExecutor,
-  NodesQueryClauseFactory,
 } from "@itwin/presentation-hierarchies";
 import type {
   EC,
@@ -96,7 +94,7 @@ export interface ElementsGroupInfo {
 }
 
 interface ModelsTreeInstanceKeyPathsBaseProps {
-  imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
+  imodelAccess: ECClassHierarchyInspector & ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsCache?: ModelsTreeIdsCache;
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
   limit?: number | "unbounded";
@@ -125,8 +123,6 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   private _impl: HierarchyDefinition;
   private _idsCache: ModelsTreeIdsCache;
   private _hierarchyConfig: ModelsTreeHierarchyConfiguration;
-  private _selectQueryFactory: NodesQueryClauseFactory;
-  private _nodeLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
   private _queryExecutor: LimitingECSqlQueryExecutor;
   private _isSupported?: Promise<boolean>;
 
@@ -167,13 +163,6 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     this._queryExecutor = props.imodelAccess;
     this._hierarchyConfig = props.hierarchyConfig ?? defaultHierarchyConfiguration;
     this._idsCache = props.idsCache ?? new ModelsTreeIdsCache(props.imodelAccess, this._hierarchyConfig);
-    this._nodeLabelSelectClauseFactory = createBisInstanceLabelSelectClauseFactory({
-      classHierarchyInspector: props.imodelAccess,
-    });
-    this._selectQueryFactory = createNodesQueryClauseFactory({
-      imodelAccess: props.imodelAccess,
-      instanceLabelSelectClauseFactory: this._nodeLabelSelectClauseFactory,
-    });
   }
 
   public async postProcessNode({ node }: { node: ProcessedHierarchyNode }): Promise<ProcessedHierarchyNode> {
@@ -212,7 +201,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   private async createRootHierarchyLevelDefinition(
     props: DefineRootHierarchyLevelProps,
   ): Promise<HierarchyLevelDefinition> {
-    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses({
+    const { nodeSelectClauseFactory, instanceLabelSelectClauseFactory } = props;
+    const instanceFilterClauses = await nodeSelectClauseFactory.createFilterClauses({
       filter: props.instanceFilter,
       contentClass: { fullName: "BisCore.Subject", alias: "this" },
     });
@@ -222,11 +212,11 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ${await this._selectQueryFactory.createSelectClause({
+              ${await nodeSelectClauseFactory.createSelectClause({
                 ecClassId: { selector: ECSql.createRawPropertyValueSelector("this", "ECClassId") },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
-                  selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
+                  selector: await instanceLabelSelectClauseFactory.createSelectClause({
                     classAlias: "this",
                     className: "BisCore.Subject",
                   }),
@@ -249,13 +239,15 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   private async createSubjectChildrenQuery({
     parentNodeInstanceIds: subjectIds,
     instanceFilter,
+    nodeSelectClauseFactory,
+    instanceLabelSelectClauseFactory,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const [subjectFilterClauses, modelFilterClauses] = await Promise.all([
-      this._selectQueryFactory.createFilterClauses({
+      nodeSelectClauseFactory.createFilterClauses({
         filter: instanceFilter,
         contentClass: { fullName: "BisCore.Subject", alias: "this" },
       }),
-      this._selectQueryFactory.createFilterClauses({
+      nodeSelectClauseFactory.createFilterClauses({
         filter: instanceFilter,
         contentClass: { fullName: "BisCore.GeometricModel3d", alias: "this" },
       }),
@@ -271,11 +263,11 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ${await this._selectQueryFactory.createSelectClause({
+              ${await nodeSelectClauseFactory.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
-                  selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
+                  selector: await instanceLabelSelectClauseFactory.createSelectClause({
                     classAlias: "this",
                     className: "BisCore.Subject",
                   }),
@@ -306,11 +298,11 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             SELECT model.ECInstanceId AS ECInstanceId, model.*
             FROM (
               SELECT
-                ${await this._selectQueryFactory.createSelectClause({
+                ${await nodeSelectClauseFactory.createSelectClause({
                   ecClassId: { selector: "m.ECClassId" },
                   ecInstanceId: { selector: "m.ECInstanceId" },
                   nodeLabel: {
-                    selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
+                    selector: await instanceLabelSelectClauseFactory.createSelectClause({
                       classAlias: "partition",
                       className: "BisCore.InformationPartitionElement",
                     }),
@@ -358,6 +350,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
 
   private async createISubModeledElementChildrenQuery({
     parentNodeInstanceIds: elementIds,
+    nodeSelectClauseFactory,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     // note: we do not apply hierarchy level filtering on this hierarchy level, because it's always
     // hidden - the filter will get applied on the child hierarchy levels
@@ -367,7 +360,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ${await this._selectQueryFactory.createSelectClause({
+              ${await nodeSelectClauseFactory.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: "", // doesn't matter - the node is always hidden
@@ -388,8 +381,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   private async createGeometricModel3dChildrenQuery({
     parentNodeInstanceIds: modelIds,
     instanceFilter,
+    nodeSelectClauseFactory,
+    instanceLabelSelectClauseFactory,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses({
+    const instanceFilterClauses = await nodeSelectClauseFactory.createFilterClauses({
       filter: instanceFilter,
       contentClass: { fullName: "BisCore.SpatialCategory", alias: "this" },
     });
@@ -399,11 +394,11 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ${await this._selectQueryFactory.createSelectClause({
+              ${await nodeSelectClauseFactory.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
-                  selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
+                  selector: await instanceLabelSelectClauseFactory.createSelectClause({
                     classAlias: "this",
                     className: "BisCore.SpatialCategory",
                   }),
@@ -440,12 +435,14 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     parentNodeInstanceIds: categoryIds,
     parentNode,
     instanceFilter,
+    nodeSelectClauseFactory,
+    instanceLabelSelectClauseFactory,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const modelIds = parseIdsSelectorResult(parentNode.extendedData?.modelIds);
     if (modelIds.length === 0) {
       throw new Error(`Invalid category node "${parentNode.label}" - missing model information.`);
     }
-    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses({
+    const instanceFilterClauses = await nodeSelectClauseFactory.createFilterClauses({
       filter: instanceFilter,
       contentClass: { fullName: this._hierarchyConfig.elementClassSpecification, alias: "this" },
     });
@@ -455,11 +452,11 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ${await this._selectQueryFactory.createSelectClause({
+              ${await nodeSelectClauseFactory.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
-                  selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
+                  selector: await instanceLabelSelectClauseFactory.createSelectClause({
                     classAlias: "this",
                     className: this._hierarchyConfig.elementClassSpecification,
                   }),
@@ -506,8 +503,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   private async createGeometricElement3dChildrenQuery({
     parentNodeInstanceIds: elementIds,
     instanceFilter,
+    nodeSelectClauseFactory,
+    instanceLabelSelectClauseFactory,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses({
+    const instanceFilterClauses = await nodeSelectClauseFactory.createFilterClauses({
       filter: instanceFilter,
       contentClass: { fullName: this._hierarchyConfig.elementClassSpecification, alias: "this" },
     });
@@ -517,11 +516,11 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ${await this._selectQueryFactory.createSelectClause({
+              ${await nodeSelectClauseFactory.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
-                  selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
+                  selector: await instanceLabelSelectClauseFactory.createSelectClause({
                     classAlias: "this",
                     className: this._hierarchyConfig.elementClassSpecification,
                   }),
@@ -562,7 +561,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
 
   public static async createInstanceKeyPaths(props: ModelsTreeInstanceKeyPathsProps) {
     if (ModelsTreeInstanceKeyPathsProps.isLabelProps(props)) {
-      const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: props.imodelAccess });
+      const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess });
       return createInstanceKeyPathsFromInstanceLabel({ ...props, labelsFactory });
     }
     return createInstanceKeyPathsFromTargetItems(props);

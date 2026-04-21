@@ -13,8 +13,7 @@ import {
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.Imports
-import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -47,7 +46,7 @@ describe("Hierarchies", () => {
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.PhysicalElement` nodes to be return as
                   // root nodes and have them grouped by label
@@ -56,12 +55,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.PhysicalElement",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await nodeSelectClauseFactory.createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -125,7 +119,7 @@ describe("Hierarchies", () => {
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.PhysicalElement` nodes to be returned as root
                   // nodes and have them merged based on label
@@ -134,12 +128,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.PhysicalElement",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await nodeSelectClauseFactory.createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -181,7 +170,7 @@ describe("Hierarchies", () => {
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.Category` nodes to be returned as root nodes and have
                   // them grouped by class.
@@ -190,12 +179,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.Category",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await nodeSelectClauseFactory.createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.CodeValue" },
@@ -253,7 +237,7 @@ describe("Hierarchies", () => {
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.Category` nodes to be grouped by the following classes:
                   // - `BisCore.Element`
@@ -263,12 +247,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.Category",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await nodeSelectClauseFactory.createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.CodeValue" },
@@ -329,7 +308,7 @@ describe("Hierarchies", () => {
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.RepositoryLink` nodes to be returned as root nodes and have
                   // them grouped by the `Format` property.
@@ -338,12 +317,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.RepositoryLink",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await nodeSelectClauseFactory.createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -417,7 +391,7 @@ describe("Hierarchies", () => {
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.PhysicalMaterial` nodes to be returned as root nodes and have
                   // them grouped by the `Density` property value in given ranges.
@@ -426,12 +400,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.PhysicalMaterial",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await nodeSelectClauseFactory.createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -509,7 +478,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
-            defineHierarchyLevel: async ({ parentNode }) => {
+            defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
               if (!parentNode) {
                 // The hierarchy definition requests `BisCore.RepositoryLink` nodes to be returned as root nodes and have
                 // them grouped by the `Format` property.
@@ -518,12 +487,7 @@ describe("Hierarchies", () => {
                     fullClassName: "BisCore.RepositoryLink",
                     query: {
                       ecsql: `
-                        SELECT ${await createNodesQueryClauseFactory({
-                          imodelAccess,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                            classHierarchyInspector: imodelAccess,
-                          }),
-                        }).createSelectClause({
+                        SELECT ${await nodeSelectClauseFactory.createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },
                           nodeLabel: { selector: "this.UserLabel" },
@@ -635,7 +599,7 @@ describe("Hierarchies", () => {
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.RepositoryLink` nodes to be returned as root nodes and have
                   // them grouped by label only if there's more than one instance with the same label.
@@ -644,12 +608,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.RepositoryLink",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await nodeSelectClauseFactory.createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -693,7 +652,7 @@ describe("Hierarchies", () => {
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.RepositoryLink` nodes to be returned as root nodes and have
                   // them grouped by class only if the grouping node has siblings.
@@ -702,12 +661,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.RepositoryLink",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await nodeSelectClauseFactory.createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -751,7 +705,7 @@ describe("Hierarchies", () => {
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
                 if (!parentNode) {
                   return [
                     {
@@ -760,12 +714,7 @@ describe("Hierarchies", () => {
                         ecsql:
                           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.AutoExpandExample
                           `
-                            SELECT ${await createNodesQueryClauseFactory({
-                              imodelAccess,
-                              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                                classHierarchyInspector: imodelAccess,
-                              }),
-                            }).createSelectClause({
+                            SELECT ${await nodeSelectClauseFactory.createSelectClause({
                               ecClassId: { selector: "this.ECClassId" },
                               ecInstanceId: { selector: "this.ECInstanceId" },
                               nodeLabel: { selector: "this.UserLabel" },
