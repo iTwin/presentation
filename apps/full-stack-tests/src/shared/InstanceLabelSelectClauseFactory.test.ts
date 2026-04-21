@@ -98,7 +98,7 @@ describe("iModel instance labels", () => {
     expect(await selectInstanceLabel({ imodel: imodelConnection, instanceKey: keys.target })).toBe("HighWins");
   });
 
-  it("applies `Property` spec with `propertySource` — label from parent's property", async () => {
+  it("applies `Property` spec with `propertySource` - label from parent's property", async () => {
     const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
       const { id: modelId } = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
       const { id: categoryId } = insertSpatialCategory({ imodel, codeValue: "category" });
@@ -129,7 +129,7 @@ describe("iModel instance labels", () => {
     expect(await selectInstanceLabel({ imodel: imodelConnection, instanceKey: keys.child })).toBe("ParentLabel");
   });
 
-  it("applies `RelatedInstanceLabel` spec — label from related PhysicalType", async () => {
+  it("applies `RelatedInstanceLabel` spec - label from related PhysicalType", async () => {
     const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
       const { id: modelId } = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
       const { id: categoryId } = insertSpatialCategory({ imodel, codeValue: "category" });
