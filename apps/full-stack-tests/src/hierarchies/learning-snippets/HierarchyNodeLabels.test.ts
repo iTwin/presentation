@@ -78,7 +78,7 @@ describe("Hierarchies", () => {
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.IModelInstanceLabelSelectClauseFactory
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode, instanceLabelSelectClauseFactory, nodeSelectClauseFactory }) {
+          async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
             // For root nodes, return a query that selects all physical elements
             if (!parentNode) {
               return [
@@ -89,12 +89,13 @@ describe("Hierarchies", () => {
                       SELECT ${await nodeSelectClauseFactory.createSelectClause({
                         ecClassId: { selector: "x.ECClassId" },
                         ecInstanceId: { selector: "x.ECInstanceId" },
+                        // Use `{ of: ... }` to delegate label creation to the instance label select clause factory used 
+                        // by `nodeSelectClauseFactory`, which defaults to the result of `createIModelInstanceLabelSelectClauseFactory`.
                         nodeLabel: {
-                          // Use iModel instance label select clause factory to create the label selector
-                          selector: await instanceLabelSelectClauseFactory.createSelectClause({
+                          of: {
                             classAlias: "x",
                             className: "BisCore.PhysicalElement", // This is optional, but helps create a more optimal selector
-                          }),
+                          },
                         },
                       })}
                       FROM BisCore.PhysicalElement x

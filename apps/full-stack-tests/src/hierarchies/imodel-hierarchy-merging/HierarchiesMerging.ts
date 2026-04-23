@@ -6,21 +6,19 @@
 import { assert } from "@itwin/core-bentley";
 import {
   createMergedIModelHierarchyProvider,
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
   HierarchyNodeKey,
 } from "@itwin/presentation-hierarchies";
-import { createDefaultInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { importSchema } from "../../SchemaUtils.js";
 import { createIModelAccess } from "../Utils.js";
 
 import type { ECDb } from "@itwin/core-backend";
 import type {
   DefineGenericNodeChildHierarchyLevelProps,
+  DefineHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
   HierarchyDefinition,
-  NodesQueryClauseFactory,
 } from "@itwin/presentation-hierarchies";
 import type { ECSqlBinding, Props } from "@itwin/presentation-shared";
 import type { ECDbBuilder } from "../../ECDbUtils.js";
@@ -31,17 +29,15 @@ export function createHierarchyDefinitionFactory({
   createGenericNodeForY,
 }: {
   xyzSchema: Awaited<ReturnType<typeof importSchema>>;
-  createYGroupingParams?: (alias: string) => Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"];
+  createYGroupingParams?: (
+    alias: string,
+  ) => Props<DefineHierarchyLevelProps["nodeSelectClauseFactory"]["createSelectClause"]>["grouping"];
   createGenericNodeForY?: boolean;
 }): Props<typeof createMergedHierarchyProvider>["createHierarchyDefinition"] {
   const classes = xyzSchema.items;
 
-  const rootNodes = async ({ imodelAccess, instanceFilter }: DefineRootHierarchyLevelProps) => {
-    const queryClauseFactory = createNodesQueryClauseFactory({
-      imodelAccess,
-      instanceLabelSelectClauseFactory: createDefaultInstanceLabelSelectClauseFactory(),
-    });
-    const { from, joins, where } = await queryClauseFactory.createFilterClauses({
+  const rootNodes = async ({ instanceFilter, nodeSelectClauseFactory }: DefineRootHierarchyLevelProps) => {
+    const { from, joins, where } = await nodeSelectClauseFactory.createFilterClauses({
       contentClass: { fullName: classes.X.fullName, alias: "this" },
       filter: instanceFilter,
     });
@@ -50,7 +46,7 @@ export function createHierarchyDefinitionFactory({
         fullClassName: classes.X.fullName,
         query: {
           ecsql: `
-            SELECT ${await queryClauseFactory.createSelectClause({
+            SELECT ${await nodeSelectClauseFactory.createSelectClause({
               ecClassId: { selector: `this.ECClassId` },
               ecInstanceId: { selector: `this.ECInstanceId` },
               nodeLabel: { selector: "this.Label" },
@@ -64,17 +60,16 @@ export function createHierarchyDefinitionFactory({
     ];
   };
   const childNodesForX = async ({
-    imodelAccess,
     instanceFilter,
     parentNodeInstanceIds,
-  }: Pick<DefineInstanceNodeChildHierarchyLevelProps, "imodelAccess" | "instanceFilter" | "parentNodeInstanceIds">) => {
-    const queryClauseFactory = createNodesQueryClauseFactory({
-      imodelAccess,
-      instanceLabelSelectClauseFactory: createDefaultInstanceLabelSelectClauseFactory(),
-    });
+    nodeSelectClauseFactory,
+  }: Pick<
+    DefineInstanceNodeChildHierarchyLevelProps,
+    "instanceFilter" | "parentNodeInstanceIds" | "nodeSelectClauseFactory"
+  >) => {
     const [filterY, filterZ] = await Promise.all(
       [classes.Y.fullName, classes.Z.fullName].map(async (contentClassName) =>
-        queryClauseFactory.createFilterClauses({
+        nodeSelectClauseFactory.createFilterClauses({
           contentClass: { fullName: contentClassName, alias: "this" },
           filter: instanceFilter,
         }),
@@ -85,7 +80,7 @@ export function createHierarchyDefinitionFactory({
         fullClassName: classes.Y.fullName,
         query: {
           ecsql: `
-            SELECT ${await queryClauseFactory.createSelectClause({
+            SELECT ${await nodeSelectClauseFactory.createSelectClause({
               ecClassId: { selector: `this.ECClassId` },
               ecInstanceId: { selector: `this.ECInstanceId` },
               nodeLabel: { selector: "this.Label" },
@@ -104,7 +99,7 @@ export function createHierarchyDefinitionFactory({
         fullClassName: classes.Z.fullName,
         query: {
           ecsql: `
-            SELECT ${await queryClauseFactory.createSelectClause({
+            SELECT ${await nodeSelectClauseFactory.createSelectClause({
               ecClassId: { selector: `this.ECClassId` },
               ecInstanceId: { selector: `this.ECInstanceId` },
               nodeLabel: { selector: "this.Label" },

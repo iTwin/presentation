@@ -79,7 +79,7 @@ The callback argument allows the filter to be assigned to the node. Upon that no
 
 As mentioned in the previous section, hierarchy definition gets the applied filter as the `DefineHierarchyLevelProps.instanceFilter` argument to its `defineHierarchyLevel` function. And it's definition's job to apply this filter on the returned `InstanceNodesQueryDefinition`.
 
-While the library can't do that automatically, it does provide a helper function that can be used to apply the filter on the query. The function is available as `NodesQueryClauseFactory.createFilterClauses` retrieved from `createNodesQueryClauseFactory` (which can also be used to create SELECT clauses). The function takes information about the class the nodes represent and the filter, and returns a set of clauses that can be used to apply the filter on the query:
+While the library can't do that automatically, it does provide a helper function that can be used to apply the filter on the query. The function is available as `nodeSelectClauseFactory.createFilterClauses` through the `defineHierarchyLevel` props. The function takes information about the class the nodes represent and the filter, and returns a set of clauses that can be used to apply the filter on the query:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchyLevelFiltering.Imports, Presentation.Hierarchies.HierarchyLevelFiltering.ApplyFilter], ts]] -->
 <!-- BEGIN EXTRACTION -->

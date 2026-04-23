@@ -33,12 +33,11 @@ import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.HierarchyNodesDefinitionImports
 import {
-  createNodesQueryClauseFactory,
+  DefineHierarchyLevelProps,
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
   InstancesNodeKey,
 } from "@itwin/presentation-hierarchies";
-import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -190,41 +189,37 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.InstanceNodesOfSpecificClassesDefinition
-          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
-          const definition: HierarchyNodesDefinition = {
-            fullClassName: "BisCore.GeometricModel",
-            query: {
-              ecsql: `
-                SELECT ${await selectClauseFactory.createSelectClause({
-                  ecClassId: { selector: "this.ECClassId" },
-                  ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: {
-                    selector: await labelsFactory.createSelectClause({
-                      className: "BisCore.GeometricModel",
-                      classAlias: "this",
-                    }),
+          const hierarchyDefinition: HierarchyDefinition = {
+            defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+              if (parentNode) {
+                return [];
+              }
+              return [
+                {
+                  fullClassName: "BisCore.GeometricModel",
+                  query: {
+                    ecsql: `
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                        ecClassId: { selector: "this.ECClassId" },
+                        ecInstanceId: { selector: "this.ECInstanceId" },
+                        nodeLabel: { of: { className: "BisCore.GeometricModel", classAlias: "this" } },
+                        hasChildren: true,
+                        grouping: {
+                          byClass: true,
+                          byLabel: { action: "group", hideIfNoSiblings: true, hideIfOneGroupedNode: true },
+                        },
+                      })}
+                      FROM BisCore.GeometricModel [this]
+                      INNER JOIN BisCore.InformationPartitionElement [partition] ON [partition].[ECInstanceId] = [this].[ModeledElement].[Id]
+                      WHERE NOT [this].[IsPrivate] AND [this].[ECClassId] IS NOT (BisCore.GeometricModel2d)
+                    `,
                   },
-                  hasChildren: true,
-                  grouping: {
-                    byClass: true,
-                    byLabel: { action: "group", hideIfNoSiblings: true, hideIfOneGroupedNode: true },
-                  },
-                })}
-                FROM BisCore.GeometricModel [this]
-                INNER JOIN BisCore.InformationPartitionElement [partition] ON [partition].[ECInstanceId] = [this].[ModeledElement].[Id]
-                WHERE NOT [this].[IsPrivate] AND [this].[ECClassId] IS NOT (BisCore.GeometricModel2d)
-              `,
+                },
+              ];
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createIModelHierarchyProvider({
-            imodelAccess,
-            hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]) },
-          });
+          const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
           await validateHierarchy({
             provider,
             expect: [
@@ -251,28 +246,19 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.RelatedInstanceNodesDefinition
-          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
-          const createDefinition = async ({
+          const createChildDefinition = async ({
             parentNode,
-          }: {
+            nodeSelectClauseFactory,
+          }: Pick<DefineHierarchyLevelProps, "nodeSelectClauseFactory"> & {
             parentNode: HierarchyNode & { key: InstancesNodeKey };
           }): Promise<HierarchyNodesDefinition> => ({
             fullClassName: "BisCore.GeometricElement3d",
             query: {
               ecsql: `
-                SELECT ${await selectClauseFactory.createSelectClause({
+                SELECT ${await nodeSelectClauseFactory.createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: {
-                    selector: await labelsFactory.createSelectClause({
-                      className: "BisCore.GeometricElement3d",
-                      classAlias: "this",
-                    }),
-                  },
+                  nodeLabel: { of: { className: "BisCore.GeometricElement3d", classAlias: "this" } },
                 })}
                 FROM BisCore.GeometricElement3d [this]
                 INNER JOIN BisCore.SpatialCategory [category] ON [category].[ECInstanceId] = [this].[Category].[Id]
@@ -285,31 +271,29 @@ describe("Hierarchies", () => {
             },
           });
           // __PUBLISH_EXTRACT_END__
-          const rootLevelDefinition: HierarchyNodesDefinition = {
-            fullClassName: "BisCore.PhysicalModel",
-            query: {
-              ecsql: `
-                SELECT ${await selectClauseFactory.createSelectClause({
-                  ecClassId: { selector: "this.ECClassId" },
-                  ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: {
-                    selector: await labelsFactory.createSelectClause({
-                      className: "BisCore.PhysicalModel",
-                      classAlias: "this",
-                    }),
-                  },
-                })}
-                FROM BisCore.PhysicalModel [this]
-              `,
-            },
-          };
           const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) =>
-                parentNode && HierarchyNode.isInstancesNode(parentNode)
-                  ? [await createDefinition({ parentNode })]
-                  : [rootLevelDefinition],
+              defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+                if (parentNode && HierarchyNode.isInstancesNode(parentNode)) {
+                  return [await createChildDefinition({ parentNode, nodeSelectClauseFactory })];
+                }
+                return [
+                  {
+                    fullClassName: "BisCore.PhysicalModel",
+                    query: {
+                      ecsql: `
+                        SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                          ecClassId: { selector: "this.ECClassId" },
+                          ecInstanceId: { selector: "this.ECInstanceId" },
+                          nodeLabel: { of: { className: "BisCore.PhysicalModel", classAlias: "this" } },
+                        })}
+                        FROM BisCore.PhysicalModel [this]
+                      `,
+                    },
+                  },
+                ];
+              },
             },
           });
           await validateHierarchy({
@@ -360,14 +344,10 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.CustomQueryInstanceNodesDefinition
-          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
           const createDefinition = async ({
             parentNode,
-          }: {
+            nodeSelectClauseFactory,
+          }: Pick<DefineHierarchyLevelProps, "nodeSelectClauseFactory"> & {
             parentNode: HierarchyNode & { key: InstancesNodeKey };
           }): Promise<HierarchyLevelDefinition> => {
             if (
@@ -394,15 +374,10 @@ describe("Hierarchies", () => {
                       fullClassName: `${schema.schemaName}.MyChildElement`,
                       query: {
                         ecsql: `
-                          SELECT ${await selectClauseFactory.createSelectClause({
+                          SELECT ${await nodeSelectClauseFactory.createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
-                            nodeLabel: {
-                              selector: await labelsFactory.createSelectClause({
-                                className: `${schema.schemaName}.MyChildElement`,
-                                classAlias: "this",
-                              }),
-                            },
+                            nodeLabel: { of: { className: `${schema.schemaName}.MyChildElement`, classAlias: "this" } },
                           })}
                           FROM ${schema.schemaName}.MyChildElement this
                           WHERE this.ECInstanceId IN (
@@ -417,33 +392,29 @@ describe("Hierarchies", () => {
             return [];
           };
           // __PUBLISH_EXTRACT_END__
-          const rootLevelDefinition: HierarchyLevelDefinition = [
-            {
-              fullClassName: schema.items.MyParentElement.fullName,
-              query: {
-                ecsql: `
-                SELECT ${await selectClauseFactory.createSelectClause({
-                  ecClassId: { selector: "this.ECClassId" },
-                  ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: {
-                    selector: await labelsFactory.createSelectClause({
-                      className: schema.items.MyParentElement.fullName,
-                      classAlias: "this",
-                    }),
-                  },
-                })}
-                FROM ${schema.items.MyParentElement.fullName} [this]
-              `,
-              },
-            },
-          ];
           const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) =>
-                parentNode && HierarchyNode.isInstancesNode(parentNode)
-                  ? createDefinition({ parentNode })
-                  : rootLevelDefinition,
+              defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+                if (parentNode && HierarchyNode.isInstancesNode(parentNode)) {
+                  return createDefinition({ parentNode, nodeSelectClauseFactory });
+                }
+                return [
+                  {
+                    fullClassName: schema.items.MyParentElement.fullName,
+                    query: {
+                      ecsql: `
+                        SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                          ecClassId: { selector: "this.ECClassId" },
+                          ecInstanceId: { selector: "this.ECInstanceId" },
+                          nodeLabel: { of: { className: schema.items.MyParentElement.fullName, classAlias: "this" } },
+                        })}
+                        FROM ${schema.items.MyParentElement.fullName} [this]
+                      `,
+                    },
+                  },
+                ];
+              },
             },
           });
           await validateHierarchy({
@@ -472,37 +443,33 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.BaseClassGrouping
-          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
-          const definition: HierarchyNodesDefinition = {
-            fullClassName: "BisCore.GeometricElement",
-            query: {
-              ecsql: `
-                SELECT ${await selectClauseFactory.createSelectClause({
-                  ecClassId: { selector: "this.ECClassId" },
-                  ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: {
-                    selector: await labelsFactory.createSelectClause({
-                      className: "BisCore.GeometricElement",
-                      classAlias: "this",
-                    }),
+          const hierarchyDefinition: HierarchyDefinition = {
+            defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+              if (parentNode) {
+                return [];
+              }
+              return [
+                {
+                  fullClassName: "BisCore.GeometricElement",
+                  query: {
+                    ecsql: `
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                        ecClassId: { selector: "this.ECClassId" },
+                        ecInstanceId: { selector: "this.ECInstanceId" },
+                        nodeLabel: { of: { className: "BisCore.GeometricElement", classAlias: "this" } },
+                        grouping: {
+                          byBaseClasses: { fullClassNames: ["BisCore.GeometricElement3d", "BisCore.PhysicalElement"] },
+                        },
+                      })}
+                      FROM BisCore.GeometricElement [this]
+                    `,
                   },
-                  grouping: {
-                    byBaseClasses: { fullClassNames: ["BisCore.GeometricElement3d", "BisCore.PhysicalElement"] },
-                  },
-                })}
-                FROM BisCore.GeometricElement [this]
-              `,
+                },
+              ];
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createIModelHierarchyProvider({
-            imodelAccess,
-            hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]) },
-          });
+          const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
           await validateHierarchy({
             provider,
             expect: [
@@ -522,35 +489,31 @@ describe("Hierarchies", () => {
         it("groups by class", async () => {
           const imodelAccess = createIModelAccess(emptyIModel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.ClassGrouping
-          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
-          const definition: HierarchyNodesDefinition = {
-            fullClassName: "BisCore.Element",
-            query: {
-              ecsql: `
-                SELECT ${await selectClauseFactory.createSelectClause({
-                  ecClassId: { selector: "this.ECClassId" },
-                  ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: {
-                    selector: await labelsFactory.createSelectClause({
-                      className: "BisCore.Element",
-                      classAlias: "this",
-                    }),
+          const hierarchyDefinition: HierarchyDefinition = {
+            defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+              if (parentNode) {
+                return [];
+              }
+              return [
+                {
+                  fullClassName: "BisCore.Element",
+                  query: {
+                    ecsql: `
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                        ecClassId: { selector: "this.ECClassId" },
+                        ecInstanceId: { selector: "this.ECInstanceId" },
+                        nodeLabel: { of: { className: "BisCore.Element", classAlias: "this" } },
+                        grouping: { byClass: true },
+                      })}
+                      FROM BisCore.Element [this]
+                    `,
                   },
-                  grouping: { byClass: true },
-                })}
-                FROM BisCore.Element [this]
-              `,
+                },
+              ];
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createIModelHierarchyProvider({
-            imodelAccess,
-            hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]) },
-          });
+          const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
           await validateHierarchy({
             provider,
             expect: [
@@ -588,52 +551,48 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.PropertyGrouping
-          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
-          const definition: HierarchyNodesDefinition = {
-            fullClassName: "BisCore.GeometricElement3d",
-            query: {
-              ecsql: `
-                SELECT ${await selectClauseFactory.createSelectClause({
-                  ecClassId: { selector: "this.ECClassId" },
-                  ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: {
-                    selector: await labelsFactory.createSelectClause({
-                      className: "BisCore.GeometricElement3d",
-                      classAlias: "this",
-                    }),
-                  },
-                  grouping: {
-                    byProperties: {
-                      propertiesClassName: "BisCore.GeometricElement3d",
-                      createGroupForOutOfRangeValues: true,
-                      createGroupForUnspecifiedValues: true,
-                      propertyGroups: [
-                        {
-                          propertyClassAlias: "this",
-                          propertyName: "Yaw",
-                          ranges: [
-                            { fromValue: 0, toValue: 0, rangeLabel: "Zero" },
-                            { fromValue: -360, toValue: 0, rangeLabel: "Negative" },
-                            { fromValue: 0, toValue: 360, rangeLabel: "Positive" },
-                          ],
+          const hierarchyDefinition: HierarchyDefinition = {
+            defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+              if (parentNode) {
+                return [];
+              }
+              return [
+                {
+                  fullClassName: "BisCore.GeometricElement3d",
+                  query: {
+                    ecsql: `
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                        ecClassId: { selector: "this.ECClassId" },
+                        ecInstanceId: { selector: "this.ECInstanceId" },
+                        nodeLabel: { of: { className: "BisCore.GeometricElement3d", classAlias: "this" } },
+                        grouping: {
+                          byProperties: {
+                            propertiesClassName: "BisCore.GeometricElement3d",
+                            createGroupForOutOfRangeValues: true,
+                            createGroupForUnspecifiedValues: true,
+                            propertyGroups: [
+                              {
+                                propertyClassAlias: "this",
+                                propertyName: "Yaw",
+                                ranges: [
+                                  { fromValue: 0, toValue: 0, rangeLabel: "Zero" },
+                                  { fromValue: -360, toValue: 0, rangeLabel: "Negative" },
+                                  { fromValue: 0, toValue: 360, rangeLabel: "Positive" },
+                                ],
+                              },
+                            ],
+                          },
                         },
-                      ],
-                    },
+                      })}
+                      FROM BisCore.GeometricElement3d [this]
+                    `,
                   },
-                })}
-                FROM BisCore.GeometricElement3d [this]
-              `,
+                },
+              ];
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createIModelHierarchyProvider({
-            imodelAccess,
-            hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]) },
-          });
+          const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
           await validateHierarchy({
             provider,
             expect: [
@@ -655,35 +614,31 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.LabelGrouping
-          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
-          const definition: HierarchyNodesDefinition = {
-            fullClassName: "BisCore.Element",
-            query: {
-              ecsql: `
-                SELECT ${await selectClauseFactory.createSelectClause({
-                  ecClassId: { selector: "this.ECClassId" },
-                  ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: {
-                    selector: await labelsFactory.createSelectClause({
-                      className: "BisCore.Element",
-                      classAlias: "this",
-                    }),
+          const hierarchyDefinition: HierarchyDefinition = {
+            defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+              if (parentNode) {
+                return [];
+              }
+              return [
+                {
+                  fullClassName: "BisCore.Element",
+                  query: {
+                    ecsql: `
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                        ecClassId: { selector: "this.ECClassId" },
+                        ecInstanceId: { selector: "this.ECInstanceId" },
+                        nodeLabel: { of: { className: "BisCore.Element", classAlias: "this" } },
+                        grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } },
+                      })}
+                      FROM BisCore.Element [this]
+                    `,
                   },
-                  grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } },
-                })}
-                FROM BisCore.Element [this]
-              `,
+                },
+              ];
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createIModelHierarchyProvider({
-            imodelAccess,
-            hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]) },
-          });
+          const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
           await validateHierarchy({
             provider,
             expect: [
@@ -715,35 +670,31 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.SameLabelGrouping
-          const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
-          const selectClauseFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: labelsFactory,
-          });
-          const definition: HierarchyNodesDefinition = {
-            fullClassName: "BisCore.Element",
-            query: {
-              ecsql: `
-                SELECT ${await selectClauseFactory.createSelectClause({
-                  ecClassId: { selector: "this.ECClassId" },
-                  ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: {
-                    selector: await labelsFactory.createSelectClause({
-                      className: "BisCore.Element",
-                      classAlias: "this",
-                    }),
+          const hierarchyDefinition: HierarchyDefinition = {
+            defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+              if (parentNode) {
+                return [];
+              }
+              return [
+                {
+                  fullClassName: "BisCore.Element",
+                  query: {
+                    ecsql: `
+                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                        ecClassId: { selector: "this.ECClassId" },
+                        ecInstanceId: { selector: "this.ECInstanceId" },
+                        nodeLabel: { of: { className: "BisCore.Element", classAlias: "this" } },
+                        grouping: { byLabel: { action: "merge" } },
+                      })}
+                      FROM BisCore.Element [this]
+                    `,
                   },
-                  grouping: { byLabel: { action: "merge" } },
-                })}
-                FROM BisCore.Element [this]
-              `,
+                },
+              ];
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createIModelHierarchyProvider({
-            imodelAccess,
-            hierarchyDefinition: { defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]) },
-          });
+          const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
           await validateHierarchy({
             provider,
             expect: [

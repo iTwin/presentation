@@ -60,7 +60,7 @@ const hierarchyDefinition: HierarchyDefinition = {
 
 ## Custom parsing
 
-By default, it's expected that the nodes' SELECT clause is created using `NodesQueryClauseFactory.createSelectClause` and then specifying `parseNode` callback in the hierarchy definition is not necessary, as the default parser knows how parse ECSQL rows.
+By default, it's expected that the nodes' SELECT clause is created using the `nodeSelectClauseFactory.createSelectClause` function (available through `defineHierarchyLevel` props) and then specifying `parseNode` callback in the hierarchy definition is not necessary, as the default parser knows how to parse ECSQL rows.
 
 However, some hierarchy definitions may choose to write SELECT clause manually and then they need to provide a custom `parseNode` callback to parse the ECSQL result row into a `SourceInstanceHierarchyNode` object. Example:
 
@@ -84,7 +84,7 @@ const hierarchyDefinition: HierarchyDefinition = {
         {
           fullClassName: "BisCore.PhysicalElement",
           query: {
-            // Define the query without using `NodesQueryClauseFactory` - we'll parse the results manually. But to create
+            // Define the query without using `nodeSelectClauseFactory` - we'll parse the results manually. But to create
             // an instances node we need at least a class name, instance id, and a label.
             ecsql: `
               SELECT

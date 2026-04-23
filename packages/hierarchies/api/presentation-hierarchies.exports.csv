@@ -6,7 +6,6 @@ public;function;createHierarchySearchHelper
 public;function;createIModelHierarchyProvider
 public;function;createLimitingECSqlQueryExecutor
 alpha;function;createMergedIModelHierarchyProvider
-public;function;createNodesQueryClauseFactory
 public;function;createPredicateBasedHierarchyDefinition
 public;type;DefineGenericNodeChildHierarchyLevelProps
 public;interface;DefineHierarchyLevelProps
@@ -43,8 +42,6 @@ public;function;mergeProviders
 public;type;NodeParser
 public;type;NodePostProcessor
 public;type;NodePreProcessor
-public;enum;NodeSelectClauseColumnNames
-public;interface;NodesQueryClauseFactory
 public;interface;NonGroupingHierarchyNode
 public;type;ProcessedHierarchyNode
 public;namespace;ProcessedHierarchyNode

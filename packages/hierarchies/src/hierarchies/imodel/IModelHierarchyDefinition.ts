@@ -4,13 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { GenericInstanceFilter } from "@itwin/core-common";
-import type {
-  EC,
-  ECClassHierarchyInspector,
-  ECSchemaProvider,
-  ECSqlQueryDef,
-  IInstanceLabelSelectClauseFactory,
-} from "@itwin/presentation-shared";
+import type { EC, ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef } from "@itwin/presentation-shared";
 import type { NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
 import type {
   ProcessedGenericHierarchyNode,
@@ -137,21 +131,6 @@ export interface DefineHierarchyLevelProps {
 
   /** Optional hierarchy level filter. */
   instanceFilter?: GenericInstanceFilter;
-
-  /**
-   * A factory for creating ECSQL select clauses for instance labels. Created using
-   * `createIModelInstanceLabelSelectClauseFactory` from `@itwin/presentation-shared` and scoped
-   * to the iModel identified by `imodelAccess`.
-   *
-   * Example:
-   * ```ts
-   * const labelClause = await instanceLabelSelectClauseFactory.createSelectClause({ classAlias: "this", className: "SomeSchema.SomeClass" });
-   * ```
-   *
-   * Using this factory is optional — consumers may create their own `IInstanceLabelSelectClauseFactory`
-   * and use it instead, or just define instance label select clauses manually without a factory.
-   */
-  instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
 
   /**
    * A factory for creating ECSQL select clauses for hierarchy nodes. Created using

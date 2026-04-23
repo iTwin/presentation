@@ -178,6 +178,16 @@ interface IModelHierarchyProviderProps {
     /** A list of search trees that define paths from root to search target nodes. */
     paths: HierarchySearchTree[];
   };
+
+  /**
+   * A factory for creating ECSQL select clauses for instance labels. The clause is injected into
+   * hierarchy node queries to select labels for instance-based nodes.
+   *
+   * Defaults to the result of `createIModelInstanceLabelSelectClauseFactory` called with the provided `imodelAccess`.
+   *
+   * @see `IInstanceLabelSelectClauseFactory`
+   */
+  instanceLabelSelectClauseFactory?: IInstanceLabelSelectClauseFactory;
 }
 
 /**
@@ -187,8 +197,11 @@ interface IModelHierarchyProviderProps {
  * @public
  */
 export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & Disposable {
-  const { imodelAccess, imodelChanged, ...restProps } = props;
-  return createMergedIModelHierarchyProvider({ ...restProps, imodels: [{ imodelAccess, imodelChanged }] });
+  const { imodelAccess, imodelChanged, instanceLabelSelectClauseFactory, ...restProps } = props;
+  return createMergedIModelHierarchyProvider({
+    ...restProps,
+    imodels: [{ imodelAccess, imodelChanged, instanceLabelSelectClauseFactory }],
+  });
 }
 
 /**
@@ -197,7 +210,7 @@ export function createIModelHierarchyProvider(props: IModelHierarchyProviderProp
  */
 interface MergedIModelHierarchyProviderProps extends Omit<
   IModelHierarchyProviderProps,
-  "imodelAccess" | "imodelChanged"
+  "imodelAccess" | "imodelChanged" | "instanceLabelSelectClauseFactory"
 > {
   /**
    * A list of iModels to create merged hierarchy for.
@@ -220,6 +233,16 @@ interface MergedIModelHierarchyProviderProps extends Omit<
      * subscribes to the event to know that it needs to reload the data, and unsubscribes on disposal.
      */
     imodelChanged?: Event<() => void>;
+
+    /**
+     * A factory for creating ECSQL select clauses for instance labels. The clause is injected into
+     * hierarchy node queries to select labels for instance-based nodes.
+     *
+     * Defaults to the result of `createIModelInstanceLabelSelectClauseFactory` called with the provided `imodelAccess`.
+     *
+     * @see `IInstanceLabelSelectClauseFactory`
+     */
+    instanceLabelSelectClauseFactory?: IInstanceLabelSelectClauseFactory;
   }>;
 }
 
@@ -245,10 +268,7 @@ type WithSourceNameOverride<T> = T & { sourceName?: string };
 
 class IModelHierarchyProviderImpl implements HierarchyProvider {
   private _imodels: Array<
-    MergedIModelHierarchyProviderProps["imodels"][number] & {
-      instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
-      nodeSelectClauseFactory: NodesQueryClauseFactory;
-    }
+    MergedIModelHierarchyProviderProps["imodels"][number] & { nodeSelectClauseFactory: NodesQueryClauseFactory }
   >;
   private _hierarchyChanged: BeEvent<(args: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>;
   private _valuesFormatter: IPrimitiveValueFormatter;
@@ -272,10 +292,12 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this.#componentId = Guid.createValue();
     this.#componentName = "IModelHierarchyProviderImpl";
     this.#sourceName = props.sourceName ?? `${this.#componentName}:${this.#componentId}`;
-    this._imodels = props.imodels.map(({ imodelAccess, imodelChanged }) => {
-      const instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
+    this._imodels = props.imodels.map(({ imodelAccess, imodelChanged, instanceLabelSelectClauseFactory }) => {
+      if (!instanceLabelSelectClauseFactory) {
+        instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
+      }
       const nodeSelectClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory });
-      return { imodelAccess, imodelChanged, instanceLabelSelectClauseFactory, nodeSelectClauseFactory };
+      return { imodelAccess, imodelChanged, nodeSelectClauseFactory };
     });
     this._hierarchyChanged = new BeEvent();
     this._activeHierarchyDefinition = this._sourceHierarchyDefinition = getRxjsHierarchyDefinition(
@@ -411,7 +433,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     });
 
     return from(this._imodels).pipe(
-      mergeMap(({ imodelAccess, instanceLabelSelectClauseFactory, nodeSelectClauseFactory }, imodelAccessIndex) => {
+      mergeMap(({ imodelAccess, nodeSelectClauseFactory }, imodelAccessIndex) => {
         let parentNode = props.parentNode;
         if (
           parentNode &&
@@ -437,13 +459,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
           }
         }
         return this._activeHierarchyDefinition
-          .defineHierarchyLevel({
-            ...defineHierarchyLevelProps,
-            parentNode,
-            imodelAccess,
-            instanceLabelSelectClauseFactory,
-            nodeSelectClauseFactory,
-          })
+          .defineHierarchyLevel({ ...defineHierarchyLevelProps, parentNode, imodelAccess, nodeSelectClauseFactory })
           .pipe(
             mergeAll(),
             map(

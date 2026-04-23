@@ -10,7 +10,7 @@ import { Datasets } from "../util/Datasets.js";
 import { run } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
-import type { DefineHierarchyLevelProps, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import type { DefineHierarchyLevelProps } from "@itwin/presentation-hierarchies";
 import type { EC, Props } from "@itwin/presentation-shared";
 import type { IModelName } from "../util/Datasets.js";
 import type { RunOptions } from "../util/TestUtilities.js";
@@ -24,7 +24,7 @@ export function runHierarchyTest(
   testProps: {
     iModelName: IModelName;
     fullClassName?: EC.FullClassName;
-    nodeSelectProps?: Partial<Props<NodesQueryClauseFactory["createSelectClause"]>>;
+    nodeSelectProps?: Partial<Props<DefineHierarchyLevelProps["nodeSelectClauseFactory"]["createSelectClause"]>>;
     expectedNodeCount?: number;
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
 ) {

@@ -106,7 +106,7 @@ describe("Hierarchies", () => {
                 {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
-                    // Define the query without using `NodesQueryClauseFactory` - we'll parse the results manually. But to create
+                    // Define the query without using `nodeSelectClauseFactory` - we'll parse the results manually. But to create
                     // an instances node we need at least a class name, instance id, and a label.
                     ecsql: `
                       SELECT

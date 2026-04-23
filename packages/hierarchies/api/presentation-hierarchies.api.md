@@ -76,12 +76,6 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecuto
 export function createMergedIModelHierarchyProvider(props: MergedIModelHierarchyProviderProps): HierarchyProvider & Disposable;
 
 // @public
-export function createNodesQueryClauseFactory(props: {
-    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
-    instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
-}): NodesQueryClauseFactory;
-
-// @public
 export function createPredicateBasedHierarchyDefinition(props: PredicateBasedHierarchyDefinitionProps): HierarchyDefinition;
 
 // @public
@@ -97,7 +91,6 @@ export interface DefineHierarchyLevelProps {
         imodelKey: string;
     };
     instanceFilter?: GenericInstanceFilter;
-    instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
     nodeSelectClauseFactory: NodesQueryClauseFactory;
     parentNode: HierarchyDefinitionParentNode | undefined;
 }
@@ -558,6 +551,7 @@ interface IModelHierarchyProviderProps {
     hierarchyDefinition: HierarchyDefinition;
     imodelAccess: IModelAccess;
     imodelChanged?: Event_2<() => void>;
+    instanceLabelSelectClauseFactory?: IInstanceLabelSelectClauseFactory;
     localizedStrings?: Partial<IModelHierarchyProviderLocalizedStrings>;
     queryCacheSize?: number;
     queryConcurrency?: number;
@@ -612,10 +606,11 @@ export interface LimitingECSqlQueryExecutor {
 }
 
 // @alpha
-interface MergedIModelHierarchyProviderProps extends Omit<IModelHierarchyProviderProps, "imodelAccess" | "imodelChanged"> {
+interface MergedIModelHierarchyProviderProps extends Omit<IModelHierarchyProviderProps, "imodelAccess" | "imodelChanged" | "instanceLabelSelectClauseFactory"> {
     imodels: Array<{
         imodelAccess: IModelAccess;
         imodelChanged?: Event_2<() => void>;
+        instanceLabelSelectClauseFactory?: IInstanceLabelSelectClauseFactory;
     }>;
 }
 
@@ -651,20 +646,6 @@ export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | Pr
 }) => Promise<TNode | undefined>;
 
 // @public
-export enum NodeSelectClauseColumnNames {
-    AutoExpand = "AutoExpand",
-    DisplayLabel = "DisplayLabel",
-    ECInstanceId = "ECInstanceId",
-    ExtendedData = "ExtendedData",
-    FullClassName = "FullClassName",
-    Grouping = "Grouping",
-    HasChildren = "HasChildren",
-    HideIfNoChildren = "HideIfNoChildren",
-    HideNodeInHierarchy = "HideNodeInHierarchy",
-    SupportsFiltering = "SupportsFiltering"
-}
-
-// @public
 interface NodeSelectClauseProps {
     // (undocumented)
     autoExpand?: boolean | ECSqlValueSelector;
@@ -685,13 +666,15 @@ interface NodeSelectClauseProps {
     // (undocumented)
     hideNodeInHierarchy?: boolean | ECSqlValueSelector;
     // (undocumented)
-    nodeLabel: string | ECSqlValueSelector;
+    nodeLabel: string | ECSqlValueSelector | {
+        of: Props<IInstanceLabelSelectClauseFactory["createSelectClause"]>;
+    };
     // (undocumented)
     supportsFiltering?: boolean | ECSqlValueSelector;
 }
 
 // @public
-export interface NodesQueryClauseFactory {
+interface NodesQueryClauseFactory {
     createFilterClauses(props: {
         contentClass: {
             fullName: EC.FullClassName;
