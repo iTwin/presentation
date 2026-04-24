@@ -297,8 +297,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
               SELECT
                 CASE
                   WHEN (
-                    json_extract([partition].JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
-                    OR json_extract([partition].JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
+                    json_extract(p.JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
+                    OR json_extract(p.JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
                   ) THEN 1
                   ELSE 0
                 END IsHidden,
@@ -314,13 +314,14 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                     `
                     : "1"
                 } HasChildren,
-                m.*,
+                m.*
               FROM Bis.GeometricModel3d m
-              JOIN bis.InformationPartitionElement [partition] ON [partition].ECInstanceId = m.ModeledElement.Id
+              JOIN bis.InformationPartitionElement p ON p.ECInstanceId = m.ModeledElement.Id
               WHERE
                 m.ECInstanceId IN (${childModelIds.map(() => "?").join(",")})
             ) model
             JOIN ${modelFilterClauses.from} this ON this.ECInstanceId = model.ECInstanceId
+            JOIN bis.InformationPartitionElement [partition] ON [partition].ECInstanceId = this.ModeledElement.Id
             ${modelFilterClauses.joins}
             ${modelFilterClauses.where ? `AND (model.IsHidden OR ${modelFilterClauses.where})` : ""}
           `,
