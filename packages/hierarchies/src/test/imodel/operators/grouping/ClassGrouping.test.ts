@@ -5,7 +5,6 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
-import { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping.js";
 import { createClassGroups } from "../../../../hierarchies/imodel/operators/grouping/ClassGrouping.js";
 import {
   createECSchemaProviderStub,
@@ -46,7 +45,7 @@ describe("ClassGrouping", () => {
         },
       ],
       ungrouped: [],
-    } as GroupingHandlerResult);
+    });
   });
 
   it("groups multiple instance nodes", async () => {
@@ -147,6 +146,6 @@ describe("ClassGrouping", () => {
       groupingType: "class",
       grouped: [],
       ungrouped: nodes,
-    } as GroupingHandlerResult);
+    });
   });
 });

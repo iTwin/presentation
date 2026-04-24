@@ -49,7 +49,7 @@
     "classnames": "catalog:react",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
-    "fast-xml-parser": "^5.7.0",
+    "fast-xml-parser": "^5.7.1",
     "immer": "^10.2.0",
     "react": "catalog:react",
     "react-dom": "catalog:react",
@@ -60,6 +60,6 @@
     "sass": "^1.99.0",
     "typescript": "catalog:build-tools",
     "vite": "catalog:build-tools",
-    "vite-plugin-static-copy": "^4.0.1"
+    "vite-plugin-static-copy": "^4.1.0"
   }
 }
