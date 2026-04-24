@@ -321,7 +321,7 @@ describe("ContentBuilder", () => {
               item.displayValues[v.name] = v.displayValue;
               return item;
             },
-            { rawValues: {}, displayValues: {} } as ItemValues,
+            { rawValues: {}, displayValues: {} },
           ),
         ];
         public override getContentSetSize = async () => this.items.length;
