@@ -89,7 +89,7 @@ describe("Hierarchies", () => {
                       SELECT ${await nodeSelectClauseFactory.createSelectClause({
                         ecClassId: { selector: "x.ECClassId" },
                         ecInstanceId: { selector: "x.ECInstanceId" },
-                        // Use `{ of: ... }` to delegate label creation to the instance label select clause factory used 
+                        // Use `{ of: ... }` to delegate label creation to the instance label select clause factory used
                         // by `nodeSelectClauseFactory`, which defaults to the result of `createIModelInstanceLabelSelectClauseFactory`.
                         nodeLabel: {
                           of: {
