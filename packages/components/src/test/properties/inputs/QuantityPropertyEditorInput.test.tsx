@@ -9,7 +9,7 @@ import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import { Format, FormatterSpec, FormatType, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
+import { Format, FormatType, ParseError, QuantityParseResult } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext.js";
@@ -56,8 +56,8 @@ describe("<QuantityPropertyEditorInput />", () => {
       return { ok: true, value: Number(value.substring(0, value.length - 4)) };
     });
 
-    getFormatterSpecStub.mockResolvedValue(formatterSpec as unknown as FormatterSpec);
-    getParserSpecStub.mockResolvedValue(parserSpec as unknown as ParserSpec);
+    getFormatterSpecStub.mockResolvedValue(formatterSpec);
+    getParserSpecStub.mockResolvedValue(parserSpec);
   });
 
   afterEach(() => {
