@@ -6,10 +6,10 @@ autoInstallPeers: true
 
 catalogs:
   appui:
-    '@itwin/appui-react': ^5.27.1
-    '@itwin/components-react': ^5.27.1
-    '@itwin/core-react': ^5.27.1
-    '@itwin/imodel-components-react': ^5.27.1
+    '@itwin/appui-react': ^5.28.1
+    '@itwin/components-react': ^5.28.1
+    '@itwin/core-react': ^5.28.1
+    '@itwin/imodel-components-react': ^5.28.1
   build-tools:
     '@itwin/build-tools': ^5.8.1
     '@itwin/eslint-plugin': 5.1.0
