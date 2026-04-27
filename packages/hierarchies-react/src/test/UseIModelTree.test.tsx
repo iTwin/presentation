@@ -23,7 +23,7 @@ describe("useIModelTree hooks", () => {
     const initialProps: UseIModelTreeProps = {
       imodelAccess: {} as UseIModelTreeProps["imodelAccess"],
       getHierarchyDefinition: () => hierarchyDefinition,
-      localizedStrings: {} as UseIModelTreeProps["localizedStrings"],
+      localizedStrings: {},
     };
 
     beforeAll(() => {
@@ -73,7 +73,7 @@ describe("useIModelTree hooks", () => {
     const initialProps: UseIModelTreeProps = {
       imodelAccess: {} as UseIModelTreeProps["imodelAccess"],
       getHierarchyDefinition: () => hierarchyDefinition,
-      localizedStrings: {} as UseIModelTreeProps["localizedStrings"],
+      localizedStrings: {},
       sourceName: "test-component",
     };
 

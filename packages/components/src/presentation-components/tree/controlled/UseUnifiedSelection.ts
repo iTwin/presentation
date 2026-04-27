@@ -197,7 +197,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
   protected getKeys(nodes: TreeNodeItem[]): Keys {
     const nodeKeys: NodeKey[] = nodes
       .map((node) => (isPresentationTreeNodeItem(node) ? node.key : /* v8 ignore next -- @preserve */ undefined))
-      .filter((key) => key !== undefined) as NodeKey[];
+      .filter((key) => key !== undefined);
     return SelectionHelper.getKeysForSelection(nodeKeys);
   }
 

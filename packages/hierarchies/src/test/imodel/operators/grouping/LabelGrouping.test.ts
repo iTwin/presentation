@@ -5,7 +5,6 @@
 
 import { describe, expect, it } from "vitest";
 import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
-import { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping.js";
 import { createLabelGroups } from "../../../../hierarchies/imodel/operators/grouping/LabelGrouping.js";
 import {
   createTestGenericNodeKey,
@@ -40,7 +39,7 @@ describe("LabelGrouping", () => {
         }),
       ],
       ungrouped: [],
-    } as GroupingHandlerResult);
+    });
   });
 
   it("groups one node when 'action' is set to 'group'", async () => {
@@ -68,7 +67,7 @@ describe("LabelGrouping", () => {
         }),
       ],
       ungrouped: [],
-    } as GroupingHandlerResult);
+    });
   });
 
   it("groups one node when 'byLabel' is set to empty object", async () => {
@@ -96,7 +95,7 @@ describe("LabelGrouping", () => {
         }),
       ],
       ungrouped: [],
-    } as GroupingHandlerResult);
+    });
   });
 
   it("creates separate groups for nodes with same labels and different groupIds", async () => {
@@ -248,7 +247,7 @@ describe("LabelGrouping", () => {
         }),
       ],
       ungrouped: [],
-    } as GroupingHandlerResult);
+    });
   });
 
   it("doesn't group nodes with byLabel set to false", async () => {

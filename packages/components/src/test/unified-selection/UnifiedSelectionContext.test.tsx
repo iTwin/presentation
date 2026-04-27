@@ -17,7 +17,7 @@ import {
 import { act, render, renderHook, RenderHookResult, waitFor } from "../TestUtils.js";
 
 describe("UnifiedSelectionContext", () => {
-  const testIModel = { key: "" } as IModelConnection;
+  const testIModel = { key: "test-imodel" } as IModelConnection;
 
   function renderUnifiedSelectionContextHook(
     imodel = {} as IModelConnection,

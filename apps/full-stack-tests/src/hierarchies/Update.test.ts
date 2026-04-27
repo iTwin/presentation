@@ -635,7 +635,7 @@ describe("Hierarchies", () => {
       if (!handler) {
         throw new Error(`no handler for channel "${channel}"`);
       }
-      return handler({} as Event, ...args);
+      return handler({}, ...args);
     }
 
     /**

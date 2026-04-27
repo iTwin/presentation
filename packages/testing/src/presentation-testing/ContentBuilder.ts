@@ -181,9 +181,10 @@ export class ContentBuilder {
         continue;
       }
 
-      const instanceKeys = instanceIds.map(
-        (idEntry) => ({ className: `${nameEntry.schemaName}:${nameEntry.className}`, id: idEntry }) as InstanceKey,
-      );
+      const instanceKeys = instanceIds.map((idEntry) => ({
+        className: `${nameEntry.schemaName}:${nameEntry.className}`,
+        id: idEntry,
+      }));
 
       contents.push({
         className: `${nameEntry.schemaName}:${nameEntry.className}`,

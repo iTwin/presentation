@@ -7,15 +7,7 @@ import { useEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, QuantityFormatter } from "@itwin/core-frontend";
-import {
-  Format,
-  FormatsProvider,
-  FormatterSpec,
-  FormatType,
-  ParseError,
-  ParserSpec,
-  QuantityParseResult,
-} from "@itwin/core-quantity";
+import { Format, FormatsProvider, FormatType, ParseError, QuantityParseResult } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import {
@@ -69,8 +61,8 @@ describe("UseQuantityValueInput", () => {
       return { ok: true, value: Number(value.substring(0, value.length - 4)) };
     });
 
-    getFormatterSpecStub.mockResolvedValue(formatterSpec as unknown as FormatterSpec);
-    getParserSpecStub.mockResolvedValue(parserSpec as unknown as ParserSpec);
+    getFormatterSpecStub.mockResolvedValue(formatterSpec);
+    getParserSpecStub.mockResolvedValue(parserSpec);
   });
 
   afterEach(() => {
@@ -149,8 +141,8 @@ describe("UseQuantityValueInput", () => {
       format,
     };
 
-    getFormatterSpecStub.mockResolvedValue(newFormatterSpec as unknown as FormatterSpec);
-    getParserSpecStub.mockResolvedValue(newParserSpec as unknown as ParserSpec);
+    getFormatterSpecStub.mockResolvedValue(newFormatterSpec);
+    getParserSpecStub.mockResolvedValue(newParserSpec);
 
     formatProvider.onFormatsChanged.raiseEvent();
 
@@ -166,7 +158,7 @@ describe("UseQuantityValueInput", () => {
     };
 
     decimalFormatterSpec.applyFormatting.mockImplementation((raw) => `${raw} unit`);
-    getFormatterSpecStub.mockResolvedValue(decimalFormatterSpec as unknown as FormatterSpec);
+    getFormatterSpecStub.mockResolvedValue(decimalFormatterSpec);
 
     render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={0.123456} />);
     await waitFor(() => expect(decimalFormatterSpec.applyFormatting).toHaveBeenCalled());
@@ -184,7 +176,7 @@ describe("UseQuantityValueInput", () => {
     };
 
     fractionalFormatterSpec.applyFormatting.mockImplementation((raw) => `${raw} unit`);
-    getFormatterSpecStub.mockResolvedValue(fractionalFormatterSpec as unknown as FormatterSpec);
+    getFormatterSpecStub.mockResolvedValue(fractionalFormatterSpec);
 
     render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={0.123456} />);
     await waitFor(() => expect(fractionalFormatterSpec.applyFormatting).toHaveBeenCalled());

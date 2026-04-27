@@ -5,7 +5,7 @@
 
 import { ResolvablePromise } from "presentation-test-utilities";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { PropertyValueFormat as AbstractPropertyValueFormat, PrimitiveValue } from "@itwin/appui-abstract";
+import { PropertyValueFormat as AbstractPropertyValueFormat } from "@itwin/appui-abstract";
 import { UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -246,7 +246,7 @@ describe("PresentationInstanceFilterDialog", () => {
             valueFormat: AbstractPropertyValueFormat.Primitive,
             value: "test value",
             displayValue: "test value",
-          } as PrimitiveValue,
+          },
         },
         usedClasses: [classInfo],
       });

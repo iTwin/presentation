@@ -17,12 +17,7 @@ import {
   RegisteredRuleset,
   Ruleset,
 } from "@itwin/presentation-common";
-import {
-  Presentation,
-  PresentationManager,
-  RulesetManager,
-  RulesetVariablesManager,
-} from "@itwin/presentation-frontend";
+import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
 import { HierarchyBuilder, NodeMappingFunc } from "../presentation-testing/HierarchyBuilder.js";
 import { createStub } from "./Utils.js";
 
@@ -62,8 +57,8 @@ describe("HierarchyBuilder", () => {
     rulesetManager.add.mockImplementation(async (rules) => new RegisteredRuleset(rules, Guid.createValue(), () => {}));
 
     presentationManager = {
-      rulesets: vi.fn().mockReturnValue(rulesetManager as unknown as RulesetManager),
-      vars: vi.fn().mockReturnValue({ onVariableChanged: new BeEvent() } as RulesetVariablesManager),
+      rulesets: vi.fn().mockReturnValue(rulesetManager),
+      vars: vi.fn().mockReturnValue({ onVariableChanged: new BeEvent() }),
       getNodesIterator: vi.fn(),
     };
   });
