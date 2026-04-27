@@ -61,7 +61,7 @@ interface TestContext {
  * @param name Name of test IModel
  * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
  * @beta
- * @deprecated in 4.x. Use an overload with `cb` returning a promise.
+ * @deprecated in 4.1. Use an overload with `cb` returning a promise.
  */
 export async function buildTestIModel(
   name: string,
@@ -75,7 +75,7 @@ export async function buildTestIModel(
  */
 export async function buildTestIModel(
   name: string,
-  // eslint-disable-next-line @typescript-eslint/unified-signatures
+
   cb: (builder: TestIModelBuilder) => Promise<void>,
 ): Promise<IModelConnection>;
 /**
@@ -83,10 +83,9 @@ export async function buildTestIModel(
  * @param context test context to generate iModel name from
  * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
  * @beta
- * @deprecated in 4.x. Use an overload with `cb` returning a promise.
+ * @deprecated in 4.1. Use an overload with `cb` returning a promise.
  */
 export async function buildTestIModel(
-  // eslint-disable-next-line @typescript-eslint/unified-signatures
   context: TestContext,
   cb: (builder: TestIModelBuilder) => void,
 ): Promise<IModelConnection>;
@@ -97,9 +96,8 @@ export async function buildTestIModel(
  * @beta
  */
 export async function buildTestIModel(
-  // eslint-disable-next-line @typescript-eslint/unified-signatures
   context: TestContext,
-  // eslint-disable-next-line @typescript-eslint/unified-signatures
+
   cb: (builder: TestIModelBuilder) => Promise<void>,
 ): Promise<IModelConnection>;
 export async function buildTestIModel(
