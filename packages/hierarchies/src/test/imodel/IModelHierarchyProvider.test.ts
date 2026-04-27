@@ -637,12 +637,14 @@ describe("createIModelHierarchyProvider", () => {
       expect(hierarchyDefinition.defineHierarchyLevel).toHaveBeenNthCalledWith(1, {
         imodelAccess,
         parentNode: undefined,
-        nodeSelectClauseFactory: expect.anything(),
+        createSelectClause: expect.any(Function),
+        createFilterClauses: expect.any(Function),
       });
       expect(hierarchyDefinition.defineHierarchyLevel).toHaveBeenNthCalledWith(2, {
         imodelAccess,
         parentNode: rootNodes[0],
-        nodeSelectClauseFactory: expect.anything(),
+        createSelectClause: expect.any(Function),
+        createFilterClauses: expect.any(Function),
       });
     });
   });

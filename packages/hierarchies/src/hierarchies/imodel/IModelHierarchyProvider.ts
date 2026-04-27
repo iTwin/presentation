@@ -456,7 +456,17 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
           }
         }
         return this._activeHierarchyDefinition
-          .defineHierarchyLevel({ ...defineHierarchyLevelProps, ...nodeSelectClauseFactory, parentNode, imodelAccess })
+          .defineHierarchyLevel({
+            ...defineHierarchyLevelProps,
+            createSelectClause: async (selectClauseProps) =>
+              nodeSelectClauseFactory.createSelectClause(selectClauseProps),
+            /* v8 ignore start */
+            createFilterClauses: async (filterClausesProps) =>
+              nodeSelectClauseFactory.createFilterClauses(filterClausesProps),
+            /* v8 ignore stop */
+            parentNode,
+            imodelAccess,
+          })
           .pipe(
             mergeAll(),
             map(
