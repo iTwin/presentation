@@ -29,15 +29,17 @@ export function createHierarchyDefinitionFactory({
   createGenericNodeForY,
 }: {
   xyzSchema: Awaited<ReturnType<typeof importSchema>>;
-  createYGroupingParams?: (
-    alias: string,
-  ) => Props<DefineHierarchyLevelProps["nodeSelectClauseFactory"]["createSelectClause"]>["grouping"];
+  createYGroupingParams?: (alias: string) => Props<DefineHierarchyLevelProps["createSelectClause"]>["grouping"];
   createGenericNodeForY?: boolean;
 }): Props<typeof createMergedHierarchyProvider>["createHierarchyDefinition"] {
   const classes = xyzSchema.items;
 
-  const rootNodes = async ({ instanceFilter, nodeSelectClauseFactory }: DefineRootHierarchyLevelProps) => {
-    const { from, joins, where } = await nodeSelectClauseFactory.createFilterClauses({
+  const rootNodes = async ({
+    instanceFilter,
+    createSelectClause,
+    createFilterClauses,
+  }: DefineRootHierarchyLevelProps) => {
+    const { from, joins, where } = await createFilterClauses({
       contentClass: { fullName: classes.X.fullName, alias: "this" },
       filter: instanceFilter,
     });
@@ -46,7 +48,7 @@ export function createHierarchyDefinitionFactory({
         fullClassName: classes.X.fullName,
         query: {
           ecsql: `
-            SELECT ${await nodeSelectClauseFactory.createSelectClause({
+            SELECT ${await createSelectClause({
               ecClassId: { selector: `this.ECClassId` },
               ecInstanceId: { selector: `this.ECInstanceId` },
               nodeLabel: { selector: "this.Label" },
@@ -62,17 +64,15 @@ export function createHierarchyDefinitionFactory({
   const childNodesForX = async ({
     instanceFilter,
     parentNodeInstanceIds,
-    nodeSelectClauseFactory,
+    createSelectClause,
+    createFilterClauses,
   }: Pick<
     DefineInstanceNodeChildHierarchyLevelProps,
-    "instanceFilter" | "parentNodeInstanceIds" | "nodeSelectClauseFactory"
+    "instanceFilter" | "parentNodeInstanceIds" | "createSelectClause" | "createFilterClauses"
   >) => {
     const [filterY, filterZ] = await Promise.all(
       [classes.Y.fullName, classes.Z.fullName].map(async (contentClassName) =>
-        nodeSelectClauseFactory.createFilterClauses({
-          contentClass: { fullName: contentClassName, alias: "this" },
-          filter: instanceFilter,
-        }),
+        createFilterClauses({ contentClass: { fullName: contentClassName, alias: "this" }, filter: instanceFilter }),
       ),
     );
     return [
@@ -80,7 +80,7 @@ export function createHierarchyDefinitionFactory({
         fullClassName: classes.Y.fullName,
         query: {
           ecsql: `
-            SELECT ${await nodeSelectClauseFactory.createSelectClause({
+            SELECT ${await createSelectClause({
               ecClassId: { selector: `this.ECClassId` },
               ecInstanceId: { selector: `this.ECInstanceId` },
               nodeLabel: { selector: "this.Label" },
@@ -99,7 +99,7 @@ export function createHierarchyDefinitionFactory({
         fullClassName: classes.Z.fullName,
         query: {
           ecsql: `
-            SELECT ${await nodeSelectClauseFactory.createSelectClause({
+            SELECT ${await createSelectClause({
               ecClassId: { selector: `this.ECClassId` },
               ecInstanceId: { selector: `this.ECInstanceId` },
               nodeLabel: { selector: "this.Label" },

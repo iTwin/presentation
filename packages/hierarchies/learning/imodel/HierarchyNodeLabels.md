@@ -48,9 +48,9 @@ expect(await collectHierarchy(hierarchyProvider)).toMatchObject([{ label: "Examp
 
 ## ECInstances-based node labels
 
-In case of instance nodes, the hierarchy definition returns a query object which is used to fetch the nodes. Generally, the SELECT clause of the query defines how to select the label from iModel, and, when the query is executed, the parser reads and assigns the label to the node. A custom parser may decide to use other means to get the label - see the [custom parsing](./HierarchyDefinition.md#custom-parsing) section for more details. However, usually, consumers will want to use the `nodeSelectClauseFactory.createSelectClause` function (available through `defineHierarchyLevel` props) to create the SELECT clause for the query, as it works with the default parser.
+In case of instance nodes, the hierarchy definition returns a query object which is used to fetch the nodes. Generally, the SELECT clause of the query defines how to select the label from iModel, and, when the query is executed, the parser reads and assigns the label to the node. A custom parser may decide to use other means to get the label - see the [custom parsing](./HierarchyDefinition.md#custom-parsing) section for more details. However, usually, consumers will want to use the `createSelectClause` function (available through `defineHierarchyLevel` props) to create the SELECT clause for the query, as it works with the default parser.
 
-The `nodeSelectClauseFactory.createSelectClause` function has a required `nodeLabel` attribute whose type is one of the following:
+The `createSelectClause` function has a required `nodeLabel` attribute whose type is one of the following:
 
 - A string — simply uses the same given string for all nodes returned by the query. This is not a recommended approach, unless the hierarchy definition author is sure the query returns only a single node.
 
@@ -66,7 +66,7 @@ The `nodeSelectClauseFactory.createSelectClause` function has a required `nodeLa
   import { ECSql } from "@itwin/presentation-shared";
 
   const hierarchyDefinition: HierarchyDefinition = {
-    async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
+    async defineHierarchyLevel({ parentNode, createSelectClause }) {
       // For root nodes, return a query that selects all physical elements
       if (!parentNode) {
         return [
@@ -74,11 +74,11 @@ The `nodeSelectClauseFactory.createSelectClause` function has a required `nodeLa
             fullClassName: "BisCore.PhysicalElement",
             query: {
               ecsql: `
-                SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                SELECT ${await createSelectClause({
                   ecClassId: { selector: "x.ECClassId" },
                   ecInstanceId: { selector: "x.ECInstanceId" },
                   // Use `{ of: ... }` to delegate label creation to the instance label select clause factory used
-                  // by `nodeSelectClauseFactory`, which defaults to the result of `createIModelInstanceLabelSelectClauseFactory`.
+                  // by `createSelectClause`, which defaults to the result of `createIModelInstanceLabelSelectClauseFactory`.
                   nodeLabel: {
                     of: {
                       classAlias: "x",
@@ -163,7 +163,7 @@ By a request of `HierarchyDefinition`, the hierarchy provider groups instance no
   const hierarchyProvider = createIModelHierarchyProvider({
     imodelAccess,
     hierarchyDefinition: {
-      defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+      defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
         if (!parentNode) {
           return [
             // The hierarchy definition returns nodes for `myPhysicalObjectClassName` element type, grouped by `DoubleProperty` property value
@@ -171,7 +171,7 @@ By a request of `HierarchyDefinition`, the hierarchy provider groups instance no
               fullClassName: myPhysicalObjectClassName,
               query: {
                 ecsql: `
-                  SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                  SELECT ${await createSelectClause({
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
                     nodeLabel: { selector: "this.UserLabel" },

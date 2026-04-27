@@ -46,14 +46,14 @@ describe("Hierarchies", () => {
       });
       const { ecdb: db, schema, ...keys } = setup;
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: "x",
@@ -74,7 +74,7 @@ describe("Hierarchies", () => {
                 fullClassName: schema.items.Y.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `'y: ' || CAST(this.ECInstanceId AS TEXT)` },

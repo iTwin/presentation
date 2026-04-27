@@ -35,14 +35,14 @@ describe("Hierarchies", () => {
     });
     it("doesn't create grouping nodes if provided classes aren't base for node class", async () => {
       const customHierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },
@@ -76,14 +76,14 @@ describe("Hierarchies", () => {
 
     it("doesn't create grouping nodes if provided classes aren't of entity or relationship type", async () => {
       const customHierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },
@@ -118,14 +118,14 @@ describe("Hierarchies", () => {
     it("creates grouping nodes if provided class is base for node class", async () => {
       const baseClassName = "BisCore.InformationContentElement";
       const customHierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
@@ -172,14 +172,14 @@ describe("Hierarchies", () => {
       });
 
       const customHierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
@@ -245,14 +245,14 @@ describe("Hierarchies", () => {
       });
 
       const customHierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
@@ -279,7 +279,7 @@ describe("Hierarchies", () => {
                 fullClassName: physicalPartitionClassName,
                 query: {
                   ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
@@ -351,14 +351,14 @@ describe("Hierarchies", () => {
       });
 
       const customHierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.CodeValue` },

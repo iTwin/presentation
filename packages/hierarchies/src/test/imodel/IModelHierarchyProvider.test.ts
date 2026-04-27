@@ -93,14 +93,14 @@ describe("createIModelHierarchyProvider", () => {
       imodelAccess,
       instanceLabelSelectClauseFactory,
       hierarchyDefinition: {
-        async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: "a.b",
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: { of: { classAlias: "this" } },

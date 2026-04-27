@@ -118,7 +118,7 @@ describe("Hierarchies", () => {
       // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.HierarchyDefinition
       function createHierarchyDefinition(): HierarchyDefinition {
         return {
-          defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+          defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
             const createHierarchyLevelDefinition = async ({
               whereClause,
               bindings,
@@ -130,7 +130,7 @@ describe("Hierarchies", () => {
                 fullClassName: "BisCore.PhysicalElement",
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: { selector: "this.UserLabel" },
@@ -356,14 +356,14 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         // Define a hierarchy such that all elements except root are grouped by label.
         const hierarchyDefinition: HierarchyDefinition = {
-          defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+          defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
             if (!parentNode) {
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: "this.ECClassId" },
                         ecInstanceId: { selector: "this.ECInstanceId" },
                         nodeLabel: { selector: "this.UserLabel" },
@@ -382,7 +382,7 @@ describe("Hierarchies", () => {
                 fullClassName: "BisCore.PhysicalElement",
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: { selector: "this.UserLabel" },
@@ -476,14 +476,14 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         // Define a hierarchy such that all elements except root are grouped by label.
         const hierarchyDefinition: HierarchyDefinition = {
-          defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+          defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
             if (!parentNode) {
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: "this.ECClassId" },
                         ecInstanceId: { selector: "this.ECInstanceId" },
                         nodeLabel: { selector: "this.UserLabel" },
@@ -502,7 +502,7 @@ describe("Hierarchies", () => {
                 fullClassName: "BisCore.PhysicalElement",
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: { selector: "this.UserLabel" },
@@ -577,14 +577,14 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         // Define a hierarchy such that all elements except root are grouped by label.
         const hierarchyDefinition: HierarchyDefinition = {
-          defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+          defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
             if (!parentNode) {
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: "this.ECClassId" },
                         ecInstanceId: { selector: "this.ECInstanceId" },
                         nodeLabel: { selector: "this.UserLabel" },
@@ -603,7 +603,7 @@ describe("Hierarchies", () => {
                 fullClassName: "BisCore.PhysicalElement",
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: { selector: "this.UserLabel" },

@@ -19,7 +19,7 @@ import type { Props } from "@itwin/presentation-shared";
 describe("Hierarchies", () => {
   describe("Grouping nodes' hiding", () => {
     type ECSqlSelectClauseGroupingParams = NonNullable<
-      Props<DefineHierarchyLevelProps["nodeSelectClauseFactory"]["createSelectClause"]>["grouping"]
+      Props<DefineHierarchyLevelProps["createSelectClause"]>["grouping"]
     >;
     let subjectClassName: string;
     let physicalPartitionClassName: string;
@@ -41,14 +41,14 @@ describe("Hierarchies", () => {
       labelProperty?: string,
     ): HierarchyDefinition {
       return {
-        async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.${labelProperty ?? "CodeValue"}` },

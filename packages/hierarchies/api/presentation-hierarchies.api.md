@@ -86,12 +86,11 @@ export type DefineGenericNodeChildHierarchyLevelProps = Omit<DefineHierarchyLeve
 };
 
 // @public
-export interface DefineHierarchyLevelProps {
+export interface DefineHierarchyLevelProps extends Pick<NodesQueryClauseFactory, "createSelectClause" | "createFilterClauses"> {
     imodelAccess: LimitingECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector & {
         imodelKey: string;
     };
     instanceFilter?: GenericInstanceFilter;
-    nodeSelectClauseFactory: NodesQueryClauseFactory;
     parentNode: HierarchyDefinitionParentNode | undefined;
 }
 

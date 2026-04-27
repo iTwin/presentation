@@ -42,8 +42,8 @@ describe("Hierarchies", () => {
         });
         const { ecdb, schema, ...keys } = setup;
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ instanceFilter, nodeSelectClauseFactory }) {
-            const filterClauses = await nodeSelectClauseFactory.createFilterClauses({
+          async defineHierarchyLevel({ instanceFilter, createSelectClause, createFilterClauses }) {
+            const filterClauses = await createFilterClauses({
               filter: instanceFilter,
               contentClass: { fullName: schema.items.X.fullName, alias: "this" },
             });
@@ -52,7 +52,7 @@ describe("Hierarchies", () => {
                 fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: "x",
@@ -95,8 +95,8 @@ describe("Hierarchies", () => {
         });
         const { ecdb, schema, ...keys } = setup;
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ instanceFilter, nodeSelectClauseFactory }) {
-            const filterClauses = await nodeSelectClauseFactory.createFilterClauses({
+          async defineHierarchyLevel({ instanceFilter, createSelectClause, createFilterClauses }) {
+            const filterClauses = await createFilterClauses({
               filter: instanceFilter,
               contentClass: { fullName: schema.items.Y.fullName, alias: "this" },
             });
@@ -105,7 +105,7 @@ describe("Hierarchies", () => {
                 fullClassName: schema.items.Y.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: "y",
@@ -166,8 +166,8 @@ describe("Hierarchies", () => {
         });
         const { ecdb, schema, ...keys } = setup;
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ instanceFilter, nodeSelectClauseFactory }) {
-            const filterClauses = await nodeSelectClauseFactory.createFilterClauses({
+          async defineHierarchyLevel({ instanceFilter, createSelectClause, createFilterClauses }) {
+            const filterClauses = await createFilterClauses({
               filter: instanceFilter,
               contentClass: { fullName: schema.items.X.fullName, alias: "this" },
             });
@@ -176,7 +176,7 @@ describe("Hierarchies", () => {
                 fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `ec_classname(this.ECClassId, 'c')` },
@@ -219,8 +219,8 @@ describe("Hierarchies", () => {
         });
         const { ecdb, schema, ...keys } = setup;
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ instanceFilter, nodeSelectClauseFactory }) {
-            const filterClauses = await nodeSelectClauseFactory.createFilterClauses({
+          async defineHierarchyLevel({ instanceFilter, createSelectClause, createFilterClauses }) {
+            const filterClauses = await createFilterClauses({
               filter: instanceFilter,
               contentClass: { fullName: schema.items.X.fullName, alias: "this" },
             });
@@ -229,7 +229,7 @@ describe("Hierarchies", () => {
                 fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: "x",
@@ -278,8 +278,8 @@ describe("Hierarchies", () => {
         });
         const { ecdb, nonHiddenSchema: schema, ...keys } = setup;
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ instanceFilter, nodeSelectClauseFactory }) {
-            const filterClauses = await nodeSelectClauseFactory.createFilterClauses({
+          async defineHierarchyLevel({ instanceFilter, createSelectClause, createFilterClauses }) {
+            const filterClauses = await createFilterClauses({
               filter: instanceFilter,
               contentClass: { fullName: schema.items.Y.fullName, alias: "this" },
             });
@@ -288,7 +288,7 @@ describe("Hierarchies", () => {
                 fullClassName: schema.items.Y.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: "y",
@@ -370,8 +370,8 @@ describe("Hierarchies", () => {
         });
         const { ecdb, xSchema: schema, ...keys } = setup;
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ instanceFilter, nodeSelectClauseFactory }) {
-            const filterClauses = await nodeSelectClauseFactory.createFilterClauses({
+          async defineHierarchyLevel({ instanceFilter, createSelectClause, createFilterClauses }) {
+            const filterClauses = await createFilterClauses({
               filter: instanceFilter,
               contentClass: { fullName: schema.items.X.fullName, alias: "this" },
             });
@@ -380,7 +380,7 @@ describe("Hierarchies", () => {
                 fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `ec_classname(this.ECClassId, 'c')` },

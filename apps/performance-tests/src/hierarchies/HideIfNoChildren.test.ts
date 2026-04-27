@@ -31,18 +31,18 @@ describe("hide if no children", () => {
           return createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
-              rootNodes: async ({ nodeSelectClauseFactory }) =>
-                createPhysicalElementsHierarchyLevelDefinition({ nodeSelectClauseFactory, limit: 5 }),
+              rootNodes: async ({ createSelectClause }) =>
+                createPhysicalElementsHierarchyLevelDefinition({ createSelectClause, limit: 5 }),
               childNodes: [
                 {
                   parentInstancesNodePredicate: `BisCore.PhysicalElement`,
                   definitions: async ({
                     parentNode,
-                    nodeSelectClauseFactory,
+                    createSelectClause,
                   }: DefineInstanceNodeChildHierarchyLevelProps) => {
                     const depth = parentNode.parentKeys.length + 1;
                     return createPhysicalElementsHierarchyLevelDefinition({
-                      nodeSelectClauseFactory,
+                      createSelectClause,
                       limit: 1000,
                       hideIfNoChildren: true,
                       hasChildren: depth >= 2 ? false : undefined,
@@ -71,18 +71,18 @@ describe("hide if no children", () => {
           return createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
-              rootNodes: async ({ nodeSelectClauseFactory }) =>
-                createPhysicalElementsHierarchyLevelDefinition({ nodeSelectClauseFactory, limit: 5 }),
+              rootNodes: async ({ createSelectClause }) =>
+                createPhysicalElementsHierarchyLevelDefinition({ createSelectClause, limit: 5 }),
               childNodes: [
                 {
                   parentInstancesNodePredicate: `BisCore.PhysicalElement`,
                   definitions: async ({
                     parentNode,
-                    nodeSelectClauseFactory,
+                    createSelectClause,
                   }: DefineInstanceNodeChildHierarchyLevelProps) => {
                     const depth = parentNode.parentKeys.length + 1;
                     return createPhysicalElementsHierarchyLevelDefinition({
-                      nodeSelectClauseFactory,
+                      createSelectClause,
                       limit: 1000,
                       hideIfNoChildren: true,
                       hasChildren: depth >= 2 ? true : undefined,
@@ -102,18 +102,18 @@ describe("hide if no children", () => {
 });
 
 async function createPhysicalElementsHierarchyLevelDefinition(props: {
-  nodeSelectClauseFactory: DefineInstanceNodeChildHierarchyLevelProps["nodeSelectClauseFactory"];
+  createSelectClause: DefineInstanceNodeChildHierarchyLevelProps["createSelectClause"];
   limit: number;
   hasChildren?: boolean;
   hideIfNoChildren?: boolean;
 }): Promise<HierarchyLevelDefinition> {
-  const { nodeSelectClauseFactory, limit, hasChildren, hideIfNoChildren } = props;
+  const { createSelectClause, limit, hasChildren, hideIfNoChildren } = props;
   return [
     {
       fullClassName: `BisCore.PhysicalElement`,
       query: {
         ecsql: `
-          SELECT ${await nodeSelectClauseFactory.createSelectClause({
+          SELECT ${await createSelectClause({
             ecClassId: { selector: `this.ECClassId` },
             ecInstanceId: { selector: `this.ECInstanceId` },
             nodeLabel: { selector: `this.UserLabel` },

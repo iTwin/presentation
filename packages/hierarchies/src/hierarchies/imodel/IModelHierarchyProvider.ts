@@ -413,10 +413,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 
   private createHierarchyLevelDefinitionsObservable(
-    props: Omit<
-      DefineHierarchyLevelProps,
-      "imodelAccess" | "instanceLabelSelectClauseFactory" | "nodeSelectClauseFactory"
-    > &
+    props: Omit<DefineHierarchyLevelProps, "imodelAccess" | "createSelectClause" | "createFilterClauses"> &
       RequestContextProp,
   ): Observable<
     { imodelAccess: IModelAccess; imodelAccessIndex: number } & (
@@ -459,7 +456,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
           }
         }
         return this._activeHierarchyDefinition
-          .defineHierarchyLevel({ ...defineHierarchyLevelProps, parentNode, imodelAccess, nodeSelectClauseFactory })
+          .defineHierarchyLevel({ ...defineHierarchyLevelProps, ...nodeSelectClauseFactory, parentNode, imodelAccess })
           .pipe(
             mergeAll(),
             map(
@@ -483,10 +480,10 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 
   private createSourceNodesObservable(
-    props: Omit<
-      DefineHierarchyLevelProps,
-      "imodelAccess" | "instanceLabelSelectClauseFactory" | "nodeSelectClauseFactory"
-    > & { hierarchyLevelSizeLimit?: number | "unbounded"; targetInstanceKeys?: InstanceKey[] } & RequestContextProp,
+    props: Omit<DefineHierarchyLevelProps, "imodelAccess" | "createSelectClause" | "createFilterClauses"> & {
+      hierarchyLevelSizeLimit?: number | "unbounded";
+      targetInstanceKeys?: InstanceKey[];
+    } & RequestContextProp,
   ): SourceNodesObservable {
     const createSourceNodesFromDefinition = (
       imodelAccess: IModelAccess,

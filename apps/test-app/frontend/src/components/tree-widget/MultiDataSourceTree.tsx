@@ -260,12 +260,12 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
   return createPredicateBasedHierarchyDefinition({
     classHierarchyInspector: imodelAccess,
     hierarchy: {
-      rootNodes: async ({ nodeSelectClauseFactory }) => [
+      rootNodes: async ({ createSelectClause }) => [
         {
           fullClassName: "BisCore.Subject",
           query: {
             ecsql: `
-              SELECT ${await nodeSelectClauseFactory.createSelectClause({
+              SELECT ${await createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: { of: { classAlias: "this", className: "BisCore.Subject" } },
@@ -282,13 +282,13 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
         {
           parentInstancesNodePredicate: "BisCore.Subject",
           definitions: async ({
-            nodeSelectClauseFactory,
+            createSelectClause,
           }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
             {
               fullClassName: "BisCore.Model",
               query: {
                 ecsql: `
-                  SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                  SELECT ${await createSelectClause({
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
                     nodeLabel: { of: { classAlias: "this", className: "BisCore.Model" } },
@@ -303,12 +303,12 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
         },
         {
           parentInstancesNodePredicate: "BisCore.Model",
-          definitions: async ({ parentNode, nodeSelectClauseFactory }: DefineInstanceNodeChildHierarchyLevelProps) => [
+          definitions: async ({ parentNode, createSelectClause }: DefineInstanceNodeChildHierarchyLevelProps) => [
             {
               fullClassName: "BisCore.Model" as const,
               query: {
                 ecsql: `
-                  SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                  SELECT ${await createSelectClause({
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
                     nodeLabel: { of: { classAlias: "this", className: "BisCore.Model" } },

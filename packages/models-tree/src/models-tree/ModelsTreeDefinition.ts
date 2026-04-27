@@ -197,12 +197,13 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     return this._impl.defineHierarchyLevel(props);
   }
 
-  private async createRootHierarchyLevelDefinition(
-    props: DefineRootHierarchyLevelProps,
-  ): Promise<HierarchyLevelDefinition> {
-    const { nodeSelectClauseFactory } = props;
-    const instanceFilterClauses = await nodeSelectClauseFactory.createFilterClauses({
-      filter: props.instanceFilter,
+  private async createRootHierarchyLevelDefinition({
+    instanceFilter,
+    createSelectClause,
+    createFilterClauses,
+  }: DefineRootHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
+    const instanceFilterClauses = await createFilterClauses({
+      filter: instanceFilter,
       contentClass: { fullName: "BisCore.Subject", alias: "this" },
     });
     return [
@@ -211,7 +212,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ${await nodeSelectClauseFactory.createSelectClause({
+              ${await createSelectClause({
                 ecClassId: { selector: ECSql.createRawPropertyValueSelector("this", "ECClassId") },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: { of: { classAlias: "this", className: "BisCore.Subject" } },
@@ -233,14 +234,12 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   private async createSubjectChildrenQuery({
     parentNodeInstanceIds: subjectIds,
     instanceFilter,
-    nodeSelectClauseFactory,
+    createSelectClause,
+    createFilterClauses,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const [subjectFilterClauses, modelFilterClauses] = await Promise.all([
-      nodeSelectClauseFactory.createFilterClauses({
-        filter: instanceFilter,
-        contentClass: { fullName: "BisCore.Subject", alias: "this" },
-      }),
-      nodeSelectClauseFactory.createFilterClauses({
+      createFilterClauses({ filter: instanceFilter, contentClass: { fullName: "BisCore.Subject", alias: "this" } }),
+      createFilterClauses({
         filter: instanceFilter,
         contentClass: { fullName: "BisCore.GeometricModel3d", alias: "this" },
       }),
@@ -256,7 +255,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ${await nodeSelectClauseFactory.createSelectClause({
+              ${await createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: { of: { classAlias: "this", className: "BisCore.Subject" } },
@@ -284,7 +283,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ${await nodeSelectClauseFactory.createSelectClause({
+              ${await createSelectClause({
                 ecClassId: { selector: "model.ECClassId" },
                 ecInstanceId: { selector: "model.ECInstanceId" },
                 nodeLabel: { of: { classAlias: "partition", className: "BisCore.InformationPartitionElement" } },
@@ -333,7 +332,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
 
   private async createISubModeledElementChildrenQuery({
     parentNodeInstanceIds: elementIds,
-    nodeSelectClauseFactory,
+    createSelectClause,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     // note: we do not apply hierarchy level filtering on this hierarchy level, because it's always
     // hidden - the filter will get applied on the child hierarchy levels
@@ -343,7 +342,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ${await nodeSelectClauseFactory.createSelectClause({
+              ${await createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: "", // doesn't matter - the node is always hidden
@@ -364,9 +363,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   private async createGeometricModel3dChildrenQuery({
     parentNodeInstanceIds: modelIds,
     instanceFilter,
-    nodeSelectClauseFactory,
+    createSelectClause,
+    createFilterClauses,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    const instanceFilterClauses = await nodeSelectClauseFactory.createFilterClauses({
+    const instanceFilterClauses = await createFilterClauses({
       filter: instanceFilter,
       contentClass: { fullName: "BisCore.SpatialCategory", alias: "this" },
     });
@@ -376,7 +376,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ${await nodeSelectClauseFactory.createSelectClause({
+              ${await createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: { of: { classAlias: "this", className: "BisCore.SpatialCategory" } },
@@ -412,13 +412,14 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     parentNodeInstanceIds: categoryIds,
     parentNode,
     instanceFilter,
-    nodeSelectClauseFactory,
+    createSelectClause,
+    createFilterClauses,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const modelIds = parseIdsSelectorResult(parentNode.extendedData?.modelIds);
     if (modelIds.length === 0) {
       throw new Error(`Invalid category node "${parentNode.label}" - missing model information.`);
     }
-    const instanceFilterClauses = await nodeSelectClauseFactory.createFilterClauses({
+    const instanceFilterClauses = await createFilterClauses({
       filter: instanceFilter,
       contentClass: { fullName: this._hierarchyConfig.elementClassSpecification, alias: "this" },
     });
@@ -428,7 +429,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ${await nodeSelectClauseFactory.createSelectClause({
+              ${await createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: { of: { classAlias: "this", className: this._hierarchyConfig.elementClassSpecification } },
@@ -474,9 +475,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   private async createGeometricElement3dChildrenQuery({
     parentNodeInstanceIds: elementIds,
     instanceFilter,
-    nodeSelectClauseFactory,
+    createSelectClause,
+    createFilterClauses,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    const instanceFilterClauses = await nodeSelectClauseFactory.createFilterClauses({
+    const instanceFilterClauses = await createFilterClauses({
       filter: instanceFilter,
       contentClass: { fullName: this._hierarchyConfig.elementClassSpecification, alias: "this" },
     });
@@ -486,7 +488,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ${await nodeSelectClauseFactory.createSelectClause({
+              ${await createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: { of: { classAlias: "this", className: this._hierarchyConfig.elementClassSpecification } },

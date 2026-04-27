@@ -62,14 +62,14 @@ describe("Hierarchies", () => {
       });
 
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ nodeSelectClauseFactory, ...props }) {
+        async defineHierarchyLevel({ createSelectClause, ...props }) {
           if (!props.parentNode) {
             return [
               {
                 fullClassName: subjectClassName,
                 query: {
                   ecsql: `
-                  SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                  SELECT ${await createSelectClause({
                     ecClassId: { selector: `this.ECClassId` },
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.UserLabel` },
@@ -143,14 +143,14 @@ describe("Hierarchies", () => {
       });
 
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ nodeSelectClauseFactory, ...props }) {
+        async defineHierarchyLevel({ createSelectClause, ...props }) {
           if (!props.parentNode) {
             return [
               {
                 fullClassName: subjectClassName,
                 query: {
                   ecsql: `
-                  SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                  SELECT ${await createSelectClause({
                     ecClassId: { selector: `this.ECClassId` },
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.UserLabel` },
@@ -220,14 +220,14 @@ describe("Hierarchies", () => {
       });
 
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ nodeSelectClauseFactory, ...props }) {
+        async defineHierarchyLevel({ createSelectClause, ...props }) {
           if (!props.parentNode) {
             return [
               {
                 fullClassName: subjectClassName,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },
@@ -263,14 +263,14 @@ describe("Hierarchies", () => {
       });
 
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ nodeSelectClauseFactory, ...props }) {
+        async defineHierarchyLevel({ createSelectClause, ...props }) {
           if (!props.parentNode) {
             return [
               {
                 fullClassName: subjectClassName,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: "merge this",
@@ -309,14 +309,14 @@ describe("Hierarchies", () => {
       });
 
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ nodeSelectClauseFactory, ...props }) {
+        async defineHierarchyLevel({ createSelectClause, ...props }) {
           if (!props.parentNode) {
             return [
               {
                 fullClassName: subjectClassName,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.CodeValue` },
@@ -336,7 +336,7 @@ describe("Hierarchies", () => {
                 fullClassName: subjectClassName,
                 query: {
                   ecsql: `
-                    SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.CodeValue` },

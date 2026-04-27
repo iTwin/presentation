@@ -122,7 +122,10 @@ export type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "chil
  * Props for `HierarchyDefinition.defineHierarchyLevel`.
  * @public
  */
-export interface DefineHierarchyLevelProps {
+export interface DefineHierarchyLevelProps extends Pick<
+  NodesQueryClauseFactory,
+  "createSelectClause" | "createFilterClauses"
+> {
   /** The iModel for which the hierarchy definition is being requested for. */
   imodelAccess: LimitingECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector & { imodelKey: string };
 
@@ -131,24 +134,6 @@ export interface DefineHierarchyLevelProps {
 
   /** Optional hierarchy level filter. */
   instanceFilter?: GenericInstanceFilter;
-
-  /**
-   * A factory for creating ECSQL select clauses for hierarchy nodes. Created using
-   * `createNodesQueryClauseFactory` and scoped to the iModel identified by `imodelAccess`.
-   *
-   * Example:
-   * ```ts
-   * const selectClause = await nodeSelectClauseFactory.createSelectClause({
-   *   ecClassId: { selector: "this.ECClassId" },
-   *   ecInstanceId: { selector: "this.ECInstanceId" },
-   *   nodeLabel: { selector: "this.UserLabel" },
-   * });
-   * ```
-   *
-   * While using this factory is optional, and consumers may create their own `NodesQueryClauseFactory`,
-   * it's strongly recommended to use it to ensure the select clause format is consistent with the parser.
-   */
-  nodeSelectClauseFactory: NodesQueryClauseFactory;
 }
 
 /**

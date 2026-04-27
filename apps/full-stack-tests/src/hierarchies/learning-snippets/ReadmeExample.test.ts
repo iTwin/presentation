@@ -55,13 +55,13 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
     classHierarchyInspector: imodelAccess,
     hierarchy: {
       // For root nodes, select all BisCore.GeometricModel3d instances
-      rootNodes: async ({ nodeSelectClauseFactory }) => [
+      rootNodes: async ({ createSelectClause }) => [
         {
           fullClassName: "BisCore.GeometricModel3d",
           query: {
             ecsql: `
               SELECT
-                ${await nodeSelectClauseFactory.createSelectClause({
+                ${await createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { of: { classAlias: "this", className: "BisCore.GeometricModel3d" } },
@@ -77,14 +77,14 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
           parentInstancesNodePredicate: "BisCore.Model",
           definitions: async ({
             parentNodeInstanceIds,
-            nodeSelectClauseFactory,
+            createSelectClause,
           }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
             {
               fullClassName: "BisCore.Element",
               query: {
                 ecsql: `
                   SELECT
-                    ${await nodeSelectClauseFactory.createSelectClause({
+                    ${await createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: { of: { classAlias: "this", className: "BisCore.Element" } },

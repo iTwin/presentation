@@ -4,11 +4,11 @@
 
 **Breaking:** `createNodesQueryClauseFactory` and `NodeSelectClauseColumnNames` are no longer part of the public API.
 
-The `NodesQueryClauseFactory` is now created internally by `createIModelHierarchyProvider` and passed to `HierarchyDefinition.defineHierarchyLevel` as the `nodeSelectClauseFactory` prop.
+The `NodesQueryClauseFactory` is now created internally by `createIModelHierarchyProvider` and its methods (`createSelectClause`, `createFilterClauses`) are passed directly as props to `HierarchyDefinition.defineHierarchyLevel`.
 
 - Added `instanceLabelSelectClauseFactory` option to `createIModelHierarchyProvider` and `createMergedIModelHierarchyProvider` props, allowing consumers to override the default instance label select clause factory. Defaults to the result of `createIModelInstanceLabelSelectClauseFactory`.
 
-- Added `{ of: ... }` variant to `NodeSelectClauseProps.nodeLabel`, which delegates label select clause creation to the `IInstanceLabelSelectClauseFactory` held by the `NodesQueryClauseFactory`. This replaces the previous pattern of manually calling `instanceLabelSelectClauseFactory.createSelectClause()` and wrapping the result in a selector.
+- Added `{ of: ... }` variant to `NodeSelectClauseProps.nodeLabel`, which delegates label select clause creation to the `IInstanceLabelSelectClauseFactory` used by the provided `createSelectClause` function. This replaces the previous pattern of manually calling `instanceLabelSelectClauseFactory.createSelectClause()` and wrapping the result in a selector.
 
 Before:
 
@@ -40,18 +40,18 @@ After:
 
 ```ts
 // Note: if a custom `IInstanceLabelSelectClauseFactory` is needed, it should be supplied to `createIModelHierarchyProvider`
-// and will be used by `nodeSelectClauseFactory` that is provided to `defineHierarchyLevel`.
+// and will be used by the `createSelectClause` function provided to `defineHierarchyLevel`.
 const hierarchyDefinition: HierarchyDefinition = {
-  async defineHierarchyLevel({ nodeSelectClauseFactory }) {
+  async defineHierarchyLevel({ createSelectClause }) {
     return [
       {
         fullClassName: "SomeClass",
         query: {
           ecsql: `
-            SELECT ${await nodeSelectClauseFactory.createSelectClause({
+            SELECT ${await createSelectClause({
               ecClassId: { selector: "this.ECClassId" },
               ecInstanceId: { selector: "this.ECInstanceId" },
-              // Use `{ of: ... }` to delegate label creation to the instance label select clause factory used by `nodeSelectClauseFactory`
+              // Use `{ of: ... }` to delegate label creation to the instance label select clause factory
               nodeLabel: { of: { classAlias: "this", className: "SomeClass" } },
             })}
             FROM SomeClass this

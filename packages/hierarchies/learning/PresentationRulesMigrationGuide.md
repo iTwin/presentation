@@ -263,7 +263,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
-  defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+  defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
     if (parentNode) {
       return [];
     }
@@ -272,7 +272,7 @@ const hierarchyDefinition: HierarchyDefinition = {
         fullClassName: "BisCore.GeometricModel",
         query: {
           ecsql: `
-            SELECT ${await nodeSelectClauseFactory.createSelectClause({
+            SELECT ${await createSelectClause({
               ecClassId: { selector: "this.ECClassId" },
               ecInstanceId: { selector: "this.ECInstanceId" },
               nodeLabel: { of: { className: "BisCore.GeometricModel", classAlias: "this" } },
@@ -355,14 +355,14 @@ import {
 
 const createChildDefinition = async ({
   parentNode,
-  nodeSelectClauseFactory,
-}: Pick<DefineHierarchyLevelProps, "nodeSelectClauseFactory"> & {
+  createSelectClause,
+}: Pick<DefineHierarchyLevelProps, "createSelectClause"> & {
   parentNode: HierarchyNode & { key: InstancesNodeKey };
 }): Promise<HierarchyNodesDefinition> => ({
   fullClassName: "BisCore.GeometricElement3d",
   query: {
     ecsql: `
-      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+      SELECT ${await createSelectClause({
         ecClassId: { selector: "this.ECClassId" },
         ecInstanceId: { selector: "this.ECInstanceId" },
         nodeLabel: { of: { className: "BisCore.GeometricElement3d", classAlias: "this" } },
@@ -446,8 +446,8 @@ The purpose of a custom query instance nodes specification in Presentation Rules
 
   const createDefinition = async ({
     parentNode,
-    nodeSelectClauseFactory,
-  }: Pick<DefineHierarchyLevelProps, "nodeSelectClauseFactory"> & {
+    createSelectClause,
+  }: Pick<DefineHierarchyLevelProps, "createSelectClause"> & {
     parentNode: HierarchyNode & { key: InstancesNodeKey };
   }): Promise<HierarchyLevelDefinition> => {
     if (
@@ -474,7 +474,7 @@ The purpose of a custom query instance nodes specification in Presentation Rules
               fullClassName: `${schema.schemaName}.MyChildElement`,
               query: {
                 ecsql: `
-                  SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                  SELECT ${await createSelectClause({
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
                     nodeLabel: { of: { className: `${schema.schemaName}.MyChildElement`, classAlias: "this" } },
@@ -569,7 +569,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
-  defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+  defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
     if (parentNode) {
       return [];
     }
@@ -578,7 +578,7 @@ const hierarchyDefinition: HierarchyDefinition = {
         fullClassName: "BisCore.GeometricElement",
         query: {
           ecsql: `
-            SELECT ${await nodeSelectClauseFactory.createSelectClause({
+            SELECT ${await createSelectClause({
               ecClassId: { selector: "this.ECClassId" },
               ecInstanceId: { selector: "this.ECInstanceId" },
               nodeLabel: { of: { className: "BisCore.GeometricElement", classAlias: "this" } },
@@ -627,7 +627,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
-  defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+  defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
     if (parentNode) {
       return [];
     }
@@ -636,7 +636,7 @@ const hierarchyDefinition: HierarchyDefinition = {
         fullClassName: "BisCore.Element",
         query: {
           ecsql: `
-            SELECT ${await nodeSelectClauseFactory.createSelectClause({
+            SELECT ${await createSelectClause({
               ecClassId: { selector: "this.ECClassId" },
               ecInstanceId: { selector: "this.ECInstanceId" },
               nodeLabel: { of: { className: "BisCore.Element", classAlias: "this" } },
@@ -720,7 +720,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
-  defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+  defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
     if (parentNode) {
       return [];
     }
@@ -729,7 +729,7 @@ const hierarchyDefinition: HierarchyDefinition = {
         fullClassName: "BisCore.GeometricElement3d",
         query: {
           ecsql: `
-            SELECT ${await nodeSelectClauseFactory.createSelectClause({
+            SELECT ${await createSelectClause({
               ecClassId: { selector: "this.ECClassId" },
               ecInstanceId: { selector: "this.ECInstanceId" },
               nodeLabel: { of: { className: "BisCore.GeometricElement3d", classAlias: "this" } },
@@ -793,7 +793,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
-  defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+  defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
     if (parentNode) {
       return [];
     }
@@ -802,7 +802,7 @@ const hierarchyDefinition: HierarchyDefinition = {
         fullClassName: "BisCore.Element",
         query: {
           ecsql: `
-            SELECT ${await nodeSelectClauseFactory.createSelectClause({
+            SELECT ${await createSelectClause({
               ecClassId: { selector: "this.ECClassId" },
               ecInstanceId: { selector: "this.ECInstanceId" },
               nodeLabel: { of: { className: "BisCore.Element", classAlias: "this" } },
@@ -884,7 +884,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
-  defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+  defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
     if (parentNode) {
       return [];
     }
@@ -893,7 +893,7 @@ const hierarchyDefinition: HierarchyDefinition = {
         fullClassName: "BisCore.Element",
         query: {
           ecsql: `
-            SELECT ${await nodeSelectClauseFactory.createSelectClause({
+            SELECT ${await createSelectClause({
               ecClassId: { selector: "this.ECClassId" },
               ecInstanceId: { selector: "this.ECInstanceId" },
               nodeLabel: { of: { className: "BisCore.Element", classAlias: "this" } },

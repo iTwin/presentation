@@ -32,7 +32,7 @@ import { ECSqlBinding } from "@itwin/presentation-shared";
 
 function createHierarchyDefinition(): HierarchyDefinition {
   return {
-    defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+    defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
       const createHierarchyLevelDefinition = async ({
         whereClause,
         bindings,
@@ -44,7 +44,7 @@ function createHierarchyDefinition(): HierarchyDefinition {
           fullClassName: "BisCore.PhysicalElement",
           query: {
             ecsql: `
-              SELECT ${await nodeSelectClauseFactory.createSelectClause({
+              SELECT ${await createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: { selector: "this.UserLabel" },

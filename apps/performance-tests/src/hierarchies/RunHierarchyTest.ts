@@ -24,7 +24,7 @@ export function runHierarchyTest(
   testProps: {
     iModelName: IModelName;
     fullClassName?: EC.FullClassName;
-    nodeSelectProps?: Partial<Props<DefineHierarchyLevelProps["nodeSelectClauseFactory"]["createSelectClause"]>>;
+    nodeSelectProps?: Partial<Props<DefineHierarchyLevelProps["createSelectClause"]>>;
     expectedNodeCount?: number;
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
 ) {
@@ -37,8 +37,8 @@ export function runHierarchyTest(
       return {
         iModel,
         getHierarchyFactory: () => ({
-          async defineHierarchyLevel(props: DefineHierarchyLevelProps) {
-            if (props.parentNode) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }: DefineHierarchyLevelProps) {
+            if (parentNode) {
               return [];
             }
 
@@ -47,7 +47,7 @@ export function runHierarchyTest(
                 fullClassName,
                 query: {
                   ecsql: `
-                    SELECT ${await props.nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ...nodeSelectProps,
                       ecClassId: nodeSelectProps?.ecClassId ?? { selector: `this.ECClassId` },
                       ecInstanceId: nodeSelectProps?.ecInstanceId ?? { selector: `this.ECInstanceId` },
