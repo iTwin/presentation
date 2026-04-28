@@ -5,7 +5,7 @@
     "module": "CommonJS",
     "moduleResolution": "Bundler",
     "rootDir": "./src",
-    "outDir": "lib/cjs",
+    "outDir": "lib/cjs"
   },
-  "include": ["src/styles.d.ts", "src/presentation-components", "src/presentation-components.ts"],
+  "include": ["src/styles.d.ts", "src/presentation-components", "src/presentation-components.ts"]
 }

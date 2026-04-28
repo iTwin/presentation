@@ -10,7 +10,7 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "rootDir": ".",
-    "noEmit": true,
+    "noEmit": true
   },
-  "include": ["src", "vitest.config.ts"],
+  "include": ["src", "vitest.config.ts"]
 }

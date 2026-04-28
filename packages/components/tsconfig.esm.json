@@ -3,7 +3,7 @@
   "compilerOptions": {
     "noEmit": false,
     "rootDir": "./src",
-    "outDir": "lib/esm",
+    "outDir": "lib/esm"
   },
-  "include": ["src/styles.d.ts", "src/presentation-components", "src/presentation-components.ts"],
+  "include": ["src/styles.d.ts", "src/presentation-components", "src/presentation-components.ts"]
 }

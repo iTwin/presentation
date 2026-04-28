@@ -5,7 +5,7 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "rootDir": "./src",
+    "rootDir": "./src"
   },
-  "include": ["src"],
+  "include": ["src"]
 }

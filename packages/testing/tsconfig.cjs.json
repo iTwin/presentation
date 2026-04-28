@@ -5,7 +5,7 @@
     "module": "CommonJS",
     "moduleResolution": "Bundler",
     "rootDir": "./src",
-    "outDir": "lib/cjs",
+    "outDir": "lib/cjs"
   },
-  "include": ["src/presentation-testing", "src/presentation-testing.ts"],
+  "include": ["src/presentation-testing", "src/presentation-testing.ts"]
 }

@@ -10,7 +10,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "rootDir": ".",
-    "noEmit": true,
+    "noEmit": true
   },
-  "include": ["src", "vite.config.mts"],
+  "include": ["src", "vite.config.mts"]
 }

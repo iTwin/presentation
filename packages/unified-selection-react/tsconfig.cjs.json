@@ -5,7 +5,7 @@
     "module": "CommonJS",
     "moduleResolution": "Bundler",
     "rootDir": "./src",
-    "outDir": "lib/cjs",
+    "outDir": "lib/cjs"
   },
-  "include": ["src/unified-selection-react", "src/unified-selection-react.ts"],
+  "include": ["src/unified-selection-react", "src/unified-selection-react.ts"]
 }

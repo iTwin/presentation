@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "./lib",
     "sourceMap": true,
-    "rootDir": "./src",
+    "rootDir": "./src"
   },
-  "include": ["src"],
+  "include": ["src"]
 }
