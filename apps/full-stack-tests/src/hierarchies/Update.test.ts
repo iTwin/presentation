@@ -53,6 +53,7 @@ describe("Hierarchies", () => {
       const socket = new TestSocket();
       await IpcHost.startup({ ipcHost: { socket }, iModelHost: { profileName: Guid.createValue() } });
 
+      // eslint-disable-next-line @itwin/no-internal
       RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);
       await IpcApp.startup(socket, {
         iModelApp: {
@@ -63,7 +64,9 @@ describe("Hierarchies", () => {
         },
       });
       RpcConfiguration.developmentMode = true;
+      // eslint-disable-next-line @itwin/no-internal
       RpcManager.initializeInterface(IModelReadRpcInterface);
+      // eslint-disable-next-line @itwin/no-internal
       RpcManager.initializeInterface(ECSchemaRpcInterface);
     });
 
