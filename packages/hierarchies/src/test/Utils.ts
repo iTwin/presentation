@@ -104,9 +104,7 @@ export function createECSchemaProviderStub(): {
     let schemaStub = schemaStubs[schemaName];
     if (!schemaStub) {
       const classMap = new Map<string, EC.Class>();
-      const getClass: EC.Schema["getClass"] = vi
-        .fn()
-        .mockImplementation(async (name: string) => classMap.get(name)) as unknown as EC.Schema["getClass"];
+      const getClass: EC.Schema["getClass"] = vi.fn().mockImplementation(async (name: string) => classMap.get(name));
       schemaStub = { name: schemaName, getClass, classMap };
       schemaStubs[schemaName] = schemaStub;
     }
@@ -167,8 +165,8 @@ export function createECSchemaProviderStub(): {
     stubRelationshipClass,
     stubOtherClass,
     getSchema: vi.fn().mockImplementation(async (schemaName: string): Promise<EC.Schema | undefined> => {
-      return schemaStubs[schemaName] as unknown as EC.Schema | undefined;
-    }) as unknown as ECSchemaProvider["getSchema"],
+      return schemaStubs[schemaName];
+    }),
   };
 }
 
@@ -195,7 +193,7 @@ export function createClassHierarchyInspectorStub(
         return false;
       }
       return derivedClass.is(baseClassName, baseSchemaName);
-    }) as unknown as ECClassHierarchyInspector["classDerivesFrom"],
+    }),
   };
 }
 

@@ -181,9 +181,10 @@ export class ContentBuilder {
         continue;
       }
 
-      const instanceKeys = instanceIds.map(
-        (idEntry) => ({ className: `${nameEntry.schemaName}:${nameEntry.className}`, id: idEntry }) as InstanceKey,
-      );
+      const instanceKeys = instanceIds.map((idEntry) => ({
+        className: `${nameEntry.schemaName}:${nameEntry.className}`,
+        id: idEntry,
+      }));
 
       contents.push({
         className: `${nameEntry.schemaName}:${nameEntry.className}`,
@@ -200,7 +201,7 @@ export class ContentBuilder {
    * @param rulesetOrId Either a [Ruleset]($presentation-common) object or a ruleset id.
    * @param displayType Type of content container display. For example:
    * "PropertyPane", "Grid", "List" etc.
-   * @deprecated in 3.x. This method turned out to be useless as it creates content for too many instances. Should use [[createContent]] instead.
+   * @deprecated in 3.7. This method turned out to be useless as it creates content for too many instances. Should use [[createContent]] instead.
    */
   public async createContentForAllInstances(
     rulesetOrId: Ruleset | string,
@@ -215,7 +216,7 @@ export class ContentBuilder {
    * @param rulesetOrId Either a [Ruleset]($presentation-common) object or a ruleset id.
    * @param displayType Type of content container display. For example:
    * "PropertyPane", "Grid", "List" etc.
-   * @deprecated in 3.x. This method turned out to be useless as it creates content for too many instances. Should use [[createContent]] instead.
+   * @deprecated in 3.7. This method turned out to be useless as it creates content for too many instances. Should use [[createContent]] instead.
    */
   public async createContentForInstancePerClass(
     rulesetOrId: Ruleset | string,

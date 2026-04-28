@@ -18,7 +18,6 @@ import {
   StructProperty as CoreStructProperty,
   PrimitiveType,
   RelationshipMultiplicity,
-  SchemaContext,
   SchemaItemType,
   SchemaKey,
   StrengthDirection,
@@ -41,7 +40,7 @@ describe("createECSchemaProvider", () => {
           }),
       };
 
-      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
+      const provider = createECSchemaProvider(schemaContext);
       const schema = await provider.getSchema("x");
       assert(schema !== undefined);
 
@@ -57,7 +56,7 @@ describe("createECSchemaProvider", () => {
         getSchema: vi.fn<(key: SchemaKey) => Promise<CoreSchema>>().mockRejectedValue(new Error("schema not found")),
       };
 
-      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
+      const provider = createECSchemaProvider(schemaContext);
       expect(await provider.getSchema("x")).toBeUndefined();
     });
 
@@ -66,7 +65,7 @@ describe("createECSchemaProvider", () => {
         getSchema: vi.fn<(key: SchemaKey) => Promise<CoreSchema>>().mockRejectedValue(new Error("Unknown error")),
       };
 
-      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
+      const provider = createECSchemaProvider(schemaContext);
       await expect(provider.getSchema("x")).rejects.toThrow();
       expect(schemaContext.getSchema).toHaveBeenCalledOnce();
     });
@@ -90,7 +89,7 @@ describe("createECSchemaProvider", () => {
           .mockResolvedValue({ name: "x" } as unknown as CoreSchema),
       };
 
-      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
+      const provider = createECSchemaProvider(schemaContext);
       await Promise.all([provider.getSchema("x"), provider.getSchema("x")]);
 
       expect(schemaContext.getSchema).toHaveBeenCalledOnce();
@@ -104,7 +103,7 @@ describe("createECSchemaProvider", () => {
           .mockResolvedValueOnce({ name: "x" } as unknown as CoreSchema),
       };
 
-      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
+      const provider = createECSchemaProvider(schemaContext);
       await provider.getSchema("x");
 
       expect(schemaContext.getSchema).toHaveBeenCalledTimes(2);

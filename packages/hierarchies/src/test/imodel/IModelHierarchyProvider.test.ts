@@ -103,7 +103,7 @@ describe("createIModelHierarchyProvider", () => {
         parentKeys: [],
         label: "test label",
         children: false,
-      } as HierarchyNode,
+      },
     ]);
   });
 
@@ -1525,7 +1525,7 @@ describe("createIModelHierarchyProvider", () => {
           parentKeys: [{ type: "class-grouping", className: "x.y" }],
           label: "one",
           children: true,
-        } as HierarchyNode,
+        },
       ]);
       imodelAccess.createQueryReader.mockClear();
 
@@ -1542,7 +1542,7 @@ describe("createIModelHierarchyProvider", () => {
           ],
           label: "two",
           children: false,
-        } as HierarchyNode,
+        },
       ]);
       imodelAccess.createQueryReader.mockClear();
 

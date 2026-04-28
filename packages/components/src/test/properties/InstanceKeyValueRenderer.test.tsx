@@ -66,7 +66,7 @@ describe("InstanceKeyValueRenderer", () => {
     });
 
     describe("returned component", () => {
-      const testIModel = { key: "" } as IModelConnection;
+      const testIModel = { key: "test-imodel" } as IModelConnection;
       const instanceKey: Primitives.InstanceKey = { className: "test_schema:test_class", id: "test_id" };
 
       describe("without unified selection context", () => {

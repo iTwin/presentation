@@ -11,7 +11,6 @@ import {
   ArrayValue,
   PrimitiveValue,
   PropertyDescription,
-  PropertyEditorInfo,
   PropertyRecord,
   StandardTypeNames,
   StructValue,
@@ -103,7 +102,7 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
   }
 
   if (info.editor) {
-    description.editor = { name: info.editor.name } as PropertyEditorInfo;
+    description.editor = { name: info.editor.name };
   }
 
   if (info.koqName) {

@@ -16,7 +16,7 @@ import { ViewportSelectionHandler } from "./ViewportSelectionHandler.js";
 /**
  * Props that are injected to the ViewWithUnifiedSelection HOC component.
  * @public
- * @deprecated in 5.3.x This interface is empty.
+ * @deprecated in 5.3. This interface is empty.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ViewWithUnifiedSelectionProps {}

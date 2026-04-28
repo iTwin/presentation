@@ -30,7 +30,7 @@ import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlled
 /**
  * Properties for [[usePresentationTreeNodeLoader]] hook.
  * @public
- * @deprecated in 4.x. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTreeState]] instead.
+ * @deprecated in 4.4. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTreeState]] instead.
  */
 export interface PresentationTreeNodeLoaderProps extends PresentationTreeDataProviderProps {
   /**
@@ -52,7 +52,7 @@ export interface PresentationTreeNodeLoaderProps extends PresentationTreeDataPro
 /**
  * Return type for [[usePresentationTreeNodeLoader]] hook.
  * @public
- * @deprecated in 4.x. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTreeState]] instead.
+ * @deprecated in 4.4. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTreeState]] instead.
  */
 export interface PresentationTreeNodeLoaderResult {
   /** Tree node loader to be used with a tree component */
@@ -69,7 +69,7 @@ export interface PresentationTreeNodeLoaderResult {
  * Custom hooks which creates PagedTreeNodeLoader with PresentationTreeDataProvider using
  * supplied imodel and ruleset.
  * @public
- * @deprecated in 4.x. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTreeState]] instead.
+ * @deprecated in 4.4. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTreeState]] instead.
  */
 export function usePresentationTreeNodeLoader(
   props: PresentationTreeNodeLoaderProps,

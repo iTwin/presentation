@@ -73,7 +73,7 @@ export function createECClass(coreClass: CoreClass, schema?: EC.Schema): EC.Clas
     case SchemaItemType.RelationshipClass:
       return new ECRelationshipClassImpl(coreClass as CoreRelationshipClass, schema);
     case SchemaItemType.StructClass:
-      return new ECStructClassImpl(coreClass as CoreStructClass, schema);
+      return new ECStructClassImpl(coreClass, schema);
     case SchemaItemType.Mixin:
       return new ECMixinImpl(coreClass as CoreMixin, schema);
   }

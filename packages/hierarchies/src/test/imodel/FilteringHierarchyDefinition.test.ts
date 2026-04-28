@@ -7,7 +7,6 @@ import { firstValueFrom, from, lastValueFrom, of, toArray } from "rxjs";
 import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
 import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyFiltering.js";
-import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier.js";
 import {
   applyECInstanceIdsFilter,
@@ -51,7 +50,7 @@ describe("FilteringHierarchyDefinition", () => {
     });
 
     it("uses source's node parser when it has one", async () => {
-      const stub = vi.fn().mockResolvedValue({} as unknown as HierarchyNode);
+      const stub = vi.fn().mockResolvedValue({});
       const sourceFactory = { parseNode: (rowProp: any) => from(stub(rowProp)) } as unknown as RxjsHierarchyDefinition;
       const row = { [NodeSelectClauseColumnNames.FullClassName]: "" };
       const filteringFactory = await createFilteringHierarchyDefinition({ sourceFactory });
