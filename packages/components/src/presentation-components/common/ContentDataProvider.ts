@@ -455,6 +455,15 @@ export class ContentDataProvider implements IContentDataProvider {
         paging: pageOptions,
       };
 
+      // we always get formatted content from presentation manager - ensure
+      // we set `_isContentFormatted = true` when we finish getting content, to
+      // avoid formatting it again unnecessarily
+      using _ = {
+        [Symbol.dispose]: () => {
+          this._isContentFormatted = true;
+        },
+      };
+
       if (Presentation.presentation.getContentIterator) {
         const result = await Presentation.presentation.getContentIterator(options);
         return result
@@ -473,7 +482,6 @@ export class ContentDataProvider implements IContentDataProvider {
             }
           : undefined;
       }
-
       const requestSize = undefined !== pageOptions && 0 === pageOptions.start && undefined !== pageOptions.size;
       if (requestSize) {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
