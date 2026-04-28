@@ -70,7 +70,6 @@ import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 import { RenderedItemsRange } from '@itwin/components-react';
 import { Ruleset } from '@itwin/presentation-common';
-import { RulesetVariable } from '@itwin/presentation-common';
 import { SchemaContext } from '@itwin/ecschema-metadata';
 import { SelectionChangeType } from '@itwin/presentation-frontend';
 import { SelectionHandler } from '@itwin/presentation-frontend';
@@ -94,7 +93,6 @@ import { TreeRendererProps } from '@itwin/components-react';
 import { TreeSelectionModificationEventArgs } from '@itwin/components-react';
 import { TreeSelectionReplacementEventArgs } from '@itwin/components-react';
 import { TypeEditor } from '@itwin/components-react';
-import { UnitSystemKey } from '@itwin/core-quantity';
 import { ViewportProps } from '@itwin/imodel-components-react';
 
 // @public
@@ -530,16 +528,7 @@ export function PresentationTree<TEventHandler extends TreeEventHandler>(input: 
 export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, Disposable {
     [Symbol.dispose](): void;
     constructor(props: PresentationTreeDataProviderProps);
-    createRequestOptions(parentKey: NodeKey | undefined, instanceFilter?: InstanceFilterDefinition): {
-        instanceFilter?: InstanceFilterDefinition | undefined;
-        sizeLimit?: number | undefined;
-        parentKey?: NodeKey | undefined;
-        rulesetOrId: Ruleset | string;
-        rulesetVariables?: RulesetVariable[] | undefined;
-        imodel: IModelConnection;
-        locale?: string;
-        unitSystem?: UnitSystemKey;
-    };
+    createRequestOptions(parentKey: NodeKey | undefined, instanceFilter?: InstanceFilterDefinition): Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>;
     // @deprecated (undocumented)
     dispose(): void;
     getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
