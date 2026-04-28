@@ -306,7 +306,7 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
       : undefined;
     const value: PrimitiveValue = {
       valueFormat: UiPropertyValueFormat.Primitive,
-      ...(displayValue ? { displayValue } : {}),
+      ...(displayValue?.startsWith("--") ? { displayValue } : {}),
     };
     const record = new PropertyRecord(
       value,
