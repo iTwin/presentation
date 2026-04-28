@@ -75,7 +75,6 @@ export async function buildTestIModel(
  */
 export async function buildTestIModel(
   name: string,
-
   cb: (builder: TestIModelBuilder) => Promise<void>,
 ): Promise<IModelConnection>;
 /**
@@ -97,7 +96,6 @@ export async function buildTestIModel(
  */
 export async function buildTestIModel(
   context: TestContext,
-
   cb: (builder: TestIModelBuilder) => Promise<void>,
 ): Promise<IModelConnection>;
 export async function buildTestIModel(
