@@ -485,7 +485,7 @@ export class ContentDataProvider implements IContentDataProvider {
       const requestSize = undefined !== pageOptions && 0 === pageOptions.start && undefined !== pageOptions.size;
       if (requestSize) {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        return Presentation.presentation.getContentAndSize(options);
+        return await Presentation.presentation.getContentAndSize(options);
       }
 
       // eslint-disable-next-line @typescript-eslint/no-deprecated
