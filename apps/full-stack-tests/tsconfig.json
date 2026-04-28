@@ -1,8 +1,6 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "noEmit": true,
     "sourceMap": true,
     "esModuleInterop": true,
@@ -10,7 +8,7 @@
     "noUnusedLocals": false,
     "jsx": "react-jsx",
     "outDir": "lib",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
   },
-  "include": ["src", "vitest.config.ts"]
+  "include": ["src", "vitest.config.ts"],
 }

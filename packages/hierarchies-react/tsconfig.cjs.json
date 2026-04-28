@@ -1,14 +1,17 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "noEmit": false,
     "module": "CommonJS",
-    "moduleResolution": "Node",
-    "outDir": "lib/cjs"
+    "moduleResolution": "Bundler",
+    "rootDir": "./src",
+    "outDir": "lib/cjs",
   },
   "include": [
+    "src/styles.d.ts",
     "src/presentation-hierarchies-react",
     "src/presentation-hierarchies-react.ts",
     "src/presentation-hierarchies-react-core.ts",
-    "src/presentation-hierarchies-react-itwinui.ts"
-  ]
+    "src/presentation-hierarchies-react-itwinui.ts",
+  ],
 }

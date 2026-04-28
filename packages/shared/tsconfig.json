@@ -5,7 +5,10 @@
     "sourceMap": true,
     "esModuleInterop": true,
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "rootDir": ".",
+    "noEmit": true,
+    "types": ["node"],
   },
-  "include": ["src", "vitest.config.ts"]
+  "include": ["src"],
 }

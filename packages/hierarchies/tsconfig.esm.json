@@ -1,9 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "outDir": "lib/esm"
+    "noEmit": false,
+    "rootDir": "./src",
+    "outDir": "lib/esm",
   },
-  "include": ["src/hierarchies", "src/presentation-hierarchies.ts"]
+  "include": ["src/hierarchies", "src/presentation-hierarchies.ts"],
 }

@@ -1,9 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "noEmit": false,
     "module": "CommonJS",
-    "moduleResolution": "Node",
-    "outDir": "lib/cjs"
+    "moduleResolution": "Bundler",
+    "rootDir": "./src",
+    "outDir": "lib/cjs",
   },
-  "include": ["src/presentation-opentelemetry", "src/presentation-opentelemetry.ts"]
+  "include": ["src/presentation-opentelemetry", "src/presentation-opentelemetry.ts"],
 }

@@ -1,9 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "noEmit": false,
     "module": "CommonJS",
-    "moduleResolution": "Node",
-    "outDir": "lib/cjs"
+    "moduleResolution": "Bundler",
+    "rootDir": "./src",
+    "outDir": "lib/cjs",
   },
-  "include": ["src/unified-selection-react", "src/unified-selection-react.ts"]
+  "include": ["src/unified-selection-react", "src/unified-selection-react.ts"],
 }

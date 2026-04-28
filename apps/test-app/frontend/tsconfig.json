@@ -8,7 +8,9 @@
     "outDir": "./lib",
     "sourceMap": true,
     "esModuleInterop": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "rootDir": ".",
+    "noEmit": true,
   },
-  "include": ["src", "vite.config.mts"]
+  "include": ["src", "vite.config.mts"],
 }

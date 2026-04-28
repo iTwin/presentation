@@ -1,9 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "outDir": "lib/esm"
+    "noEmit": false,
+    "rootDir": "./src",
+    "outDir": "lib/esm",
   },
-  "include": ["src/presentation-opentelemetry", "src/presentation-opentelemetry.ts"]
+  "include": ["src/presentation-opentelemetry", "src/presentation-opentelemetry.ts"],
 }

@@ -7,6 +7,7 @@
     "name": "Bentley Systems, Inc.",
     "url": "https://www.bentley.com"
   },
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "clean": "rimraf lib",

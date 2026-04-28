@@ -2,10 +2,13 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./lib",
+    "rootDir": ".",
+    "noEmit": true,
     "sourceMap": true,
     "esModuleInterop": true,
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "types": ["node"],
   },
-  "include": ["src"]
+  "include": ["src"],
 }
