@@ -8,7 +8,7 @@ import { Id64 } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { SchemaFormatsProvider } from "@itwin/ecschema-metadata";
 import { Ruleset } from "@itwin/presentation-common";
-import { ContentBuilder } from "../presentation-testing.js";
+import { ContentBuilder } from "../presentation-testing/ContentBuilder.js";
 import { initialize, terminate } from "../presentation-testing/Helpers.js";
 import { HierarchyBuilder } from "../presentation-testing/HierarchyBuilder.js";
 import { TestIModelConnection } from "../presentation-testing/IModelUtilities.js";

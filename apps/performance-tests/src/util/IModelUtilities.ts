@@ -5,7 +5,7 @@
 
 import fs from "fs";
 import { getFullSchemaXml, TestIModelBuilder } from "presentation-test-utilities";
-import { IModelDb, SnapshotDb } from "@itwin/core-backend";
+import { EditTxn, SnapshotDb, withEditTxn } from "@itwin/core-backend";
 import { BisCodeSpec, Code, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
 
 export async function createIModel(
@@ -15,45 +15,46 @@ export async function createIModel(
 ) {
   fs.rmSync(localPath, { force: true });
   const iModel = SnapshotDb.createEmpty(localPath, { rootSubject: { name } });
-  const builder = new BackendTestIModelBuilder(iModel);
   try {
-    await cb(builder);
+    await withEditTxn(iModel, async (txn) => {
+      const builder = new BackendTestIModelBuilder(txn);
+      await cb(builder);
+    });
   } finally {
-    iModel.saveChanges("Initial commit");
     iModel.close();
   }
 }
 
 class BackendTestIModelBuilder implements TestIModelBuilder {
-  constructor(private readonly _iModel: IModelDb) {}
+  constructor(private readonly _txn: EditTxn) {}
 
   public insertModel(props: ModelProps): string {
-    return this._iModel.models.insertModel(props);
+    return this._txn.insertModel(props);
   }
 
   public insertElement(props: ElementProps): string {
-    return this._iModel.elements.insertElement(props);
+    return this._txn.insertElement(props);
   }
 
   public insertAspect(props: ElementAspectProps): string {
-    return this._iModel.elements.insertAspect(props);
+    return this._txn.insertAspect(props);
   }
 
   public insertRelationship(props: RelationshipProps): string {
-    return this._iModel.relationships.insertInstance(props);
+    return this._txn.insertRelationship(props);
   }
 
   public createCode(scopeModelId: string, codeSpecName: BisCodeSpec, codeValue: string): Code {
-    const spec = this._iModel.codeSpecs.getByName(codeSpecName).id;
+    const spec = this._txn.iModel.codeSpecs.getByName(codeSpecName).id;
     return new Code({ scope: scopeModelId, spec, value: codeValue });
   }
 
   public async importSchema(schemaName: string, schemaContentXml: string): Promise<void> {
     const fullXml = getFullSchemaXml({ schemaName, schemaContentXml });
-    await this._iModel.importSchemaStrings([fullXml]);
+    await this._txn.iModel.importSchemaStrings([fullXml]);
   }
 
   public async importFullSchema(schema: string): Promise<void> {
-    await this._iModel.importSchemaStrings([schema]);
+    await this._txn.iModel.importSchemaStrings([schema]);
   }
 }

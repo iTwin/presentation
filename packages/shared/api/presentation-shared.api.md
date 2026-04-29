@@ -282,7 +282,6 @@ declare namespace ECSql {
         createRelationshipPathJoinClause
     }
 }
-export { ECSql }
 
 // @public
 export type ECSqlBinding = {
