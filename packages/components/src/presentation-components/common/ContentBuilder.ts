@@ -301,9 +301,8 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
   public processMergedValue(props: ProcessMergedValueProps): void {
     const propertyField = props.requestedField;
     const rootAppender = this._appendersStack[0];
-    const displayValue = IPropertiesAppender.isRoot(rootAppender)
-      ? (rootAppender.item.displayValues[props.mergedField.name] as string)
-      : undefined;
+    assert(IPropertiesAppender.isRoot(rootAppender));
+    const displayValue = rootAppender.item.displayValues[props.mergedField.name] as string | undefined;
     const value: PrimitiveValue = {
       valueFormat: UiPropertyValueFormat.Primitive,
       ...(displayValue?.startsWith("--") ? { displayValue } : {}),
