@@ -17,10 +17,15 @@ jobs:
   update-screenshots:
     runs-on: ubuntu-24.04
 
-    # run on manual trigger, or when /update-screenshots comment is added to a PR
+    # run on manual trigger, or when a trusted user adds /update-screenshots comment to a PR
     if: >-
       (github.event_name == 'workflow_dispatch' && github.ref_name != github.event.repository.default_branch) ||
-      (github.event_name == 'issue_comment' && github.event.issue.pull_request && github.event.comment.body == '/update-screenshots')
+      (github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request &&
+        github.event.comment.body == '/update-screenshots' &&
+        (github.event.comment.author_association == 'OWNER' ||
+          github.event.comment.author_association == 'MEMBER' ||
+          github.event.comment.author_association == 'COLLABORATOR'))
 
     # one at a time per branch
     concurrency:
@@ -29,6 +34,7 @@ jobs:
 
     permissions:
       contents: write # needs to push changes
+      pull-requests: read # needed to resolve PR head ref via github-script
 
     steps:
       - name: Get PR head ref
@@ -42,6 +48,12 @@ jobs:
               repo: context.repo.repo,
               pull_number: context.issue.number,
             });
+            const headRepo = pr.data.head.repo.full_name;
+            const baseRepo = pr.data.base.repo.full_name;
+            if (headRepo !== baseRepo) {
+              core.setFailed(`Fork PRs are not supported (head: ${headRepo}, base: ${baseRepo})`);
+              return;
+            }
             core.setOutput('ref', pr.data.head.ref);
 
       - name: Checkout selected branch
@@ -108,7 +120,7 @@ jobs:
           if [[ "${{ steps.check_changes.outputs.changes }}" == "true" ]]; then
             echo "### 📸 Visual Regression Screenshots Updated" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Successfully updated **${{ steps.check_changes.outputs.changed_count }}** screenshot(s) on \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "Successfully updated **${{ steps.check_changes.outputs.changed_count }}** screenshot(s) on \`${{ steps.pr.outputs.ref || github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "#### Changed Files:" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
