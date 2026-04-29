@@ -52,7 +52,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Simple
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             // For root nodes, simply return one generic node
             if (!parentNode) {
               return [{ node: { key: "physical-elements", label: "Physical elements" } }];
@@ -64,7 +64,7 @@ describe("Hierarchies", () => {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: "x.ECClassId" },
                         ecInstanceId: { selector: "x.ECInstanceId" },
                         nodeLabel: { selector: "x.UserLabel" },
@@ -106,7 +106,7 @@ describe("Hierarchies", () => {
                 {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
-                    // Define the query without using `NodesQueryClauseFactory` - we'll parse the results manually. But to create
+                    // Define the query without using `createSelectClause` - we'll parse the results manually. But to create
                     // an instances node we need at least a class name, instance id, and a label.
                     ecsql: `
                       SELECT
@@ -153,7 +153,7 @@ describe("Hierarchies", () => {
         };
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PreProcessNode
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             // For root nodes, return all physical elements
             if (!parentNode) {
               return [
@@ -161,7 +161,7 @@ describe("Hierarchies", () => {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: "x.ECClassId" },
                         ecInstanceId: { selector: "x.ECInstanceId" },
                         nodeLabel: { selector: "x.UserLabel" },
@@ -199,7 +199,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PostProcessNode
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             // For root nodes, return all physical elements grouped by class
             if (!parentNode) {
               return [
@@ -207,7 +207,7 @@ describe("Hierarchies", () => {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: "x.ECClassId" },
                         ecInstanceId: { selector: "x.ECInstanceId" },
                         nodeLabel: { selector: "x.UserLabel" },
@@ -263,13 +263,13 @@ describe("Hierarchies", () => {
                 // For the root node, return a query that selects all physical elements
                 parentGenericNodePredicate: async (parentKey) => parentKey.id === "physical-elements",
                 definitions: async ({
-                  nodeSelectClauseFactory,
+                  createSelectClause,
                 }: DefineGenericNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
                   {
                     fullClassName: "BisCore.PhysicalElement",
                     query: {
                       ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: "x.ECClassId" },
                         ecInstanceId: { selector: "x.ECInstanceId" },
                         nodeLabel: { selector: "x.UserLabel" },

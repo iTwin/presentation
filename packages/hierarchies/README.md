@@ -109,21 +109,16 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
     classHierarchyInspector: imodelAccess,
     hierarchy: {
       // For root nodes, select all BisCore.GeometricModel3d instances
-      rootNodes: async ({ instanceLabelSelectClauseFactory, nodeSelectClauseFactory }) => [
+      rootNodes: async ({ createSelectClause }) => [
         {
           fullClassName: "BisCore.GeometricModel3d",
           query: {
             ecsql: `
               SELECT
-                ${await nodeSelectClauseFactory.createSelectClause({
+                ${await createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: {
-                    selector: await instanceLabelSelectClauseFactory.createSelectClause({
-                      classAlias: "this",
-                      className: "BisCore.GeometricModel3d",
-                    }),
-                  },
+                  nodeLabel: { of: { classAlias: "this", className: "BisCore.GeometricModel3d" } },
                 })}
               FROM BisCore.GeometricModel3d this
             `,
@@ -136,23 +131,17 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
           parentInstancesNodePredicate: "BisCore.Model",
           definitions: async ({
             parentNodeInstanceIds,
-            instanceLabelSelectClauseFactory,
-            nodeSelectClauseFactory,
+            createSelectClause,
           }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
             {
               fullClassName: "BisCore.Element",
               query: {
                 ecsql: `
                   SELECT
-                    ${await nodeSelectClauseFactory.createSelectClause({
+                    ${await createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
-                      nodeLabel: {
-                        selector: await instanceLabelSelectClauseFactory.createSelectClause({
-                          classAlias: "this",
-                          className: "BisCore.Element",
-                        }),
-                      },
+                      nodeLabel: { of: { classAlias: "this", className: "BisCore.Element" } },
                       grouping: { byClass: true },
                     })}
                   FROM BisCore.Element this

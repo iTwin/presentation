@@ -78,7 +78,7 @@ describe("Hierarchies", () => {
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.IModelInstanceLabelSelectClauseFactory
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode, instanceLabelSelectClauseFactory, nodeSelectClauseFactory }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             // For root nodes, return a query that selects all physical elements
             if (!parentNode) {
               return [
@@ -86,15 +86,16 @@ describe("Hierarchies", () => {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: "x.ECClassId" },
                         ecInstanceId: { selector: "x.ECInstanceId" },
+                        // Use `{ of: ... }` to delegate label creation to the instance label select clause factory used
+                        // by `createSelectClause`, which defaults to the result of `createIModelInstanceLabelSelectClauseFactory`.
                         nodeLabel: {
-                          // Use iModel instance label select clause factory to create the label selector
-                          selector: await instanceLabelSelectClauseFactory.createSelectClause({
+                          of: {
                             classAlias: "x",
                             className: "BisCore.PhysicalElement", // This is optional, but helps create a more optimal selector
-                          }),
+                          },
                         },
                       })}
                       FROM BisCore.PhysicalElement x
@@ -134,14 +135,14 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
-            defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+            defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
               if (!parentNode) {
                 return [
                   {
                     fullClassName: "BisCore.PhysicalElement",
                     query: {
                       ecsql: `
-                        SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                        SELECT ${await createSelectClause({
                           ecClassId: { selector: "x.ECClassId" },
                           ecInstanceId: { selector: "x.ECInstanceId" },
                           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.CustomLabelSelector
@@ -222,7 +223,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
-            defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+            defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
               if (!parentNode) {
                 return [
                   // The hierarchy definition returns nodes for `myPhysicalObjectClassName` element type, grouped by `DoubleProperty` property value
@@ -230,7 +231,7 @@ describe("Hierarchies", () => {
                     fullClassName: myPhysicalObjectClassName,
                     query: {
                       ecsql: `
-                        SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                        SELECT ${await createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },
                           nodeLabel: { selector: "this.UserLabel" },

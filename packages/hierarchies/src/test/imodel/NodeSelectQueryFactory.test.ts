@@ -272,6 +272,29 @@ describe("createNodesQueryClauseFactory", () => {
       );
     });
 
+    it("creates valid clause with instance label factory props", async () => {
+      const result = await factory.createSelectClause({
+        ecClassId: { selector: "class_id" },
+        ecInstanceId: { selector: "instance_id" },
+        nodeLabel: { of: { classAlias: "this" } },
+      });
+      const labelClause = await instanceLabelSelectClauseFactory.createSelectClause({ classAlias: "this" });
+      expect(trimWhitespace(result)).toBe(
+        trimWhitespace(`
+        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
+        ${labelClause} AS ${NodeSelectClauseColumnNames.DisplayLabel},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
+        CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.Grouping},
+        CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.ExtendedData},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.SupportsFiltering}
+      `),
+      );
+    });
+
     it("creates valid clause with null props", async () => {
       const result = await factory.createSelectClause({
         ecClassId: { selector: "class_id" },

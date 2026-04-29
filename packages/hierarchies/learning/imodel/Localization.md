@@ -15,7 +15,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
-    defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+    defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
       if (!parentNode) {
         // The hierarchy definition returns nodes for `myPhysicalObjectClassName` element type, grouped by `IntProperty` property value,
         // with options to create groups for out-of-range and unspecified values - labels of those grouping nodes get localized
@@ -24,7 +24,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
             fullClassName: myPhysicalObjectClassName,
             query: {
               ecsql: `
-                SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                SELECT ${await createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },

@@ -19,13 +19,7 @@ import { Subject } from "@itwin/core-backend";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
-import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import {
-  createIModelInstanceLabelSelectClauseFactory,
-  ECSql,
-  julianToDateTime,
-  normalizeFullClassName,
-} from "@itwin/presentation-shared";
+import { ECSql, julianToDateTime, normalizeFullClassName } from "@itwin/presentation-shared";
 import { buildTestIModel } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
@@ -121,20 +115,15 @@ describe("Hierarchies", () => {
           return { schema, model, category, element };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
-
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-        });
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: schema.items.ClassX.fullName,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
@@ -235,19 +224,15 @@ describe("Hierarchies", () => {
     describe("DateTime", () => {
       it("formats instance node labels", async () => {
         const imodelAccess = createIModelAccess(emptyIModel);
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-        });
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: subjectClassName,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
@@ -371,20 +356,15 @@ describe("Hierarchies", () => {
           return { modelClassName: m2.className };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
-
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-        });
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: modelClassName,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
@@ -452,20 +432,15 @@ describe("Hierarchies", () => {
           return { sheetIndexFolder: insertSheetIndexFolder({ imodel, entryPriority: 2 }) };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
-
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-        });
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: sheetIndexFolder.className,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
@@ -538,20 +513,15 @@ describe("Hierarchies", () => {
           return { model, category, element };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
-
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-        });
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: element.className,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
@@ -625,20 +595,15 @@ describe("Hierarchies", () => {
           return { model, category, element };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
-
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-        });
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: element.className,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
@@ -712,20 +677,15 @@ describe("Hierarchies", () => {
           return { model, category, element };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
-
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-        });
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: element.className,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
@@ -800,20 +760,15 @@ describe("Hierarchies", () => {
           return { model, category, element };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
-
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-        });
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: element.className,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
@@ -852,20 +807,15 @@ describe("Hierarchies", () => {
     });
 
     it("reacts to changed formatter without running queries", async () => {
-      const imodelAccess = createIModelAccess(emptyIModel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-      });
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: subjectClassName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },

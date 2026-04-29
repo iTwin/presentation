@@ -22,11 +22,6 @@ export type {
 export { createPredicateBasedHierarchyDefinition } from "./hierarchies/imodel/PredicateBasedHierarchyDefinition.js";
 export type { LimitingECSqlQueryExecutor } from "./hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 export { createLimitingECSqlQueryExecutor } from "./hierarchies/imodel/LimitingECSqlQueryExecutor.js";
-export type { NodesQueryClauseFactory } from "./hierarchies/imodel/NodeSelectQueryFactory.js";
-export {
-  NodeSelectClauseColumnNames,
-  createNodesQueryClauseFactory,
-} from "./hierarchies/imodel/NodeSelectQueryFactory.js";
 export {
   createIModelHierarchyProvider,
   createMergedIModelHierarchyProvider,

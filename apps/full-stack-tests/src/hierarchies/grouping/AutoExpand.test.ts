@@ -7,21 +7,19 @@ import { insertSubject } from "presentation-test-utilities";
 import { afterAll, describe, it, test } from "vitest";
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { createIModelAccess, createProvider } from "../Utils.js";
+import { createProvider } from "../Utils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { HierarchyDefinition, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import type { DefineHierarchyLevelProps, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import type { Props } from "@itwin/presentation-shared";
 
 describe("Hierarchies", () => {
   describe("Grouping nodes' autoExpand setting", () => {
     type ECSqlSelectClauseGroupingParams = NonNullable<
-      Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"]
+      Props<DefineHierarchyLevelProps["createSelectClause"]>["grouping"]
     >;
     let subjectClassName: string;
     let emptyIModel: IModelConnection;
@@ -37,24 +35,19 @@ describe("Hierarchies", () => {
     });
 
     function createHierarchyWithSpecifiedGrouping(
-      imodel: IModelConnection,
+      _imodel: IModelConnection,
       specifiedGrouping: ECSqlSelectClauseGroupingParams,
       labelProperty?: string,
     ): HierarchyDefinition {
-      const imodelAccess = createIModelAccess(imodel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-      });
       return {
-        async defineHierarchyLevel({ parentNode }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                  SELECT ${await selectQueryFactory.createSelectClause({
+                  SELECT ${await createSelectClause({
                     ecClassId: { selector: `this.ECClassId` },
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.${labelProperty ?? "CodeValue"}` },

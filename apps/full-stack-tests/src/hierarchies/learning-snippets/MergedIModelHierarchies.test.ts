@@ -99,28 +99,22 @@ describe("Hierarchies", () => {
 
         // Define an utility for creating instance nodes query definitions, that we'll use in our hierarchy definition.
         async function createInstanceNodesQueryDefinition({
-          instanceLabelSelectClauseFactory,
-          nodeSelectClauseFactory,
+          createSelectClause,
           fullClassName,
           whereClauseFactory,
-        }: Pick<
-          DefineInstanceNodeChildHierarchyLevelProps,
-          "instanceLabelSelectClauseFactory" | "nodeSelectClauseFactory"
-        > & { fullClassName: EC.FullClassName; whereClauseFactory?: (props: { alias: string }) => Promise<string> }) {
+        }: Pick<DefineInstanceNodeChildHierarchyLevelProps, "createSelectClause"> & {
+          fullClassName: EC.FullClassName;
+          whereClauseFactory?: (props: { alias: string }) => Promise<string>;
+        }) {
           const whereClause = whereClauseFactory ? await whereClauseFactory({ alias: "this" }) : undefined;
           return {
             fullClassName,
             query: {
               ecsql: `
-                SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                SELECT ${await createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: {
-                    selector: await instanceLabelSelectClauseFactory.createSelectClause({
-                      classAlias: "this",
-                      className: fullClassName,
-                    }),
-                  },
+                  nodeLabel: { of: { classAlias: "this", className: fullClassName } },
                 })}
                 FROM ${fullClassName} AS this
                 ${whereClause ? `WHERE ${whereClause}` : ""}

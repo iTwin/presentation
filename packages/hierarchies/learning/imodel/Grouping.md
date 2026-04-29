@@ -19,7 +19,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
-    defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+    defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
       if (!parentNode) {
         // The hierarchy definition requests `BisCore.PhysicalElement` nodes to be return as
         // root nodes and have them grouped by label
@@ -28,7 +28,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
             fullClassName: "BisCore.PhysicalElement",
             query: {
               ecsql: `
-                SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                SELECT ${await createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
@@ -82,7 +82,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
-    defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+    defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
       if (!parentNode) {
         // The hierarchy definition requests `BisCore.PhysicalElement` nodes to be returned as root
         // nodes and have them merged based on label
@@ -91,7 +91,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
             fullClassName: "BisCore.PhysicalElement",
             query: {
               ecsql: `
-                SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                SELECT ${await createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
@@ -139,7 +139,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
-    defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+    defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
       if (!parentNode) {
         // The hierarchy definition requests `BisCore.Category` nodes to be returned as root nodes and have
         // them grouped by class.
@@ -148,7 +148,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
             fullClassName: "BisCore.Category",
             query: {
               ecsql: `
-                SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                SELECT ${await createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.CodeValue" },
@@ -210,7 +210,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
-    defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+    defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
       if (!parentNode) {
         // The hierarchy definition requests `BisCore.Category` nodes to be grouped by the following classes:
         // - `BisCore.Element`
@@ -220,7 +220,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
             fullClassName: "BisCore.Category",
             query: {
               ecsql: `
-                SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                SELECT ${await createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.CodeValue" },
@@ -288,7 +288,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
-    defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+    defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
       if (!parentNode) {
         // The hierarchy definition requests `BisCore.RepositoryLink` nodes to be returned as root nodes and have
         // them grouped by the `Format` property.
@@ -297,7 +297,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
             fullClassName: "BisCore.RepositoryLink",
             query: {
               ecsql: `
-                SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                SELECT ${await createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
@@ -378,7 +378,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
-    defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+    defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
       if (!parentNode) {
         // The hierarchy definition requests `BisCore.PhysicalMaterial` nodes to be returned as root nodes and have
         // them grouped by the `Density` property value in given ranges.
@@ -387,7 +387,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
             fullClassName: "BisCore.PhysicalMaterial",
             query: {
               ecsql: `
-                SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                SELECT ${await createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
@@ -465,7 +465,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
-    defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+    defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
       if (!parentNode) {
         // The hierarchy definition requests `BisCore.RepositoryLink` nodes to be returned as root nodes and have
         // them grouped by the `Format` property.
@@ -474,7 +474,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
             fullClassName: "BisCore.RepositoryLink",
             query: {
               ecsql: `
-                SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                SELECT ${await createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
@@ -595,7 +595,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
-    defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+    defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
       if (!parentNode) {
         // The hierarchy definition requests `BisCore.RepositoryLink` nodes to be returned as root nodes and have
         // them grouped by label only if there's more than one instance with the same label.
@@ -604,7 +604,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
             fullClassName: "BisCore.RepositoryLink",
             query: {
               ecsql: `
-                SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                SELECT ${await createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
@@ -651,7 +651,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
-    defineHierarchyLevel: async ({ parentNode, nodeSelectClauseFactory }) => {
+    defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
       if (!parentNode) {
         // The hierarchy definition requests `BisCore.RepositoryLink` nodes to be returned as root nodes and have
         // them grouped by class only if the grouping node has siblings.
@@ -660,7 +660,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
             fullClassName: "BisCore.RepositoryLink",
             query: {
               ecsql: `
-                SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                SELECT ${await createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
@@ -704,7 +704,7 @@ In certain scenarios it may be required to automatically expand the grouping nod
 
 ```ts
 `
-  SELECT ${await nodeSelectClauseFactory.createSelectClause({
+  SELECT ${await createSelectClause({
     ecClassId: { selector: "this.ECClassId" },
     ecInstanceId: { selector: "this.ECInstanceId" },
     nodeLabel: { selector: "this.UserLabel" },

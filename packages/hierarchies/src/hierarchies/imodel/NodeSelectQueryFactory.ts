@@ -80,7 +80,7 @@ interface ECSqlValueSelector {
 interface NodeSelectClauseProps {
   ecClassId: ECSqlValueSelector;
   ecInstanceId: ECSqlValueSelector;
-  nodeLabel: string | ECSqlValueSelector;
+  nodeLabel: string | ECSqlValueSelector | { of: Props<IInstanceLabelSelectClauseFactory["createSelectClause"]> };
   extendedData?: { [key: string]: Id64String | string | number | boolean | ECSqlValueSelector };
   autoExpand?: boolean | ECSqlValueSelector;
   supportsFiltering?: boolean | ECSqlValueSelector;
@@ -260,7 +260,6 @@ export interface NodesQueryClauseFactory {
 
 /**
  * Creates an instance of `NodeSelectQueryFactory`.
- * @public
  */
 export function createNodesQueryClauseFactory(props: {
   imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
@@ -288,7 +287,11 @@ class NodeSelectQueryFactory {
     return `
       ec_ClassName(${props.ecClassId.selector}) AS ${NodeSelectClauseColumnNames.FullClassName},
       ${props.ecInstanceId.selector} AS ${NodeSelectClauseColumnNames.ECInstanceId},
-      ${createECSqlValueSelector(props.nodeLabel)} AS ${NodeSelectClauseColumnNames.DisplayLabel},
+      ${createECSqlValueSelector(
+        typeof props.nodeLabel === "object" && "of" in props.nodeLabel
+          ? { selector: await this._instanceLabelSelectClauseFactory.createSelectClause(props.nodeLabel.of) }
+          : props.nodeLabel,
+      )} AS ${NodeSelectClauseColumnNames.DisplayLabel},
       CAST(${createECSqlValueSelector(props.hasChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
       CAST(${createECSqlValueSelector(props.hideIfNoChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
       CAST(${createECSqlValueSelector(props.hideNodeInHierarchy)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},

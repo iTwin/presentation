@@ -20,6 +20,7 @@ import {
 } from "../../hierarchies/imodel/SearchHierarchyDefinition.js";
 import {
   createIModelAccessStub,
+  createInstanceLabelSelectClauseFactoryStub,
   createTestGenericNode,
   createTestGenericNodeKey,
   createTestInstanceKey,
@@ -74,6 +75,48 @@ describe("createIModelHierarchyProvider", () => {
     expect(nodes).toEqual([
       { ...node, key: createTestGenericNodeKey({ source: sourceName }), parentKeys: [], children: false },
     ]);
+  });
+
+  it("uses custom instanceLabelSelectClauseFactory when provided", async () => {
+    imodelAccess.createQueryReader.mockReturnValue(
+      createAsyncIterator<RowDef>([
+        {
+          [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+          [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
+          [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
+        },
+      ]),
+    );
+    const instanceLabelSelectClauseFactory = createInstanceLabelSelectClauseFactoryStub();
+    const createSelectClauseSpy = vi.spyOn(instanceLabelSelectClauseFactory, "createSelectClause");
+    using provider = createIModelHierarchyProvider({
+      imodelAccess,
+      instanceLabelSelectClauseFactory,
+      hierarchyDefinition: {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: "a.b",
+                query: {
+                  ecsql: `
+                    SELECT ${await createSelectClause({
+                      ecClassId: { selector: "this.ECClassId" },
+                      ecInstanceId: { selector: "this.ECInstanceId" },
+                      nodeLabel: { of: { classAlias: "this" } },
+                    })}
+                    FROM a.b
+                  `,
+                },
+              },
+            ];
+          }
+          return [];
+        },
+      },
+    });
+    await collect(provider.getNodes({ parentNode: undefined }));
+    expect(createSelectClauseSpy).toHaveBeenCalled();
   });
 
   it("loads root instance nodes", async () => {
@@ -594,14 +637,14 @@ describe("createIModelHierarchyProvider", () => {
       expect(hierarchyDefinition.defineHierarchyLevel).toHaveBeenNthCalledWith(1, {
         imodelAccess,
         parentNode: undefined,
-        instanceLabelSelectClauseFactory: expect.anything(),
-        nodeSelectClauseFactory: expect.anything(),
+        createSelectClause: expect.any(Function),
+        createFilterClauses: expect.any(Function),
       });
       expect(hierarchyDefinition.defineHierarchyLevel).toHaveBeenNthCalledWith(2, {
         imodelAccess,
         parentNode: rootNodes[0],
-        instanceLabelSelectClauseFactory: expect.anything(),
-        nodeSelectClauseFactory: expect.anything(),
+        createSelectClause: expect.any(Function),
+        createFilterClauses: expect.any(Function),
       });
     });
   });

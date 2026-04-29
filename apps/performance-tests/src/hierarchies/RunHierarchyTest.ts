@@ -10,7 +10,7 @@ import { Datasets } from "../util/Datasets.js";
 import { run } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
-import type { DefineHierarchyLevelProps, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import type { DefineHierarchyLevelProps } from "@itwin/presentation-hierarchies";
 import type { EC, Props } from "@itwin/presentation-shared";
 import type { IModelName } from "../util/Datasets.js";
 import type { RunOptions } from "../util/TestUtilities.js";
@@ -24,7 +24,7 @@ export function runHierarchyTest(
   testProps: {
     iModelName: IModelName;
     fullClassName?: EC.FullClassName;
-    nodeSelectProps?: Partial<Props<NodesQueryClauseFactory["createSelectClause"]>>;
+    nodeSelectProps?: Partial<Props<DefineHierarchyLevelProps["createSelectClause"]>>;
     expectedNodeCount?: number;
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
 ) {
@@ -37,8 +37,8 @@ export function runHierarchyTest(
       return {
         iModel,
         getHierarchyFactory: () => ({
-          async defineHierarchyLevel(props: DefineHierarchyLevelProps) {
-            if (props.parentNode) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }: DefineHierarchyLevelProps) {
+            if (parentNode) {
               return [];
             }
 
@@ -47,7 +47,7 @@ export function runHierarchyTest(
                 fullClassName,
                 query: {
                   ecsql: `
-                    SELECT ${await props.nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ...nodeSelectProps,
                       ecClassId: nodeSelectProps?.ecClassId ?? { selector: `this.ECClassId` },
                       ecInstanceId: nodeSelectProps?.ecInstanceId ?? { selector: `this.ECInstanceId` },

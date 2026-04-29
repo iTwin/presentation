@@ -145,22 +145,17 @@ type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
 // The hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all `BisCore.PhysicalModel` instances
 function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }): HierarchyDefinition {
   return {
-    // The `instanceLabelSelectClauseFactory` and `nodeSelectClauseFactory` are provided automatically by the hierarchy provider
-    defineHierarchyLevel: async ({ instanceLabelSelectClauseFactory, nodeSelectClauseFactory }) => [
+    // The `createSelectClause` function is provided automatically by the hierarchy provider
+    defineHierarchyLevel: async ({ createSelectClause }) => [
       {
         fullClassName: "BisCore.PhysicalModel",
         query: {
           ecsql: `
             SELECT
-              ${await nodeSelectClauseFactory.createSelectClause({
+              ${await createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
-                nodeLabel: {
-                  selector: await instanceLabelSelectClauseFactory.createSelectClause({
-                    classAlias: "this",
-                    className: "BisCore.PhysicalModel",
-                  }),
-                },
+                nodeLabel: { of: { classAlias: "this", className: "BisCore.PhysicalModel" } },
                 hasChildren: false,
               })}
             FROM BisCore.PhysicalModel this

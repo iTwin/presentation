@@ -7,7 +7,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createPredicateBasedHierarchyDefinition } from "../../hierarchies/imodel/PredicateBasedHierarchyDefinition.js";
 import { createIModelAccessStub, createTestGenericNodeKey, createTestSourceGenericNode } from "../Utils.js";
 
-import type { IInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import type {
   DefineHierarchyLevelProps,
   GenericHierarchyNodeDefinition,
@@ -20,7 +19,6 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   const imodelKey = "test-imodel-key";
 
   let imodelAccess: ReturnType<typeof createIModelAccessStub> & { imodelKey: string };
-  const instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory = { createSelectClause: vi.fn() };
   const nodeSelectClauseFactory: NodesQueryClauseFactory = {
     createSelectClause: vi.fn(),
     createFilterClauses: vi.fn(),
@@ -32,9 +30,9 @@ describe("createPredicateBasedHierarchyDefinition", () => {
 
   function constProps(): Pick<
     DefineHierarchyLevelProps,
-    "imodelAccess" | "instanceLabelSelectClauseFactory" | "nodeSelectClauseFactory"
+    "imodelAccess" | "createSelectClause" | "createFilterClauses"
   > {
-    return { imodelAccess, instanceLabelSelectClauseFactory, nodeSelectClauseFactory };
+    return { imodelAccess, ...nodeSelectClauseFactory };
   }
 
   it("returns root hierarchy level definition", async () => {

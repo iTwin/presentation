@@ -4,13 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { afterAll, beforeAll, describe, it } from "vitest";
-import { createNodesQueryClauseFactory, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { buildTestECDb } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { importSchema } from "../../SchemaUtils.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { createIModelAccess, createProvider } from "../Utils.js";
+import { createProvider } from "../Utils.js";
 
 import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
@@ -46,20 +45,15 @@ describe("Hierarchies", () => {
         return { schema: s, x1, x2, y1, y2 };
       });
       const { ecdb: db, schema, ...keys } = setup;
-      const imodelAccess = createIModelAccess(db);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createIModelInstanceLabelSelectClauseFactory({ imodelAccess }),
-      });
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: "x",
@@ -80,7 +74,7 @@ describe("Hierarchies", () => {
                 fullClassName: schema.items.Y.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `'y: ' || CAST(this.ECInstanceId AS TEXT)` },

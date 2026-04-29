@@ -81,14 +81,14 @@ describe("Hierarchies", () => {
       it("creates filterable instances node", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.InstanceNodesQueryDefinition
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode, nodeSelectClauseFactory }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: "this.ECClassId" },
                         ecInstanceId: { selector: "this.ECInstanceId" },
                         nodeLabel: { selector: "this.UserLabel" },
@@ -117,22 +117,22 @@ describe("Hierarchies", () => {
       it("applies filter", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.ApplyFilter
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel(props) {
+          async defineHierarchyLevel({ instanceFilter, createSelectClause, createFilterClauses }) {
             // `createFilterClauses` function returns `from`, `joins`, and `where` clauses which need to be used in the
             // query in appropriate places
-            const { from, joins, where } = await props.nodeSelectClauseFactory.createFilterClauses({
+            const { from, joins, where } = await createFilterClauses({
               // specify the content class whose instances are used to build nodes - this should
               // generally match the instance whose ECClassId and ECInstanceId are used in the SELECT clause
               contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
               // specify the filter that we get from props for this hierarchy level
-              filter: props.instanceFilter,
+              filter: instanceFilter,
             });
             return [
               {
                 fullClassName: "BisCore.PhysicalElement",
                 query: {
                   ecsql: `
-                    SELECT ${await props.nodeSelectClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: { selector: "this.UserLabel" },
@@ -151,7 +151,7 @@ describe("Hierarchies", () => {
           imodelAccess: createIModelAccess(imodelConnection),
           hierarchyDefinition,
         });
-        const instanceFilter: GenericInstanceFilter = {
+        const testInstanceFilter: GenericInstanceFilter = {
           propertyClassNames: ["BisCore.PhysicalElement"],
           relatedInstances: [],
           rules: {
@@ -175,7 +175,7 @@ describe("Hierarchies", () => {
           },
         };
         validateHierarchyLevel({
-          nodes: await collect(provider.getNodes({ parentNode: undefined, instanceFilter })),
+          nodes: await collect(provider.getNodes({ parentNode: undefined, instanceFilter: testInstanceFilter })),
           expect: [
             NodeValidators.createForInstanceNode({ label: "B" }),
             NodeValidators.createForInstanceNode({ label: "C" }),

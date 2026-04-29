@@ -22,7 +22,7 @@ import {
   createTestProcessedInstanceNode,
 } from "../Utils.js";
 
-import type { ECClassHierarchyInspector, IInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import type { ECClassHierarchyInspector } from "@itwin/presentation-shared";
 import type { HierarchyNodeIdentifier } from "../../hierarchies/HierarchyNodeIdentifier.js";
 import type { HierarchySearchTree } from "../../hierarchies/HierarchySearch.js";
 import type {
@@ -373,12 +373,11 @@ describe("SearchHierarchyDefinition", () => {
 
   describe("defineHierarchyLevel", () => {
     const stubIModelAccess = { ...createIModelAccessStub(), imodelKey: "test-imodel" };
-    const instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory = { createSelectClause: vi.fn() };
     const nodeSelectClauseFactory: NodesQueryClauseFactory = {
       createSelectClause: vi.fn(),
       createFilterClauses: vi.fn(),
     };
-    const constProps = { imodelAccess: stubIModelAccess, instanceLabelSelectClauseFactory, nodeSelectClauseFactory };
+    const constProps = { imodelAccess: stubIModelAccess, ...nodeSelectClauseFactory };
 
     it("returns source definitions when search identifiers are not applicable to the level", async () => {
       const sourceDefs: HierarchyLevelDefinition = [{ fullClassName: "Schema:Class", query: { ecsql: "SELECT *" } }];

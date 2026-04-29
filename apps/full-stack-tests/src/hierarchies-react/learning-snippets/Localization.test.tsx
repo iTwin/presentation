@@ -70,17 +70,17 @@
 //           ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
 //         };
 //         getHierarchyDefinition = () => ({
-//           defineHierarchyLevel: async ({ instanceLabelSelectClauseFactory, nodeSelectClauseFactory }) => [
+//           defineHierarchyLevel: async ({ createSelectClause }) => [
 //             {
 //               fullClassName: "BisCore.PhysicalModel",
 //               query: {
 //                 ecsql: `
 //                   SELECT
-//                     ${await nodeSelectClauseFactory.createSelectClause({
+//                     ${await createSelectClause({
 //                       ecClassId: { selector: "this.ECClassId" },
 //                       ecInstanceId: { selector: "this.ECInstanceId" },
 //                       nodeLabel: {
-//                         selector: await instanceLabelSelectClauseFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
+//                         of: { classAlias: "this", className: "BisCore.PhysicalModel" },
 //                       },
 //                       hasChildren: true,
 //                       hideIfNoChildren: false,

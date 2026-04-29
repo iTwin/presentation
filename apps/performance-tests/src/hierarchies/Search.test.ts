@@ -53,7 +53,7 @@ describe("search", () => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
       const fullClassName = normalizeFullClassName(PhysicalElement.classFullName);
       const createHierarchyLevelDefinition = async (
-        nodeSelectClauseFactory: DefineHierarchyLevelProps["nodeSelectClauseFactory"],
+        createSelectClause: DefineHierarchyLevelProps["createSelectClause"],
         whereClause: (alias: string) => string,
       ) => {
         return [
@@ -61,7 +61,7 @@ describe("search", () => {
             fullClassName,
             query: {
               ecsql: `
-                SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                SELECT ${await createSelectClause({
                   ecClassId: { selector: `this.ECClassId` },
                   ecInstanceId: { selector: `this.ECInstanceId` },
                   nodeLabel: { selector: `this.UserLabel` },
@@ -76,7 +76,7 @@ describe("search", () => {
       return {
         iModel,
         getHierarchyFactory: () => ({
-          async defineHierarchyLevel(props: DefineHierarchyLevelProps) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }: DefineHierarchyLevelProps) {
             // A hierarchy with this structure is created:
             //
             //        id:21 -> all other BisCore.PhysicalElement
@@ -87,30 +87,28 @@ describe("search", () => {
             //
             // We need to split the hierarchy in 50 parts to reduce the time of the test.
 
-            if (!props.parentNode) {
+            if (!parentNode) {
               return createHierarchyLevelDefinition(
-                props.nodeSelectClauseFactory,
+                createSelectClause,
                 (alias) => `WHERE ${alias}.ECInstanceId = ${physicalElementsSmallestDecimalId}`,
               );
             }
             if (
-              HierarchyNode.isInstancesNode(props.parentNode) &&
-              props.parentNode.key.instanceKeys.some(
-                ({ id }) => Id64.getLocalId(id) === physicalElementsSmallestDecimalId,
-              )
+              HierarchyNode.isInstancesNode(parentNode) &&
+              parentNode.key.instanceKeys.some(({ id }) => Id64.getLocalId(id) === physicalElementsSmallestDecimalId)
             ) {
               return createHierarchyLevelDefinition(
-                props.nodeSelectClauseFactory,
+                createSelectClause,
                 (alias) => `WHERE ${alias}.ECInstanceId IN (${parentIdsArr.join(", ")})`,
               );
             }
 
             if (
-              HierarchyNode.isInstancesNode(props.parentNode) &&
-              props.parentNode.key.instanceKeys.some(({ id }) => parentIdsArr.includes(Id64.getLocalId(id)))
+              HierarchyNode.isInstancesNode(parentNode) &&
+              parentNode.key.instanceKeys.some(({ id }) => parentIdsArr.includes(Id64.getLocalId(id)))
             ) {
               return createHierarchyLevelDefinition(
-                props.nodeSelectClauseFactory,
+                createSelectClause,
                 (alias) =>
                   `WHERE ${alias}.ECInstanceId NOT IN (${physicalElementsSmallestDecimalId}, ${parentIdsArr.join(", ")})`,
               );

@@ -417,13 +417,13 @@ describe("Hierarchies", () => {
           props: { label: "codeValue" | "aspectIdentifier" } = { label: "codeValue" },
         ) {
           const hierarchy: HierarchyDefinition = {
-            async defineHierarchyLevel({ nodeSelectClauseFactory }) {
+            async defineHierarchyLevel({ createSelectClause }) {
               return [
                 {
                   fullClassName: normalizeFullClassName(Subject.classFullName),
                   query: {
                     ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: props.label === "codeValue" ? `this.CodeValue` : `aspect.Identifier` },
@@ -445,13 +445,13 @@ describe("Hierarchies", () => {
 
         function createRootSubjectReferredElementsProvider() {
           const hierarchy: HierarchyDefinition = {
-            async defineHierarchyLevel({ nodeSelectClauseFactory }) {
+            async defineHierarchyLevel({ createSelectClause }) {
               return [
                 {
                   fullClassName: normalizeFullClassName(Element.classFullName),
                   query: {
                     ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.CodeValue` },
@@ -474,13 +474,13 @@ describe("Hierarchies", () => {
         function createPhysicalModelsProvider() {
           const imodelAccess = createIModelAccess(imodel);
           const hierarchy: HierarchyDefinition = {
-            async defineHierarchyLevel({ nodeSelectClauseFactory }) {
+            async defineHierarchyLevel({ createSelectClause }) {
               return [
                 {
                   fullClassName: normalizeFullClassName(Subject.classFullName),
                   query: {
                     ecsql: `
-                      SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: {

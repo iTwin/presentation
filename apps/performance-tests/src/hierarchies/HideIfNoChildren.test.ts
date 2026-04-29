@@ -14,7 +14,6 @@ import type { IModelDb } from "@itwin/core-backend";
 import type {
   DefineInstanceNodeChildHierarchyLevelProps,
   HierarchyLevelDefinition,
-  NodesQueryClauseFactory,
 } from "@itwin/presentation-hierarchies";
 
 describe("hide if no children", () => {
@@ -32,18 +31,18 @@ describe("hide if no children", () => {
           return createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
-              rootNodes: async ({ nodeSelectClauseFactory: queryFactory }) =>
-                createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
+              rootNodes: async ({ createSelectClause }) =>
+                createPhysicalElementsHierarchyLevelDefinition({ createSelectClause, limit: 5 }),
               childNodes: [
                 {
                   parentInstancesNodePredicate: `BisCore.PhysicalElement`,
                   definitions: async ({
                     parentNode,
-                    nodeSelectClauseFactory: queryFactory,
+                    createSelectClause,
                   }: DefineInstanceNodeChildHierarchyLevelProps) => {
                     const depth = parentNode.parentKeys.length + 1;
                     return createPhysicalElementsHierarchyLevelDefinition({
-                      queryFactory,
+                      createSelectClause,
                       limit: 1000,
                       hideIfNoChildren: true,
                       hasChildren: depth >= 2 ? false : undefined,
@@ -72,18 +71,18 @@ describe("hide if no children", () => {
           return createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
-              rootNodes: async ({ nodeSelectClauseFactory: queryFactory }) =>
-                createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
+              rootNodes: async ({ createSelectClause }) =>
+                createPhysicalElementsHierarchyLevelDefinition({ createSelectClause, limit: 5 }),
               childNodes: [
                 {
                   parentInstancesNodePredicate: `BisCore.PhysicalElement`,
                   definitions: async ({
                     parentNode,
-                    nodeSelectClauseFactory: queryFactory,
+                    createSelectClause,
                   }: DefineInstanceNodeChildHierarchyLevelProps) => {
                     const depth = parentNode.parentKeys.length + 1;
                     return createPhysicalElementsHierarchyLevelDefinition({
-                      queryFactory,
+                      createSelectClause,
                       limit: 1000,
                       hideIfNoChildren: true,
                       hasChildren: depth >= 2 ? true : undefined,
@@ -103,27 +102,27 @@ describe("hide if no children", () => {
 });
 
 async function createPhysicalElementsHierarchyLevelDefinition(props: {
-  queryFactory: NodesQueryClauseFactory;
+  createSelectClause: DefineInstanceNodeChildHierarchyLevelProps["createSelectClause"];
   limit: number;
   hasChildren?: boolean;
   hideIfNoChildren?: boolean;
 }): Promise<HierarchyLevelDefinition> {
-  const { queryFactory, limit, hasChildren, hideIfNoChildren } = props;
+  const { createSelectClause, limit, hasChildren, hideIfNoChildren } = props;
   return [
     {
       fullClassName: `BisCore.PhysicalElement`,
       query: {
         ecsql: `
-        SELECT ${await queryFactory.createSelectClause({
-          ecClassId: { selector: `this.ECClassId` },
-          ecInstanceId: { selector: `this.ECInstanceId` },
-          nodeLabel: { selector: `this.UserLabel` },
-          hasChildren,
-          hideIfNoChildren,
-        })}
-        FROM BisCore.PhysicalElement AS this
-        LIMIT ${limit}
-      `,
+          SELECT ${await createSelectClause({
+            ecClassId: { selector: `this.ECClassId` },
+            ecInstanceId: { selector: `this.ECInstanceId` },
+            nodeLabel: { selector: `this.UserLabel` },
+            hasChildren,
+            hideIfNoChildren,
+          })}
+          FROM BisCore.PhysicalElement AS this
+          LIMIT ${limit}
+        `,
       },
     },
   ];
