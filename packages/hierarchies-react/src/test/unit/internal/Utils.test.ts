@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { createNodeId, safeDispose, sameNodes } from "../../presentation-hierarchies-react/internal/Utils.js";
+import { createNodeId, safeDispose, sameNodes } from "../../../presentation-hierarchies-react/internal/Utils.js";
 import { createTestGroupingNode, createTestHierarchyNode } from "../TestUtils.js";
 
 describe("createNodeId", () => {

@@ -3,44 +3,30 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { beforeEach, expect, vi } from "vitest";
+import { expect, vi } from "vitest";
 import { createHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { render as renderRTL } from "@testing-library/react";
-import { userEvent } from "@testing-library/user-event";
-import { TreeModel } from "../presentation-hierarchies-react/internal/TreeModel.js";
+import { TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
 
-import type { ReactElement } from "react";
 import type {
   GroupingHierarchyNode,
   HierarchyProvider,
   NonGroupingHierarchyNode,
 } from "@itwin/presentation-hierarchies";
 import type { EventListener, RaisableEvent } from "@itwin/presentation-shared";
-import type { RenderOptions, RenderResult } from "@testing-library/react";
-import type { UserEvent } from "@testing-library/user-event";
 import type {
   TreeModelHierarchyNode,
   TreeModelRootNode,
-} from "../presentation-hierarchies-react/internal/TreeModel.js";
+} from "../../presentation-hierarchies-react/internal/TreeModel.js";
 import type {
   ChildrenLoadErrorInfo,
   ErrorInfo,
   GenericErrorInfo,
   NoFilterMatchesErrorInfo,
   ResultSetTooLargeErrorInfo,
-} from "../presentation-hierarchies-react/TreeNode.js";
-import type { UseTreeResult } from "../presentation-hierarchies-react/UseTree.js";
-
-/**
- * Custom render function that wraps around `render` function from `@testing-library/react` and additionally
- * setup `userEvent` from `@testing-library/user-event`.
- */
-function customRender(ui: ReactElement, options?: RenderOptions): RenderResult & { user: UserEvent } {
-  return { ...renderRTL(ui, options), user: userEvent.setup() };
-}
+} from "../../presentation-hierarchies-react/TreeNode.js";
+import type { UseTreeResult } from "../../presentation-hierarchies-react/UseTree.js";
 
 export * from "@testing-library/react";
-export { customRender as render };
 
 export function getHierarchyNode(model: TreeModel, id: string | undefined) {
   const node = TreeModel.getNode(model, id);
@@ -152,24 +138,6 @@ export function createTestGroupingNode({
     parentKeys: props.parentKeys ?? [],
     groupedInstanceKeys: props.groupedInstanceKeys ?? [],
   };
-}
-
-export function stubVirtualization() {
-  beforeEach(() => {
-    vi.spyOn(window.HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(800);
-    vi.spyOn(window.HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(800);
-    vi.spyOn(window.Element.prototype, "getBoundingClientRect").mockReturnValue({
-      height: 20,
-      width: 20,
-      x: 0,
-      y: 0,
-      bottom: 0,
-      left: 0,
-      right: 0,
-      top: 0,
-      toJSON: () => {},
-    });
-  });
 }
 
 export type StubbedHierarchyProvider = {

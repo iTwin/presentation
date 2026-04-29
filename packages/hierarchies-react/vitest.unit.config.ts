@@ -7,12 +7,12 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    name: "Hierarchies-react tests",
-    include: ["src/test/**/*.test.{ts,tsx}"],
+    name: "hierarchies-react-unit",
+    include: ["src/test/unit/**/*.test.{ts,tsx}"],
     testTimeout: 60000,
     slowTestThreshold: 500,
     environment: "happy-dom",
-    setupFiles: ["./src/test/setup.ts"],
+    setupFiles: ["./src/test/unit/setup.ts"],
     clearMocks: true,
     restoreMocks: true,
     mockReset: true,

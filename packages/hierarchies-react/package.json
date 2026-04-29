@@ -49,8 +49,10 @@
     "clean": "rimraf lib build",
     "cover": "npm -s test",
     "lint": "eslint \"./src/**/*.{ts,tsx}\"",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run --config vitest.unit.config.ts",
+    "test:watch": "vitest --config vitest.unit.config.ts",
+    "test:components": "vitest run --config vitest.browser.config.ts",
+    "test:components:update": "vitest run --config vitest.browser.config.ts --update",
     "extract-api": "betools extract-api --entry=lib/presentation-hierarchies-react-extract --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-hierarchies-react-extract.api.md",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -100,6 +102,7 @@
     "@types/react-dom": "catalog:react",
     "@vitejs/plugin-react": "catalog:build-tools",
     "babel-plugin-react-compiler": "catalog:build-tools",
+    "@vitest/browser-playwright": "catalog:test-tools",
     "@vitest/coverage-v8": "catalog:test-tools",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
@@ -111,6 +114,8 @@
     "rimraf": "catalog:build-tools",
     "tsdown": "catalog:build-tools",
     "typescript": "catalog:build-tools",
-    "vitest": "catalog:test-tools"
+    "playwright": "catalog:test-tools",
+    "vitest": "catalog:test-tools",
+    "vitest-browser-react": "catalog:test-tools"
   }
 }

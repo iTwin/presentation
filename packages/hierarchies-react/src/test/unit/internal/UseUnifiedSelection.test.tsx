@@ -6,7 +6,7 @@
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createStorage, Selectables } from "@itwin/unified-selection";
-import { useUnifiedTreeSelection } from "../../presentation-hierarchies-react/internal/UseUnifiedSelection.js";
+import { useUnifiedTreeSelection } from "../../../presentation-hierarchies-react/internal/UseUnifiedSelection.js";
 import { act, createTestGroupingNode, createTestHierarchyNode, createTreeModelNode, renderHook } from "../TestUtils.js";
 
 import type { GenericNodeKey, InstancesNodeKey, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
@@ -16,7 +16,7 @@ import type {
   StorageSelectionChangeEventArgs,
   StorageSelectionChangesListener,
 } from "@itwin/unified-selection";
-import type { TreeModelHierarchyNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import type { TreeModelHierarchyNode } from "../../../presentation-hierarchies-react/internal/TreeModel.js";
 
 describe("useUnifiedSelection", () => {
   let storage: SelectionStorage;

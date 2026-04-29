@@ -7,8 +7,8 @@ import { createAsyncIterator, throwingAsyncIterator } from "presentation-test-ut
 import { firstValueFrom, Subject } from "rxjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HierarchyNode, HierarchyNodeKey } from "@itwin/presentation-hierarchies";
-import { TreeActions } from "../../presentation-hierarchies-react/internal/TreeActions.js";
-import { createNodeId } from "../../presentation-hierarchies-react/internal/Utils.js";
+import { TreeActions } from "../../../presentation-hierarchies-react/internal/TreeActions.js";
+import { createNodeId } from "../../../presentation-hierarchies-react/internal/Utils.js";
 import {
   createTestChildrenLoadErrorInfo,
   createTestGroupingNode,
@@ -19,7 +19,7 @@ import {
 } from "../TestUtils.js";
 
 import type { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import type { TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import type { TreeModel } from "../../../presentation-hierarchies-react/internal/TreeModel.js";
 
 describe("TreeActions", () => {
   const provider = { getNodes: vi.fn<HierarchyProvider["getNodes"]>() };

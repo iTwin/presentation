@@ -7,7 +7,7 @@ import { createAsyncIterator } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
 import { BeEvent } from "@itwin/core-bentley";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { useIModelTree, useIModelUnifiedSelectionTree } from "../presentation-hierarchies-react/UseIModelTree.js";
+import { useIModelTree, useIModelUnifiedSelectionTree } from "../../presentation-hierarchies-react/UseIModelTree.js";
 import { createHierarchyProviderStub, getTreeRendererProps, renderHook, waitFor } from "./TestUtils.js";
 
 import type * as presentationHierarchiesModule from "@itwin/presentation-hierarchies";

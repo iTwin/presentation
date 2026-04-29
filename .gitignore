@@ -21,3 +21,5 @@ pnpm-debug.log*
 
 scripts/**/*.sh
 .github/plans/
+
+.vitest-attachments/

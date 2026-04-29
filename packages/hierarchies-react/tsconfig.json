@@ -10,5 +10,5 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true
   },
-  "include": ["src", "types.d.ts", "tsdown.config.ts", "vitest.config.ts"]
+  "include": ["src", "types.d.ts", "tsdown.config.ts", "vitest.unit.config.ts", "vitest.browser.config.ts"]
 }

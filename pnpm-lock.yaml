@@ -197,6 +197,9 @@ catalogs:
     '@types/deep-equal-in-any-order':
       specifier: ^1.0.4
       version: 1.0.4
+    '@vitest/browser-playwright':
+      specifier: ^4.1.3
+      version: 4.1.3
     '@vitest/coverage-v8':
       specifier: ^4.1.3
       version: 4.1.3
@@ -206,9 +209,15 @@ catalogs:
     happy-dom:
       specifier: ^20.8.9
       version: 20.8.9
+    playwright:
+      specifier: ^1.52.0
+      version: 1.56.1
     vitest:
       specifier: ^4.1.3
       version: 4.1.3
+    vitest-browser-react:
+      specifier: ^2.2.0
+      version: 2.2.0
 
 overrides:
   '@itwin/build-tools@^5.8.0>@microsoft/api-extractor@<7.58': ^7.58.1
@@ -441,7 +450,7 @@ importers:
         version: 5.7.3
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
 
   apps/load-tests/backend:
     devDependencies:
@@ -609,7 +618,7 @@ importers:
         version: 5.7.3
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
 
   apps/test-app/backend:
     devDependencies:
@@ -976,7 +985,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: catalog:test-tools
-        version: 4.1.3(vitest@4.1.3)
+        version: 4.1.3(@vitest/browser@4.1.3)(vitest@4.1.3)
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2
@@ -1009,7 +1018,7 @@ importers:
         version: 5.7.3
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
 
   packages/core-interop:
     dependencies:
@@ -1043,7 +1052,7 @@ importers:
         version: 5.1.0(eslint@9.39.4)(typescript@5.7.3)
       '@vitest/coverage-v8':
         specifier: catalog:test-tools
-        version: 4.1.3(vitest@4.1.3)
+        version: 4.1.3(@vitest/browser@4.1.3)(vitest@4.1.3)
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2
@@ -1061,7 +1070,7 @@ importers:
         version: 5.7.3
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
 
   packages/hierarchies:
     dependencies:
@@ -1098,7 +1107,7 @@ importers:
         version: 24.12.2
       '@vitest/coverage-v8':
         specifier: catalog:test-tools
-        version: 4.1.3(vitest@4.1.3)
+        version: 4.1.3(@vitest/browser@4.1.3)(vitest@4.1.3)
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2
@@ -1116,7 +1125,7 @@ importers:
         version: 5.7.3
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
 
   packages/hierarchies-react:
     dependencies:
@@ -1193,9 +1202,12 @@ importers:
       '@vitejs/plugin-react':
         specifier: catalog:build-tools
         version: 6.0.1(@rolldown/plugin-babel@0.2.2(@babel/core@7.29.0)(@babel/runtime@7.28.6)(rolldown@1.0.0-rc.13)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3)))(babel-plugin-react-compiler@1.0.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+      '@vitest/browser-playwright':
+        specifier: catalog:test-tools
+        version: 4.1.3(playwright@1.56.1)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))(vitest@4.1.3)
       '@vitest/coverage-v8':
         specifier: catalog:test-tools
-        version: 4.1.3(vitest@4.1.3)
+        version: 4.1.3(@vitest/browser@4.1.3)(vitest@4.1.3)
       babel-plugin-react-compiler:
         specifier: catalog:build-tools
         version: 1.0.0
@@ -1211,6 +1223,9 @@ importers:
       happy-dom:
         specifier: catalog:test-tools
         version: 20.8.9
+      playwright:
+        specifier: catalog:test-tools
+        version: 1.56.1
       presentation-test-utilities:
         specifier: workspace:*
         version: link:../test-utilities
@@ -1231,7 +1246,10 @@ importers:
         version: 5.7.3
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+      vitest-browser-react:
+        specifier: catalog:test-tools
+        version: 2.2.0(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@4.1.3)
 
   packages/models-tree:
     dependencies:
@@ -1286,7 +1304,7 @@ importers:
         version: 24.12.2
       '@vitest/coverage-v8':
         specifier: catalog:test-tools
-        version: 4.1.3(vitest@4.1.3)
+        version: 4.1.3(@vitest/browser@4.1.3)(vitest@4.1.3)
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2
@@ -1304,7 +1322,7 @@ importers:
         version: 5.7.3
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
 
   packages/shared:
     dependencies:
@@ -1323,7 +1341,7 @@ importers:
         version: 24.12.2
       '@vitest/coverage-v8':
         specifier: catalog:test-tools
-        version: 4.1.3(vitest@4.1.3)
+        version: 4.1.3(@vitest/browser@4.1.3)(vitest@4.1.3)
       eslint:
         specifier: catalog:build-tools
         version: 9.39.4
@@ -1338,7 +1356,7 @@ importers:
         version: 5.7.3
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
 
   packages/test-utilities:
     devDependencies:
@@ -1432,7 +1450,7 @@ importers:
         version: 24.12.2
       '@vitest/coverage-v8':
         specifier: catalog:test-tools
-        version: 4.1.3(vitest@4.1.3)
+        version: 4.1.3(@vitest/browser@4.1.3)(vitest@4.1.3)
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2
@@ -1453,7 +1471,7 @@ importers:
         version: 5.7.3
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
 
   packages/unified-selection:
     dependencies:
@@ -1481,7 +1499,7 @@ importers:
         version: 24.12.2
       '@vitest/coverage-v8':
         specifier: catalog:test-tools
-        version: 4.1.3(vitest@4.1.3)
+        version: 4.1.3(@vitest/browser@4.1.3)(vitest@4.1.3)
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2
@@ -1499,7 +1517,7 @@ importers:
         version: 5.7.3
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
 
   packages/unified-selection-react:
     devDependencies:
@@ -1520,7 +1538,7 @@ importers:
         version: 18.3.28
       '@vitest/coverage-v8':
         specifier: catalog:test-tools
-        version: 4.1.3(vitest@4.1.3)
+        version: 4.1.3(@vitest/browser@4.1.3)(vitest@4.1.3)
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2
@@ -1547,7 +1565,7 @@ importers:
         version: 5.7.3
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+        version: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
 
 packages:
 
@@ -1984,6 +2002,9 @@ packages:
 
   '@bentley/imodeljs-native@5.8.27':
     resolution: {integrity: sha512-sGNvkjCxspiBWJBFH9/cF23BvrZ1p1zXwjTlXzgpgdOzVM8ZWA2WFIZUo4g6MJOX5OWAD1MNgz5OP3SHC2TINQ==}
+
+  '@blazediff/core@1.9.1':
+    resolution: {integrity: sha512-ehg3jIkYKulZh+8om/O25vkvSsXXwC+skXmyA87FFx6A/45eqOkZsBltMw/TVteb0mloiGT8oGRTcjRAz66zaA==}
 
   '@changesets/apply-release-plan@7.0.14':
     resolution: {integrity: sha512-ddBvf9PHdy2YY0OUiEl3TV78mH9sckndJR14QAt87KLEbIov81XO0q0QAmvooBxXlqRRP8I9B7XOzZwQG7JkWA==}
@@ -3505,6 +3526,9 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  '@polka/url@1.0.0-next.29':
+    resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
+
   '@probe.gl/env@4.1.1':
     resolution: {integrity: sha512-+68seNDMVsEegRB47pFA/Ws1Fjy8agcFYXxzorKToyPcD6zd+gZ5uhwoLd7TzsSw6Ydns//2KEszWn+EnNHTbA==}
 
@@ -4474,6 +4498,17 @@ packages:
         optional: true
       babel-plugin-react-compiler:
         optional: true
+
+  '@vitest/browser-playwright@4.1.3':
+    resolution: {integrity: sha512-D3Q+YozvSpiFaLPgd6/OMbyqEIZeucSe6AHJJ7VnNJKQhIyBE60TlBZlxzwM8bvjzQE9ZnYWQCPeCw5pnhbiNg==}
+    peerDependencies:
+      playwright: '*'
+      vitest: 4.1.3
+
+  '@vitest/browser@4.1.3':
+    resolution: {integrity: sha512-CS9KjO2vijuBlbwz0JIgC0YuoI1BuqWI5ziD3Nll6jkpNYtWdjPMVgGynQ9vZovjsECeUqEeNjWrypP414d0CQ==}
+    peerDependencies:
+      vitest: 4.1.3
 
   '@vitest/coverage-v8@4.1.3':
     resolution: {integrity: sha512-/MBdrkA8t6hbdCWFKs09dPik774xvs4Z6L4bycdCxYNLHM8oZuRyosumQMG19LUlBsB6GeVpL1q4kFFazvyKGA==}
@@ -7148,6 +7183,10 @@ packages:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
     engines: {node: '>=4'}
 
+  mrmime@2.0.1:
+    resolution: {integrity: sha512-Y3wQdFg2Va6etvQ5I82yUhGdsKrcYox6p7FfL1LbK2J4V01F9TGlepTIhnK24t7koZibmg82KGglhA1XK5IsLQ==}
+    engines: {node: '>=10'}
+
   ms@2.0.0:
     resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==}
 
@@ -7540,6 +7579,10 @@ packages:
     resolution: {integrity: sha512-aFi5B0WovBHTEvpM3DzXTUaeN6eN0qWnTkKx4NQaH4Wvcmc153PdaY2UBdSYKaGYw+UyWXSVyxDUg5DoPEttjw==}
     engines: {node: '>=18'}
     hasBin: true
+
+  pngjs@7.0.0:
+    resolution: {integrity: sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==}
+    engines: {node: '>=14.19.0'}
 
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
@@ -8060,6 +8103,10 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
 
+  sirv@3.0.2:
+    resolution: {integrity: sha512-2wcC/oGxHis/BoHkkPwldgiPSYcpZK3JU28WoMVv55yHJgcZ8rlXvuG9iZggz+sU1d4bRgIGASwyWqjxu3FM0g==}
+    engines: {node: '>=18'}
+
   slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
     engines: {node: '>=8'}
@@ -8326,6 +8373,10 @@ packages:
   toidentifier@1.0.1:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
     engines: {node: '>=0.6'}
+
+  totalist@3.0.1:
+    resolution: {integrity: sha512-sf4i37nQ2LBx4m3wB74y+ubopq6W/dIzXg0FDGjsYnZHVa1Da8FH853wlL2gtUhg+xJXjfk3kUZS3BRoQeoQBQ==}
+    engines: {node: '>=6'}
 
   touch@3.1.1:
     resolution: {integrity: sha512-r0eojU4bI8MnHr8c5bNo7lJDdI2qXlWWJk6a9EAFG7vbhTjElYhBVS3/miuE0uOuoLdb8Mc/rVfsmm6eo5o9GA==}
@@ -8637,6 +8688,20 @@ packages:
       tsx:
         optional: true
       yaml:
+        optional: true
+
+  vitest-browser-react@2.2.0:
+    resolution: {integrity: sha512-oY3KM6305kwJMa6nHo92vVtkOsih7mjEf12dLKuphaF+9ywWPEc+qanIBd394SZ6m5LadVEaG6dicvvizOzmjA==}
+    peerDependencies:
+      '@types/react': ^18.0.0 || ^19.0.0
+      '@types/react-dom': ^18.0.0 || ^19.0.0
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+      vitest: ^4.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
         optional: true
 
   vitest@4.1.3:
@@ -10300,6 +10365,8 @@ snapshots:
   '@bentley/icons-generic-webfont@1.0.34': {}
 
   '@bentley/imodeljs-native@5.8.27': {}
+
+  '@blazediff/core@1.9.1': {}
 
   '@changesets/apply-release-plan@7.0.14':
     dependencies:
@@ -12072,6 +12139,8 @@ snapshots:
     dependencies:
       playwright: 1.56.1
 
+  '@polka/url@1.0.0-next.29': {}
+
   '@probe.gl/env@4.1.1': {}
 
   '@probe.gl/log@4.1.1':
@@ -13171,7 +13240,37 @@ snapshots:
       '@rolldown/plugin-babel': 0.2.2(@babel/core@7.29.0)(@babel/runtime@7.28.6)(rolldown@1.0.0-rc.13)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
       babel-plugin-react-compiler: 1.0.0
 
-  '@vitest/coverage-v8@4.1.3(vitest@4.1.3)':
+  '@vitest/browser-playwright@4.1.3(playwright@1.56.1)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))(vitest@4.1.3)':
+    dependencies:
+      '@vitest/browser': 4.1.3(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))(vitest@4.1.3)
+      '@vitest/mocker': 4.1.3(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+      playwright: 1.56.1
+      tinyrainbow: 3.1.0
+      vitest: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
+
+  '@vitest/browser@4.1.3(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))(vitest@4.1.3)':
+    dependencies:
+      '@blazediff/core': 1.9.1
+      '@vitest/mocker': 4.1.3(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+      '@vitest/utils': 4.1.3
+      magic-string: 0.30.21
+      pngjs: 7.0.0
+      sirv: 3.0.2
+      tinyrainbow: 3.1.0
+      vitest: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+      ws: 8.19.0
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
+
+  '@vitest/coverage-v8@4.1.3(@vitest/browser@4.1.3)(vitest@4.1.3)':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/utils': 4.1.3
@@ -13183,7 +13282,9 @@ snapshots:
       obug: 2.1.1
       std-env: 4.0.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+      vitest: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+    optionalDependencies:
+      '@vitest/browser': 4.1.3(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))(vitest@4.1.3)
 
   '@vitest/expect@4.1.3':
     dependencies:
@@ -16300,6 +16401,8 @@ snapshots:
 
   mri@1.2.0: {}
 
+  mrmime@2.0.1: {}
+
   ms@2.0.0: {}
 
   ms@2.1.3: {}
@@ -16696,6 +16799,8 @@ snapshots:
       playwright-core: 1.56.1
     optionalDependencies:
       fsevents: 2.3.2
+
+  pngjs@7.0.0: {}
 
   possible-typed-array-names@1.1.0: {}
 
@@ -17342,6 +17447,12 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
+  sirv@3.0.2:
+    dependencies:
+      '@polka/url': 1.0.0-next.29
+      mrmime: 2.0.1
+      totalist: 3.0.1
+
   slash@3.0.0: {}
 
   slice-ansi@5.0.0:
@@ -17633,6 +17744,8 @@ snapshots:
 
   toidentifier@1.0.1: {}
 
+  totalist@3.0.1: {}
+
   touch@3.1.1: {}
 
   tough-cookie@5.1.2:
@@ -17917,7 +18030,16 @@ snapshots:
       sass: 1.99.0
       yaml: 2.8.3
 
-  vitest@4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3)):
+  vitest-browser-react@2.2.0(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@4.1.3):
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      vitest: 4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
+    optionalDependencies:
+      '@types/react': 18.3.28
+      '@types/react-dom': 18.3.7(@types/react@18.3.28)
+
+  vitest@4.1.3(@opentelemetry/api@1.9.1)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.3)(@vitest/coverage-v8@4.1.3)(happy-dom@20.8.9)(jsdom@26.1.0)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3)):
     dependencies:
       '@vitest/expect': 4.1.3
       '@vitest/mocker': 4.1.3(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))
@@ -17942,7 +18064,8 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
       '@types/node': 24.12.2
-      '@vitest/coverage-v8': 4.1.3(vitest@4.1.3)
+      '@vitest/browser-playwright': 4.1.3(playwright@1.56.1)(vite@8.0.7(@types/node@24.12.2)(sass@1.99.0)(yaml@2.8.3))(vitest@4.1.3)
+      '@vitest/coverage-v8': 4.1.3(@vitest/browser@4.1.3)(vitest@4.1.3)
       happy-dom: 20.8.9
       jsdom: 26.1.0
     transitivePeerDependencies:
