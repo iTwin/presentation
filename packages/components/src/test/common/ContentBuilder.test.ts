@@ -280,6 +280,38 @@ describe("PropertyRecordsBuilder", () => {
     expect(builder.entries[0].value).toEqual({ valueFormat: UiPropertyValueFormat.Primitive });
   });
 
+  it("creates merged property record with quantity editor when field has kind of quantity", () => {
+    const fieldName = "test-field";
+    const descriptor = createTestContentDescriptor({
+      fields: [
+        createTestPropertiesContentField({
+          name: fieldName,
+          properties: [
+            {
+              property: {
+                classInfo: createTestECClassInfo(),
+                name: "test-props",
+                type: "double",
+                kindOfQuantity: { label: "Length", name: "testKOQ", persistenceUnit: "m" },
+              },
+            },
+          ],
+        }),
+      ],
+    });
+    const item = createTestContentItem({
+      values: {},
+      displayValues: { [fieldName]: "-- m" },
+      mergedFieldNames: [fieldName],
+    });
+    createContentTraverser(builder)(descriptor, [item]);
+    expect(builder.entries).toHaveLength(1);
+    expect(builder.entries[0].isMerged).toBe(true);
+    expect(builder.entries[0].property.editor?.name).toBe(QuantityEditorName);
+    expect(builder.entries[0].property.kindOfQuantityName).toBe("testKOQ");
+    expect(builder.entries[0].value).toEqual({ valueFormat: UiPropertyValueFormat.Primitive, displayValue: "-- m" });
+  });
+
   it("sorts struct properties", () => {
     const descriptor = createTestContentDescriptor({
       fields: [

@@ -482,7 +482,6 @@ export class ContentDataProvider implements IContentDataProvider {
             }
           : undefined;
       }
-
       const requestSize = undefined !== pageOptions && 0 === pageOptions.start && undefined !== pageOptions.size;
       if (requestSize) {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
@@ -579,7 +578,7 @@ class ContentFormatter {
   private async formatContentItems(items: Item[], descriptor: Descriptor) {
     return Promise.all(
       items.map(async (item) => {
-        await this.formatValues(item.values, item.displayValues, descriptor.fields);
+        await this.formatValues(item.values, item.displayValues, descriptor.fields, item.mergedFieldNames);
         return item;
       }),
     );
@@ -589,9 +588,18 @@ class ContentFormatter {
     values: ValuesDictionary<Value>,
     displayValues: ValuesDictionary<DisplayValue>,
     fields: Field[],
+    mergedFieldNames?: string[],
   ) {
     for (const field of fields) {
       const value = values[field.name];
+      // for merged quantity fields, format display value as "-- unit"
+      if (value === undefined && mergedFieldNames?.includes(field.name) && isFieldWithKoq(field)) {
+        const unitLabel = await this._propertyValueFormatter.getUnitLabel(field, this._unitSystem);
+        if (unitLabel) {
+          displayValues[field.name] = `-- ${unitLabel}`;
+        }
+        continue;
+      }
 
       // do not add undefined value to display values
       if (value === undefined) {
@@ -678,6 +686,12 @@ class ContentFormatter {
 
 class ContentPropertyValueFormatter {
   constructor(private _koqValueFormatter: KoqPropertyValueFormatter) {}
+
+  public async getUnitLabel(field: FieldWithKoq, unitSystem?: UnitSystemKey): Promise<string | undefined> {
+    const koq = field.properties[0].property.kindOfQuantity;
+    const formatterSpec = await this._koqValueFormatter.getFormatterSpec({ koqName: koq.name, unitSystem });
+    return formatterSpec?.unitConversions[0]?.label;
+  }
 
   public async formatPropertyValue(
     field: Field,
