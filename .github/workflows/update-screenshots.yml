@@ -67,11 +67,10 @@ jobs:
         run: pnpm install
 
       - name: Install browsers
-        working-directory: packages/scenes-control-react
-        run: npx playwright install chromium
+        run: pnpm lage install-browsers
 
       - name: Update Visual Regression Screenshots
-        run: pnpm run test:components:update
+        run: pnpm lage test:components:update
 
       # check what changed
       - name: Check for changes
