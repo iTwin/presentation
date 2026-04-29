@@ -3,10 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-// eslint-disable-next-line @itwin/no-internal-barrel-imports
-import * as ECSql from "./shared/ecsql-snippets/index.js";
-
-export { ECSql };
+export * as ECSql from "./shared/ecsql-snippets/index.js";
 
 export { ConcatenatedValue, ConcatenatedValuePart } from "./shared/ConcatenatedValue.js";
 export {
