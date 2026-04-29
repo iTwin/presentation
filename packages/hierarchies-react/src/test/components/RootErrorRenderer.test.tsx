@@ -9,7 +9,7 @@ import { COLOR_SCHEMES, renderWithTheme } from "./RenderUtils.js";
 
 import type { StrataKitRootErrorRendererProps } from "../../presentation-hierarchies-react/stratakit/RootErrorRenderer.js";
 
-COLOR_SCHEMES.map((colorScheme) => {
+COLOR_SCHEMES.forEach((colorScheme) => {
   describe(`[${colorScheme}] <StrataKitRootErrorRenderer />`, () => {
     const defaultProps: StrataKitRootErrorRendererProps = {
       error: { id: "test-error", type: "Unknown", message: "Something went wrong" },
