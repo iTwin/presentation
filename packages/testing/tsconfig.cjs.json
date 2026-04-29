@@ -1,8 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "noEmit": false,
     "module": "CommonJS",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
+    "rootDir": "./src",
     "outDir": "lib/cjs"
   },
   "include": ["src/presentation-testing", "src/presentation-testing.ts"]
