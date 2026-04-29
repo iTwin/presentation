@@ -34,6 +34,7 @@ jobs:
 
     permissions:
       contents: write # needs to push changes
+      pull-requests: read # needed to resolve PR head ref via github-script
 
     steps:
       - name: Get PR head ref
@@ -47,6 +48,12 @@ jobs:
               repo: context.repo.repo,
               pull_number: context.issue.number,
             });
+            const headRepo = pr.data.head.repo.full_name;
+            const baseRepo = pr.data.base.repo.full_name;
+            if (headRepo !== baseRepo) {
+              core.setFailed(`Fork PRs are not supported (head: ${headRepo}, base: ${baseRepo})`);
+              return;
+            }
             core.setOutput('ref', pr.data.head.ref);
 
       - name: Checkout selected branch
