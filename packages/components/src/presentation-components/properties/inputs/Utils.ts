@@ -3,7 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Format, FormatType, Parser, ParserSpec } from "@itwin/core-quantity";
+import { type Format, FormatType, Parser, type ParserSpec } from "@itwin/core-quantity";
+
+import type { PropertyValueConstraints } from "../../common/ContentBuilder.js";
 
 /**
  * Finds rounding error for entered value and converts it to persistence unit.
@@ -22,6 +24,30 @@ export function getPersistenceUnitRoundingError(numberStr: string, parser: Parse
   // convert precision to persistence unit
   const parseResult = parser.parseToQuantityValue(enteredUnit ? `${precisionStr}${enteredUnit}` : precisionStr);
   return parseResult.ok ? parseResult.value : undefined;
+}
+
+/** @internal */
+export function getMinMaxFromPropertyConstraints(constraints: PropertyValueConstraints): {
+  min: number | undefined;
+  max: number | undefined;
+} {
+  if ("minimumValue" in constraints || "maximumValue" in constraints) {
+    return { min: constraints.minimumValue, max: constraints.maximumValue };
+  }
+
+  return { min: undefined, max: undefined };
+}
+
+/** @internal */
+export function applyNumericConstraints({ value, min, max }: { value: number; min?: number; max?: number }): number {
+  let constrainedValued = value;
+  if (min !== undefined) {
+    constrainedValued = Math.max(constrainedValued, min);
+  }
+  if (max !== undefined) {
+    constrainedValued = Math.min(constrainedValued, max);
+  }
+  return constrainedValued;
 }
 
 /** @internal */

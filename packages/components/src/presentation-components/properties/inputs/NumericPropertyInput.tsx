@@ -7,9 +7,9 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { Input } from "@itwin/itwinui-react";
-import { PropertyValueConstraints, WithConstraints } from "../../common/ContentBuilder.js";
+import { WithConstraints } from "../../common/ContentBuilder.js";
 import { PropertyEditorAttributes } from "../editors/Common.js";
-import { getDecimalRoundingError } from "./Utils.js";
+import { applyNumericConstraints, getDecimalRoundingError, getMinMaxFromPropertyConstraints } from "./Utils.js";
 
 /** @internal */
 export interface NumericPropertyInputProps extends PropertyEditorProps {
@@ -31,7 +31,7 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
     ? getMinMaxFromPropertyConstraints(property.constraints)
     : { min: undefined, max: undefined };
   const commitInput = () => {
-    const formattedInputValue = applyConstraints(inputValue, min, max);
+    const formattedInputValue = applyConstraints({ inputAsString: inputValue, min, max });
     setInputValue(formattedInputValue);
     onCommit && onCommit({ propertyRecord, newValue: parsePrimitiveValue(formattedInputValue) });
   };
@@ -150,32 +150,14 @@ export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputPro
 );
 NumericInput.displayName = "NumericInput";
 
-function applyConstraints(inputAsNumber: string, min: number | undefined, max: number | undefined): string {
+function applyConstraints({ inputAsString, min, max }: { inputAsString: string; min?: number; max?: number }): string {
   if (min === undefined && max === undefined) {
-    return inputAsNumber;
+    return inputAsString;
   }
-
-  if (!isFinite(Number(inputAsNumber))) {
-    return inputAsNumber;
+  const inputAsNumber = Number(inputAsString);
+  if (!isFinite(inputAsNumber)) {
+    return inputAsString;
   }
-
-  let valAsNumber = Number(inputAsNumber);
-  if (min !== undefined) {
-    valAsNumber = Math.max(valAsNumber, min);
-  }
-  if (max !== undefined) {
-    valAsNumber = Math.min(valAsNumber, max);
-  }
-  return valAsNumber.toString();
-}
-
-function getMinMaxFromPropertyConstraints(constraints: PropertyValueConstraints): {
-  min: number | undefined;
-  max: number | undefined;
-} {
-  if ("minimumValue" in constraints) {
-    return { min: constraints.minimumValue, max: constraints.maximumValue };
-  }
-
-  return { min: undefined, max: undefined };
+  const constrainedNumber = applyNumericConstraints({ value: inputAsNumber, min, max });
+  return constrainedNumber !== inputAsNumber ? constrainedNumber.toString() : inputAsString;
 }

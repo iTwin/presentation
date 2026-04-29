@@ -4,14 +4,22 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyEditorProps } from "@itwin/components-react";
+import {
+  type PrimitiveValue,
+  type PropertyDescription,
+  type PropertyRecord,
+  PropertyValueFormat,
+} from "@itwin/appui-abstract";
 import { assert } from "@itwin/core-bentley";
 import { Input } from "@itwin/itwinui-react";
 import { useSchemaMetadataContext } from "../../common/SchemaMetadataContext.js";
-import { PropertyEditorAttributes } from "../editors/Common.js";
 import { NumericPropertyInput } from "./NumericPropertyInput.js";
-import { useQuantityValueInput, UseQuantityValueInputProps } from "./UseQuantityValueInput.js";
+import { useQuantityValueInput, type UseQuantityValueInputProps } from "./UseQuantityValueInput.js";
+import { applyNumericConstraints, getMinMaxFromPropertyConstraints } from "./Utils.js";
+
+import type { PropertyEditorProps } from "@itwin/components-react";
+import type { WithConstraints } from "../../common/ContentBuilder.js";
+import type { PropertyEditorAttributes } from "../editors/Common.js";
 
 /** @internal */
 export interface QuantityPropertyEditorImplProps extends PropertyEditorProps {
@@ -52,7 +60,11 @@ type QuantityPropertyValueInputProps = QuantityPropertyEditorImplProps & UseQuan
 
 const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, QuantityPropertyValueInputProps>(
   ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus, onCancel }, ref) => {
-    const { quantityValue, inputProps } = useQuantityValueInput({ koqName, schemaContext, initialRawValue });
+    const { quantityValue, inputProps, setNewValue } = useQuantityValueInput({
+      koqName,
+      schemaContext,
+      initialRawValue,
+    });
     const [isEditing, setEditing] = useState(false);
     const value = isEditing ? quantityValue.highPrecisionFormattedValue : quantityValue.defaultFormattedValue;
 
@@ -72,16 +84,30 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
     );
 
     const onBlur = () => {
-      onCommit &&
-        onCommit({
-          propertyRecord,
-          newValue: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: quantityValue.rawValue,
-            displayValue: quantityValue.defaultFormattedValue,
-            roundingError: quantityValue.roundingError,
-          },
-        });
+      if (!onCommit) {
+        return;
+      }
+
+      let valueToCommit = quantityValue;
+      const rawValue = quantityValue.rawValue;
+      const property: WithConstraints<PropertyDescription> = propertyRecord.property;
+      if (rawValue !== undefined && property.constraints) {
+        const { min, max } = getMinMaxFromPropertyConstraints(property.constraints);
+        const constrainedValue = applyNumericConstraints({ value: rawValue, min, max });
+        if (constrainedValue !== rawValue) {
+          valueToCommit = setNewValue(constrainedValue);
+        }
+      }
+
+      onCommit({
+        propertyRecord,
+        newValue: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: valueToCommit.rawValue,
+          displayValue: valueToCommit.defaultFormattedValue,
+          roundingError: valueToCommit.roundingError,
+        },
+      });
     };
 
     useEffect(() => {

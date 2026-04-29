@@ -114,7 +114,26 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     );
   };
 
-  return { quantityValue, inputProps: { onChange, placeholder, disabled: !highPrecisionFormatter || !parser } };
+  return {
+    quantityValue,
+    inputProps: { onChange, placeholder, disabled: !highPrecisionFormatter || !parser },
+    setNewValue: (rawValue: number): QuantityValue => {
+      assert(parser !== undefined); // input should be disabled if parser is `undefined`
+      const defaultFormattedValue = defaultFormatter?.applyFormatting(rawValue);
+      const highPrecisionFormattedValue = highPrecisionFormatter?.applyFormatting(rawValue);
+      const newValue = {
+        rawValue,
+        defaultFormattedValue: defaultFormattedValue ?? quantityValue.defaultFormattedValue,
+        highPrecisionFormattedValue: highPrecisionFormattedValue ?? quantityValue.highPrecisionFormattedValue,
+        roundingError: getPersistenceUnitRoundingError(
+          highPrecisionFormattedValue ?? quantityValue.highPrecisionFormattedValue,
+          parser,
+        ),
+      };
+      setState((prev) => ({ ...prev, quantityValue: newValue }));
+      return newValue;
+    },
+  };
 }
 
 function useFormatterAndParser(
