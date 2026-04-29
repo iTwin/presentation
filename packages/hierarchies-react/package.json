@@ -58,7 +58,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "update-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md",
     "check-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md --check",
-    "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
+    "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md",
+    "install-browsers": "pnpm playwright install chromium"
   },
   "dependencies": {
     "@itwin/core-bentley": "catalog:itwinjs-core",

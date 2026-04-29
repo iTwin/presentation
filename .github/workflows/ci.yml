@@ -36,6 +36,9 @@ jobs:
           NODE_ENV: "development"
         run: pnpm lage build lint cover
 
+      - name: Run component tests
+        run: pnpm lage test:components
+
   docs:
     runs-on: ubuntu-latest
     name: Validate docs
