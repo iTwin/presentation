@@ -83,4 +83,4 @@ onlyBuiltDependencies:
 
 resolutionMode: lowest-direct
 
-strictPeerDependencies: true
+strictPeerDependencies: false
