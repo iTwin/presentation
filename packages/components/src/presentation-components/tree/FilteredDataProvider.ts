@@ -15,7 +15,14 @@ import {
   TreeNodeItem,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
-import { InstanceFilterDefinition, Node, NodeKey, NodePathElement } from "@itwin/presentation-common";
+import {
+  HierarchyRequestOptions,
+  InstanceFilterDefinition,
+  Node,
+  NodeKey,
+  NodePathElement,
+  Paged,
+} from "@itwin/presentation-common";
 import { memoize } from "../common/Utils.js";
 import { PresentationTreeDataProvider } from "./DataProvider.js";
 import {
@@ -153,7 +160,10 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     return this._parentDataProvider.getFilteredNodePaths(filter);
   }
 
-  public createRequestOptions(parentKey?: NodeKey, instanceFilter?: InstanceFilterDefinition) {
+  public createRequestOptions(
+    parentKey?: NodeKey,
+    instanceFilter?: InstanceFilterDefinition,
+  ): Paged<HierarchyRequestOptions<IModelConnection, NodeKey>> {
     return this._parentDataProvider.createRequestOptions(parentKey, instanceFilter);
   }
 

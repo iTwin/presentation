@@ -1,9 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "noEmit": false,
+    "rootDir": "./src",
     "outDir": "lib/esm"
   },
-  "include": ["src/presentation-components", "src/presentation-components.ts"]
+  "include": ["src/styles.d.ts", "src/presentation-components", "src/presentation-components.ts"]
 }

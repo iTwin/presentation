@@ -253,7 +253,10 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   }
 
   /** Creates options for nodes requests. */
-  public createRequestOptions(parentKey: NodeKey | undefined, instanceFilter?: InstanceFilterDefinition) {
+  public createRequestOptions(
+    parentKey: NodeKey | undefined,
+    instanceFilter?: InstanceFilterDefinition,
+  ): Paged<HierarchyRequestOptions<IModelConnection, NodeKey>> {
     const isHierarchyLevelLimitingSupported = !!this.hierarchyLevelSizeLimit && parentKey;
     return {
       ...this.createBaseRequestOptions(),
