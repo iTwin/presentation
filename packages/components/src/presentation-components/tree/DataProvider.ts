@@ -129,9 +129,9 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
  * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface PresentationTreeDataProviderDataSourceEntryPoints {
-  /** @deprecated in 4.0 The entry point is not used anymore, it's usage has been replaced by [[getNodesIterator]]. */
+  /** @deprecated in 4.0. The entry point is not used anymore, its usage has been replaced by [[getNodesIterator]]. */
   getNodesCount?: (requestOptions: HierarchyRequestOptions<IModelConnection, NodeKey>) => Promise<number>;
-  /** @deprecated in 5.2 The entry point is not used anymore, it's usage has been replaced by [[getNodesIterator]]. */
+  /** @deprecated in 5.2. The entry point is not used anymore, its usage has been replaced by [[getNodesIterator]]. */
   getNodesAndCount?: (
     requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>,
   ) => Promise<{ nodes: Node[]; count: number }>;
@@ -253,7 +253,10 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   }
 
   /** Creates options for nodes requests. */
-  public createRequestOptions(parentKey: NodeKey | undefined, instanceFilter?: InstanceFilterDefinition) {
+  public createRequestOptions(
+    parentKey: NodeKey | undefined,
+    instanceFilter?: InstanceFilterDefinition,
+  ): Paged<HierarchyRequestOptions<IModelConnection, NodeKey>> {
     const isHierarchyLevelLimitingSupported = !!this.hierarchyLevelSizeLimit && parentKey;
     return {
       ...this.createBaseRequestOptions(),

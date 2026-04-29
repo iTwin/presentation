@@ -101,4 +101,29 @@ describe("<QuantityPropertyEditor />", () => {
       expect(getByDisplayValue("10 unit")).not.toBeNull();
     });
   });
+
+  it("renders '-- unit' for merged record with no value when schema context is available", async () => {
+    const record = createRecord({ kindOfQuantityName: "TestKOQ" });
+    record.isMerged = true;
+    const { getByDisplayValue } = render(
+      <SchemaMetadataContextProvider
+        imodel={{} as IModelConnection}
+        schemaContextProvider={() => ({}) as SchemaContext}
+      >
+        <QuantityPropertyEditor propertyRecord={record} />
+      </SchemaMetadataContextProvider>,
+    );
+
+    await waitFor(() => {
+      expect(getByDisplayValue("-- unit")).not.toBeNull();
+    });
+  });
+
+  it("renders '--' for merged record with no value when schema context is not available", async () => {
+    const record = createRecord({});
+    record.isMerged = true;
+    const { getByDisplayValue } = render(<QuantityPropertyEditor propertyRecord={record} />);
+
+    expect(getByDisplayValue("--")).not.toBeNull();
+  });
 });

@@ -7,7 +7,10 @@
     "declaration": true,
     "declarationMap": true,
     "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "rootDir": ".",
+    "noEmit": true,
+    "types": ["node"]
   },
   "include": ["src", "vitest.config.ts"]
 }

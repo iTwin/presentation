@@ -51,4 +51,12 @@ describe("<NumericPropertyEditor />", () => {
       newValue: { valueFormat: 0, value: 1, displayValue: "1", roundingError: 0.5 },
     });
   });
+
+  it("renders '--' for merged record", async () => {
+    const record = createRecord();
+    record.isMerged = true;
+    const { getByDisplayValue } = render(<NumericPropertyEditor propertyRecord={record} />);
+
+    expect(getByDisplayValue("--")).not.toBeNull();
+  });
 });

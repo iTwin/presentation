@@ -67,7 +67,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
       const defaultValue =
         prev.quantityValue.rawValue !== undefined
           ? newDefaultFormatter.applyFormatting(prev.quantityValue.rawValue)
-          : newHighPrecisionFormatter.unitConversions[0].label;
+          : `-- ${newHighPrecisionFormatter.unitConversions[0].label}`;
       const newFormattedValue =
         prev.quantityValue.rawValue !== undefined
           ? newHighPrecisionFormatter.applyFormatting(prev.quantityValue.rawValue)

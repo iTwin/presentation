@@ -26,7 +26,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { doRequest, getCurrentIModelName, loadNodes, loadVariables, openIModelConnectionIfNeeded } from "./common";
+import { doRequest, getCurrentIModelName, loadNodes, loadVariables, openIModelConnectionIfNeeded } from "./common.js";
 
 console.log(`Frontend PID: ${process.pid}`);
 const ENABLE_REQUESTS_LOGGING = false;

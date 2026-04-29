@@ -173,7 +173,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    * - For *array* fields: `[]` (empty array)
    * - For *struct* fields: `{}` (object with no members)
    *
-   * @deprecated in 3.x. Use [FilteringPropertyDataProvider]($components-react) and [IPropertyDataFilterer]($components-react) APIs for filtering-out properties.
+   * @deprecated in 3.6. Use [FilteringPropertyDataProvider]($components-react) and [IPropertyDataFilterer]($components-react) APIs for filtering-out properties.
    */
   public get includeFieldsWithNoValues(): boolean {
     return this._includeFieldsWithNoValues;
@@ -192,7 +192,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    * - *array* fields.
    * - *struct* fields.
    *
-   * @deprecated in 3.x. Use [FilteringPropertyDataProvider]($components-react) and [IPropertyDataFilterer]($components-react) APIs for filtering-out properties.
+   * @deprecated in 3.6. Use [FilteringPropertyDataProvider]($components-react) and [IPropertyDataFilterer]($components-react) APIs for filtering-out properties.
    */
   public get includeFieldsWithCompositeValues(): boolean {
     return this._includeFieldsWithCompositeValues;
