@@ -86,7 +86,7 @@
 //         // The hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all `BisCore.PhysicalModel` instances
 //         function getHierarchyDefinition(): HierarchyDefinition {
 //           return {
-//             defineHierarchyLevel: async ({ instanceLabelSelectClauseFactory, createSelectClause }) => [
+//             defineHierarchyLevel: async ({ createSelectClause }) => [
 //               {
 //                 fullClassName: "BisCore.PhysicalModel",
 //                 query: {
@@ -96,7 +96,7 @@
 //                         ecClassId: { selector: "this.ECClassId" },
 //                         ecInstanceId: { selector: "this.ECInstanceId" },
 //                         nodeLabel: {
-//                           selector: await instanceLabelSelectClauseFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
+//                           of: { classAlias: "this", className: "BisCore.PhysicalModel" },
 //                         },
 //                         hasChildren: false,
 //                       })}
