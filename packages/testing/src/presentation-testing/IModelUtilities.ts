@@ -109,6 +109,7 @@ export async function buildTestIModel(
   try {
     await cb(builder);
   } finally {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     db.saveChanges("Created test IModel");
     db.close();
   }

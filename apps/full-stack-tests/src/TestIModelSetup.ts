@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "vitest";
-import { IModelDb, SnapshotDb } from "@itwin/core-backend";
+import { EditTxn, IModelDb, SnapshotDb, withEditTxn } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
 import {
   BisCodeSpec,
@@ -29,35 +29,35 @@ export interface TestIModelBuilder {
 }
 
 class TestIModelBuilderImpl implements TestIModelBuilder {
-  private _iModel: IModelDb;
+  private _txn: EditTxn;
 
-  constructor(iModel: IModelDb) {
-    this._iModel = iModel;
+  constructor(txn: EditTxn) {
+    this._txn = txn;
   }
 
   public insertModel<TProps extends ModelProps>(props: TProps): Id64String {
-    return this._iModel.models.insertModel(props);
+    return this._txn.insertModel(props);
   }
 
   public insertElement<TProps extends ElementProps>(props: TProps): Id64String {
-    return this._iModel.elements.insertElement(props);
+    return this._txn.insertElement(props);
   }
 
   public insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String {
-    return this._iModel.elements.insertAspect(props);
+    return this._txn.insertAspect(props);
   }
 
   public insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String {
-    return this._iModel.relationships.insertInstance(props);
+    return this._txn.insertRelationship(props);
   }
 
   public createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code {
-    const codeSpec: CodeSpec = this._iModel.codeSpecs.getByName(codeSpecName);
+    const codeSpec: CodeSpec = this._txn.iModel.codeSpecs.getByName(codeSpecName);
     return new Code({ spec: codeSpec.id, scope: scopeModelId, value: codeValue });
   }
 
   public async importSchema(schemaXml: string) {
-    await this._iModel.importSchemaStrings([schemaXml]);
+    await this._txn.iModel.importSchemaStrings([schemaXml]);
   }
 }
 
@@ -93,14 +93,15 @@ export async function buildTestIModel<TResult extends {} | void>(
   const fileName = createFileNameFromString(`${name}.bim`);
   const outputFile = setupOutputFileLocation(fileName);
   const db = SnapshotDb.createEmpty(outputFile, { rootSubject: { name } });
-  const builder = new TestIModelBuilderImpl(db);
   let result!: TResult;
   try {
     if (callback) {
-      result = await callback?.(builder, name);
+      await withEditTxn(db, async (txn) => {
+        const builderWithTxn = new TestIModelBuilderImpl(txn);
+        result = await callback(builderWithTxn, name);
+      });
     }
   } finally {
-    db.saveChanges("Created test IModel");
     db.close();
   }
   return { ...result, imodel: TestIModelConnection.openFile(outputFile) };

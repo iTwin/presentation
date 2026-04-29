@@ -18,6 +18,7 @@ import {
   Subject,
   SubjectOwnsPartitionElements,
   SubjectOwnsSubjects,
+  withEditTxn,
 } from "@itwin/core-backend";
 import { BeEvent, Guid, Id64String, OpenMode } from "@itwin/core-bentley";
 import {
@@ -117,7 +118,6 @@ describe("Hierarchies", () => {
           validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
 
           const subjectId = insertSubject("0x1", "test subject");
-          db.saveChanges();
 
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
@@ -131,7 +131,6 @@ describe("Hierarchies", () => {
 
         it("updates hierarchy when an element is updated", async () => {
           const subjectId = insertSubject("0x1", "test subject");
-          db.saveChanges();
 
           const provider = createRootSubjectChildrenProvider();
           validateHierarchyLevel({
@@ -145,7 +144,6 @@ describe("Hierarchies", () => {
           });
 
           updateSubject(subjectId, "modified label");
-          db.saveChanges();
 
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
@@ -160,7 +158,6 @@ describe("Hierarchies", () => {
 
         it("updates hierarchy when an element is deleted", async () => {
           const subjectId = insertSubject("0x1", "test subject");
-          db.saveChanges();
 
           const provider = createRootSubjectChildrenProvider();
           validateHierarchyLevel({
@@ -174,14 +171,12 @@ describe("Hierarchies", () => {
           });
 
           deleteElement(subjectId);
-          db.saveChanges();
 
           validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
         });
 
         it("updates hierarchy when an aspect is inserted", async () => {
           const subjectId = insertSubject("0x1", "test subject");
-          db.saveChanges();
 
           const provider = createRootSubjectChildrenProvider({ label: "aspectIdentifier" });
           validateHierarchyLevel({
@@ -195,7 +190,6 @@ describe("Hierarchies", () => {
           });
 
           insertExternalSourceAspect(subjectId, "test aspect");
-          db.saveChanges();
 
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
@@ -211,7 +205,6 @@ describe("Hierarchies", () => {
         it("updates hierarchy when an aspect is updated", async () => {
           const subjectId = insertSubject("0x1", "test subject");
           const aspectId = insertExternalSourceAspect(subjectId, "test aspect");
-          db.saveChanges();
 
           const provider = createRootSubjectChildrenProvider({ label: "aspectIdentifier" });
           validateHierarchyLevel({
@@ -225,7 +218,6 @@ describe("Hierarchies", () => {
           });
 
           updateExternalSourceAspect(aspectId, "modified aspect");
-          db.saveChanges();
 
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
@@ -241,7 +233,6 @@ describe("Hierarchies", () => {
         it("updates hierarchy when an aspect is deleted", async () => {
           const subjectId = insertSubject("0x1", "test subject");
           const aspectId = insertExternalSourceAspect(subjectId, "test aspect");
-          db.saveChanges();
 
           const provider = createRootSubjectChildrenProvider({ label: "aspectIdentifier" });
           validateHierarchyLevel({
@@ -255,7 +246,6 @@ describe("Hierarchies", () => {
           });
 
           deleteAspect(aspectId);
-          db.saveChanges();
 
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
@@ -270,13 +260,11 @@ describe("Hierarchies", () => {
 
         it("updates hierarchy when a model is inserted", async () => {
           const partitionId = insertPhysicalPartition("0x1");
-          db.saveChanges();
 
           const provider = createPhysicalModelsProvider();
           validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
 
           const modelId = insertPhysicalModel(partitionId, false);
-          db.saveChanges();
 
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
@@ -291,7 +279,6 @@ describe("Hierarchies", () => {
         it("updates hierarchy when a model is updated", async () => {
           const partitionId = insertPhysicalPartition("0x1", "test");
           const modelId = insertPhysicalModel(partitionId, false);
-          db.saveChanges();
 
           const provider = createPhysicalModelsProvider();
           validateHierarchyLevel({
@@ -305,7 +292,6 @@ describe("Hierarchies", () => {
           });
 
           updatePhysicalModel(modelId, true);
-          db.saveChanges();
 
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
@@ -321,7 +307,6 @@ describe("Hierarchies", () => {
         it("updates hierarchy when a model is deleted", async () => {
           const partitionId = insertPhysicalPartition("0x1");
           const modelId = insertPhysicalModel(partitionId, false);
-          db.saveChanges();
 
           const provider = createPhysicalModelsProvider();
           validateHierarchyLevel({
@@ -334,7 +319,6 @@ describe("Hierarchies", () => {
           });
 
           deleteModel(modelId);
-          db.saveChanges();
 
           validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
         });
@@ -342,13 +326,11 @@ describe("Hierarchies", () => {
         /** The test crashes when trying to insert the ElementRefersToElements relationship */
         it.skip("updates hierarchy when a many-to-many relationship is inserted", async function () {
           const subjectId = insertSubject("0x1", "test subject");
-          db.saveChanges();
 
           const provider = createRootSubjectReferredElementsProvider();
           validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
 
           insertElementRefersToElementRelationship("0x1", subjectId);
-          db.saveChanges();
 
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
@@ -365,7 +347,6 @@ describe("Hierarchies", () => {
           const subject1Id = insertSubject("0x1", "test subject 1");
           const subject2Id = insertSubject("0x1", "test subject 2");
           const relationshipProps = insertElementRefersToElementRelationship("0x1", subject1Id);
-          db.saveChanges();
 
           const provider = createRootSubjectReferredElementsProvider();
           validateHierarchyLevel({
@@ -378,7 +359,6 @@ describe("Hierarchies", () => {
           });
 
           updateElementRefersToElementRelationship({ ...relationshipProps, targetId: subject2Id });
-          db.saveChanges();
 
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
@@ -394,7 +374,6 @@ describe("Hierarchies", () => {
         it.skip("updates hierarchy when a many-to-many relationship is deleted", async function () {
           const subjectId = insertSubject("0x1", "test subject");
           const relationshipProps = insertElementRefersToElementRelationship("0x1", subjectId);
-          db.saveChanges();
 
           const provider = createRootSubjectReferredElementsProvider();
           validateHierarchyLevel({
@@ -407,7 +386,6 @@ describe("Hierarchies", () => {
           });
 
           deleteRelationship(relationshipProps);
-          db.saveChanges();
 
           validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
         });
@@ -535,85 +513,115 @@ describe("Hierarchies", () => {
         }
 
         function insertSubject(parentId: Id64String, codeValue: string) {
-          return db.elements.insertElement({
-            classFullName: "BisCore.Subject",
-            model: IModel.repositoryModelId,
-            parent: { id: parentId, relClassName: SubjectOwnsSubjects.classFullName },
-            code: { scope: parentId, spec: db.codeSpecs.getByName(BisCodeSpec.subject).id, value: codeValue },
+          return withEditTxn(db, (txn) => {
+            return txn.insertElement({
+              classFullName: "BisCore.Subject",
+              model: IModel.repositoryModelId,
+              parent: { id: parentId, relClassName: SubjectOwnsSubjects.classFullName },
+              code: { scope: parentId, spec: db.codeSpecs.getByName(BisCodeSpec.subject).id, value: codeValue },
+            });
           });
         }
 
         function updateSubject(subjectId: Id64String, newCodeValue: string) {
           const props = db.elements.getElementProps(subjectId);
-          db.elements.updateElement({ ...props, code: { ...props.code, value: newCodeValue } });
+          withEditTxn(db, (txn) => {
+            txn.updateElement({ ...props, code: { ...props.code, value: newCodeValue } });
+          });
         }
 
         function deleteElement(subjectId: Id64String) {
-          db.elements.deleteElement(subjectId);
+          withEditTxn(db, (txn) => {
+            txn.deleteElement(subjectId);
+          });
         }
 
         function insertExternalSourceAspect(elementId: Id64String, identifier: string) {
-          return db.elements.insertAspect({
-            classFullName: ExternalSourceAspect.classFullName,
-            element: { relClassName: ElementOwnsExternalSourceAspects.classFullName, id: elementId },
-            identifier,
-          } as ExternalSourceAspectProps);
+          return withEditTxn(db, (txn) => {
+            return txn.insertAspect({
+              classFullName: ExternalSourceAspect.classFullName,
+              element: { relClassName: ElementOwnsExternalSourceAspects.classFullName, id: elementId },
+              identifier,
+            } as ExternalSourceAspectProps);
+          });
         }
 
         function updateExternalSourceAspect(aspectId: Id64String, newIdentifier: string) {
           const props = db.elements.getAspect(aspectId).toJSON();
-          db.elements.updateAspect({ ...props, identifier: newIdentifier } as ExternalSourceAspectProps);
+          withEditTxn(db, (txn) => {
+            txn.updateAspect({ ...props, identifier: newIdentifier } as ExternalSourceAspectProps);
+          });
         }
 
         function deleteAspect(aspectId: Id64String) {
-          db.elements.deleteAspect(aspectId);
+          withEditTxn(db, (txn) => {
+            txn.deleteAspect(aspectId);
+          });
         }
 
         function insertPhysicalPartition(parentSubjectId: Id64String, codeValue = "test partition") {
-          return db.elements.insertElement({
-            classFullName: PhysicalPartition.classFullName,
-            model: IModel.repositoryModelId,
-            parent: { id: parentSubjectId, relClassName: SubjectOwnsPartitionElements.classFullName },
-            code: {
-              scope: parentSubjectId,
-              spec: db.codeSpecs.getByName(BisCodeSpec.informationPartitionElement).id,
-              value: codeValue,
-            },
+          return withEditTxn(db, (txn) => {
+            return txn.insertElement({
+              classFullName: PhysicalPartition.classFullName,
+              model: IModel.repositoryModelId,
+              parent: { id: parentSubjectId, relClassName: SubjectOwnsPartitionElements.classFullName },
+              code: {
+                scope: parentSubjectId,
+                spec: db.codeSpecs.getByName(BisCodeSpec.informationPartitionElement).id,
+                value: codeValue,
+              },
+            });
           });
         }
 
         function insertPhysicalModel(modeledElementId: Id64String, isPrivate: boolean) {
-          return db.models.insertModel({
-            classFullName: PhysicalModel.classFullName,
-            modeledElement: { id: modeledElementId },
-            isPrivate,
+          return withEditTxn(db, (txn) => {
+            return txn.insertModel({
+              classFullName: PhysicalModel.classFullName,
+              modeledElement: { id: modeledElementId },
+              isPrivate,
+            });
           });
         }
 
         function updatePhysicalModel(modelId: Id64String, newIsPrivate: boolean) {
           const props = db.models.getModelProps(modelId);
-          db.models.updateModel({ ...props, isPrivate: newIsPrivate });
+          withEditTxn(db, (txn) => {
+            txn.updateModel({ ...props, isPrivate: newIsPrivate });
+          });
         }
 
         function deleteModel(modelId: Id64String) {
-          db.models.deleteModel(modelId);
+          withEditTxn(db, (txn) => {
+            txn.deleteModel(modelId);
+          });
         }
 
         function insertElementRefersToElementRelationship(
           sourceId: Id64String,
           targetId: Id64String,
         ): RelationshipProps {
-          const props: RelationshipProps = { classFullName: ElementRefersToElements.classFullName, sourceId, targetId };
-          const id = db.relationships.insertInstance(props);
-          return { ...props, id };
+          return withEditTxn(db, (txn) => {
+            const props: RelationshipProps = {
+              classFullName: ElementRefersToElements.classFullName,
+              sourceId,
+              targetId,
+            };
+            const id = txn.insertRelationship(props);
+            return { ...props, id };
+          });
         }
 
         function updateElementRefersToElementRelationship(props: RelationshipProps) {
-          db.relationships.updateInstance(props);
+          withEditTxn(db, (txn) => {
+            txn.updateRelationship(props);
+          });
         }
 
         function deleteRelationship(props: RelationshipProps) {
-          db.relationships.deleteInstance(props);
+          withEditTxn(db, (txn) => {
+            txn.deleteRelationship(props);
+          });
         }
       });
     });

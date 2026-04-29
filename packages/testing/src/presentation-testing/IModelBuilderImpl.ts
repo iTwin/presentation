@@ -32,18 +32,22 @@ export class TestIModelBuilderImpl implements TestIModelBuilder {
   }
 
   public insertModel<TProps extends ModelProps>(props: TProps): Id64String {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     return this._iModel.models.insertModel(props);
   }
 
   public insertElement<TProps extends ElementProps>(props: TProps): Id64String {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     return this._iModel.elements.insertElement(props);
   }
 
   public insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     return this._iModel.elements.insertAspect(props);
   }
 
   public insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     return this._iModel.relationships.insertInstance(props);
   }
 
