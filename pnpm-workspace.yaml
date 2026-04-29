@@ -11,7 +11,7 @@ catalogs:
     '@itwin/core-react': ^5.28.1
     '@itwin/imodel-components-react': ^5.28.1
   build-tools:
-    '@itwin/build-tools': ^5.8.4
+    '@itwin/build-tools': ^5.10.0-dev.1
     '@itwin/eslint-plugin': ^6.0.0
     '@types/node': ^24.12.2
     '@vitejs/plugin-react': ^6.0.1
