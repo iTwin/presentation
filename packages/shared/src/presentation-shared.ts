@@ -3,9 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import * as ECSql from "./shared/ecsql-snippets/index.js";
-
-export { ECSql };
+export * as ECSql from "./shared/ecsql-snippets/index.js";
 
 export { ConcatenatedValue, ConcatenatedValuePart } from "./shared/ConcatenatedValue.js";
 export {

@@ -21,7 +21,7 @@ index 577eaaf9..72414a2f 100644
          const bindingIndex = i + 1;
          switch (typeof value) {
 @@ -126,7 +126,7 @@ export class ECDbBuilder {
- 
+
    public insertInstance(fullClassName: string, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
      const query = this.createInsertQuery(fullClassName, props);
 -    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
@@ -58,6 +58,80 @@ index 577eaaf9..72414a2f 100644
        }
      });
    }
+diff --git a/apps/full-stack-tests/src/TestIModelSetup.ts b/apps/full-stack-tests/src/TestIModelSetup.ts
+index a7b02510..b996fb59 100644
+--- a/apps/full-stack-tests/src/TestIModelSetup.ts
++++ b/apps/full-stack-tests/src/TestIModelSetup.ts
+@@ -4,7 +4,7 @@
+  *--------------------------------------------------------------------------------------------*/
+
+ import { expect } from "vitest";
+-import { EditTxn, IModelDb, SnapshotDb, withEditTxn } from "@itwin/core-backend";
++import { IModelDb, SnapshotDb } from "@itwin/core-backend";
+ import { Id64String } from "@itwin/core-bentley";
+ import {
+   BisCodeSpec,
+@@ -29,35 +29,35 @@ export interface TestIModelBuilder {
+ }
+
+ class TestIModelBuilderImpl implements TestIModelBuilder {
+-  private _txn: EditTxn;
++  private _imodel: IModelDb;
+
+-  constructor(txn: EditTxn) {
+-    this._txn = txn;
++  constructor(imodel: IModelDb) {
++    this._imodel = imodel;
+   }
+
+   public insertModel<TProps extends ModelProps>(props: TProps): Id64String {
+-    return this._txn.insertModel(props);
++    return this._imodel.models.insertModel(props);
+   }
+
+   public insertElement<TProps extends ElementProps>(props: TProps): Id64String {
+-    return this._txn.insertElement(props);
++    return this._imodel.elements.insertElement(props);
+   }
+
+   public insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String {
+-    return this._txn.insertAspect(props);
++    return this._imodel.elements.insertAspect(props);
+   }
+
+   public insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String {
+-    return this._txn.insertRelationship(props);
++    return this._imodel.relationships.insertInstance(props);
+   }
+
+   public createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code {
+-    const codeSpec: CodeSpec = this._txn.iModel.codeSpecs.getByName(codeSpecName);
++    const codeSpec: CodeSpec = this._imodel.codeSpecs.getByName(codeSpecName);
+     return new Code({ spec: codeSpec.id, scope: scopeModelId, value: codeValue });
+   }
+
+   public async importSchema(schemaXml: string) {
+-    await this._txn.iModel.importSchemaStrings([schemaXml]);
++    await this._imodel.importSchemaStrings([schemaXml]);
+   }
+ }
+
+@@ -96,12 +96,11 @@ export async function buildTestIModel<TResult extends {} | void>(
+   let result!: TResult;
+   try {
+     if (callback) {
+-      await withEditTxn(db, async (txn) => {
+-        const builderWithTxn = new TestIModelBuilderImpl(txn);
+-        result = await callback(builderWithTxn, name);
+-      });
++      const builderWithTxn = new TestIModelBuilderImpl(db);
++      result = await callback(builderWithTxn, name);
+     }
+   } finally {
++    db.saveChanges("initial");
+     db.close();
+   }
+   return { ...result, imodel: TestIModelConnection.openFile(outputFile) };
 diff --git a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
 index 649fbc75..f4442a17 100644
 --- a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
@@ -181,7 +255,7 @@ index 649fbc75..f4442a17 100644
 -    });
 -  });
 +  }, 30000);
- 
+
    it("edits merged values", async () => {
      const { imodel, schema, ...imodelKeys } = await buildTestIModel(async (builder, testName) => {
 diff --git a/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts b/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts
@@ -208,7 +282,7 @@ index 0f2dcb8c..4cd9ae58 100644
 @@ -309,7 +301,8 @@ describe("PropertyDataProvider", async () => {
    runTests("with flat property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = false));
    runTests("with nested property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = true));
- 
+
 -  it("finds array item & struct member fields", async () => {
 +  // requires iTwin.js@5.6
 +  it.skip("finds array item & struct member fields", async () => {
@@ -224,7 +298,7 @@ index 0f2dcb8c..4cd9ae58 100644
 -      label: "ArrayProperty",
 -      type: { valueFormat: "Array", typeName: "string[]" },
 -    });
- 
+
      // test retrieving struct member field
      const structRecord = properties.records["/selected-item/"].find((r) => r.property.name.endsWith("StructProperty"));
 @@ -464,11 +452,6 @@ describe("PropertyDataProvider", async () => {
@@ -236,7 +310,7 @@ index 0f2dcb8c..4cd9ae58 100644
 -      label: "StructProperty",
 -      type: { valueFormat: "Struct", typeName: "TestStruct" },
 -    });
- 
+
      // test retrieving struct array member field
      const structArrayRecord = properties.records["/selected-item/"].find((r) =>
 @@ -482,18 +465,6 @@ describe("PropertyDataProvider", async () => {
@@ -256,7 +330,7 @@ index 0f2dcb8c..4cd9ae58 100644
 -      type: { valueFormat: "Array", typeName: "TestStruct[]" },
 -    });
    });
- 
+
    it("gets property data after re-initializing Presentation", async () => {
 diff --git a/apps/full-stack-tests/src/hierarchies/Formatting.test.ts b/apps/full-stack-tests/src/hierarchies/Formatting.test.ts
 index 7c8424f6..41617cc4 100644
@@ -278,7 +352,7 @@ index 7c8424f6..41617cc4 100644
  import { createValueFormatter } from "@itwin/presentation-core-interop";
  import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 @@ -446,8 +445,8 @@ describe("Hierarchies", () => {
- 
+
      describe("Integer", () => {
        it("formats instance node labels", async () => {
 -        const { imodel, sheetIndexFolder } = await buildTestIModel(async (builder) => {
@@ -287,7 +361,7 @@ index 7c8424f6..41617cc4 100644
 +          return { category: insertSpatialCategory({ builder, codeValue: "category", rank: Rank.Application }) };
          });
          const imodelAccess = createIModelAccess(imodel);
- 
+
 @@ -462,7 +461,7 @@ describe("Hierarchies", () => {
              if (!parentNode) {
                return [
@@ -316,17 +390,358 @@ index 7c8424f6..41617cc4 100644
                    `,
                    },
                  },
+diff --git a/apps/full-stack-tests/src/hierarchies/Update.test.ts b/apps/full-stack-tests/src/hierarchies/Update.test.ts
+index 59791724..06e41466 100644
+--- a/apps/full-stack-tests/src/hierarchies/Update.test.ts
++++ b/apps/full-stack-tests/src/hierarchies/Update.test.ts
+@@ -18,7 +18,6 @@ import {
+   Subject,
+   SubjectOwnsPartitionElements,
+   SubjectOwnsSubjects,
+-  withEditTxn,
+ } from "@itwin/core-backend";
+ import { BeEvent, Guid, Id64String, OpenMode } from "@itwin/core-bentley";
+ import {
+@@ -118,6 +117,7 @@ describe("Hierarchies", () => {
+           validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
+
+           const subjectId = insertSubject("0x1", "test subject");
++          db.saveChanges();
+
+           validateHierarchyLevel({
+             nodes: await collect(provider.getNodes({ parentNode: undefined })),
+@@ -131,6 +131,7 @@ describe("Hierarchies", () => {
+
+         it("updates hierarchy when an element is updated", async () => {
+           const subjectId = insertSubject("0x1", "test subject");
++          db.saveChanges();
+
+           const provider = createRootSubjectChildrenProvider();
+           validateHierarchyLevel({
+@@ -144,6 +145,7 @@ describe("Hierarchies", () => {
+           });
+
+           updateSubject(subjectId, "modified label");
++          db.saveChanges();
+
+           validateHierarchyLevel({
+             nodes: await collect(provider.getNodes({ parentNode: undefined })),
+@@ -158,6 +160,7 @@ describe("Hierarchies", () => {
+
+         it("updates hierarchy when an element is deleted", async () => {
+           const subjectId = insertSubject("0x1", "test subject");
++          db.saveChanges();
+
+           const provider = createRootSubjectChildrenProvider();
+           validateHierarchyLevel({
+@@ -171,12 +174,14 @@ describe("Hierarchies", () => {
+           });
+
+           deleteElement(subjectId);
++          db.saveChanges();
+
+           validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
+         });
+
+         it("updates hierarchy when an aspect is inserted", async () => {
+           const subjectId = insertSubject("0x1", "test subject");
++          db.saveChanges();
+
+           const provider = createRootSubjectChildrenProvider({ label: "aspectIdentifier" });
+           validateHierarchyLevel({
+@@ -190,6 +195,7 @@ describe("Hierarchies", () => {
+           });
+
+           insertExternalSourceAspect(subjectId, "test aspect");
++          db.saveChanges();
+
+           validateHierarchyLevel({
+             nodes: await collect(provider.getNodes({ parentNode: undefined })),
+@@ -205,6 +211,7 @@ describe("Hierarchies", () => {
+         it("updates hierarchy when an aspect is updated", async () => {
+           const subjectId = insertSubject("0x1", "test subject");
+           const aspectId = insertExternalSourceAspect(subjectId, "test aspect");
++          db.saveChanges();
+
+           const provider = createRootSubjectChildrenProvider({ label: "aspectIdentifier" });
+           validateHierarchyLevel({
+@@ -218,6 +225,7 @@ describe("Hierarchies", () => {
+           });
+
+           updateExternalSourceAspect(aspectId, "modified aspect");
++          db.saveChanges();
+
+           validateHierarchyLevel({
+             nodes: await collect(provider.getNodes({ parentNode: undefined })),
+@@ -233,6 +241,7 @@ describe("Hierarchies", () => {
+         it("updates hierarchy when an aspect is deleted", async () => {
+           const subjectId = insertSubject("0x1", "test subject");
+           const aspectId = insertExternalSourceAspect(subjectId, "test aspect");
++          db.saveChanges();
+
+           const provider = createRootSubjectChildrenProvider({ label: "aspectIdentifier" });
+           validateHierarchyLevel({
+@@ -246,6 +255,7 @@ describe("Hierarchies", () => {
+           });
+
+           deleteAspect(aspectId);
++          db.saveChanges();
+
+           validateHierarchyLevel({
+             nodes: await collect(provider.getNodes({ parentNode: undefined })),
+@@ -260,11 +270,13 @@ describe("Hierarchies", () => {
+
+         it("updates hierarchy when a model is inserted", async () => {
+           const partitionId = insertPhysicalPartition("0x1");
++          db.saveChanges();
+
+           const provider = createPhysicalModelsProvider();
+           validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
+
+           const modelId = insertPhysicalModel(partitionId, false);
++          db.saveChanges();
+
+           validateHierarchyLevel({
+             nodes: await collect(provider.getNodes({ parentNode: undefined })),
+@@ -279,6 +291,7 @@ describe("Hierarchies", () => {
+         it("updates hierarchy when a model is updated", async () => {
+           const partitionId = insertPhysicalPartition("0x1", "test");
+           const modelId = insertPhysicalModel(partitionId, false);
++          db.saveChanges();
+
+           const provider = createPhysicalModelsProvider();
+           validateHierarchyLevel({
+@@ -292,6 +305,7 @@ describe("Hierarchies", () => {
+           });
+
+           updatePhysicalModel(modelId, true);
++          db.saveChanges();
+
+           validateHierarchyLevel({
+             nodes: await collect(provider.getNodes({ parentNode: undefined })),
+@@ -307,6 +321,7 @@ describe("Hierarchies", () => {
+         it("updates hierarchy when a model is deleted", async () => {
+           const partitionId = insertPhysicalPartition("0x1");
+           const modelId = insertPhysicalModel(partitionId, false);
++          db.saveChanges();
+
+           const provider = createPhysicalModelsProvider();
+           validateHierarchyLevel({
+@@ -319,6 +334,7 @@ describe("Hierarchies", () => {
+           });
+
+           deleteModel(modelId);
++          db.saveChanges();
+
+           validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
+         });
+@@ -326,11 +342,13 @@ describe("Hierarchies", () => {
+         /** The test crashes when trying to insert the ElementRefersToElements relationship */
+         it.skip("updates hierarchy when a many-to-many relationship is inserted", async function () {
+           const subjectId = insertSubject("0x1", "test subject");
++          db.saveChanges();
+
+           const provider = createRootSubjectReferredElementsProvider();
+           validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
+
+           insertElementRefersToElementRelationship("0x1", subjectId);
++          db.saveChanges();
+
+           validateHierarchyLevel({
+             nodes: await collect(provider.getNodes({ parentNode: undefined })),
+@@ -347,6 +365,7 @@ describe("Hierarchies", () => {
+           const subject1Id = insertSubject("0x1", "test subject 1");
+           const subject2Id = insertSubject("0x1", "test subject 2");
+           const relationshipProps = insertElementRefersToElementRelationship("0x1", subject1Id);
++          db.saveChanges();
+
+           const provider = createRootSubjectReferredElementsProvider();
+           validateHierarchyLevel({
+@@ -359,6 +378,7 @@ describe("Hierarchies", () => {
+           });
+
+           updateElementRefersToElementRelationship({ ...relationshipProps, targetId: subject2Id });
++          db.saveChanges();
+
+           validateHierarchyLevel({
+             nodes: await collect(provider.getNodes({ parentNode: undefined })),
+@@ -374,6 +394,7 @@ describe("Hierarchies", () => {
+         it.skip("updates hierarchy when a many-to-many relationship is deleted", async function () {
+           const subjectId = insertSubject("0x1", "test subject");
+           const relationshipProps = insertElementRefersToElementRelationship("0x1", subjectId);
++          db.saveChanges();
+
+           const provider = createRootSubjectReferredElementsProvider();
+           validateHierarchyLevel({
+@@ -386,6 +407,7 @@ describe("Hierarchies", () => {
+           });
+
+           deleteRelationship(relationshipProps);
++          db.saveChanges();
+
+           validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
+         });
+@@ -513,115 +535,85 @@ describe("Hierarchies", () => {
+         }
+
+         function insertSubject(parentId: Id64String, codeValue: string) {
+-          return withEditTxn(db, (txn) => {
+-            return txn.insertElement({
+-              classFullName: "BisCore.Subject",
+-              model: IModel.repositoryModelId,
+-              parent: { id: parentId, relClassName: SubjectOwnsSubjects.classFullName },
+-              code: { scope: parentId, spec: db.codeSpecs.getByName(BisCodeSpec.subject).id, value: codeValue },
+-            });
++          return db.elements.insertElement({
++            classFullName: "BisCore.Subject",
++            model: IModel.repositoryModelId,
++            parent: { id: parentId, relClassName: SubjectOwnsSubjects.classFullName },
++            code: { scope: parentId, spec: db.codeSpecs.getByName(BisCodeSpec.subject).id, value: codeValue },
+           });
+         }
+
+         function updateSubject(subjectId: Id64String, newCodeValue: string) {
+           const props = db.elements.getElementProps(subjectId);
+-          withEditTxn(db, (txn) => {
+-            txn.updateElement({ ...props, code: { ...props.code, value: newCodeValue } });
+-          });
++          db.elements.updateElement({ ...props, code: { ...props.code, value: newCodeValue } });
+         }
+
+         function deleteElement(subjectId: Id64String) {
+-          withEditTxn(db, (txn) => {
+-            txn.deleteElement(subjectId);
+-          });
++          db.elements.deleteElement(subjectId);
+         }
+
+         function insertExternalSourceAspect(elementId: Id64String, identifier: string) {
+-          return withEditTxn(db, (txn) => {
+-            return txn.insertAspect({
+-              classFullName: ExternalSourceAspect.classFullName,
+-              element: { relClassName: ElementOwnsExternalSourceAspects.classFullName, id: elementId },
+-              identifier,
+-            } as ExternalSourceAspectProps);
+-          });
++          return db.elements.insertAspect({
++            classFullName: ExternalSourceAspect.classFullName,
++            element: { relClassName: ElementOwnsExternalSourceAspects.classFullName, id: elementId },
++            identifier,
++          } as ExternalSourceAspectProps);
+         }
+
+         function updateExternalSourceAspect(aspectId: Id64String, newIdentifier: string) {
+           const props = db.elements.getAspect(aspectId).toJSON();
+-          withEditTxn(db, (txn) => {
+-            txn.updateAspect({ ...props, identifier: newIdentifier } as ExternalSourceAspectProps);
+-          });
++          db.elements.updateAspect({ ...props, identifier: newIdentifier } as ExternalSourceAspectProps);
+         }
+
+         function deleteAspect(aspectId: Id64String) {
+-          withEditTxn(db, (txn) => {
+-            txn.deleteAspect(aspectId);
+-          });
++          db.elements.deleteAspect(aspectId);
+         }
+
+         function insertPhysicalPartition(parentSubjectId: Id64String, codeValue = "test partition") {
+-          return withEditTxn(db, (txn) => {
+-            return txn.insertElement({
+-              classFullName: PhysicalPartition.classFullName,
+-              model: IModel.repositoryModelId,
+-              parent: { id: parentSubjectId, relClassName: SubjectOwnsPartitionElements.classFullName },
+-              code: {
+-                scope: parentSubjectId,
+-                spec: db.codeSpecs.getByName(BisCodeSpec.informationPartitionElement).id,
+-                value: codeValue,
+-              },
+-            });
++          return db.elements.insertElement({
++            classFullName: PhysicalPartition.classFullName,
++            model: IModel.repositoryModelId,
++            parent: { id: parentSubjectId, relClassName: SubjectOwnsPartitionElements.classFullName },
++            code: {
++              scope: parentSubjectId,
++              spec: db.codeSpecs.getByName(BisCodeSpec.informationPartitionElement).id,
++              value: codeValue,
++            },
+           });
+         }
+
+         function insertPhysicalModel(modeledElementId: Id64String, isPrivate: boolean) {
+-          return withEditTxn(db, (txn) => {
+-            return txn.insertModel({
+-              classFullName: PhysicalModel.classFullName,
+-              modeledElement: { id: modeledElementId },
+-              isPrivate,
+-            });
++          return db.models.insertModel({
++            classFullName: PhysicalModel.classFullName,
++            modeledElement: { id: modeledElementId },
++            isPrivate,
+           });
+         }
+
+         function updatePhysicalModel(modelId: Id64String, newIsPrivate: boolean) {
+           const props = db.models.getModelProps(modelId);
+-          withEditTxn(db, (txn) => {
+-            txn.updateModel({ ...props, isPrivate: newIsPrivate });
+-          });
++          db.models.updateModel({ ...props, isPrivate: newIsPrivate });
+         }
+
+         function deleteModel(modelId: Id64String) {
+-          withEditTxn(db, (txn) => {
+-            txn.deleteModel(modelId);
+-          });
++          db.models.deleteModel(modelId);
+         }
+
+         function insertElementRefersToElementRelationship(
+           sourceId: Id64String,
+           targetId: Id64String,
+         ): RelationshipProps {
+-          return withEditTxn(db, (txn) => {
+-            const props: RelationshipProps = {
+-              classFullName: ElementRefersToElements.classFullName,
+-              sourceId,
+-              targetId,
+-            };
+-            const id = txn.insertRelationship(props);
+-            return { ...props, id };
+-          });
++          const props: RelationshipProps = { classFullName: ElementRefersToElements.classFullName, sourceId, targetId };
++          const id = db.relationships.insertInstance(props);
++          return { ...props, id };
+         }
+
+         function updateElementRefersToElementRelationship(props: RelationshipProps) {
+-          withEditTxn(db, (txn) => {
+-            txn.updateRelationship(props);
+-          });
++          db.relationships.updateInstance(props);
+         }
+
+         function deleteRelationship(props: RelationshipProps) {
+-          withEditTxn(db, (txn) => {
+-            txn.deleteRelationship(props);
+-          });
++          db.relationships.deleteInstance(props);
+         }
+       });
+     });
 diff --git a/apps/full-stack-tests/src/hierarchies/grouping/GroupHiding.test.ts b/apps/full-stack-tests/src/hierarchies/grouping/GroupHiding.test.ts
 index 1cb124db..553999bb 100644
 --- a/apps/full-stack-tests/src/hierarchies/grouping/GroupHiding.test.ts
 +++ b/apps/full-stack-tests/src/hierarchies/grouping/GroupHiding.test.ts
 @@ -36,7 +36,7 @@ describe("Hierarchies", () => {
- 
+
      afterAll(async () => {
        await terminate();
 -    });
 +    }, 30000);
- 
+
      function createHierarchyWithSpecifiedGrouping(
        imodel: IModelConnection,
 diff --git a/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts b/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts
@@ -354,12 +769,12 @@ index fafa6d0a..950510cd 100644
 --- a/apps/full-stack-tests/src/unified-selection/SelectionScope.test.ts
 +++ b/apps/full-stack-tests/src/unified-selection/SelectionScope.test.ts
 @@ -31,7 +31,7 @@ describe("SelectionScope", () => {
- 
+
    afterAll(async () => {
      await terminate();
 -  });
 +  }, 30000);
- 
+
    async function getSelection(
      keys: string[],
 diff --git a/apps/full-stack-tests/src/unified-selection/learning-snippets/HiliteSets.test.ts b/apps/full-stack-tests/src/unified-selection/learning-snippets/HiliteSets.test.ts
@@ -372,13 +787,13 @@ index 7b4f75f9..63b4848f 100644
  import { buildTestIModel } from "../../TestIModelSetup.js";
 +import { SchemaContext } from "@itwin/ecschema-metadata";
 +import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
- 
+
  describe("Unified selection", () => {
    describe("Learning snippets", () => {
 @@ -48,7 +50,16 @@ describe("Unified selection", () => {
            return { modelKey, categoryKey, elementKey };
          });
- 
+
 -        const getIModelConnection = () => imodel;
 +        // The accessor was introduced in iTwin.js Core 5.1.0
 +        Object.defineProperty(imodel, "schemaContext", {
@@ -391,12 +806,12 @@ index 7b4f75f9..63b4848f 100644
 +
 +        const getIModelConnection = (): any => imodel;
          const selectables = Selectables.create([keys.elementKey]);
- 
+
          // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.BasicProvider
 @@ -80,6 +91,9 @@ describe("Unified selection", () => {
            return { modelKey, categoryKey, elementKey };
          });
- 
+
 +        const schemas = new SchemaContext();
 +        schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
 +
@@ -424,7 +839,7 @@ index 87f50924..98c865f9 100644
  import { buildTestIModel } from "../../TestIModelSetup.js";
 +import { SchemaContext } from "@itwin/ecschema-metadata";
 +import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
- 
+
  describe("Unified selection", () => {
    describe("Learning snippets", () => {
 @@ -115,7 +117,15 @@ describe("Unified selection", () => {
@@ -443,27 +858,27 @@ index 87f50924..98c865f9 100644
 +        function useActiveIModelConnection(): any {
            return imodel;
          }
- 
+
 @@ -137,7 +147,7 @@ describe("Unified selection", () => {
          /** An iModel-based component that handles iModel selection directly, through its `SelectionSet` */
          function IModelComponent({ selectionStorage }: { selectionStorage: SelectionStorage }) {
            // get the active iModel connection (implementation is outside the scope of this example)
 -          const iModelConnection: IModelConnection = useActiveIModelConnection();
 +          const iModelConnection = useActiveIModelConnection();
- 
+
            // enable unified selection sync with the iModel
            useEffect(
 @@ -214,11 +224,12 @@ describe("Unified selection", () => {
- 
+
            // Initialize Presentation with our selection storage, to make sure that any components, using `Presentation.selection`,
            // use the same underlying selection store.
 +          // @ts-expect-error SelectionManagerProps does not have `selectionStorage` property
            await Presentation.initialize({ selection: { selectionStorage } });
            // __PUBLISH_EXTRACT_END__
- 
+
            expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key }))).toBe(true);
 -
-+          
++
            // eslint-disable-next-line @typescript-eslint/no-deprecated
            Presentation.selection.addToSelection("test", imodel, new KeySet([keys.elementKey]));
            await waitFor(() => {
@@ -482,7 +897,7 @@ index b3df12aa..f13540c7 100644
 @@ -498,20 +497,6 @@ export function insertGroupInformationElement(
    return { className, id };
  }
- 
+
 -export function insertSheetIndexFolder(
 -  props: BaseInstanceInsertProps & Partial<Omit<SheetIndexFolderProps, "id" | "parent" | "code" | "model">>,
 -) {
