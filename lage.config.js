@@ -52,7 +52,7 @@ module.exports = {
       cache: false,
     },
     "test:components": {
-      dependsOn: ["build", "install-browsers"],
+      dependsOn: ["build"],
       outputs: ["**/test/components/__screenshots__/**"],
       inputs: ["**/test/components/**", "!**/test/components/__screenshots__/**"],
     },

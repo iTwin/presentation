@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Install browsers
+        run: pnpm lage install-browsers
+
       - name: Run oxfmt
         run: pnpm format
 
