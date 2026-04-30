@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, it, vi } from "vitest";
 import { StrataKitRootErrorRenderer } from "../../presentation-hierarchies-react/stratakit/RootErrorRenderer.js";
-import { COLOR_SCHEMES, renderWithTheme } from "./RenderUtils.js";
+import { COLOR_SCHEMES, renderWithTheme, validateSnapshot } from "./RenderUtils.js";
 
 import type { StrataKitRootErrorRendererProps } from "../../presentation-hierarchies-react/stratakit/RootErrorRenderer.js";
 
@@ -19,7 +19,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
 
     it("renders generic error", async () => {
       const { locator } = await renderWithTheme(<StrataKitRootErrorRenderer {...defaultProps} />, { colorScheme });
-      await expect(locator).toMatchScreenshot();
+      await validateSnapshot(locator);
     });
 
     it("renders result set too large error", async () => {
@@ -28,7 +28,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         error: { id: "test-error", type: "ResultSetTooLarge", resultSetSizeLimit: 1000 },
       };
       const { locator } = await renderWithTheme(<StrataKitRootErrorRenderer {...props} />, { colorScheme });
-      await expect(locator).toMatchScreenshot();
+      await validateSnapshot(locator);
     });
   });
 });
