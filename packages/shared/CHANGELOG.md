@@ -1,5 +1,12 @@
 # @itwin/presentation-shared
 
+## 1.2.12
+
+### Patch Changes
+
+- [#1300](https://github.com/iTwin/presentation/pull/1300): Use more distinctive aliases in label select clauses to avoid collisions with aliases in outer FROM clause.
+- [#1313](https://github.com/iTwin/presentation/pull/1313): Bump dependencies.
+
 ## 1.2.11
 
 ### Patch Changes
