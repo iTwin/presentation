@@ -40,14 +40,14 @@ export function getMinMaxFromPropertyConstraints(constraints: PropertyValueConst
 
 /** @internal */
 export function applyNumericConstraints({ value, min, max }: { value: number; min?: number; max?: number }): number {
-  let constrainedValued = value;
+  let constrainedValue = value;
   if (min !== undefined) {
-    constrainedValued = Math.max(constrainedValued, min);
+    constrainedValue = Math.max(constrainedValue, min);
   }
   if (max !== undefined) {
-    constrainedValued = Math.min(constrainedValued, max);
+    constrainedValue = Math.min(constrainedValue, max);
   }
-  return constrainedValued;
+  return constrainedValue;
 }
 
 /** @internal */
