@@ -8,7 +8,7 @@
     "declaration": true,
     "declarationMap": true,
     "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   },
-  "include": ["src", "types.d.ts", "tsdown.config.ts", "vitest.config.ts"],
+  "include": ["src", "types.d.ts", "tsdown.config.ts", "vitest.config.ts"]
 }
