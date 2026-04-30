@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import { TreeModel } from "../../../presentation-hierarchies-react/internal/TreeModel.js";
 import {
   createTestChildrenLoadErrorInfo,
   createTestHierarchyNode,

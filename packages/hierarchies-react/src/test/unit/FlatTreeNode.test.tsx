@@ -5,10 +5,10 @@
 
 import { describe, expect, it } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useErrorNodes, useFlatTreeItems } from "../presentation-hierarchies-react/FlatTreeNode.js";
+import { useErrorNodes, useFlatTreeItems } from "../../presentation-hierarchies-react/FlatTreeNode.js";
 
 import type { HierarchyNode } from "@itwin/presentation-hierarchies";
-import type { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
+import type { TreeNode } from "../../presentation-hierarchies-react/TreeNode.js";
 
 describe("FlatTreeNode", () => {
   function createTreeNode(props: Partial<TreeNode> & { id: string }): TreeNode {

@@ -5,11 +5,11 @@
 
 import { waitFor } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
-import { useSelectionHandler } from "../presentation-hierarchies-react/UseSelectionHandler.js";
+import { useSelectionHandler } from "../../presentation-hierarchies-react/UseSelectionHandler.js";
 import { renderHook } from "./TestUtils.js";
 
-import type { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
-import type { SelectionChangeType } from "../presentation-hierarchies-react/UseSelectionHandler.js";
+import type { TreeNode } from "../../presentation-hierarchies-react/TreeNode.js";
+import type { SelectionChangeType } from "../../presentation-hierarchies-react/UseSelectionHandler.js";
 
 describe("useSelectionHandler", () => {
   const selectNodesStub = vi.fn<(nodeIds: Array<string>, changeType: SelectionChangeType) => void>();

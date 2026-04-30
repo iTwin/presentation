@@ -13,8 +13,8 @@ import {
   RowsLimitExceededError,
 } from "@itwin/presentation-hierarchies";
 import { createStorage, Selectables } from "@itwin/unified-selection";
-import { createNodeId } from "../presentation-hierarchies-react/internal/Utils.js";
-import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree.js";
+import { createNodeId } from "../../presentation-hierarchies-react/internal/Utils.js";
+import { useTree, useUnifiedSelectionTree } from "../../presentation-hierarchies-react/UseTree.js";
 import {
   act,
   cleanup,
@@ -35,7 +35,7 @@ import type {
 } from "@itwin/presentation-hierarchies";
 import type { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import type { Selectable, SelectionStorage, StorageSelectionChangesListener } from "@itwin/unified-selection";
-import type { TreeNode } from "../presentation-hierarchies-react/TreeNode.js";
+import type { TreeNode } from "../../presentation-hierarchies-react/TreeNode.js";
 import type { StubbedHierarchyProvider } from "./TestUtils.js";
 
 describe("useTree", () => {

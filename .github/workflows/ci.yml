@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Install browsers
+        run: pnpm lage install-browsers
+
       - name: Run oxfmt
         run: pnpm format
 
@@ -35,6 +38,9 @@ jobs:
         env:
           NODE_ENV: "development"
         run: pnpm lage build lint cover
+
+      - name: Run component tests
+        run: pnpm lage test:components
 
   docs:
     runs-on: ubuntu-latest

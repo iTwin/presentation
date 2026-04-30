@@ -6,15 +6,15 @@
 import { createAsyncIterator, throwingAsyncIterator } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
 import { HierarchyNode, HierarchyNodeKey, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
-import { TreeLoader } from "../../presentation-hierarchies-react/internal/TreeLoader.js";
-import { createNodeId } from "../../presentation-hierarchies-react/internal/Utils.js";
+import { TreeLoader } from "../../../presentation-hierarchies-react/internal/TreeLoader.js";
+import { createNodeId } from "../../../presentation-hierarchies-react/internal/Utils.js";
 import { createTestHierarchyNode, createTreeModelNode } from "../TestUtils.js";
 
 import type { Observable } from "rxjs";
 import type { GenericInstanceFilter, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import type { LoadedTreePart } from "../../presentation-hierarchies-react/internal/TreeLoader.js";
-import type { TreeModelHierarchyNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
-import type { ErrorInfo } from "../../presentation-hierarchies-react/TreeNode.js";
+import type { LoadedTreePart } from "../../../presentation-hierarchies-react/internal/TreeLoader.js";
+import type { TreeModelHierarchyNode } from "../../../presentation-hierarchies-react/internal/TreeModel.js";
+import type { ErrorInfo } from "../../../presentation-hierarchies-react/TreeNode.js";
 
 describe("TreeLoader", () => {
   const onHierarchyLimitExceededStub = vi.fn();

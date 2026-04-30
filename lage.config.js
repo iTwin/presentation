@@ -48,6 +48,18 @@ module.exports = {
     "validate-markdowns": {
       cache: false,
     },
+    "install-browsers": {
+      cache: false,
+    },
+    "test:components": {
+      dependsOn: ["build"],
+      outputs: ["**/test/components/__screenshots__/**"],
+      inputs: ["**/test/components/**", "!**/test/components/__screenshots__/**"],
+    },
+    "test:components:update": {
+      dependsOn: ["build"],
+      cache: false,
+    },
     clean: {
       cache: false,
     },

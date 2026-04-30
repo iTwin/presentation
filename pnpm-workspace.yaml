@@ -74,14 +74,18 @@ catalogs:
     '@stratakit/icons': ^0.3.1
     '@stratakit/structures': ^0.5.6
   test-tools:
+    axe-core: ^4.10.3
     '@testing-library/dom': ^10.4.1
     '@testing-library/react': ^16.3.2
     '@testing-library/user-event': ^14.6.1
     '@types/deep-equal-in-any-order': ^1.0.4
+    '@vitest/browser-playwright': ^4.1.3
     '@vitest/coverage-v8': ^4.1.3
     deep-equal-in-any-order: ^2.1.0
     happy-dom: ^20.8.9
+    playwright: ^1.52.0
     vitest: ^4.1.3
+    vitest-browser-react: ^2.2.0
 
 hoistPattern:
   - '!*'
@@ -93,6 +97,7 @@ hoistPattern:
 
 onlyBuiltDependencies:
   - '@bentley/imodeljs-native'
+  - "@playwright/browser-chromium"
   - electron
   - esbuild
 
