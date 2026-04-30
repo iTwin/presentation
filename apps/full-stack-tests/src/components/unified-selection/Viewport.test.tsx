@@ -10,6 +10,7 @@ import {
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { withEditTxn } from "@itwin/core-backend";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { IModelApp, SpatialViewState } from "@itwin/core-frontend";
 import { Point3d, Vector3d } from "@itwin/core-geometry";
@@ -50,39 +51,41 @@ describe("Learning snippets", async () => {
       const elementKeys: InstanceKey[] = [];
 
       const { imodelConnection } = await buildTestIModel(async (imodel) => {
-        const categoryKey = insertSpatialCategory({ imodel, fullClassNameSeparator: ":", codeValue: "My Category" });
-        const modelKey = insertPhysicalModelWithPartition({
-          imodel,
-          fullClassNameSeparator: ":",
-          codeValue: "My Model",
-        });
-        (elementKeys.push(
-          insertPhysicalElement({
-            imodel,
+        withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, fullClassNameSeparator: ":", codeValue: "My Category" });
+          const modelKey = insertPhysicalModelWithPartition({
+            txn,
             fullClassNameSeparator: ":",
-            userLabel: "My Assembly Element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          }),
-        ),
-          elementKeys.push(
+            codeValue: "My Model",
+          });
+          (elementKeys.push(
             insertPhysicalElement({
-              imodel,
+              txn,
               fullClassNameSeparator: ":",
-              userLabel: "My Child Element 1",
+              userLabel: "My Assembly Element",
               modelId: modelKey.id,
               categoryId: categoryKey.id,
-              parentId: elementKeys[0].id,
             }),
-            insertPhysicalElement({
-              imodel,
-              fullClassNameSeparator: ":",
-              userLabel: "My Child Element 2",
-              modelId: modelKey.id,
-              categoryId: categoryKey.id,
-              parentId: elementKeys[0].id,
-            }),
-          ));
+          ),
+            elementKeys.push(
+              insertPhysicalElement({
+                txn,
+                fullClassNameSeparator: ":",
+                userLabel: "My Child Element 1",
+                modelId: modelKey.id,
+                categoryId: categoryKey.id,
+                parentId: elementKeys[0].id,
+              }),
+              insertPhysicalElement({
+                txn,
+                fullClassNameSeparator: ":",
+                userLabel: "My Child Element 2",
+                modelId: modelKey.id,
+                categoryId: categoryKey.id,
+                parentId: elementKeys[0].id,
+              }),
+            ));
+        });
       });
 
       // we're not rendering on a screen, so need to stub some stuff

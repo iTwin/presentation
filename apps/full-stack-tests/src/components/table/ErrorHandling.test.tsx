@@ -10,6 +10,7 @@ import {
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it, vi } from "vitest";
 import { PropertyValueRendererManager, UiComponents } from "@itwin/components-react";
+import { withEditTxn } from "@itwin/core-backend";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
@@ -126,10 +127,12 @@ describe("Learning snippets", () => {
       // set up imodel for the test
       let modelKey: InstanceKey | undefined;
       const { imodelConnection } = await buildTestIModel(async (imodel) => {
-        const categoryKey = insertSpatialCategory({ imodel, codeValue: "My Category" });
-        modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "My Model" });
-        insertPhysicalElement({ imodel, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
-        insertPhysicalElement({ imodel, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id });
+        withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+          modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
+          insertPhysicalElement({ txn, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
+          insertPhysicalElement({ txn, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id });
+        });
       });
       assert(modelKey !== undefined);
 

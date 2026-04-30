@@ -21,6 +21,7 @@ import { createIModelHiliteSetProvider } from "@itwin/unified-selection";
 import { createIModelKey } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
 import { createStorage, Selectables } from "@itwin/unified-selection";
+import { withEditTxn } from "@itwin/core-backend";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 
@@ -37,15 +38,17 @@ describe("Unified selection", () => {
 
       it("Basic hilite set provider", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-          const elementKey = insertPhysicalElement({
-            imodel,
-            userLabel: "test element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+          return withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            const elementKey = insertPhysicalElement({
+              txn,
+              userLabel: "test element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            return { modelKey, categoryKey, elementKey };
           });
-          return { modelKey, categoryKey, elementKey };
         });
 
         const getIModelConnection = () => imodelConnection;
@@ -69,15 +72,17 @@ describe("Unified selection", () => {
 
       it("iModel hilite set provider", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-          const elementKey = insertPhysicalElement({
-            imodel,
-            userLabel: "test element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+          return withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            const elementKey = insertPhysicalElement({
+              txn,
+              userLabel: "test element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            return { modelKey, categoryKey, elementKey };
           });
-          return { modelKey, categoryKey, elementKey };
         });
 
         const selectionStorage = createStorage();

@@ -10,6 +10,7 @@ import {
 } from "../../shared/ecsql-snippets/ECSqlValueSelectorSnippets.js";
 import { createBisInstanceLabelSelectClauseFactory } from "../../shared/instance-label-factory-impls/BisInstanceLabelSelectClauseFactory.js";
 import { createDefaultInstanceLabelSelectClauseFactory } from "../../shared/instance-label-factory-impls/DefaultInstanceLabelSelectClauseFactory.js";
+import { ALIAS_PREFIX } from "../../shared/instance-label-factory-impls/Utils.js";
 import { trimWhitespace } from "../../shared/Utils.js";
 
 import type { IInstanceLabelSelectClauseFactory } from "../../shared/InstanceLabelSelectClauseFactory.js";
@@ -114,15 +115,16 @@ describe("createBisInstanceLabelSelectClauseFactory", () => {
 
   it("returns valid clause for any model", async () => {
     const result = await factory.createSelectClause({ classAlias: "test", className: "BisCore.Model" });
+    const expectedAlias = `${ALIAS_PREFIX}e`;
     expect(trimWhitespace(result)).toBe(
       trimWhitespace(`
         COALESCE(
           IIF(
             [test].[ECClassId] IS (BisCore.Model),
             (
-              SELECT ${await factory.createSelectClause({ classAlias: "e", className: "BisCore.Element" })}
-              FROM [bis].[Element] AS [e]
-              WHERE [e].[ECInstanceId] = [test].[ModeledElement].[Id]
+              SELECT ${await factory.createSelectClause({ classAlias: expectedAlias, className: "BisCore.Element" })}
+              FROM [bis].[Element] AS ${expectedAlias}
+              WHERE ${expectedAlias}.[ECInstanceId] = [test].[ModeledElement].[Id]
             ),
             NULL
           ),

@@ -6,8 +6,8 @@
 
 import { Guid, StopWatch } from "@itwin/core-bentley";
 import { PresentationError, PresentationStatus } from "@itwin/presentation-common";
-import RULESET_ModelsTree from "../rulesets/ModelsTree-GroupedByClass.PresentationRuleSet.json";
-import { doRequest, getCurrentIModelName, loadNodes, loadVariables, openIModelConnectionIfNeeded } from "./common";
+import RULESET_ModelsTree from "../rulesets/ModelsTree-GroupedByClass.PresentationRuleSet.json" with { type: "json" };
+import { doRequest, getCurrentIModelName, loadNodes, loadVariables, openIModelConnectionIfNeeded } from "./common.js";
 
 import type { VUContext, VUEvents } from "artillery";
 import type {

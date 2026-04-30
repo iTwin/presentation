@@ -5,7 +5,7 @@
 
 import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it } from "vitest";
-import { PhysicalPartition, Subject } from "@itwin/core-backend";
+import { PhysicalPartition, Subject, withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -34,39 +34,41 @@ describe("Hierarchies", () => {
       const labelGroupName2 = "test2";
       const description1 = "test description1";
       const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        const childSubject1 = insertSubject({
-          imodel,
-          codeValue: "A1",
-          parentId: IModel.rootSubjectId,
-          userLabel: labelGroupName1,
-          description: description1,
+        return withEditTxn(imodel, (txn) => {
+          const childSubject1 = insertSubject({
+            txn,
+            codeValue: "A1",
+            parentId: IModel.rootSubjectId,
+            userLabel: labelGroupName1,
+            description: description1,
+          });
+          const childSubject2 = insertSubject({
+            txn,
+            codeValue: "A2",
+            parentId: IModel.rootSubjectId,
+            userLabel: labelGroupName1,
+            description: description1,
+          });
+          const childPartition3 = insertPhysicalPartition({
+            txn,
+            codeValue: "B3",
+            parentId: IModel.rootSubjectId,
+            userLabel: labelGroupName1,
+          });
+          const childPartition4 = insertPhysicalPartition({
+            txn,
+            codeValue: "B4",
+            parentId: IModel.rootSubjectId,
+            userLabel: labelGroupName2,
+          });
+          const childPartition5 = insertPhysicalPartition({
+            txn,
+            codeValue: "B5",
+            parentId: IModel.rootSubjectId,
+            userLabel: labelGroupName2,
+          });
+          return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
         });
-        const childSubject2 = insertSubject({
-          imodel,
-          codeValue: "A2",
-          parentId: IModel.rootSubjectId,
-          userLabel: labelGroupName1,
-          description: description1,
-        });
-        const childPartition3 = insertPhysicalPartition({
-          imodel,
-          codeValue: "B3",
-          parentId: IModel.rootSubjectId,
-          userLabel: labelGroupName1,
-        });
-        const childPartition4 = insertPhysicalPartition({
-          imodel,
-          codeValue: "B4",
-          parentId: IModel.rootSubjectId,
-          userLabel: labelGroupName2,
-        });
-        const childPartition5 = insertPhysicalPartition({
-          imodel,
-          codeValue: "B5",
-          parentId: IModel.rootSubjectId,
-          userLabel: labelGroupName2,
-        });
-        return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
       });
 
       const customHierarchy: HierarchyDefinition = {

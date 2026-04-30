@@ -12,6 +12,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Localization.Imports
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
+import { withEditTxn } from "@itwin/core-backend";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { importSchema } from "../../SchemaUtils.js";
@@ -31,51 +32,53 @@ describe("Hierarchies", () => {
 
       it("localizes property grouping node labels", async () => {
         const { imodelConnection, myPhysicalObjectClassName } = await buildTestIModel(async (imodel, testName) => {
-          const schema = await importSchema(
-            testName,
-            imodel,
-            `
-              <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-              <ECEntityClass typeName="MyPhysicalObject">
-                <BaseClass>bis:PhysicalElement</BaseClass>
-                <ECProperty propertyName="IntProperty" typeName="int" />
-              </ECEntityClass>
-            `,
-          );
-          const category = insertSpatialCategory({ imodel, codeValue: "Category" });
-          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Model" });
-          insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            classFullName: schema.items.MyPhysicalObject.fullName,
-            userLabel: "Element 1",
-            intProperty: 2,
+          return withEditTxn(imodel, async (txn) => {
+            const schema = await importSchema(
+              testName,
+              imodel,
+              `
+                <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+                <ECEntityClass typeName="MyPhysicalObject">
+                  <BaseClass>bis:PhysicalElement</BaseClass>
+                  <ECProperty propertyName="IntProperty" typeName="int" />
+                </ECEntityClass>
+              `,
+            );
+            const category = insertSpatialCategory({ txn, codeValue: "Category" });
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "Model" });
+            insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              classFullName: schema.items.MyPhysicalObject.fullName,
+              userLabel: "Element 1",
+              intProperty: 2,
+            });
+            insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              classFullName: schema.items.MyPhysicalObject.fullName,
+              userLabel: "Element 2",
+              intProperty: 4,
+            });
+            insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              classFullName: schema.items.MyPhysicalObject.fullName,
+              userLabel: "Element 3",
+              intProperty: 6,
+            });
+            insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              classFullName: schema.items.MyPhysicalObject.fullName,
+              userLabel: "Element 4",
+            });
+            return { myPhysicalObjectClassName: schema.items.MyPhysicalObject.fullName };
           });
-          insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            classFullName: schema.items.MyPhysicalObject.fullName,
-            userLabel: "Element 2",
-            intProperty: 4,
-          });
-          insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            classFullName: schema.items.MyPhysicalObject.fullName,
-            userLabel: "Element 3",
-            intProperty: 6,
-          });
-          insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            classFullName: schema.items.MyPhysicalObject.fullName,
-            userLabel: "Element 4",
-          });
-          return { myPhysicalObjectClassName: schema.items.MyPhysicalObject.fullName };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
 

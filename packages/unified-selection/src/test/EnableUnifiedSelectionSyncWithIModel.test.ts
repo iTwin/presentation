@@ -192,7 +192,7 @@ describe("IModelSelectionHandler", () => {
     hiliteSetProvider.getHiliteSet.mockImplementation(async function* () {});
 
     imodelHiliteSetProvider.getHiliteSetProvider.mockReset();
-    imodelHiliteSetProvider.getHiliteSetProvider.mockReturnValue(hiliteSetProvider as unknown as HiliteSetProvider);
+    imodelHiliteSetProvider.getHiliteSetProvider.mockReturnValue(hiliteSetProvider);
     imodelHiliteSetProvider.getCurrentHiliteSet.mockReset();
     imodelHiliteSetProvider.getCurrentHiliteSet.mockImplementation(async function* () {});
 
@@ -207,9 +207,9 @@ describe("IModelSelectionHandler", () => {
   ) {
     const selectionHandler = new IModelSelectionHandler({
       activeScopeProvider: () => "element",
-      selectionStorage: props.selectionStorage ?? (createSelectionStorage() as SelectionStorage),
+      selectionStorage: props.selectionStorage ?? createSelectionStorage(),
       imodelAccess: (props.imodelAccess ??
-        createIModelAccess()) as unknown as EnableUnifiedSelectionSyncWithIModelProps["imodelAccess"],
+        createIModelAccess()) as EnableUnifiedSelectionSyncWithIModelProps["imodelAccess"],
       imodelHiliteSetProvider,
       hiliteSetProvider,
     });
@@ -243,7 +243,7 @@ describe("IModelSelectionHandler", () => {
 
     it("uses custom `CachingHiliteSetProvider` and its underlying `HiliteSetProvider`", async () => {
       // ensure the providers are used on create
-      using _handler = await createHandler({ selectionStorage: selectionStorageStub as unknown as SelectionStorage });
+      using _handler = await createHandler({ selectionStorage: selectionStorageStub });
       expect(imodelHiliteSetProvider.getCurrentHiliteSet).toHaveBeenCalledOnce();
       imodelHiliteSetProvider.getHiliteSetProvider.mockClear();
       imodelHiliteSetProvider.getCurrentHiliteSet.mockClear();
@@ -277,10 +277,7 @@ describe("IModelSelectionHandler", () => {
     it("clears selection", async () => {
       const selectionSet = createSelectionSetV4();
       const imodelAccess = createIModelAccess({ selectionSet });
-      using _handler = await createHandler({
-        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-        imodelAccess,
-      });
+      using _handler = await createHandler({ selectionStorage: selectionStorageStub, imodelAccess });
 
       selectionSet.onChanged.raiseEvent({ type: CoreSelectionSetEventType.Clear, removed: [], set: selectionSet });
       await waitFor(() => {
@@ -294,10 +291,7 @@ describe("IModelSelectionHandler", () => {
     it("adds elements to selection", async () => {
       const selectionSet = createSelectionSetV4();
       const imodelAccess = createIModelAccess({ selectionSet });
-      using _handler = await createHandler({
-        selectionStorage: selectionStorageStub as SelectionStorage,
-        imodelAccess,
-      });
+      using _handler = await createHandler({ selectionStorage: selectionStorageStub, imodelAccess });
 
       const addedKeys = [createSelectableInstanceKey(1)];
       imodelAccess.createQueryReader.mockReturnValue(createFakeQueryReader(toQueryResponse(addedKeys)));
@@ -320,10 +314,7 @@ describe("IModelSelectionHandler", () => {
     it("adds models/subcategories/elements collection to selection", async () => {
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ selectionSet });
-      using _handler = await createHandler({
-        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-        imodelAccess,
-      });
+      using _handler = await createHandler({ selectionStorage: selectionStorageStub, imodelAccess });
 
       const modelKeys = [createSelectableInstanceKey(1, "BisCore.Model")];
       const subcategoryKeys = [createSelectableInstanceKey(2, "BisCore.SubCategory")];
@@ -353,10 +344,7 @@ describe("IModelSelectionHandler", () => {
     it("removes elements from selection", async () => {
       const selectionSet = createSelectionSetV4();
       const imodelAccess = createIModelAccess({ selectionSet });
-      using _handler = await createHandler({
-        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-        imodelAccess,
-      });
+      using _handler = await createHandler({ selectionStorage: selectionStorageStub, imodelAccess });
 
       const removedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
       imodelAccess.createQueryReader.mockReturnValue(createFakeQueryReader(toQueryResponse(removedKeys)));
@@ -379,10 +367,7 @@ describe("IModelSelectionHandler", () => {
     it("removes models/subcategories/elements collection from selection", async () => {
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ selectionSet });
-      using _handler = await createHandler({
-        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-        imodelAccess,
-      });
+      using _handler = await createHandler({ selectionStorage: selectionStorageStub, imodelAccess });
 
       const modelKeys = [createSelectableInstanceKey(1, "BisCore.Model")];
       const subcategoryKeys = [createSelectableInstanceKey(2, "BisCore.SubCategory")];
@@ -412,10 +397,7 @@ describe("IModelSelectionHandler", () => {
     it("replaces elements selection", async () => {
       const selectionSet = createSelectionSetV4();
       const imodelAccess = createIModelAccess({ selectionSet });
-      using _handler = await createHandler({
-        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-        imodelAccess,
-      });
+      using _handler = await createHandler({ selectionStorage: selectionStorageStub, imodelAccess });
 
       const addedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
       imodelAccess.createQueryReader.mockReturnValue(createFakeQueryReader(toQueryResponse(addedKeys)));
@@ -439,10 +421,7 @@ describe("IModelSelectionHandler", () => {
     it("replaces models/subcategories/elements collection selection", async () => {
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ selectionSet });
-      using _handler = await createHandler({
-        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-        imodelAccess,
-      });
+      using _handler = await createHandler({ selectionStorage: selectionStorageStub, imodelAccess });
 
       const modelKeys = [
         createSelectableInstanceKey(1, "BisCore.Model"),
@@ -481,10 +460,7 @@ describe("IModelSelectionHandler", () => {
     it("ignores changes when suspended", async () => {
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ selectionSet });
-      using handler = await createHandler({
-        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-        imodelAccess,
-      });
+      using handler = await createHandler({ selectionStorage: selectionStorageStub, imodelAccess });
 
       const addedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
       imodelAccess.createQueryReader.mockReturnValue(createFakeQueryReader(toQueryResponse(addedKeys)));
@@ -500,10 +476,7 @@ describe("IModelSelectionHandler", () => {
     it("syncs hilite set if selection storage doesn't change on tool selection change", async () => {
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ selectionSet });
-      using _handler = await createHandler({
-        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-        imodelAccess,
-      });
+      using _handler = await createHandler({ selectionStorage: selectionStorageStub, imodelAccess });
 
       const selectionStorageChangeSpy = vi.fn();
       selectionStorageStub.selectionChangeEvent.addListener(selectionStorageChangeSpy);
@@ -543,10 +516,7 @@ describe("IModelSelectionHandler", () => {
     it("doesn't sync hilite set more than once when tool selection change triggers selection storage change", async () => {
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ selectionSet });
-      using _handler = await createHandler({
-        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-        imodelAccess,
-      });
+      using _handler = await createHandler({ selectionStorage: selectionStorageStub, imodelAccess });
 
       // set up `SelectionStorage.replaceSelection` to trigger a selection change event
       selectionStorageStub.replaceSelection.mockImplementation((args) => {
@@ -558,7 +528,7 @@ describe("IModelSelectionHandler", () => {
           level: 0,
           selectables: Selectables.create(args.selectables),
           timestamp: new Date(),
-          storage: selectionStorageStub as unknown as SelectionStorage,
+          storage: selectionStorageStub,
         });
       });
 

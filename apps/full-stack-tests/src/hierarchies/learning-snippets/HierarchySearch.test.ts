@@ -33,6 +33,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport
 import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
+import { withEditTxn } from "@itwin/core-backend";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Utils.js";
@@ -49,52 +50,54 @@ describe("Hierarchies", () => {
         await initialize();
 
         const res = await buildTestIModel(suite.fullTestName!, async (imodel) => {
-          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-          const category = insertSpatialCategory({ imodel, codeValue: "category" });
-          const a = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, userLabel: "A" });
-          const b = insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            userLabel: "B",
-            parentId: a.id,
+          return withEditTxn(imodel, (txn) => {
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            const a = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, userLabel: "A" });
+            const b = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              userLabel: "B",
+              parentId: a.id,
+            });
+            const c = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              userLabel: "C",
+              parentId: b.id,
+            });
+            const d = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              userLabel: "D",
+              parentId: b.id,
+            });
+            const e = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              userLabel: "E",
+              parentId: a.id,
+            });
+            const f = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              userLabel: "F",
+              parentId: e.id,
+            });
+            const g = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              userLabel: "G",
+              parentId: a.id,
+            });
+            return { a, b, c, d, e, f, g };
           });
-          const c = insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            userLabel: "C",
-            parentId: b.id,
-          });
-          const d = insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            userLabel: "D",
-            parentId: b.id,
-          });
-          const e = insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            userLabel: "E",
-            parentId: a.id,
-          });
-          const f = insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            userLabel: "F",
-            parentId: e.id,
-          });
-          const g = insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            userLabel: "G",
-            parentId: a.id,
-          });
-          return { a, b, c, d, e, f, g };
         });
         const { imodelConnection: _, ...elements } = res;
         imodelConnection = res.imodelConnection;

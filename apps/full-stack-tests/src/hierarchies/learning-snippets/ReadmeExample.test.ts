@@ -28,6 +28,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
+import { withEditTxn } from "@itwin/core-backend";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 
@@ -120,10 +121,12 @@ async function main() {
 
 async function getIModelConnection(): Promise<IModelConnection> {
   const { imodelConnection } = await buildTestIModel(async (imodel) => {
-    const category = insertSpatialCategory({ imodel, codeValue: "Test category" });
-    const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Test model" });
-    insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, userLabel: "Test element 1" });
-    insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, userLabel: "Test element 2" });
+    withEditTxn(imodel, (txn) => {
+      const category = insertSpatialCategory({ txn, codeValue: "Test category" });
+      const model = insertPhysicalModelWithPartition({ txn, codeValue: "Test model" });
+      insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, userLabel: "Test element 1" });
+      insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, userLabel: "Test element 2" });
+    });
   });
   return imodelConnection;
 }

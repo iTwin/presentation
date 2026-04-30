@@ -40,7 +40,6 @@ import {
   within,
 } from "../TestUtils.js";
 
-import type { PrimitiveValue } from "@itwin/appui-abstract";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import type { PresentationInstanceFilterPropertiesSource } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
@@ -247,7 +246,7 @@ describe("PresentationInstanceFilterDialog", () => {
             valueFormat: AbstractPropertyValueFormat.Primitive,
             value: "test value",
             displayValue: "test value",
-          } as PrimitiveValue,
+          },
         },
         usedClasses: [classInfo],
       });

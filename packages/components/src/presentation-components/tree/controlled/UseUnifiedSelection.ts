@@ -195,7 +195,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
   protected getKeys(nodes: TreeNodeItem[]): Keys {
     const nodeKeys: NodeKey[] = nodes
       .map((node) => (isPresentationTreeNodeItem(node) ? node.key : /* v8 ignore next -- @preserve */ undefined))
-      .filter((key) => key !== undefined) as NodeKey[];
+      .filter((key) => key !== undefined);
     return SelectionHelper.getKeysForSelection(nodeKeys);
   }
 
@@ -286,7 +286,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
 /**
  * A custom hook which creates and disposes [[UnifiedSelectionTreeEventHandler]]
  * @public
- * @deprecated in 4.x. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTreeState]] and
+ * @deprecated in 4.4. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTreeState]] and
  * [[UsePresentationTreeProps.eventHandlerFactory]] instead or manually create and dispose [[UnifiedSelectionTreeEventHandler]].
  */
 export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams) {

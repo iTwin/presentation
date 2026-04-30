@@ -30,7 +30,7 @@ describe("useIModelTree hooks", () => {
     it("creates imodel hierarchy provider using given imodel and hierarchy definition", async () => {
       const hierarchyProvider = createHierarchyProviderStub();
       hierarchyProvider.getNodes.mockImplementation(() => createAsyncIterator([]));
-      vi.mocked(createIModelHierarchyProvider).mockImplementation(() => hierarchyProvider as any);
+      vi.mocked(createIModelHierarchyProvider).mockImplementation(() => hierarchyProvider);
 
       const { result } = renderHook(useIModelTree, { initialProps });
       await waitFor(() => {
@@ -44,7 +44,7 @@ describe("useIModelTree hooks", () => {
     it("forwards `getSearchPaths` call", async () => {
       const hierarchyProvider = createHierarchyProviderStub();
       hierarchyProvider.getNodes.mockImplementation(() => createAsyncIterator([]));
-      vi.mocked(createIModelHierarchyProvider).mockImplementation(() => hierarchyProvider as any);
+      vi.mocked(createIModelHierarchyProvider).mockImplementation(() => hierarchyProvider);
 
       let signal;
       const getSearchPaths = vi
@@ -77,7 +77,7 @@ describe("useIModelTree hooks", () => {
     it("creates imodel hierarchy provider using given imodel and hierarchy definition", async () => {
       const hierarchyProvider = createHierarchyProviderStub();
       hierarchyProvider.getNodes.mockImplementation(() => createAsyncIterator([]));
-      vi.mocked(createIModelHierarchyProvider).mockImplementation(() => hierarchyProvider as any);
+      vi.mocked(createIModelHierarchyProvider).mockImplementation(() => hierarchyProvider);
 
       const { result } = renderHook(useIModelUnifiedSelectionTree, { initialProps });
       await waitFor(() => {
@@ -91,7 +91,7 @@ describe("useIModelTree hooks", () => {
     it("forwards `getSearchPaths` call", async () => {
       const hierarchyProvider = createHierarchyProviderStub();
       hierarchyProvider.getNodes.mockImplementation(() => createAsyncIterator([]));
-      vi.mocked(createIModelHierarchyProvider).mockImplementation(() => hierarchyProvider as any);
+      vi.mocked(createIModelHierarchyProvider).mockImplementation(() => hierarchyProvider);
       let signal;
       const getSearchPaths = vi
         .fn<Required<Props<typeof useIModelTree>>["getSearchPaths"]>()

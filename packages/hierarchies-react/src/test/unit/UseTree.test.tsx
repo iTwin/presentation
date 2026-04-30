@@ -924,7 +924,7 @@ describe("useTree", () => {
         return createAsyncIterator(childNodes.slice(0, 1));
       }),
     });
-    rerender({ ...initialProps, getHierarchyProvider: () => newProvider as unknown as HierarchyProvider });
+    rerender({ ...initialProps, getHierarchyProvider: () => newProvider });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
@@ -1069,11 +1069,7 @@ describe("useUnifiedSelectionTree", () => {
     changeListener.mockReset();
     storage = createStorage();
     storage.selectionChangeEvent.addListener(changeListener);
-    initialProps = {
-      getHierarchyProvider: () => hierarchyProvider as unknown as HierarchyProvider,
-      sourceName,
-      selectionStorage: storage,
-    };
+    initialProps = { getHierarchyProvider: () => hierarchyProvider, sourceName, selectionStorage: storage };
   });
 
   afterEach(() => {

@@ -57,9 +57,7 @@ describe("useRows", () => {
     const getContentAndSizeStub = vi.fn<PresentationManager["getContentAndSize"]>();
 
     beforeEach(() => {
-      presentationManagerSpy.mockReturnValue({
-        getContentAndSize: getContentAndSizeStub,
-      } as unknown as PresentationManager);
+      presentationManagerSpy.mockReturnValue({ getContentAndSize: getContentAndSizeStub });
     });
 
     it("loads rows", async () => {

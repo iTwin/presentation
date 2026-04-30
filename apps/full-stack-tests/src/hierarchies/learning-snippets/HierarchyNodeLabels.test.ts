@@ -13,6 +13,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createIModelHierarchyProvider, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { ECSql } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
+import { withEditTxn } from "@itwin/core-backend";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { importSchema } from "../../SchemaUtils.js";
@@ -67,12 +68,14 @@ describe("Hierarchies", () => {
 
       it("creates a hierarchy using labels from `createIModelInstanceLabelSelectClauseFactory`", async () => {
         const { imodelConnection } = await buildTestIModel(async (imodel) => {
-          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-          const category = insertSpatialCategory({ imodel, codeValue: "category" });
-          const a = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, codeValue: "A" });
-          const b = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, userLabel: "B" });
-          const c = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id });
-          return { a, b, c };
+          return withEditTxn(imodel, (txn) => {
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            const a = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, codeValue: "A" });
+            const b = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, userLabel: "B" });
+            const c = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id });
+            return { a, b, c };
+          });
         });
         const imodelAccess = createIModelAccess(imodelConnection);
 
@@ -124,12 +127,15 @@ describe("Hierarchies", () => {
 
       it("creates a hierarchy using labels from custom selector", async () => {
         const { imodelConnection } = await buildTestIModel(async (imodel) => {
-          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-          const category = insertSpatialCategory({ imodel, codeValue: "category" });
-          const a = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, codeValue: "A" });
-          const b = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, codeValue: "B" });
-          const c = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, codeValue: "C" });
-          return { a, b, c };
+          return withEditTxn(imodel, (txn) => {
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            const a = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, codeValue: "A" });
+            const b = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, codeValue: "B" });
+            const c = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, codeValue: "C" });
+            return { a, b, c };
+          });
         });
         const imodelAccess = createIModelAccess(imodelConnection);
         const hierarchyProvider = createIModelHierarchyProvider({
@@ -186,36 +192,38 @@ describe("Hierarchies", () => {
 
       it("formats property grouping node's label", async () => {
         const { imodelConnection, myPhysicalObjectClassName } = await buildTestIModel(async (imodel, testName) => {
-          const schema = await importSchema(
-            testName,
-            imodel,
-            `
-              <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-              <ECEntityClass typeName="MyPhysicalObject">
-                <BaseClass>bis:PhysicalElement</BaseClass>
-                <ECProperty propertyName="DoubleProperty" typeName="double" />
-              </ECEntityClass>
-            `,
-          );
-          const category = insertSpatialCategory({ imodel, codeValue: "Category" });
-          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Model" });
-          insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            classFullName: schema.items.MyPhysicalObject.fullName,
-            userLabel: "Example element 1",
-            doubleProperty: 123.45,
+          return withEditTxn(imodel, async (txn) => {
+            const schema = await importSchema(
+              testName,
+              imodel,
+              `
+              <ECSchemaReference name="BisCore" version="01.00.16" alias="bis"/>
+                <ECEntityClass typeName="MyPhysicalObject">
+                  <BaseClass>bis:PhysicalElement</BaseClass>
+                  <ECProperty propertyName="DoubleProperty" typeName="double" />
+                </ECEntityClass>
+              `,
+            );
+            const category = insertSpatialCategory({ txn, codeValue: "Category" });
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "Model" });
+            insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              classFullName: schema.items.MyPhysicalObject.fullName,
+              userLabel: "Example element 1",
+              doubleProperty: 123.45,
+            });
+            insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              classFullName: schema.items.MyPhysicalObject.fullName,
+              userLabel: "Example element 2",
+              doubleProperty: 123.454,
+            });
+            return { myPhysicalObjectClassName: schema.items.MyPhysicalObject.fullName };
           });
-          insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            classFullName: schema.items.MyPhysicalObject.fullName,
-            userLabel: "Example element 2",
-            doubleProperty: 123.454,
-          });
-          return { myPhysicalObjectClassName: schema.items.MyPhysicalObject.fullName };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
 

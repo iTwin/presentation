@@ -10,6 +10,8 @@ import {
 
 import type { TypedValueSelectClauseProps } from "../ecsql-snippets/ECSqlValueSelectorSnippets.js";
 
+export const ALIAS_PREFIX = "pres_";
+
 export function createECInstanceIdSuffixSelectors(classAlias: string): TypedValueSelectClauseProps[] {
   return [
     { value: ` [`, type: "String" },

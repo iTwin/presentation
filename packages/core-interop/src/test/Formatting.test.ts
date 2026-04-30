@@ -372,5 +372,5 @@ function createUnit(fullName: string, unitSystem: UnitSystemKey) {
 
 function createLazyLoaded<T extends SchemaItem>(item: T): LazyLoadedSchemaItem<T> {
   // eslint-disable-next-line @itwin/no-internal
-  return new DelayedPromiseWithProps(item.key, async () => Promise.resolve(item)) as LazyLoadedSchemaItem<T>;
+  return new DelayedPromiseWithProps(item.key, async () => Promise.resolve(item));
 }

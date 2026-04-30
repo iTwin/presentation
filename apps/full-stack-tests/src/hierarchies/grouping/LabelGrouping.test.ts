@@ -5,7 +5,7 @@
 
 import { insertSubject } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it } from "vitest";
-import { Subject } from "@itwin/core-backend";
+import { Subject, withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
@@ -34,31 +34,33 @@ describe("Hierarchies", () => {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
       const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        const childSubject1 = insertSubject({
-          imodel,
-          codeValue: "1",
-          parentId: IModel.rootSubjectId,
-          userLabel: labelGroupName1,
+        return withEditTxn(imodel, (txn) => {
+          const childSubject1 = insertSubject({
+            txn,
+            codeValue: "1",
+            parentId: IModel.rootSubjectId,
+            userLabel: labelGroupName1,
+          });
+          const childSubject2 = insertSubject({
+            txn,
+            codeValue: "2",
+            parentId: IModel.rootSubjectId,
+            userLabel: labelGroupName2,
+          });
+          const childSubject3 = insertSubject({
+            txn,
+            codeValue: "3",
+            parentId: IModel.rootSubjectId,
+            userLabel: labelGroupName1,
+          });
+          const childSubject4 = insertSubject({
+            txn,
+            codeValue: "4",
+            parentId: IModel.rootSubjectId,
+            userLabel: labelGroupName2,
+          });
+          return { childSubject1, childSubject2, childSubject3, childSubject4 };
         });
-        const childSubject2 = insertSubject({
-          imodel,
-          codeValue: "2",
-          parentId: IModel.rootSubjectId,
-          userLabel: labelGroupName2,
-        });
-        const childSubject3 = insertSubject({
-          imodel,
-          codeValue: "3",
-          parentId: IModel.rootSubjectId,
-          userLabel: labelGroupName1,
-        });
-        const childSubject4 = insertSubject({
-          imodel,
-          codeValue: "4",
-          parentId: IModel.rootSubjectId,
-          userLabel: labelGroupName2,
-        });
-        return { childSubject1, childSubject2, childSubject3, childSubject4 };
       });
 
       const hierarchy: HierarchyDefinition = {
@@ -111,35 +113,37 @@ describe("Hierarchies", () => {
       const descriptionGroupName1 = "test1";
       const descriptionGroupName2 = "test2";
       const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        const childSubject1 = insertSubject({
-          imodel,
-          codeValue: "1",
-          parentId: IModel.rootSubjectId,
-          userLabel: "test",
-          description: descriptionGroupName1,
+        return withEditTxn(imodel, (txn) => {
+          const childSubject1 = insertSubject({
+            txn,
+            codeValue: "1",
+            parentId: IModel.rootSubjectId,
+            userLabel: "test",
+            description: descriptionGroupName1,
+          });
+          const childSubject2 = insertSubject({
+            txn,
+            codeValue: "2",
+            parentId: IModel.rootSubjectId,
+            userLabel: "test",
+            description: descriptionGroupName2,
+          });
+          const childSubject3 = insertSubject({
+            txn,
+            codeValue: "3",
+            parentId: IModel.rootSubjectId,
+            userLabel: "test",
+            description: descriptionGroupName1,
+          });
+          const childSubject4 = insertSubject({
+            txn,
+            codeValue: "4",
+            parentId: IModel.rootSubjectId,
+            userLabel: "test",
+            description: descriptionGroupName2,
+          });
+          return { childSubject1, childSubject2, childSubject3, childSubject4 };
         });
-        const childSubject2 = insertSubject({
-          imodel,
-          codeValue: "2",
-          parentId: IModel.rootSubjectId,
-          userLabel: "test",
-          description: descriptionGroupName2,
-        });
-        const childSubject3 = insertSubject({
-          imodel,
-          codeValue: "3",
-          parentId: IModel.rootSubjectId,
-          userLabel: "test",
-          description: descriptionGroupName1,
-        });
-        const childSubject4 = insertSubject({
-          imodel,
-          codeValue: "4",
-          parentId: IModel.rootSubjectId,
-          userLabel: "test",
-          description: descriptionGroupName2,
-        });
-        return { childSubject1, childSubject2, childSubject3, childSubject4 };
       });
 
       const hierarchy: HierarchyDefinition = {
@@ -194,29 +198,31 @@ describe("Hierarchies", () => {
   describe("Label merging", () => {
     it("doesn't merge when different groupIds or labels are provided", async () => {
       const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({
-          imodel,
-          codeValue: "1",
-          parentId: rootSubject.id,
-          userLabel: "label1",
-          description: "description1",
+        return withEditTxn(imodel, (txn) => {
+          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+          const childSubject1 = insertSubject({
+            txn,
+            codeValue: "1",
+            parentId: rootSubject.id,
+            userLabel: "label1",
+            description: "description1",
+          });
+          const childSubject2 = insertSubject({
+            txn,
+            codeValue: "2",
+            parentId: rootSubject.id,
+            userLabel: "label1",
+            description: "description2",
+          });
+          const childSubject3 = insertSubject({
+            txn,
+            codeValue: "3",
+            parentId: rootSubject.id,
+            userLabel: "label2",
+            description: "description1",
+          });
+          return { rootSubject, childSubject1, childSubject2, childSubject3 };
         });
-        const childSubject2 = insertSubject({
-          imodel,
-          codeValue: "2",
-          parentId: rootSubject.id,
-          userLabel: "label1",
-          description: "description2",
-        });
-        const childSubject3 = insertSubject({
-          imodel,
-          codeValue: "3",
-          parentId: rootSubject.id,
-          userLabel: "label2",
-          description: "description1",
-        });
-        return { rootSubject, childSubject1, childSubject2, childSubject3 };
       });
 
       const hierarchy: HierarchyDefinition = {
@@ -256,10 +262,12 @@ describe("Hierarchies", () => {
 
     it("merges instance nodes with same merge id", async () => {
       const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({ imodel, codeValue: "1", parentId: rootSubject.id });
-        const childSubject2 = insertSubject({ imodel, codeValue: "2", parentId: rootSubject.id });
-        return { rootSubject, childSubject1, childSubject2 };
+        return withEditTxn(imodel, (txn) => {
+          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+          const childSubject1 = insertSubject({ txn, codeValue: "1", parentId: rootSubject.id });
+          const childSubject2 = insertSubject({ txn, codeValue: "2", parentId: rootSubject.id });
+          return { rootSubject, childSubject1, childSubject2 };
+        });
       });
 
       const hierarchy: HierarchyDefinition = {
@@ -301,11 +309,13 @@ describe("Hierarchies", () => {
 
     it("merges instance nodes from different hidden parent hierarchy levels ", async () => {
       const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const visibleSubject1 = insertSubject({ imodel, codeValue: "merged", parentId: rootSubject.id });
-        const hiddenSubject = insertSubject({ imodel, codeValue: "hide", parentId: rootSubject.id });
-        const visibleSubject2 = insertSubject({ imodel, codeValue: "merged", parentId: hiddenSubject.id });
-        return { rootSubject, visibleSubject1, visibleSubject2 };
+        return withEditTxn(imodel, (txn) => {
+          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+          const visibleSubject1 = insertSubject({ txn, codeValue: "merged", parentId: rootSubject.id });
+          const hiddenSubject = insertSubject({ txn, codeValue: "hide", parentId: rootSubject.id });
+          const visibleSubject2 = insertSubject({ txn, codeValue: "merged", parentId: hiddenSubject.id });
+          return { rootSubject, visibleSubject1, visibleSubject2 };
+        });
       });
 
       const hierarchy: HierarchyDefinition = {

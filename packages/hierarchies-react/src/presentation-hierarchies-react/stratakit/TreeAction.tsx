@@ -6,7 +6,7 @@
 import { memo } from "react";
 import { DropdownMenu, Tree } from "@stratakit/structures";
 
-import type { ComponentProps, NamedExoticComponent } from "react";
+import type { ComponentPropsWithoutRef, NamedExoticComponent } from "react";
 
 /**
  * Attributes used to decide how to render tree actions. They allow to differentiate action style based on the context
@@ -30,7 +30,7 @@ export interface TreeActionBaseAttributes {
 }
 
 /** @alpha */
-export type TreeActionBaseProps = ComponentProps<typeof Tree.ItemAction> & TreeActionBaseAttributes;
+export type TreeActionBaseProps = ComponentPropsWithoutRef<typeof Tree.ItemAction> & TreeActionBaseAttributes;
 
 /**
  * Base component used to render tree actions. It is designed to allow rendering same action in different contexts: inline, dropdown, context menu.

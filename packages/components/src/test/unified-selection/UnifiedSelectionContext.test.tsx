@@ -21,7 +21,7 @@ import type { UnifiedSelectionContext } from "../../presentation-components/unif
 import type { RenderHookResult } from "../TestUtils.js";
 
 describe("UnifiedSelectionContext", () => {
-  const testIModel = { key: "" } as IModelConnection;
+  const testIModel = { key: "test-imodel" } as IModelConnection;
 
   function renderUnifiedSelectionContextHook(
     imodel = {} as IModelConnection,

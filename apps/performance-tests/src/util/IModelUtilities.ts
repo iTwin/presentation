@@ -4,17 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import fs from "fs";
-import { SnapshotDb } from "@itwin/core-backend";
+import { SnapshotDb, withEditTxn } from "@itwin/core-backend";
 
-import type { IModelDb } from "@itwin/core-backend";
+import type { EditTxn } from "@itwin/core-backend";
 
-export async function createIModel(name: string, localPath: string, cb: (imodel: IModelDb) => void | Promise<void>) {
+export async function createIModel(name: string, localPath: string, cb: (txn: EditTxn) => void | Promise<void>) {
   fs.rmSync(localPath, { force: true });
   const iModel = SnapshotDb.createEmpty(localPath, { rootSubject: { name } });
   try {
-    await cb(iModel);
+    await withEditTxn(iModel, async (txn) => {
+      await cb(txn);
+    });
   } finally {
-    iModel.saveChanges("Initial commit");
     iModel.close();
   }
 }

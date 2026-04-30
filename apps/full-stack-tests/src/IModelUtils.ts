@@ -46,7 +46,6 @@ export async function buildTestIModel<TResult extends {} | void>(
       result = await callback(db, name);
     }
   } finally {
-    db.saveChanges("Created test IModel");
     db.close();
   }
   return { ...result, imodelConnection: TestIModelConnection.openFile(outputFile) };
@@ -64,7 +63,6 @@ async function cloneIModel<TResult extends {}>(
   const imodel = StandaloneDb.openFile(targetIModelPath, OpenMode.ReadWrite);
   try {
     const res = await setup(imodel);
-    imodel.saveChanges("Updated cloned iModel");
     return {
       ...res,
       imodelConnection: new TestIModelConnection(imodel, targetIModelPath),

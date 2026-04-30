@@ -322,13 +322,13 @@ describe("ContentBuilder", () => {
       class TestDataProvider extends EmptyDataProvider {
         public readonly descriptor = descriptor;
         public readonly items = [
-          testValues.reduce(
+          testValues.reduce<{ rawValues: Record<string, any>; displayValues: Record<string, any> }>(
             (item, v) => {
               item.rawValues[v.name] = v.value;
               item.displayValues[v.name] = v.displayValue;
               return item;
             },
-            { rawValues: {}, displayValues: {} } as ItemValues,
+            { rawValues: {}, displayValues: {} },
           ),
         ];
         public override getContentSetSize = async () => this.items.length;

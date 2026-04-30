@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Id64 } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
 import { SchemaFormatsProvider } from "@itwin/ecschema-metadata";
-import { ContentBuilder } from "../presentation-testing.js";
+import { ContentBuilder } from "../presentation-testing/ContentBuilder.js";
 import { initialize, terminate } from "../presentation-testing/Helpers.js";
 import { HierarchyBuilder } from "../presentation-testing/HierarchyBuilder.js";
 import { TestIModelConnection } from "../presentation-testing/IModelUtilities.js";

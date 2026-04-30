@@ -12,6 +12,7 @@ import {
 import { useCallback, useState } from "react";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { SelectionMode, UiComponents } from "@itwin/components-react";
+import { withEditTxn } from "@itwin/core-backend";
 import { IModelApp } from "@itwin/core-frontend";
 import { KeySet, RuleTypes } from "@itwin/presentation-common";
 import {
@@ -73,14 +74,16 @@ describe("Learning snippets", async () => {
       let modelKey: InstanceKey;
       let elementKey: InstanceKey;
       const { imodelConnection } = await buildTestIModel(async (imodel) => {
-        const categoryKey = insertSpatialCategory({ imodel, fullClassNameSeparator: ":", codeValue: "My Category" });
-        modelKey = insertPhysicalModelWithPartition({ imodel, fullClassNameSeparator: ":", codeValue: "My Model" });
-        elementKey = insertPhysicalElement({
-          imodel,
-          fullClassNameSeparator: ":",
-          userLabel: "My Element",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
+        withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, fullClassNameSeparator: ":", codeValue: "My Category" });
+          modelKey = insertPhysicalModelWithPartition({ txn, fullClassNameSeparator: ":", codeValue: "My Model" });
+          elementKey = insertPhysicalElement({
+            txn,
+            fullClassNameSeparator: ":",
+            userLabel: "My Element",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          });
         });
       });
 

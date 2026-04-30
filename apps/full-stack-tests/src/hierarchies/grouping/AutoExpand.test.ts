@@ -5,7 +5,7 @@
 
 import { insertSubject } from "presentation-test-utilities";
 import { afterAll, describe, it, test } from "vitest";
-import { Subject } from "@itwin/core-backend";
+import { Subject, withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -119,9 +119,11 @@ describe("Hierarchies", () => {
 
       it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ imodel, codeValue: "A2", parentId: IModel.rootSubjectId });
-          return { childSubject1, childSubject2 };
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({ txn, codeValue: "A1", parentId: IModel.rootSubjectId });
+            const childSubject2 = insertSubject({ txn, codeValue: "A2", parentId: IModel.rootSubjectId });
+            return { childSubject1, childSubject2 };
+          });
         });
 
         await validateHierarchy({
@@ -201,9 +203,11 @@ describe("Hierarchies", () => {
 
       it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ imodel, codeValue: "A2", parentId: IModel.rootSubjectId });
-          return { childSubject1, childSubject2 };
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({ txn, codeValue: "A1", parentId: IModel.rootSubjectId });
+            const childSubject2 = insertSubject({ txn, codeValue: "A2", parentId: IModel.rootSubjectId });
+            return { childSubject1, childSubject2 };
+          });
         });
 
         await validateHierarchy({
@@ -281,19 +285,21 @@ describe("Hierarchies", () => {
       it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async () => {
         const groupName = "test1";
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({
-            imodel,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({
+              txn,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            const childSubject2 = insertSubject({
+              txn,
+              codeValue: "A2",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            return { childSubject1, childSubject2 };
           });
-          const childSubject2 = insertSubject({
-            imodel,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({
@@ -385,9 +391,11 @@ describe("Hierarchies", () => {
 
       it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ imodel, codeValue: "A2", parentId: IModel.rootSubjectId });
-          return { childSubject1, childSubject2 };
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({ txn, codeValue: "A1", parentId: IModel.rootSubjectId });
+            const childSubject2 = insertSubject({ txn, codeValue: "A2", parentId: IModel.rootSubjectId });
+            return { childSubject1, childSubject2 };
+          });
         });
 
         await validateHierarchy({

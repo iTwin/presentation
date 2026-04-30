@@ -39,6 +39,7 @@ import {
   InstancesNodeKey,
 } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
+import { withEditTxn } from "@itwin/core-backend";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { importSchema } from "../../SchemaUtils.js";
@@ -175,17 +176,19 @@ describe("Hierarchies", () => {
 
         it("creates instance nodes of specific classes definition", async () => {
           const { imodelConnection } = await buildTestIModel(async (imodel) => {
-            insertPhysicalModelWithPartition({ imodel, codeValue: "Non-private physical model" });
-            insertPhysicalSubModel({
-              imodel,
-              modeledElementId: insertPhysicalPartition({
-                imodel,
-                codeValue: "Private physical model",
-                parentId: IModel.rootSubjectId,
-              }).id,
-              isPrivate: true,
+            withEditTxn(imodel, (txn) => {
+              insertPhysicalModelWithPartition({ txn, codeValue: "Non-private physical model" });
+              insertPhysicalSubModel({
+                txn,
+                modeledElementId: insertPhysicalPartition({
+                  txn,
+                  codeValue: "Private physical model",
+                  parentId: IModel.rootSubjectId,
+                }).id,
+                isPrivate: true,
+              });
+              insertDrawingModelWithPartition({ txn, codeValue: "Drawing model" });
             });
-            insertDrawingModelWithPartition({ imodel, codeValue: "Drawing model" });
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.InstanceNodesOfSpecificClassesDefinition
@@ -233,15 +236,17 @@ describe("Hierarchies", () => {
 
         it("creates related instance nodes definition", async () => {
           const { imodelConnection } = await buildTestIModel(async (imodel) => {
-            const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Physical model" });
-            const category = insertSpatialCategory({ imodel, codeValue: "Spatial category" });
-            const type = insertPhysicalType({ imodel, codeValue: "Physical type" });
-            insertPhysicalElement({
-              imodel,
-              modelId: model.id,
-              categoryId: category.id,
-              typeDefinitionId: type.id,
-              codeValue: "Physical element",
+            withEditTxn(imodel, (txn) => {
+              const model = insertPhysicalModelWithPartition({ txn, codeValue: "Physical model" });
+              const category = insertSpatialCategory({ txn, codeValue: "Spatial category" });
+              const type = insertPhysicalType({ txn, codeValue: "Physical type" });
+              insertPhysicalElement({
+                txn,
+                modelId: model.id,
+                categoryId: category.id,
+                typeDefinitionId: type.id,
+                codeValue: "Physical element",
+              });
             });
           });
           const imodelAccess = createIModelAccess(imodelConnection);
@@ -309,10 +314,11 @@ describe("Hierarchies", () => {
 
         it("creates custom query instance nodes definition", async () => {
           const { imodelConnection, schema } = await buildTestIModel(async (imodel, testName) => {
-            const importedSchema = await importSchema(
-              testName,
-              imodel,
-              `
+            return withEditTxn(imodel, async (txn) => {
+              const importedSchema = await importSchema(
+                testName,
+                imodel,
+                `
                 <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
                 <ECEntityClass typeName="MyParentElement">
                   <BaseClass>bis:PhysicalElement</BaseClass>
@@ -322,25 +328,26 @@ describe("Hierarchies", () => {
                   <BaseClass>bis:PhysicalElement</BaseClass>
                 </ECEntityClass>
               `,
-            );
-            const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Physical model" });
-            const category = insertSpatialCategory({ imodel, codeValue: "Spatial category" });
-            insertPhysicalElement({
-              imodel,
-              classFullName: importedSchema.items.MyParentElement.fullName,
-              modelId: model.id,
-              categoryId: category.id,
-              codeValue: "Parent physical element",
-              ["ChildrenQuery"]: `SELECT ECClassId, ECInstanceId FROM ${importedSchema.items.MyChildElement.fullName}`,
+              );
+              const model = insertPhysicalModelWithPartition({ txn, codeValue: "Physical model" });
+              const category = insertSpatialCategory({ txn, codeValue: "Spatial category" });
+              insertPhysicalElement({
+                txn,
+                classFullName: importedSchema.items.MyParentElement.fullName,
+                modelId: model.id,
+                categoryId: category.id,
+                codeValue: "Parent physical element",
+                ["ChildrenQuery"]: `SELECT ECClassId, ECInstanceId FROM ${importedSchema.items.MyChildElement.fullName}`,
+              });
+              insertPhysicalElement({
+                txn,
+                classFullName: importedSchema.items.MyChildElement.fullName,
+                modelId: model.id,
+                categoryId: category.id,
+                codeValue: "Child physical element",
+              });
+              return { schema: importedSchema };
             });
-            insertPhysicalElement({
-              imodel,
-              classFullName: importedSchema.items.MyChildElement.fullName,
-              modelId: model.id,
-              categoryId: category.id,
-              codeValue: "Child physical element",
-            });
-            return { schema: importedSchema };
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.CustomQueryInstanceNodesDefinition
@@ -432,13 +439,10 @@ describe("Hierarchies", () => {
       describe("Migrating grouping specifications", () => {
         it("groups by base class", async () => {
           const { imodelConnection } = await buildTestIModel(async (imodel) => {
-            const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Physical model" });
-            const category = insertSpatialCategory({ imodel, codeValue: "Spatial category" });
-            insertPhysicalElement({
-              imodel,
-              modelId: model.id,
-              categoryId: category.id,
-              codeValue: "Physical element",
+            withEditTxn(imodel, (txn) => {
+              const model = insertPhysicalModelWithPartition({ txn, codeValue: "Physical model" });
+              const category = insertSpatialCategory({ txn, codeValue: "Spatial category" });
+              insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, codeValue: "Physical element" });
             });
           });
           const imodelAccess = createIModelAccess(imodelConnection);
@@ -539,14 +543,16 @@ describe("Hierarchies", () => {
 
         it("groups by properties", async () => {
           const { imodelConnection } = await buildTestIModel(async (imodel) => {
-            const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Physical model" });
-            const category = insertSpatialCategory({ imodel, codeValue: "Spatial category" });
-            insertPhysicalElement({
-              imodel,
-              modelId: model.id,
-              categoryId: category.id,
-              codeValue: "Physical element",
-              placement: { origin: { x: 0, y: 0, z: 0 }, angles: { yaw: 180 } },
+            withEditTxn(imodel, (txn) => {
+              const model = insertPhysicalModelWithPartition({ txn, codeValue: "Physical model" });
+              const category = insertSpatialCategory({ txn, codeValue: "Spatial category" });
+              insertPhysicalElement({
+                txn,
+                modelId: model.id,
+                categoryId: category.id,
+                codeValue: "Physical element",
+                placement: { origin: { x: 0, y: 0, z: 0 }, angles: { yaw: 180 } },
+              });
             });
           });
           const imodelAccess = createIModelAccess(imodelConnection);
@@ -609,8 +615,10 @@ describe("Hierarchies", () => {
 
         it("groups by label", async () => {
           const { imodelConnection } = await buildTestIModel(async (imodel) => {
-            insertRepositoryLink({ imodel, repositoryLabel: "Test repository link" });
-            insertRepositoryLink({ imodel, repositoryLabel: "Test repository link" });
+            withEditTxn(imodel, (txn) => {
+              insertRepositoryLink({ txn, repositoryLabel: "Test repository link" });
+              insertRepositoryLink({ txn, repositoryLabel: "Test repository link" });
+            });
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.LabelGrouping
@@ -661,12 +669,14 @@ describe("Hierarchies", () => {
 
         it("merges by label", async () => {
           const { imodelConnection, repoLinkKeys } = await buildTestIModel(async (imodel) => {
-            return {
-              repoLinkKeys: [
-                insertRepositoryLink({ imodel, repositoryLabel: "Test repository link" }),
-                insertRepositoryLink({ imodel, repositoryLabel: "Test repository link" }),
-              ],
-            };
+            return withEditTxn(imodel, (txn) => {
+              return {
+                repoLinkKeys: [
+                  insertRepositoryLink({ txn, repositoryLabel: "Test repository link" }),
+                  insertRepositoryLink({ txn, repositoryLabel: "Test repository link" }),
+                ],
+              };
+            });
           });
           const imodelAccess = createIModelAccess(imodelConnection);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.SameLabelGrouping

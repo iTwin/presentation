@@ -11,6 +11,7 @@ import {
 import { useCallback, useState } from "react";
 import { afterAll, beforeAll, describe, it, vi } from "vitest";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
+import { withEditTxn } from "@itwin/core-backend";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
@@ -77,13 +78,15 @@ describe("Learning snippets", () => {
       let elementKey: InstanceKey | undefined;
 
       const { imodelConnection } = await buildTestIModel(async (imodel) => {
-        const categoryKey = insertSpatialCategory({ imodel, codeValue: "My Category" });
-        const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "My Model" });
-        elementKey = insertPhysicalElement({
-          imodel,
-          userLabel: "My Element",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
+        withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+          const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
+          elementKey = insertPhysicalElement({
+            txn,
+            userLabel: "My Element",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          });
         });
       });
       assert(elementKey !== undefined);

@@ -70,9 +70,7 @@ describe("HiliteSetProvider", () => {
           return createFakeQueryReader(elementKeys.map(toQueryResponse));
         }
         if (query.ecsql.includes("FunctionalElement")) {
-          return createFakeQueryReader<ECSqlQueryRow>(
-            functionalElementKeys.map((k) => ({ ["ECInstanceId"]: k }) as unknown as ECSqlQueryRow),
-          );
+          return createFakeQueryReader<ECSqlQueryRow>(functionalElementKeys.map((k) => ({ ["ECInstanceId"]: k })));
         }
         return createFakeQueryReader([]);
       });

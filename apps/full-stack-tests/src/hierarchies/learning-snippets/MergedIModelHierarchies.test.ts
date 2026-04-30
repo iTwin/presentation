@@ -19,6 +19,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { EC } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
+import { withEditTxn } from "@itwin/core-backend";
 import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Utils.js";
@@ -38,53 +39,57 @@ describe("Hierarchies", () => {
       it("creates merged iModel hierarchy", async function () {
         await using changesets = await createChangedIModels(
           async (imodel) => {
-            const model1 = insertPhysicalModelWithPartition({ imodel, codeValue: "Model 1" });
-            const category = insertSpatialCategory({ imodel, codeValue: "Category" });
-            const element1 = insertPhysicalElement({
-              imodel,
-              modelId: model1.id,
-              categoryId: category.id,
-              codeValue: "Element 1",
+            return withEditTxn(imodel, (txn) => {
+              const model1 = insertPhysicalModelWithPartition({ txn, codeValue: "Model 1" });
+              const category = insertSpatialCategory({ txn, codeValue: "Category" });
+              const element1 = insertPhysicalElement({
+                txn,
+                modelId: model1.id,
+                categoryId: category.id,
+                codeValue: "Element 1",
+              });
+              const element2 = insertPhysicalElement({
+                txn,
+                modelId: model1.id,
+                categoryId: category.id,
+                codeValue: "Element 2",
+              });
+              const element3 = insertPhysicalElement({
+                txn,
+                modelId: model1.id,
+                categoryId: category.id,
+                codeValue: "Element 3",
+              });
+              return { model1, category, element1, element2, element3 };
             });
-            const element2 = insertPhysicalElement({
-              imodel,
-              modelId: model1.id,
-              categoryId: category.id,
-              codeValue: "Element 2",
-            });
-            const element3 = insertPhysicalElement({
-              imodel,
-              modelId: model1.id,
-              categoryId: category.id,
-              codeValue: "Element 3",
-            });
-            return { model1, category, element1, element2, element3 };
           },
           async (imodel, base) => {
             const { element2, ...restKeys } = base;
-            imodel.elements.deleteElement(element2.id);
-            imodel.elements.updateElement({
-              id: base.element3.id,
-              code: new Code({
-                spec: imodel.codeSpecs.getByName(BisCodeSpec.nullCodeSpec).id,
-                scope: base.model1.id,
-                value: "Updated element 3",
-              }),
+            return withEditTxn(imodel, (txn) => {
+              txn.deleteElement(element2.id);
+              txn.updateElement({
+                id: base.element3.id,
+                code: new Code({
+                  spec: txn.iModel.codeSpecs.getByName(BisCodeSpec.nullCodeSpec).id,
+                  scope: base.model1.id,
+                  value: "Updated element 3",
+                }),
+              });
+              const element4 = insertPhysicalElement({
+                txn,
+                modelId: base.model1.id,
+                categoryId: base.category.id,
+                codeValue: "Element 4",
+              });
+              const model2 = insertPhysicalModelWithPartition({ txn, codeValue: "Model 2" });
+              const element5 = insertPhysicalElement({
+                txn,
+                modelId: model2.id,
+                categoryId: base.category.id,
+                codeValue: "Element 5",
+              });
+              return { ...restKeys, model2, element4, element5 };
             });
-            const element4 = insertPhysicalElement({
-              imodel,
-              modelId: base.model1.id,
-              categoryId: base.category.id,
-              codeValue: "Element 4",
-            });
-            const model2 = insertPhysicalModelWithPartition({ imodel, codeValue: "Model 2" });
-            const element5 = insertPhysicalElement({
-              imodel,
-              modelId: model2.id,
-              categoryId: base.category.id,
-              codeValue: "Element 5",
-            });
-            return { ...restKeys, model2, element4, element5 };
           },
         );
 

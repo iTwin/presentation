@@ -14,6 +14,7 @@ import {
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { withEditTxn } from "@itwin/core-backend";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { computeSelection } from "@itwin/unified-selection";
 import { buildTestIModel } from "../IModelUtils.js";
@@ -56,20 +57,22 @@ describe("SelectionScope", () => {
 
       imodelConnection = (
         await buildTestIModel(async (imodel) => {
-          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-          const assemblyKey = insertPhysicalElement({
-            imodel,
-            userLabel: "root element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          }).id;
-          elementKey1 = insertPhysicalElement({
-            imodel,
-            userLabel: "element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: assemblyKey,
+          return withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            const assemblyKey = insertPhysicalElement({
+              txn,
+              userLabel: "root element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            }).id;
+            elementKey1 = insertPhysicalElement({
+              txn,
+              userLabel: "element 1",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: assemblyKey,
+            });
           });
         })
       ).imodelConnection;
@@ -83,20 +86,22 @@ describe("SelectionScope", () => {
 
       imodelConnection = (
         await buildTestIModel(async (imodel) => {
-          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-          const assemblyKey = insertPhysicalElement({
-            imodel,
-            userLabel: "root element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          }).id;
-          elementKey1 = insertPhysicalElement({
-            imodel,
-            userLabel: "element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: assemblyKey,
+          withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            const assemblyKey = insertPhysicalElement({
+              txn,
+              userLabel: "root element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            }).id;
+            elementKey1 = insertPhysicalElement({
+              txn,
+              userLabel: "element 1",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: assemblyKey,
+            });
           });
         })
       ).imodelConnection;
@@ -112,27 +117,29 @@ describe("SelectionScope", () => {
 
       imodelConnection = (
         await buildTestIModel(async (imodel) => {
-          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-          parentKey = insertPhysicalElement({
-            imodel,
-            userLabel: "root element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          });
-          elementKey1 = insertPhysicalElement({
-            imodel,
-            userLabel: "element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: parentKey.id,
-          });
-          elementKey2 = insertPhysicalElement({
-            imodel,
-            userLabel: "element 2",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: parentKey.id,
+          withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            parentKey = insertPhysicalElement({
+              txn,
+              userLabel: "root element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            elementKey1 = insertPhysicalElement({
+              txn,
+              userLabel: "element 1",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: parentKey.id,
+            });
+            elementKey2 = insertPhysicalElement({
+              txn,
+              userLabel: "element 2",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: parentKey.id,
+            });
           });
         })
       ).imodelConnection;
@@ -145,13 +152,15 @@ describe("SelectionScope", () => {
 
       imodelConnection = (
         await buildTestIModel(async (imodel) => {
-          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-          elementKey = insertPhysicalElement({
-            imodel,
-            userLabel: "root element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+          withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            elementKey = insertPhysicalElement({
+              txn,
+              userLabel: "root element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
           });
         })
       ).imodelConnection;
@@ -166,27 +175,29 @@ describe("SelectionScope", () => {
 
       imodelConnection = (
         await buildTestIModel(async (imodel) => {
-          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-          grandParentKey = insertPhysicalElement({
-            imodel,
-            userLabel: "root element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          });
-          const parentKey = insertPhysicalElement({
-            imodel,
-            userLabel: "element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: grandParentKey.id,
-          });
-          elementKey = insertPhysicalElement({
-            imodel,
-            userLabel: "element 2",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: parentKey.id,
+          withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            grandParentKey = insertPhysicalElement({
+              txn,
+              userLabel: "root element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            const parentKey = insertPhysicalElement({
+              txn,
+              userLabel: "element 1",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: grandParentKey.id,
+            });
+            elementKey = insertPhysicalElement({
+              txn,
+              userLabel: "element 2",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: parentKey.id,
+            });
           });
         })
       ).imodelConnection;
@@ -201,20 +212,22 @@ describe("SelectionScope", () => {
 
       imodelConnection = (
         await buildTestIModel(async (imodel) => {
-          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-          parentKey = insertPhysicalElement({
-            imodel,
-            userLabel: "root element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          });
-          elementKey = insertPhysicalElement({
-            imodel,
-            userLabel: "element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: parentKey.id,
+          withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            parentKey = insertPhysicalElement({
+              txn,
+              userLabel: "root element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            elementKey = insertPhysicalElement({
+              txn,
+              userLabel: "element 1",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: parentKey.id,
+            });
           });
         })
       ).imodelConnection;
@@ -228,13 +241,15 @@ describe("SelectionScope", () => {
 
       imodelConnection = (
         await buildTestIModel(async (imodel) => {
-          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-          elementKeys = [
-            insertPhysicalElement({ imodel, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
-            insertPhysicalElement({ imodel, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
-            insertPhysicalElement({ imodel, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
-          ];
+          withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            elementKeys = [
+              insertPhysicalElement({ txn, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
+              insertPhysicalElement({ txn, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
+              insertPhysicalElement({ txn, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
+            ];
+          });
         })
       ).imodelConnection;
 
@@ -251,34 +266,36 @@ describe("SelectionScope", () => {
 
       imodelConnection = (
         await buildTestIModel(async (imodel) => {
-          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-          rootElementKey = insertPhysicalElement({
-            imodel,
-            userLabel: "root element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          });
-          const elementKey1 = insertPhysicalElement({
-            imodel,
-            userLabel: "element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: rootElementKey.id,
-          });
-          const elementKey2 = insertPhysicalElement({
-            imodel,
-            userLabel: "element 2",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: elementKey1.id,
-          });
-          elementKey3 = insertPhysicalElement({
-            imodel,
-            userLabel: "element 3",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: elementKey2.id,
+          withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            rootElementKey = insertPhysicalElement({
+              txn,
+              userLabel: "root element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            const elementKey1 = insertPhysicalElement({
+              txn,
+              userLabel: "element 1",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: rootElementKey.id,
+            });
+            const elementKey2 = insertPhysicalElement({
+              txn,
+              userLabel: "element 2",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: elementKey1.id,
+            });
+            elementKey3 = insertPhysicalElement({
+              txn,
+              userLabel: "element 3",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: elementKey2.id,
+            });
           });
         })
       ).imodelConnection;
@@ -296,38 +313,40 @@ describe("SelectionScope", () => {
 
       imodelConnection = (
         await buildTestIModel(async (imodel) => {
-          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          categoryKey1 = insertSpatialCategory({ imodel, codeValue: "test category 1" });
-          categoryKey2 = insertSpatialCategory({ imodel, codeValue: "test category 2" });
-          const assemblyKey = insertPhysicalElement({
-            imodel,
-            userLabel: "root element",
-            modelId: modelKey.id,
-            categoryId: categoryKey1.id,
+          withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            categoryKey1 = insertSpatialCategory({ txn, codeValue: "test category 1" });
+            categoryKey2 = insertSpatialCategory({ txn, codeValue: "test category 2" });
+            const assemblyKey = insertPhysicalElement({
+              txn,
+              userLabel: "root element",
+              modelId: modelKey.id,
+              categoryId: categoryKey1.id,
+            });
+            elementIds = [
+              insertPhysicalElement({
+                txn,
+                userLabel: "element 1",
+                modelId: modelKey.id,
+                categoryId: categoryKey1.id,
+                parentId: assemblyKey.id,
+              }).id,
+              insertPhysicalElement({
+                txn,
+                userLabel: "element 2",
+                modelId: modelKey.id,
+                categoryId: categoryKey1.id,
+                parentId: assemblyKey.id,
+              }).id,
+              insertPhysicalElement({
+                txn,
+                userLabel: "element 2",
+                modelId: modelKey.id,
+                categoryId: categoryKey2.id,
+                parentId: assemblyKey.id,
+              }).id,
+            ];
           });
-          elementIds = [
-            insertPhysicalElement({
-              imodel,
-              userLabel: "element 1",
-              modelId: modelKey.id,
-              categoryId: categoryKey1.id,
-              parentId: assemblyKey.id,
-            }).id,
-            insertPhysicalElement({
-              imodel,
-              userLabel: "element 2",
-              modelId: modelKey.id,
-              categoryId: categoryKey1.id,
-              parentId: assemblyKey.id,
-            }).id,
-            insertPhysicalElement({
-              imodel,
-              userLabel: "element 2",
-              modelId: modelKey.id,
-              categoryId: categoryKey2.id,
-              parentId: assemblyKey.id,
-            }).id,
-          ];
         })
       ).imodelConnection;
 
@@ -343,30 +362,32 @@ describe("SelectionScope", () => {
 
       imodelConnection = (
         await buildTestIModel(async (imodel) => {
-          modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-          const assemblyKey = insertPhysicalElement({
-            imodel,
-            userLabel: "root element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+          withEditTxn(imodel, (txn) => {
+            modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            const assemblyKey = insertPhysicalElement({
+              txn,
+              userLabel: "root element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            elementIds = [
+              insertPhysicalElement({
+                txn,
+                userLabel: "element 1",
+                modelId: modelKey.id,
+                categoryId: categoryKey.id,
+                parentId: assemblyKey.id,
+              }).id,
+              insertPhysicalElement({
+                txn,
+                userLabel: "element 2",
+                modelId: modelKey.id,
+                categoryId: categoryKey.id,
+                parentId: assemblyKey.id,
+              }).id,
+            ];
           });
-          elementIds = [
-            insertPhysicalElement({
-              imodel,
-              userLabel: "element 1",
-              modelId: modelKey.id,
-              categoryId: categoryKey.id,
-              parentId: assemblyKey.id,
-            }).id,
-            insertPhysicalElement({
-              imodel,
-              userLabel: "element 2",
-              modelId: modelKey.id,
-              categoryId: categoryKey.id,
-              parentId: assemblyKey.id,
-            }).id,
-          ];
         })
       ).imodelConnection;
 
@@ -383,25 +404,27 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            physicalElement = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            functionalElement = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: physicalElement.id,
-              relationshipName: "PhysicalElementFulfillsFunction",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              physicalElement = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              functionalElement = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: physicalElement.id,
+                relationshipName: "PhysicalElementFulfillsFunction",
+              });
             });
           })
         ).imodelConnection;
@@ -415,15 +438,17 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            physicalElement = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              physicalElement = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+              });
             });
           })
         ).imodelConnection;
@@ -437,32 +462,34 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            const physicalElementParent = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            physicalElement = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: physicalElementParent.id,
-            });
-            insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: physicalElementParent.id,
-              relationshipName: "PhysicalElementFulfillsFunction",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              const physicalElementParent = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              physicalElement = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: physicalElementParent.id,
+              });
+              insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: physicalElementParent.id,
+                relationshipName: "PhysicalElementFulfillsFunction",
+              });
             });
           })
         ).imodelConnection;
@@ -478,32 +505,34 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            physicalElement1 = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            physicalElement2 = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: physicalElement1.id,
-            });
-            functionalElement = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: physicalElement1.id,
-              relationshipName: "PhysicalElementFulfillsFunction",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              physicalElement1 = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              physicalElement2 = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: physicalElement1.id,
+              });
+              functionalElement = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: physicalElement1.id,
+                relationshipName: "PhysicalElementFulfillsFunction",
+              });
             });
           })
         ).imodelConnection;
@@ -518,32 +547,34 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            const physicalElementParent = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            physicalElement = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: physicalElementParent.id,
-            });
-            functionalElementKey = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: physicalElementParent.id,
-              relationshipName: "PhysicalElementFulfillsFunction",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              const physicalElementParent = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              physicalElement = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: physicalElementParent.id,
+              });
+              functionalElementKey = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: physicalElementParent.id,
+                relationshipName: "PhysicalElementFulfillsFunction",
+              });
             });
           })
         ).imodelConnection;
@@ -558,22 +589,24 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            parentKey = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            physicalElement = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: parentKey.id,
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              parentKey = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              physicalElement = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: parentKey.id,
+              });
             });
           })
         ).imodelConnection;
@@ -588,25 +621,27 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            physicalElement = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            functionalElementKey = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: physicalElement.id,
-              relationshipName: "PhysicalElementFulfillsFunction",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              physicalElement = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              functionalElementKey = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: physicalElement.id,
+                relationshipName: "PhysicalElementFulfillsFunction",
+              });
             });
           })
         ).imodelConnection;
@@ -620,15 +655,17 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            physicalElement = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              physicalElement = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+              });
             });
           })
         ).imodelConnection;
@@ -643,39 +680,41 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            const physicalElementGrandParent = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            const physicalElementParent = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: physicalElementGrandParent.id,
-            });
-            physicalElement = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: physicalElementParent.id,
-            });
-            functionalElementKey = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: physicalElementGrandParent.id,
-              relationshipName: "PhysicalElementFulfillsFunction",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              const physicalElementGrandParent = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              const physicalElementParent = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: physicalElementGrandParent.id,
+              });
+              physicalElement = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: physicalElementParent.id,
+              });
+              functionalElementKey = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: physicalElementGrandParent.id,
+                relationshipName: "PhysicalElementFulfillsFunction",
+              });
             });
           })
         ).imodelConnection;
@@ -690,29 +729,31 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            physicalElementGrandParent = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            const physicalElementParent = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: physicalElementGrandParent.id,
-            });
-            physicalElement = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: physicalElementParent.id,
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              physicalElementGrandParent = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              const physicalElementParent = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: physicalElementGrandParent.id,
+              });
+              physicalElement = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: physicalElementParent.id,
+              });
             });
           })
         ).imodelConnection;
@@ -727,32 +768,34 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            const physicalElementParent = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            physicalElement = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: physicalElementParent.id,
-            });
-            functionalElementKey = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: physicalElementParent.id,
-              relationshipName: "PhysicalElementFulfillsFunction",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              const physicalElementParent = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              physicalElement = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: physicalElementParent.id,
+              });
+              functionalElementKey = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: physicalElementParent.id,
+                relationshipName: "PhysicalElementFulfillsFunction",
+              });
             });
           })
         ).imodelConnection;
@@ -767,22 +810,24 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            physicalElementParent = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            physicalElement = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: physicalElementParent.id,
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              physicalElementParent = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              physicalElement = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: physicalElementParent.id,
+              });
             });
           })
         ).imodelConnection;
@@ -797,39 +842,41 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            const physicalElementGrandparent = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            const physicalElementParent = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: physicalElementGrandparent.id,
-            });
-            physicalElement = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: physicalElementParent.id,
-            });
-            functionalElementKey = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: physicalElementGrandparent.id,
-              relationshipName: "PhysicalElementFulfillsFunction",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              const physicalElementGrandparent = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              const physicalElementParent = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: physicalElementGrandparent.id,
+              });
+              physicalElement = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: physicalElementParent.id,
+              });
+              functionalElementKey = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: physicalElementGrandparent.id,
+                relationshipName: "PhysicalElementFulfillsFunction",
+              });
             });
           })
         ).imodelConnection;
@@ -846,36 +893,38 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
-            const graphicsElementGrandParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            const graphicsElementParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementGrandParent.id,
-            });
-            graphicsElement = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            functionalElement = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElement.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
+              const graphicsElementGrandParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              const graphicsElementParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementGrandParent.id,
+              });
+              graphicsElement = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              functionalElement = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElement.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              });
             });
           })
         ).imodelConnection;
@@ -889,26 +938,28 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const categoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
-            const graphicsElementGrandParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            const graphicsElementParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementGrandParent.id,
-            });
-            graphicsElement = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementParent.id,
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const categoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
+              const graphicsElementGrandParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              const graphicsElementParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementGrandParent.id,
+              });
+              graphicsElement = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
             });
           })
         ).imodelConnection;
@@ -925,48 +976,50 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
-            const graphicsElementGrandParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            const graphicsElementParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementGrandParent.id,
-            });
-            graphicsElement1 = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            graphicsElement2 = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            functionalElement1 = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElement2.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-            });
-            functionalElement2 = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElementGrandParent.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
+              const graphicsElementGrandParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              const graphicsElementParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementGrandParent.id,
+              });
+              graphicsElement1 = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              graphicsElement2 = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              functionalElement1 = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElement2.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              });
+              functionalElement2 = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElementGrandParent.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              });
             });
           })
         ).imodelConnection;
@@ -982,54 +1035,56 @@ describe("SelectionScope", () => {
         let functionalElement2: SelectableInstanceKey;
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
-            const graphicsElementGrandParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            const graphicsElementParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementGrandParent.id,
-            });
-            graphicsElement1 = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            graphicsElement2 = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            functionalElement1 = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElement2.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-            });
-            functionalElement2 = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElementParent.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-            });
-            insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElementGrandParent.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
+              const graphicsElementGrandParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              const graphicsElementParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementGrandParent.id,
+              });
+              graphicsElement1 = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              graphicsElement2 = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              functionalElement1 = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElement2.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              });
+              functionalElement2 = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElementParent.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              });
+              insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElementGrandParent.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              });
             });
           })
         ).imodelConnection;
@@ -1044,36 +1099,38 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
-            const graphicsElementGrandParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            const graphicsElementParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementGrandParent.id,
-            });
-            graphicsElement = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            functionalElementKey = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElement.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
+              const graphicsElementGrandParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              const graphicsElementParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementGrandParent.id,
+              });
+              graphicsElement = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              functionalElementKey = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElement.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              });
             });
           })
         ).imodelConnection;
@@ -1088,36 +1145,38 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
-            const graphicsElementGrandParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            const graphicsElementParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementGrandParent.id,
-            });
-            graphicsElement = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            functionalElementKey = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElementParent.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
+              const graphicsElementGrandParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              const graphicsElementParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementGrandParent.id,
+              });
+              graphicsElement = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              functionalElementKey = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElementParent.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              });
             });
           })
         ).imodelConnection;
@@ -1132,36 +1191,38 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
-            const graphicsElementGrandParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            const graphicsElementParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementGrandParent.id,
-            });
-            graphicsElement = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            functionalElementKey = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElementGrandParent.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
+              const graphicsElementGrandParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              const graphicsElementParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementGrandParent.id,
+              });
+              graphicsElement = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              functionalElementKey = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElementGrandParent.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              });
             });
           })
         ).imodelConnection;
@@ -1177,51 +1238,53 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
+              const graphicsElementGrandParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              const graphicsElementParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementGrandParent.id,
+              });
+              graphicsElement1 = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              graphicsElement2 = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              functionalElementKeys = [
+                insertFunctionalElement({
+                  txn,
+                  modelId: functionalModelKey.id,
+                  representedElementId: graphicsElementGrandParent.id,
+                  relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+                }),
+                insertFunctionalElement({
+                  txn,
+                  modelId: functionalModelKey.id,
+                  representedElementId: graphicsElement1.id,
+                  relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+                }),
+              ];
             });
-            const categoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
-            const graphicsElementGrandParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            const graphicsElementParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementGrandParent.id,
-            });
-            graphicsElement1 = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            graphicsElement2 = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            functionalElementKeys = [
-              insertFunctionalElement({
-                imodel,
-                modelId: functionalModelKey.id,
-                representedElementId: graphicsElementGrandParent.id,
-                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-              }),
-              insertFunctionalElement({
-                imodel,
-                modelId: functionalModelKey.id,
-                representedElementId: graphicsElement1.id,
-                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-              }),
-            ];
           })
         ).imodelConnection;
 
@@ -1238,20 +1301,22 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
-            graphicsElement = insertDrawingGraphic({ imodel, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-            functionalElementKey = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElement.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
+              graphicsElement = insertDrawingGraphic({ txn, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+              functionalElementKey = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElement.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              });
             });
           })
         ).imodelConnection;
@@ -1265,11 +1330,13 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const categoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
-            graphicsElement = insertDrawingGraphic({ imodel, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const categoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
+              graphicsElement = insertDrawingGraphic({ txn, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            });
           })
         ).imodelConnection;
 
@@ -1283,26 +1350,28 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const categoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
-            graphicsElementGrandParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            const graphicsElementParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementGrandParent.id,
-            });
-            graphicsElement = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementParent.id,
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const categoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
+              graphicsElementGrandParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              const graphicsElementParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementGrandParent.id,
+              });
+              graphicsElement = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
             });
           })
         ).imodelConnection;
@@ -1317,20 +1386,22 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const categoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
-            graphicsElementParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            graphicsElement = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementParent.id,
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const categoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
+              graphicsElementParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              graphicsElement = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
             });
           })
         ).imodelConnection;
@@ -1345,36 +1416,38 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const categoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
-            const graphicsElementGrandParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-            });
-            const graphicsElementParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementGrandParent.id,
-            });
-            graphicsElement = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: categoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            functionalElementKey = insertFunctionalElement({
-              imodel,
-              modelId: functionalModelKey.id,
-              representedElementId: graphicsElementGrandParent.id,
-              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const categoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
+              const graphicsElementGrandParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+              });
+              const graphicsElementParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementGrandParent.id,
+              });
+              graphicsElement = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: categoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              functionalElementKey = insertFunctionalElement({
+                txn,
+                modelId: functionalModelKey.id,
+                representedElementId: graphicsElementGrandParent.id,
+                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+              });
             });
           })
         ).imodelConnection;
@@ -1392,74 +1465,76 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const spatialCategoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            const drawingCategoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const spatialCategoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              const drawingCategoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
 
-            const graphicsElementGrandParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: drawingCategoryKey.id,
+              const graphicsElementGrandParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: drawingCategoryKey.id,
+              });
+              const graphicsElementParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: drawingCategoryKey.id,
+                parentId: graphicsElementGrandParent.id,
+              });
+              const graphicsElement1 = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: drawingCategoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              const graphicsElement2 = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: drawingCategoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              const physicalElement1 = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: spatialCategoryKey.id,
+              });
+              physicalElement2 = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: spatialCategoryKey.id,
+                parentId: physicalElement1.id,
+              });
+              elementIds = [graphicsElement1.id, graphicsElement2.id, physicalElement1.id, physicalElement2.id];
+              functionalElementKeys = [
+                insertFunctionalElement({
+                  txn,
+                  modelId: functionalModelKey.id,
+                  representedElementId: graphicsElement2.id,
+                  relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+                }),
+                insertFunctionalElement({
+                  txn,
+                  modelId: functionalModelKey.id,
+                  representedElementId: graphicsElementGrandParent.id,
+                  relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+                }),
+                insertFunctionalElement({
+                  txn,
+                  modelId: functionalModelKey.id,
+                  representedElementId: physicalElement1.id,
+                  relationshipName: "PhysicalElementFulfillsFunction",
+                }),
+              ];
             });
-            const graphicsElementParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: drawingCategoryKey.id,
-              parentId: graphicsElementGrandParent.id,
-            });
-            const graphicsElement1 = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: drawingCategoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            const graphicsElement2 = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: drawingCategoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            const physicalElement1 = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: spatialCategoryKey.id,
-            });
-            physicalElement2 = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: spatialCategoryKey.id,
-              parentId: physicalElement1.id,
-            });
-            elementIds = [graphicsElement1.id, graphicsElement2.id, physicalElement1.id, physicalElement2.id];
-            functionalElementKeys = [
-              insertFunctionalElement({
-                imodel,
-                modelId: functionalModelKey.id,
-                representedElementId: graphicsElement2.id,
-                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-              }),
-              insertFunctionalElement({
-                imodel,
-                modelId: functionalModelKey.id,
-                representedElementId: graphicsElementGrandParent.id,
-                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-              }),
-              insertFunctionalElement({
-                imodel,
-                modelId: functionalModelKey.id,
-                representedElementId: physicalElement1.id,
-                relationshipName: "PhysicalElementFulfillsFunction",
-              }),
-            ];
           })
         ).imodelConnection;
 
@@ -1473,74 +1548,76 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const spatialCategoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            const drawingCategoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const spatialCategoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              const drawingCategoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
 
-            const graphicsElementGrandParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: drawingCategoryKey.id,
+              const graphicsElementGrandParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: drawingCategoryKey.id,
+              });
+              const graphicsElementParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: drawingCategoryKey.id,
+                parentId: graphicsElementGrandParent.id,
+              });
+              const graphicsElement1 = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: drawingCategoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              const graphicsElement2 = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: drawingCategoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              const physicalElement1 = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: spatialCategoryKey.id,
+              });
+              const physicalElement2 = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: spatialCategoryKey.id,
+                parentId: physicalElement1.id,
+              });
+              elementIds = [graphicsElement1.id, graphicsElement2.id, physicalElement1.id, physicalElement2.id];
+              functionalElementKeys = [
+                insertFunctionalElement({
+                  txn,
+                  modelId: functionalModelKey.id,
+                  representedElementId: graphicsElement2.id,
+                  relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+                }),
+                insertFunctionalElement({
+                  txn,
+                  modelId: functionalModelKey.id,
+                  representedElementId: graphicsElementParent.id,
+                  relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+                }),
+                insertFunctionalElement({
+                  txn,
+                  modelId: functionalModelKey.id,
+                  representedElementId: physicalElement1.id,
+                  relationshipName: "PhysicalElementFulfillsFunction",
+                }),
+              ];
             });
-            const graphicsElementParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: drawingCategoryKey.id,
-              parentId: graphicsElementGrandParent.id,
-            });
-            const graphicsElement1 = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: drawingCategoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            const graphicsElement2 = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: drawingCategoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            const physicalElement1 = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: spatialCategoryKey.id,
-            });
-            const physicalElement2 = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: spatialCategoryKey.id,
-              parentId: physicalElement1.id,
-            });
-            elementIds = [graphicsElement1.id, graphicsElement2.id, physicalElement1.id, physicalElement2.id];
-            functionalElementKeys = [
-              insertFunctionalElement({
-                imodel,
-                modelId: functionalModelKey.id,
-                representedElementId: graphicsElement2.id,
-                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-              }),
-              insertFunctionalElement({
-                imodel,
-                modelId: functionalModelKey.id,
-                representedElementId: graphicsElementParent.id,
-                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-              }),
-              insertFunctionalElement({
-                imodel,
-                modelId: functionalModelKey.id,
-                representedElementId: physicalElement1.id,
-                relationshipName: "PhysicalElementFulfillsFunction",
-              }),
-            ];
           })
         ).imodelConnection;
 
@@ -1555,74 +1632,76 @@ describe("SelectionScope", () => {
 
         imodelConnection = (
           await buildTestIModel(async (imodel) => {
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await imodel.importSchemaStrings([schema]);
-            const drawingModelKey = insertDrawingModelWithPartition({ imodel, codeValue: "test drawing model" });
-            const physicalModelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test physical model" });
-            const functionalModelKey = insertFunctionalModelWithPartition({
-              imodel,
-              codeValue: "test functional model",
-            });
-            const spatialCategoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            const drawingCategoryKey = insertDrawingCategory({ imodel, codeValue: "test drawing category" });
+            await withEditTxn(imodel, async (txn) => {
+              const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+              await imodel.importSchemaStrings([schema]);
+              const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+              const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+              const functionalModelKey = insertFunctionalModelWithPartition({
+                txn,
+                codeValue: "test functional model",
+              });
+              const spatialCategoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              const drawingCategoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
 
-            const graphicsElementGrandParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: drawingCategoryKey.id,
+              const graphicsElementGrandParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: drawingCategoryKey.id,
+              });
+              const graphicsElementParent = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: drawingCategoryKey.id,
+                parentId: graphicsElementGrandParent.id,
+              });
+              const graphicsElement1 = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: drawingCategoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              const graphicsElement2 = insertDrawingGraphic({
+                txn,
+                modelId: drawingModelKey.id,
+                categoryId: drawingCategoryKey.id,
+                parentId: graphicsElementParent.id,
+              });
+              const physicalElement1 = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: spatialCategoryKey.id,
+              });
+              physicalElement2 = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: physicalModelKey.id,
+                categoryId: spatialCategoryKey.id,
+                parentId: physicalElement1.id,
+              });
+              elementIds = [graphicsElement1.id, graphicsElement2.id, physicalElement1.id, physicalElement2.id];
+              functionalElementKeys = [
+                insertFunctionalElement({
+                  txn,
+                  modelId: functionalModelKey.id,
+                  representedElementId: graphicsElement2.id,
+                  relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+                }),
+                insertFunctionalElement({
+                  txn,
+                  modelId: functionalModelKey.id,
+                  representedElementId: graphicsElementGrandParent.id,
+                  relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+                }),
+                insertFunctionalElement({
+                  txn,
+                  modelId: functionalModelKey.id,
+                  representedElementId: physicalElement1.id,
+                  relationshipName: "PhysicalElementFulfillsFunction",
+                }),
+              ];
             });
-            const graphicsElementParent = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: drawingCategoryKey.id,
-              parentId: graphicsElementGrandParent.id,
-            });
-            const graphicsElement1 = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: drawingCategoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            const graphicsElement2 = insertDrawingGraphic({
-              imodel,
-              modelId: drawingModelKey.id,
-              categoryId: drawingCategoryKey.id,
-              parentId: graphicsElementParent.id,
-            });
-            const physicalElement1 = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: spatialCategoryKey.id,
-            });
-            physicalElement2 = insertPhysicalElement({
-              imodel,
-              userLabel: "element",
-              modelId: physicalModelKey.id,
-              categoryId: spatialCategoryKey.id,
-              parentId: physicalElement1.id,
-            });
-            elementIds = [graphicsElement1.id, graphicsElement2.id, physicalElement1.id, physicalElement2.id];
-            functionalElementKeys = [
-              insertFunctionalElement({
-                imodel,
-                modelId: functionalModelKey.id,
-                representedElementId: graphicsElement2.id,
-                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-              }),
-              insertFunctionalElement({
-                imodel,
-                modelId: functionalModelKey.id,
-                representedElementId: graphicsElementGrandParent.id,
-                relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-              }),
-              insertFunctionalElement({
-                imodel,
-                modelId: functionalModelKey.id,
-                representedElementId: physicalElement1.id,
-                relationshipName: "PhysicalElementFulfillsFunction",
-              }),
-            ];
           })
         ).imodelConnection;
 

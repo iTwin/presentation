@@ -87,7 +87,7 @@ export function createStub<T extends (...args: any[]) => any>() {
  */
 export function createMocked<T extends object>(target: { prototype: T }): Mocked<T> {
   const instance = {} as Mocked<T>;
-  let proto: object | null = target.prototype as object;
+  let proto: object | null = target.prototype;
   while (proto && proto !== Object.prototype) {
     for (const key of Object.getOwnPropertyNames(proto)) {
       if (key === "constructor") {

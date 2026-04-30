@@ -11,6 +11,7 @@ import {
 import { useCallback, useState } from "react";
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
+import { withEditTxn } from "@itwin/core-backend";
 import { IModelApp } from "@itwin/core-frontend";
 import {
   PresentationPropertyDataProvider,
@@ -91,22 +92,14 @@ describe("Learning snippets", async () => {
       const elementKeys: InstanceKey[] = [];
 
       const { imodelConnection } = await buildTestIModel((imodel) => {
-        const categoryKey = insertSpatialCategory({ imodel, codeValue: "My Category" });
-        const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "My Model" });
-        elementKeys.push(
-          insertPhysicalElement({
-            imodel,
-            userLabel: "My Element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          }),
-          insertPhysicalElement({
-            imodel,
-            userLabel: "My Element 2",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          }),
-        );
+        withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+          const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
+          elementKeys.push(
+            insertPhysicalElement({ txn, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id }),
+            insertPhysicalElement({ txn, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id }),
+          );
+        });
       });
 
       // render the component

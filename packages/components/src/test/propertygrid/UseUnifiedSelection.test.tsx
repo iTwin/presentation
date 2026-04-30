@@ -44,7 +44,6 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
 
   describe("with deprecated SelectionHandler", () => {
     let selectionHandler: Mocked<SelectionHandler>;
-    // eslint-disable-next-line @stylistic/object-curly-spacing
     function SelectionHandlerWrapper({ children }: PropsWithChildren<{}>) {
       return (
         <SelectionHandlerContextProvider selectionHandler={selectionHandler}>

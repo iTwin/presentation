@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
 
-import { StandaloneDb } from "@itwin/core-backend";
+import { StandaloneDb, withEditTxn } from "@itwin/core-backend";
 import { createHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.RegisterTxnListeners.Imports
 import { BriefcaseDb } from "@itwin/core-backend";
@@ -64,21 +64,24 @@ describe("Core interop", () => {
 
         expect(hierarchyChangedSpy).not.toHaveBeenCalled();
 
-        testIModel.elements.insertAspect({ element: { id: "0x1" }, classFullName: "BisCore.ExternalSourceAspect" });
-        testIModel.saveChanges();
+        withEditTxn(testIModel, (txn) => {
+          txn.insertAspect({ element: { id: "0x1" }, classFullName: "BisCore.ExternalSourceAspect" });
+        });
         expect(hierarchyChangedSpy).toHaveBeenCalledOnce();
-        await testIModel.importSchemaStrings([
-          getFullSchemaXml({
-            schemaName: "TestSchema",
-            schemaContentXml: `
+
+        await withEditTxn(testIModel, async (txn) => {
+          await txn.iModel.importSchemaStrings([
+            getFullSchemaXml({
+              schemaName: "TestSchema",
+              schemaContentXml: `
               <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
               <ECEntityClass typeName="X">
                 <BaseClass>bis:PhysicalElement</BaseClass>
               </ECEntityClass>
             `,
-          }),
-        ]);
-        testIModel.saveChanges();
+            }),
+          ]);
+        });
         expect(hierarchyChangedSpy).toHaveBeenCalledTimes(2);
       });
     });

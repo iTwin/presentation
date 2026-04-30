@@ -51,6 +51,7 @@ import type {
   CategoryDescription,
   DisplayValue,
   Field,
+  PropertiesField,
   StructFieldMemberDescription,
   StructTypeDescription,
   TypeDescription,
@@ -312,50 +313,82 @@ describe("PropertyDataProvider", () => {
   describe("getData", () => {
     const createPrimitiveField = createTestSimpleContentField;
 
-    const createArrayField = (props?: { name?: string; itemsType?: TypeDescription }) => {
-      const itemsType = props?.itemsType ?? { valueFormat: PropertyValueFormat.Primitive, typeName: "MyArrayItemType" };
+    const createArrayField = (
+      props?: { name?: string; category?: CategoryDescription | undefined } & (
+        | { itemsType?: TypeDescription }
+        | { itemsField?: PropertiesField }
+      ),
+    ) => {
+      const itemsField =
+        props && "itemsField" in props && props.itemsField
+          ? props.itemsField
+          : (function () {
+              const itemsType: TypeDescription =
+                props && "itemsType" in props && props.itemsType
+                  ? props.itemsType
+                  : { valueFormat: PropertyValueFormat.Primitive, typeName: "MyArrayItemType" };
+              return createTestPropertiesContentField({
+                name: "MyArrayItem",
+                type: itemsType,
+                category: props?.category,
+                properties: [{ property: createTestPropertyInfo({ name: itemsType.typeName }) }],
+              });
+            })();
       const arrayType: ArrayTypeDescription = {
         valueFormat: PropertyValueFormat.Array,
         typeName: "MyArrayItemType[]",
-        memberType: itemsType,
+        memberType: itemsField.type,
       };
       return createTestPropertiesContentField({
         name: props?.name ?? "MyArray",
+        label: "My array properties field",
+        category: props?.category,
         type: arrayType,
         properties: [{ property: createTestPropertyInfo() }],
-        itemsField: createTestPropertiesContentField({
-          name: "MyArrayItem",
-          type: itemsType,
-          properties: [{ property: createTestPropertyInfo({ name: itemsType.typeName }) }],
-        }),
+        itemsField,
       });
     };
 
-    const createStructField = (props?: { name?: string; members?: StructFieldMemberDescription[] }) => {
-      const memberTypes = props?.members ?? [
-        {
-          name: "MyMemberProperty",
-          label: "My member property",
-          type: { valueFormat: PropertyValueFormat.Primitive, typeName: "MyMemberType" },
-        },
-      ];
+    const createStructField = (
+      props?: { name?: string; category?: CategoryDescription | undefined } & (
+        | { memberTypes?: StructFieldMemberDescription[] }
+        | { memberFields?: PropertiesField[] }
+      ),
+    ) => {
+      const memberFields =
+        props && "memberFields" in props && props.memberFields
+          ? props.memberFields
+          : (function () {
+              const memberTypes: StructFieldMemberDescription[] =
+                props && "memberTypes" in props && props.memberTypes
+                  ? props.memberTypes
+                  : [
+                      {
+                        name: "MyMemberProperty",
+                        label: "My member property",
+                        type: { valueFormat: PropertyValueFormat.Primitive, typeName: "MyMemberType" },
+                      },
+                    ];
+              return memberTypes.map((member) =>
+                createTestPropertiesContentField({
+                  name: member.name,
+                  label: member.label,
+                  type: member.type,
+                  properties: [{ property: createTestPropertyInfo({ name: member.name }) }],
+                }),
+              );
+            })();
       const structType: StructTypeDescription = {
         valueFormat: PropertyValueFormat.Struct,
         typeName: "MyStructType",
-        members: memberTypes,
+        members: memberFields.map((mf) => ({ label: mf.label, name: mf.name, type: mf.type })),
       };
       return createTestPropertiesContentField({
         name: props?.name ?? "MyStruct",
+        label: "My struct properties field",
         type: structType,
         properties: [{ property: createTestPropertyInfo() }],
-        memberFields: memberTypes.map((member) =>
-          createTestPropertiesContentField({
-            name: member.name,
-            label: member.label,
-            type: member.type,
-            properties: [{ property: createTestPropertyInfo({ name: member.name }) }],
-          }),
-        ),
+        memberFields,
       });
     };
 
@@ -665,6 +698,31 @@ describe("PropertyDataProvider", () => {
             expect(await provider.getData()).toMatchSnapshot();
           });
 
+          it("doesn't destructure nested array properties with one value", async () => {
+            const category = createTestCategoryDescription();
+            const arrayField = createArrayField({ name: "array-field", category });
+            const rootField = createTestNestedContentField({
+              name: "root-field",
+              category,
+              nestedFields: [arrayField],
+            });
+            const descriptor = createTestContentDescriptor({ fields: [rootField] });
+            const values = {
+              [rootField.name]: [
+                {
+                  primaryKeys: [createTestECInstanceKey({ id: "0x1" })],
+                  values: { [arrayField.name]: ["test value"] },
+                  displayValues: { [arrayField.name]: ["test value"] },
+                  mergedFieldNames: [],
+                },
+              ],
+            };
+            const displayValues = { [rootField.name]: [{ displayValues: { [arrayField.name]: ["test value"] } }] };
+            const record = createTestContentItem({ values, displayValues });
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
+          });
+
           it("returns nested content with deeply nested content as structs array when there are multiple nested content items", async () => {
             const category = createTestCategoryDescription();
             const primitiveField1 = createPrimitiveField({ name: "primitive-field-1", category });
@@ -776,6 +834,191 @@ describe("PropertyDataProvider", () => {
               ],
             };
             const displayValues = { [field.name]: [{ displayValues: { [nestedField.name]: "display value 1" } }] };
+            const record = createTestContentItem({ values, displayValues });
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
+          });
+
+          it("returns nested content with a single primitives' array property having one array item", async () => {
+            const nestedFieldCategory = createTestCategoryDescription({
+              name: "nested-content",
+              label: "Nested content",
+            });
+            const arrayItemField = createTestPropertiesContentField({
+              name: "array-item-field",
+              category: nestedFieldCategory,
+              properties: [{ property: createTestPropertyInfo({ type: "string" }) }],
+            });
+            const arrayField = createArrayField({
+              name: "array-field",
+              category: nestedFieldCategory,
+              itemsField: arrayItemField,
+            });
+            const rootField = createTestNestedContentField({
+              name: "root-field",
+              category: createTestCategoryDescription({ name: "root", label: "Root category" }),
+              nestedFields: [arrayField],
+            });
+            const descriptor = createTestContentDescriptor({ fields: [rootField] });
+            const values = {
+              [rootField.name]: [
+                {
+                  primaryKeys: [createTestECInstanceKey({ id: "0x1" })],
+                  values: { [arrayField.name]: ["value 1"] },
+                  displayValues: { [arrayField.name]: ["display value 1"] },
+                  mergedFieldNames: [],
+                },
+              ],
+            };
+            const displayValues = { [rootField.name]: [{ displayValues: { [arrayField.name]: ["display value 1"] } }] };
+            const record = createTestContentItem({ values, displayValues });
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
+          });
+
+          it("returns nested content with a single primitives' array property having multiple array items", async () => {
+            const nestedFieldCategory = createTestCategoryDescription({
+              name: "nested-content",
+              label: "Nested content",
+            });
+            const arrayItemField = createTestPropertiesContentField({
+              name: "array-item-field",
+              category: nestedFieldCategory,
+              properties: [{ property: createTestPropertyInfo({ type: "string" }) }],
+            });
+            const arrayField = createArrayField({
+              name: "array-field",
+              category: nestedFieldCategory,
+              itemsField: arrayItemField,
+            });
+            const rootField = createTestNestedContentField({
+              name: "root-field",
+              category: createTestCategoryDescription({ name: "root", label: "Root category" }),
+              nestedFields: [arrayField],
+            });
+            const descriptor = createTestContentDescriptor({ fields: [rootField] });
+            const values = {
+              [rootField.name]: [
+                {
+                  primaryKeys: [createTestECInstanceKey({ id: "0x1" })],
+                  values: { [arrayField.name]: ["value 1", "value 2"] },
+                  displayValues: { [arrayField.name]: ["display value 1", "display value 2"] },
+                  mergedFieldNames: [],
+                },
+              ],
+            };
+            const displayValues = {
+              [rootField.name]: [{ displayValues: { [arrayField.name]: ["display value 1", "display value 2"] } }],
+            };
+            const record = createTestContentItem({ values, displayValues });
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
+          });
+
+          it("returns nested content with a single structs' array property having one array item", async () => {
+            const nestedFieldCategory = createTestCategoryDescription({
+              name: "nested-content",
+              label: "Nested content",
+            });
+            const structMemberField = createTestPropertiesContentField({
+              name: "struct-member-field",
+              category: nestedFieldCategory,
+              properties: [{ property: createTestPropertyInfo({ name: "struct-member-field", type: "string" }) }],
+            });
+            const arrayItemField = createStructField({
+              name: "array-item-field",
+              category: nestedFieldCategory,
+              memberFields: [structMemberField],
+            });
+            const arrayField = createArrayField({
+              name: "array-field",
+              category: nestedFieldCategory,
+              itemsField: arrayItemField,
+            });
+            const rootField = createTestNestedContentField({
+              name: "root-field",
+              category: createTestCategoryDescription({ name: "root", label: "Root category" }),
+              nestedFields: [arrayField],
+            });
+            const descriptor = createTestContentDescriptor({ fields: [rootField] });
+            const values = {
+              [rootField.name]: [
+                {
+                  primaryKeys: [createTestECInstanceKey({ id: "0x1" })],
+                  values: { [arrayField.name]: [{ [structMemberField.name]: "value 1" }] },
+                  displayValues: { [arrayField.name]: [{ [structMemberField.name]: "display value 1" }] },
+                  mergedFieldNames: [],
+                },
+              ],
+            };
+            const displayValues = {
+              [rootField.name]: [
+                { displayValues: { [arrayField.name]: [{ [structMemberField.name]: "display value 1" }] } },
+              ],
+            };
+            const record = createTestContentItem({ values, displayValues });
+            provider.getContent = async () => new Content(descriptor, [record]);
+            expect(await provider.getData()).toMatchSnapshot();
+          });
+
+          it("returns nested content with a single structs' array property having multiple array items", async () => {
+            const nestedFieldCategory = createTestCategoryDescription({
+              name: "nested-content",
+              label: "Nested content",
+            });
+            const structMemberField = createTestPropertiesContentField({
+              name: "struct-member-field",
+              category: nestedFieldCategory,
+              properties: [{ property: createTestPropertyInfo({ name: "struct-member-field", type: "string" }) }],
+            });
+            const arrayItemField = createStructField({
+              name: "array-item-field",
+              category: nestedFieldCategory,
+              memberFields: [structMemberField],
+            });
+            const arrayField = createArrayField({
+              name: "array-field",
+              category: nestedFieldCategory,
+              itemsField: arrayItemField,
+            });
+            const rootField = createTestNestedContentField({
+              name: "root-field",
+              category: createTestCategoryDescription({ name: "root", label: "Root category" }),
+              nestedFields: [arrayField],
+            });
+            const descriptor = createTestContentDescriptor({ fields: [rootField] });
+            const values = {
+              [rootField.name]: [
+                {
+                  primaryKeys: [createTestECInstanceKey({ id: "0x1" })],
+                  values: {
+                    [arrayField.name]: [
+                      { [structMemberField.name]: "value 1" },
+                      { [structMemberField.name]: "value 2" },
+                    ],
+                  },
+                  displayValues: {
+                    [arrayField.name]: [
+                      { [structMemberField.name]: "display value 1" },
+                      { [structMemberField.name]: "display value 2" },
+                    ],
+                  },
+                  mergedFieldNames: [],
+                },
+              ],
+            };
+            const displayValues = {
+              [rootField.name]: [
+                {
+                  displayValues: {
+                    [arrayField.name]: [
+                      { [structMemberField.name]: "display value 1" },
+                      { [structMemberField.name]: "display value 2" },
+                    ],
+                  },
+                },
+              ],
+            };
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             expect(await provider.getData()).toMatchSnapshot();
@@ -1142,7 +1385,7 @@ describe("PropertyDataProvider", () => {
               fields: [
                 createStructField({
                   name: "WithMembers",
-                  members: [
+                  memberTypes: [
                     {
                       name: "TestMember",
                       label: "Test",
@@ -1150,7 +1393,7 @@ describe("PropertyDataProvider", () => {
                     },
                   ],
                 }),
-                createStructField({ name: "Empty", members: [] }),
+                createStructField({ name: "Empty", memberTypes: [] }),
               ],
             });
             const values: ValuesDictionary<any> = { WithMembers: { TestMember: "some value" }, Empty: {} };

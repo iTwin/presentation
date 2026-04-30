@@ -39,20 +39,20 @@
     "benchmark:unified-selection": "pnpm run -C ./apps/performance-tests benchmark:unified-selection"
   },
   "dependencies": {
-    "@changesets/cli": "^2.29.8",
+    "@changesets/cli": "^2.31.0",
     "@stylistic/eslint-plugin": "catalog:build-tools",
-    "eslint-plugin-unused-imports": "catalog:build-tools",
     "cpx2": "catalog:build-tools",
     "cspell": "^9.8.0",
     "eslint": "catalog:build-tools",
     "eslint-config-prettier": "^9.1.2",
+    "eslint-plugin-unused-imports": "catalog:build-tools",
     "fast-glob": "^3.3.3",
     "husky": "^9.1.7",
-    "lage": "^2.15.6",
+    "lage": "^2.15.11",
     "lint-staged": "^15.5.2",
     "markdown-link-check": "^3.14.2",
     "npm-run-all": "^4.1.5",
-    "oxfmt": "^0.41.0",
+    "oxfmt": "^0.47.0",
     "rimraf": "catalog:build-tools",
     "yaml": "^2.8.3",
     "yargs": "^17.7.2"
@@ -74,7 +74,7 @@
       "@opentelemetry/exporter-trace-otlp-grpc@^0.43.0": "^0.52.0",
       "@opentelemetry/exporter-trace-otlp-http@^0.41.2": "^0.52.0",
       "@opentelemetry/exporter-trace-otlp-proto@^0.41.2": "^0.52.0",
-      "xmlbuilder2>js-yaml@^3": "^3.14.2"
+      "uuid@<14": "^14.0.0"
     }
   }
 }

@@ -14,6 +14,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { computeSelection } from "@itwin/unified-selection";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
+import { withEditTxn } from "@itwin/core-backend";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 
@@ -30,15 +31,17 @@ describe("Unified selection", () => {
 
       it("Basic selection scope", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-          const elementKey = insertPhysicalElement({
-            imodel,
-            userLabel: "test element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+          return withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            const elementKey = insertPhysicalElement({
+              txn,
+              userLabel: "test element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            return { modelKey, categoryKey, elementKey };
           });
-          return { modelKey, categoryKey, elementKey };
         });
 
         const elementIds = [keys.elementKey.id];
@@ -54,22 +57,24 @@ describe("Unified selection", () => {
 
       it("Selection scope with ancestor level", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-          const parentElementKey = insertPhysicalElement({
-            imodel,
-            userLabel: "test element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+          return withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            const parentElementKey = insertPhysicalElement({
+              txn,
+              userLabel: "test element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            const elementKey = insertPhysicalElement({
+              txn,
+              userLabel: "test element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: parentElementKey.id,
+            });
+            return { modelKey, categoryKey, parentElementKey, elementKey };
           });
-          const elementKey = insertPhysicalElement({
-            imodel,
-            userLabel: "test element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: parentElementKey.id,
-          });
-          return { modelKey, categoryKey, parentElementKey, elementKey };
         });
 
         const elementIds = [keys.elementKey.id];

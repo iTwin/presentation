@@ -13,7 +13,6 @@ import {
 } from "../../../Utils.js";
 
 import type { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
-import type { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping.js";
 
 describe("ClassGrouping", () => {
   let schemaProvider: ReturnType<typeof createECSchemaProviderStub>;
@@ -47,7 +46,7 @@ describe("ClassGrouping", () => {
         },
       ],
       ungrouped: [],
-    } as GroupingHandlerResult);
+    });
   });
 
   it("groups multiple instance nodes", async () => {
@@ -149,6 +148,6 @@ describe("ClassGrouping", () => {
       groupingType: "class",
       grouped: [],
       ungrouped: nodes,
-    } as GroupingHandlerResult);
+    });
   });
 });

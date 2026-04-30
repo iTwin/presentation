@@ -30,6 +30,7 @@ import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
 import { isSelectionStorageSupported, stubVirtualization } from "../../Utils.js";
+import { withEditTxn } from "@itwin/core-backend";
 
 describe("Unified selection", () => {
   describe("Learning snippets", () => {
@@ -109,15 +110,17 @@ describe("Unified selection", () => {
           imodelConnection,
           elementKey: { id: geometricElementId },
         } = await buildTestIModel(async (imodel) => {
-          const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-          const elementKey = insertPhysicalElement({
-            imodel,
-            userLabel: "root element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+          return withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            const elementKey = insertPhysicalElement({
+              txn,
+              userLabel: "root element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            return { modelKey, categoryKey, elementKey };
           });
-          return { modelKey, categoryKey, elementKey };
         });
         function useActiveIModelConnection() {
           return imodelConnection;
@@ -202,15 +205,17 @@ describe("Unified selection", () => {
           Presentation.terminate();
 
           const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-            const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "test model" });
-            const categoryKey = insertSpatialCategory({ imodel, codeValue: "test category" });
-            const elementKey = insertPhysicalElement({
-              imodel,
-              userLabel: "root element",
-              modelId: modelKey.id,
-              categoryId: categoryKey.id,
+            return withEditTxn(imodel, (txn) => {
+              const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+              const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+              const elementKey = insertPhysicalElement({
+                txn,
+                userLabel: "root element",
+                modelId: modelKey.id,
+                categoryId: categoryKey.id,
+              });
+              return { modelKey, categoryKey, elementKey };
             });
-            return { modelKey, categoryKey, elementKey };
           });
 
           // __PUBLISH_EXTRACT_START__ Presentation.LegacySelectionManagerSelectionSync.Example

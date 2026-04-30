@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { Input } from "@itwin/itwinui-react";
 import { getDecimalRoundingError } from "./Utils.js";
@@ -24,6 +24,11 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
   const property: WithConstraints<PropertyDescription> = propertyRecord.property;
 
   const [inputValue, setInputValue] = useState<string>(() => getInputTargetFromPropertyRecord(propertyRecord) ?? "");
+  const [isEditing, setEditing] = useState(false);
+  const displayValue = useMemo(
+    () => (!isEditing && propertyRecord.isMerged && inputValue === "" ? "--" : inputValue),
+    [isEditing, propertyRecord.isMerged, inputValue],
+  );
 
   const handleChange = (newVal: string) => {
     setInputValue(newVal);
@@ -41,9 +46,13 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
   return (
     <NumericInput
       onChange={handleChange}
-      value={inputValue}
+      value={displayValue}
       onCancel={onCancel}
-      onBlur={commitInput}
+      onBlur={() => {
+        commitInput();
+        setEditing(false);
+      }}
+      onFocus={() => setEditing(true)}
       isDisabled={propertyRecord.isReadonly}
       setFocus={setFocus}
       ref={ref}
@@ -78,6 +87,7 @@ function getInputTargetFromPropertyRecord(propertyRecord: PropertyRecord) {
 export interface NumericInputProps extends PropertyEditorProps {
   onChange: (newValue: string) => void;
   onBlur?: React.FocusEventHandler;
+  onFocus?: React.FocusEventHandler;
   value: string;
   isDisabled?: boolean;
   min?: number;
@@ -86,7 +96,7 @@ export interface NumericInputProps extends PropertyEditorProps {
 
 /** @internal */
 export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputProps>(
-  ({ value, onChange, onBlur, isDisabled, setFocus, min, max, onCancel }, ref) => {
+  ({ value, onChange, onBlur, onFocus, isDisabled, setFocus, min, max, onCancel }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
     useImperativeHandle(ref, () => ({ getValue: () => parsePrimitiveValue(value), htmlElement: inputRef.current }), [
       value,
@@ -145,7 +155,12 @@ export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputPro
         max={max}
         onChange={handleChange}
         onBlur={onBlur}
-        onFocus={() => inputRef.current?.setSelectionRange(0, 9999)}
+        onFocus={(e) => {
+          onFocus?.(e);
+          requestAnimationFrame(() => {
+            inputRef.current?.setSelectionRange(0, 9999);
+          });
+        }}
       />
     );
   },

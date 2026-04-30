@@ -1,8 +1,9 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "rootDirs": ["src/utils", "src/presentation-hierarchies-react/internal"],
-    "outDir": "./lib/build"
+    "rootDir": "./src",
+    "outDir": "./lib/build",
+    "types": ["node"]
   },
   "include": ["src/utils", "src/presentation-hierarchies-react/internal/LocalizedStrings.ts"]
 }

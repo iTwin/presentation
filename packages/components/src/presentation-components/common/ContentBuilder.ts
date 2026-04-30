@@ -13,13 +13,7 @@ import { combineFieldNames, PropertyValueFormat as PresentationPropertyValueForm
 import { NumericEditorName } from "../properties/editors/NumericPropertyEditor.js";
 import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor.js";
 
-import type {
-  ArrayValue,
-  PrimitiveValue,
-  PropertyDescription,
-  PropertyEditorInfo,
-  StructValue,
-} from "@itwin/appui-abstract";
+import type { ArrayValue, PrimitiveValue, PropertyDescription, StructValue } from "@itwin/appui-abstract";
 import type {
   EditorDescription,
   EnumerationInfo,
@@ -73,9 +67,8 @@ export interface FieldInfo {
 
 /** @internal */
 export function createFieldInfo(field: Field, parentFieldName?: string): FieldInfo {
-  const property: undefined | WithConstraints<PropertyInfo> = field.isPropertiesField()
-    ? field.properties[0].property
-    : undefined;
+  const property: undefined | WithConstraints<PropertyInfo> =
+    field.isPropertiesField() && field.properties.length > 0 ? field.properties[0].property : undefined;
   return {
     name: combineFieldNames(field.name, parentFieldName),
     type: field.isNestedContentField() ? field.type : { ...field.type, typeName: field.type.typeName.toLowerCase() },
@@ -102,7 +95,7 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
   }
 
   if (info.editor) {
-    description.editor = { name: info.editor.name } as PropertyEditorInfo;
+    description.editor = { name: info.editor.name };
   }
 
   if (info.koqName) {
@@ -299,7 +292,13 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
 
   public processMergedValue(props: ProcessMergedValueProps): void {
     const propertyField = props.requestedField;
-    const value: PrimitiveValue = { valueFormat: UiPropertyValueFormat.Primitive };
+    const rootAppender = this._appendersStack[0];
+    assert(IPropertiesAppender.isRoot(rootAppender));
+    const displayValue = rootAppender.item.displayValues[props.mergedField.name] as string | undefined;
+    const value: PrimitiveValue = {
+      valueFormat: UiPropertyValueFormat.Primitive,
+      ...(displayValue?.startsWith("--") ? { displayValue } : {}),
+    };
     const record = new PropertyRecord(
       value,
       createPropertyDescriptionFromFieldInfo(createFieldInfo(propertyField, props.parentFieldName)),

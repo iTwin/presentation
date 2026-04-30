@@ -10,6 +10,7 @@ import {
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { withEditTxn } from "@itwin/core-backend";
 import { BisCodeSpec, Code, IModel } from "@itwin/core-common";
 import { RulesetEmbedder } from "@itwin/presentation-backend";
 import {
@@ -44,9 +45,11 @@ describe("iModel instance labels", () => {
 
   it("applies `InstanceLabelOverride` `Property` spec from embedded ruleset", async () => {
     const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-      const { id: modelId } = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-      const { id: categoryId } = insertSpatialCategory({ imodel, codeValue: "category" });
-      const target = insertPhysicalElement({ imodel, modelId, categoryId, userLabel: "ExpectedLabel" });
+      const target = withEditTxn(imodel, (txn) => {
+        const { id: modelId } = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+        const { id: categoryId } = insertSpatialCategory({ txn, codeValue: "category" });
+        return insertPhysicalElement({ txn, modelId, categoryId, userLabel: "ExpectedLabel" });
+      });
       const ruleset: Ruleset = {
         id: "label-override-test",
         rules: [
@@ -65,14 +68,16 @@ describe("iModel instance labels", () => {
 
   it("higher-priority override wins over lower-priority override", async () => {
     const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-      const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-      const category = insertSpatialCategory({ imodel, codeValue: "category" });
-      const el = insertPhysicalElement({
-        imodel,
-        modelId: model.id,
-        categoryId: category.id,
-        userLabel: "HighWins",
-        codeValue: "LowLoses",
+      const target = withEditTxn(imodel, (txn) => {
+        const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+        const category = insertSpatialCategory({ txn, codeValue: "category" });
+        return insertPhysicalElement({
+          txn,
+          modelId: model.id,
+          categoryId: category.id,
+          userLabel: "HighWins",
+          codeValue: "LowLoses",
+        });
       });
       // Low-priority rule listed first in source; high-priority should still win
       const ruleset: Ruleset = {
@@ -93,17 +98,19 @@ describe("iModel instance labels", () => {
         ],
       };
       await new RulesetEmbedder({ imodel }).insertRuleset(ruleset);
-      return { target: el };
+      return { target };
     });
     expect(await selectInstanceLabel({ imodel: imodelConnection, instanceKey: keys.target })).toBe("HighWins");
   });
 
   it("applies `Property` spec with `propertySource` - label from parent's property", async () => {
     const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-      const { id: modelId } = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-      const { id: categoryId } = insertSpatialCategory({ imodel, codeValue: "category" });
-      const parent = insertPhysicalElement({ imodel, modelId, categoryId, userLabel: "ParentLabel" });
-      const child = insertPhysicalElement({ imodel, modelId, categoryId, parentId: parent.id });
+      const child = withEditTxn(imodel, (txn) => {
+        const { id: modelId } = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+        const { id: categoryId } = insertSpatialCategory({ txn, codeValue: "category" });
+        const parent = insertPhysicalElement({ txn, modelId, categoryId, userLabel: "ParentLabel" });
+        return insertPhysicalElement({ txn, modelId, categoryId, parentId: parent.id });
+      });
       const ruleset: Ruleset = {
         id: "property-source-test",
         rules: [
@@ -131,10 +138,12 @@ describe("iModel instance labels", () => {
 
   it("applies `RelatedInstanceLabel` spec - label from related PhysicalType", async () => {
     const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-      const { id: modelId } = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-      const { id: categoryId } = insertSpatialCategory({ imodel, codeValue: "category" });
-      const physicalType = insertPhysicalType({ imodel, userLabel: "MyTypeName" });
-      const element = insertPhysicalElement({ imodel, modelId, categoryId, typeDefinitionId: physicalType.id });
+      const element = withEditTxn(imodel, (txn) => {
+        const { id: modelId } = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+        const { id: categoryId } = insertSpatialCategory({ txn, codeValue: "category" });
+        const physicalType = insertPhysicalType({ txn, userLabel: "MyTypeName" });
+        return insertPhysicalElement({ txn, modelId, categoryId, typeDefinitionId: physicalType.id });
+      });
       const ruleset: Ruleset = {
         id: "related-instance-label-test",
         rules: [
@@ -161,18 +170,20 @@ describe("iModel instance labels", () => {
 
   it("applies `RelatedInstanceLabel` spec with recursive override for the related class", async () => {
     const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-      const { id: modelId } = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-      const { id: categoryId } = insertSpatialCategory({ imodel, codeValue: "category" });
-      const physicalType = insertPhysicalType({
-        imodel,
-        userLabel: "IgnoredUserLabel",
-        code: new Code({
-          spec: imodel.codeSpecs.getByName(BisCodeSpec.nullCodeSpec).id,
-          scope: IModel.dictionaryId,
-          value: "TypeCodeValue",
-        }),
+      const element = withEditTxn(imodel, (txn) => {
+        const { id: modelId } = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+        const { id: categoryId } = insertSpatialCategory({ txn, codeValue: "category" });
+        const physicalType = insertPhysicalType({
+          txn,
+          userLabel: "IgnoredUserLabel",
+          code: new Code({
+            spec: txn.iModel.codeSpecs.getByName(BisCodeSpec.nullCodeSpec).id,
+            scope: IModel.dictionaryId,
+            value: "TypeCodeValue",
+          }),
+        });
+        return insertPhysicalElement({ txn, modelId, categoryId, typeDefinitionId: physicalType.id });
       });
-      const element = insertPhysicalElement({ imodel, modelId, categoryId, typeDefinitionId: physicalType.id });
       const ruleset: Ruleset = {
         id: "related-instance-label-override-test",
         rules: [

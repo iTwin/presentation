@@ -5,7 +5,7 @@
 
 import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it } from "vitest";
-import { PhysicalPartition, Subject } from "@itwin/core-backend";
+import { PhysicalPartition, Subject, withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -83,9 +83,11 @@ describe("Hierarchies", () => {
 
       it("hides base class groups when there're no siblings", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ imodel, codeValue: "A2", parentId: IModel.rootSubjectId });
-          return { childSubject1, childSubject2 };
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({ txn, codeValue: "A1", parentId: IModel.rootSubjectId });
+            const childSubject2 = insertSubject({ txn, codeValue: "A2", parentId: IModel.rootSubjectId });
+            return { childSubject1, childSubject2 };
+          });
         });
 
         await validateHierarchy({
@@ -102,8 +104,10 @@ describe("Hierarchies", () => {
 
       it("hides base class groups when there's only 1 grouped node", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
-          return { childSubject1 };
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({ txn, codeValue: "A1", parentId: IModel.rootSubjectId });
+            return { childSubject1 };
+          });
         });
 
         await validateHierarchy({
@@ -117,14 +121,16 @@ describe("Hierarchies", () => {
 
       it("doesn't hide base class groups when there are siblings", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({
-            imodel,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({
+              txn,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            const childPartition2 = insertPhysicalPartition({ txn, codeValue: "B1", parentId: IModel.rootSubjectId });
+            return { childSubject1, childPartition2 };
           });
-          const childPartition2 = insertPhysicalPartition({ imodel, codeValue: "B1", parentId: IModel.rootSubjectId });
-          return { childSubject1, childPartition2 };
         });
 
         await validateHierarchy({
@@ -145,9 +151,11 @@ describe("Hierarchies", () => {
 
       it("doesn't hide base class groups when there's more than 1 grouped node", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ imodel, codeValue: "A2", parentId: IModel.rootSubjectId });
-          return { childSubject1, childSubject2 };
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({ txn, codeValue: "A1", parentId: IModel.rootSubjectId });
+            const childSubject2 = insertSubject({ txn, codeValue: "A2", parentId: IModel.rootSubjectId });
+            return { childSubject1, childSubject2 };
+          });
         });
 
         await validateHierarchy({
@@ -178,9 +186,11 @@ describe("Hierarchies", () => {
 
       it("hides class groups when there're no siblings", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ imodel, codeValue: "A2", parentId: IModel.rootSubjectId });
-          return { childSubject1, childSubject2 };
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({ txn, codeValue: "A1", parentId: IModel.rootSubjectId });
+            const childSubject2 = insertSubject({ txn, codeValue: "A2", parentId: IModel.rootSubjectId });
+            return { childSubject1, childSubject2 };
+          });
         });
 
         await validateHierarchy({
@@ -197,8 +207,10 @@ describe("Hierarchies", () => {
 
       it("hides class groups when there's only 1 grouped node", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
-          return { childSubject1 };
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({ txn, codeValue: "A1", parentId: IModel.rootSubjectId });
+            return { childSubject1 };
+          });
         });
 
         await validateHierarchy({
@@ -212,9 +224,11 @@ describe("Hierarchies", () => {
 
       it("doesn't hide class groups when there are siblings", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childPartition2 = insertPhysicalPartition({ imodel, codeValue: "B1", parentId: IModel.rootSubjectId });
-          return { childSubject1, childPartition2 };
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({ txn, codeValue: "A1", parentId: IModel.rootSubjectId });
+            const childPartition2 = insertPhysicalPartition({ txn, codeValue: "B1", parentId: IModel.rootSubjectId });
+            return { childSubject1, childPartition2 };
+          });
         });
 
         await validateHierarchy({
@@ -239,9 +253,11 @@ describe("Hierarchies", () => {
 
       it("doesn't hide class groups when there's more than 1 grouped node", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ imodel, codeValue: "A2", parentId: IModel.rootSubjectId });
-          return { childSubject1, childSubject2 };
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({ txn, codeValue: "A1", parentId: IModel.rootSubjectId });
+            const childSubject2 = insertSubject({ txn, codeValue: "A2", parentId: IModel.rootSubjectId });
+            return { childSubject1, childSubject2 };
+          });
         });
 
         await validateHierarchy({
@@ -271,19 +287,21 @@ describe("Hierarchies", () => {
 
       it("hides label groups when there're no siblings", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({
-            imodel,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({
+              txn,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            const childSubject2 = insertSubject({
+              txn,
+              codeValue: "A2",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            return { childSubject1, childSubject2 };
           });
-          const childSubject2 = insertSubject({
-            imodel,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({
@@ -304,13 +322,15 @@ describe("Hierarchies", () => {
 
       it("hides label groups when there's only 1 grouped node", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({
-            imodel,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({
+              txn,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            return { childSubject1 };
           });
-          return { childSubject1 };
         });
 
         await validateHierarchy({
@@ -328,19 +348,21 @@ describe("Hierarchies", () => {
 
       it("doesn't hide label groups when there are siblings", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({
-            imodel,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({
+              txn,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            const childSubject2 = insertSubject({
+              txn,
+              codeValue: "A2",
+              parentId: IModel.rootSubjectId,
+              userLabel: "test2",
+            });
+            return { childSubject1, childSubject2 };
           });
-          const childSubject2 = insertSubject({
-            imodel,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: "test2",
-          });
-          return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({
@@ -367,19 +389,21 @@ describe("Hierarchies", () => {
 
       it("doesn't hide label groups when there's more than 1 grouped node", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({
-            imodel,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({
+              txn,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            const childSubject2 = insertSubject({
+              txn,
+              codeValue: "A2",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            return { childSubject1, childSubject2 };
           });
-          const childSubject2 = insertSubject({
-            imodel,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({
@@ -423,19 +447,21 @@ describe("Hierarchies", () => {
 
       it("hides property groups when there're no siblings", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({
-            imodel,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({
+              txn,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            const childSubject2 = insertSubject({
+              txn,
+              codeValue: "A2",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            return { childSubject1, childSubject2 };
           });
-          const childSubject2 = insertSubject({
-            imodel,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({
@@ -452,13 +478,15 @@ describe("Hierarchies", () => {
 
       it("hides property groups when there's only 1 grouped node", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({
-            imodel,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({
+              txn,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            return { childSubject1 };
           });
-          return { childSubject1 };
         });
 
         await validateHierarchy({
@@ -472,19 +500,21 @@ describe("Hierarchies", () => {
 
       it("doesn't hide property groups when there are siblings", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({
-            imodel,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({
+              txn,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            const childSubject2 = insertSubject({
+              txn,
+              codeValue: "A2",
+              parentId: IModel.rootSubjectId,
+              userLabel: `${groupName}2`,
+            });
+            return { childSubject1, childSubject2 };
           });
-          const childSubject2 = insertSubject({
-            imodel,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: `${groupName}2`,
-          });
-          return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({
@@ -511,19 +541,21 @@ describe("Hierarchies", () => {
 
       it("doesn't hide base class groups when there's more than 1 grouped node", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({
-            imodel,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({
+              txn,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            const childSubject2 = insertSubject({
+              txn,
+              codeValue: "A2",
+              parentId: IModel.rootSubjectId,
+              userLabel: groupName,
+            });
+            return { childSubject1, childSubject2 };
           });
-          const childSubject2 = insertSubject({
-            imodel,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({

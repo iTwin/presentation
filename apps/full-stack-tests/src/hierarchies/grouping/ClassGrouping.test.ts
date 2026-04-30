@@ -5,7 +5,7 @@
 
 import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it } from "vitest";
-import { PhysicalPartition, Subject } from "@itwin/core-backend";
+import { PhysicalPartition, Subject, withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -31,11 +31,13 @@ describe("Hierarchies", () => {
 
     it("creates different groups for different classes", async () => {
       const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        const childSubject1 = insertSubject({ imodel, codeValue: "1", parentId: IModel.rootSubjectId });
-        const childPartition2 = insertPhysicalPartition({ imodel, codeValue: "2", parentId: IModel.rootSubjectId });
-        const childSubject3 = insertSubject({ imodel, codeValue: "3", parentId: IModel.rootSubjectId });
-        const childPartition4 = insertPhysicalPartition({ imodel, codeValue: "4", parentId: IModel.rootSubjectId });
-        return { childSubject1, childPartition2, childSubject3, childPartition4 };
+        return withEditTxn(imodel, (txn) => {
+          const childSubject1 = insertSubject({ txn, codeValue: "1", parentId: IModel.rootSubjectId });
+          const childPartition2 = insertPhysicalPartition({ txn, codeValue: "2", parentId: IModel.rootSubjectId });
+          const childSubject3 = insertSubject({ txn, codeValue: "3", parentId: IModel.rootSubjectId });
+          const childPartition4 = insertPhysicalPartition({ txn, codeValue: "4", parentId: IModel.rootSubjectId });
+          return { childSubject1, childPartition2, childSubject3, childPartition4 };
+        });
       });
 
       const hierarchy: HierarchyDefinition = {

@@ -12,6 +12,7 @@ import {
 } from "presentation-test-utilities";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { PropertyValueFormat } from "@itwin/appui-abstract";
+import { withEditTxn } from "@itwin/core-backend";
 import { assert } from "@itwin/core-bentley";
 import {
   ArrayPropertiesField,
@@ -54,7 +55,9 @@ describe("PropertyDataProvider", async () => {
 
       it("creates empty result when properties requested for 0 instances", async () => {
         const { imodelConnection } = await buildTestIModel(async (imodel) => {
-          insertSpatialCategory({ imodel, fullClassNameSeparator: ":", codeValue: "My Category" });
+          withEditTxn(imodel, (txn) => {
+            insertSpatialCategory({ txn, fullClassNameSeparator: ":", codeValue: "My Category" });
+          });
         });
         using provider = createProvider({ imodel: imodelConnection, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
         provider.keys = new KeySet();
@@ -68,14 +71,16 @@ describe("PropertyDataProvider", async () => {
         let elementKey: InstanceKey;
 
         const { imodelConnection } = await buildTestIModel(async (imodel) => {
-          categoryKey = insertSpatialCategory({ imodel, fullClassNameSeparator: ":", codeValue: "My Category" });
-          modelKey = insertPhysicalModelWithPartition({ imodel, fullClassNameSeparator: ":", codeValue: "My Model" });
-          elementKey = insertPhysicalElement({
-            imodel,
-            fullClassNameSeparator: ":",
-            userLabel: "My Element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+          withEditTxn(imodel, (txn) => {
+            categoryKey = insertSpatialCategory({ txn, fullClassNameSeparator: ":", codeValue: "My Category" });
+            modelKey = insertPhysicalModelWithPartition({ txn, fullClassNameSeparator: ":", codeValue: "My Model" });
+            elementKey = insertPhysicalElement({
+              txn,
+              fullClassNameSeparator: ":",
+              userLabel: "My Element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
           });
         });
         using provider = createProvider({ imodel: imodelConnection, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
@@ -115,14 +120,16 @@ describe("PropertyDataProvider", async () => {
         let elementKey: InstanceKey;
 
         const { imodelConnection } = await buildTestIModel(async (imodel) => {
-          categoryKey = insertSpatialCategory({ imodel, fullClassNameSeparator: ":", codeValue: "My Category" });
-          modelKey = insertPhysicalModelWithPartition({ imodel, fullClassNameSeparator: ":", codeValue: "My Model" });
-          elementKey = insertPhysicalElement({
-            imodel,
-            fullClassNameSeparator: ":",
-            userLabel: "My Element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+          withEditTxn(imodel, (txn) => {
+            categoryKey = insertSpatialCategory({ txn, fullClassNameSeparator: ":", codeValue: "My Category" });
+            modelKey = insertPhysicalModelWithPartition({ txn, fullClassNameSeparator: ":", codeValue: "My Model" });
+            elementKey = insertPhysicalElement({
+              txn,
+              fullClassNameSeparator: ":",
+              userLabel: "My Element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
           });
         });
         using provider = createProvider({ imodel: imodelConnection, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
@@ -160,7 +167,9 @@ describe("PropertyDataProvider", async () => {
         let categoryKey: InstanceKey;
 
         const { imodelConnection } = await buildTestIModel(async (imodel) => {
-          categoryKey = insertSpatialCategory({ imodel, fullClassNameSeparator: ":", codeValue: "My Category" });
+          categoryKey = withEditTxn(imodel, (txn) =>
+            insertSpatialCategory({ txn, fullClassNameSeparator: ":", codeValue: "My Category" }),
+          );
         });
         using provider = createProvider({ imodel: imodelConnection, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
         vi.spyOn(provider as any, "isFieldFavorite").mockReturnValue(true);
@@ -185,7 +194,9 @@ describe("PropertyDataProvider", async () => {
         let categoryKey: InstanceKey;
 
         const { imodelConnection } = await buildTestIModel(async (imodel) => {
-          categoryKey = insertSpatialCategory({ imodel, fullClassNameSeparator: ":", codeValue: "My Category" });
+          categoryKey = withEditTxn(imodel, (txn) =>
+            insertSpatialCategory({ txn, fullClassNameSeparator: ":", codeValue: "My Category" }),
+          );
         });
         using provider = createProvider({
           imodel: imodelConnection,
@@ -219,7 +230,9 @@ describe("PropertyDataProvider", async () => {
         let categoryKey: InstanceKey;
 
         const { imodelConnection } = await buildTestIModel(async (imodel) => {
-          categoryKey = insertSpatialCategory({ imodel, fullClassNameSeparator: ":", codeValue: "My Category" });
+          categoryKey = withEditTxn(imodel, (txn) =>
+            insertSpatialCategory({ txn, fullClassNameSeparator: ":", codeValue: "My Category" }),
+          );
         });
 
         using provider = createProvider({ imodel: imodelConnection, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
@@ -241,31 +254,33 @@ describe("PropertyDataProvider", async () => {
         let externalsSourceAspectKey: InstanceKey;
 
         const { imodelConnection } = await buildTestIModel(async (imodel) => {
-          const categoryKey = insertSpatialCategory({ imodel, fullClassNameSeparator: ":", codeValue: "My Category" });
-          const modelKey = insertPhysicalModelWithPartition({
-            imodel,
-            fullClassNameSeparator: ":",
-            codeValue: "My Model",
-          });
-          elementKey = insertPhysicalElement({
-            imodel,
-            fullClassNameSeparator: ":",
-            userLabel: "My Element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          });
-          const repositoryLinkKey = insertRepositoryLink({
-            imodel,
-            fullClassNameSeparator: ":",
-            repositoryUrl: "Repository URL",
-            repositoryLabel: "Repository Label",
-          });
-          externalsSourceAspectKey = insertExternalSourceAspect({
-            imodel,
-            fullClassNameSeparator: ":",
-            elementId: elementKey.id,
-            identifier: "My External Source Aspect",
-            repositoryId: repositoryLinkKey.id,
+          withEditTxn(imodel, (txn) => {
+            const categoryKey = insertSpatialCategory({ txn, fullClassNameSeparator: ":", codeValue: "My Category" });
+            const modelKey = insertPhysicalModelWithPartition({
+              txn,
+              fullClassNameSeparator: ":",
+              codeValue: "My Model",
+            });
+            elementKey = insertPhysicalElement({
+              txn,
+              fullClassNameSeparator: ":",
+              userLabel: "My Element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            const repositoryLinkKey = insertRepositoryLink({
+              txn,
+              fullClassNameSeparator: ":",
+              repositoryUrl: "Repository URL",
+              repositoryLabel: "Repository Label",
+            });
+            externalsSourceAspectKey = insertExternalSourceAspect({
+              txn,
+              fullClassNameSeparator: ":",
+              elementId: elementKey.id,
+              identifier: "My External Source Aspect",
+              repositoryId: repositoryLinkKey.id,
+            });
           });
         });
 
@@ -303,39 +318,41 @@ describe("PropertyDataProvider", async () => {
 
   it("finds array item & struct member fields", async () => {
     const { imodelConnection, ...keys } = await buildTestIModel(async (imodel, testName) => {
-      const schema = await importSchema(
-        testName,
-        imodel,
-        `
-          <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-          <ECStructClass typeName="TestStruct">
-            <ECProperty propertyName="StringMember" typeName="string" />
-            <ECProperty propertyName="NumericMember" typeName="int" />
-          </ECStructClass>
-          <ECEntityClass typeName="TestPhysicalObject">
-            <BaseClass>bis:PhysicalElement</BaseClass>
-            <ECArrayProperty propertyName="ArrayProperty" typeName="string" />
-            <ECStructProperty propertyName="StructProperty" typeName="TestStruct" />
-            <ECStructArrayProperty propertyName="StructArrayProperty" typeName="TestStruct" />
-          </ECEntityClass>
-        `,
-      );
-      const categoryKey = insertSpatialCategory({ imodel, fullClassNameSeparator: ":", codeValue: "My Category" });
-      const modelKey = insertPhysicalModelWithPartition({ imodel, fullClassNameSeparator: ":", codeValue: "My Model" });
-      const elementKey = insertPhysicalElement({
-        imodel,
-        classFullName: `${schema.schemaAlias}:TestPhysicalObject` as const,
-        userLabel: "Test element",
-        modelId: modelKey.id,
-        categoryId: categoryKey.id,
-        ArrayProperty: ["Item 1", "Item 2"],
-        StructProperty: { StringMember: "Test string", NumericMember: 123 },
-        StructArrayProperty: [
-          { StringMember: "Item 1", NumericMember: 456 },
-          { StringMember: "Item 2", NumericMember: 789 },
-        ],
+      return withEditTxn(imodel, async (txn) => {
+        const schema = await importSchema(
+          testName,
+          imodel,
+          `
+            <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+            <ECStructClass typeName="TestStruct">
+              <ECProperty propertyName="StringMember" typeName="string" />
+              <ECProperty propertyName="NumericMember" typeName="int" />
+            </ECStructClass>
+            <ECEntityClass typeName="TestPhysicalObject">
+              <BaseClass>bis:PhysicalElement</BaseClass>
+              <ECArrayProperty propertyName="ArrayProperty" typeName="string" />
+              <ECStructProperty propertyName="StructProperty" typeName="TestStruct" />
+              <ECStructArrayProperty propertyName="StructArrayProperty" typeName="TestStruct" />
+            </ECEntityClass>
+          `,
+        );
+        const categoryKey = insertSpatialCategory({ txn, fullClassNameSeparator: ":", codeValue: "My Category" });
+        const modelKey = insertPhysicalModelWithPartition({ txn, fullClassNameSeparator: ":", codeValue: "My Model" });
+        const elementKey = insertPhysicalElement({
+          txn,
+          classFullName: `${schema.schemaAlias}:TestPhysicalObject` as const,
+          userLabel: "Test element",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+          ArrayProperty: ["Item 1", "Item 2"],
+          StructProperty: { StringMember: "Test string", NumericMember: 123 },
+          StructArrayProperty: [
+            { StringMember: "Item 1", NumericMember: 456 },
+            { StringMember: "Item 2", NumericMember: 789 },
+          ],
+        });
+        return { element: elementKey };
       });
-      return { element: elementKey };
     });
 
     using provider = new PresentationPropertyDataProvider({ imodel: imodelConnection });
@@ -488,7 +505,9 @@ describe("PropertyDataProvider", async () => {
     let categoryKey: InstanceKey;
 
     const { imodelConnection } = await buildTestIModel(async (imodel) => {
-      categoryKey = insertSpatialCategory({ imodel, fullClassNameSeparator: ":", codeValue: "My Category" });
+      categoryKey = withEditTxn(imodel, (txn) =>
+        insertSpatialCategory({ txn, fullClassNameSeparator: ":", codeValue: "My Category" }),
+      );
     });
     const checkDataProvider = async () => {
       using provider = new PresentationPropertyDataProvider({ imodel: imodelConnection });

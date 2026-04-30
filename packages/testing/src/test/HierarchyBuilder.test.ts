@@ -14,7 +14,7 @@ import { HierarchyBuilder } from "../presentation-testing/HierarchyBuilder.js";
 import type { TreeNodeItem } from "@itwin/components-react";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { HierarchyRequestOptions, Node, NodeKey, Ruleset } from "@itwin/presentation-common";
-import type { PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import type { PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
 import type { NodeMappingFunc } from "../presentation-testing/HierarchyBuilder.js";
 
 async function getRootNodes() {
@@ -53,8 +53,8 @@ describe("HierarchyBuilder", () => {
     rulesetManager.add.mockImplementation(async (rules) => new RegisteredRuleset(rules, Guid.createValue(), () => {}));
 
     presentationManager = {
-      rulesets: vi.fn().mockReturnValue(rulesetManager as unknown as RulesetManager),
-      vars: vi.fn().mockReturnValue({ onVariableChanged: new BeEvent() } as RulesetVariablesManager),
+      rulesets: vi.fn().mockReturnValue(rulesetManager),
+      vars: vi.fn().mockReturnValue({ onVariableChanged: new BeEvent() }),
       getNodesIterator: vi.fn(),
     };
   });

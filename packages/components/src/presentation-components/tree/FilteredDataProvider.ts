@@ -19,7 +19,14 @@ import type {
   TreeNodeItem,
 } from "@itwin/components-react";
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { InstanceFilterDefinition, Node, NodeKey, NodePathElement } from "@itwin/presentation-common";
+import type {
+  HierarchyRequestOptions,
+  InstanceFilterDefinition,
+  Node,
+  NodeKey,
+  NodePathElement,
+  Paged,
+} from "@itwin/presentation-common";
 import type {
   IFilteredPresentationTreeDataProvider,
   IPresentationTreeDataProvider,
@@ -154,7 +161,10 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     return this._parentDataProvider.getFilteredNodePaths(filter);
   }
 
-  public createRequestOptions(parentKey?: NodeKey, instanceFilter?: InstanceFilterDefinition) {
+  public createRequestOptions(
+    parentKey?: NodeKey,
+    instanceFilter?: InstanceFilterDefinition,
+  ): Paged<HierarchyRequestOptions<IModelConnection, NodeKey>> {
     return this._parentDataProvider.createRequestOptions(parentKey, instanceFilter);
   }
 

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createRawPropertyValueSelector } from "../ecsql-snippets/ECSqlValueSelectorSnippets.js";
-import { concatenate, createECInstanceIdSuffixSelectors } from "./Utils.js";
+import { ALIAS_PREFIX, concatenate, createECInstanceIdSuffixSelectors } from "./Utils.js";
 
 import type { IInstanceLabelSelectClauseFactory } from "../InstanceLabelSelectClauseFactory.js";
 
@@ -18,6 +18,7 @@ import type { IInstanceLabelSelectClauseFactory } from "../InstanceLabelSelectCl
  * @public
  */
 export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelSelectClauseFactory {
+  const alias = `${ALIAS_PREFIX}c`;
   return {
     async createSelectClause(props): Promise<string> {
       return `(
@@ -25,14 +26,14 @@ export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelS
           ${concatenate(props, [
             {
               selector: `COALESCE(
-                ${createRawPropertyValueSelector("c", "DisplayLabel")},
-                ${createRawPropertyValueSelector("c", "Name")}
+                ${createRawPropertyValueSelector(alias, "DisplayLabel")},
+                ${createRawPropertyValueSelector(alias, "Name")}
               )`,
             },
             ...createECInstanceIdSuffixSelectors(props.classAlias),
           ])}
-        FROM [meta].[ECClassDef] AS [c]
-        WHERE [c].[ECInstanceId] = ${createRawPropertyValueSelector(props.classAlias, "ECClassId")}
+        FROM [meta].[ECClassDef] AS ${alias}
+        WHERE ${alias}.[ECInstanceId] = ${createRawPropertyValueSelector(props.classAlias, "ECClassId")}
       )`;
     },
   };

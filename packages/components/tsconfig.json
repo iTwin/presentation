@@ -7,7 +7,9 @@
     "inlineSources": true,
     "declaration": true,
     "declarationMap": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "rootDir": ".",
+    "noEmit": true
   },
   "include": ["src", "vitest.config.ts"]
 }

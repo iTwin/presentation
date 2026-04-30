@@ -5,7 +5,7 @@
 
 import { createRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { StandardTypeNames } from "@itwin/appui-abstract";
+import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -238,6 +238,35 @@ describe("<NumericPropertyInput />", () => {
     await user.type(inputContainer, "1e-5");
     expect(getByDisplayValue("1e-5")).not.toBeNull();
     expect((ref.current?.getValue() as PrimitiveValue).value).toBe(0.00001);
+  });
+
+  it("displays -- for merged value and clears it on focus", async () => {
+    const record = createRecord();
+    record.isMerged = true;
+    const ref = createRef<PropertyEditorAttributes>();
+    const spy = vi.fn();
+    const { getByRole, getByDisplayValue, user } = render(
+      <NumericPropertyInput ref={ref} propertyRecord={record} onCommit={spy} />,
+    );
+
+    // when not focused, merged empty value shows "--"
+    expect(getByDisplayValue("--")).not.toBeNull();
+
+    const input = getByRole("textbox") as HTMLInputElement;
+    // focus clears the "--" placeholder
+    await user.click(input);
+    expect(input.value).toBe("");
+
+    // type a new value and commit
+    await user.type(input, "4.56");
+    await user.tab();
+
+    expect(input.value).toBe("4.56");
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBe(4.56);
+    expect(spy).toHaveBeenCalledWith({
+      propertyRecord: record,
+      newValue: { valueFormat: PropertyValueFormat.Primitive, value: 4.56, displayValue: "4.56", roundingError: 0.005 },
+    });
   });
 });
 

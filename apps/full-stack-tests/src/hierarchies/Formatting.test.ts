@@ -15,7 +15,7 @@ import {
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import { afterAll, describe, expect, it, test, vi } from "vitest";
-import { Subject } from "@itwin/core-backend";
+import { Subject, withEditTxn } from "@itwin/core-backend";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
@@ -88,31 +88,33 @@ describe("Hierarchies", () => {
     describe("KindOfQuantity", () => {
       it("formats instance node labels", async () => {
         const { imodelConnection, schema } = await buildTestIModel(async (imodel, testName) => {
-          // eslint-disable-next-line @typescript-eslint/no-shadow
-          const schema = await importSchema(
-            testName,
-            imodel,
-            `
-              <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-              <ECSchemaReference name="Units" version="01.00.07" alias="u" />
-              <ECSchemaReference name="Formats" version="01.00.00" alias="f" />
-              <KindOfQuantity typeName="LENGTH" persistenceUnit="u:M" presentationUnits="f:DefaultRealU(1)[u:M];f:DefaultRealU(1)[u:FT];f:DefaultRealU(2)[u:US_SURVEY_FT];f:AmerFI" relativeError="0.0001" />
-              <ECEntityClass typeName="ClassX">
-                <BaseClass>bis:PhysicalElement</BaseClass>
-                <ECProperty propertyName="PropX" typeName="double" kindOfQuantity="LENGTH" />
-              </ECEntityClass>
-            `,
-          );
-          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-          const category = insertSpatialCategory({ imodel, codeValue: "category" });
-          const element = insertPhysicalElement({
-            imodel,
-            classFullName: schema.items.ClassX.fullName,
-            modelId: model.id,
-            categoryId: category.id,
-            ["PropX"]: 123.456,
+          return withEditTxn(imodel, async (txn) => {
+            // eslint-disable-next-line @typescript-eslint/no-shadow
+            const schema = await importSchema(
+              testName,
+              imodel,
+              `
+                <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+                <ECSchemaReference name="Units" version="01.00.07" alias="u" />
+                <ECSchemaReference name="Formats" version="01.00.00" alias="f" />
+                <KindOfQuantity typeName="LENGTH" persistenceUnit="u:M" presentationUnits="f:DefaultRealU(1)[u:M];f:DefaultRealU(1)[u:FT];f:DefaultRealU(2)[u:US_SURVEY_FT];f:AmerFI" relativeError="0.0001" />
+                <ECEntityClass typeName="ClassX">
+                  <BaseClass>bis:PhysicalElement</BaseClass>
+                  <ECProperty propertyName="PropX" typeName="double" kindOfQuantity="LENGTH" />
+                </ECEntityClass>
+              `,
+            );
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            const element = insertPhysicalElement({
+              txn,
+              classFullName: schema.items.ClassX.fullName,
+              modelId: model.id,
+              categoryId: category.id,
+              ["PropX"]: 123.456,
+            });
+            return { schema, model, category, element };
           });
-          return { schema, model, category, element };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
         const hierarchy: HierarchyDefinition = {
@@ -349,11 +351,13 @@ describe("Hierarchies", () => {
     describe("Boolean", () => {
       it("formats instance node labels", async () => {
         const { imodelConnection, modelClassName } = await buildTestIModel(async (imodel) => {
-          const p1 = insertPhysicalPartition({ imodel, codeValue: "p1", parentId: IModel.rootSubjectId });
-          insertPhysicalSubModel({ imodel, modeledElementId: p1.id, isPrivate: false });
-          const p2 = insertPhysicalPartition({ imodel, codeValue: "p2", parentId: IModel.rootSubjectId });
-          const m2 = insertPhysicalSubModel({ imodel, modeledElementId: p2.id, isPrivate: true });
-          return { modelClassName: m2.className };
+          return withEditTxn(imodel, (txn) => {
+            const p1 = insertPhysicalPartition({ txn, codeValue: "p1", parentId: IModel.rootSubjectId });
+            insertPhysicalSubModel({ txn, modeledElementId: p1.id, isPrivate: false });
+            const p2 = insertPhysicalPartition({ txn, codeValue: "p2", parentId: IModel.rootSubjectId });
+            const m2 = insertPhysicalSubModel({ txn, modeledElementId: p2.id, isPrivate: true });
+            return { modelClassName: m2.className };
+          });
         });
         const imodelAccess = createIModelAccess(imodelConnection);
         const hierarchy: HierarchyDefinition = {
@@ -429,7 +433,9 @@ describe("Hierarchies", () => {
     describe("Integer", () => {
       it("formats instance node labels", async () => {
         const { imodelConnection, sheetIndexFolder } = await buildTestIModel(async (imodel) => {
-          return { sheetIndexFolder: insertSheetIndexFolder({ imodel, entryPriority: 2 }) };
+          return withEditTxn(imodel, (txn) => {
+            return { sheetIndexFolder: insertSheetIndexFolder({ txn, entryPriority: 2 }) };
+          });
         });
         const imodelAccess = createIModelAccess(imodelConnection);
         const hierarchy: HierarchyDefinition = {
@@ -501,16 +507,18 @@ describe("Hierarchies", () => {
     describe("Double", () => {
       it("formats instance node labels", async () => {
         const { imodelConnection, element } = await buildTestIModel(async (imodel) => {
-          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-          const category = insertSpatialCategory({ imodel, codeValue: "category" });
-          // eslint-disable-next-line @typescript-eslint/no-shadow
-          const element = insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            placement: { origin: { x: 1.23, y: 4.56, z: 7.89 }, angles: { yaw: 90.789 } },
+          return withEditTxn(imodel, (txn) => {
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            // eslint-disable-next-line @typescript-eslint/no-shadow
+            const element = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              placement: { origin: { x: 1.23, y: 4.56, z: 7.89 }, angles: { yaw: 90.789 } },
+            });
+            return { model, category, element };
           });
-          return { model, category, element };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
         const hierarchy: HierarchyDefinition = {
@@ -583,16 +591,18 @@ describe("Hierarchies", () => {
     describe("Point2d", () => {
       it("formats instance node labels", async () => {
         const { imodelConnection, element } = await buildTestIModel(async (imodel) => {
-          const model = insertDrawingModelWithPartition({ imodel, codeValue: "model" });
-          const category = insertDrawingCategory({ imodel, codeValue: "category" });
-          // eslint-disable-next-line @typescript-eslint/no-shadow
-          const element = insertDrawingGraphic({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            placement: { origin: { x: 1.477, y: 2.588 }, angle: 0 },
+          return withEditTxn(imodel, (txn) => {
+            const model = insertDrawingModelWithPartition({ txn, codeValue: "model" });
+            const category = insertDrawingCategory({ txn, codeValue: "category" });
+            // eslint-disable-next-line @typescript-eslint/no-shadow
+            const element = insertDrawingGraphic({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              placement: { origin: { x: 1.477, y: 2.588 }, angle: 0 },
+            });
+            return { model, category, element };
           });
-          return { model, category, element };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
         const hierarchy: HierarchyDefinition = {
@@ -665,16 +675,18 @@ describe("Hierarchies", () => {
     describe("Point3d", () => {
       it("formats instance node labels", async () => {
         const { imodelConnection, element } = await buildTestIModel(async (imodel) => {
-          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-          const category = insertSpatialCategory({ imodel, codeValue: "category" });
-          // eslint-disable-next-line @typescript-eslint/no-shadow
-          const element = insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            placement: { origin: { x: 1.234, y: 4.567, z: 7.89 }, angles: {} },
+          return withEditTxn(imodel, (txn) => {
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            // eslint-disable-next-line @typescript-eslint/no-shadow
+            const element = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              placement: { origin: { x: 1.234, y: 4.567, z: 7.89 }, angles: {} },
+            });
+            return { model, category, element };
           });
-          return { model, category, element };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
         const hierarchy: HierarchyDefinition = {
@@ -748,16 +760,18 @@ describe("Hierarchies", () => {
       it("formats instance node labels", async () => {
         const guid = Guid.createValue();
         const { imodelConnection, element } = await buildTestIModel(async (imodel) => {
-          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-          const category = insertSpatialCategory({ imodel, codeValue: "category" });
-          // eslint-disable-next-line @typescript-eslint/no-shadow
-          const element = insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            federationGuid: guid,
+          return withEditTxn(imodel, (txn) => {
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            // eslint-disable-next-line @typescript-eslint/no-shadow
+            const element = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              federationGuid: guid,
+            });
+            return { model, category, element };
           });
-          return { model, category, element };
         });
         const imodelAccess = createIModelAccess(imodelConnection);
         const hierarchy: HierarchyDefinition = {

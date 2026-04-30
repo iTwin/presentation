@@ -21,6 +21,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { withEditTxn } from "@itwin/core-backend";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -35,11 +36,13 @@ describe("Hierarchies", () => {
         await initialize();
 
         const res = await buildTestIModel(suite.fullTestName!, async (imodel) => {
-          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-          const category = insertSpatialCategory({ imodel, codeValue: "category" });
-          const a = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, userLabel: "A" });
-          const b = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id, userLabel: "B" });
-          return { a, b };
+          return withEditTxn(imodel, (txn) => {
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            const a = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, userLabel: "A" });
+            const b = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, userLabel: "B" });
+            return { a, b };
+          });
         });
         imodelConnection = res.imodelConnection;
       });

@@ -13,7 +13,6 @@ import {
 } from "../../../Utils.js";
 
 import type { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
-import type { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping.js";
 
 describe("LabelGrouping", () => {
   it("groups one node", async () => {
@@ -41,7 +40,7 @@ describe("LabelGrouping", () => {
         }),
       ],
       ungrouped: [],
-    } as GroupingHandlerResult);
+    });
   });
 
   it("groups one node when 'action' is set to 'group'", async () => {
@@ -69,7 +68,7 @@ describe("LabelGrouping", () => {
         }),
       ],
       ungrouped: [],
-    } as GroupingHandlerResult);
+    });
   });
 
   it("groups one node when 'byLabel' is set to empty object", async () => {
@@ -97,7 +96,7 @@ describe("LabelGrouping", () => {
         }),
       ],
       ungrouped: [],
-    } as GroupingHandlerResult);
+    });
   });
 
   it("creates separate groups for nodes with same labels and different groupIds", async () => {
@@ -249,7 +248,7 @@ describe("LabelGrouping", () => {
         }),
       ],
       ungrouped: [],
-    } as GroupingHandlerResult);
+    });
   });
 
   it("doesn't group nodes with byLabel set to false", async () => {

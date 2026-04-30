@@ -5,7 +5,7 @@
 
 import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
 import { afterAll, describe, it, test } from "vitest";
-import { PhysicalPartition, Subject } from "@itwin/core-backend";
+import { PhysicalPartition, Subject, withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
 import { buildTestIModel } from "../../IModelUtils.js";
@@ -167,8 +167,10 @@ describe("Hierarchies", () => {
       const baseClassName3 = "InformationPartitionElement";
       const baseSchemaName = "BisCore";
       const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        const childPartition1 = insertPhysicalPartition({ imodel, codeValue: "B1", parentId: IModel.rootSubjectId });
-        return { childPartition1 };
+        return withEditTxn(imodel, (txn) => {
+          const childPartition1 = insertPhysicalPartition({ txn, codeValue: "B1", parentId: IModel.rootSubjectId });
+          return { childPartition1 };
+        });
       });
 
       const customHierarchy: HierarchyDefinition = {
@@ -239,9 +241,11 @@ describe("Hierarchies", () => {
       const baseClassName3 = "InformationPartitionElement";
       const baseSchemaName = "BisCore";
       const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        const childPartition1 = insertPhysicalPartition({ imodel, codeValue: "B1", parentId: IModel.rootSubjectId });
-        const childPartition2 = insertPhysicalPartition({ imodel, codeValue: "B2", parentId: IModel.rootSubjectId });
-        return { childPartition1, childPartition2 };
+        return withEditTxn(imodel, (txn) => {
+          const childPartition1 = insertPhysicalPartition({ txn, codeValue: "B1", parentId: IModel.rootSubjectId });
+          const childPartition2 = insertPhysicalPartition({ txn, codeValue: "B2", parentId: IModel.rootSubjectId });
+          return { childPartition1, childPartition2 };
+        });
       });
 
       const customHierarchy: HierarchyDefinition = {
@@ -345,9 +349,11 @@ describe("Hierarchies", () => {
 
     it("groups nodes of different classes if they share the same base class", async () => {
       const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
-        const childPartition2 = insertPhysicalPartition({ imodel, codeValue: "B2", parentId: IModel.rootSubjectId });
-        return { childSubject1, childPartition2 };
+        return withEditTxn(imodel, (txn) => {
+          const childSubject1 = insertSubject({ txn, codeValue: "A1", parentId: IModel.rootSubjectId });
+          const childPartition2 = insertPhysicalPartition({ txn, codeValue: "B2", parentId: IModel.rootSubjectId });
+          return { childSubject1, childPartition2 };
+        });
       });
 
       const customHierarchy: HierarchyDefinition = {

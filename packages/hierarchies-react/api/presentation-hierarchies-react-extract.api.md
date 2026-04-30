@@ -223,7 +223,7 @@ export interface TreeActionBaseAttributes {
 }
 
 // @alpha (undocumented)
-type TreeActionBaseProps = ComponentProps<typeof Tree.ItemAction> & TreeActionBaseAttributes;
+type TreeActionBaseProps = ComponentPropsWithoutRef<typeof Tree.ItemAction> & TreeActionBaseAttributes;
 
 // @alpha
 export function TreeErrorRenderer(input: TreeErrorRendererProps): JSX_2.Element;

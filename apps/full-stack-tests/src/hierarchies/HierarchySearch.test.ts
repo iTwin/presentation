@@ -11,7 +11,7 @@ import {
   insertSubject,
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it, test } from "vitest";
-import { Subject } from "@itwin/core-backend";
+import { Subject, withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import {
   createHierarchyProvider,
@@ -59,10 +59,12 @@ describe("Hierarchies", () => {
     describe("generic nodes", () => {
       it("searches through generic nodes", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ imodel, codeValue: "test subject 1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ imodel, codeValue: "test subject 2", parentId: rootSubject.id });
-          return { rootSubject, childSubject1, childSubject2 };
+          return withEditTxn(imodel, (txn) => {
+            const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+            const childSubject1 = insertSubject({ txn, codeValue: "test subject 1", parentId: rootSubject.id });
+            const childSubject2 = insertSubject({ txn, codeValue: "test subject 2", parentId: rootSubject.id });
+            return { rootSubject, childSubject1, childSubject2 };
+          });
         });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode, createSelectClause }) {
@@ -295,12 +297,14 @@ describe("Hierarchies", () => {
     describe("instance nodes", () => {
       it("sets auto-expand flag up to specific grouping level", async function () {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ imodel, codeValue: "test subject 1", parentId: rootSubject.id });
-          const childSubject21 = insertSubject({ imodel, codeValue: "test subject 2.1", parentId: rootSubject.id });
-          const childSubject22 = insertSubject({ imodel, codeValue: "test subject 2.2", parentId: rootSubject.id });
-          const childSubject3 = insertSubject({ imodel, codeValue: "test subject 3", parentId: rootSubject.id });
-          return { rootSubject, childSubject1, childSubject21, childSubject22, childSubject3 };
+          return withEditTxn(imodel, (txn) => {
+            const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+            const childSubject1 = insertSubject({ txn, codeValue: "test subject 1", parentId: rootSubject.id });
+            const childSubject21 = insertSubject({ txn, codeValue: "test subject 2.1", parentId: rootSubject.id });
+            const childSubject22 = insertSubject({ txn, codeValue: "test subject 2.2", parentId: rootSubject.id });
+            const childSubject3 = insertSubject({ txn, codeValue: "test subject 3", parentId: rootSubject.id });
+            return { rootSubject, childSubject1, childSubject21, childSubject22, childSubject3 };
+          });
         });
         const createHierarchyLevelDefinition = async (
           createSelectClause: DefineHierarchyLevelProps["createSelectClause"],
@@ -429,12 +433,14 @@ describe("Hierarchies", () => {
 
       it("searches through instance nodes that are in multiple paths", async function () {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ imodel, codeValue: "test subject 1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ imodel, codeValue: "test subject 2", parentId: rootSubject.id });
-          const childSubject3 = insertSubject({ imodel, codeValue: "test subject 3", parentId: rootSubject.id });
-          const childSubject4 = insertSubject({ imodel, codeValue: "test subject 4", parentId: rootSubject.id });
-          return { rootSubject, childSubject1, childSubject2, childSubject3, childSubject4 };
+          return withEditTxn(imodel, (txn) => {
+            const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+            const childSubject1 = insertSubject({ txn, codeValue: "test subject 1", parentId: rootSubject.id });
+            const childSubject2 = insertSubject({ txn, codeValue: "test subject 2", parentId: rootSubject.id });
+            const childSubject3 = insertSubject({ txn, codeValue: "test subject 3", parentId: rootSubject.id });
+            const childSubject4 = insertSubject({ txn, codeValue: "test subject 4", parentId: rootSubject.id });
+            return { rootSubject, childSubject1, childSubject2, childSubject3, childSubject4 };
+          });
         });
         const createHierarchyLevelDefinition = async (
           createSelectClause: DefineHierarchyLevelProps["createSelectClause"],
@@ -558,22 +564,24 @@ describe("Hierarchies", () => {
 
       it("searches instance nodes when targeting child and ancestor", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ imodel, codeValue: "test subject 1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ imodel, codeValue: "test subject 2", parentId: rootSubject.id });
-          const childSubject21 = insertSubject({ imodel, codeValue: "test subject 21", parentId: rootSubject.id });
-          const childSubject22 = insertSubject({ imodel, codeValue: "test subject 22", parentId: rootSubject.id });
-          const childSubject221 = insertSubject({ imodel, codeValue: "test subject 221", parentId: rootSubject.id });
-          const childSubject222 = insertSubject({ imodel, codeValue: "test subject 222", parentId: rootSubject.id });
-          return {
-            rootSubject,
-            childSubject1,
-            childSubject2,
-            childSubject21,
-            childSubject22,
-            childSubject221,
-            childSubject222,
-          };
+          return withEditTxn(imodel, (txn) => {
+            const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+            const childSubject1 = insertSubject({ txn, codeValue: "test subject 1", parentId: rootSubject.id });
+            const childSubject2 = insertSubject({ txn, codeValue: "test subject 2", parentId: rootSubject.id });
+            const childSubject21 = insertSubject({ txn, codeValue: "test subject 21", parentId: rootSubject.id });
+            const childSubject22 = insertSubject({ txn, codeValue: "test subject 22", parentId: rootSubject.id });
+            const childSubject221 = insertSubject({ txn, codeValue: "test subject 221", parentId: rootSubject.id });
+            const childSubject222 = insertSubject({ txn, codeValue: "test subject 222", parentId: rootSubject.id });
+            return {
+              rootSubject,
+              childSubject1,
+              childSubject2,
+              childSubject21,
+              childSubject22,
+              childSubject221,
+              childSubject222,
+            };
+          });
         });
         const createHierarchyLevelDefinition = async (
           createSelectClause: DefineHierarchyLevelProps["createSelectClause"],
@@ -681,10 +689,12 @@ describe("Hierarchies", () => {
     describe("when searching through hidden nodes", () => {
       it("searches through hidden generic nodes", async function () {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ imodel, codeValue: "test subject 1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ imodel, codeValue: "test subject 2", parentId: rootSubject.id });
-          return { rootSubject, childSubject1, childSubject2 };
+          return withEditTxn(imodel, (txn) => {
+            const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+            const childSubject1 = insertSubject({ txn, codeValue: "test subject 1", parentId: rootSubject.id });
+            const childSubject2 = insertSubject({ txn, codeValue: "test subject 2", parentId: rootSubject.id });
+            return { rootSubject, childSubject1, childSubject2 };
+          });
         });
 
         const hierarchy: HierarchyDefinition = {
@@ -784,10 +794,12 @@ describe("Hierarchies", () => {
     describe("when targeting hidden nodes", () => {
       it("doesn't return matching hidden generic nodes or their children", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ imodel, codeValue: "test subject 1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ imodel, codeValue: "test subject 2", parentId: rootSubject.id });
-          return { rootSubject, childSubject1, childSubject2 };
+          return withEditTxn(imodel, (txn) => {
+            const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+            const childSubject1 = insertSubject({ txn, codeValue: "test subject 1", parentId: rootSubject.id });
+            const childSubject2 = insertSubject({ txn, codeValue: "test subject 2", parentId: rootSubject.id });
+            return { rootSubject, childSubject1, childSubject2 };
+          });
         });
 
         const hierarchy: HierarchyDefinition = {
@@ -865,11 +877,13 @@ describe("Hierarchies", () => {
 
       it("doesn't return matching hidden instance nodes", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ imodel, codeValue: "test subject 1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ imodel, codeValue: "test subject 2", parentId: childSubject1.id });
-          const childSubject3 = insertSubject({ imodel, codeValue: "test subject 3", parentId: childSubject1.id });
-          return { rootSubject, childSubject1, childSubject2, childSubject3 };
+          return withEditTxn(imodel, (txn) => {
+            const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+            const childSubject1 = insertSubject({ txn, codeValue: "test subject 1", parentId: rootSubject.id });
+            const childSubject2 = insertSubject({ txn, codeValue: "test subject 2", parentId: childSubject1.id });
+            const childSubject3 = insertSubject({ txn, codeValue: "test subject 3", parentId: childSubject1.id });
+            return { rootSubject, childSubject1, childSubject2, childSubject3 };
+          });
         });
 
         const hierarchy: HierarchyDefinition = {
@@ -1141,14 +1155,16 @@ describe("Hierarchies", () => {
     describe("when targeting grouped instance nodes", () => {
       it("sets auto-expand flag for parent nodes before the target grouping node", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const category = insertSpatialCategory({ imodel, codeValue: "category" });
-          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-          const elements = [
-            insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id }),
-            insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id }),
-          ];
-          return { rootSubject, model, category, elements };
+          return withEditTxn(imodel, (txn) => {
+            const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+            const elements = [
+              insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id }),
+              insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id }),
+            ];
+            return { rootSubject, model, category, elements };
+          });
         });
 
         const rootNodeKey: GenericNodeKey = { type: "generic", id: "root-node" };
@@ -1207,23 +1223,25 @@ describe("Hierarchies", () => {
 
       it("sets auto-expand flag for all deeply-nested grouping nodes before the target grouping node", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const category = insertSpatialCategory({ imodel, codeValue: "category" });
-          const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-          const rootElement = insertPhysicalElement({ imodel, modelId: model.id, categoryId: category.id });
-          const middleElement = insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            parentId: rootElement.id,
+          return withEditTxn(imodel, (txn) => {
+            const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+            const rootElement = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id });
+            const middleElement = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              parentId: rootElement.id,
+            });
+            const childElement = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              parentId: middleElement.id,
+            });
+            return { rootSubject, model, category, rootElement, middleElement, childElement };
           });
-          const childElement = insertPhysicalElement({
-            imodel,
-            modelId: model.id,
-            categoryId: category.id,
-            parentId: middleElement.id,
-          });
-          return { rootSubject, model, category, rootElement, middleElement, childElement };
         });
 
         const rootNodeKey: GenericNodeKey = { type: "generic", id: "root-node" };
@@ -1331,22 +1349,24 @@ describe("Hierarchies", () => {
               testName,
               imodel,
               `
-                <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-                <ECEntityClass typeName="Circle">
-                  <BaseClass>bis:PhysicalElement</BaseClass>
-                  <ECProperty propertyName="Color" typeName="string" />
-                </ECEntityClass>
-              `,
+                  <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+                  <ECEntityClass typeName="Circle">
+                    <BaseClass>bis:PhysicalElement</BaseClass>
+                    <ECProperty propertyName="Color" typeName="string" />
+                  </ECEntityClass>
+                `,
             );
-            const category = insertSpatialCategory({ imodel, codeValue: "category" });
-            const model = insertPhysicalModelWithPartition({ imodel, codeValue: "model" });
-            circleClassName = schema.items.Circle.fullName;
-            elementKey = insertPhysicalElement({
-              imodel,
-              modelId: model.id,
-              categoryId: category.id,
-              classFullName: circleClassName,
-              ["Color"]: "Red",
+            return withEditTxn(imodel, (txn) => {
+              const category = insertSpatialCategory({ txn, codeValue: "category" });
+              const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+              circleClassName = schema.items.Circle.fullName;
+              elementKey = insertPhysicalElement({
+                txn,
+                modelId: model.id,
+                categoryId: category.id,
+                classFullName: circleClassName,
+                ["Color"]: "Red",
+              });
             });
           });
           imodelConnection = result.imodelConnection;
@@ -1574,15 +1594,19 @@ describe("Hierarchies", () => {
         const { imodelConnection: imodel1, ...keys1 } = await buildTestIModel(
           `${expect.getState().currentTestName!} 1`,
           async (imodel) => {
-            const testSubject = insertSubject({ imodel, codeValue: "A subject", parentId: IModel.rootSubjectId });
-            return { testSubject };
+            return withEditTxn(imodel, (txn) => {
+              const testSubject = insertSubject({ txn, codeValue: "A subject", parentId: IModel.rootSubjectId });
+              return { testSubject };
+            });
           },
         );
         const { imodelConnection: imodel2, ...keys2 } = await buildTestIModel(
           `${expect.getState().currentTestName!} 2`,
           async (imodel) => {
-            const testSubject = insertSubject({ imodel, codeValue: "B subject", parentId: IModel.rootSubjectId });
-            return { testSubject };
+            return withEditTxn(imodel, (txn) => {
+              const testSubject = insertSubject({ txn, codeValue: "B subject", parentId: IModel.rootSubjectId });
+              return { testSubject };
+            });
           },
         );
         expect(keys1.testSubject).toEqual(keys2.testSubject);
@@ -1766,17 +1790,21 @@ describe("Hierarchies", () => {
         const { imodelConnection: imodel1, ...keys1 } = await buildTestIModel(
           `${expect.getState().currentTestName!} 1`,
           async (imodel) => {
-            const subject1 = insertSubject({ imodel, codeValue: "A subject 1", parentId: rootSubjectKey.id });
-            const subject2 = insertSubject({ imodel, codeValue: "A subject 2", parentId: subject1.id });
-            return { subject1, subject2 };
+            return withEditTxn(imodel, (txn) => {
+              const subject1 = insertSubject({ txn, codeValue: "A subject 1", parentId: rootSubjectKey.id });
+              const subject2 = insertSubject({ txn, codeValue: "A subject 2", parentId: subject1.id });
+              return { subject1, subject2 };
+            });
           },
         );
         const { imodelConnection: imodel2, ...keys2 } = await buildTestIModel(
           `${expect.getState().currentTestName!} 2`,
           async (imodel) => {
-            const subject1 = insertSubject({ imodel, codeValue: "B subject 1", parentId: rootSubjectKey.id });
-            const subject2 = insertSubject({ imodel, codeValue: "B subject 2", parentId: subject1.id });
-            return { subject1, subject2 };
+            return withEditTxn(imodel, (txn) => {
+              const subject1 = insertSubject({ txn, codeValue: "B subject 1", parentId: rootSubjectKey.id });
+              const subject2 = insertSubject({ txn, codeValue: "B subject 2", parentId: subject1.id });
+              return { subject1, subject2 };
+            });
           },
         );
 

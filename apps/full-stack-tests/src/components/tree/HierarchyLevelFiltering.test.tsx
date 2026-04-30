@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { SelectionMode, UiComponents } from "@itwin/components-react";
+import { withEditTxn } from "@itwin/core-backend";
 import { IModelApp } from "@itwin/core-frontend";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { buildTestIModel } from "../../IModelUtils.js";
@@ -74,10 +75,12 @@ describe("Learning snippets", () => {
 
       // set up imodel for the test
       const { imodelConnection } = await buildTestIModel(async (imodel) => {
-        const categoryKey = insertSpatialCategory({ imodel, codeValue: "My Category" });
-        const modelKey = insertPhysicalModelWithPartition({ imodel, codeValue: "My Model" });
-        insertPhysicalElement({ imodel, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
-        insertPhysicalElement({ imodel, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id });
+        withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+          const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
+          insertPhysicalElement({ txn, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
+          insertPhysicalElement({ txn, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id });
+        });
       });
 
       // render the component

@@ -49,7 +49,7 @@ export * from "./presentation-testing/IModelUtilities.js";
 /**
  * Presentation manager working mode.
  * @public
- * @deprecated in 3.x. The attribute is not used by [[PresentationManager]] anymore
+ * @deprecated in 3.5. The attribute is not used by [[PresentationManager]] anymore
  */
 export enum PresentationManagerMode {
   /**

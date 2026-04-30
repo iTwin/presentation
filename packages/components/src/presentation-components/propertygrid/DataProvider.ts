@@ -175,7 +175,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    * - For *array* fields: `[]` (empty array)
    * - For *struct* fields: `{}` (object with no members)
    *
-   * @deprecated in 3.x. Use [FilteringPropertyDataProvider]($components-react) and [IPropertyDataFilterer]($components-react) APIs for filtering-out properties.
+   * @deprecated in 3.6. Use [FilteringPropertyDataProvider]($components-react) and [IPropertyDataFilterer]($components-react) APIs for filtering-out properties.
    */
   public get includeFieldsWithNoValues(): boolean {
     return this._includeFieldsWithNoValues;
@@ -194,7 +194,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    * - *array* fields.
    * - *struct* fields.
    *
-   * @deprecated in 3.x. Use [FilteringPropertyDataProvider]($components-react) and [IPropertyDataFilterer]($components-react) APIs for filtering-out properties.
+   * @deprecated in 3.6. Use [FilteringPropertyDataProvider]($components-react) and [IPropertyDataFilterer]($components-react) APIs for filtering-out properties.
    */
   public get includeFieldsWithCompositeValues(): boolean {
     return this._includeFieldsWithCompositeValues;
@@ -768,7 +768,12 @@ class PropertyCategoriesCache {
 
 function shouldDestructureArrayField(field: Field) {
   // destructure arrays if they're based on nested content field or nested under a nested content field
-  return field.isNestedContentField() || field.parent;
+  return (
+    field.isNestedContentField() ||
+    /* This is only needed for pre-5.8.1 iTwin.js core */
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    (field.parent && (!field.isPropertiesField() || !field.isArrayPropertiesField?.()))
+  );
 }
 
 function shouldDestructureStructField(field: Field, totalRecordsCount: number | undefined) {
@@ -862,10 +867,8 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
       entry.record.value.valueFormat === UiPropertyValueFormat.Array &&
       shouldDestructureArrayField(entry.fieldHierarchy.field)
     ) {
-      if (shouldDestructureStructField(entry.fieldHierarchy.field, 1)) {
-        // destructure individual array items
-        destructureStructArrayItems(entry.record.value.items, entry.fieldHierarchy);
-      }
+      // destructure individual array items
+      destructureStructArrayItems(entry.record.value.items, entry.fieldHierarchy);
 
       // destructure 0 or 1 sized arrays by removing the array record and putting its first item in its place (if any)
       if (entry.record.value.items.length <= 1) {
@@ -873,7 +876,12 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
         /* v8 ignore else -- @preserve */
         if (entry.record.value.items.length > 0) {
           const item = entry.record.value.items[0];
-          records.splice(i, 0, { ...entry, fieldHierarchy: entry.fieldHierarchy, record: item });
+          const fieldHierarchy =
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            entry.fieldHierarchy.field.isPropertiesField() && entry.fieldHierarchy.field.isArrayPropertiesField?.()
+              ? { ...entry.fieldHierarchy, field: entry.fieldHierarchy.field.itemsField }
+              : entry.fieldHierarchy;
+          records.splice(i, 0, { ...entry, fieldHierarchy, record: item });
         }
         continue;
       }
@@ -890,7 +898,6 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
         assert(entry.record.value.members[nestedFieldHierarchy.field.name] !== undefined);
         const member = {
           fieldHierarchy: nestedFieldHierarchy,
-          field: nestedFieldHierarchy.field,
           record: entry.record.value.members[nestedFieldHierarchy.field.name],
         };
         list.push(...destructureStructMember(member));

@@ -5,7 +5,7 @@
 
 import { createRawPropertyValueSelector } from "../ecsql-snippets/ECSqlValueSelectorSnippets.js";
 import { createClassBasedInstanceLabelSelectClauseFactory } from "./ClassBasedInstanceLabelSelectClauseFactory.js";
-import { concatenate, createECInstanceIdSuffixSelectors } from "./Utils.js";
+import { ALIAS_PREFIX, concatenate, createECInstanceIdSuffixSelectors } from "./Utils.js";
 
 import type { IInstanceLabelSelectClauseFactory } from "../InstanceLabelSelectClauseFactory.js";
 import type { ECClassHierarchyInspector } from "../Metadata.js";
@@ -60,11 +60,14 @@ export function createBisInstanceLabelSelectClauseFactory(
     },
     {
       className: "BisCore.Model",
-      clause: async ({ classAlias, ...rest }) => `(
-        SELECT ${await factory.createSelectClause({ ...rest, classAlias: "e", className: "BisCore.Element" })}
-        FROM [bis].[Element] AS [e]
-        WHERE [e].[ECInstanceId] = ${createRawPropertyValueSelector(classAlias, "ModeledElement", "Id")}
-      )`,
+      clause: async ({ classAlias, ...rest }) => {
+        const elementAlias = `${ALIAS_PREFIX}e`;
+        return `(
+        SELECT ${await factory.createSelectClause({ ...rest, classAlias: elementAlias, className: "BisCore.Element" })}
+        FROM [bis].[Element] AS ${elementAlias}
+        WHERE ${elementAlias}.[ECInstanceId] = ${createRawPropertyValueSelector(classAlias, "ModeledElement", "Id")}
+      )`;
+      },
     },
   );
   return factory;

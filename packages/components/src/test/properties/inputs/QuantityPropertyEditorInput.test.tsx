@@ -18,7 +18,7 @@ import { render, waitFor } from "../../TestUtils.js";
 
 import type { PropertyEditorProps } from "@itwin/components-react";
 import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import type { FormatterSpec, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
+import type { QuantityParseResult } from "@itwin/core-quantity";
 import type { SchemaContext } from "@itwin/ecschema-metadata";
 import type { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 
@@ -59,8 +59,8 @@ describe("<QuantityPropertyEditorInput />", () => {
       return { ok: true, value: Number(value.substring(0, value.length - 4)) };
     });
 
-    getFormatterSpecStub.mockResolvedValue(formatterSpec as unknown as FormatterSpec);
-    getParserSpecStub.mockResolvedValue(parserSpec as unknown as ParserSpec);
+    getFormatterSpecStub.mockResolvedValue(formatterSpec);
+    getParserSpecStub.mockResolvedValue(parserSpec);
   });
 
   afterEach(() => {

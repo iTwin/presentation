@@ -44,7 +44,7 @@ export function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | 
           (ref as MutableRefObject<T | null>).current = instance;
         }
       });
-    }, // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
     [...refs],
   );
 }

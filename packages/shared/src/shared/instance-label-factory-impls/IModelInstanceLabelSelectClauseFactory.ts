@@ -14,6 +14,7 @@ import { getClass } from "../Metadata.js";
 import { parseFullClassName } from "../Utils.js";
 import { createBisInstanceLabelSelectClauseFactory } from "./BisInstanceLabelSelectClauseFactory.js";
 import { createClassBasedInstanceLabelSelectClauseFactory } from "./ClassBasedInstanceLabelSelectClauseFactory.js";
+import { ALIAS_PREFIX } from "./Utils.js";
 
 import type { TypedValueSelectClauseProps } from "../ecsql-snippets/ECSqlValueSelectorSnippets.js";
 import type { ECSqlQueryExecutor } from "../ECSqlCore.js";
@@ -352,7 +353,6 @@ function normalizeRelationshipPath(path: RelationshipPathSpecification): Relatio
   return Array.isArray(path) ? path : [path];
 }
 
-const ALIAS_PREFIX = "pres_";
 const SUBQUERY_SOURCE_ALIAS = "src";
 const PROPERTY_SOURCE_TARGET_ALIAS = "pst";
 const RELATED_INSTANCE_LABEL_TARGET_ALIAS = "rilt";

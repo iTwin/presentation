@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { SelectionMode, UiComponents } from "@itwin/components-react";
+import { withEditTxn } from "@itwin/core-backend";
 import { IModelApp } from "@itwin/core-frontend";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { buildTestIModel } from "../../IModelUtils.js";
@@ -83,25 +84,27 @@ describe("Learning snippets", () => {
 
       // set up imodel for the test
       const { imodelConnection } = await buildTestIModel(async (imodel) => {
-        const categoryKey = insertSpatialCategory({ imodel, codeValue: "My Category" });
-        const modelKeyA = insertPhysicalModelWithPartition({ imodel, codeValue: "My Model A" });
-        for (let i = 0; i < 10; ++i) {
-          insertPhysicalElement({
-            imodel,
-            userLabel: `A element ${i + 1}`,
-            modelId: modelKeyA.id,
-            categoryId: categoryKey.id,
-          });
-        }
-        const modelKeyB = insertPhysicalModelWithPartition({ imodel, codeValue: "My Model B" });
-        for (let i = 0; i < 11; ++i) {
-          insertPhysicalElement({
-            imodel,
-            userLabel: `B element ${i + 1}`,
-            modelId: modelKeyB.id,
-            categoryId: categoryKey.id,
-          });
-        }
+        withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+          const modelKeyA = insertPhysicalModelWithPartition({ txn, codeValue: "My Model A" });
+          for (let i = 0; i < 10; ++i) {
+            insertPhysicalElement({
+              txn,
+              userLabel: `A element ${i + 1}`,
+              modelId: modelKeyA.id,
+              categoryId: categoryKey.id,
+            });
+          }
+          const modelKeyB = insertPhysicalModelWithPartition({ txn, codeValue: "My Model B" });
+          for (let i = 0; i < 11; ++i) {
+            insertPhysicalElement({
+              txn,
+              userLabel: `B element ${i + 1}`,
+              modelId: modelKeyB.id,
+              categoryId: categoryKey.id,
+            });
+          }
+        });
       });
 
       // render the component

@@ -10,7 +10,7 @@ import {
   insertSubject,
 } from "presentation-test-utilities";
 import { afterAll, describe, it, test } from "vitest";
-import { Subject } from "@itwin/core-backend";
+import { Subject, withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { buildTestECDb } from "../../ECDbUtils.js";
@@ -74,13 +74,15 @@ describe("Hierarchies", () => {
 
     it("doesn't group if provided properties class isn't base of nodes class", async () => {
       const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        const childSubject1 = insertSubject({
-          imodel,
-          codeValue: "A1",
-          parentId: IModel.rootSubjectId,
-          description: "TestDescription",
+        return withEditTxn(imodel, (txn) => {
+          const childSubject1 = insertSubject({
+            txn,
+            codeValue: "A1",
+            parentId: IModel.rootSubjectId,
+            description: "TestDescription",
+          });
+          return { childSubject1 };
         });
-        return { childSubject1 };
       });
 
       const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
@@ -100,8 +102,10 @@ describe("Hierarchies", () => {
     describe("unspecified values grouping", () => {
       it("doesn't create grouping nodes if provided property values are not defined and `createGroupForUnspecifiedValues` isn't set", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
-          return { childSubject1 };
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({ txn, codeValue: "A1", parentId: IModel.rootSubjectId });
+            return { childSubject1 };
+          });
         });
 
         const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
@@ -120,8 +124,10 @@ describe("Hierarchies", () => {
 
       it("creates property value grouping node if provided property values are not defined and `createGroupForOutOfRangeValues` is `true`", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({ imodel, codeValue: "A1", parentId: IModel.rootSubjectId });
-          return { childSubject1 };
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({ txn, codeValue: "A1", parentId: IModel.rootSubjectId });
+            return { childSubject1 };
+          });
         });
 
         const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
@@ -198,13 +204,15 @@ describe("Hierarchies", () => {
     describe("value grouping", () => {
       it("creates property value grouping nodes", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({
-            imodel,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            description: "TestDescription",
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({
+              txn,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              description: "TestDescription",
+            });
+            return { childSubject1 };
           });
-          return { childSubject1 };
         });
 
         const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
@@ -231,19 +239,21 @@ describe("Hierarchies", () => {
 
       it("creates multiple grouping nodes if nodes have different property values", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({
-            imodel,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: "Test1",
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({
+              txn,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              userLabel: "Test1",
+            });
+            const childSubject2 = insertSubject({
+              txn,
+              codeValue: "A2",
+              parentId: IModel.rootSubjectId,
+              userLabel: "Test2",
+            });
+            return { childSubject1, childSubject2 };
           });
-          const childSubject2 = insertSubject({
-            imodel,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: "Test2",
-          });
-          return { childSubject1, childSubject2 };
         });
 
         const customHierarchy: HierarchyDefinition = {
@@ -299,14 +309,16 @@ describe("Hierarchies", () => {
 
       it("creates multiple levels of grouping if node has multiple property groupings", async () => {
         const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-          const childSubject1 = insertSubject({
-            imodel,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: "TestLabel",
-            description: "TestDescription",
+          return withEditTxn(imodel, (txn) => {
+            const childSubject1 = insertSubject({
+              txn,
+              codeValue: "A1",
+              parentId: IModel.rootSubjectId,
+              userLabel: "TestLabel",
+              description: "TestDescription",
+            });
+            return { childSubject1 };
           });
-          return { childSubject1 };
         });
         const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
           propertiesClassName: "BisCore.Subject",
@@ -346,15 +358,17 @@ describe("Hierarchies", () => {
       describe("navigation property", () => {
         it("groups by navigation property with forward direction", async () => {
           const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-            const model = insertPhysicalModelWithPartition({ imodel, codeValue: "Physical model" });
-            const category = insertSpatialCategory({ imodel, codeValue: "Spatial category" });
-            const physicalElement = insertPhysicalElement({
-              imodel,
-              modelId: model.id,
-              categoryId: category.id,
-              codeValue: "Physical element",
+            return withEditTxn(imodel, (txn) => {
+              const model = insertPhysicalModelWithPartition({ txn, codeValue: "Physical model" });
+              const category = insertSpatialCategory({ txn, codeValue: "Spatial category" });
+              const physicalElement = insertPhysicalElement({
+                txn,
+                modelId: model.id,
+                categoryId: category.id,
+                codeValue: "Physical element",
+              });
+              return { physicalElement };
             });
-            return { physicalElement };
           });
 
           const provider = createIModelHierarchyProvider({
@@ -404,14 +418,16 @@ describe("Hierarchies", () => {
 
         it("groups by navigation property with backward direction", async () => {
           const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-            const childSubject1 = insertSubject({
-              imodel,
-              codeValue: "A1",
-              parentId: IModel.rootSubjectId,
-              userLabel: "custom label",
+            return withEditTxn(imodel, (txn) => {
+              const childSubject1 = insertSubject({
+                txn,
+                codeValue: "A1",
+                parentId: IModel.rootSubjectId,
+                userLabel: "custom label",
+              });
+              const childSubject2 = insertSubject({ txn, codeValue: "A2", parentId: childSubject1.id });
+              return { childSubject1, childSubject2 };
             });
-            const childSubject2 = insertSubject({ imodel, codeValue: "A2", parentId: childSubject1.id });
-            return { childSubject1, childSubject2 };
           });
 
           const provider = createIModelHierarchyProvider({
@@ -462,33 +478,35 @@ describe("Hierarchies", () => {
 
         it("creates one grouping node when navigation properties point to different nodes with same labels", async () => {
           const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-            const childSubject1 = insertSubject({
-              imodel,
-              codeValue: "A1",
-              parentId: IModel.rootSubjectId,
-              description: "TestDescription",
-              userLabel: "sameLabel",
+            return withEditTxn(imodel, (txn) => {
+              const childSubject1 = insertSubject({
+                txn,
+                codeValue: "A1",
+                parentId: IModel.rootSubjectId,
+                description: "TestDescription",
+                userLabel: "sameLabel",
+              });
+              const childSubject2 = insertSubject({
+                txn,
+                codeValue: "A2",
+                parentId: childSubject1.id,
+                description: "TestDescription",
+              });
+              const childSubject3 = insertSubject({
+                txn,
+                codeValue: "A3",
+                parentId: IModel.rootSubjectId,
+                description: "TestDescription",
+                userLabel: "sameLabel",
+              });
+              const childSubject4 = insertSubject({
+                txn,
+                codeValue: "A4",
+                parentId: childSubject3.id,
+                description: "TestDescription",
+              });
+              return { childSubject1, childSubject2, childSubject3, childSubject4 };
             });
-            const childSubject2 = insertSubject({
-              imodel,
-              codeValue: "A2",
-              parentId: childSubject1.id,
-              description: "TestDescription",
-            });
-            const childSubject3 = insertSubject({
-              imodel,
-              codeValue: "A3",
-              parentId: IModel.rootSubjectId,
-              description: "TestDescription",
-              userLabel: "sameLabel",
-            });
-            const childSubject4 = insertSubject({
-              imodel,
-              codeValue: "A4",
-              parentId: childSubject3.id,
-              description: "TestDescription",
-            });
-            return { childSubject1, childSubject2, childSubject3, childSubject4 };
           });
           const provider = createIModelHierarchyProvider({
             imodelAccess: createIModelAccess(imodelConnection),
@@ -539,33 +557,35 @@ describe("Hierarchies", () => {
 
         it("creates different grouping nodes when navigation properties point to different nodes with different labels", async () => {
           const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-            const childSubject1 = insertSubject({
-              imodel,
-              codeValue: "A1",
-              parentId: IModel.rootSubjectId,
-              description: "TestDescription",
-              userLabel: "differentLabel1",
+            return withEditTxn(imodel, (txn) => {
+              const childSubject1 = insertSubject({
+                txn,
+                codeValue: "A1",
+                parentId: IModel.rootSubjectId,
+                description: "TestDescription",
+                userLabel: "differentLabel1",
+              });
+              const childSubject2 = insertSubject({
+                txn,
+                codeValue: "A2",
+                parentId: childSubject1.id,
+                description: "TestDescription",
+              });
+              const childSubject3 = insertSubject({
+                txn,
+                codeValue: "A3",
+                parentId: IModel.rootSubjectId,
+                description: "TestDescription",
+                userLabel: "differentLabel2",
+              });
+              const childSubject4 = insertSubject({
+                txn,
+                codeValue: "A4",
+                parentId: childSubject3.id,
+                description: "TestDescription",
+              });
+              return { childSubject1, childSubject2, childSubject3, childSubject4 };
             });
-            const childSubject2 = insertSubject({
-              imodel,
-              codeValue: "A2",
-              parentId: childSubject1.id,
-              description: "TestDescription",
-            });
-            const childSubject3 = insertSubject({
-              imodel,
-              codeValue: "A3",
-              parentId: IModel.rootSubjectId,
-              description: "TestDescription",
-              userLabel: "differentLabel2",
-            });
-            const childSubject4 = insertSubject({
-              imodel,
-              codeValue: "A4",
-              parentId: childSubject3.id,
-              description: "TestDescription",
-            });
-            return { childSubject1, childSubject2, childSubject3, childSubject4 };
           });
 
           const provider = createIModelHierarchyProvider({

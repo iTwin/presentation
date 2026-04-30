@@ -11,6 +11,7 @@ import {
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { UiComponents } from "@itwin/components-react";
+import { withEditTxn } from "@itwin/core-backend";
 import { IModelApp } from "@itwin/core-frontend";
 import { DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
 import { PresentationFilterBuilderValueRenderer } from "@itwin/presentation-components";
@@ -39,53 +40,55 @@ describe("Presentation filter builder value renderer", () => {
   it("renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided", async () => {
     let schemaAlias = "";
     const result = await buildTestIModel(async (imodel, testName) => {
-      const schema = await importSchema(
-        testName,
-        imodel,
-        `
-          <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-          <ECEntityClass typeName="MyPhysicalObjectParent">
-            <BaseClass>bis:PhysicalElement</BaseClass>
-            <ECProperty propertyName="PropertyName" typeName="string" />
-          </ECEntityClass>
-          <ECEntityClass typeName="MyPhysicalObject1">
-            <BaseClass>MyPhysicalObjectParent</BaseClass>
-          </ECEntityClass>
-          <ECEntityClass typeName="MyPhysicalObject2">
-            <BaseClass>MyPhysicalObjectParent</BaseClass>
-          </ECEntityClass>
-        `,
-      );
-      schemaAlias = schema.schemaAlias;
-      const physicalModel = insertPhysicalModelWithPartition({ imodel, codeValue: "TestPhysicalModel" });
-      const category = insertSpatialCategory({ imodel, codeValue: "Test SpatialCategory" });
-      const parentElement = insertPhysicalElement({
-        imodel,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObjectParent.fullName,
-        userLabel: "Parent Test Class",
-        ["PropertyName"]: "Parent",
+      return withEditTxn(imodel, async (txn) => {
+        const schema = await importSchema(
+          testName,
+          imodel,
+          `
+            <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+            <ECEntityClass typeName="MyPhysicalObjectParent">
+              <BaseClass>bis:PhysicalElement</BaseClass>
+              <ECProperty propertyName="PropertyName" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="MyPhysicalObject1">
+              <BaseClass>MyPhysicalObjectParent</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="MyPhysicalObject2">
+              <BaseClass>MyPhysicalObjectParent</BaseClass>
+            </ECEntityClass>
+          `,
+        );
+        schemaAlias = schema.schemaAlias;
+        const physicalModel = insertPhysicalModelWithPartition({ txn, codeValue: "TestPhysicalModel" });
+        const category = insertSpatialCategory({ txn, codeValue: "Test SpatialCategory" });
+        const parentElement = insertPhysicalElement({
+          txn,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObjectParent.fullName,
+          userLabel: "Parent Test Class",
+          ["PropertyName"]: "Parent",
+        });
+        const element1 = insertPhysicalElement({
+          txn,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObject1.fullName,
+          parentId: parentElement.id,
+          userLabel: "Test Class",
+          ["PropertyName"]: "Value1",
+        });
+        const element2 = insertPhysicalElement({
+          txn,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObject2.fullName,
+          parentId: parentElement.id,
+          userLabel: "Test Class 2",
+          ["PropertyName"]: "Value2",
+        });
+        return { parentElement, element1, element2, category };
       });
-      const element1 = insertPhysicalElement({
-        imodel,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObject1.fullName,
-        parentId: parentElement.id,
-        userLabel: "Test Class",
-        ["PropertyName"]: "Value1",
-      });
-      const element2 = insertPhysicalElement({
-        imodel,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObject2.fullName,
-        parentId: parentElement.id,
-        userLabel: "Test Class 2",
-        ["PropertyName"]: "Value2",
-      });
-      return { parentElement, element1, element2, category };
     });
 
     const testProperty = {
@@ -142,53 +145,55 @@ describe("Presentation filter builder value renderer", () => {
   it("renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided without keys", async () => {
     let schemaAlias = "";
     const result = await buildTestIModel(async (imodel, testName) => {
-      const schema = await importSchema(
-        testName,
-        imodel,
-        `
+      return withEditTxn(imodel, async (txn) => {
+        const schema = await importSchema(
+          testName,
+          imodel,
+          `
           <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-          <ECEntityClass typeName="MyPhysicalObjectParent">
-            <BaseClass>bis:PhysicalElement</BaseClass>
-            <ECProperty propertyName="PropertyName" typeName="string" />
-          </ECEntityClass>
-          <ECEntityClass typeName="MyPhysicalObject1">
-            <BaseClass>MyPhysicalObjectParent</BaseClass>
-          </ECEntityClass>
-          <ECEntityClass typeName="MyPhysicalObject2">
-            <BaseClass>MyPhysicalObjectParent</BaseClass>
-          </ECEntityClass>
-        `,
-      );
-      schemaAlias = schema.schemaAlias;
-      const physicalModel = insertPhysicalModelWithPartition({ imodel, codeValue: "TestPhysicalModel" });
-      const category = insertSpatialCategory({ imodel, codeValue: "Test SpatialCategory" });
-      const parentElement = insertPhysicalElement({
-        imodel,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObjectParent.fullName,
-        userLabel: "Parent Test Class",
-        ["PropertyName"]: "Parent",
+            <ECEntityClass typeName="MyPhysicalObjectParent">
+              <BaseClass>bis:PhysicalElement</BaseClass>
+              <ECProperty propertyName="PropertyName" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="MyPhysicalObject1">
+              <BaseClass>MyPhysicalObjectParent</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="MyPhysicalObject2">
+              <BaseClass>MyPhysicalObjectParent</BaseClass>
+            </ECEntityClass>
+          `,
+        );
+        schemaAlias = schema.schemaAlias;
+        const physicalModel = insertPhysicalModelWithPartition({ txn, codeValue: "TestPhysicalModel" });
+        const category = insertSpatialCategory({ txn, codeValue: "Test SpatialCategory" });
+        const parentElement = insertPhysicalElement({
+          txn,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObjectParent.fullName,
+          userLabel: "Parent Test Class",
+          ["PropertyName"]: "Parent",
+        });
+        const element1 = insertPhysicalElement({
+          txn,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObject1.fullName,
+          parentId: parentElement.id,
+          userLabel: "Test Class",
+          ["PropertyName"]: "Value1",
+        });
+        const element2 = insertPhysicalElement({
+          txn,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObject2.fullName,
+          parentId: parentElement.id,
+          userLabel: "Test Class 2",
+          ["PropertyName"]: "Value2",
+        });
+        return { parentElement, element1, element2, category };
       });
-      const element1 = insertPhysicalElement({
-        imodel,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObject1.fullName,
-        parentId: parentElement.id,
-        userLabel: "Test Class",
-        ["PropertyName"]: "Value1",
-      });
-      const element2 = insertPhysicalElement({
-        imodel,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObject2.fullName,
-        parentId: parentElement.id,
-        userLabel: "Test Class 2",
-        ["PropertyName"]: "Value2",
-      });
-      return { parentElement, element1, element2, category };
     });
 
     const testProperty = {
