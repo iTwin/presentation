@@ -17,7 +17,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Description, IconButton, Spinner, Text, TextBox } from "@stratakit/bricks";
+import { Description, IconButton, Spinner, Text, TextBox, VisuallyHidden } from "@stratakit/bricks";
 import { DropdownMenu, unstable_Popover as Popover, Tree } from "@stratakit/structures";
 import { useTranslation } from "../LocalizationContext.js";
 import { TreeActionBase } from "./TreeAction.js";
@@ -197,8 +197,11 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
         >
           {contextMenuProps ? (
             <DropdownMenu.Button
-              style={{ position: "fixed", top: contextMenuProps.position.y, left: contextMenuProps.position.x }}
-              render={<div />}
+              render={(renderProps) => (
+                <div style={{ position: "fixed", top: contextMenuProps.position.y, left: contextMenuProps.position.x }}>
+                  <VisuallyHidden {...renderProps}>{translate("more")}</VisuallyHidden>
+                </div>
+              )}
             />
           ) : null}
           {/* `autoFocus` prop is coming from ariakit and is not native HTML `autoFocus` prop. */}
