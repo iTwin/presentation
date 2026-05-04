@@ -266,7 +266,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
 
     it("renders tree with rename action", async () => {
       const props = createDefaultProps({
-        rootNodes: [createTreeNode({ id: "node-1", label: "Renameable Node" })],
+        rootNodes: [createTreeNode({ id: "node-1", label: "Renaming Node" })],
         getEditingProps: () => ({ onLabelChanged: vi.fn() }),
         getMenuActions: ({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />],
       });
@@ -276,7 +276,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         </div>,
         { colorScheme },
       );
-      const node = locator.getByText("Renameable Node");
+      const node = locator.getByText("Renaming Node");
       await expect.element(node).toBeVisible();
       await node.hover();
       await locator.getByRole("button", { name: "More" }).click();
