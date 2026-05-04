@@ -28,6 +28,7 @@ import {
 } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { GlobalContextMenu } from "@itwin/core-react";
+import { IModelConnectionProvider } from "@itwin/imodel-components-react";
 import { Flex, MenuItem, ToggleSwitch } from "@itwin/itwinui-react";
 import { Field } from "@itwin/presentation-common";
 import {
@@ -274,29 +275,31 @@ function FilterablePropertyGrid({
 
   return (
     <>
-      <NavigationPropertyEditorContextProvider {...navigationPropertyEditorContextProviderProps}>
-        <VirtualizedPropertyGridWithDataProvider
-          width={width}
-          height={height}
-          dataProvider={filteringDataProvider}
-          isPropertyHoverEnabled={true}
-          onPropertyContextMenu={onPropertyContextMenu}
-          actionButtonRenderers={[renderFavoritesActionButton, renderCopyActionButton]}
-          orientation={Orientation.Horizontal}
-          horizontalOrientationMinWidth={500}
-          highlight={
-            filterText && filterText.length !== 0
-              ? { highlightedText: filterText, activeHighlight, filteredTypes: filteringResult?.filteredTypes }
-              : undefined
-          }
-          isPropertyEditingEnabled={true}
-          onPropertyUpdated={async ({ newValue }) => {
-            console.log(`Updated new value`, newValue); // eslint-disable-line no-console
-            return true;
-          }}
-          editorSystem="new"
-        />
-      </NavigationPropertyEditorContextProvider>
+      <IModelConnectionProvider iModelConnection={imodel}>
+        <NavigationPropertyEditorContextProvider {...navigationPropertyEditorContextProviderProps}>
+          <VirtualizedPropertyGridWithDataProvider
+            width={width}
+            height={height}
+            dataProvider={filteringDataProvider}
+            isPropertyHoverEnabled={true}
+            onPropertyContextMenu={onPropertyContextMenu}
+            actionButtonRenderers={[renderFavoritesActionButton, renderCopyActionButton]}
+            orientation={Orientation.Horizontal}
+            horizontalOrientationMinWidth={500}
+            highlight={
+              filterText && filterText.length !== 0
+                ? { highlightedText: filterText, activeHighlight, filteredTypes: filteringResult?.filteredTypes }
+                : undefined
+            }
+            isPropertyEditingEnabled={true}
+            onPropertyUpdated={async ({ newValue }) => {
+              console.log(`Updated new value`, newValue); // eslint-disable-line no-console
+              return true;
+            }}
+            editorSystem="new"
+          />
+        </NavigationPropertyEditorContextProvider>
+      </IModelConnectionProvider>
       {contextMenuArgs && (
         <PropertiesWidgetContextMenu
           args={contextMenuArgs}

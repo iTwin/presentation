@@ -6,7 +6,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Format, FormatType, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import {
+  applyNumericConstraints,
   getDecimalRoundingError,
+  getMinMaxFromPropertyConstraints,
   getPersistenceUnitRoundingError,
 } from "../../../presentation-components/properties/inputs/Utils.js";
 
@@ -77,5 +79,75 @@ describe("getPersistenceUnitRoundingError", () => {
     const result = getPersistenceUnitRoundingError("not a number", parserSpec as unknown as ParserSpec);
     expect(result).toBeUndefined();
     expect(parserSpec.parseToQuantityValue).not.toHaveBeenCalled();
+  });
+});
+
+describe("applyNumericConstraints", () => {
+  it("returns value unchanged when no constraints are provided", () => {
+    expect(applyNumericConstraints({ value: 5 })).toBe(5);
+  });
+
+  it("returns value unchanged when value is within range", () => {
+    expect(applyNumericConstraints({ value: 5, min: 1, max: 10 })).toBe(5);
+  });
+
+  it("clamps to min when value is below minimum", () => {
+    expect(applyNumericConstraints({ value: -5, min: 0, max: 10 })).toBe(0);
+  });
+
+  it("clamps to max when value exceeds maximum", () => {
+    expect(applyNumericConstraints({ value: 15, min: 0, max: 10 })).toBe(10);
+  });
+
+  it("clamps to min when only min constraint is provided", () => {
+    expect(applyNumericConstraints({ value: -5, min: 0 })).toBe(0);
+  });
+
+  it("clamps to max when only max constraint is provided", () => {
+    expect(applyNumericConstraints({ value: 15, max: 10 })).toBe(10);
+  });
+
+  it("returns min when min equals max and value is below", () => {
+    expect(applyNumericConstraints({ value: 0, min: 5, max: 5 })).toBe(5);
+  });
+
+  it("handles negative min and max constraints", () => {
+    expect(applyNumericConstraints({ value: 5, min: -10, max: -1 })).toBe(-1);
+  });
+
+  it("returns exact boundary value when value equals min", () => {
+    expect(applyNumericConstraints({ value: 0, min: 0, max: 10 })).toBe(0);
+  });
+
+  it("returns exact boundary value when value equals max", () => {
+    expect(applyNumericConstraints({ value: 10, min: 0, max: 10 })).toBe(10);
+  });
+});
+
+describe("getMinMaxFromPropertyConstraints", () => {
+  it("extracts min and max from numeric constraints", () => {
+    expect(getMinMaxFromPropertyConstraints({ minimumValue: 1, maximumValue: 10 })).toEqual({ min: 1, max: 10 });
+  });
+
+  it("extracts only min when max is undefined", () => {
+    expect(getMinMaxFromPropertyConstraints({ minimumValue: 1 })).toEqual({ min: 1, max: undefined });
+  });
+
+  it("extracts only max when min is undefined", () => {
+    expect(getMinMaxFromPropertyConstraints({ maximumValue: 10 })).toEqual({ min: undefined, max: 10 });
+  });
+
+  it("returns undefined min and max for non-numeric constraints", () => {
+    expect(getMinMaxFromPropertyConstraints({ minimumLength: 2, maximumLength: 10 })).toEqual({
+      min: undefined,
+      max: undefined,
+    });
+  });
+
+  it("returns undefined min and max for occurrence constraints", () => {
+    expect(getMinMaxFromPropertyConstraints({ minOccurs: 1, maxOccurs: 5 })).toEqual({
+      min: undefined,
+      max: undefined,
+    });
   });
 });
