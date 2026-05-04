@@ -222,7 +222,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
       await locator.getByText("Node with context menu").click({ button: "right" });
       await expect.element(page.getByText("Context Action 1")).toBeVisible();
       // `aria-required-children` is being triggered because anchor element of context menu is rendered next to `treeitem` under `tree` and
-      // it expect that `tree` contains only `treeitem` children.
+      // it expects that `tree` contains only `treeitem` children.
       await validateSnapshot(locator, { skipA11y: ["aria-hidden-focus", "aria-required-children"] });
     });
 
