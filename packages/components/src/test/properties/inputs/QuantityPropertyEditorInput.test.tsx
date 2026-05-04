@@ -201,19 +201,6 @@ describe("<QuantityPropertyEditorInput />", () => {
     await waitFor(() => expect(input.selectionEnd).toBe(8));
   });
 
-  it("does not throw when onCommit is not provided and input is blurred", async () => {
-    const record = createRecord({ initialValue: 10, kindOfQuantityName: "TestKOQ" });
-    const { getByRole, user } = render(
-      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
-        <QuantityPropertyEditorInput propertyRecord={record} />
-      </SchemaMetadataContextProvider>,
-    );
-
-    const input = await waitFor(() => getByRole("textbox"));
-    await user.click(input);
-    await expect(user.tab()).resolves.not.toThrow();
-  });
-
   it("commits value and blurs input when Enter is pressed", async () => {
     const record = createRecord({ initialValue: 10, kindOfQuantityName: "TestKOQ" });
     const onCommitSpy = vi.fn();

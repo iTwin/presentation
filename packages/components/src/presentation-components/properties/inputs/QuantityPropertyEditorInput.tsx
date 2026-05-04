@@ -85,19 +85,16 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
     );
 
     const onBlur = () => {
-      if (!onCommit) {
-        return;
-      }
-
-      onCommit({
-        propertyRecord,
-        newValue: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: quantityValue.rawValue,
-          displayValue: quantityValue.defaultFormattedValue,
-          roundingError: quantityValue.roundingError,
-        },
-      });
+      onCommit &&
+        onCommit({
+          propertyRecord,
+          newValue: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: quantityValue.rawValue,
+            displayValue: quantityValue.defaultFormattedValue,
+            roundingError: quantityValue.roundingError,
+          },
+        });
     };
 
     useEffect(() => {
