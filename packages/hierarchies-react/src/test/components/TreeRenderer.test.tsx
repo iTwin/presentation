@@ -195,8 +195,9 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         </div>,
         { colorScheme },
       );
-      await expect.element(locator.getByText("Node with menu")).toBeVisible();
-      await locator.getByText("Node with menu").hover();
+      const node = locator.getByText("Node with menu");
+      await expect.element(node).toBeVisible();
+      await node.hover();
       await locator.getByRole("button", { name: "More" }).click();
       await expect.element(page.getByText("Menu Action 1")).toBeVisible();
       await validateSnapshot(locator, { skipA11y: ["aria-hidden-focus"] });
@@ -239,7 +240,10 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         </div>,
         { colorScheme },
       );
-      await expect.element(locator.getByText("Filterable Node")).toBeVisible();
+      const node = locator.getByText("Filterable Node");
+      await expect.element(node).toBeVisible();
+      await node.hover();
+      await expect.element(locator.getByRole("button", { name: "Filter" })).toBeVisible();
       await validateSnapshot(locator);
     });
 
@@ -272,8 +276,12 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         </div>,
         { colorScheme },
       );
-      await expect.element(locator.getByText("Renameable Node")).toBeVisible();
-      await validateSnapshot(locator);
+      const node = locator.getByText("Renameable Node");
+      await expect.element(node).toBeVisible();
+      await node.hover();
+      await locator.getByRole("button", { name: "More" }).click();
+      await expect.element(page.getByText("Rename", { exact: true })).toBeVisible();
+      await validateSnapshot(locator, { skipA11y: ["aria-hidden-focus"] });
     });
   });
 });
