@@ -173,6 +173,5 @@ function applyConstraints({ inputAsString, min, max }: { inputAsString: string; 
   if (!isFinite(inputAsNumber)) {
     return inputAsString;
   }
-  const constrainedNumber = applyNumericConstraints({ value: inputAsNumber, min, max });
-  return constrainedNumber !== inputAsNumber ? constrainedNumber.toString() : inputAsString;
+  return applyNumericConstraints({ value: inputAsNumber, min, max }).toString();
 }
