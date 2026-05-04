@@ -270,7 +270,7 @@ describe("<QuantityPropertyEditorInput />", () => {
 
         await waitFor(() => {
           expect(spy).toHaveBeenCalledWith(
-            expect.objectContaining({ newValue: expect.objectContaining({ value: 10, displayValue: "10 unit" }) }),
+            expect.objectContaining({ newValue: expect.objectContaining({ value: 10, displayValue: "3 unit" }) }),
           );
         });
       });
@@ -297,7 +297,7 @@ describe("<QuantityPropertyEditorInput />", () => {
 
         await waitFor(() => {
           expect(spy).toHaveBeenCalledWith(
-            expect.objectContaining({ newValue: expect.objectContaining({ value: 8, displayValue: "8 unit" }) }),
+            expect.objectContaining({ newValue: expect.objectContaining({ value: 8, displayValue: "15 unit" }) }),
           );
         });
       });
@@ -423,7 +423,7 @@ describe("<QuantityPropertyEditorInput />", () => {
         await waitFor(() => {
           expect(spy).toHaveBeenCalledWith(
             expect.objectContaining({
-              newValue: expect.objectContaining({ value: 2, displayValue: `${convertMetersToInches(2)} in` }),
+              newValue: expect.objectContaining({ value: 2, displayValue: `${convertMetersToInches(1)} in` }),
             }),
           );
         });
@@ -452,7 +452,7 @@ describe("<QuantityPropertyEditorInput />", () => {
         await waitFor(() => {
           expect(spy).toHaveBeenCalledWith(
             expect.objectContaining({
-              newValue: expect.objectContaining({ value: 2, displayValue: `${convertMetersToInches(2)} in` }),
+              newValue: expect.objectContaining({ value: 2, displayValue: `${convertMetersToInches(3)} in` }),
             }),
           );
         });

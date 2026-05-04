@@ -27,11 +27,11 @@ export function getPersistenceUnitRoundingError(numberStr: string, parser: Parse
 }
 
 /** @internal */
-export function getMinMaxFromPropertyConstraints(constraints: PropertyValueConstraints): {
+export function getMinMaxFromPropertyConstraints(constraints?: PropertyValueConstraints): {
   min: number | undefined;
   max: number | undefined;
 } {
-  if ("minimumValue" in constraints || "maximumValue" in constraints) {
+  if (constraints && ("minimumValue" in constraints || "maximumValue" in constraints)) {
     return { min: constraints.minimumValue, max: constraints.maximumValue };
   }
 

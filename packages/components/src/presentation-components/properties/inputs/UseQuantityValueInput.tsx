@@ -34,13 +34,19 @@ export interface UseQuantityValueInputProps {
   initialRawValue?: number;
   schemaContext: SchemaContext;
   koqName: string;
+  constraints?: PropertyValueConstraints;
 }
 
 /**
  * Custom hook that manages state for quantity values input.
  * @internal
  */
-export function useQuantityValueInput({ initialRawValue, schemaContext, koqName }: UseQuantityValueInputProps) {
+export function useQuantityValueInput({
+  initialRawValue,
+  schemaContext,
+  koqName,
+  constraints,
+}: UseQuantityValueInputProps) {
   interface State {
     quantityValue: QuantityValue;
     placeholder: string;
@@ -98,6 +104,9 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     const parseResult = parser.parseToQuantityValue(newValue);
     const roundingError = getPersistenceUnitRoundingError(newValue, parser);
     const defaultFormattedValue = parseResult.ok ? defaultFormatter?.applyFormatting(parseResult.value) : undefined;
+    const rawValue = parseResult.ok
+      ? applyNumericConstraints({ ...getMinMaxFromPropertyConstraints(constraints), value: parseResult.value })
+      : undefined;
 
     setState(
       (prev): State => ({
@@ -105,38 +114,14 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
         quantityValue: {
           highPrecisionFormattedValue: newValue,
           defaultFormattedValue: defaultFormattedValue ?? newValue,
-          rawValue: parseResult.ok ? parseResult.value : undefined,
+          rawValue,
           roundingError: parseResult.ok ? roundingError : undefined,
         },
       }),
     );
   };
 
-  return {
-    quantityValue,
-    inputProps: { onChange, placeholder, disabled: !useFormatterAndParserResult.parser },
-    applyConstraints: (constraints?: PropertyValueConstraints): QuantityValue => {
-      if (quantityValue.rawValue === undefined || !constraints) {
-        return quantityValue;
-      }
-      const { min, max } = getMinMaxFromPropertyConstraints(constraints);
-      const constrainedValue = applyNumericConstraints({ value: quantityValue.rawValue, min, max });
-      if (constrainedValue === quantityValue.rawValue) {
-        return quantityValue;
-      }
-
-      assert(useFormatterAndParserResult.parser !== undefined); // input should be disabled if parser is `undefined`
-      const { parser, defaultFormatter, highPrecisionFormatter } = useFormatterAndParserResult;
-      const defaultFormattedValue = defaultFormatter.applyFormatting(constrainedValue);
-      const highPrecisionFormattedValue = highPrecisionFormatter.applyFormatting(constrainedValue);
-      return {
-        rawValue: constrainedValue,
-        defaultFormattedValue,
-        highPrecisionFormattedValue,
-        roundingError: getPersistenceUnitRoundingError(highPrecisionFormattedValue, parser),
-      };
-    },
-  };
+  return { quantityValue, inputProps: { onChange, placeholder, disabled: !useFormatterAndParserResult.parser } };
 }
 
 function useFormatterAndParser(

@@ -32,9 +32,7 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
     setInputValue(newVal);
   };
 
-  const { min, max } = property.constraints
-    ? getMinMaxFromPropertyConstraints(property.constraints)
-    : { min: undefined, max: undefined };
+  const { min, max } = getMinMaxFromPropertyConstraints(property.constraints);
   const commitInput = () => {
     const formattedInputValue = applyConstraints({ inputAsString: inputValue, min, max });
     setInputValue(formattedInputValue);

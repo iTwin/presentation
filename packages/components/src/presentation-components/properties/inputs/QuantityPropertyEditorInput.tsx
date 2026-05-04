@@ -59,10 +59,12 @@ type QuantityPropertyValueInputProps = QuantityPropertyEditorImplProps & UseQuan
 
 const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, QuantityPropertyValueInputProps>(
   ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus, onCancel }, ref) => {
-    const { quantityValue, inputProps, applyConstraints } = useQuantityValueInput({
+    const property: WithConstraints<PropertyDescription> = propertyRecord.property;
+    const { quantityValue, inputProps } = useQuantityValueInput({
       koqName,
       schemaContext,
       initialRawValue,
+      constraints: property.constraints,
     });
     const [isEditing, setEditing] = useState(false);
     const value = isEditing ? quantityValue.highPrecisionFormattedValue : quantityValue.defaultFormattedValue;
@@ -87,16 +89,13 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         return;
       }
 
-      const property: WithConstraints<PropertyDescription> = propertyRecord.property;
-      const valueToCommit = applyConstraints(property.constraints);
-
       onCommit({
         propertyRecord,
         newValue: {
           valueFormat: PropertyValueFormat.Primitive,
-          value: valueToCommit.rawValue,
-          displayValue: valueToCommit.defaultFormattedValue,
-          roundingError: valueToCommit.roundingError,
+          value: quantityValue.rawValue,
+          displayValue: quantityValue.defaultFormattedValue,
+          roundingError: quantityValue.roundingError,
         },
       });
     };
