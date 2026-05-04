@@ -98,7 +98,7 @@ export function useQuantityValueInput({
   const useFormatterAndParserResult = useFormatterAndParser(koqName, schemaContext, onFormatterLoad.current);
 
   const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
-    assert(useFormatterAndParserResult.parser !== undefined); // input should be disabled if parser is `undefined`
+    assert(useFormatterAndParserResult !== undefined); // input should be disabled if parser is `undefined`
     const { parser, defaultFormatter } = useFormatterAndParserResult;
     const newValue = e.currentTarget.value;
     const parseResult = parser.parseToQuantityValue(newValue);
@@ -121,7 +121,7 @@ export function useQuantityValueInput({
     );
   };
 
-  return { quantityValue, inputProps: { onChange, placeholder, disabled: !useFormatterAndParserResult.parser } };
+  return { quantityValue, inputProps: { onChange, placeholder, disabled: !useFormatterAndParserResult } };
 }
 
 function useFormatterAndParser(
@@ -132,9 +132,7 @@ function useFormatterAndParser(
     newHighPrecisionFormatter: FormatterSpec;
     newParser: ParserSpec;
   }) => void,
-):
-  | { highPrecisionFormatter: FormatterSpec; parser: ParserSpec; defaultFormatter: FormatterSpec }
-  | { highPrecisionFormatter: undefined; parser: undefined; defaultFormatter: undefined } {
+): { highPrecisionFormatter: FormatterSpec; parser: ParserSpec; defaultFormatter: FormatterSpec } | undefined {
   interface State {
     defaultFormatter: FormatterSpec;
     highPrecisionFormatter: FormatterSpec;
@@ -194,5 +192,5 @@ function useFormatterAndParser(
         parser: state.parserSpec,
         defaultFormatter: state.defaultFormatter,
       }
-    : { highPrecisionFormatter: undefined, parser: undefined, defaultFormatter: undefined };
+    : undefined;
 }
