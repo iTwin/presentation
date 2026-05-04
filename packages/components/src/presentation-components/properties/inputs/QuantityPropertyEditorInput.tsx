@@ -15,7 +15,6 @@ import { Input } from "@itwin/itwinui-react";
 import { useSchemaMetadataContext } from "../../common/SchemaMetadataContext.js";
 import { NumericPropertyInput } from "./NumericPropertyInput.js";
 import { useQuantityValueInput, type UseQuantityValueInputProps } from "./UseQuantityValueInput.js";
-import { applyNumericConstraints, getMinMaxFromPropertyConstraints } from "./Utils.js";
 
 import type { PropertyEditorProps } from "@itwin/components-react";
 import type { WithConstraints } from "../../common/ContentBuilder.js";
@@ -60,7 +59,7 @@ type QuantityPropertyValueInputProps = QuantityPropertyEditorImplProps & UseQuan
 
 const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, QuantityPropertyValueInputProps>(
   ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus, onCancel }, ref) => {
-    const { quantityValue, inputProps, setNewValue } = useQuantityValueInput({
+    const { quantityValue, inputProps, applyConstraints } = useQuantityValueInput({
       koqName,
       schemaContext,
       initialRawValue,
@@ -88,16 +87,8 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         return;
       }
 
-      let valueToCommit = quantityValue;
-      const rawValue = quantityValue.rawValue;
       const property: WithConstraints<PropertyDescription> = propertyRecord.property;
-      if (rawValue !== undefined && property.constraints) {
-        const { min, max } = getMinMaxFromPropertyConstraints(property.constraints);
-        const constrainedValue = applyNumericConstraints({ value: rawValue, min, max });
-        if (constrainedValue !== rawValue) {
-          valueToCommit = setNewValue(constrainedValue);
-        }
-      }
+      const valueToCommit = applyConstraints(property.constraints);
 
       onCommit({
         propertyRecord,
