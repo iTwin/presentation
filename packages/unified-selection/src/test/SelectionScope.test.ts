@@ -11,11 +11,16 @@ import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
 describe("SelectionScope", () => {
   const queryExecutor = {
-    createQueryReader: vi.fn<(query: ECSqlQueryDef, options?: ECSqlQueryReaderOptions) => ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
+    createQueryReader:
+      vi.fn<
+        (query: ECSqlQueryDef, options?: ECSqlQueryReaderOptions) => ReturnType<ECSqlQueryExecutor["createQueryReader"]>
+      >(),
   };
 
   describe("computeSelection", () => {
-    function createFakeQueryReader<TRow extends object>(rows: TRow[]): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
+    function createFakeQueryReader<TRow extends object>(
+      rows: TRow[],
+    ): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
       return (async function* () {
         for (const row of rows) {
           yield row;
@@ -35,7 +40,10 @@ describe("SelectionScope", () => {
       });
     }
 
-    async function getSelection(keys: SelectableInstanceKey[], scope: SelectionScope): Promise<SelectableInstanceKey[]> {
+    async function getSelection(
+      keys: SelectableInstanceKey[],
+      scope: SelectionScope,
+    ): Promise<SelectableInstanceKey[]> {
       const selectables: SelectableInstanceKey[] = [];
       for await (const selectable of computeSelection({ queryExecutor, elementIds: keys.map((k) => k.id), scope })) {
         selectables.push(selectable);
@@ -61,7 +69,9 @@ describe("SelectionScope", () => {
 
         const result = await getSelection(keys, scope);
         expect(result).toHaveLength(2);
-        expect(result).toEqual(expect.arrayContaining([persistentKey, { id: transientId, className: TRANSIENT_ELEMENT_CLASSNAME }]));
+        expect(result).toEqual(
+          expect.arrayContaining([persistentKey, { id: transientId, className: TRANSIENT_ELEMENT_CLASSNAME }]),
+        );
       });
 
       it("returns only transient keys when all element ids are transient", async () => {
