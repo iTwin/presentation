@@ -59,6 +59,7 @@ export function App() {
   const [state, setState] = useAppState();
 
   const onIModelSelected = (imodel: IModelConnection | undefined, path?: string) => {
+    UiFramework.setIModelConnection(imodel);
     setState((prev) => ({ ...prev, imodel, imodelPath: path }));
   };
 
