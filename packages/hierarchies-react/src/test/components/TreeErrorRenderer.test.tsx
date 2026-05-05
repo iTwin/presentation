@@ -17,7 +17,7 @@ async function renderTreeErrorRenderer(
   waitForText: string,
 ) {
   const result = await renderWithTheme(
-    <div style={{ width: 300, minHeight: 200 }}>
+    <div style={{ width: 300, height: 200 }}>
       <TreeErrorRenderer {...props} />
     </div>,
     { colorScheme },

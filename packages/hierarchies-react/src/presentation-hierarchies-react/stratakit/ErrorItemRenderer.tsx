@@ -141,9 +141,11 @@ interface MessageWithLinkProps {
 
 function MessageWithLink({ linkLabel, scrollToElement, message }: MessageWithLinkProps) {
   const splitMessage = message.split("{{node}}", 2);
+  // append space before the link if message does not contain it already.
+  const firstPart = splitMessage[0].endsWith(" ") ? splitMessage[0] : `${splitMessage[0]} `;
   return (
-    <div style={{ display: "flex", whiteSpace: "pre", flexWrap: "wrap" }}>
-      {splitMessage[0]}
+    <div style={{ display: "flex", whiteSpace: "pre", flexWrap: "wrap", textWrap: "auto" }}>
+      {firstPart}
       <Anchor onClick={scrollToElement} render={<button />}>
         {linkLabel}
       </Anchor>
