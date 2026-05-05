@@ -144,7 +144,7 @@ function MessageWithLink({ linkLabel, scrollToElement, message }: MessageWithLin
   const firstPart = splitMessage[0].trimEnd();
   const secondPart = splitMessage[1]?.trimStart();
   return (
-    <div style={{ display: "flex", whiteSpace: "pre", flexWrap: "wrap", textWrap: "auto" }}>
+    <div>
       {firstPart}{" "}
       <Anchor onClick={scrollToElement} render={<button />}>
         {linkLabel}
