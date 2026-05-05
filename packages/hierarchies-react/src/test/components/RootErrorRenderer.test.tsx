@@ -3,7 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, it, vi } from "vitest";
+import { beforeEach, describe, it, vi } from "vitest";
+import { page } from "vitest/browser";
 import { StrataKitRootErrorRenderer } from "../../presentation-hierarchies-react/stratakit/RootErrorRenderer.js";
 import { COLOR_SCHEMES, renderWithTheme, validateSnapshot } from "./RenderUtils.js";
 
@@ -16,6 +17,10 @@ COLOR_SCHEMES.forEach((colorScheme) => {
       reloadTree: vi.fn(),
       getHierarchyLevelDetails: vi.fn(),
     };
+
+    beforeEach(async () => {
+      await page.viewport(300, 200);
+    });
 
     it("renders generic error", async () => {
       const { locator } = await renderWithTheme(<StrataKitRootErrorRenderer {...defaultProps} />, { colorScheme });

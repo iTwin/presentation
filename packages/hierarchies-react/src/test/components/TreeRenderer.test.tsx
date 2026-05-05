@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { TreeActionBase } from "../../presentation-hierarchies-react/stratakit/TreeAction.js";
 import { TreeNodeFilterAction } from "../../presentation-hierarchies-react/stratakit/TreeNodeFilterAction.js";
@@ -31,16 +31,24 @@ function createDefaultProps(overrides?: Partial<StrataKitTreeRendererProps>): St
   };
 }
 
+async function renderTree(props: StrataKitTreeRendererProps, colorScheme: "light" | "dark") {
+  return renderWithTheme(
+    <div style={{ height: 100, width: 300 }}>
+      <StrataKitTreeRenderer {...props} />
+    </div>,
+    { colorScheme },
+  );
+}
+
 COLOR_SCHEMES.forEach((colorScheme) => {
   describe(`[${colorScheme}] <StrataKitTreeRenderer />`, () => {
+    beforeEach(async () => {
+      await page.viewport(300, 100);
+    });
+
     it("renders tree with single root node", async () => {
       const props = createDefaultProps({ rootNodes: [createTreeNode({ id: "node-1", label: "Root Node" })] });
-      const { locator } = await renderWithTheme(
-        <div style={{ height: 200, width: 300 }}>
-          <StrataKitTreeRenderer {...props} />
-        </div>,
-        { colorScheme },
-      );
+      const { locator } = await renderTree(props, colorScheme);
       await expect.element(locator.getByText("Root Node")).toBeVisible();
       await validateSnapshot(locator);
     });
@@ -59,12 +67,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
           }),
         ],
       });
-      const { locator } = await renderWithTheme(
-        <div style={{ height: 200, width: 300 }}>
-          <StrataKitTreeRenderer {...props} />
-        </div>,
-        { colorScheme },
-      );
+      const { locator } = await renderTree(props, colorScheme);
       await expect.element(locator.getByText("Child 2")).toBeVisible();
       await validateSnapshot(locator);
     });
@@ -75,12 +78,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
           createTreeNode({ id: "parent", label: "Loading Node", isExpanded: true, isLoading: true, children: true }),
         ],
       });
-      const { locator } = await renderWithTheme(
-        <div style={{ height: 200, width: 300 }}>
-          <StrataKitTreeRenderer {...props} />
-        </div>,
-        { colorScheme },
-      );
+      const { locator } = await renderTree(props, colorScheme);
       await expect.element(locator.getByText("Loading Node")).toBeVisible();
       await validateSnapshot(locator);
     });
@@ -93,12 +91,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         ],
         isNodeSelected: (nodeId) => nodeId === "node-1",
       });
-      const { locator } = await renderWithTheme(
-        <div style={{ height: 200, width: 300 }}>
-          <StrataKitTreeRenderer {...props} />
-        </div>,
-        { colorScheme },
-      );
+      const { locator } = await renderTree(props, colorScheme);
       await expect.element(locator.getByText("Selected Node", { exact: true })).toBeVisible();
       await validateSnapshot(locator);
     });
@@ -113,12 +106,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
           }),
         ],
       });
-      const { locator } = await renderWithTheme(
-        <div style={{ height: 200, width: 300 }}>
-          <StrataKitTreeRenderer {...props} />
-        </div>,
-        { colorScheme },
-      );
+      const { locator } = await renderTree(props, colorScheme);
       await expect.element(locator.getByRole("treeitem", { name: "Error Node" })).toBeVisible();
       await validateSnapshot(locator);
     });
@@ -133,12 +121,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
           }),
         ],
       });
-      const { locator } = await renderWithTheme(
-        <div style={{ height: 200, width: 300 }}>
-          <StrataKitTreeRenderer {...props} />
-        </div>,
-        { colorScheme },
-      );
+      const { locator } = await renderTree(props, colorScheme);
       await expect.element(locator.getByRole("treeitem", { name: "Failed Node" })).toBeVisible();
       await validateSnapshot(locator);
     });
@@ -150,12 +133,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
           <TreeActionBase key="action-1" label="Action 1" icon={placeholderSvg} onClick={vi.fn()} />,
         ],
       });
-      const { locator } = await renderWithTheme(
-        <div style={{ height: 200, width: 300 }}>
-          <StrataKitTreeRenderer {...props} />
-        </div>,
-        { colorScheme },
-      );
+      const { locator } = await renderTree(props, colorScheme);
       await locator.getByText("Node with actions").hover();
       await expect.element(locator.getByRole("button", { name: "Action 1" })).toBeVisible();
       await validateSnapshot(locator);
@@ -168,12 +146,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
           <TreeActionBase key="action-1" label="Action 1" icon={placeholderSvg} onClick={vi.fn()} visible={true} />,
         ],
       });
-      const { locator } = await renderWithTheme(
-        <div style={{ height: 200, width: 300 }}>
-          <StrataKitTreeRenderer {...props} />
-        </div>,
-        { colorScheme },
-      );
+      const { locator } = await renderTree(props, colorScheme);
       await expect.element(locator.getByRole("button", { name: "Action 1" })).toBeVisible();
       await validateSnapshot(locator);
     });
@@ -189,12 +162,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
           <TreeActionBase key="action-2" label="Menu Action 2" icon={placeholderSvg} onClick={vi.fn()} />,
         ],
       });
-      const { locator } = await renderWithTheme(
-        <div style={{ height: 200, width: 300 }}>
-          <StrataKitTreeRenderer {...props} />
-        </div>,
-        { colorScheme },
-      );
+      const { locator } = await renderTree(props, colorScheme);
       const node = locator.getByText("Node with menu");
       await expect.element(node).toBeVisible();
       await node.hover();
@@ -214,12 +182,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
           <TreeActionBase key="action-2" label="Context Action 2" icon={placeholderSvg} onClick={vi.fn()} />,
         ],
       });
-      const { locator } = await renderWithTheme(
-        <div style={{ height: 200, width: 300 }}>
-          <StrataKitTreeRenderer {...props} />
-        </div>,
-        { colorScheme },
-      );
+      const { locator } = await renderTree(props, colorScheme);
       await locator.getByText("Node with context menu").click({ button: "right" });
       await expect.element(page.getByText("Context Action 1")).toBeVisible();
       // `aria-required-children` is being triggered because anchor element of context menu is rendered next to `treeitem` under `tree` and
@@ -234,12 +197,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
           <TreeNodeFilterAction key="filter" node={targetNode} onFilter={vi.fn()} getHierarchyLevelDetails={vi.fn()} />,
         ],
       });
-      const { locator } = await renderWithTheme(
-        <div style={{ height: 200, width: 300 }}>
-          <StrataKitTreeRenderer {...props} />
-        </div>,
-        { colorScheme },
-      );
+      const { locator } = await renderTree(props, colorScheme);
       const node = locator.getByText("Filterable Node");
       await expect.element(node).toBeVisible();
       await node.hover();
@@ -254,12 +212,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
           <TreeNodeFilterAction key="filter" node={targetNode} onFilter={vi.fn()} getHierarchyLevelDetails={vi.fn()} />,
         ],
       });
-      const { locator } = await renderWithTheme(
-        <div style={{ height: 200, width: 300 }}>
-          <StrataKitTreeRenderer {...props} />
-        </div>,
-        { colorScheme },
-      );
+      const { locator } = await renderTree(props, colorScheme);
       await expect.element(locator.getByText("Filtered Node")).toBeVisible();
       await validateSnapshot(locator);
     });
@@ -270,12 +223,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         getEditingProps: () => ({ onLabelChanged: vi.fn() }),
         getMenuActions: ({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />],
       });
-      const { locator } = await renderWithTheme(
-        <div style={{ height: 200, width: 300 }}>
-          <StrataKitTreeRenderer {...props} />
-        </div>,
-        { colorScheme },
-      );
+      const { locator } = await renderTree(props, colorScheme);
       const node = locator.getByText("Renaming Node");
       await expect.element(node).toBeVisible();
       await node.hover();

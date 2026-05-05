@@ -3,7 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { page } from "vitest/browser";
 import { TreeErrorRenderer } from "../../presentation-hierarchies-react/stratakit/TreeErrorRenderer.js";
 import { COLOR_SCHEMES, renderWithTheme, validateSnapshot } from "./RenderUtils.js";
 import { createTreeNode } from "./TestUtils.js";
@@ -16,7 +17,7 @@ async function renderTreeErrorRenderer(
   waitForText: string,
 ) {
   const result = await renderWithTheme(
-    <div style={{ width: 400, minHeight: 200 }}>
+    <div style={{ width: 300, minHeight: 200 }}>
       <TreeErrorRenderer {...props} />
     </div>,
     { colorScheme },
@@ -34,6 +35,10 @@ COLOR_SCHEMES.forEach((colorScheme) => {
       scrollToNode: vi.fn(),
       getHierarchyLevelDetails: vi.fn(),
     };
+
+    beforeEach(async () => {
+      await page.viewport(300, 200);
+    });
 
     it("renders with unknown error", async () => {
       const errorNodes = [
