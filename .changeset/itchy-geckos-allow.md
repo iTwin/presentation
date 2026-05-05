@@ -2,4 +2,4 @@
 "@itwin/presentation-testing": patch
 ---
 
-Add a deprecation notice to `README.md`.
+Deprecate `@itwin/presentation-testing`.
