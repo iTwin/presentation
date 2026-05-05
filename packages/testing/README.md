@@ -4,7 +4,11 @@ Copyright © Bentley Systems, Incorporated. All rights reserved. See LICENSE.md 
 
 ## Deprecation notice
 
-**This package has been deprecated.** Please use tested APIs directly from the packages they are defined in. For example, use [@itwin/presentation-frontend](https://www.npmjs.com/package/@itwin/presentation-frontend) instead of `@itwin/presentation-testing` for testing presentation-frontend modules.
+**This package is no longer recommended for new development.**
+
+The package contains testing utilities (`HierarchyBuilder`, `ContentBuilder`, filename utilities, and `buildTestIModel`) that remain functional and available for existing consumers. However, no new features or utilities will be added to this package.
+
+For new tests, consider testing presentation APIs directly through integration tests rather than snapshot-based hierarchy/content testing, or implement your own test builders tailored to your needs.
 
 ## Description
 
