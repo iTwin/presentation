@@ -15,7 +15,17 @@ were moved to this repository, which broke them out of lock-step and allowed the
 core repository. Both - the Presentation packages in [itwinjs-core](https://github.com/iTwin/itwinjs-core) repository and the ones that we moved to this one - are considered [legacy packages](#legacy-packages).
 While the legacy packages are still maintained and contain some APIs that have no replacements, they're gradually being replaced by [new generation packages](#new-generation-packages).
 
+### Deprecated packages
+
+Deprecated packages are not expected to receive any new features or updates, unless it's a critical bug fix.
+
+| Package                                                                                | Description                                                              |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| [`@itwin/presentation-testing`](https://npmjs.com/package/@itwin/presentation-testing) | Utility APIs for testing components based on _legacy_ Presentation APIs. |
+
 ### Legacy packages
+
+Legacy packages are still maintained and receive bug fixes, but they're not expected to receive any new features, and some of their APIs might be marked as deprecated in favor of the ones in the new generation packages.
 
 | Package                                                                                                                   | Description                                                                                                                                              |
 | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -23,7 +33,6 @@ While the legacy packages are still maintained and contain some APIs that have n
 | [`@itwin/presentation-backend`](https://github.com/iTwin/itwinjs-core/tree/master/presentation/backend/README.md)         | APIs for querying presentation data directly from iModels on the backend.                                                                                |
 | [`@itwin/presentation-frontend`](https://github.com/iTwin/itwinjs-core/tree/master/presentation/frontend/README.md)       | APIs for querying presentation data from iModels through the [RPC system](https://www.itwinjs.org/learning/rpcinterface/).                               |
 | [`@itwin/presentation-components`](https://github.com/iTwin/presentation/tree/master/packages/components/README.md)       | React components and their building blocks to display presentation data to users. Uses `@itwin/presentation-frontend` peer dependency to query the data. |
-| [`@itwin/presentation-testing`](https://github.com/iTwin/presentation/tree/master/packages/testing/README.md)             | Utility APIs for testing components based on _legacy_ Presentation APIs.                                                                                 |
 | [`@itwin/presentation-opentelemetry`](https://github.com/iTwin/presentation/tree/master/packages/opentelemetry/README.md) | APIs for making interop between OpenTelemetry and _legacy_ Presentation types easier.                                                                    |
 
 ### New generation packages
