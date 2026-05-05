@@ -35,7 +35,6 @@ This is a **pnpm monorepo** orchestrated with **Lage** and versioned with **Chan
 | `@itwin/unified-selection-react` | `packages/unified-selection-react` | React bindings for unified selection |
 | `@itwin/presentation-opentelemetry` | `packages/opentelemetry` | OpenTelemetry diagnostics integration |
 | `@itwin/presentation-models-tree` | `packages/models-tree` | Models tree widget for internal testing |
-| `@itwin/presentation-testing` | `packages/testing` | Test helpers |
 | `@itwin/presentation-test-utilities` | `packages/test-utilities` | Internal test utilities |
 
 ## Apps

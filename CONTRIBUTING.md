@@ -229,10 +229,6 @@ echo "Packing presentation-components"
 cd packages/components
 pnpm pack
 
-echo "Packing presentation-testing"
-cd ../testing
-pnpm pack
-
 echo "Packing presentation-core-interop"
 cd ../core-interop
 pnpm pack
