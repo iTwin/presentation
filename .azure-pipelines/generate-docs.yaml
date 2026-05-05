@@ -39,11 +39,9 @@ stages:
             $paths = @(
               ".azure-pipelines/generate-docs.yaml",
               "packages/components/*",
-              "packages/testing/*",
               "packages/opentelemetry/*",
               "apps/test-app/*",
-              "apps/full-stack-tests/src/components/*",
-              "apps/full-stack-tests/src/testing/*"
+              "apps/full-stack-tests/src/components/*"
             )
             $sourceBranch = "origin/$(System.PullRequest.SourceBranch)"
             $targetBranch = "origin/$(System.PullRequest.targetBranchName)"

@@ -47,15 +47,11 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Build packages
-        run: pnpm lage build --to @itwin/presentation-components @itwin/presentation-testing @itwin/presentation-core-interop --grouped
+        run: pnpm lage build --to @itwin/presentation-components @itwin/presentation-core-interop --grouped
 
       - name: Pack components
         run: pnpm pack
         working-directory: packages/components
-
-      - name: Pack testing
-        run: pnpm pack
-        working-directory: packages/testing
 
       - name: Pack core-interop
         run: pnpm pack
