@@ -12,8 +12,7 @@ Presentation packages are part of the [iTwin.js library](https://www.itwinjs.org
 
 Initially, all presentation packages were part of the [itwinjs-core](https://github.com/iTwin/itwinjs-core) repository, releasing in lock-step with the core packages. At some point, some of the packages
 were moved to this repository, which broke them out of lock-step and allowed them to have their own, much quicker, release cycle. However, the moved packages are still tightly coupled with the ones in
-core repository. Both - the Presentation packages in [itwinjs-core](https://github.com/iTwin/itwinjs-core) repository and the ones that we moved to this one - are considered [legacy packages](#legacy-packages).
-While the legacy packages are still maintained and contain some APIs that have no replacements, they're gradually being replaced by [new generation packages](#new-generation-packages).
+core repository. Both - the Presentation packages in [itwinjs-core](https://github.com/iTwin/itwinjs-core) repository and the ones that we moved to this one - are considered [legacy packages](#legacy-packages), with the long-term goal to deprecate them.
 
 ### Deprecated packages
 
@@ -25,7 +24,7 @@ Deprecated packages are not expected to receive any new features or updates, unl
 
 ### Legacy packages
 
-Legacy packages are still maintained and receive bug fixes, but they're not expected to receive any new features, and some of their APIs might be marked as deprecated in favor of the ones in the new generation packages.
+Legacy packages are still maintained and receive bug fixes, but they're not expected to receive any new features, and some of their APIs might be marked as deprecated in favor of the ones in the [new generation packages](#new-generation-packages).
 
 | Package                                                                                                                   | Description                                                                                                                                              |
 | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
