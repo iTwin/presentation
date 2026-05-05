@@ -75,7 +75,9 @@ export async function* computeSelection(props: ComputeSelectionProps): AsyncIter
 
   const { persistent: persistentIds, transient: transientIds } = parseElementIds(elementIds);
 
-  yield* transientIds.values().map((id) => ({ id, className: TRANSIENT_ELEMENT_CLASSNAME }));
+  for (const id of transientIds) {
+    yield { id, className: TRANSIENT_ELEMENT_CLASSNAME };
+  }
 
   switch (scope.id) {
     case "element":
