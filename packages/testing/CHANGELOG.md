@@ -1,5 +1,13 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.4.21
+
+### Patch Changes
+
+- [#1327](https://github.com/iTwin/presentation/pull/1327): Deprecate `@itwin/presentation-testing`.
+- Updated dependencies:
+  - @itwin/presentation-components@5.13.6
+
 ## 5.4.20
 
 ### Patch Changes
