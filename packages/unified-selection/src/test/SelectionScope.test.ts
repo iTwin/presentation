@@ -5,22 +5,17 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
-import { SelectableInstanceKey } from "../unified-selection/Selectable.js";
+import { SelectableInstanceKey, TRANSIENT_ELEMENT_CLASSNAME } from "../unified-selection/Selectable.js";
 import { computeSelection, SelectionScope } from "../unified-selection/SelectionScope.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
 describe("SelectionScope", () => {
   const queryExecutor = {
-    createQueryReader:
-      vi.fn<
-        (query: ECSqlQueryDef, options?: ECSqlQueryReaderOptions) => ReturnType<ECSqlQueryExecutor["createQueryReader"]>
-      >(),
+    createQueryReader: vi.fn<(query: ECSqlQueryDef, options?: ECSqlQueryReaderOptions) => ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
   };
 
   describe("computeSelection", () => {
-    function createFakeQueryReader<TRow extends object>(
-      rows: TRow[],
-    ): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
+    function createFakeQueryReader<TRow extends object>(rows: TRow[]): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
       return (async function* () {
         for (const row of rows) {
           yield row;
@@ -40,10 +35,7 @@ describe("SelectionScope", () => {
       });
     }
 
-    async function getSelection(
-      keys: SelectableInstanceKey[],
-      scope: SelectionScope,
-    ): Promise<SelectableInstanceKey[]> {
+    async function getSelection(keys: SelectableInstanceKey[], scope: SelectionScope): Promise<SelectableInstanceKey[]> {
       const selectables: SelectableInstanceKey[] = [];
       for await (const selectable of computeSelection({ queryExecutor, elementIds: keys.map((k) => k.id), scope })) {
         selectables.push(selectable);
@@ -61,13 +53,34 @@ describe("SelectionScope", () => {
         expect(result).toEqual(expect.arrayContaining(keys));
       });
 
-      it("skips transient element ids", async () => {
-        const keys = [createSelectableInstanceKey(), { className: "any:class", id: "0xffffff0000000001" }];
-        mockQuery(query, keys);
+      it("returns persistent and transient element ids", async () => {
+        const persistentKey = createSelectableInstanceKey();
+        const transientId = "0xffffff0000000001";
+        const keys = [persistentKey, { className: "any:class", id: transientId }];
+        mockQuery(query, [persistentKey]);
 
         const result = await getSelection(keys, scope);
         expect(result).toHaveLength(2);
-        expect(result).toEqual(expect.arrayContaining([keys[0]]));
+        expect(result).toEqual(expect.arrayContaining([persistentKey, { id: transientId, className: TRANSIENT_ELEMENT_CLASSNAME }]));
+      });
+
+      it("returns only transient keys when all element ids are transient", async () => {
+        const transientId1 = "0xffffff0000000001";
+        const transientId2 = "0xffffff0000000002";
+        const keys = [
+          { className: "any:class", id: transientId1 },
+          { className: "any:class", id: transientId2 },
+        ];
+        mockQuery(query, []);
+
+        const result = await getSelection(keys, scope);
+        expect(result).toHaveLength(2);
+        expect(result).toEqual(
+          expect.arrayContaining([
+            { id: transientId1, className: TRANSIENT_ELEMENT_CLASSNAME },
+            { id: transientId2, className: TRANSIENT_ELEMENT_CLASSNAME },
+          ]),
+        );
       });
     }
 
