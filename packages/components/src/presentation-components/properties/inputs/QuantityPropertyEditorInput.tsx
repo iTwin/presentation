@@ -11,8 +11,9 @@ import { useSchemaMetadataContext } from "../../common/SchemaMetadataContext.js"
 import { NumericPropertyInput } from "./NumericPropertyInput.js";
 import { useQuantityValueInput } from "./UseQuantityValueInput.js";
 
-import type { PrimitiveValue, PropertyRecord } from "@itwin/appui-abstract";
+import type { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
 import type { PropertyEditorProps } from "@itwin/components-react";
+import type { WithConstraints } from "../../common/ContentBuilder.js";
 import type { PropertyEditorAttributes } from "../editors/Common.js";
 import type { UseQuantityValueInputProps } from "./UseQuantityValueInput.js";
 
@@ -56,7 +57,13 @@ type QuantityPropertyValueInputProps = QuantityPropertyEditorImplProps & UseQuan
 
 const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, QuantityPropertyValueInputProps>(
   ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus, onCancel }, ref) => {
-    const { quantityValue, inputProps } = useQuantityValueInput({ koqName, schemaContext, initialRawValue });
+    const property: WithConstraints<PropertyDescription> = propertyRecord.property;
+    const { quantityValue, inputProps } = useQuantityValueInput({
+      koqName,
+      schemaContext,
+      initialRawValue,
+      constraints: property.constraints,
+    });
     const [isEditing, setEditing] = useState(false);
     const value = isEditing ? quantityValue.highPrecisionFormattedValue : quantityValue.defaultFormattedValue;
 

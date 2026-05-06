@@ -16,10 +16,12 @@ import { QuantityPropertyEditorInput } from "../../../presentation-components/pr
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 
+import type { PropertyDescription } from "@itwin/appui-abstract";
 import type { PropertyEditorProps } from "@itwin/components-react";
 import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import type { QuantityParseResult } from "@itwin/core-quantity";
 import type { SchemaContext } from "@itwin/ecschema-metadata";
+import type { WithConstraints } from "../../../presentation-components/common/ContentBuilder.js";
 import type { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 
 const createRecord = ({ initialValue, kindOfQuantityName }: { initialValue?: number; kindOfQuantityName?: string }) => {
@@ -27,6 +29,20 @@ const createRecord = ({ initialValue, kindOfQuantityName }: { initialValue?: num
     { value: initialValue, displayValue: undefined },
     { typename: StandardTypeNames.Double, kindOfQuantityName, editor: { name: QuantityEditorName } },
   );
+};
+
+const createRecordWithConstraints = ({
+  initialValue,
+  kindOfQuantityName,
+  constraints,
+}: {
+  initialValue?: number;
+  kindOfQuantityName?: string;
+  constraints?: { minimumValue?: number; maximumValue?: number };
+}) => {
+  const record = createRecord({ initialValue, kindOfQuantityName });
+  (record.property as WithConstraints<PropertyDescription>).constraints = constraints;
+  return record;
 };
 
 describe("<QuantityPropertyEditorInput />", () => {
@@ -219,5 +235,247 @@ describe("<QuantityPropertyEditorInput />", () => {
     await user.keyboard("{Escape}");
 
     expect(onCancelSpy).toHaveBeenCalledOnce();
+  });
+
+  describe("with constraints", () => {
+    describe("persistence unit matches display unit", () => {
+      it("calls onCommit with minimumValue when typed value is smaller", async () => {
+        const record = createRecordWithConstraints({
+          initialValue: 5,
+          kindOfQuantityName: "TestKOQ",
+          constraints: { minimumValue: 10 },
+        });
+        const spy = vi.fn();
+        const { getByRole, user } = render(
+          <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+            <QuantityPropertyEditorInput propertyRecord={record} onCommit={spy} setFocus={true} />
+          </SchemaMetadataContextProvider>,
+        );
+
+        const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
+        await waitFor(() => expect(input.disabled).toBe(false));
+
+        await user.clear(input);
+        await user.type(input, "3 unit", { skipClick: true });
+        await user.tab();
+
+        await waitFor(() => {
+          expect(spy).toHaveBeenCalledWith(
+            expect.objectContaining({ newValue: expect.objectContaining({ value: 10, displayValue: "3 unit" }) }),
+          );
+        });
+      });
+
+      it("calls onCommit with maximumValue when typed value is larger", async () => {
+        const record = createRecordWithConstraints({
+          initialValue: 5,
+          kindOfQuantityName: "TestKOQ",
+          constraints: { maximumValue: 8 },
+        });
+        const spy = vi.fn();
+        const { getByRole, user } = render(
+          <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+            <QuantityPropertyEditorInput propertyRecord={record} onCommit={spy} setFocus={true} />
+          </SchemaMetadataContextProvider>,
+        );
+
+        const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
+        await waitFor(() => expect(input.disabled).toBe(false));
+
+        await user.clear(input);
+        await user.type(input, "15 unit", { skipClick: true });
+        await user.tab();
+
+        await waitFor(() => {
+          expect(spy).toHaveBeenCalledWith(
+            expect.objectContaining({ newValue: expect.objectContaining({ value: 8, displayValue: "15 unit" }) }),
+          );
+        });
+      });
+
+      it("calls onCommit with typed in value when it is in between minimumValue and maximumValue", async () => {
+        const record = createRecordWithConstraints({
+          initialValue: 5,
+          kindOfQuantityName: "TestKOQ",
+          constraints: { minimumValue: 0, maximumValue: 100 },
+        });
+        const spy = vi.fn();
+        const { getByRole, user } = render(
+          <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+            <QuantityPropertyEditorInput propertyRecord={record} onCommit={spy} setFocus={true} />
+          </SchemaMetadataContextProvider>,
+        );
+
+        const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
+        await waitFor(() => expect(input.disabled).toBe(false));
+
+        await user.clear(input);
+        await user.type(input, "50 unit", { skipClick: true });
+        await user.tab();
+
+        await waitFor(() => {
+          expect(spy).toHaveBeenCalledWith(
+            expect.objectContaining({ newValue: expect.objectContaining({ value: 50, displayValue: "50 unit" }) }),
+          );
+        });
+      });
+
+      it("calls onCommit with typed in value when minimumValue and maximumValue are undefined", async () => {
+        const record = createRecord({ initialValue: 5, kindOfQuantityName: "TestKOQ" });
+        const spy = vi.fn();
+        const { getByRole, user } = render(
+          <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+            <QuantityPropertyEditorInput propertyRecord={record} onCommit={spy} setFocus={true} />
+          </SchemaMetadataContextProvider>,
+        );
+
+        const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
+        await waitFor(() => expect(input.disabled).toBe(false));
+
+        await user.clear(input);
+        await user.type(input, "999 unit", { skipClick: true });
+        await user.tab();
+
+        await waitFor(() => {
+          expect(spy).toHaveBeenCalledWith(
+            expect.objectContaining({ newValue: expect.objectContaining({ value: 999, displayValue: "999 unit" }) }),
+          );
+        });
+      });
+
+      it("calls onCommit with typed in value when it is not a number", async () => {
+        const record = createRecordWithConstraints({
+          initialValue: 5,
+          kindOfQuantityName: "TestKOQ",
+          constraints: { minimumValue: 0, maximumValue: 10 },
+        });
+        const spy = vi.fn();
+        const { getByRole, user } = render(
+          <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+            <QuantityPropertyEditorInput propertyRecord={record} onCommit={spy} setFocus={true} />
+          </SchemaMetadataContextProvider>,
+        );
+
+        const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
+        await waitFor(() => expect(input.disabled).toBe(false));
+
+        await user.clear(input);
+        await user.type(input, "abc", { skipClick: true });
+        await user.tab();
+
+        await waitFor(() => {
+          expect(spy).toHaveBeenCalledWith(
+            expect.objectContaining({ newValue: expect.objectContaining({ value: undefined, displayValue: "abc" }) }),
+          );
+        });
+      });
+    });
+
+    describe("persistence unit is different from display unit", () => {
+      const METERS_PER_INCH = 0.0254;
+      const convertMetersToInches = (meters: number) => meters / METERS_PER_INCH;
+      const convertInchesToMeters = (inches: number) => inches * METERS_PER_INCH;
+      beforeEach(() => {
+        // Formatter: persistence (meters) → display (inches)
+        formatterSpec.applyFormatting.mockImplementation((rawMeters) => `${convertMetersToInches(rawMeters)} in`);
+        // Parser: display (inches) → persistence (meters)
+        parserSpec.parseToQuantityValue.mockImplementation((value) => {
+          if (!value.endsWith("in")) {
+            return { ok: false, error: ParseError.UnknownUnit };
+          }
+          const inches = Number(value.substring(0, value.length - 2));
+          if (isNaN(inches)) {
+            return { ok: false, error: ParseError.UnknownUnit };
+          }
+          return { ok: true, value: convertInchesToMeters(inches) };
+        });
+      });
+
+      it("calls onCommit to with minimumValue when typed value is smaller", async () => {
+        const record = createRecordWithConstraints({
+          initialValue: 2,
+          kindOfQuantityName: "TestKOQ",
+          constraints: { minimumValue: 2 },
+        });
+        const spy = vi.fn();
+        const { getByRole, user } = render(
+          <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+            <QuantityPropertyEditorInput propertyRecord={record} onCommit={spy} setFocus={true} />
+          </SchemaMetadataContextProvider>,
+        );
+
+        const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
+        await waitFor(() => expect(input.disabled).toBe(false));
+
+        await user.clear(input);
+        await user.type(input, `${convertMetersToInches(1)} in`, { skipClick: true });
+        await user.tab();
+
+        await waitFor(() => {
+          expect(spy).toHaveBeenCalledWith(
+            expect.objectContaining({
+              newValue: expect.objectContaining({ value: 2, displayValue: `${convertMetersToInches(1)} in` }),
+            }),
+          );
+        });
+      });
+
+      it("calls onCommit to with maximumValue when typed value is larger", async () => {
+        const record = createRecordWithConstraints({
+          initialValue: 1,
+          kindOfQuantityName: "TestKOQ",
+          constraints: { maximumValue: 2 },
+        });
+        const spy = vi.fn();
+        const { getByRole, user } = render(
+          <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+            <QuantityPropertyEditorInput propertyRecord={record} onCommit={spy} setFocus={true} />
+          </SchemaMetadataContextProvider>,
+        );
+
+        const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
+        await waitFor(() => expect(input.disabled).toBe(false));
+
+        await user.clear(input);
+        await user.type(input, `${convertMetersToInches(3)} in`, { skipClick: true });
+        await user.tab();
+
+        await waitFor(() => {
+          expect(spy).toHaveBeenCalledWith(
+            expect.objectContaining({
+              newValue: expect.objectContaining({ value: 2, displayValue: `${convertMetersToInches(3)} in` }),
+            }),
+          );
+        });
+      });
+
+      it("calls onCommit with typed in value when it is larger than maximumValue but converted is within constraints", async () => {
+        const record = createRecordWithConstraints({
+          initialValue: 1,
+          kindOfQuantityName: "TestKOQ",
+          constraints: { minimumValue: 0.5, maximumValue: 2 },
+        });
+        const spy = vi.fn();
+        const { getByRole, user } = render(
+          <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+            <QuantityPropertyEditorInput propertyRecord={record} onCommit={spy} setFocus={true} />
+          </SchemaMetadataContextProvider>,
+        );
+
+        const input = await waitFor(() => getByRole("textbox") as HTMLInputElement);
+        await waitFor(() => expect(input.disabled).toBe(false));
+        const inches = convertMetersToInches(1);
+        expect(inches).toBeGreaterThan(2);
+        await user.clear(input);
+        await user.type(input, `${inches} in`, { skipClick: true });
+        await user.tab();
+
+        await waitFor(() => {
+          expect(spy).toHaveBeenCalledWith(
+            expect.objectContaining({ newValue: expect.objectContaining({ value: 1, displayValue: `${inches} in` }) }),
+          );
+        });
+      });
+    });
   });
 });

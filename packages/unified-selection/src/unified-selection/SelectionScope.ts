@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Guid, Id64 } from "@itwin/core-bentley";
+import { TRANSIENT_ELEMENT_CLASSNAME } from "./Selectable.js";
 import { formIdBindings, genericExecuteQuery } from "./Utils.js";
 
-import type { Id64Arg, Id64Array } from "@itwin/core-bentley";
+import type { Id64Arg, Id64Array, Id64Set } from "@itwin/core-bentley";
 import type {
   ECSqlBinding,
   ECSqlQueryDef,
@@ -75,33 +76,32 @@ export async function* computeSelection(props: ComputeSelectionProps): AsyncIter
     return;
   }
 
-  const nonTransientIds: Id64Array = [];
-  for (const id of Id64.iterable(elementIds)) {
-    if (!Id64.isTransient(id)) {
-      nonTransientIds.push(id);
-    }
+  const { persistent: persistentIds, transient: transientIds } = parseElementIds(elementIds);
+
+  for (const id of transientIds) {
+    yield { id, className: TRANSIENT_ELEMENT_CLASSNAME };
   }
 
   switch (scope.id) {
     case "element":
       yield* computeElementSelection(
         queryExecutor,
-        nonTransientIds,
+        persistentIds,
         (scope as ElementSelectionScopeProps).ancestorLevel ?? 0,
         componentId,
         componentName,
       );
       return;
     case "category":
-      yield* computeCategorySelection(queryExecutor, nonTransientIds, componentId, componentName);
+      yield* computeCategorySelection(queryExecutor, persistentIds, componentId, componentName);
       return;
     case "model":
-      yield* computeModelSelection(queryExecutor, nonTransientIds, componentId, componentName);
+      yield* computeModelSelection(queryExecutor, persistentIds, componentId, componentName);
       return;
     case "functional":
       yield* computeFunctionalElementSelection(
         queryExecutor,
-        nonTransientIds,
+        persistentIds,
         (scope as ElementSelectionScopeProps).ancestorLevel ?? 0,
         componentId,
         componentName,
@@ -112,7 +112,7 @@ export async function* computeSelection(props: ComputeSelectionProps): AsyncIter
 
 async function* computeElementSelection(
   queryExecutor: ECSqlQueryExecutor,
-  elementIds: string[],
+  ids: Id64Array | Id64Set,
   ancestorLevel: number,
   componentId: string,
   componentName: string,
@@ -124,7 +124,7 @@ async function* computeElementSelection(
       AncestorElements(ECInstanceId, ECClassId, Depth, ParentId) AS (
         SELECT ECInstanceId, ECClassId, ${formAncestorLevelBinding(ancestorLevel, bindings)}, Parent.Id
         FROM BisCore.Element
-        WHERE ${formIdBindings("ECInstanceId", elementIds, bindings)}
+        WHERE ${formIdBindings("ECInstanceId", ids, bindings)}
         UNION ALL
         SELECT pe.ECInstanceId, pe.ECClassId, a.Depth - 1, pe.Parent.Id
         FROM AncestorElements a
@@ -147,7 +147,7 @@ async function* computeElementSelection(
 
 async function* computeCategorySelection(
   queryExecutor: ECSqlQueryExecutor,
-  ids: string[],
+  ids: Id64Array | Id64Set,
   componentId: string,
   componentName: string,
 ): AsyncIterableIterator<SelectableInstanceKey> {
@@ -175,7 +175,7 @@ async function* computeCategorySelection(
 
 async function* computeModelSelection(
   queryExecutor: ECSqlQueryExecutor,
-  ids: string[],
+  ids: Id64Array | Id64Set,
   componentId: string,
   componentName: string,
 ): AsyncIterableIterator<SelectableInstanceKey> {
@@ -195,7 +195,7 @@ async function* computeModelSelection(
 
 async function* computeFunctionalElementSelection(
   queryExecutor: ECSqlQueryExecutor,
-  ids: string[],
+  ids: Id64Array | Id64Set,
   ancestorLevel: number,
   componentId: string,
   componentName: string,
@@ -311,4 +311,46 @@ async function* executeQuery(props: {
     ...props,
     parseQueryRow: (row: ECSqlQueryRow) => ({ className: row.ClassName, id: row.ECInstanceId }),
   });
+}
+
+function parseElementIds(ids: Id64Arg): { persistent: Id64Set | Id64Array; transient: Id64Set | Id64Array } {
+  if (typeof ids === "string") {
+    ids = [ids];
+  }
+
+  // detect if all ids are either transient or persistent to avoid unnecessary copying
+  let allPersistent = true;
+  let allTransient = true;
+  for (const id of ids) {
+    if (Id64.isTransient(id)) {
+      allPersistent = false;
+    } else {
+      allTransient = false;
+    }
+
+    if (!allPersistent && !allTransient) {
+      break;
+    }
+  }
+
+  // avoid making a copy if ids are only persistent or only transient
+  if (allPersistent) {
+    return { persistent: ids, transient: [] };
+  } else if (allTransient) {
+    return { persistent: [], transient: ids };
+  }
+
+  // if `ids` contain mixed ids, we have to copy.. use Array instead of
+  // a Set for performance
+  const persistentElementIds: Id64Array = [];
+  const transientElementIds: Id64Array = [];
+  for (const id of ids) {
+    if (Id64.isTransient(id)) {
+      transientElementIds.push(id);
+    } else {
+      persistentElementIds.push(id);
+    }
+  }
+
+  return { persistent: persistentElementIds, transient: transientElementIds };
 }

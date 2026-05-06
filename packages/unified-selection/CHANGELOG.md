@@ -1,5 +1,11 @@
 # @itwin/unified-selection
 
+## 1.7.2
+
+### Patch Changes
+
+- [#1330](https://github.com/iTwin/presentation/pull/1330): `computeSelection`: Yield transient element IDs as selectable instance keys with the `TRANSIENT_ELEMENT_CLASSNAME` class name, instead of silently dropping them. This ensures transient selections are preserved in the computed selection result.
+
 ## 1.7.1
 
 ### Patch Changes

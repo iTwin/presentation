@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.13.6
+
+### Patch Changes
+
+- [#1323](https://github.com/iTwin/presentation/pull/1323): Enforce ECProperty `minimumValue`/`maximumValue` constraints in the quantity property editor. Previously, the quantity editor (`QuantityPropertyEditorInput`) did not clamp values to the range defined in the ECSchema. Now, when a user commits a value (on blur), it is clamped to the constraint range before being committed.
+
 ## 5.13.5
 
 ### Patch Changes

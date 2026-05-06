@@ -6,9 +6,11 @@
 import "./DisposePolyfill.js";
 
 import { bufferCount, concatAll, concatMap, delay, of } from "rxjs";
+import { Id64 } from "@itwin/core-bentley";
 import { createMainThreadReleaseOnTimePassedHandler } from "@itwin/presentation-shared";
 
 import type { Observable } from "rxjs";
+import type { Id64Array, Id64Set } from "@itwin/core-bentley";
 import type {
   ECSqlBinding,
   ECSqlQueryDef,
@@ -21,18 +23,26 @@ import type {
  * Forms ECSql bindings from given ID's.
  * @internal
  */
-export function formIdBindings(property: string, ids: string[], bindings: ECSqlBinding[]): string {
-  if (ids.length > 1000) {
-    bindings.push({ type: "idset", value: ids });
+export function formIdBindings(property: string, ids: Id64Array | Id64Set, bindings: ECSqlBinding[]): string {
+  const count = Id64.sizeOf(ids);
+  if (count > 1000) {
+    bindings.push({ type: "idset", value: ids instanceof Set ? [...ids] : ids });
     return `InVirtualSet(?, ${property})`;
   }
 
-  if (ids.length === 0) {
+  if (count === 0) {
     return `FALSE`;
   }
 
-  ids.forEach((id) => bindings.push({ type: "id", value: id }));
-  return `${property} IN (${ids.map(() => "?").join(",")})`;
+  let bindingsClause = "";
+  ids.forEach((id) => {
+    bindings.push({ type: "id", value: id });
+    if (bindingsClause.length > 0) {
+      bindingsClause += ",";
+    }
+    bindingsClause += "?";
+  });
+  return `${property} IN (${bindingsClause})`;
 }
 
 /**

@@ -8,11 +8,12 @@ import { assert } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
 import { FormatType } from "@itwin/core-quantity";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
-import { getPersistenceUnitRoundingError } from "./Utils.js";
+import { applyNumericConstraints, getMinMaxFromPropertyConstraints, getPersistenceUnitRoundingError } from "./Utils.js";
 
 import type { ChangeEventHandler } from "react";
 import type { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
 import type { SchemaContext } from "@itwin/ecschema-metadata";
+import type { PropertyValueConstraints } from "../../common/ContentBuilder.js";
 
 /**
  * Value of kind of quantity property.
@@ -36,13 +37,19 @@ export interface UseQuantityValueInputProps {
   initialRawValue?: number;
   schemaContext: SchemaContext;
   koqName: string;
+  constraints?: PropertyValueConstraints;
 }
 
 /**
  * Custom hook that manages state for quantity values input.
  * @internal
  */
-export function useQuantityValueInput({ initialRawValue, schemaContext, koqName }: UseQuantityValueInputProps) {
+export function useQuantityValueInput({
+  initialRawValue,
+  schemaContext,
+  koqName,
+  constraints,
+}: UseQuantityValueInputProps) {
   interface State {
     quantityValue: QuantityValue;
     placeholder: string;
@@ -91,18 +98,18 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     });
   });
 
-  const { highPrecisionFormatter, parser, defaultFormatter } = useFormatterAndParser(
-    koqName,
-    schemaContext,
-    onFormatterLoad.current,
-  );
+  const useFormatterAndParserResult = useFormatterAndParser(koqName, schemaContext, onFormatterLoad.current);
 
   const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
-    assert(parser !== undefined); // input should be disabled if parser is `undefined`
+    assert(useFormatterAndParserResult !== undefined); // input should be disabled if parser is `undefined`
+    const { parser, defaultFormatter } = useFormatterAndParserResult;
     const newValue = e.currentTarget.value;
     const parseResult = parser.parseToQuantityValue(newValue);
     const roundingError = getPersistenceUnitRoundingError(newValue, parser);
-    const defaultFormattedValue = parseResult.ok ? defaultFormatter?.applyFormatting(parseResult.value) : undefined;
+    const defaultFormattedValue = parseResult.ok ? defaultFormatter.applyFormatting(parseResult.value) : undefined;
+    const rawValue = parseResult.ok
+      ? applyNumericConstraints({ ...getMinMaxFromPropertyConstraints(constraints), value: parseResult.value })
+      : undefined;
 
     setState(
       (prev): State => ({
@@ -110,14 +117,14 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
         quantityValue: {
           highPrecisionFormattedValue: newValue,
           defaultFormattedValue: defaultFormattedValue ?? newValue,
-          rawValue: parseResult.ok ? parseResult.value : undefined,
+          rawValue,
           roundingError: parseResult.ok ? roundingError : undefined,
         },
       }),
     );
   };
 
-  return { quantityValue, inputProps: { onChange, placeholder, disabled: !highPrecisionFormatter || !parser } };
+  return { quantityValue, inputProps: { onChange, placeholder, disabled: !useFormatterAndParserResult } };
 }
 
 function useFormatterAndParser(
@@ -128,7 +135,7 @@ function useFormatterAndParser(
     newHighPrecisionFormatter: FormatterSpec;
     newParser: ParserSpec;
   }) => void,
-) {
+): { highPrecisionFormatter: FormatterSpec; parser: ParserSpec; defaultFormatter: FormatterSpec } | undefined {
   interface State {
     defaultFormatter: FormatterSpec;
     highPrecisionFormatter: FormatterSpec;
@@ -184,9 +191,11 @@ function useFormatterAndParser(
     };
   }, [koqName, schemaContext, onChange]);
 
-  return {
-    highPrecisionFormatter: state?.highPrecisionFormatter,
-    parser: state?.parserSpec,
-    defaultFormatter: state?.defaultFormatter,
-  };
+  return state
+    ? {
+        highPrecisionFormatter: state.highPrecisionFormatter,
+        parser: state.parserSpec,
+        defaultFormatter: state.defaultFormatter,
+      }
+    : undefined;
 }
