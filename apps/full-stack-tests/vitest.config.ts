@@ -11,6 +11,7 @@ export default defineConfig({
     include: ["src/**/*.test.{ts,tsx}"],
     exclude: ["src/hierarchies-react/learning-snippets/**"],
     testTimeout: 60000,
+    hookTimeout: 60000,
     slowTestThreshold: 500,
     environment: "happy-dom",
     setupFiles: ["./src/setup.ts"],

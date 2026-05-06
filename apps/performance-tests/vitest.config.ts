@@ -11,6 +11,7 @@ export default defineConfig({
     name: "Performance tests",
     include: ["src/**/*.test.ts"],
     testTimeout: 300000,
+    hookTimeout: 60000,
     pool: "forks",
     fileParallelism: false,
     setupFiles: ["./src/setup.ts"],
