@@ -1,5 +1,16 @@
 # Change Log - @itwin/presentation-components
 
+## 5.13.7
+
+### Patch Changes
+
+- [#1338](https://github.com/iTwin/presentation/pull/1338): Bump AppUI dependencies to `^5.29.0`.
+- [#1338](https://github.com/iTwin/presentation/pull/1338): Bump iTwin.js core dependencies to `^5.9.1`.
+- Updated dependencies:
+  - @itwin/unified-selection@1.7.3
+  - @itwin/presentation-core-interop@1.3.13
+  - @itwin/presentation-shared@1.2.13
+
 ## 5.13.6
 
 ### Patch Changes

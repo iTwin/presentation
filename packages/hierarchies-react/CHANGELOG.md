@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.10.3
+
+### Patch Changes
+
+- [#1338](https://github.com/iTwin/presentation/pull/1338): Bump iTwin.js core dependencies to `^5.9.1`.
+- Updated dependencies:
+  - @itwin/unified-selection@1.7.3
+  - @itwin/presentation-hierarchies@1.7.14
+  - @itwin/presentation-shared@1.2.13
+
 ## 1.10.2
 
 ### Patch Changes
