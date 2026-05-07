@@ -7,4 +7,4 @@
 "@itwin/presentation-shared": patch
 ---
 
-Bump iTwin.js core dependencies to `^5.9.1` and AppUI dependencies to `^5.29.0`.
+Bump iTwin.js core dependencies to `^5.9.1`.
