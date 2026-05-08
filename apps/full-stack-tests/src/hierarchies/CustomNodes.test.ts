@@ -5,29 +5,28 @@
 
 import { afterAll, describe, it, test } from "vitest";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
-import { buildTestIModel } from "../IModelUtils.js";
+import { buildTestECDb } from "../ECDbUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation.js";
 import { createProvider } from "./Utils.js";
 
-import type { IModelConnection } from "@itwin/core-frontend";
-
 describe("Hierarchies", () => {
   describe("Generic nodes", () => {
-    let emptyIModel!: IModelConnection;
+    let suiteSetup!: Awaited<ReturnType<typeof buildTestECDb>>;
 
     test.beforeAll(async (_, suite) => {
       await initialize();
-      emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodelConnection;
+      suiteSetup = await buildTestECDb(suite.fullTestName!);
     });
 
     afterAll(async () => {
+      suiteSetup[Symbol.dispose]();
       await terminate();
     });
 
     it("creates generic root nodes", async () => {
       const provider = createProvider({
-        imodel: emptyIModel,
+        ecdb: suiteSetup.ecdb,
         hierarchy: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -48,7 +47,7 @@ describe("Hierarchies", () => {
 
     it("creates generic child nodes", async () => {
       const provider = createProvider({
-        imodel: emptyIModel,
+        ecdb: suiteSetup.ecdb,
         hierarchy: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -81,7 +80,7 @@ describe("Hierarchies", () => {
 
     it("creates hidden generic nodes", async () => {
       const provider = createProvider({
-        imodel: emptyIModel,
+        ecdb: suiteSetup.ecdb,
         hierarchy: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -110,7 +109,7 @@ describe("Hierarchies", () => {
 
     it("hides generic nodes with no children", async () => {
       const provider = createProvider({
-        imodel: emptyIModel,
+        ecdb: suiteSetup.ecdb,
         hierarchy: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {

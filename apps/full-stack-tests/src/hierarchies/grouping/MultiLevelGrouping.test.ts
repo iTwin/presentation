@@ -3,12 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it } from "vitest";
-import { PhysicalPartition, Subject, withEditTxn } from "@itwin/core-backend";
-import { IModel } from "@itwin/core-common";
-import { buildTestIModel } from "../../IModelUtils.js";
+import { buildTestECDb } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createProvider } from "../Utils.js";
 
@@ -16,13 +14,8 @@ import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
   describe("Multi level grouping", () => {
-    let subjectClassName: string;
-    let physicalPartitionClassName: string;
-
     beforeAll(async () => {
       await initialize();
-      subjectClassName = Subject.classFullName.replace(":", ".");
-      physicalPartitionClassName = PhysicalPartition.classFullName.replace(":", ".");
     });
 
     afterAll(async () => {
@@ -33,50 +26,47 @@ describe("Hierarchies", () => {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
       const description1 = "test description1";
-      const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        return withEditTxn(imodel, (txn) => {
-          const childSubject1 = insertSubject({
-            txn,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: labelGroupName1,
-            description: description1,
-          });
-          const childSubject2 = insertSubject({
-            txn,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: labelGroupName1,
-            description: description1,
-          });
-          const childPartition3 = insertPhysicalPartition({
-            txn,
-            codeValue: "B3",
-            parentId: IModel.rootSubjectId,
-            userLabel: labelGroupName1,
-          });
-          const childPartition4 = insertPhysicalPartition({
-            txn,
-            codeValue: "B4",
-            parentId: IModel.rootSubjectId,
-            userLabel: labelGroupName2,
-          });
-          const childPartition5 = insertPhysicalPartition({
-            txn,
-            codeValue: "B5",
-            parentId: IModel.rootSubjectId,
-            userLabel: labelGroupName2,
-          });
-          return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="UserLabel" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="B">
+              <BaseClass>A</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="X">
+              <BaseClass>A</BaseClass>
+              <ECProperty propertyName="Description" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="Y">
+              <BaseClass>B</BaseClass>
+            </ECEntityClass>
+          `,
+        );
+        const x1 = builder.insertInstance(s.items.X.fullName, {
+          userLabel: labelGroupName1,
+          description: description1,
         });
+        const x2 = builder.insertInstance(s.items.X.fullName, {
+          userLabel: labelGroupName1,
+          description: description1,
+        });
+        const y3 = builder.insertInstance(s.items.Y.fullName, { userLabel: labelGroupName1 });
+        const y4 = builder.insertInstance(s.items.Y.fullName, { userLabel: labelGroupName2 });
+        const y5 = builder.insertInstance(s.items.Y.fullName, { userLabel: labelGroupName2 });
+        return { schema: s, x1, x2, y3, y4, y5 };
       });
+      const { ecdb, schema, ...keys } = setup;
 
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
-                fullClassName: `BisCore.InformationContentElement`,
+                fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
                     SELECT ${await createSelectClause({
@@ -86,11 +76,9 @@ describe("Hierarchies", () => {
                       grouping: {
                         byClass: true,
                         byLabel: true,
-                        byBaseClasses: {
-                          fullClassNames: ["BisCore.InformationContentElement", "BisCore.InformationPartitionElement"],
-                        },
+                        byBaseClasses: { fullClassNames: [schema.items.A.fullName, schema.items.B.fullName] },
                         byProperties: {
-                          propertiesClassName: "BisCore.Subject",
+                          propertiesClassName: schema.items.X.fullName,
                           propertyGroups: [
                             { propertyName: "Description", propertyClassAlias: "this" },
                             { propertyName: "UserLabel", propertyClassAlias: "this" },
@@ -98,13 +86,12 @@ describe("Hierarchies", () => {
                         },
                       },
                     })}
-                    FROM ${subjectClassName} AS this
-                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                 },
               },
               {
-                fullClassName: `BisCore.InformationContentElement`,
+                fullClassName: schema.items.Y.fullName,
                 query: {
                   ecsql: `
                     SELECT ${await createSelectClause({
@@ -114,13 +101,10 @@ describe("Hierarchies", () => {
                       grouping: {
                         byClass: true,
                         byLabel: true,
-                        byBaseClasses: {
-                          fullClassNames: ["BisCore.InformationContentElement", "BisCore.InformationPartitionElement"],
-                        },
+                        byBaseClasses: { fullClassNames: [schema.items.A.fullName, schema.items.B.fullName] },
                       },
                     })}
-                    FROM ${physicalPartitionClassName} AS this
-                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                    FROM ${schema.items.Y.fullName} AS this
                   `,
                 },
               },
@@ -131,39 +115,26 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: imodelConnection, hierarchy: customHierarchy }),
+        provider: createProvider({ ecdb, hierarchy: customHierarchy }),
         expect: [
           NodeValidators.createForClassGroupingNode({
-            label: "Information Content Element",
-            className: "BisCore.InformationContentElement",
+            className: schema.items.A.fullName,
             children: [
               NodeValidators.createForClassGroupingNode({
-                label: "Information Partition",
-                className: "BisCore.InformationPartitionElement",
+                className: schema.items.B.fullName,
                 children: [
                   NodeValidators.createForClassGroupingNode({
-                    className: physicalPartitionClassName,
+                    className: schema.items.Y.fullName,
                     children: [
                       NodeValidators.createForLabelGroupingNode({
                         label: labelGroupName1,
-                        children: [
-                          NodeValidators.createForInstanceNode({
-                            instanceKeys: [keys.childPartition3],
-                            children: false,
-                          }),
-                        ],
+                        children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.y3], children: false })],
                       }),
                       NodeValidators.createForLabelGroupingNode({
                         label: labelGroupName2,
                         children: [
-                          NodeValidators.createForInstanceNode({
-                            instanceKeys: [keys.childPartition5],
-                            children: false,
-                          }),
-                          NodeValidators.createForInstanceNode({
-                            instanceKeys: [keys.childPartition4],
-                            children: false,
-                          }),
+                          NodeValidators.createForInstanceNode({ instanceKeys: [keys.y5], children: false }),
+                          NodeValidators.createForInstanceNode({ instanceKeys: [keys.y4], children: false }),
                         ],
                       }),
                     ],
@@ -171,31 +142,25 @@ describe("Hierarchies", () => {
                 ],
               }),
               NodeValidators.createForClassGroupingNode({
-                className: subjectClassName,
+                className: schema.items.X.fullName,
                 children: [
                   NodeValidators.createForPropertyValueGroupingNode({
                     label: description1,
-                    propertyClassName: "BisCore.Subject",
+                    propertyClassName: schema.items.X.fullName,
                     formattedPropertyValue: description1,
                     propertyName: "Description",
                     children: [
                       NodeValidators.createForPropertyValueGroupingNode({
                         label: labelGroupName1,
-                        propertyClassName: "BisCore.Subject",
+                        propertyClassName: schema.items.X.fullName,
                         formattedPropertyValue: labelGroupName1,
                         propertyName: "UserLabel",
                         children: [
                           NodeValidators.createForLabelGroupingNode({
                             label: labelGroupName1,
                             children: [
-                              NodeValidators.createForInstanceNode({
-                                instanceKeys: [keys.childSubject2],
-                                children: false,
-                              }),
-                              NodeValidators.createForInstanceNode({
-                                instanceKeys: [keys.childSubject1],
-                                children: false,
-                              }),
+                              NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2], children: false }),
+                              NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false }),
                             ],
                           }),
                         ],
