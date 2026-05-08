@@ -286,7 +286,7 @@ export async function buildTestECDb<TResult extends {} | undefined>(
 ): Promise<TResult & { ecdb: ECDb } & Disposable>;
 export async function buildTestECDb<TResult extends {} | undefined>(
   name: string,
-  setup: (ecdbBuilder: ECDbBuilder, testName: string) => TResult | Promise<TResult>,
+  setup?: (ecdbBuilder: ECDbBuilder, testName: string) => TResult | Promise<TResult>,
 ): Promise<TResult & { ecdb: ECDb } & Disposable>;
 export async function buildTestECDb(
   setup?: (ecdbBuilder: ECDbBuilder, testName: string) => void | Promise<void>,
