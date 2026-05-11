@@ -3,57 +3,57 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
-import { afterAll, describe, it, test } from "vitest";
-import { PhysicalPartition, Subject, withEditTxn } from "@itwin/core-backend";
-import { IModel } from "@itwin/core-common";
-import { normalizeFullClassName } from "@itwin/presentation-shared";
-import { buildTestIModel } from "../../IModelUtils.js";
+import { afterAll, beforeAll, describe, it } from "vitest";
+import { buildTestECDb } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createProvider } from "../Utils.js";
 
-import type { IModelConnection } from "@itwin/core-frontend";
 import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import type { EC } from "@itwin/presentation-shared";
 
 describe("Hierarchies", () => {
   describe("Base class grouping", () => {
-    let subjectClassName: EC.FullClassName;
-    let physicalPartitionClassName: EC.FullClassName;
-    let emptyIModel: IModelConnection;
-
-    test.beforeAll(async (_, suite) => {
+    beforeAll(async () => {
       await initialize();
-      emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodelConnection;
-      subjectClassName = normalizeFullClassName(Subject.classFullName);
-      physicalPartitionClassName = normalizeFullClassName(PhysicalPartition.classFullName);
     });
 
     afterAll(async () => {
       await terminate();
     });
+
     it("doesn't create grouping nodes if provided classes aren't base for node class", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+          <ECEntityClass typeName="X">
+            <ECProperty propertyName="Label" typeName="string" />
+          </ECEntityClass>
+          <ECEntityClass typeName="C" />
+        `,
+        );
+        const x1 = builder.insertInstance(s.items.X.fullName, { label: "x1" });
+        return { schema: s, x1 };
+      });
+      const { ecdb, schema, ...keys } = setup;
+
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
-                fullClassName: `BisCore.InformationContentElement`,
+                fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
                     SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
-                      nodeLabel: { selector: `this.UserLabel` },
-                      grouping: {
-                        byBaseClasses: { fullClassNames: ["BisCore.GraphicalPartition3d", "BisCore.LinkElement"] },
-                      },
+                      nodeLabel: { selector: `this.Label` },
+                      grouping: { byBaseClasses: { fullClassNames: [schema.items.C.fullName] } },
                     })}
-                    FROM (
-                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                      FROM ${subjectClassName}
-                    ) AS this
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                 },
               },
@@ -64,37 +64,50 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: emptyIModel, hierarchy: customHierarchy }),
-        expect: [
-          NodeValidators.createForInstanceNode({
-            instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-            children: false,
-          }),
-        ],
+        provider: createProvider({ ecdb, hierarchy: customHierarchy }),
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false })],
       });
     });
 
     it("doesn't create grouping nodes if provided classes aren't of entity or relationship type", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+          <ECEntityClass typeName="M">
+            <ECCustomAttributes>
+              <IsMixin xmlns="CoreCustomAttributes.01.00.03">
+                <AppliesToEntityClass>X</AppliesToEntityClass>
+              </IsMixin>
+            </ECCustomAttributes>
+          </ECEntityClass>
+          <ECEntityClass typeName="X">
+            <BaseClass>M</BaseClass>
+            <ECProperty propertyName="Label" typeName="string" />
+          </ECEntityClass>
+        `,
+        );
+        const x1 = builder.insertInstance(s.items.X.fullName, { label: "x1" });
+        return { schema: s, x1 };
+      });
+      const { ecdb, schema, ...keys } = setup;
+
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
-                fullClassName: `BisCore.InformationContentElement`,
+                fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
                     SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
-                      nodeLabel: { selector: `this.UserLabel` },
-                      grouping: {
-                        byBaseClasses: { fullClassNames: ["BisCore.IParentElement", "BisCore.ISubModeledElement"] },
-                      },
+                      nodeLabel: { selector: `this.Label` },
+                      grouping: { byBaseClasses: { fullClassNames: [schema.items.M.fullName] } },
                     })}
-                    FROM (
-                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                      FROM ${subjectClassName}
-                    ) AS this
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                 },
               },
@@ -105,37 +118,46 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: emptyIModel, hierarchy: customHierarchy }),
-        expect: [
-          NodeValidators.createForInstanceNode({
-            instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-            children: false,
-          }),
-        ],
+        provider: createProvider({ ecdb, hierarchy: customHierarchy }),
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false })],
       });
     });
 
     it("creates grouping nodes if provided class is base for node class", async () => {
-      const baseClassName = "BisCore.InformationContentElement";
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+          <ECEntityClass typeName="B">
+            <ECProperty propertyName="Label" typeName="string" />
+          </ECEntityClass>
+          <ECEntityClass typeName="X">
+            <BaseClass>B</BaseClass>
+          </ECEntityClass>
+        `,
+        );
+        const x1 = builder.insertInstance(s.items.X.fullName, { label: "x1" });
+        return { schema: s, x1 };
+      });
+      const { ecdb, schema, ...keys } = setup;
+
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
-                fullClassName: `BisCore.InformationContentElement`,
+                fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                      SELECT ${await createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
-                        grouping: { byBaseClasses: { fullClassNames: [baseClassName] } },
-                      })}
-                      FROM (
-                        SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                        FROM ${subjectClassName}
-                      ) AS this
-                    `,
+                    SELECT ${await createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.Label` },
+                      grouping: { byBaseClasses: { fullClassNames: [schema.items.B.fullName] } },
+                    })}
+                    FROM ${schema.items.X.fullName} AS this
+                  `,
                 },
               },
             ];
@@ -145,62 +167,60 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: emptyIModel, hierarchy: customHierarchy }),
+        provider: createProvider({ ecdb, hierarchy: customHierarchy }),
         expect: [
           NodeValidators.createForClassGroupingNode({
-            label: "Information Content Element",
-            className: baseClassName,
-            children: [
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
-                children: false,
-              }),
-            ],
+            className: schema.items.B.fullName,
+            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false })],
           }),
         ],
       });
     });
 
     it("creates multiple grouping nodes if provided base classes are base for node and for provided other base class", async () => {
-      const baseClassName1 = "Element";
-      const baseClassName2 = "InformationContentElement";
-      const baseClassName3 = "InformationPartitionElement";
-      const baseSchemaName = "BisCore";
-      const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        return withEditTxn(imodel, (txn) => {
-          const childPartition1 = insertPhysicalPartition({ txn, codeValue: "B1", parentId: IModel.rootSubjectId });
-          return { childPartition1 };
-        });
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+          <ECEntityClass typeName="A" />
+          <ECEntityClass typeName="B">
+            <BaseClass>A</BaseClass>
+          </ECEntityClass>
+          <ECEntityClass typeName="C">
+            <BaseClass>B</BaseClass>
+          </ECEntityClass>
+          <ECEntityClass typeName="Z">
+            <BaseClass>C</BaseClass>
+            <ECProperty propertyName="Label" typeName="string" />
+          </ECEntityClass>
+        `,
+        );
+        const z1 = builder.insertInstance(s.items.Z.fullName, { label: "z1" });
+        return { schema: s, z1 };
       });
+      const { ecdb, schema, ...keys } = setup;
 
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
-                fullClassName: `BisCore.InformationContentElement`,
+                fullClassName: schema.items.Z.fullName,
                 query: {
                   ecsql: `
-                      SELECT ${await createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
-                        grouping: {
-                          byBaseClasses: {
-                            fullClassNames: [
-                              `${baseSchemaName}.${baseClassName1}`,
-                              `${baseSchemaName}.${baseClassName2}`,
-                              `${baseSchemaName}.${baseClassName3}`,
-                            ],
-                          },
+                    SELECT ${await createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.Label` },
+                      grouping: {
+                        byBaseClasses: {
+                          fullClassNames: [schema.items.A.fullName, schema.items.B.fullName, schema.items.C.fullName],
                         },
-                      })}
-                      FROM (
-                        SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                        FROM ${physicalPartitionClassName}
-                      ) AS this
-                      WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                    `,
+                      },
+                    })}
+                    FROM ${schema.items.Z.fullName} AS this
+                  `,
                 },
               },
             ];
@@ -210,22 +230,17 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: imodelConnection, hierarchy: customHierarchy }),
+        provider: createProvider({ ecdb, hierarchy: customHierarchy }),
         expect: [
           NodeValidators.createForClassGroupingNode({
-            label: "Element",
-            className: `${baseSchemaName}.${baseClassName1}`,
+            className: schema.items.A.fullName,
             children: [
               NodeValidators.createForClassGroupingNode({
-                label: "Information Content Element",
-                className: `${baseSchemaName}.${baseClassName2}`,
+                className: schema.items.B.fullName,
                 children: [
                   NodeValidators.createForClassGroupingNode({
-                    label: "Information Partition",
-                    className: `${baseSchemaName}.${baseClassName3}`,
-                    children: [
-                      NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition1], children: false }),
-                    ],
+                    className: schema.items.C.fullName,
+                    children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.z1], children: false })],
                   }),
                 ],
               }),
@@ -236,70 +251,68 @@ describe("Hierarchies", () => {
     });
 
     it("creates different grouping nodes if nodes of the same class have different base classes provided", async () => {
-      const baseClassName1 = "Element";
-      const baseClassName2 = "InformationContentElement";
-      const baseClassName3 = "InformationPartitionElement";
-      const baseSchemaName = "BisCore";
-      const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        return withEditTxn(imodel, (txn) => {
-          const childPartition1 = insertPhysicalPartition({ txn, codeValue: "B1", parentId: IModel.rootSubjectId });
-          const childPartition2 = insertPhysicalPartition({ txn, codeValue: "B2", parentId: IModel.rootSubjectId });
-          return { childPartition1, childPartition2 };
-        });
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+          <ECEntityClass typeName="A" />
+          <ECEntityClass typeName="B">
+            <BaseClass>A</BaseClass>
+          </ECEntityClass>
+          <ECEntityClass typeName="C">
+            <BaseClass>B</BaseClass>
+          </ECEntityClass>
+          <ECEntityClass typeName="Z">
+            <BaseClass>C</BaseClass>
+            <ECProperty propertyName="CodeValue" typeName="string" />
+          </ECEntityClass>
+        `,
+        );
+        const z1 = builder.insertInstance(s.items.Z.fullName, { codeValue: "z1" });
+        const z2 = builder.insertInstance(s.items.Z.fullName, { codeValue: "z2" });
+        return { schema: s, z1, z2 };
       });
+      const { ecdb, schema, ...keys } = setup;
 
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
-                fullClassName: `BisCore.InformationContentElement`,
+                fullClassName: schema.items.Z.fullName,
                 query: {
                   ecsql: `
-                      SELECT ${await createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
-                        grouping: {
-                          byBaseClasses: {
-                            fullClassNames: [
-                              `${baseSchemaName}.${baseClassName1}`,
-                              `${baseSchemaName}.${baseClassName2}`,
-                              `${baseSchemaName}.${baseClassName3}`,
-                            ],
-                          },
+                    SELECT ${await createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.CodeValue` },
+                      grouping: {
+                        byBaseClasses: {
+                          fullClassNames: [schema.items.A.fullName, schema.items.B.fullName, schema.items.C.fullName],
                         },
-                      })}
-                      FROM (
-                        SELECT ECClassId, ECInstanceId, UserLabel, Parent, CodeValue
-                        FROM ${physicalPartitionClassName}
-                      ) AS this
-                      WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                        AND NOT this.CodeValue = 'B2'
-                    `,
+                      },
+                    })}
+                    FROM ${schema.items.Z.fullName} AS this
+                    WHERE this.CodeValue <> 'z2'
+                  `,
                 },
               },
               {
-                fullClassName: physicalPartitionClassName,
+                fullClassName: schema.items.Z.fullName,
                 query: {
                   ecsql: `
-                      SELECT ${await createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
-                        grouping: {
-                          byBaseClasses: {
-                            fullClassNames: [
-                              `${baseSchemaName}.${baseClassName2}`,
-                              `${baseSchemaName}.${baseClassName3}`,
-                            ],
-                          },
-                        },
-                      })}
-                      FROM ${physicalPartitionClassName} AS this
-                      WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                        AND this.CodeValue = 'B2'
-                    `,
+                    SELECT ${await createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.CodeValue` },
+                      grouping: {
+                        byBaseClasses: { fullClassNames: [schema.items.B.fullName, schema.items.C.fullName] },
+                      },
+                    })}
+                    FROM ${schema.items.Z.fullName} AS this
+                    WHERE this.CodeValue = 'z2'
+                  `,
                 },
               },
             ];
@@ -309,37 +322,28 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: imodelConnection, hierarchy: customHierarchy }),
+        provider: createProvider({ ecdb, hierarchy: customHierarchy }),
         expect: [
           NodeValidators.createForClassGroupingNode({
-            label: "Element",
-            className: `${baseSchemaName}.${baseClassName1}`,
+            className: schema.items.A.fullName,
             children: [
               NodeValidators.createForClassGroupingNode({
-                label: "Information Content Element",
-                className: `${baseSchemaName}.${baseClassName2}`,
+                className: schema.items.B.fullName,
                 children: [
                   NodeValidators.createForClassGroupingNode({
-                    label: "Information Partition",
-                    className: `${baseSchemaName}.${baseClassName3}`,
-                    children: [
-                      NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition1], children: false }),
-                    ],
+                    className: schema.items.C.fullName,
+                    children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.z1], children: false })],
                   }),
                 ],
               }),
             ],
           }),
           NodeValidators.createForClassGroupingNode({
-            label: "Information Content Element",
-            className: `${baseSchemaName}.${baseClassName2}`,
+            className: schema.items.B.fullName,
             children: [
               NodeValidators.createForClassGroupingNode({
-                label: "Information Partition",
-                className: `${baseSchemaName}.${baseClassName3}`,
-                children: [
-                  NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2], children: false }),
-                ],
+                className: schema.items.C.fullName,
+                children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.z2], children: false })],
               }),
             ],
           }),
@@ -348,37 +352,58 @@ describe("Hierarchies", () => {
     });
 
     it("groups nodes of different classes if they share the same base class", async () => {
-      const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
-        return withEditTxn(imodel, (txn) => {
-          const childSubject1 = insertSubject({ txn, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childPartition2 = insertPhysicalPartition({ txn, codeValue: "B2", parentId: IModel.rootSubjectId });
-          return { childSubject1, childPartition2 };
-        });
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+          <ECEntityClass typeName="E">
+            <ECProperty propertyName="Label" typeName="string" />
+          </ECEntityClass>
+          <ECEntityClass typeName="S">
+            <BaseClass>E</BaseClass>
+          </ECEntityClass>
+          <ECEntityClass typeName="P">
+            <BaseClass>E</BaseClass>
+          </ECEntityClass>
+        `,
+        );
+        const s1 = builder.insertInstance(s.items.S.fullName, { label: "a s1" });
+        const p1 = builder.insertInstance(s.items.P.fullName, { label: "b p1" });
+        return { schema: s, s1, p1 };
       });
+      const { ecdb, schema, ...keys } = setup;
 
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
-                fullClassName: `BisCore.InformationContentElement`,
+                fullClassName: schema.items.S.fullName,
                 query: {
                   ecsql: `
-                      SELECT ${await createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.CodeValue` },
-                        grouping: { byBaseClasses: { fullClassNames: ["BisCore.Element"] } },
-                      })}
-                      FROM (
-                        SELECT ECClassId, ECInstanceId, Parent, CodeValue
-                        FROM ${subjectClassName}
-                        UNION ALL
-                        SELECT ECClassId, ECInstanceId, Parent, CodeValue
-                        FROM ${physicalPartitionClassName}
-                      ) AS this
-                      WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                    `,
+                    SELECT ${await createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.Label` },
+                      grouping: { byBaseClasses: { fullClassNames: [schema.items.E.fullName] } },
+                    })}
+                    FROM ${schema.items.S.fullName} AS this
+                  `,
+                },
+              },
+              {
+                fullClassName: schema.items.P.fullName,
+                query: {
+                  ecsql: `
+                    SELECT ${await createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.Label` },
+                      grouping: { byBaseClasses: { fullClassNames: [schema.items.E.fullName] } },
+                    })}
+                    FROM ${schema.items.P.fullName} AS this
+                  `,
                 },
               },
             ];
@@ -388,14 +413,13 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: imodelConnection, hierarchy: customHierarchy }),
+        provider: createProvider({ ecdb, hierarchy: customHierarchy }),
         expect: [
           NodeValidators.createForClassGroupingNode({
-            label: "Element",
-            className: "BisCore.Element",
+            className: schema.items.E.fullName,
             children: [
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.s1], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.p1], children: false }),
             ],
           }),
         ],

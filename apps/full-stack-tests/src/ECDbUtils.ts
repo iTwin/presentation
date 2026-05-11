@@ -284,20 +284,26 @@ export async function createChangedDbs<
 export async function buildTestECDb<TResult extends {} | undefined>(
   setup: (ecdbBuilder: ECDbBuilder, testName: string) => TResult | Promise<TResult>,
 ): Promise<TResult & { ecdb: ECDb } & Disposable>;
+export async function buildTestECDb<TResult extends {} | undefined>(
+  name: string,
+  setup?: (ecdbBuilder: ECDbBuilder, testName: string) => TResult | Promise<TResult>,
+): Promise<TResult & { ecdb: ECDb } & Disposable>;
 export async function buildTestECDb(
   setup?: (ecdbBuilder: ECDbBuilder, testName: string) => void | Promise<void>,
 ): Promise<{ ecdb: ECDb } & Disposable>;
 export async function buildTestECDb<TResult extends {} | undefined>(
+  nameOrSetup?: string | ((ecdbBuilder: ECDbBuilder, testName: string) => TResult | Promise<TResult>),
   setup?: (ecdbBuilder: ECDbBuilder, testName: string) => TResult | Promise<TResult>,
 ): Promise<TResult & { ecdb: ECDb } & Disposable> {
-  const testName = getTestName();
+  const testName = typeof nameOrSetup === "string" ? nameOrSetup : getTestName();
+  const setupFn = typeof nameOrSetup === "function" ? nameOrSetup : setup;
   const name = createFileNameFromString(testName);
   const outputFilePath = setupOutputFileLocation(name);
   const ecdb = new ECDb();
   let setupResult: TResult | undefined;
   try {
     ecdb.createDb(outputFilePath);
-    setupResult = await setup?.(new ECDbBuilder(ecdb, outputFilePath), testName);
+    setupResult = await setupFn?.(new ECDbBuilder(ecdb, outputFilePath), testName);
     ecdb.saveChanges("Created test ECDb");
   } catch (e) {
     ecdb[Symbol.dispose]();
