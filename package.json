@@ -61,11 +61,5 @@
     "./scripts/*.js": [
       "pnpm lint:copyright --fix"
     ]
-  },
-  "pnpm": {
-    "overrides": {
-      "@opentelemetry/otlp-transformer>protobufjs@8.0.0": "^8.0.1",
-      "uuid@<14": "^14.0.0"
-    }
   }
 }

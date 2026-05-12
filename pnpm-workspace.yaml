@@ -10,6 +10,9 @@ allowBuilds:
   protobufjs: false
   unix-dgram: false
 
+overrides:
+  "@opentelemetry/otlp-transformer>protobufjs": ^8.0.2
+
 autoInstallPeers: true
 
 catalogs:
