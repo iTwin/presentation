@@ -1,0 +1,23 @@
+{
+  "$schema": "../../node_modules/@itwin/presentation-common/Ruleset.schema.json",
+  "id": "Test",
+  "supplementationInfo": {
+    "supplementationPurpose": "Test"
+  },
+  "rules": [
+    {
+      "ruleType": "ContentModifier",
+      "class": {
+        "schemaName": "BisCore",
+        "className": "Element"
+      },
+      "calculatedProperties": [
+        {
+          "label": "Test property",
+          "type": "string",
+          "value": "\"A test property on every BisCore.Element.\""
+        }
+      ]
+    }
+  ]
+}

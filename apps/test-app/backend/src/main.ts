@@ -66,6 +66,7 @@ void (async () => {
   // set up props for the presentation backend
   const presentationBackendProps: PresentationProps = {
     rulesetDirectories: [path.join("assets", "presentation_rules")],
+    supplementalRulesetDirectories: [path.join("assets", "supplemental_presentation_rules")],
   };
   // __PUBLISH_EXTRACT_END__
 
