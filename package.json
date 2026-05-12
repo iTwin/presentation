@@ -64,13 +64,7 @@
   },
   "pnpm": {
     "overrides": {
-      "@itwin/build-tools@^5.8.0>@microsoft/api-extractor@<7.58": "^7.58.1",
-      "@opentelemetry/exporter-metrics-otlp-grpc@^0.41.2": "^0.52.0",
-      "@opentelemetry/exporter-metrics-otlp-http@^0.41.2": "^0.52.0",
-      "@opentelemetry/exporter-metrics-otlp-proto@^0.41.2": "^0.52.0",
-      "@opentelemetry/exporter-trace-otlp-grpc@^0.43.0": "^0.52.0",
-      "@opentelemetry/exporter-trace-otlp-http@^0.41.2": "^0.52.0",
-      "@opentelemetry/exporter-trace-otlp-proto@^0.41.2": "^0.52.0",
+      "@opentelemetry/otlp-transformer>protobufjs@8.0.0": "^8.0.1",
       "uuid@<14": "^14.0.0"
     }
   }
