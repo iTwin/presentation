@@ -14,7 +14,7 @@ Replace the native-backed presentation content pipeline with a pure TypeScript i
 
 ### Content target
 
-The starting point for a content request, scoped to a **single EC class**. Answers the question: "what am I getting properties *for*?"
+The starting point for a content request, scoped to a **single EC class**. Answers the question: "what am I getting properties _for_?"
 
 A content target specifies:
 
@@ -22,9 +22,9 @@ A content target specifies:
 - Optionally, a set of **instance IDs** of that class (to scope to specific instances rather than all instances of the class).
 - Optionally, an **instance filter** (a predicate to further restrict which instances are in scope, beyond explicit IDs).
 
-When a consumer selects multiple instances of *different* classes, this becomes multiple content targets — one per distinct class. The higher-level consumer API accepts a mixed collection and groups by class internally.
+When a consumer selects multiple instances of _different_ classes, this becomes multiple content targets — one per distinct class. The higher-level consumer API accepts a mixed collection and groups by class internally.
 
-The distinction between "class only" and "class + instance IDs" matters for source resolution: when instance IDs are provided, the system queries only those specific instances to determine which relationship paths are relevant (e.g., only include a path to an aspect class if at least one of the specified instances actually *has* an aspect of that class). Without instance IDs, the system must query all instances of the target class to discover which related classes exist in the data.
+The distinction between "class only" and "class + instance IDs" matters for source resolution: when instance IDs are provided, the system queries only those specific instances to determine which relationship paths are relevant (e.g., only include a path to an aspect class if at least one of the specified instances actually _has_ an aspect of that class). Without instance IDs, the system must query all instances of the target class to discover which related classes exist in the data.
 
 ### Relationship path
 
@@ -58,7 +58,7 @@ Fields declared against the target class itself require no relationship path (ze
 
 A content source defines everything needed to construct the FROM + JOINs of an ECSQL query for one target class. The SELECT clause (which columns) is determined later by Stage 2, which reads EC schema metadata and applies the property specs to generate fields.
 
-Which relationship paths are included depends on both the target class *and* the target instance IDs:
+Which relationship paths are included depends on both the target class _and_ the target instance IDs:
 
 - Without instance IDs: paths are determined by querying all instances of the target class to find which related classes actually exist in the data.
 - With instance IDs: paths are determined by querying only the specified instances (e.g., only include a path to `ElementUniqueAspect` subclass X if at least one of the given instances actually has an aspect of that class).
@@ -69,7 +69,7 @@ Multiple content sources (from multiple targets) are fed together into descripto
 
 ### Content descriptor
 
-The schema of the content result. Computed *before* loading any values. Describes *what fields exist* — it is purely structural and does not carry request-level concerns like sorting, filtering, or paging. Contains:
+The schema of the content result. Computed _before_ loading any values. Describes _what fields exist_ — it is purely structural and does not carry request-level concerns like sorting, filtering, or paging. Contains:
 
 - The list of **content sources** that were used to compute it (one per target class).
 - The full list of fields, organized as a two-level structure:
@@ -176,7 +176,7 @@ Executes the ECSQL and materializes rows into content items. After materializing
 - `getSize` only needs Stage 1 (for the join shape) + a simplified query build (COUNT over the join shape — no descriptor or field enumeration needed).
 - `getInstanceKeys` only needs Stage 1 + a simplified query build (SELECT keys from the join shape — no descriptor needed).
 - `getDescriptor` only needs stages 1–2.
-- `getDistinctValues` needs a simplified query build from a single field's metadata (the field already carries its path and class — combined with the content target, that's enough to build the DISTINCT query directly). However, consumers expect distinct *display* values, not raw values — see Open Questions.
+- `getDistinctValues` needs a simplified query build from a single field's metadata (the field already carries its path and class — combined with the content target, that's enough to build the DISTINCT query directly). However, consumers expect distinct _display_ values, not raw values — see Open Questions.
 - `getItems` runs stages 1–4.
 
 The pipeline ends at raw content items. Any post-processing (formatting, merging, label resolution) is the consumer’s responsibility, aided by composable utility functions (see Consumer Utilities below).
@@ -212,25 +212,25 @@ Each provider:
 ```ts
 interface PathDeclaration {
   path: RelationshipPath;
-  properties?: StepPropertySpec[];    // sparse — only steps needing customization
+  properties?: StepPropertySpec[]; // sparse — only steps needing customization
   categories?: CategoryDefinition[];
   cardinalityHint?: "one" | "many";
 }
 
 interface StepPropertySpec {
-  stepIndex: number;  // 0-based position in the path
-  target?: ClassPropertySpec;         // properties from the target class at this step
-  relationship?: ClassPropertySpec;   // properties from the relationship class at this step
+  stepIndex: number; // 0-based position in the path
+  target?: ClassPropertySpec; // properties from the target class at this step
+  relationship?: ClassPropertySpec; // properties from the relationship class at this step
 }
 
 interface ClassPropertySpec {
   select?: "all" | "none" | { include: string[] } | { exclude: string[] };
-  overrides?: Record<string, PropertyOverrides>;  // keyed by property name
+  overrides?: Record<string, PropertyOverrides>; // keyed by property name
 }
 
 interface PropertyOverrides {
   label?: string;
-  categoryId?: string;  // references a CategoryDefinition.id
+  categoryId?: string; // references a CategoryDefinition.id
   readOnly?: boolean;
   renderer?: string;
   editor?: string;
@@ -267,7 +267,7 @@ interface PathDeclaration {
 - If `resolve` is omitted, the system resolves the path using its default ECSQL-based discovery.
 - The callback is expected to return only paths to concrete classes that actually have data for the target — same contract as the default resolver, just a different (provider-optimized) implementation.
 
-Multiple providers can contribute to the same request. Their contributions are *additive* — path declarations from all applicable providers are collected and their resulting fields are merged into a single descriptor.
+Multiple providers can contribute to the same request. Their contributions are _additive_ — path declarations from all applicable providers are collected and their resulting fields are merged into a single descriptor.
 
 **Conflict resolution:** If two providers' path declarations produce the same field (same source class + property name + path), they are deduplicated. If they produce conflicting metadata (e.g., different categories), the provider with higher priority wins.
 
@@ -279,7 +279,7 @@ Inspiration: [RelatedPropertiesSpecification](https://www.itwinjs.org/presentati
 
 ### Descriptor transformer
 
-Modifies the descriptor *after* all providers have contributed their fields. Use cases:
+Modifies the descriptor _after_ all providers have contributed their fields. Use cases:
 
 - Hiding specific fields based on user preferences or component needs.
 - Overriding field labels, categories, priorities.
@@ -414,7 +414,7 @@ The content pipeline does not include labels in content items — consumers that
 
 ## Request Options
 
-Request options are passed alongside the descriptor when loading values. They control *how* to query, not *what fields exist*. The same descriptor can be reused with different request options (e.g., different pages, different sort orders, different filters).
+Request options are passed alongside the descriptor when loading values. They control _how_ to query, not _what fields exist_. The same descriptor can be reused with different request options (e.g., different pages, different sort orders, different filters).
 
 ### Sorting
 
@@ -424,14 +424,14 @@ By field identity + direction (ascending/descending). Applied as ORDER BY in the
 
 Two levels, applied at different stages:
 
-- **Instance filter** — part of the content target definition. Applied during **Stage 1 (source resolution)**. Restricts which primary instances are in scope *before* discovering relationship paths. This affects which paths and fields end up in the descriptor (e.g., if only wall elements pass the filter, only aspect classes that exist on walls are discovered). Changing the instance filter invalidates the descriptor — it must be rebuilt.
+- **Instance filter** — part of the content target definition. Applied during **Stage 1 (source resolution)**. Restricts which primary instances are in scope _before_ discovering relationship paths. This affects which paths and fields end up in the descriptor (e.g., if only wall elements pass the filter, only aspect classes that exist on walls are discovered). Changing the instance filter invalidates the descriptor — it must be rebuilt.
 - **Value filter** — a request option applied during **Stage 3 (query building)**. Adds a WHERE clause to the final query. Does not affect which fields exist in the descriptor — only which rows are returned. The descriptor remains valid across different value filters.
 
 Distinct values (for filter dropdowns) are a specialized query that groups by one field and returns unique values.
 
 ### Paging
 
-Applies to the final content items (after joins, after related content resolution). Does *not* page at the source-instance level.
+Applies to the final content items (after joins, after related content resolution). Does _not_ page at the source-instance level.
 
 The pipeline exposes an **async iterator** — consumers `for await` over content items without managing pages. Internally, the pipeline pages using efficient cursor-based strategies (e.g., keyset pagination rather than `OFFSET`), fetching the next batch transparently when the iterator advances past the current page.
 
@@ -470,7 +470,7 @@ The pipeline exposes an **async iterator** — consumers `for await` over conten
    Need to evaluate trade-offs around query count, parsing complexity, paging interaction, and typical cardinalities in real iModels.
 
 8. **Distinct values: raw vs. formatted:**
-   `getDistinctValues` runs `SELECT DISTINCT` on raw values, but consumers (e.g., table filter dropdowns) want distinct *display* values. Multiple raw values may format to the same display string (e.g., different timestamps → same date, different precisions → same rounded number). Options:
+   `getDistinctValues` runs `SELECT DISTINCT` on raw values, but consumers (e.g., table filter dropdowns) want distinct _display_ values. Multiple raw values may format to the same display string (e.g., different timestamps → same date, different precisions → same rounded number). Options:
    - **A) Return raw, consumer deduplicates after formatting:** Simple for us, more work to consumers.
    - **B) Accept a formatter function as input:** The pipeline fetches raw values, applies the consumer-provided formatter, then deduplicates. Formatting stays a consumer concern, but the pipeline handles deduplication.
 
@@ -479,7 +479,6 @@ The pipeline exposes an **async iterator** — consumers `for await` over conten
 9. **SQLite/ECSQL query limits**
 
    SQLite imposes hard limits that directly constrain the queries this pipeline can generate. The most relevant ones:
-
    - **64 tables in a JOIN** (hard limit, cannot be raised) — each relationship path step adds at least one JOIN. A content source with many related classes can exhaust this quickly.
    - **2000 columns in a SELECT** (default `SQLITE_MAX_COLUMN`) — wide schemas with many properties per class can hit this, especially when multiple paths are JOINed into one query.
    - **500 compound SELECT terms** (default `SQLITE_MAX_COMPOUND_SELECT`) — limits how many queries can be UNIONed together.
