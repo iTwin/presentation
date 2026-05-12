@@ -2,6 +2,14 @@ packages:
   - apps/**
   - packages/*
 
+allowBuilds:
+  '@bentley/imodeljs-native': true
+  '@parcel/watcher': false
+  '@playwright/browser-chromium': true
+  electron: true
+  protobufjs: false
+  unix-dgram: false
+
 autoInstallPeers: true
 
 catalogs:
@@ -83,4 +91,4 @@ onlyBuiltDependencies:
 
 resolutionMode: lowest-direct
 
-strictPeerDependencies: false
+strictPeerDependencies: true
