@@ -155,7 +155,7 @@ Descriptor transformers then run to apply further customizations (hide fields, o
 - **Provider property specs** are **local** — they express knowledge intrinsic to the path being declared. The provider knows the domain semantics of its path and sets initial metadata accordingly (e.g., "call `UserLabel` → `Name`", or define a `source_information` category and assign properties to it). This metadata is always appropriate when this path is included. Categories are defined as lightweight objects (`{ id, label, description? }`) alongside the path declaration — this is domain knowledge, not UI layout.
 - **Descriptor transformers** are **global** — they see the full field list across all providers and make cross-cutting decisions that no single provider could make (e.g., "hide all read-only fields", "reorder by priority", "move all `BisCore` fields to a System category").
 
-Provider specs run first (during field generation), transformers run second (after all fields are collected). If a transformer conflicts with a provider spec, the transformer wins — it has full context.
+Provider specs are applied first (the system uses them during field generation to set initial metadata), then transformers run second (after all fields are collected). If a transformer overrides metadata that was set by a provider spec, the transformer wins — it has full context.
 
 ### Stage 3: Query building
 
