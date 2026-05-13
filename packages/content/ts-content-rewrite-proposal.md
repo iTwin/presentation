@@ -28,13 +28,16 @@ The distinction between "class only" and "class + instance IDs" matters for sour
 
 ### Relationship path
 
-This concept is already defined as `RelationshipPath` in the `@itwin/presentation-shared` package (see `RelationshipPathStep` in `packages/shared/src/shared/Metadata.ts`). Each step specifies source class, target class, relationship class, and whether the direction is reversed.
+This concept is already defined as `RelationshipPath` in the `@itwin/presentation-shared` package (see `RelationshipPathStep` in `packages/shared/src/shared/Metadata.ts`). In the current codebase, each step specifies the source class, target class, relationship class, and whether the direction is reversed.
 
-A sequence of steps describing how to navigate from one class to another through EC relationships. Each step specifies:
+A sequence of steps describing how to navigate from one class to another through EC relationships. In the current shared type, each step specifies:
 
 - The relationship class to traverse.
 - The direction (forward = source→target, backward = target→source).
 - The source and target classes at that step.
+
+For this rewrite, we may want to extend the step shape with optional per-step filters, such as:
+
 - An optional **instance filter** on the relationship class (to restrict which relationship instances are traversed).
 - An optional **instance filter** on the target class (to restrict which target instances are reached).
 
