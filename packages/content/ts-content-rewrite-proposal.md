@@ -99,7 +99,6 @@ Field kinds:
 
 1. **Property field** — backed by a real EC property. Carries the property's class and name.
 2. **SQL calculated field** — carries an ECSQL expression evaluated in the query. The query builder includes it in the SELECT clause; the value comes back from the database like any other column. Can participate in sorting, filtering, and distinct values.
-3. **Computed field** — carries a TS function evaluated during value loading (Stage 4). After SQL results are materialized, the value loader calls the function with the partially-populated content item (all SQL-sourced values are present). The value does not exist in the query and cannot participate in SQL-level sorting or filtering.
 
 Note: The current system's "related content field" (a field that contains child fields) is replaced by **related field groups** in the descriptor structure (see Content descriptor above). Groups are organizational containers, not fields — they don't have a value type or appear as columns in content items.
 
@@ -108,7 +107,7 @@ Note: The current system's "related content field" (a field that contains child 
 One row of the content result. Contains:
 
 - **Primary keys** — which instance(s) this row represents.
-- **Values** — raw values keyed by field identity. All fields (property, SQL calculated, and computed) are populated by the pipeline before the item reaches the consumer.
+- **Values** — raw values keyed by field identity. All fields (property and SQL calculated) are populated by the pipeline before the item reaches the consumer.
 
 Not part of the content item:
 
@@ -165,14 +164,14 @@ Provider specs are applied first (the system uses them during field generation t
 **Input:** Content descriptor (possibly modified by the consumer or by descriptor transformers).
 **Output:** ECSQL query (or queries).
 
-This stage translates the descriptor into one or more ECSQL queries. It only selects columns for fields that are still present in the descriptor (hidden/removed fields are not queried). SQL calculated fields carry their ECSQL expression as metadata — the query builder includes that expression in the SELECT clause like any other column. Computed fields (TS-evaluated) are ignored at this stage — they have no SQL representation. Query filterers can inject additional WHERE clauses or JOINs at this point.
+This stage translates the descriptor into one or more ECSQL queries. It only selects columns for fields that are still present in the descriptor (hidden/removed fields are not queried). SQL calculated fields carry their ECSQL expression as metadata — the query builder includes that expression in the SELECT clause like any other column. Query filterers can inject additional WHERE clauses or JOINs at this point.
 
 ### Stage 4: Value loading
 
 **Input:** Built query + request options (sorting, filtering, paging).
 **Output:** Raw content items.
 
-Executes the ECSQL and materializes rows into content items. After materializing query results (populating all property fields and SQL calculated fields), the value loader evaluates any **computed fields** in declaration order — calling each field's TS function with the partially-populated content item. At this point all SQL-sourced values are present, and earlier computed fields' values are available to later ones. The consumer receives content items with all fields populated, regardless of whether the value came from SQL or a TS function.
+Executes the ECSQL and materializes rows into content items. The value loader maps query result columns to fields using the descriptor's field structure.
 
 **Not all stages run for every request:**
 
@@ -286,7 +285,7 @@ Modifies the descriptor _after_ all providers have contributed their fields. Use
 
 - Hiding specific fields based on user preferences or component needs.
 - Overriding field labels, categories, priorities.
-- Adding computed/virtual fields not backed by schema properties.
+- Adding SQL calculated fields not backed by schema properties.
 - Reordering or regrouping fields.
 
 Multiple transformers run sequentially in priority order. Each receives the descriptor as modified by previous transformers.
@@ -306,7 +305,7 @@ Use cases:
 
 **Rule:** Query filterers must not add or remove SELECT columns. They may only add WHERE clauses and JOINs needed to support those clauses.
 
-Computed columns are handled differently: **SQL calculated fields** (declared by a provider or descriptor transformer) carry their ECSQL expression as metadata. The query builder includes those expressions in the SELECT clause, and the value loader reads them like any other field. This keeps the invariant that every column in the query corresponds to a field in the descriptor. **Computed fields** (TS-evaluated) have no SQL representation and are not included in the query — their values are populated by the value loader in Stage 4 after query execution.
+Computed columns are handled differently: **SQL calculated fields** (declared by a provider or descriptor transformer) carry their ECSQL expression as metadata. The query builder includes those expressions in the SELECT clause, and the value loader reads them like any other field. This keeps the invariant that every column in the query corresponds to a field in the descriptor.
 
 ### Registration and ordering
 
@@ -354,6 +353,16 @@ The content pipeline returns raw values only. Formatting (converting raw values 
 - The backend pipeline is simpler — no formatting logic or locale handling.
 - Export use cases (CSV, JSON) consume raw values directly.
 - UI components format values using their own formatting utilities (e.g., quantity formatters, date formatters) at render time.
+
+### No pipeline-level computed fields
+
+We considered a third field kind — "computed fields" — that would carry a TS function evaluated per-item during value loading. This was rejected because it doesn't fill a gap that isn't already covered:
+
+- **Anything expressible in ECSQL** → use an SQL calculated field (participates in sorting/filtering).
+- **Per-item value derivation from raw values** → use the consumer `map` utility (parsing, reformatting, combining fields). This is the consumer's responsibility, same as formatting.
+- **External data from APIs/services** → this is a different problem (bulk async fetches, not per-item sync derivation) — see Open Question #6.
+
+Keeping computed fields out of the pipeline simplifies the field model (only two kinds: property fields and SQL calculated fields), eliminates ambiguity about what can participate in SQL operations, and keeps Stage 4 simple (pure query result materialization, no TS function evaluation).
 
 ### Related content loading strategy depends on cardinality
 
@@ -445,7 +454,7 @@ The pipeline exposes an **async iterator** — consumers `for await` over conten
 
 ## Open Questions
 
-1. ~~**Calculated fields at query vs. post-processing level:**~~ **Resolved.** Two explicit flavors: **SQL calculated fields** (ECSQL expression, evaluated in query, participates in sorting/filtering) and **computed fields** (TS function, evaluated during value loading in Stage 4, cannot participate in SQL operations). The provider explicitly declares which kind it's creating — no ambiguity or fallback.
+1. ~~**Calculated fields at query vs. post-processing level:**~~ **Resolved.** Only **SQL calculated fields** exist as a pipeline-level concept (ECSQL expression, evaluated in query, participates in sorting/filtering). Per-item value derivation from already-loaded data is handled by consumer utilities (`map`). See "No pipeline-level computed fields" in Key Design Decisions.
 
 2. ~~**Descriptor caching and invalidation:**~~ **Resolved.** Consumer's responsibility. The pipeline does not track descriptor staleness or versioning — consumers decide when to rebuild (e.g., after schema changes or user actions).
 
@@ -457,7 +466,8 @@ The pipeline exposes an **async iterator** — consumers `for await` over conten
 5. ~~**Undo/redo interaction:**~~ **Resolved.** Consumer's responsibility. The pipeline treats the descriptor as an opaque input — it does not track modification history or support undo.
 
 6. **External value sources (non-iModel data):**
-   Some fields may need values loaded from external services (e.g., 3rd party APIs) rather than ECSQL. Options considered:
+   Some fields may need values loaded from external services (e.g., 3rd party APIs) rather than ECSQL. This is unrelated to SQL calculated fields (which are ECSQL expressions). External value sources require **bulk async fetches** — calling an external service with a batch of primary keys and populating many items at once. The consumer `map` utility can't serve this purpose either because it evaluates per-item with no batching or cross-item context. Options considered:
+
    - **A) Two-phase loading with value resolvers:** Fields carry either an SQL expression or a value resolver reference. After ECSQL loads rows + primary keys, the system calls resolvers in bulk to fill external values. Gives a unified descriptor model (external fields are first-class, can participate in schema), but adds loading complexity and paging interaction.
    - **B) Item transformer that enriches:** A Stage 5 transformer fetches external values given primary keys and fills them into pre-declared (empty) fields. Simpler, but the "empty field" state is implicit.
    - **C) Consumer-level merging:** External data is fetched separately by the consumer and merged with content items by primary key outside the pipeline. Simplest pipeline, but no unified descriptor — external fields can't participate in sorting/filtering.
