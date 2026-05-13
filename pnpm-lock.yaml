@@ -172,6 +172,7 @@ catalogs:
 
 overrides:
   '@opentelemetry/otlp-transformer>protobufjs': ^8.0.2
+  uuid@<14: ^14.0.0
 
 pnpmfileChecksum: sha256-1zKNKhuT85/hEEinmgBFrLyqKPSuHNb3/TQNRn7AwG0=
 
@@ -7639,13 +7640,8 @@ packages:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
-  uuid@11.1.1:
-    resolution: {integrity: sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ==}
-    hasBin: true
-
-  uuid@8.3.2:
-    resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
-    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+  uuid@14.0.0:
+    resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
     hasBin: true
 
   validate-npm-package-license@3.0.4:
@@ -8013,7 +8009,7 @@ snapshots:
       socket.io-client: 4.8.3
       socketio-wildcard: 2.0.0
       tough-cookie: 5.1.2
-      uuid: 11.1.1
+      uuid: 14.0.0
       ws: 7.5.10
     transitivePeerDependencies:
       - bufferutil
@@ -10326,7 +10322,7 @@ snapshots:
   '@ngneat/falso@8.0.2':
     dependencies:
       seedrandom: 3.0.5
-      uuid: 8.3.2
+      uuid: 14.0.0
 
   '@nodable/entities@2.1.0': {}
 
@@ -12042,7 +12038,7 @@ snapshots:
       opentracing: 0.14.7
       prom-client: 14.2.0
       semver: 7.7.4
-      uuid: 11.1.1
+      uuid: 14.0.0
     transitivePeerDependencies:
       - aws-crt
       - encoding
@@ -16060,9 +16056,7 @@ snapshots:
 
   utils-merge@1.0.1: {}
 
-  uuid@11.1.1: {}
-
-  uuid@8.3.2: {}
+  uuid@14.0.0: {}
 
   validate-npm-package-license@3.0.4:
     dependencies:

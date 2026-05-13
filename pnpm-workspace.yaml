@@ -12,6 +12,7 @@ allowBuilds:
 
 overrides:
   "@opentelemetry/otlp-transformer>protobufjs": ^8.0.2
+  "uuid@<14": ^14.0.0
 
 autoInstallPeers: true
 
