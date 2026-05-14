@@ -221,9 +221,12 @@ Input:  ContentSource (from above)
 
 Additionally, a registered external fields provider contributes IoT sensor fields:
   ExternalFieldsProvider {
+    categories: [
+      { id: "iot_sensors", label: "IoT Sensors" }
+    ]
     fields: [
-      { id: "iot.currentFlow", label: "Current Flow (GPM)", type: double }
-      { id: "iot.lastMaintenance", label: "Last Maintenance", type: dateTime }
+      { id: "iot.currentFlow", label: "Current Flow (GPM)", type: double, categoryId: "iot_sensors" }
+      { id: "iot.lastMaintenance", label: "Last Maintenance", type: dateTime, categoryId: "iot_sensors" }
     ]
     inputs: (descriptor) => [
       { identity: findFieldByProperty(descriptor, "Pump.Name"), hide: false }
@@ -469,12 +472,20 @@ An external fields provider declares:
 interface ExternalFieldsProvider {
   // Descriptor contribution (applied during Stage 2)
   fields: FieldDeclaration[]; // fields this provider will populate
+  categories?: CategoryDefinition[]; // shared pool referenced by fields via categoryId
 
   // Input discovery (called after descriptor is finalized)
   inputs?: (descriptor: Descriptor) => InputFieldRef[];
 
   // Value population (called during Stage 4)
   resolve: (items: ContentItem[]) => Promise<void>;
+}
+
+interface FieldDeclaration {
+  id: string; // stable identity
+  label: string;
+  type: FieldType;
+  categoryId?: string; // references a CategoryDefinition.id
 }
 
 interface InputFieldRef {
@@ -600,6 +611,8 @@ Built-in category assignment:
 EC schema property categories can be overridden by property provider specs or descriptor transformers — the same precedence rules apply (provider specs first, transformers win on conflict).
 
 Providers define categories as part of their contribution — each category is a lightweight metadata object (`{ id, label, description? }`). Both related properties specs and calculated field declarations reference categories by ID. Descriptor transformers can reassign fields to different categories, define new categories, or restructure the category tree.
+
+**Cross-provider category sharing:** Categories are deduplicated by ID across all providers (iModel fields providers and external fields providers alike). If multiple providers declare a `CategoryDefinition` with the same `id`, the system treats them as the same category — fields from all those providers end up grouped together. No separate registry or coordination API is needed; providers that want to share a category simply use the same ID (which can be a well-known exported constant). If conflicting metadata (label, description) is declared for the same ID, the higher-priority provider's definition wins.
 
 ---
 
