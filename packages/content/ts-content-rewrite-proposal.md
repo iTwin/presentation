@@ -57,7 +57,7 @@ The resolved join shape for a **single content target**. A 1:1 output of source 
 - The **content target** (the primary table — class, optional instance IDs, optional instance filter).
 - The list of **relationship paths** to related classes (the JOINs). Each path defines a navigation route to additional classes that may be queried.
 
-Fields declared against the target class itself require no relationship path (zero-step path — no traversal needed). Each relationship path in the content source also carries the **property specs** from the provider's path declaration (which properties to include/exclude, overrides, etc.). The paths define the JOINs; the property specs tell Stage 2 which properties to enumerate from the JOINed classes.
+Fields declared against the target class itself require no relationship path (zero-step path — no traversal needed). Each relationship path in the content source also carries the **property specs** from the provider's related properties declaration (which properties to include/exclude, overrides, etc.). The paths define the JOINs; the property specs tell Stage 2 which properties to enumerate from the JOINed classes.
 
 A content source defines everything needed to construct the FROM + JOINs of an ECSQL query for one target class. The SELECT clause (which columns) is determined later by Stage 2, which reads EC schema metadata and applies the property specs to generate fields.
 
@@ -128,7 +128,7 @@ Content is produced through a multi-stage pipeline. Each stage has a clear input
 
 This stage:
 
-1. Calls each applicable properties provider, which returns **path declarations** — relationship paths (possibly generic, e.g., targeting `ElementAspect` base class) with optional per-step property specifications.
+1. Calls each applicable iModel fields provider, which returns **related properties declarations** — relationship paths (possibly generic, e.g., targeting `ElementAspect` base class) with optional per-step property specifications — and optionally calculated field declarations.
 2. Resolves generic paths to **concrete paths** by querying the data. For example, a generic path to `ElementAspect` is expanded into separate paths for each concrete subclass (`MyCustomAspect`, `PhysicalMaterialAspect`, etc.) that actually exists for the target instances. The property specs from the original generic declaration are carried forward to each concrete path.
 
 When instance IDs are provided, resolution queries only those specific instances to narrow the set of concrete paths. Without instance IDs, the system queries all instances of the target class.
@@ -145,16 +145,16 @@ The higher-level API runs source resolution once per target class and collects t
 This stage enumerates fields from the concrete paths in each content source. For each path, the system:
 
 1. Reads the EC schema metadata for the concrete classes along the path (target classes at each step, relationship classes).
-2. Applies the property specs from the path declaration — which properties to include/exclude, label overrides, category assignments, etc. If no property specs were provided, all properties from the final step's target class are included by default.
+2. Applies the property specs from the related properties declaration — which properties to include/exclude, label overrides, category assignments, etc. If no property specs were provided, all properties from the final step's target class are included by default.
 3. Generates field objects with full metadata (identity, label, type, path, category, flags).
 
 Providers are **not** called again in this stage — it operates entirely on the content sources from Stage 1 plus EC schema metadata.
 
-Descriptor transformers then run to apply further customizations (hide fields, override categories, add calculated fields, etc.).
+Descriptor transformers then run to apply further customizations (hide fields, override categories, reorder fields, etc.).
 
 **Provider property specs vs. descriptor transformers:** Both can customize field metadata (labels, categories, display flags), but they serve different purposes:
 
-- **Provider property specs** are **local** — they express knowledge intrinsic to the path being declared. The provider knows the domain semantics of its path and sets initial metadata accordingly (e.g., "call `UserLabel` → `Name`", or define a `source_information` category and assign properties to it). This metadata is always appropriate when this path is included. Categories are defined as lightweight objects (`{ id, label, description? }`) alongside the path declaration — this is domain knowledge, not UI layout.
+- **Provider property specs** are **local** — they express knowledge intrinsic to the path being declared. The provider knows the domain semantics of its path and sets initial metadata accordingly (e.g., "call `UserLabel` → `Name`", or define a `source_information` category and assign properties to it). This metadata is always appropriate when this path is included. Categories are defined as lightweight objects (`{ id, label, description? }`) at the provider contribution level — this is domain knowledge, not UI layout.
 - **Descriptor transformers** are **global** — they see the full field list across all providers and make cross-cutting decisions that no single provider could make (e.g., "hide all read-only fields", "reorder by priority", "move all `BisCore` fields to a System category").
 
 Provider specs are applied first (the system uses them during field generation to set initial metadata), then transformers run second (after all fields are collected). If a transformer overrides metadata that was set by a provider spec, the transformer wins — it has full context.
@@ -171,7 +171,7 @@ This stage translates the descriptor into one or more ECSQL queries. It selects 
 **Input:** Built query + request options (sorting, filtering, paging).
 **Output:** Raw content items.
 
-Executes the ECSQL and materializes rows into content items. The value loader maps query result columns to fields using the descriptor's field structure. After SQL-backed fields are populated, the pipeline calls any registered **value resolvers** in bulk with the page of items — resolvers read existing field values (e.g., an external ID) and populate their declared fields with data fetched from external sources.
+Executes the ECSQL and materializes rows into content items. The value loader maps query result columns to fields using the descriptor's field structure. After SQL-backed fields are populated, the pipeline calls any registered **external fields providers** in bulk with the page of items — they read existing field values (e.g., an external ID) and populate their declared fields with data fetched from external sources.
 
 **Not all stages run for every request:**
 
@@ -187,19 +187,23 @@ The pipeline ends at raw content items. Any post-processing (formatting, merging
 
 ## Extension Points
 
-### Properties provider
+### iModel fields provider
 
-Responsible for contributing content for a given target. A provider is called once during source resolution (Stage 1) and returns **path declarations** — relationship paths with optional property specifications.
+Responsible for contributing fields for a given target. A provider is called once during source resolution (Stage 1) and returns a **fields provider contribution** — a combination of related properties declarations, calculated field declarations, and category definitions.
 
 Each provider:
 
 - Specifies which content targets it handles (by class, by schema, by all, etc.).
-- Returns path declarations for a given content target. Each path declaration consists of:
+- Returns a contribution containing:
+  - **Related properties declarations** (optional) — each one describes a relationship path to navigate and which properties to load from the classes along it.
+  - **Calculated field declarations** (optional) — fields whose values are ECSQL expressions (e.g., arithmetic on schema properties, string concatenation, CASE expressions).
+  - **Category definitions** (optional) — lightweight metadata objects (`{ id, label, description? }`) that group properties for display. Both related properties specs and calculated fields reference categories by ID. Categories are domain metadata ("these aspect properties belong in a Source Information group"), not UI layout.
+
+Each related properties declaration consists of:
   - A **relationship path** (possibly generic — e.g., targeting a base class like `ElementAspect`).
   - Optional **per-step property specifications** — at each step in the path, the provider can specify which properties to include from the **target class** and/or the **relationship class** at that step. This includes include/exclude lists, label overrides, display flags, etc.
-  - Optional **category definitions** — lightweight metadata objects (`{ id, label, description? }`) that group properties for display. Property specs reference categories by ID. Categories are domain metadata ("these aspect properties belong in a Source Information group"), not UI layout.
 
-**Default behavior (common case):** A path declaration with no property specs means "take all properties from the final step's target class." No properties are taken from intermediate target classes or relationship classes along the path.
+**Default behavior (common case):** A related properties declaration with no property specs means "take all properties from the final step's target class." No properties are taken from intermediate target classes or relationship classes along the path.
 
 **Custom behavior:** The provider annotates specific steps with property specs to control which properties are loaded. This allows:
 
@@ -209,13 +213,26 @@ Each provider:
 - Overriding labels and display flags for specific properties.
 - Assigning properties to provider-defined categories.
 
-**Path declaration shape:**
+**Provider contribution shape:**
 
 ```ts
-interface PathDeclaration {
+interface FieldsProviderContribution {
+  relatedProperties?: RelatedPropertiesDeclaration[];
+  calculatedFields?: CalculatedFieldDeclaration[];
+  categories?: CategoryDefinition[];  // shared pool referenced by both relatedProperties and calculatedFields
+}
+
+interface CalculatedFieldDeclaration {
+  id: string;               // stable identity
+  label: string;
+  expression: string;       // ECSQL expression
+  type: FieldType;
+  categoryId?: string;      // references a CategoryDefinition.id
+}
+
+interface RelatedPropertiesDeclaration {
   path: RelationshipPath;
   properties?: StepPropertySpec[]; // sparse — only steps needing customization
-  categories?: CategoryDefinition[];
   cardinalityHint?: "one" | "many";
 }
 
@@ -248,17 +265,17 @@ Design notes:
 
 **Possible future syntactic sugar:**
 
-- Allow a bare `RelationshipPath` as a path declaration (union type) — equivalent to `{ path: myPath }` with no specs.
+- Allow a bare `RelationshipPath` as a related properties declaration (union type) — equivalent to `{ path: myPath }` with no specs.
 - When the path is a single step, allow specifying it as a step object rather than a 1-element array — avoids the `[{ ... }]` wrapper for the most common case.
 
 These shorthands can be added later without breaking the canonical object form.
 
-**Resolution flow:** The system takes the provider's (possibly generic) path declarations, resolves them to concrete classes by querying the data (Stage 1), then uses the concrete classes' EC schema metadata plus the provider's property specs to enumerate and customize fields (Stage 2). The provider is not called again — Stage 2 is system logic.
+**Resolution flow:** The system takes the provider's (possibly generic) related properties declarations, resolves them to concrete classes by querying the data (Stage 1), then uses the concrete classes' EC schema metadata plus the provider's property specs to enumerate and customize fields (Stage 2). The provider is not called again — Stage 2 is system logic.
 
-**Provider-controlled resolution:** A provider can optionally supply a `resolve` callback on a path declaration. When present, the system delegates resolution of that path to the callback instead of using its default discovery logic. The callback receives the iModel accessor (for running ECSQL queries) and the content target, and returns concrete paths. This lets providers that know the most efficient query for their domain avoid the system's generic resolution query.
+**Provider-controlled resolution:** A provider can optionally supply a `resolve` callback on a related properties declaration. When present, the system delegates resolution of that path to the callback instead of using its default discovery logic. The callback receives the iModel accessor (for running ECSQL queries) and the content target, and returns concrete paths. This lets providers that know the most efficient query for their domain avoid the system's generic resolution query.
 
 ```ts
-interface PathDeclaration {
+interface RelatedPropertiesDeclaration {
   path: RelationshipPath;
   resolve?: (iModel: IModelAccess, target: ContentTarget) => Promise<RelationshipPath[]>;
   // ... other fields as before
@@ -269,13 +286,13 @@ interface PathDeclaration {
 - If `resolve` is omitted, the system resolves the path using its default ECSQL-based discovery.
 - The callback is expected to return only paths to concrete classes that actually have data for the target — same contract as the default resolver, just a different (provider-optimized) implementation.
 
-Multiple providers can contribute to the same request. Their contributions are _additive_ — path declarations from all applicable providers are collected and their resulting fields are merged into a single descriptor.
+Multiple providers can contribute to the same request. Their contributions are _additive_ — related properties declarations from all applicable providers are collected and their resulting fields are merged into a single descriptor.
 
-**Conflict resolution:** If two providers' path declarations produce the same field (same source class + property name + path), they are deduplicated. If they produce conflicting metadata (e.g., different categories), the provider with higher priority wins.
+**Conflict resolution:** If two providers' declarations produce the same field (same source class + property name + path), they are deduplicated. If they produce conflicting metadata (e.g., different categories), the provider with higher priority wins.
 
-**Provider priority:** Providers are registered with a numeric priority. Higher priority wins on metadata conflicts for deduplicated fields. The built-in iModel properties provider has a default priority; custom providers can be registered above or below it.
+**Provider priority:** Providers are registered with a numeric priority. Higher priority wins on metadata conflicts for deduplicated fields. The built-in iModel fields provider has a default priority; custom providers can be registered above or below it.
 
-**Built-in provider:** An "iModel properties provider" implementation that reads presentation rules from the iModel's ECSchemas and content modifier rules to determine available paths, property specs, and calculated properties.
+**Built-in provider:** An "iModel fields provider" implementation that reads presentation rules from the iModel's ECSchemas and content modifier rules to determine available paths, property specs, and calculated properties.
 
 Inspiration: [RelatedPropertiesSpecification](https://www.itwinjs.org/presentation/content/relatedpropertiesspecification/), [CalculatedPropertiesSpecification](https://www.itwinjs.org/presentation/content/calculatedpropertiesspecification/).
 
@@ -285,12 +302,12 @@ Modifies the descriptor _after_ all providers have contributed their fields. Use
 
 - Hiding specific fields based on user preferences or component needs.
 - Overriding field labels, categories, priorities.
-- Adding SQL calculated fields not backed by schema properties.
 - Reordering or regrouping fields.
+- Cross-provider decisions that no single provider can make (e.g., "move all `BisCore` fields to a System category").
 
 Multiple transformers run sequentially in priority order. Each receives the descriptor as modified by previous transformers.
 
-**Rule:** Transformers may remove, modify, or add fields. They must not change field identity (the stable key), only metadata.
+**Rule:** Transformers may hide, remove, modify, or reorder fields. They must not change field identity (the stable key), only metadata. They do not add new fields — field contribution is the iModel fields provider's (or external fields provider's) responsibility.
 
 Inspiration: [PropertySpecification](https://www.itwinjs.org/presentation/content/propertyspecification/), [PropertyCategorySpecification](https://www.itwinjs.org/presentation/content/propertycategoryspecification/).
 
@@ -305,22 +322,22 @@ Use cases:
 
 **Rule:** Query filterers must not add or remove SELECT columns. They may only add WHERE clauses and JOINs needed to support those clauses.
 
-Computed columns are handled differently: **SQL calculated fields** (declared by a provider or descriptor transformer) carry their ECSQL expression as metadata. The query builder includes those expressions in the SELECT clause, and the value loader reads them like any other field. This keeps the invariant that every column in the query corresponds to a field in the descriptor.
+Computed columns are handled differently: **SQL calculated fields** (declared by a provider) carry their ECSQL expression as metadata. The query builder includes those expressions in the SELECT clause, and the value loader reads them like any other field. This keeps the invariant that every column in the query corresponds to a field in the descriptor.
 
-### Value resolver
+### External fields provider
 
-A self-contained extension that both declares new fields and populates them with external data. A single registration covers the full lifecycle — no separate transformer needed.
+A self-contained extension that both declares new fields and populates them with data from outside the iModel. A single registration covers the full lifecycle — no separate transformer needed.
 
-A value resolver declares:
+An external fields provider declares:
 
 - **Output fields** — field declarations (identity, label, type, category, etc.) that the resolver will populate. The pipeline adds these to the descriptor during Stage 2.
 - **Input selection** (optional) — a callback that receives the finalized descriptor and returns the field identities the resolver needs as input. The pipeline ensures these fields are not removed and optionally hides them. This late-binding approach decouples the resolver from internal field identity formats — the resolver inspects the actual descriptor using utility methods (find by class + property name, by label, by path, etc.) rather than hardcoding identity strings.
 - **Resolve function** — receives a batch of content items (the current page) after SQL-backed fields are populated, and fills in output field values in bulk.
 
 ```ts
-interface ValueResolver {
+interface ExternalFieldsProvider {
   // Descriptor contribution (applied during Stage 2)
-  fields: FieldDeclaration[];       // fields this resolver will populate
+  fields: FieldDeclaration[];       // fields this provider will populate
 
   // Input discovery (called after descriptor is finalized)
   inputs?: (descriptor: Descriptor) => InputFieldRef[];
@@ -337,18 +354,18 @@ interface InputFieldRef {
 
 The `Descriptor` provides utility methods for field lookup — find by class + property name, by label, by path, by category, etc. Resolver authors use these utilities inside `inputs` rather than depending on internal identity encoding.
 
-Value resolvers run during Stage 4, after query execution but before items are emitted to the consumer. They enable external data to be first-class in the descriptor — resolver-declared fields appear in the field list, carry categories and metadata, and can be hidden/shown like any other field.
+External fields providers run during Stage 4, after query execution but before items are emitted to the consumer. They enable external data to be first-class in the descriptor — their declared fields appear in the field list, carry categories and metadata, and can be hidden/shown like any other field.
 
 **Constraints:**
 
-- Resolver fields cannot participate in SQL-level sorting, filtering, or distinct values (their data doesn't exist in the query).
-- Resolvers must not modify fields they don't own.
+- External fields cannot participate in SQL-level sorting, filtering, or distinct values (their data doesn't exist in the query).
+- External fields providers must not modify fields they don't own.
 
-**Example:** A value resolver declares an `inputs` callback that uses `descriptor.findFieldByProperty("BisCore", "Element", "CodeValue")` to locate the field carrying external IDs, returning `[{ identity: field.identity, hide: true }]`. It declares `fields: [{ id: "externalName", ... }, { id: "externalStatus", ... }]`. The pipeline hides the input field (still queried) and adds the two output fields to the descriptor. During Stage 4, the resolver's `resolve` function reads the input value from each item, calls an external service once with all values, and fills in `externalName` and `externalStatus` across the batch.
+**Example:** An external fields provider declares an `inputs` callback that uses `descriptor.findFieldByProperty("BisCore", "Element", "CodeValue")` to locate the field carrying external IDs, returning `[{ identity: field.identity, hide: true }]`. It declares `fields: [{ id: "externalName", ... }, { id: "externalStatus", ... }]`. The pipeline hides the input field (still queried) and adds the two output fields to the descriptor. During Stage 4, the provider's `resolve` function reads the input value from each item, calls an external service once with all values, and fills in `externalName` and `externalStatus` across the batch.
 
 ### Registration and ordering
 
-All extension points — providers, descriptor transformers, query filterers, and value resolvers — are registered on the pipeline instance with a numeric priority. The pipeline calls them in priority order (providers are collected additively, transformers and filterers run sequentially, resolvers contribute fields during Stage 2 and run their resolve function in order during Stage 4). This registration mechanism is intentionally left unspecified at the conceptual level — concrete API design will define the exact registration surface.
+All extension points — iModel fields providers, descriptor transformers, query filterers, and external fields providers — are registered on the pipeline instance with a numeric priority. The pipeline calls them in priority order (iModel fields providers are collected additively, transformers and filterers run sequentially, external fields providers contribute fields during Stage 2 and run their resolve function in order during Stage 4). This registration mechanism is intentionally left unspecified at the conceptual level — concrete API design will define the exact registration surface.
 
 ### Consumer utilities
 
@@ -411,7 +428,7 @@ For **1:many relationships** (e.g., element → multi aspects of the same class)
 
 **Cardinality cannot be trusted from the schema alone.** EC relationship definitions frequently declare `many-to-many` even when the actual data invariant is `1:1` (e.g., `ElementOwnsUniqueAspect` is declared `(1:N)` but each element has at most one unique aspect per class). Therefore:
 
-- **Providers can supply a cardinality hint** on their path declarations (e.g., "this step is always 1:1 in practice"). The system trusts the hint and uses it to choose the loading strategy.
+- **Providers can supply a cardinality hint** on their related properties declarations (e.g., "this step is always 1:1 in practice"). The system trusts the hint and uses it to choose the loading strategy.
 - **For paths without hints**, the system can determine effective cardinality during path resolution (Stage 1) — the same query that resolves concrete classes can also check whether any primary instance has more than one related instance along the path. This is a data-driven check, not a schema-driven one.
 
 ### Multi-target behavior
@@ -451,7 +468,7 @@ Built-in category assignment:
 
 EC schema property categories can be overridden by property provider specs or descriptor transformers — the same precedence rules apply (provider specs first, transformers win on conflict).
 
-Providers define categories as part of their path declarations — each category is a lightweight metadata object (`{ id, label, description? }`). Property specs reference categories by ID. Descriptor transformers can reassign fields to different categories, define new categories, or restructure the category tree.
+Providers define categories as part of their contribution — each category is a lightweight metadata object (`{ id, label, description? }`). Both related properties specs and calculated field declarations reference categories by ID. Descriptor transformers can reassign fields to different categories, define new categories, or restructure the category tree.
 
 ---
 
@@ -504,7 +521,7 @@ The pipeline exposes an **async iterator** — consumers `for await` over conten
 
 5. ~~**Undo/redo interaction:**~~ **Resolved.** Consumer's responsibility. The pipeline treats the descriptor as an opaque input — it does not track modification history or support undo.
 
-6. ~~**External value sources (non-iModel data):**~~ **Resolved.** Two-phase loading with **value resolvers**. After ECSQL materializes rows, registered value resolvers are called in bulk with the page of items. Each resolver declares which fields it populates, reads input values from existing (potentially hidden) fields, calls external services in batch, and fills in its fields. This keeps external data first-class in the descriptor while keeping the pipeline in control of value population. See "Value resolver" in Extension Points.
+6. ~~**External value sources (non-iModel data):**~~ **Resolved.** Two-phase loading with **external fields providers**. After ECSQL materializes rows, registered external fields providers are called in bulk with the page of items. Each provider declares which fields it populates, reads input values from existing (potentially hidden) fields, calls external services in batch, and fills in its fields. This keeps external data first-class in the descriptor while keeping the pipeline in control of value population. See "External fields provider" in Extension Points.
 
 7. **1:many related content loading strategy:**
    For 1:1 relationships, JOINing into the main query is fine. For 1:many, naive JOINs cause row explosion. Options:
