@@ -72,7 +72,7 @@
     "@itwin/presentation-shared": "workspace:^",
     "@itwin/unified-selection": "workspace:^",
     "classnames": "catalog:react",
-    "immer": "^10.2.0",
+    "immer": "^11.1.8",
     "react-error-boundary": "catalog:react",
     "rxjs": "catalog:rxjs"
   },
