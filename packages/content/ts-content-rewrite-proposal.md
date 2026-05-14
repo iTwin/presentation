@@ -92,7 +92,7 @@ Describes a single data column in the content result. Key attributes:
 - **Value type** — primitive type, struct, array, or navigation.
 - **Relationship path** — which relationship path this field comes from, and which class along that path the field belongs to. Empty path means the field belongs to the target class directly. The path tells the query builder how to JOIN to the field's class; the class identifies which table the column lives in.
 - **Category** — logical grouping for UI display.
-- **Flags** — read-only, hidden, merged, etc.
+- **Flags** — read-only, hidden (still queried but not displayed in UI), etc.
 - **Renderer / editor hints** — optional overrides for how to display or edit the value.
 
 Field kinds:
@@ -164,7 +164,7 @@ Provider specs are applied first (the system uses them during field generation t
 **Input:** Content descriptor (possibly modified by the consumer or by descriptor transformers).
 **Output:** ECSQL query (or queries).
 
-This stage translates the descriptor into one or more ECSQL queries. It only selects columns for fields that are still present in the descriptor (hidden/removed fields are not queried). SQL calculated fields carry their ECSQL expression as metadata — the query builder includes that expression in the SELECT clause like any other column. Query filterers can inject additional WHERE clauses or JOINs at this point.
+This stage translates the descriptor into one or more ECSQL queries. It selects columns for all fields present in the descriptor, including hidden ones (hidden fields are still queried — their values exist in content items but are flagged for UI to skip). Only fields that have been **removed** from the descriptor entirely are not queried. SQL calculated fields carry their ECSQL expression as metadata — the query builder includes that expression in the SELECT clause like any other column. Query filterers can inject additional WHERE clauses or JOINs at this point.
 
 ### Stage 4: Value loading
 
@@ -337,7 +337,7 @@ The descriptor is the single artifact that flows between "what exists" and "load
 - Consumers can cache descriptors independently from values.
 - The same descriptor can be used for multiple value requests (different pages, different sort orders, different filters).
 - Cheap operations (size, keys) only need the content sources (stored on the descriptor), not the full field list.
-- Consumers can modify the descriptor (hide fields) and the value loader will respect those changes.
+- Consumers can modify the descriptor (hide fields, remove fields) and the value loader will respect those changes. Hidden fields are still queried (values available programmatically); removed fields are not queried (no column, no value).
 
 ### Providers are additive, transformers are sequential
 
