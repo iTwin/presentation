@@ -93,7 +93,8 @@ Describes a single data column in the content result. Key attributes:
 - **Relationship path** — which relationship path this field comes from, and which class along that path the field belongs to. Empty path means the field belongs to the target class directly. The path tells the query builder how to JOIN to the field's class; the class identifies which table the column lives in.
 - **Category** — logical grouping for UI display.
 - **Flags** — read-only, hidden (still queried but not displayed in UI), etc.
-- **Renderer / editor hints** — optional overrides for how to display or edit the value.
+
+Note: Renderer and editor selection is a **view-model concern**, not part of the field data model. The pipeline field describes *what* the data is (type, identity, category); consumers decide *how* to render or edit it based on their own configuration (type-based defaults, class + property mappings, explicit overrides in UI component props, etc.).
 
 Field kinds:
 
@@ -387,8 +388,6 @@ interface PropertyOverrides {
   label?: string;
   categoryId?: string; // references a CategoryDefinition.id
   readOnly?: boolean;
-  renderer?: string;
-  editor?: string;
 }
 ```
 
