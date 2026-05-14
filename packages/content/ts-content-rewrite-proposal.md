@@ -307,7 +307,7 @@ Output: ContentItem {
     "Pump.Name":              "Main Circulation Pump",
     "Pump.FlowRate":          12.5,
     "flowRate_gpm":           198131.25,
-    "PumpType.Manufacturer":  "Grundfos",
+    "PumpType.Manufacturer":  "Siemens",
     "PumpType.Model":         "CR 95-3",
     "OperatingParametersAspect.MaxPressure": 25.0,
     "OperatingParametersAspect.MaxTemp":     180.0,
