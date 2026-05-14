@@ -183,6 +183,137 @@ Executes the ECSQL and materializes rows into content items. The value loader ma
 
 The pipeline ends at raw content items. Any post-processing (formatting, merging, label resolution) is the consumer’s responsibility, aided by composable utility functions (see Consumer Utilities below).
 
+### Example: pipeline walkthrough
+
+Suppose the consumer selects a single `Pump` element (class `ProcessPhysical:Pump`, instance ID `0x3a`).
+
+**Stage 1 — Source resolution:**
+
+```
+Input:  ContentTarget { class: "ProcessPhysical:Pump", instanceIds: ["0x3a"] }
+
+iModel fields provider returns:
+  relatedProperties: [
+    { path: [Pump → PumpType via TypeDefinition] }
+    { path: [Pump → ElementAspect (generic)] }
+  ]
+  calculatedFields: [
+    { id: "flowRate_gpm", expression: "this.FlowRate * 15850.3", label: "Flow Rate (GPM)" }
+  ]
+
+System resolves generic paths by querying instance 0x3a:
+  Pump → ElementAspect  ──resolves to──►  Pump → OperatingParametersAspect
+
+Output: ContentSource {
+  target: { class: "ProcessPhysical:Pump", instanceIds: ["0x3a"] }
+  paths: [
+    Pump → PumpType (concrete, 1:1)
+    Pump → OperatingParametersAspect (concrete, 1:1)
+  ]
+  calculatedFields: [{ id: "flowRate_gpm", ... }]
+}
+```
+
+**Stage 2 — Descriptor building:**
+
+```
+Input:  ContentSource (from above)
+
+Additionally, a registered external fields provider contributes IoT sensor fields:
+  ExternalFieldsProvider {
+    fields: [
+      { id: "iot.currentFlow", label: "Current Flow (GPM)", type: double }
+      { id: "iot.lastMaintenance", label: "Last Maintenance", type: dateTime }
+    ]
+    inputs: (descriptor) => [
+      { identity: findFieldByProperty(descriptor, "Pump.Name"), hide: false }
+    ]
+    resolve: async (items) => { /* fetch from IoT service, attach values */ }
+  }
+
+System reads EC metadata for Pump, PumpType, OperatingParametersAspect.
+Generates fields from iModel sources, then appends external provider fields:
+
+  Direct fields (from Pump):
+    - "Pump.Name"         (string)
+    - "Pump.FlowRate"     (double)
+    - "flowRate_gpm"      (double, SQL calculated)
+
+  Related field group [→ PumpType]:
+    - "PumpType.Manufacturer"  (string)
+    - "PumpType.Model"         (string)
+
+  Related field group [→ OperatingParametersAspect]:
+    - "OperatingParametersAspect.MaxPressure"  (double)
+    - "OperatingParametersAspect.MaxTemp"      (double)
+
+  External fields:
+    - "iot.currentFlow"       (double, external)
+    - "iot.lastMaintenance"   (dateTime, external)
+
+  ExternalFieldsProvider's inputs callback receives the finalized descriptor, returns:
+    - reference to "Pump.Name" field (needed as lookup key, not hidden)
+
+Descriptor transformer runs (e.g., "hide all read-only fields"):
+  - "Pump.FlowRate" is marked read-only in EC metadata → transformer hides it
+  - All other fields remain visible
+
+Output: ContentDescriptor { fields: [9 fields, "Pump.FlowRate" hidden], sources: [...] }
+```
+
+**Stage 3 — Query building:**
+
+```
+Input:  ContentDescriptor + request options (no filter, sort by Pump.Name ASC, page size 100)
+
+Note: external fields are NOT part of the ECSQL query — they have no SQL expression.
+      Only iModel-backed fields (property + SQL calculated) are queried.
+      Hidden fields ("Pump.FlowRate") ARE still queried — hidden ≠ removed.
+
+Query filterer runs (e.g., spatial filter — only elements in building zone A):
+  - Injects: WHERE ... AND pump.ECInstanceId IN (SELECT SourceId FROM ...)
+
+Output (simplified ECSQL):
+  SELECT
+    pump.$,
+    pumpType.$,
+    aspect.$,
+    (pump.FlowRate * 15850.3) AS [flowRate_gpm]
+  FROM ProcessPhysical.Pump pump
+  JOIN ProcessPhysical.PumpType pumpType ON ...
+  JOIN ProcessPhysical.OperatingParametersAspect aspect ON ...
+  WHERE pump.ECInstanceId = 0x3a
+    AND pump.ECInstanceId IN (SELECT SourceId FROM ...)   ← from query filterer
+  ORDER BY pump.Name ASC
+```
+
+**Stage 4 — Value loading:**
+
+```
+Input:  Built query + paging cursor
+
+Query returns 1 row. Value loader maps columns to iModel fields.
+Then pipeline calls external fields provider's resolve(items):
+  - Provider reads "Pump.Name" = "Main Circulation Pump" from each item
+  - Fetches sensor data from IoT service
+  - Attaches "iot.currentFlow" and "iot.lastMaintenance" values to items
+
+Output: ContentItem {
+  primaryKeys: [{ class: "ProcessPhysical:Pump", id: "0x3a" }],
+  values: {
+    "Pump.Name":              "Main Circulation Pump",
+    "Pump.FlowRate":          12.5,
+    "flowRate_gpm":           198131.25,
+    "PumpType.Manufacturer":  "Grundfos",
+    "PumpType.Model":         "CR 95-3",
+    "OperatingParametersAspect.MaxPressure": 25.0,
+    "OperatingParametersAspect.MaxTemp":     180.0,
+    "iot.currentFlow":        187.3,
+    "iot.lastMaintenance":    "2026-04-22T08:00:00Z",
+  }
+}
+```
+
 ---
 
 ## Extension Points
