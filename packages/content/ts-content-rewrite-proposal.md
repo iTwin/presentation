@@ -150,7 +150,7 @@ This stage enumerates fields from the concrete paths in each content source. For
 
 Providers are **not** called again in this stage — it operates entirely on the content sources from Stage 1 plus EC schema metadata.
 
-Descriptor transformers then run to apply further customizations (hide fields, override categories, reorder fields, etc.).
+Descriptor transformers then run to apply further customizations (hide fields, override categories, etc.).
 
 **Provider property specs vs. descriptor transformers:** Both can customize field metadata (labels, categories, display flags), but they serve different purposes:
 
@@ -302,12 +302,11 @@ Modifies the descriptor _after_ all providers have contributed their fields. Use
 
 - Hiding specific fields based on user preferences or component needs.
 - Overriding field labels, categories, priorities.
-- Reordering or regrouping fields.
 - Cross-provider decisions that no single provider can make (e.g., "move all `BisCore` fields to a System category").
 
 Multiple transformers run sequentially in priority order. Each receives the descriptor as modified by previous transformers.
 
-**Rule:** Transformers may hide, remove, modify, or reorder fields. They must not change field identity (the stable key), only metadata. They do not add new fields — field contribution is the iModel fields provider's (or external fields provider's) responsibility.
+**Rule:** Transformers may hide, remove, or modify field metadata. They must not change field identity (the stable key). They do not add new fields — field contribution is the iModel fields provider's (or external fields provider's) responsibility. They do not reorder fields — display order is a UI concern handled by consumers after the pipeline.
 
 Inspiration: [PropertySpecification](https://www.itwinjs.org/presentation/content/propertyspecification/), [PropertyCategorySpecification](https://www.itwinjs.org/presentation/content/propertycategoryspecification/).
 
