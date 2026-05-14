@@ -171,7 +171,7 @@ This stage translates the descriptor into one or more ECSQL queries. It selects 
 **Input:** Built query + request options (sorting, filtering, paging).
 **Output:** Raw content items.
 
-Executes the ECSQL and materializes rows into content items. The value loader maps query result columns to fields using the descriptor's field structure.
+Executes the ECSQL and materializes rows into content items. The value loader maps query result columns to fields using the descriptor's field structure. After SQL-backed fields are populated, the pipeline calls any registered **value resolvers** in bulk with the page of items — resolvers read existing field values (e.g., an external ID) and populate their declared fields with data fetched from external sources.
 
 **Not all stages run for every request:**
 
@@ -307,9 +307,48 @@ Use cases:
 
 Computed columns are handled differently: **SQL calculated fields** (declared by a provider or descriptor transformer) carry their ECSQL expression as metadata. The query builder includes those expressions in the SELECT clause, and the value loader reads them like any other field. This keeps the invariant that every column in the query corresponds to a field in the descriptor.
 
+### Value resolver
+
+A self-contained extension that both declares new fields and populates them with external data. A single registration covers the full lifecycle — no separate transformer needed.
+
+A value resolver declares:
+
+- **Output fields** — field declarations (identity, label, type, category, etc.) that the resolver will populate. The pipeline adds these to the descriptor during Stage 2.
+- **Input selection** (optional) — a callback that receives the finalized descriptor and returns the field identities the resolver needs as input. The pipeline ensures these fields are not removed and optionally hides them. This late-binding approach decouples the resolver from internal field identity formats — the resolver inspects the actual descriptor using utility methods (find by class + property name, by label, by path, etc.) rather than hardcoding identity strings.
+- **Resolve function** — receives a batch of content items (the current page) after SQL-backed fields are populated, and fills in output field values in bulk.
+
+```ts
+interface ValueResolver {
+  // Descriptor contribution (applied during Stage 2)
+  fields: FieldDeclaration[];       // fields this resolver will populate
+
+  // Input discovery (called after descriptor is finalized)
+  inputs?: (descriptor: Descriptor) => InputFieldRef[];
+
+  // Value population (called during Stage 4)
+  resolve: (items: ContentItem[]) => Promise<void>;
+}
+
+interface InputFieldRef {
+  identity: string;  // field identity selected from the descriptor
+  hide?: boolean;    // if true, mark this input field as hidden (default: false)
+}
+```
+
+The `Descriptor` provides utility methods for field lookup — find by class + property name, by label, by path, by category, etc. Resolver authors use these utilities inside `inputs` rather than depending on internal identity encoding.
+
+Value resolvers run during Stage 4, after query execution but before items are emitted to the consumer. They enable external data to be first-class in the descriptor — resolver-declared fields appear in the field list, carry categories and metadata, and can be hidden/shown like any other field.
+
+**Constraints:**
+
+- Resolver fields cannot participate in SQL-level sorting, filtering, or distinct values (their data doesn't exist in the query).
+- Resolvers must not modify fields they don't own.
+
+**Example:** A value resolver declares an `inputs` callback that uses `descriptor.findFieldByProperty("BisCore", "Element", "CodeValue")` to locate the field carrying external IDs, returning `[{ identity: field.identity, hide: true }]`. It declares `fields: [{ id: "externalName", ... }, { id: "externalStatus", ... }]`. The pipeline hides the input field (still queried) and adds the two output fields to the descriptor. During Stage 4, the resolver's `resolve` function reads the input value from each item, calls an external service once with all values, and fills in `externalName` and `externalStatus` across the batch.
+
 ### Registration and ordering
 
-All extension points — providers, descriptor transformers, and query filterers — are registered on the pipeline instance with a numeric priority. The pipeline calls them in priority order (providers are collected additively, transformers and filterers run sequentially). This registration mechanism is intentionally left unspecified at the conceptual level — concrete API design will define the exact registration surface.
+All extension points — providers, descriptor transformers, query filterers, and value resolvers — are registered on the pipeline instance with a numeric priority. The pipeline calls them in priority order (providers are collected additively, transformers and filterers run sequentially, resolvers contribute fields during Stage 2 and run their resolve function in order during Stage 4). This registration mechanism is intentionally left unspecified at the conceptual level — concrete API design will define the exact registration surface.
 
 ### Consumer utilities
 
@@ -465,14 +504,7 @@ The pipeline exposes an **async iterator** — consumers `for await` over conten
 
 5. ~~**Undo/redo interaction:**~~ **Resolved.** Consumer's responsibility. The pipeline treats the descriptor as an opaque input — it does not track modification history or support undo.
 
-6. **External value sources (non-iModel data):**
-   Some fields may need values loaded from external services (e.g., 3rd party APIs) rather than ECSQL. This is unrelated to SQL calculated fields (which are ECSQL expressions). External value sources require **bulk async fetches** — calling an external service with a batch of primary keys and populating many items at once. The consumer `map` utility can't serve this purpose either because it evaluates per-item with no batching or cross-item context. Options considered:
-
-   - **A) Two-phase loading with value resolvers:** Fields carry either an SQL expression or a value resolver reference. After ECSQL loads rows + primary keys, the system calls resolvers in bulk to fill external values. Gives a unified descriptor model (external fields are first-class, can participate in schema), but adds loading complexity and paging interaction.
-   - **B) Item transformer that enriches:** A Stage 5 transformer fetches external values given primary keys and fills them into pre-declared (empty) fields. Simpler, but the "empty field" state is implicit.
-   - **C) Consumer-level merging:** External data is fetched separately by the consumer and merged with content items by primary key outside the pipeline. Simplest pipeline, but no unified descriptor — external fields can't participate in sorting/filtering.
-
-   Leaning toward (C) for simplicity and then, if needed, (A) for the unified model.
+6. ~~**External value sources (non-iModel data):**~~ **Resolved.** Two-phase loading with **value resolvers**. After ECSQL materializes rows, registered value resolvers are called in bulk with the page of items. Each resolver declares which fields it populates, reads input values from existing (potentially hidden) fields, calls external services in batch, and fills in its fields. This keeps external data first-class in the descriptor while keeping the pipeline in control of value population. See "Value resolver" in Extension Points.
 
 7. **1:many related content loading strategy:**
    For 1:1 relationships, JOINing into the main query is fine. For 1:many, naive JOINs cause row explosion. Options:
