@@ -327,6 +327,7 @@ Responsible for contributing fields for a given target. A provider is called onc
 
 Each provider:
 
+- Has a stable **`id`** (format: `${string}_v${number}`, e.g., `"presentation-rules_v3"`, `"my-aspects_v1"`). The version suffix must be incremented whenever the provider's implementation changes (different paths, specs, etc.). This ID is used as part of the content source cache key.
 - Specifies which content targets it handles (by class, by schema, by all, etc.).
 - Returns a contribution containing:
   - **Related properties declarations** (optional) — each one describes a relationship path to navigate and which properties to load from the classes along it.
@@ -536,6 +537,39 @@ The descriptor is the single artifact that flows between "what exists" and "load
 - The same descriptor can be used for multiple value requests (different pages, different sort orders, different filters).
 - Cheap operations (size, keys) only need the content sources (stored on the descriptor), not the full field list.
 - Consumers can modify the descriptor (hide fields, remove fields) and the value loader will respect those changes. Hidden fields are still queried (values available programmatically); removed fields are not queried (no column, no value).
+
+### Descriptor caching
+
+The expensive work in building a descriptor is **path resolution (Stage 1)** — ECSQL queries against the iModel to resolve generic paths to concrete ones. This can take tens of seconds. Stage 2 (field enumeration from EC metadata) is fast — schema metadata is already loaded in memory.
+
+**What to cache:** Only the **content sources** — the output of Stage 1 (resolved concrete paths + calculated field declarations per target). The descriptor itself is not cached.
+
+**Why cache only Stage 1:** Stage 2 is cheap (in-memory metadata reads), so re-running it from cached sources adds negligible cost. This avoids all complexity around "restoring" a descriptor:
+
+- No partial re-application of external fields.
+- No "delta" transformer pass.
+- Transformers, external fields providers, and iModel field metadata all run fresh and uniformly on every descriptor build.
+
+**Cache persistence:** The cache is persistent across sessions (disk-backed).
+
+**Restore flow:**
+
+1. Deserialize cached content sources (concrete paths + calculated field declarations).
+2. Run Stage 2 fresh — enumerate fields from EC schema metadata, append external fields, call `inputs`, run transformers.
+3. Descriptor is ready for Stage 3/4.
+
+**Cache key:** `(content target, iModel data version, sorted iModel fields provider ID set)`.
+
+- **Content target** — the full content target as provided by the consumer (class, optional instance IDs, optional instance filter). Different targets produce different cache entries.
+- **iModel data version** — changeset ID or a monotonic counter incremented on write transactions. Path resolution depends on actual relationship instances (e.g., associating a new aspect to an element adds fields), not just schema structure.
+- **Sorted provider ID set** — each iModel fields provider has a stable `id` (format: `${string}_v${number}`). The version suffix is bumped when the provider's implementation changes, causing a natural cache miss without explicit invalidation logic.
+
+**Cache invalidation:** A cache entry is invalid when any component of its key no longer matches the current state:
+
+- iModel data changes (changeset applied, write transaction) → data version advances → miss on all prior entries.
+- Provider implementation changes → provider bumps its version suffix → different ID set → miss.
+- Provider added or removed → different ID set → miss.
+- Transformer and external fields provider changes do **not** invalidate the cache — they run fresh on every descriptor build.
 
 ### Providers are additive, transformers are sequential
 
