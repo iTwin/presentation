@@ -79,7 +79,7 @@ The schema of the content result. Computed _before_ loading any values. Describe
   - **Direct fields** — property fields and calculated fields that belong to the target class directly (no relationship path).
   - **Related field groups** — containers that group fields loaded via a specific relationship path. Each group carries its relationship path. Groups can nest for multi-step paths. Fields inside a group that have no explicit category are implicitly categorized by the group's target class (its display label becomes the category label). Groups are purely organizational — they carry no value themselves; values in content items are keyed by leaf field identity as usual.
 
-The descriptor is the contract between the "what exists" phase and the "load values" phase. Consumers can inspect and modify it (hide fields, reorder, override categories) before passing it to value loading.
+The descriptor is the contract between the "what exists" phase and the "load values" phase. Consumers can inspect and modify it (hide fields, remove fields, override categories) before passing it to value loading. Display ordering of fields is a UI concern handled after the pipeline.
 
 Sorting, filtering, and paging are **request options** passed alongside the descriptor when loading values — they are not part of the descriptor itself. This keeps the descriptor cacheable and reusable across different queries against the same schema.
 
@@ -107,7 +107,7 @@ Note: The current system's "related content field" (a field that contains child 
 One row of the content result. Contains:
 
 - **Primary keys** — which instance(s) this row represents.
-- **Values** — raw values keyed by field identity. All fields (property and SQL calculated) are populated by the pipeline before the item reaches the consumer.
+- **Values** — raw values keyed by field identity. All fields (property, SQL calculated, and external) are populated by the pipeline before the item reaches the consumer.
 
 Not part of the content item:
 
@@ -148,14 +148,14 @@ This stage enumerates fields from the concrete paths in each content source. For
 2. Applies the property specs from the related properties declaration — which properties to include/exclude, label overrides, category assignments, etc. If no property specs were provided, all properties from the final step's target class are included by default.
 3. Generates field objects with full metadata (identity, label, type, path, category, flags).
 
-Providers are **not** called again in this stage — it operates entirely on the content sources from Stage 1 plus EC schema metadata.
+Providers are **not** called again in this stage — it operates entirely on the content sources from Stage 1 plus EC schema metadata. Additionally, any registered external fields providers contribute their declared fields to the descriptor at this point.
 
 Descriptor transformers then run to apply further customizations (hide fields, override categories, etc.).
 
 **Provider property specs vs. descriptor transformers:** Both can customize field metadata (labels, categories, display flags), but they serve different purposes:
 
 - **Provider property specs** are **local** — they express knowledge intrinsic to the path being declared. The provider knows the domain semantics of its path and sets initial metadata accordingly (e.g., "call `UserLabel` → `Name`", or define a `source_information` category and assign properties to it). This metadata is always appropriate when this path is included. Categories are defined as lightweight objects (`{ id, label, description? }`) at the provider contribution level — this is domain knowledge, not UI layout.
-- **Descriptor transformers** are **global** — they see the full field list across all providers and make cross-cutting decisions that no single provider could make (e.g., "hide all read-only fields", "reorder by priority", "move all `BisCore` fields to a System category").
+- **Descriptor transformers** are **global** — they see the full field list across all providers and make cross-cutting decisions that no single provider could make (e.g., "hide all read-only fields", "move all `BisCore` fields to a System category").
 
 Provider specs are applied first (the system uses them during field generation to set initial metadata), then transformers run second (after all fields are collected). If a transformer overrides metadata that was set by a provider spec, the transformer wins — it has full context.
 
@@ -200,8 +200,9 @@ Each provider:
   - **Category definitions** (optional) — lightweight metadata objects (`{ id, label, description? }`) that group properties for display. Both related properties specs and calculated fields reference categories by ID. Categories are domain metadata ("these aspect properties belong in a Source Information group"), not UI layout.
 
 Each related properties declaration consists of:
-  - A **relationship path** (possibly generic — e.g., targeting a base class like `ElementAspect`).
-  - Optional **per-step property specifications** — at each step in the path, the provider can specify which properties to include from the **target class** and/or the **relationship class** at that step. This includes include/exclude lists, label overrides, display flags, etc.
+
+- A **relationship path** (possibly generic — e.g., targeting a base class like `ElementAspect`).
+- Optional **per-step property specifications** — at each step in the path, the provider can specify which properties to include from the **target class** and/or the **relationship class** at that step. This includes include/exclude lists, label overrides, display flags, etc.
 
 **Default behavior (common case):** A related properties declaration with no property specs means "take all properties from the final step's target class." No properties are taken from intermediate target classes or relationship classes along the path.
 
@@ -219,15 +220,15 @@ Each related properties declaration consists of:
 interface FieldsProviderContribution {
   relatedProperties?: RelatedPropertiesDeclaration[];
   calculatedFields?: CalculatedFieldDeclaration[];
-  categories?: CategoryDefinition[];  // shared pool referenced by both relatedProperties and calculatedFields
+  categories?: CategoryDefinition[]; // shared pool referenced by both relatedProperties and calculatedFields
 }
 
 interface CalculatedFieldDeclaration {
-  id: string;               // stable identity
+  id: string; // stable identity
   label: string;
-  expression: string;       // ECSQL expression
+  expression: string; // ECSQL expression
   type: FieldType;
-  categoryId?: string;      // references a CategoryDefinition.id
+  categoryId?: string; // references a CategoryDefinition.id
 }
 
 interface RelatedPropertiesDeclaration {
@@ -329,14 +330,14 @@ A self-contained extension that both declares new fields and populates them with
 
 An external fields provider declares:
 
-- **Output fields** — field declarations (identity, label, type, category, etc.) that the resolver will populate. The pipeline adds these to the descriptor during Stage 2.
-- **Input selection** (optional) — a callback that receives the finalized descriptor and returns the field identities the resolver needs as input. The pipeline ensures these fields are not removed and optionally hides them. This late-binding approach decouples the resolver from internal field identity formats — the resolver inspects the actual descriptor using utility methods (find by class + property name, by label, by path, etc.) rather than hardcoding identity strings.
+- **Output fields** — field declarations (identity, label, type, category, etc.) that the provider will populate. The pipeline adds these to the descriptor during Stage 2.
+- **Input selection** (optional) — a callback that receives the finalized descriptor and returns the field identities the provider needs as input. The pipeline ensures these fields are not removed and optionally hides them. This late-binding approach decouples the provider from internal field identity formats — it inspects the actual descriptor using utility methods (find by class + property name, by label, by path, etc.) rather than hardcoding identity strings.
 - **Resolve function** — receives a batch of content items (the current page) after SQL-backed fields are populated, and fills in output field values in bulk.
 
 ```ts
 interface ExternalFieldsProvider {
   // Descriptor contribution (applied during Stage 2)
-  fields: FieldDeclaration[];       // fields this provider will populate
+  fields: FieldDeclaration[]; // fields this provider will populate
 
   // Input discovery (called after descriptor is finalized)
   inputs?: (descriptor: Descriptor) => InputFieldRef[];
@@ -346,12 +347,12 @@ interface ExternalFieldsProvider {
 }
 
 interface InputFieldRef {
-  identity: string;  // field identity selected from the descriptor
-  hide?: boolean;    // if true, mark this input field as hidden (default: false)
+  identity: string; // field identity selected from the descriptor
+  hide?: boolean; // if true, mark this input field as hidden (default: false)
 }
 ```
 
-The `Descriptor` provides utility methods for field lookup — find by class + property name, by label, by path, by category, etc. Resolver authors use these utilities inside `inputs` rather than depending on internal identity encoding.
+The `Descriptor` provides utility methods for field lookup — find by class + property name, by label, by path, by category, etc. External fields provider authors use these utilities inside `inputs` rather than depending on internal identity encoding.
 
 External fields providers run during Stage 4, after query execution but before items are emitted to the consumer. They enable external data to be first-class in the descriptor — their declared fields appear in the field list, carry categories and metadata, and can be hidden/shown like any other field.
 
@@ -415,7 +416,7 @@ We considered a third field kind — "computed fields" — that would carry a TS
 
 - **Anything expressible in ECSQL** → use an SQL calculated field (participates in sorting/filtering).
 - **Per-item value derivation from raw values** → use the consumer `map` utility (parsing, reformatting, combining fields). This is the consumer's responsibility, same as formatting.
-- **External data from APIs/services** → this is a different problem (bulk async fetches, not per-item sync derivation) — see Open Question #6.
+- **External data from APIs/services** → use an external fields provider (bulk async fetches, not per-item sync derivation). See "External fields provider" in Extension Points.
 
 Keeping computed fields out of the pipeline simplifies the field model (only two kinds: property fields and SQL calculated fields), eliminates ambiguity about what can participate in SQL operations, and keeps Stage 4 simple (pure query result materialization, no TS function evaluation).
 
@@ -463,7 +464,7 @@ Built-in category assignment:
 
 - Direct properties: no class-based category by default. If a property has a **property category** assigned in the EC schema, that schema category is used directly.
 - Related properties: grouped by the related class by default. If a property has a **property category** assigned in the EC schema, that schema category is used as a sub-category under the class-based category. A custom category defined by the provider overrides this.
-- Calculated properties: assigned to a category by the provider or transformer that created them.
+- Calculated properties: assigned to a category by the provider that declared them.
 
 EC schema property categories can be overridden by property provider specs or descriptor transformers — the same precedence rules apply (provider specs first, transformers win on conflict).
 
