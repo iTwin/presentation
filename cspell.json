@@ -73,6 +73,7 @@
     "sample_documents",
     "**/*.patch",
     ".oxfmtrc.json",
-    "cspell.json"
+    "cspell.json",
+    "dependabot.yml"
   ]
 }
