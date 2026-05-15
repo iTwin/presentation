@@ -610,7 +610,7 @@ Keeping computed fields out of the pipeline simplifies the field model (only two
 
 For **1:1 relationships** (e.g., element → unique aspect, element → type definition), JOINing into the main query is straightforward — related properties appear as extra columns with no row duplication.
 
-For **1:many relationships** (e.g., element → multi aspects of the same class), naive JOINing causes row explosion — if an element has 1000 aspects, the JOIN produces 1000 rows, each duplicating all element properties. The loading strategy for 1:many needs careful consideration (see Open Questions).
+For **1:many relationships** (e.g., element → multi aspects of the same class), naive JOINing causes row explosion — if an element has 1000 aspects, the JOIN produces 1000 rows, each duplicating all element properties. The loading strategy for 1:many needs careful consideration (see Implementation Notes).
 
 **Cardinality cannot be trusted from the schema alone.** EC relationship definitions frequently declare `many-to-many` even when the actual data invariant is `1:1` (e.g., `ElementOwnsUniqueAspect` is declared `(1:N)` but each element has at most one unique aspect per class). Therefore:
 
@@ -758,13 +758,7 @@ The pipeline exposes an **async iterator** — consumers `for await` over conten
 
 6. ~~**External value sources (non-iModel data):**~~ **Resolved.** Two-phase loading with **external fields providers**. After ECSQL materializes rows, registered external fields providers are called in bulk with the page of items. Each provider declares which fields it populates, reads input values from existing (potentially hidden) fields, calls external services in batch, and fills in its fields. This keeps external data first-class in the descriptor while keeping the pipeline in control of value population. See "External fields provider" in Extension Points.
 
-7. **1:many related content loading strategy:**
-   For 1:1 relationships, JOINing into the main query is fine. For 1:many, naive JOINs cause row explosion. Options:
-   - **A) Separate queries + stitch:** Run a separate query per 1:many path, keyed by primary instance ID. Stitch results into content items during value loading. Clean separation, but multiple round-trips and complexity in Stage 4.
-   - **B) `GROUP_CONCAT` / aggregation in SQL:** Use SQLite’s `GROUP_CONCAT` (or `json_group_array`) to aggregate 1:many values into a single column per row. Single query, no row explosion, but parsing aggregated values adds complexity and there may be limits on column size.
-   - **C) Hybrid:** Use aggregation for small cardinalities and separate queries for large ones, with a threshold.
-
-   Need to evaluate trade-offs around query count, parsing complexity, paging interaction, and typical cardinalities in real iModels.
+7. ~~**1:many related content loading strategy:**~~ Moved to Implementation Notes — this is an internal implementation concern, not an API design question.
 
 8. **Distinct values: raw vs. formatted:**
    `getDistinctValues` runs `SELECT DISTINCT` on raw values, but consumers (e.g., table filter dropdowns) want distinct _display_ values. Multiple raw values may format to the same display string (e.g., different timestamps → same date, different precisions → same rounded number). Options:
@@ -773,16 +767,35 @@ The pipeline exposes an **async iterator** — consumers `for await` over conten
 
    This interacts with the "formatting is a frontend concern" decision — need to reconcile.
 
-9. **SQLite/ECSQL query limits**
+9. ~~**SQLite/ECSQL query limits:**~~ Moved to Implementation Notes — this is an internal implementation concern, not an API design question.
 
-   SQLite imposes hard limits that directly constrain the queries this pipeline can generate. The most relevant ones:
-   - **64 tables in a JOIN** (hard limit, cannot be raised) — each relationship path step adds at least one JOIN. A content source with many related classes can exhaust this quickly.
-   - **2000 columns in a SELECT** (default `SQLITE_MAX_COLUMN`) — wide schemas with many properties per class can hit this, especially when multiple paths are JOINed into one query.
-   - **500 compound SELECT terms** (default `SQLITE_MAX_COMPOUND_SELECT`) — limits how many queries can be UNIONed together.
-   - **32766 bind parameters** (default `SQLITE_MAX_VARIABLE_NUMBER` since SQLite 3.32) — limits how many instance IDs can be passed in a single `WHERE id IN (?, ?, ...)` clause.
+---
 
-   **Column count mitigation via `$` selector:** ECSQL supports `SELECT $` which returns all properties of a class instance as a single JSON column. Instead of selecting N columns per JOINed class (one per property), the query can select one `$` blob per class and extract individual property values in TypeScript by parsing the JSON. This reduces column usage from hundreds to roughly one per JOINed class, effectively eliminating the 2000-column limit as a concern. Trade-off: JSON parsing overhead vs. direct column access. The `$->[PropName]` syntax also allows selecting specific properties as individual columns when needed (e.g., for ORDER BY or WHERE on a specific field).
+## Implementation Notes
 
-   **JOIN count mitigation — splitting and stitching:** The query builder must detect when a single query would exceed the 64-table JOIN limit and automatically split into multiple queries. The value loader then merges results from all sub-queries into a unified stream of content items. This splitting is transparent to consumers — they see a single result set regardless of how many queries were needed internally.
+These are internal implementation concerns — they don't affect the consumer-facing API but need to be resolved during development.
 
-   **Stitching:** When the query is split, each sub-query covers a different subset of JOINed paths but selects from the same primary instances. The results must be stitched back together — matching rows across sub-queries by primary key and combining their column values into a single content item. Each sub-query returns values for some fields; the stitcher assembles the full row. Fields not covered by a given sub-query are `undefined` in that sub-query's result and filled in from the sub-query that owns them.
+### 1:many related content loading strategy
+
+For 1:1 relationships, JOINing into the main query is fine. For 1:many, naive JOINs cause row explosion. Options:
+
+- **A) Separate queries + stitch:** Run a separate query per 1:many path, keyed by primary instance ID. Stitch results into content items during value loading. Clean separation, but multiple round-trips and complexity in Stage 4.
+- **B) `GROUP_CONCAT` / aggregation in SQL:** Use SQLite's `GROUP_CONCAT` (or `json_group_array`) to aggregate 1:many values into a single column per row. Single query, no row explosion, but parsing aggregated values adds complexity and there may be limits on column size.
+- **C) Hybrid:** Use aggregation for small cardinalities and separate queries for large ones, with a threshold.
+
+Need to evaluate trade-offs around query count, parsing complexity, paging interaction, and typical cardinalities in real iModels.
+
+### SQLite/ECSQL query limits
+
+SQLite imposes hard limits that directly constrain the queries this pipeline can generate. The most relevant ones:
+
+- **64 tables in a JOIN** (hard limit, cannot be raised) — each relationship path step adds at least one JOIN. A content source with many related classes can exhaust this quickly.
+- **2000 columns in a SELECT** (default `SQLITE_MAX_COLUMN`) — wide schemas with many properties per class can hit this, especially when multiple paths are JOINed into one query.
+- **500 compound SELECT terms** (default `SQLITE_MAX_COMPOUND_SELECT`) — limits how many queries can be UNIONed together.
+- **32766 bind parameters** (default `SQLITE_MAX_VARIABLE_NUMBER` since SQLite 3.32) — limits how many instance IDs can be passed in a single `WHERE id IN (?, ?, ...)` clause.
+
+**Column count mitigation via `$` selector:** ECSQL supports `SELECT $` which returns all properties of a class instance as a single JSON column. Instead of selecting N columns per JOINed class (one per property), the query can select one `$` blob per class and extract individual property values in TypeScript by parsing the JSON. This reduces column usage from hundreds to roughly one per JOINed class, effectively eliminating the 2000-column limit as a concern. Trade-off: JSON parsing overhead vs. direct column access. The `$->[PropName]` syntax also allows selecting specific properties as individual columns when needed (e.g., for ORDER BY or WHERE on a specific field).
+
+**JOIN count mitigation — splitting and stitching:** The query builder must detect when a single query would exceed the 64-table JOIN limit and automatically split into multiple queries. The value loader then merges results from all sub-queries into a unified stream of content items. This splitting is transparent to consumers — they see a single result set regardless of how many queries were needed internally.
+
+**Stitching:** When the query is split, each sub-query covers a different subset of JOINed paths but selects from the same primary instances. The results must be stitched back together — matching rows across sub-queries by primary key and combining their column values into a single content item. Each sub-query returns values for some fields; the stitcher assembles the full row. Fields not covered by a given sub-query are `undefined` in that sub-query's result and filled in from the sub-query that owns them.
