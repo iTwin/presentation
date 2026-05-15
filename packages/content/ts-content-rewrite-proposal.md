@@ -752,8 +752,7 @@ The pipeline exposes an **async iterator** — consumers `for await` over conten
 
 3. ~~**Streaming vs. paging for large result sets:**~~ **Resolved.** The pipeline exposes an async iterator to consumers. Internally, it pages using efficient cursor-based strategies (e.g., keyset pagination rather than `OFFSET`) hidden behind the iterator. Consumers simply `for await` over content items without worrying about page boundaries or paging strategy.
 
-4. **Cross-iModel content:**
-   Is there a use case for loading content across multiple iModels in a single request? If so, how does the target/source model extend?
+4. ~~**Cross-iModel content:**~~ **Resolved.** No need identified. The pipeline targets a single iModel. Consumers that need data from multiple iModels can run separate pipelines and combine results themselves.
 
 5. ~~**Undo/redo interaction:**~~ **Resolved.** Consumer's responsibility. The pipeline treats the descriptor as an opaque input — it does not track modification history or support undo.
 
