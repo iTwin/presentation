@@ -105,8 +105,8 @@ Note: The current system's "related content field" (a field that contains child 
 
 **Content values (`ContentValues`)** — the raw data for one row of the content result:
 
-- **Primary key** — which instance this row represents.
-- **Values** — raw values keyed by field identity. All fields (property, SQL calculated, and external) are populated by the pipeline.
+- **`primaryKey`** — `{ className, id }` identifying which instance this row represents.
+- **`values`** — a map of field identity → raw value. All fields (property, SQL calculated, and external) are populated by the pipeline.
 
 This is a plain data bag — serializable, no behavior, no reference to the descriptor.
 
@@ -178,7 +178,7 @@ This stage translates the descriptor into one or more ECSQL queries. It selects 
 ### Stage 4: Value loading
 
 **Input:** Built query + request options (sorting, filtering, paging).
-**Output:** Raw content items.
+**Output:** `AsyncIterable<ContentItem>` (descriptor-aware accessors wrapping raw values).
 
 Executes the ECSQL and materializes rows into content items. The value loader maps query result columns to fields using the descriptor's field structure. After SQL-backed fields are populated, the pipeline calls any registered **external fields providers** in bulk with the page of items — they read existing field values (e.g., an external ID) and populate their declared fields with data fetched from external sources.
 
@@ -187,7 +187,7 @@ Executes the ECSQL and materializes rows into content items. The value loader ma
 - `getSize` only needs Stage 1 (for the join shape) + a simplified query build (COUNT over the join shape — no descriptor or field enumeration needed).
 - `getInstanceKeys` only needs Stage 1 + a simplified query build (SELECT keys from the join shape — no descriptor needed).
 - `getDescriptor` only needs stages 1–2.
-- `getDistinctValues` needs a simplified query build from a single field's metadata (the field already carries its path and class — combined with the content target, that's enough to build the DISTINCT query directly). However, consumers expect distinct _display_ values, not raw values — see Open Questions.
+- `getDistinctValues` needs a simplified query build from a single field's metadata (the field already carries its path and class — combined with the content target, that's enough to build the DISTINCT query directly). Returns raw values; a consumer utility groups them by formatted display string (see Key Design Decisions context in resolved Open Questions #8).
 - `getItems` runs stages 1–4.
 
 The pipeline ends at raw content items. Any post-processing (formatting, merging, label resolution) is the consumer’s responsibility, aided by composable utility functions (see Consumer Utilities below).
@@ -312,16 +312,18 @@ Then pipeline calls external fields provider's resolve(items):
   - Attaches "iot.currentFlow" and "iot.lastMaintenance" values to items
 
 Output: ContentValues {
-  primaryKey:               { className: "ProcessPhysical:Pump", id: "0x3a" },
-  "Pump.Name":              "Main Circulation Pump",
-  "Pump.FlowRate":          12.5,
-  "flowRate_gpm":           198131.25,
-  "PumpType.Manufacturer":  "Siemens",
-  "PumpType.Model":         "CR 95-3",
-  "OperatingParametersAspect.MaxPressure": 25.0,
-  "OperatingParametersAspect.MaxTemp":     180.0,
-  "iot.currentFlow":        187.3,
-  "iot.lastMaintenance":    "2026-04-22T08:00:00Z",
+  primaryKey: { className: "ProcessPhysical:Pump", id: "0x3a" },
+  values: {
+    "Pump.Name":              "Main Circulation Pump",
+    "Pump.FlowRate":          12.5,
+    "flowRate_gpm":           198131.25,
+    "PumpType.Manufacturer":  "Siemens",
+    "PumpType.Model":         "CR 95-3",
+    "OperatingParametersAspect.MaxPressure": 25.0,
+    "OperatingParametersAspect.MaxTemp":     180.0,
+    "iot.currentFlow":        187.3,
+    "iot.lastMaintenance":    "2026-04-22T08:00:00Z",
+  }
 }
 
 The consumer iterates ContentItem accessors (descriptor + ContentValues),
@@ -654,23 +656,27 @@ Stage 4 executes the queries and produces two ContentValues:
   ContentValues (Pump 0x3a):
     {
       primaryKey: { className: "ProcessPhysical:Pump", id: "0x3a" },
-      "Element.Name":                           "Main Pump",
-      "Pump.FlowRate":                          12.5,
-      "PumpType.Manufacturer":                  "Siemens",
-      "OperatingParametersAspect.MaxPressure":  25.0,
-      "Valve.NominalDiameter":                  undefined,  ← not applicable
-      "ValveType.ConnectionType":               undefined,  ← not applicable
+      values: {
+        "Element.Name":                           "Main Circulation Pump",
+        "Pump.FlowRate":                          12.5,
+        "PumpType.Manufacturer":                  "Siemens",
+        "OperatingParametersAspect.MaxPressure":  25.0,
+        "Valve.NominalDiameter":                  undefined,  ← not applicable
+        "ValveType.ConnectionType":               undefined,  ← not applicable
+      }
     }
 
   ContentValues (Valve 0x4b):
     {
       primaryKey: { className: "ProcessPhysical:Valve", id: "0x4b" },
-      "Element.Name":                           "Inlet Valve",
-      "Pump.FlowRate":                          undefined,  ← not applicable
-      "PumpType.Manufacturer":                  undefined,  ← not applicable
-      "OperatingParametersAspect.MaxPressure":  undefined,  ← not applicable
-      "Valve.NominalDiameter":                  150.0,
-      "ValveType.ConnectionType":               "Flanged",
+      values: {
+        "Element.Name":                           "Inlet Valve",
+        "Pump.FlowRate":                          undefined,  ← not applicable
+        "PumpType.Manufacturer":                  undefined,  ← not applicable
+        "OperatingParametersAspect.MaxPressure":  undefined,  ← not applicable
+        "Valve.NominalDiameter":                  150.0,
+        "ValveType.ConnectionType":               "Flanged",
+      }
     }
 
 The consumer iterates ContentItem accessors (descriptor + ContentValues), which expose typed value access per field.
