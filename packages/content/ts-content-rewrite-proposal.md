@@ -105,7 +105,7 @@ Note: The current system's "related content field" (a field that contains child 
 
 **Content values (`ContentValues`)** — the raw data for one row of the content result:
 
-- **Primary keys** — which instance(s) this row represents.
+- **Primary key** — which instance this row represents.
 - **Values** — raw values keyed by field identity. All fields (property, SQL calculated, and external) are populated by the pipeline.
 
 This is a plain data bag — serializable, no behavior, no reference to the descriptor.
@@ -114,7 +114,7 @@ This is a plain data bag — serializable, no behavior, no reference to the desc
 
 - `getValue(field: Field): unknown` — retrieve a value by field reference.
 - `getFieldsByGroup(path): Array<{ field, value }>` — iterate related field groups with field+value pairs.
-- Access to `primaryKeys` and the underlying `descriptor`.
+- Access to `primaryKey` and the underlying `descriptor`.
 
 The pipeline's async iterator yields `ContentItem` instances. Consumers work with `ContentItem`; `ContentValues` is an internal/serialization-level concept (used by external fields providers' `resolve` function, export utilities, etc.).
 
@@ -311,20 +311,21 @@ Then pipeline calls external fields provider's resolve(items):
   - Fetches sensor data from IoT service
   - Attaches "iot.currentFlow" and "iot.lastMaintenance" values to items
 
-Output: ContentItem {
-  primaryKeys: [{ class: "ProcessPhysical:Pump", id: "0x3a" }],
-  values: {
-    "Pump.Name":              "Main Circulation Pump",
-    "Pump.FlowRate":          12.5,
-    "flowRate_gpm":           198131.25,
-    "PumpType.Manufacturer":  "Siemens",
-    "PumpType.Model":         "CR 95-3",
-    "OperatingParametersAspect.MaxPressure": 25.0,
-    "OperatingParametersAspect.MaxTemp":     180.0,
-    "iot.currentFlow":        187.3,
-    "iot.lastMaintenance":    "2026-04-22T08:00:00Z",
-  }
+Output: ContentValues {
+  primaryKey:               { className: "ProcessPhysical:Pump", id: "0x3a" },
+  "Pump.Name":              "Main Circulation Pump",
+  "Pump.FlowRate":          12.5,
+  "flowRate_gpm":           198131.25,
+  "PumpType.Manufacturer":  "Siemens",
+  "PumpType.Model":         "CR 95-3",
+  "OperatingParametersAspect.MaxPressure": 25.0,
+  "OperatingParametersAspect.MaxTemp":     180.0,
+  "iot.currentFlow":        187.3,
+  "iot.lastMaintenance":    "2026-04-22T08:00:00Z",
 }
+
+The consumer iterates ContentItem accessors (descriptor + ContentValues),
+which expose typed value access per field.
 ```
 
 ---
@@ -626,6 +627,54 @@ When the consumer provides instances of multiple different classes, the system c
 - Each field carries metadata about which content source(s) it belongs to.
 
 Merging (collapsing multiple instances into one record, marking conflicting values as "varies") is not part of this API. It is a consumer-level concern — components like the property grid perform merging on their own from the per-instance content items.
+
+**Example:** Consumer selects a `Pump` (0x3a) and a `Valve` (0x4b):
+
+```
+Targets:
+  ContentTarget { class: "ProcessPhysical:Pump", instanceIds: ["0x3a"] }
+  ContentTarget { class: "ProcessPhysical:Valve", instanceIds: ["0x4b"] }
+
+Stage 1 resolves each independently:
+  ContentSource for Pump → paths: [Pump → PumpType, Pump → OperatingParametersAspect]
+  ContentSource for Valve → paths: [Valve → ValveType]
+
+Stage 2 builds a unified descriptor (union of all fields):
+  - "Element.Name"              (string)  ← shared (both Pump and Valve inherit from Element)
+  - "Pump.FlowRate"             (double)  ← Pump only
+  - "PumpType.Manufacturer"     (string)  ← Pump only
+  - "OperatingParametersAspect.MaxPressure" (double) ← Pump only
+  - "Valve.NominalDiameter"     (double)  ← Valve only
+  - "ValveType.ConnectionType"  (string)  ← Valve only
+
+Stage 3 builds two queries (one per content source) selecting columns for all
+fields in the descriptor. Non-applicable columns SELECT NULL.
+
+Stage 4 executes the queries and produces two ContentValues:
+  ContentValues (Pump 0x3a):
+    {
+      primaryKey: { className: "ProcessPhysical:Pump", id: "0x3a" },
+      "Element.Name":                           "Main Pump",
+      "Pump.FlowRate":                          12.5,
+      "PumpType.Manufacturer":                  "Siemens",
+      "OperatingParametersAspect.MaxPressure":  25.0,
+      "Valve.NominalDiameter":                  undefined,  ← not applicable
+      "ValveType.ConnectionType":               undefined,  ← not applicable
+    }
+
+  ContentValues (Valve 0x4b):
+    {
+      primaryKey: { className: "ProcessPhysical:Valve", id: "0x4b" },
+      "Element.Name":                           "Inlet Valve",
+      "Pump.FlowRate":                          undefined,  ← not applicable
+      "PumpType.Manufacturer":                  undefined,  ← not applicable
+      "OperatingParametersAspect.MaxPressure":  undefined,  ← not applicable
+      "Valve.NominalDiameter":                  150.0,
+      "ValveType.ConnectionType":               "Flanged",
+    }
+
+The consumer iterates ContentItem accessors (descriptor + ContentValues), which expose typed value access per field.
+```
 
 ### Field identity must be stable
 
