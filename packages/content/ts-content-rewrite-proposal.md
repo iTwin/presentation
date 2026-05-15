@@ -760,12 +760,7 @@ The pipeline exposes an **async iterator** — consumers `for await` over conten
 
 7. ~~**1:many related content loading strategy:**~~ Moved to Implementation Notes — this is an internal implementation concern, not an API design question.
 
-8. **Distinct values: raw vs. formatted:**
-   `getDistinctValues` runs `SELECT DISTINCT` on raw values, but consumers (e.g., table filter dropdowns) want distinct _display_ values. Multiple raw values may format to the same display string (e.g., different timestamps → same date, different precisions → same rounded number). Options:
-   - **A) Return raw, consumer deduplicates after formatting:** Simple for us, more work to consumers.
-   - **B) Accept a formatter function as input:** The pipeline fetches raw values, applies the consumer-provided formatter, then deduplicates. Formatting stays a consumer concern, but the pipeline handles deduplication.
-
-   This interacts with the "formatting is a frontend concern" decision — need to reconcile.
+8. ~~**Distinct values: raw vs. formatted:**~~ **Resolved.** `getDistinctValues` returns raw values only (consistent with "formatting is a frontend concern"). A reduce-like consumer utility accepts a formatter function and collapses the raw values into a `Map<formattedValue, rawValue[]>` — grouping raw values that format to the same display string. This keeps deduplication logic out of the pipeline while giving consumers a one-liner for the common "filter dropdown" use case.
 
 9. ~~**SQLite/ECSQL query limits:**~~ Moved to Implementation Notes — this is an internal implementation concern, not an API design question.
 
