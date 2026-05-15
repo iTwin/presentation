@@ -94,8 +94,6 @@ Describes a single data column in the content result. Key attributes:
 - **Category** — logical grouping for UI display.
 - **Flags** — read-only, hidden (still queried but not displayed in UI), etc.
 
-Note: Renderer and editor selection is a **view-model concern**, not part of the field data model. The pipeline field describes _what_ the data is (type, identity, category); consumers decide _how_ to render or edit it based on their own configuration (type-based defaults, class + property mappings, explicit overrides in UI component props, etc.).
-
 Field kinds:
 
 1. **Property field** — backed by a real EC property. Carries the property's class and name.
@@ -592,6 +590,10 @@ The content pipeline returns raw values only. Formatting (converting raw values 
 - The backend pipeline is simpler — no formatting logic or locale handling.
 - Export use cases (CSV, JSON) consume raw values directly.
 - UI components format values using their own formatting utilities (e.g., quantity formatters, date formatters) at render time.
+
+### Renderer and editor selection is a view-model concern
+
+The pipeline field describes _what_ the data is (type, identity, category); it does not carry renderer or editor hints. Consumers decide _how_ to render or edit values based on their own configuration (type-based defaults, class + property mappings, explicit overrides in UI component props, etc.). This keeps the field data model purely about data semantics and avoids coupling the pipeline to any particular UI framework or rendering strategy.
 
 ### No pipeline-level computed fields
 
