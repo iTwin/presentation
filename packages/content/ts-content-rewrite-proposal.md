@@ -103,12 +103,22 @@ Field kinds:
 
 Note: The current system's "related content field" (a field that contains child fields) is replaced by **related field groups** in the descriptor structure (see Content descriptor above). Groups are organizational containers, not fields — they don't have a value type or appear as columns in content items.
 
-### Content item
+### Content values and content item
 
-One row of the content result. Contains:
+**Content values (`ContentValues`)** — the raw data for one row of the content result:
 
 - **Primary keys** — which instance(s) this row represents.
-- **Values** — raw values keyed by field identity. All fields (property, SQL calculated, and external) are populated by the pipeline before the item reaches the consumer.
+- **Values** — raw values keyed by field identity. All fields (property, SQL calculated, and external) are populated by the pipeline.
+
+This is a plain data bag — serializable, no behavior, no reference to the descriptor.
+
+**Content item (`ContentItem`)** — an accessor that pairs a descriptor with a `ContentValues` instance, providing ergonomic access, e.g.:
+
+- `getValue(field: Field): unknown` — retrieve a value by field reference.
+- `getFieldsByGroup(path): Array<{ field, value }>` — iterate related field groups with field+value pairs.
+- Access to `primaryKeys` and the underlying `descriptor`.
+
+The pipeline's async iterator yields `ContentItem` instances. Consumers work with `ContentItem`; `ContentValues` is an internal/serialization-level concept (used by external fields providers' `resolve` function, export utilities, etc.).
 
 Not part of the content item:
 
@@ -467,7 +477,7 @@ An external fields provider declares:
 
 - **Output fields** — field declarations (identity, label, type, category, etc.) that the provider will populate. The pipeline adds these to the descriptor during Stage 2.
 - **Input dependencies** (optional) — a callback that receives the finalized descriptor and returns the field identities the provider needs as input data for its `resolve` function. The pipeline ensures these fields are queried (never removed). **Visibility is determined automatically:** if an iModel fields provider already declared the field (it exists in the descriptor for its own reasons), it remains visible; if the field exists only because this external provider requires it, the system adds it as hidden (queried but not displayed). This late-binding approach decouples the provider from internal field identity formats — it inspects the actual descriptor using utility methods (find by class + property name, by label, by path, etc.) rather than hardcoding identity strings.
-- **Resolve function** — receives a batch of content items (the current page) after SQL-backed fields are populated, and fills in output field values in bulk.
+- **Resolve function** — receives a batch of `ContentValues` (the current page) after SQL-backed fields are populated, and fills in output field values in bulk.
 
 ```ts
 interface ExternalFieldsProvider {
@@ -479,7 +489,7 @@ interface ExternalFieldsProvider {
   inputs?: (descriptor: Descriptor) => string[]; // field identities this provider needs as input
 
   // Value population (called during Stage 4)
-  resolve: (items: ContentItem[]) => Promise<void>;
+  resolve: (items: ContentValues[]) => Promise<void>;
 }
 
 interface FieldDeclaration {
