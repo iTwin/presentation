@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.63
+
+### Patch Changes
+
+- [#1325](https://github.com/iTwin/presentation/pull/1325): Add accessible name for tree context menu.
+
 ## 2.0.0-alpha.62
 
 ### Patch Changes
