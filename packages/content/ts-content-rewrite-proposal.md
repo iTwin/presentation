@@ -94,7 +94,7 @@ Describes a single data column in the content result. Key attributes:
 - **Category** — logical grouping for UI display.
 - **Flags** — read-only, hidden (still queried but not displayed in UI), etc.
 
-Note: Renderer and editor selection is a **view-model concern**, not part of the field data model. The pipeline field describes *what* the data is (type, identity, category); consumers decide *how* to render or edit it based on their own configuration (type-based defaults, class + property mappings, explicit overrides in UI component props, etc.).
+Note: Renderer and editor selection is a **view-model concern**, not part of the field data model. The pipeline field describes _what_ the data is (type, identity, category); consumers decide _how_ to render or edit it based on their own configuration (type-based defaults, class + property mappings, explicit overrides in UI component props, etc.).
 
 Field kinds:
 
@@ -230,7 +230,7 @@ Additionally, a registered external fields provider contributes IoT sensor field
       { id: "iot.lastMaintenance", label: "Last Maintenance", type: dateTime, categoryId: "iot_sensors" }
     ]
     inputs: (descriptor) => [
-      { identity: findFieldByProperty(descriptor, "Pump.Name"), hide: false }
+      findFieldByProperty(descriptor, "Pump.Name").identity
     ]
     resolve: async (items) => { /* fetch from IoT service, attach values */ }
   }
@@ -256,7 +256,8 @@ Generates fields from iModel sources, then appends external provider fields:
     - "iot.lastMaintenance"   (dateTime, external)
 
   ExternalFieldsProvider's inputs callback receives the finalized descriptor, returns:
-    - reference to "Pump.Name" field (needed as lookup key, not hidden)
+    - reference to "Pump.Name" field (needed as lookup key)
+    - "Pump.Name" is already declared by the iModel fields provider → stays visible
 
 Descriptor transformer runs (e.g., "hide all read-only fields"):
   - "Pump.FlowRate" is marked read-only in EC metadata → transformer hides it
@@ -465,7 +466,7 @@ A self-contained extension that both declares new fields and populates them with
 An external fields provider declares:
 
 - **Output fields** — field declarations (identity, label, type, category, etc.) that the provider will populate. The pipeline adds these to the descriptor during Stage 2.
-- **Input selection** (optional) — a callback that receives the finalized descriptor and returns the field identities the provider needs as input. The pipeline ensures these fields are not removed and optionally hides them. This late-binding approach decouples the provider from internal field identity formats — it inspects the actual descriptor using utility methods (find by class + property name, by label, by path, etc.) rather than hardcoding identity strings.
+- **Input dependencies** (optional) — a callback that receives the finalized descriptor and returns the field identities the provider needs as input data for its `resolve` function. The pipeline ensures these fields are queried (never removed). **Visibility is determined automatically:** if an iModel fields provider already declared the field (it exists in the descriptor for its own reasons), it remains visible; if the field exists only because this external provider requires it, the system adds it as hidden (queried but not displayed). This late-binding approach decouples the provider from internal field identity formats — it inspects the actual descriptor using utility methods (find by class + property name, by label, by path, etc.) rather than hardcoding identity strings.
 - **Resolve function** — receives a batch of content items (the current page) after SQL-backed fields are populated, and fills in output field values in bulk.
 
 ```ts
@@ -475,7 +476,7 @@ interface ExternalFieldsProvider {
   categories?: CategoryDefinition[]; // shared pool referenced by fields via categoryId
 
   // Input discovery (called after descriptor is finalized)
-  inputs?: (descriptor: Descriptor) => InputFieldRef[];
+  inputs?: (descriptor: Descriptor) => string[]; // field identities this provider needs as input
 
   // Value population (called during Stage 4)
   resolve: (items: ContentItem[]) => Promise<void>;
@@ -487,12 +488,9 @@ interface FieldDeclaration {
   type: FieldType;
   categoryId?: string; // references a CategoryDefinition.id
 }
-
-interface InputFieldRef {
-  identity: string; // field identity selected from the descriptor
-  hide?: boolean; // if true, mark this input field as hidden (default: false)
-}
 ```
+
+**Input field visibility rule:** A field referenced as input by an external provider is hidden only if no iModel fields provider independently declared it. If the field was already part of the descriptor (declared by a provider or a property spec), it stays visible — the external provider is simply "piggybacking" on a field that exists for other reasons. If the field needs to be added solely for the external provider's benefit, the system adds it as hidden.
 
 The `Descriptor` provides utility methods for field lookup — find by class + property name, by label, by path, by category, etc. External fields provider authors use these utilities inside `inputs` rather than depending on internal identity encoding.
 
@@ -503,7 +501,7 @@ External fields providers run during Stage 4, after query execution but before i
 - External fields cannot participate in SQL-level sorting, filtering, or distinct values (their data doesn't exist in the query).
 - External fields providers must not modify fields they don't own.
 
-**Example:** An external fields provider declares an `inputs` callback that uses `descriptor.findFieldByProperty("BisCore", "Element", "CodeValue")` to locate the field carrying external IDs, returning `[{ identity: field.identity, hide: true }]`. It declares `fields: [{ id: "externalName", ... }, { id: "externalStatus", ... }]`. The pipeline hides the input field (still queried) and adds the two output fields to the descriptor. During Stage 4, the provider's `resolve` function reads the input value from each item, calls an external service once with all values, and fills in `externalName` and `externalStatus` across the batch.
+**Example:** An external fields provider declares an `inputs` callback that uses `descriptor.findFieldByProperty("BisCore", "Element", "CodeValue")` to locate the field carrying external IDs, returning `[field.identity]`. It declares `fields: [{ id: "externalName", ... }, { id: "externalStatus", ... }]`. Since no iModel fields provider independently declared `CodeValue`, the system adds it as hidden (queried but not displayed). During Stage 4, the provider's `resolve` function reads the input value from each item, calls an external service once with all values, and fills in `externalName` and `externalStatus` across the batch.
 
 ### Registration and ordering
 
