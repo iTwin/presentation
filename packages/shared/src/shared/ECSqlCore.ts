@@ -38,7 +38,7 @@ export interface ECSqlQueryDef {
    * Values to bind to the query.
    * @see https://www.itwinjs.org/learning/ecsql/#ecsql-parameters
    */
-  bindings?: ECSqlBinding[];
+  bindings?: ECSqlBinding[] | Record<string, ECSqlBinding>;
 }
 
 /**

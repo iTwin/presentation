@@ -1548,7 +1548,9 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [{ fullClassName: "x.y", query: { ecsql: "ROOT" } }];
+              return [
+                { fullClassName: "x.y", query: { ecsql: "ROOT", bindings: [{ type: "string", value: "test" }] } },
+              ];
             }
             if (parentNode.label === "one") {
               return [{ fullClassName: "x.y", query: { ecsql: "CHILD" } }];
@@ -1609,8 +1611,11 @@ describe("createIModelHierarchyProvider", () => {
       {
         const cachedQueryArg = imodelAccess.createQueryReader.mock.calls[0][0];
         expect(cachedQueryArg.ecsql).toContain("FROM (ROOT)");
-        expect(cachedQueryArg.bindings).toHaveLength(1);
-        expect(cachedQueryArg.bindings?.[0].value).toBe("0x1");
+        expect(cachedQueryArg.ecsql).toContain("IdSet(?)");
+        expect(cachedQueryArg.bindings).to.deep.eq([
+          { type: "string", value: "test" },
+          { type: "idset", value: ["0x1"] },
+        ]);
       }
       expect(rootInstanceNodes2).toEqual(rootInstanceNodes);
       imodelAccess.createQueryReader.mockClear();
@@ -1621,9 +1626,75 @@ describe("createIModelHierarchyProvider", () => {
       {
         const rootQueryArg = imodelAccess.createQueryReader.mock.calls[0][0];
         expect(rootQueryArg.ecsql).toBe("ROOT");
-        expect(rootQueryArg.bindings).toBeUndefined();
+        expect(rootQueryArg.bindings).to.deep.eq([{ type: "string", value: "test" }]);
       }
       expect(groupingNodes2).toEqual(groupingNodes);
+    });
+
+    it("queries grouped instance nodes with named bindings when requesting grouped children if the query is pushed-out of cache", async () => {
+      imodelAccess.stubEntityClass({ schemaName: "x", className: "y", classLabel: "Class Y" });
+      imodelAccess.createQueryReader.mockImplementation((query) => {
+        if (query.ecsql.includes("ROOT")) {
+          return createAsyncIterator<RowDef>([
+            {
+              [NodeSelectClauseColumnNames.FullClassName]: `x.y`,
+              [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+              [NodeSelectClauseColumnNames.DisplayLabel]: "one",
+              [NodeSelectClauseColumnNames.HasChildren]: true,
+              [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({ byClass: true }),
+            },
+          ]);
+        }
+        return createAsyncIterator<RowDef>([
+          {
+            [NodeSelectClauseColumnNames.FullClassName]: `x.y`,
+            [NodeSelectClauseColumnNames.ECInstanceId]: "0x2",
+            [NodeSelectClauseColumnNames.DisplayLabel]: "two",
+            [NodeSelectClauseColumnNames.HasChildren]: false,
+          },
+        ]);
+      });
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [
+                {
+                  fullClassName: "x.y",
+                  query: { ecsql: "ROOT", bindings: { param1: { type: "string", value: "test" } } },
+                },
+              ];
+            }
+            return [{ fullClassName: "x.y", query: { ecsql: "CHILD" } }];
+          },
+        },
+        queryCacheSize: 1,
+      });
+
+      const groupingNodes = await collect(provider.getNodes({ parentNode: undefined }));
+      imodelAccess.createQueryReader.mockClear();
+
+      const rootInstanceNodes = await collect(provider.getNodes({ parentNode: groupingNodes[0] }));
+      imodelAccess.createQueryReader.mockClear();
+
+      // push root query out of cache
+      await collect(provider.getNodes({ parentNode: rootInstanceNodes[0] }));
+      imodelAccess.createQueryReader.mockClear();
+
+      // requesting children for the class grouping node again should re-execute the root query with named bindings
+      const rootInstanceNodes2 = await collect(provider.getNodes({ parentNode: groupingNodes[0] }));
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledOnce();
+      {
+        const cachedQueryArg = imodelAccess.createQueryReader.mock.calls[0][0];
+        expect(cachedQueryArg.ecsql).toContain("FROM (ROOT)");
+        expect(cachedQueryArg.ecsql).toContain("IdSet(:targetInstanceKeys)");
+        expect(cachedQueryArg.bindings).to.deep.eq({
+          param1: { type: "string", value: "test" },
+          targetInstanceKeys: { type: "idset", value: ["0x1"] },
+        });
+      }
+      expect(rootInstanceNodes2).toEqual(rootInstanceNodes);
     });
 
     it("clears cache on data source change", async () => {

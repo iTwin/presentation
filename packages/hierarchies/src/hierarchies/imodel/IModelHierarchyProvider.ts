@@ -69,7 +69,6 @@ import type {
   ConcatenatedValue,
   ECClassHierarchyInspector,
   ECSchemaProvider,
-  ECSqlBinding,
   ECSqlQueryDef,
   Event,
   EventArgs,
@@ -981,34 +980,29 @@ function createInstanceKeysFilteredQuery(
   if (!targetInstanceKeys || !targetInstanceKeys.length) {
     return query;
   }
-  const MAX_ALLOWED_BINDINGS = 1000;
-  // TODO: MISSING_COVERAGE
-  /* v8 ignore else -- @preserve */
-  if (targetInstanceKeys.length < MAX_ALLOWED_BINDINGS) {
+
+  if (Array.isArray(query.bindings)) {
     return {
       ...query,
       ecsql: `
         SELECT *
         FROM (${query.ecsql}) q
-        WHERE q.ECInstanceId IN (${targetInstanceKeys.map(() => "?").join(",")})
+        JOIN IdSet(?) targetInstanceKeys ON targetInstanceKeys.id = q.ECInstanceId
+        ECSQLOPTIONS ENABLE_EXPERIMENTAL_FEATURES
       `,
-      bindings: [
-        ...(query.bindings ?? []),
-        ...targetInstanceKeys.map((k): ECSqlBinding => ({ type: "id", value: k.id })),
-      ],
+      bindings: [...query.bindings, { type: "idset", value: targetInstanceKeys.map((k) => k.id) }],
     };
   }
-  /* v8 ignore start */
   return {
     ...query,
     ecsql: `
       SELECT *
       FROM (${query.ecsql}) q
-      WHERE InVirtualSet(?, q.ECInstanceId)
+      JOIN IdSet(:targetInstanceKeys) targetInstanceKeys ON targetInstanceKeys.id = q.ECInstanceId
+      ECSQLOPTIONS ENABLE_EXPERIMENTAL_FEATURES
     `,
-    bindings: [...(query.bindings ?? []), { type: "idset", value: targetInstanceKeys.map((k) => k.id) }],
+    bindings: { ...query.bindings, targetInstanceKeys: { type: "idset", value: targetInstanceKeys.map((k) => k.id) } },
   };
-  /* v8 ignore stop */
 }
 
 interface MergeNodesInput {

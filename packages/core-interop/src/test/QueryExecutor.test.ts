@@ -23,7 +23,7 @@ describe("createECSqlQueryExecutor", () => {
       expect(imodel.createQueryReader).toHaveBeenCalledOnce();
       const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
       expect(ecsql).toBe("ecsql");
-      expect(Object.keys(binder.serialize()).length).toBe(0);
+      expect(binder).toBeUndefined();
       expect(Object.keys(options).length).toBe(0);
     });
 
@@ -67,7 +67,7 @@ describe("createECSqlQueryExecutor", () => {
       expect(imodel.createQueryReader).toHaveBeenCalledOnce();
       const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
       expect(ecsql).toBe("ecsql");
-      expect(Object.keys(binder.serialize()).length).toBe(0);
+      expect(binder).toBeUndefined();
       expect(options.rowFormat).toBe(QueryRowFormat.UseECSqlPropertyNames);
     });
 
@@ -82,7 +82,7 @@ describe("createECSqlQueryExecutor", () => {
       expect(imodel.createQueryReader).toHaveBeenCalledOnce();
       const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
       expect(ecsql).toBe("ecsql");
-      expect(Object.keys(binder.serialize()).length).toBe(0);
+      expect(binder).toBeUndefined();
       expect(options.rowFormat).toBe(QueryRowFormat.UseECSqlPropertyIndexes);
     });
 
@@ -97,7 +97,7 @@ describe("createECSqlQueryExecutor", () => {
       expect(imodel.createQueryReader).toHaveBeenCalledOnce();
       const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
       expect(ecsql).toBe("ecsql");
-      expect(Object.keys(binder.serialize()).length).toBe(0);
+      expect(binder).toBeUndefined();
       expect(options.restartToken).toBe("TestToken");
     });
 
@@ -128,6 +128,32 @@ describe("createECSqlQueryExecutor", () => {
       expectedBinder.bindPoint3d(8, Point3d.create(1.23, 4.56, 7.89));
       expectedBinder.bindString(9, "xxx");
       expectedBinder.bindNull(10);
+
+      const executor = createECSqlQueryExecutor(imodel);
+      const reader = executor.createQueryReader({ ecsql: "ecsql", bindings }, undefined);
+      for await (const _ of reader) {
+      }
+
+      expect(imodel.createQueryReader).toHaveBeenCalledOnce();
+      const [ecsql, binder, options] = imodel.createQueryReader.mock.calls[0];
+      expect(ecsql).toBe("ecsql");
+      expect(JSON.stringify(binder.serialize())).toBe(JSON.stringify(expectedBinder.serialize()));
+      expect(Object.keys(options).length).toBe(0);
+    });
+
+    it("calls IModel's `createQueryReader` with named bindings", async () => {
+      const imodel = { createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])) };
+
+      const bindings: Record<string, ECSqlBinding> = {
+        boolParam: { type: "boolean", value: true },
+        idParam: { type: "id", value: "0x123" },
+        nullParam: { type: "string", value: undefined },
+      };
+
+      const expectedBinder = new QueryBinder();
+      expectedBinder.bindBoolean("boolParam", true);
+      expectedBinder.bindId("idParam", "0x123");
+      expectedBinder.bindNull("nullParam");
 
       const executor = createECSqlQueryExecutor(imodel);
       const reader = executor.createQueryReader({ ecsql: "ecsql", bindings }, undefined);

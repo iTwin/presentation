@@ -350,7 +350,7 @@ export type ECSqlBinding = {
 
 // @public
 export interface ECSqlQueryDef {
-    bindings?: ECSqlBinding[];
+    bindings?: ECSqlBinding[] | Record<string, ECSqlBinding>;
     ctes?: string[];
     ecsql: string;
 }
