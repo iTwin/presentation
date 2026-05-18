@@ -66,7 +66,12 @@ describe("Learning snippets", () => {
           // and handled by the error boundary
           return (
             <ErrorBoundary>
-              <VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={width} height={height} />
+              <VirtualizedPropertyGridWithDataProvider
+                dataProvider={dataProvider}
+                width={width}
+                height={height}
+                editorSystem="new"
+              />
             </ErrorBoundary>
           );
         }
