@@ -18,6 +18,7 @@ import { useNavigationPropertyEditorContext } from "./NavigationPropertyEditorCo
  * **Note:** Should be used inside [[navigationPropertyEditorContext]].
  * @internal
  */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export class NavigationPropertyEditor extends PropertyEditorBase {
   /* v8 ignore start -- @preserve */
   public override get containerHandlesEnter(): boolean {
@@ -35,6 +36,7 @@ export class NavigationPropertyEditor extends PropertyEditorBase {
  * **Note:** Should be used inside [[navigationPropertyEditorContext]].
  * @internal
  */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export class NavigationPropertyTargetEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
   private _ref = createRef<PropertyEditorAttributes>();
 
@@ -60,6 +62,7 @@ export class NavigationPropertyTargetEditor extends PureComponent<PropertyEditor
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 const NavigationPropertyTargetEditorInner = forwardRef<PropertyEditorAttributes, PropertyEditorProps>((props, ref) => {
   const context = useNavigationPropertyEditorContext();
   if (!props.propertyRecord) {

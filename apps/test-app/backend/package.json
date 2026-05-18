@@ -26,10 +26,10 @@
     "@opentelemetry/resources": "^2.7.1",
     "@opentelemetry/sdk-node": "^0.217.0",
     "@opentelemetry/sdk-trace-base": "^2.7.1",
-    "@opentelemetry/semantic-conventions": "^1.40.0",
+    "@opentelemetry/semantic-conventions": "^1.41.1",
     "@test-app/common": "workspace:*",
     "cross-env": "catalog:build-tools",
-    "electron": "^39.8.9",
+    "electron": "^39.8.10",
     "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
     "typescript": "catalog:build-tools"

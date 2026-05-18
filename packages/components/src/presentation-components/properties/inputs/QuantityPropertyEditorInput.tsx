@@ -21,6 +21,7 @@ import type { WithConstraints } from "../../common/ContentBuilder.js";
 import type { PropertyEditorAttributes } from "../editors/Common.js";
 
 /** @internal */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export interface QuantityPropertyEditorImplProps extends PropertyEditorProps {
   propertyRecord: PropertyRecord;
 }

@@ -18,44 +18,44 @@ autoInstallPeers: true
 
 catalogs:
   appui:
-    '@itwin/appui-react': ^5.29.0
-    '@itwin/components-react': ^5.29.0
-    '@itwin/core-react': ^5.29.0
-    '@itwin/imodel-components-react': ^5.29.0
+    '@itwin/appui-react': ^5.30.0
+    '@itwin/components-react': ^5.30.0
+    '@itwin/core-react': ^5.30.0
+    '@itwin/imodel-components-react': ^5.30.0
   build-tools:
-    '@itwin/build-tools': ^5.10.0-dev.6
+    '@itwin/build-tools': ^5.10.0-dev.14
     '@itwin/eslint-plugin': ^6.1.0
-    '@types/node': ^24.12.2
-    '@vitejs/plugin-react': ^6.0.1
+    '@types/node': ^24.12.4
+    '@vitejs/plugin-react': ^6.0.2
     cpx2: ^7.0.2
     cross-env: ^7.0.3
     eslint: ^9.39.4
     eslint-plugin-react: ^7.37.5
     rimraf: ^6.1.3
-    typescript: ~6.0.0
-    vite: ^8.0.10
+    typescript: ~6.0.3
+    vite: ^8.0.13
   itwinjs-core:
-    '@itwin/core-bentley': ^5.9.1
-    '@itwin/core-common': ^5.9.1
-    '@itwin/core-geometry': ^5.9.1
+    '@itwin/core-bentley': ^5.9.3
+    '@itwin/core-common': ^5.9.3
+    '@itwin/core-geometry': ^5.9.3
   itwinjs-core-dev:
-    '@itwin/appui-abstract': ^5.10.0-dev.6
-    '@itwin/core-backend': ^5.10.0-dev.6
-    '@itwin/core-bentley': ^5.10.0-dev.6
-    '@itwin/core-common': ^5.10.0-dev.6
-    '@itwin/core-electron': ^5.10.0-dev.6
-    '@itwin/core-frontend': ^5.10.0-dev.6
-    '@itwin/core-geometry': ^5.10.0-dev.6
-    '@itwin/core-i18n': ^5.10.0-dev.6
-    '@itwin/core-orbitgt': ^5.10.0-dev.6
-    '@itwin/core-quantity': ^5.10.0-dev.6
-    '@itwin/ecschema-metadata': ^5.10.0-dev.6
-    '@itwin/ecschema-rpcinterface-common': ^5.10.0-dev.6
-    '@itwin/ecschema-rpcinterface-impl': ^5.10.0-dev.6
-    '@itwin/express-server': ^5.10.0-dev.6
-    '@itwin/presentation-backend': ^5.10.0-dev.6
-    '@itwin/presentation-common': ^5.10.0-dev.6
-    '@itwin/presentation-frontend': ^5.10.0-dev.6
+    '@itwin/appui-abstract': ^5.10.0-dev.14
+    '@itwin/core-backend': ^5.10.0-dev.14
+    '@itwin/core-bentley': ^5.10.0-dev.14
+    '@itwin/core-common': ^5.10.0-dev.14
+    '@itwin/core-electron': ^5.10.0-dev.14
+    '@itwin/core-frontend': ^5.10.0-dev.14
+    '@itwin/core-geometry': ^5.10.0-dev.14
+    '@itwin/core-i18n': ^5.10.0-dev.14
+    '@itwin/core-orbitgt': ^5.10.0-dev.14
+    '@itwin/core-quantity': ^5.10.0-dev.14
+    '@itwin/ecschema-metadata': ^5.10.0-dev.14
+    '@itwin/ecschema-rpcinterface-common': ^5.10.0-dev.14
+    '@itwin/ecschema-rpcinterface-impl': ^5.10.0-dev.14
+    '@itwin/express-server': ^5.10.0-dev.14
+    '@itwin/presentation-backend': ^5.10.0-dev.14
+    '@itwin/presentation-common': ^5.10.0-dev.14
+    '@itwin/presentation-frontend': ^5.10.0-dev.14
     inversify: ~6.0.2
     reflect-metadata: ^0.1.14
   itwinui:
@@ -76,9 +76,9 @@ catalogs:
     '@testing-library/dom': ^10.4.1
     '@testing-library/react': ^16.3.2
     '@testing-library/user-event': ^14.6.1
-    '@vitest/coverage-v8': ^4.1.5
+    '@vitest/coverage-v8': ^4.1.6
     happy-dom: ^20.9.0
-    vitest: ^4.1.5
+    vitest: ^4.1.6
 
 hoistPattern:
   - '!*'
