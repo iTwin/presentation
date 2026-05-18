@@ -132,8 +132,20 @@ index a7b02510..b996fb59 100644
      db.close();
    }
    return { ...result, imodel: TestIModelConnection.openFile(outputFile) };
+diff --git a/apps/full-stack-tests/src/components/properties/ErrorHandling.test.tsx b/apps/full-stack-tests/src/components/properties/ErrorHandling.test.tsx
+index 05b36003..87bc1584 100644
+--- a/apps/full-stack-tests/src/components/properties/ErrorHandling.test.tsx
++++ b/apps/full-stack-tests/src/components/properties/ErrorHandling.test.tsx
+@@ -70,7 +70,6 @@ describe("Learning snippets", () => {
+                 dataProvider={dataProvider}
+                 width={width}
+                 height={height}
+-                editorSystem="new"
+               />
+             </ErrorBoundary>
+           );
 diff --git a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
-index 649fbc75..f4442a17 100644
+index fd51404e..96f00870 100644
 --- a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
 +++ b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
 @@ -8,14 +8,11 @@ import {
@@ -153,12 +165,10 @@ index 649fbc75..f4442a17 100644
  import { importSchema } from "../../IModelUtils.js";
  import { initialize, terminate } from "../../IntegrationTests.js";
  import { render, waitFor } from "../../RenderUtils.js";
-@@ -31,103 +28,7 @@ describe("Property editors", () => {
-     vi.restoreAllMocks();
-     UiComponents.terminate();
+@@ -33,103 +30,6 @@ describe("Property editors", () => {
      await terminate();
--  });
--
+   });
+
 -  afterEach(() => {
 -    IModelApp.resetFormatsProvider();
 -  });
@@ -236,6 +246,7 @@ index 649fbc75..f4442a17 100644
 -    const cancelSpy = vi.fn();
 -    const { getByPlaceholderText, findByRole, user } = render(
 -      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={(x) => x.schemaContext}>
+-        {/* eslint-disable-next-line @typescript-eslint/no-deprecated */}
 -        <EditorContainer propertyRecord={propertyRecord!} onCommit={commitSpy} onCancel={cancelSpy} />
 -      </SchemaMetadataContextProvider>,
 -    );
@@ -254,10 +265,10 @@ index 649fbc75..f4442a17 100644
 -      expect(commitSpy.mock.calls[0][0].newValue.roundingError.toFixed(6)).toBe("0.000127");
 -    });
 -  });
-+  }, 30000);
-
+-
    it("edits merged values", async () => {
      const { imodel, schema, ...imodelKeys } = await buildTestIModel(async (builder, testName) => {
+       const mySchema = await importSchema(
 diff --git a/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts b/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts
 index 0f2dcb8c..4cd9ae58 100644
 --- a/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts
@@ -332,6 +343,18 @@ index 0f2dcb8c..4cd9ae58 100644
    });
 
    it("gets property data after re-initializing Presentation", async () => {
+diff --git a/apps/full-stack-tests/src/components/unified-selection/PropertyGrid.test.tsx b/apps/full-stack-tests/src/components/unified-selection/PropertyGrid.test.tsx
+index 6ce5628f..3d8b3a2c 100644
+--- a/apps/full-stack-tests/src/components/unified-selection/PropertyGrid.test.tsx
++++ b/apps/full-stack-tests/src/components/unified-selection/PropertyGrid.test.tsx
+@@ -86,7 +86,6 @@ describe("Learning snippets", async () => {
+             dataProvider={dataProvider}
+             width={width}
+             height={height}
+-            editorSystem="new"
+           />
+         );
+       }
 diff --git a/apps/full-stack-tests/src/hierarchies/Formatting.test.ts b/apps/full-stack-tests/src/hierarchies/Formatting.test.ts
 index 7c8424f6..41617cc4 100644
 --- a/apps/full-stack-tests/src/hierarchies/Formatting.test.ts
@@ -830,7 +853,7 @@ index 7b4f75f9..63b4848f 100644
              };
            }
 diff --git a/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx b/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
-index 87f50924..98c865f9 100644
+index 87f50924..32207049 100644
 --- a/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
 +++ b/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
 @@ -30,6 +30,8 @@ import { initialize, terminate } from "../../IntegrationTests.js";
@@ -868,7 +891,7 @@ index 87f50924..98c865f9 100644
 
            // enable unified selection sync with the iModel
            useEffect(
-@@ -214,11 +224,12 @@ describe("Unified selection", () => {
+@@ -214,6 +224,7 @@ describe("Unified selection", () => {
 
            // Initialize Presentation with our selection storage, to make sure that any components, using `Presentation.selection`,
            // use the same underlying selection store.
@@ -876,12 +899,6 @@ index 87f50924..98c865f9 100644
            await Presentation.initialize({ selection: { selectionStorage } });
            // __PUBLISH_EXTRACT_END__
 
-           expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key }))).toBe(true);
--
-+
-           // eslint-disable-next-line @typescript-eslint/no-deprecated
-           Presentation.selection.addToSelection("test", imodel, new KeySet([keys.elementKey]));
-           await waitFor(() => {
 diff --git a/packages/test-utilities/src/test-utilities/IModelUtils.ts b/packages/test-utilities/src/test-utilities/IModelUtils.ts
 index b3df12aa..f13540c7 100644
 --- a/packages/test-utilities/src/test-utilities/IModelUtils.ts
