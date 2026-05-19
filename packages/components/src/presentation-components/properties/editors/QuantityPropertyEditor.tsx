@@ -18,6 +18,7 @@ export const QuantityEditorName = "presentation-quantity-editor";
  * Editor for quantity properties.
  * @internal
  */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export class QuantityPropertyEditorBase extends PropertyEditorBase {
   /* v8 ignore start -- @preserve */
   public get reactNode(): React.ReactNode {
@@ -30,6 +31,7 @@ export class QuantityPropertyEditorBase extends PropertyEditorBase {
  * Component that renders quantity property value input
  * @internal
  */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export class QuantityPropertyEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
   private _ref = createRef<PropertyEditorAttributes>();
 

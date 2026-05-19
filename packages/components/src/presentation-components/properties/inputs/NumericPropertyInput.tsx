@@ -12,6 +12,7 @@ import { PropertyEditorAttributes } from "../editors/Common.js";
 import { applyNumericConstraints, getDecimalRoundingError, getMinMaxFromPropertyConstraints } from "./Utils.js";
 
 /** @internal */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export interface NumericPropertyInputProps extends PropertyEditorProps {
   propertyRecord: PropertyRecord;
 }
@@ -80,6 +81,7 @@ function getInputTargetFromPropertyRecord(propertyRecord: PropertyRecord) {
 }
 
 /** @internal */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export interface NumericInputProps extends PropertyEditorProps {
   onChange: (newValue: string) => void;
   onBlur?: React.FocusEventHandler;

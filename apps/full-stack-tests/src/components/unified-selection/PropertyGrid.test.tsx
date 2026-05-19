@@ -81,7 +81,14 @@ describe("Learning snippets", async () => {
         }
 
         // render the property grid
-        return <VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={width} height={height} />;
+        return (
+          <VirtualizedPropertyGridWithDataProvider
+            dataProvider={dataProvider}
+            width={width}
+            height={height}
+            editorSystem="new"
+          />
+        );
       }
       // __PUBLISH_EXTRACT_END__
 

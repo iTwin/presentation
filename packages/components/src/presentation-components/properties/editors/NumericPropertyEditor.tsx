@@ -20,6 +20,7 @@ export const NumericEditorName = "presentation-numeric-editor";
  *
  * @internal
  */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export class NumericPropertyEditorBase extends PropertyEditorBase {
   /* v8 ignore start -- @preserve */
   public override get containerHandlesTab(): boolean {
@@ -37,6 +38,7 @@ export class NumericPropertyEditorBase extends PropertyEditorBase {
  *
  * @internal
  */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export class NumericPropertyEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
   private _ref = createRef<PropertyEditorAttributes>();
 
