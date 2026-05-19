@@ -26,6 +26,7 @@ import type { PropertyEditorAttributes } from "../editors/Common.js";
 import type { NavigationPropertyTarget } from "./UseNavigationPropertyTargetsLoader.js";
 
 /** @internal */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export interface NavigationPropertyTargetSelectorProps extends PropertyEditorProps {
   imodel: IModelConnection;
   getNavigationPropertyInfo: (property: PropertyDescription) => Promise<NavigationPropertyInfo | undefined>;

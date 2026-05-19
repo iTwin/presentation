@@ -89,6 +89,7 @@ describe("Category renderer customization", () => {
           width={500}
           height={1200}
           orientation={Orientation.Horizontal}
+          editorSystem="new"
         />,
       );
       await waitFor(() => expect(queryByText("rootCategory1Property")).not.toBeNull());
@@ -180,7 +181,12 @@ describe("Property renderer customization", () => {
 
       const dataProvider = setupDataProvider();
       const { findAllByText } = render(
-        <VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={500} height={1200} />,
+        <VirtualizedPropertyGridWithDataProvider
+          dataProvider={dataProvider}
+          width={500}
+          height={1200}
+          editorSystem="new"
+        />,
       );
       const renderedElements = await findAllByText("TestValue");
       expect(renderedElements[0].style.color).toBe("red");

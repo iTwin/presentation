@@ -26,6 +26,7 @@ export {
 } from "./NavigationPropertyEditorContext.js";
 
 /* v8 ignore start -- @preserve */
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 /**
  * Editor for navigation properties.
@@ -46,7 +47,6 @@ const NavigationPropertyTargetEditor: new (
   props: PropertyEditorProps,
 ) => TypeEditor & PureComponent<PropertyEditorProps> = NavigationPropertyTargetEditorInternal;
 
-// eslint-disable-next-line @typescript-eslint/no-deprecated
 export { NavigationPropertyEditor, NavigationPropertyTargetEditor };
 
 // register editor for kind of quantity properties

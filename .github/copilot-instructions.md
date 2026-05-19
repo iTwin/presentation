@@ -36,7 +36,7 @@ When reviewing pull requests in this repository, check the following:
   "@itwin/changed-package-3": patch
   ---
 
-  {Short 1-2 sentence description of the change. When only one specific component is affected, prefix this description with the component name.}
+  {Short 1-2 sentence description of the change. When only one specific component within the package is affected (e.g., a single React component or class), prefix this description with the component name. Do not prefix for package-wide changes like dependency bumps.}
 
   {Optional additional paragraphs with more details, rationale, examples, etc.}
   ```

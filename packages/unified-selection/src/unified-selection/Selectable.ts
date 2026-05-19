@@ -14,8 +14,12 @@ import type { Id64String } from "@itwin/core-bentley";
  * @public
  */
 export interface SelectableInstanceKey {
-  /** Full class name in format `SchemaName:ClassName` or `SchemaName.ClassName`. */
+  /**
+   * Full class name in format `SchemaName:ClassName` or `SchemaName.ClassName` for
+   * persistent instances or `TRANSIENT_ELEMENT_CLASSNAME` for transient instances.
+   */
   className: string;
+
   /** ECInstance ID */
   id: string;
 }

@@ -20,7 +20,8 @@ import {
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
-import { createHiliteSetProvider, Selectables } from "@itwin/unified-selection";
+import { TransientIdSequence } from "@itwin/core-bentley";
+import { createHiliteSetProvider, Selectables, TRANSIENT_ELEMENT_CLASSNAME } from "@itwin/unified-selection";
 import { createIModelAccess } from "../hierarchies/Utils.js";
 import { buildTestIModel } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
@@ -444,7 +445,7 @@ describe("HiliteSet", () => {
       });
     });
 
-    describe("Hilites GroupInformationElement", () => {
+    describe("GroupInformationElement", () => {
       it("hilites group information element related physical elements", async () => {
         let groupInformationElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
@@ -505,6 +506,23 @@ describe("HiliteSet", () => {
         expect(hiliteSet.subCategories).toHaveLength(0);
         expect(hiliteSet.elements).toHaveLength(expectedElements!.length);
         expect(hiliteSet.elements).toEqual(expect.arrayContaining(expectedElements!.map((k) => k.id)));
+      });
+    });
+
+    describe("Transient elements", () => {
+      it("hilites transient elements", async () => {
+        imodelConnection = (await buildTestIModel()).imodelConnection;
+
+        const transientKey: SelectableInstanceKey = {
+          className: TRANSIENT_ELEMENT_CLASSNAME,
+          id: new TransientIdSequence().getNext(),
+        };
+
+        const hiliteSet = await loadHiliteSet(Selectables.create([transientKey]));
+        expect(hiliteSet.models).toHaveLength(0);
+        expect(hiliteSet.subCategories).toHaveLength(0);
+        expect(hiliteSet.elements).toHaveLength(1);
+        expect(hiliteSet.elements).toEqual(expect.arrayContaining([transientKey.id]));
       });
     });
   });

@@ -373,12 +373,12 @@ export enum PresentationComponentsLoggerCategory {
 export function PresentationFilterBuilderValueRenderer(input: PresentationFilterBuilderValueRendererProps): JSX_2.Element;
 
 // @public
-export interface PresentationFilterBuilderValueRendererProps extends PropertyFilterBuilderRuleValueRendererProps {
+export type PresentationFilterBuilderValueRendererProps = PropertyFilterBuilderRuleValueRendererProps & {
+    imodel: IModelConnection;
     descriptor: Descriptor;
     descriptorInputKeys?: Keys;
-    imodel: IModelConnection;
     selectedClasses?: ClassInfo[];
-}
+};
 
 // @public @deprecated
 export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeItem {

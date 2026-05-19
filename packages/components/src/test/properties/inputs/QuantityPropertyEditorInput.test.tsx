@@ -118,12 +118,13 @@ describe("<QuantityPropertyEditorInput />", () => {
 
   it("allows entering number when schema context is not available", async () => {
     const ref = createRef<PropertyEditorAttributes>();
-    const spy =
-      vi.fn<
-        (
-          args: Parameters<Required<PropertyEditorProps>["onCommit"]>[0],
-        ) => ReturnType<Required<PropertyEditorProps>["onCommit"]>
-      >();
+    const spy = vi.fn<
+      (
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        args: Parameters<Required<PropertyEditorProps>["onCommit"]>[0],
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+      ) => ReturnType<Required<PropertyEditorProps>["onCommit"]>
+    >();
     const record = createRecord({ initialValue: undefined, kindOfQuantityName: "TestKOQ" });
     const { getByRole, user } = render(
       <QuantityPropertyEditorInput ref={ref} propertyRecord={record} onCommit={spy} />,

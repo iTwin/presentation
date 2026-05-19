@@ -131,7 +131,7 @@ export function useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilter
  * Props for [[PresentationFilterBuilderValueRenderer]].
  * @public
  */
-export interface PresentationFilterBuilderValueRendererProps extends PropertyFilterBuilderRuleValueRendererProps {
+export type PresentationFilterBuilderValueRendererProps = PropertyFilterBuilderRuleValueRendererProps & {
   /** iModel used to pull data from. */
   imodel: IModelConnection;
   /** Descriptor used to get properties for filter builder. */
@@ -140,7 +140,7 @@ export interface PresentationFilterBuilderValueRendererProps extends PropertyFil
   descriptorInputKeys?: Keys;
   /** Currently Selected classes. Improves filter property value list relevance. If not provided, the filter may include broader, less relevant options.*/
   selectedClasses?: ClassInfo[];
-}
+};
 
 /**
  * Custom renderer of the filter rule value input. It extends default value input functionality:

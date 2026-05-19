@@ -114,6 +114,7 @@ describe("Property editors", () => {
     const cancelSpy = vi.fn();
     const { getByPlaceholderText, findByRole, user } = render(
       <SchemaMetadataContextProvider imodel={imodelConnection} schemaContextProvider={(x) => x.schemaContext}>
+        {/* eslint-disable-next-line @typescript-eslint/no-deprecated */}
         <EditorContainer propertyRecord={propertyRecord!} onCommit={commitSpy} onCancel={cancelSpy} />
       </SchemaMetadataContextProvider>,
     );
@@ -192,6 +193,7 @@ describe("Property editors", () => {
     const commitSpy = vi.fn();
     const cancelSpy = vi.fn();
     const { findByRole, user } = render(
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       <EditorContainer propertyRecord={propertyRecord!} onCommit={commitSpy} onCancel={cancelSpy} />,
     );
 

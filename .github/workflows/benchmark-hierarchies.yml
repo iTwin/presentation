@@ -24,13 +24,13 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v5
+        uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
 
       - name: Use Node.js 24
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: 24
           cache: 'pnpm'
@@ -42,7 +42,7 @@ jobs:
         run: pnpm lage build --to presentation-performance-tests
 
       - name: Restore dataset from cache
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae
         id: cache-restore
         env:
           cache-name: cache-dataset
@@ -54,7 +54,7 @@ jobs:
         run: pnpm benchmark:hierarchies
 
       - name: Save generated datasets
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae
         if: steps.cache-restore.outputs.cache-hit != 'true'
         with:
           path: "./apps/performance-tests/datasets/*.bim"

@@ -21,7 +21,7 @@ index 577eaaf9..72414a2f 100644
          const bindingIndex = i + 1;
          switch (typeof value) {
 @@ -126,7 +126,7 @@ export class ECDbBuilder {
- 
+
    public insertInstance(fullClassName: string, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
      const query = this.createInsertQuery(fullClassName, props);
 -    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
@@ -64,7 +64,7 @@ index a7b02510..b996fb59 100644
 +++ b/apps/full-stack-tests/src/TestIModelSetup.ts
 @@ -4,7 +4,7 @@
   *--------------------------------------------------------------------------------------------*/
- 
+
  import { expect } from "vitest";
 -import { EditTxn, IModelDb, SnapshotDb, withEditTxn } from "@itwin/core-backend";
 +import { IModelDb, SnapshotDb } from "@itwin/core-backend";
@@ -73,49 +73,49 @@ index a7b02510..b996fb59 100644
    BisCodeSpec,
 @@ -29,35 +29,35 @@ export interface TestIModelBuilder {
  }
- 
+
  class TestIModelBuilderImpl implements TestIModelBuilder {
 -  private _txn: EditTxn;
 +  private _imodel: IModelDb;
- 
+
 -  constructor(txn: EditTxn) {
 -    this._txn = txn;
 +  constructor(imodel: IModelDb) {
 +    this._imodel = imodel;
    }
- 
+
    public insertModel<TProps extends ModelProps>(props: TProps): Id64String {
 -    return this._txn.insertModel(props);
 +    return this._imodel.models.insertModel(props);
    }
- 
+
    public insertElement<TProps extends ElementProps>(props: TProps): Id64String {
 -    return this._txn.insertElement(props);
 +    return this._imodel.elements.insertElement(props);
    }
- 
+
    public insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String {
 -    return this._txn.insertAspect(props);
 +    return this._imodel.elements.insertAspect(props);
    }
- 
+
    public insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String {
 -    return this._txn.insertRelationship(props);
 +    return this._imodel.relationships.insertInstance(props);
    }
- 
+
    public createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code {
 -    const codeSpec: CodeSpec = this._txn.iModel.codeSpecs.getByName(codeSpecName);
 +    const codeSpec: CodeSpec = this._imodel.codeSpecs.getByName(codeSpecName);
      return new Code({ spec: codeSpec.id, scope: scopeModelId, value: codeValue });
    }
- 
+
    public async importSchema(schemaXml: string) {
 -    await this._txn.iModel.importSchemaStrings([schemaXml]);
 +    await this._imodel.importSchemaStrings([schemaXml]);
    }
  }
- 
+
 @@ -96,12 +96,11 @@ export async function buildTestIModel<TResult extends {} | void>(
    let result!: TResult;
    try {
@@ -132,8 +132,20 @@ index a7b02510..b996fb59 100644
      db.close();
    }
    return { ...result, imodel: TestIModelConnection.openFile(outputFile) };
+diff --git a/apps/full-stack-tests/src/components/properties/ErrorHandling.test.tsx b/apps/full-stack-tests/src/components/properties/ErrorHandling.test.tsx
+index 05b36003..87bc1584 100644
+--- a/apps/full-stack-tests/src/components/properties/ErrorHandling.test.tsx
++++ b/apps/full-stack-tests/src/components/properties/ErrorHandling.test.tsx
+@@ -70,7 +70,6 @@ describe("Learning snippets", () => {
+                 dataProvider={dataProvider}
+                 width={width}
+                 height={height}
+-                editorSystem="new"
+               />
+             </ErrorBoundary>
+           );
 diff --git a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
-index 649fbc75..40f99206 100644
+index fd51404e..96f00870 100644
 --- a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
 +++ b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
 @@ -8,14 +8,11 @@ import {
@@ -153,10 +165,10 @@ index 649fbc75..40f99206 100644
  import { importSchema } from "../../IModelUtils.js";
  import { initialize, terminate } from "../../IntegrationTests.js";
  import { render, waitFor } from "../../RenderUtils.js";
-@@ -33,102 +30,6 @@ describe("Property editors", () => {
+@@ -33,103 +30,6 @@ describe("Property editors", () => {
      await terminate();
    });
- 
+
 -  afterEach(() => {
 -    IModelApp.resetFormatsProvider();
 -  });
@@ -234,6 +246,7 @@ index 649fbc75..40f99206 100644
 -    const cancelSpy = vi.fn();
 -    const { getByPlaceholderText, findByRole, user } = render(
 -      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={(x) => x.schemaContext}>
+-        {/* eslint-disable-next-line @typescript-eslint/no-deprecated */}
 -        <EditorContainer propertyRecord={propertyRecord!} onCommit={commitSpy} onCancel={cancelSpy} />
 -      </SchemaMetadataContextProvider>,
 -    );
@@ -280,7 +293,7 @@ index 0f2dcb8c..4cd9ae58 100644
 @@ -309,7 +301,8 @@ describe("PropertyDataProvider", async () => {
    runTests("with flat property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = false));
    runTests("with nested property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = true));
- 
+
 -  it("finds array item & struct member fields", async () => {
 +  // requires iTwin.js@5.6
 +  it.skip("finds array item & struct member fields", async () => {
@@ -296,7 +309,7 @@ index 0f2dcb8c..4cd9ae58 100644
 -      label: "ArrayProperty",
 -      type: { valueFormat: "Array", typeName: "string[]" },
 -    });
- 
+
      // test retrieving struct member field
      const structRecord = properties.records["/selected-item/"].find((r) => r.property.name.endsWith("StructProperty"));
 @@ -464,11 +452,6 @@ describe("PropertyDataProvider", async () => {
@@ -308,7 +321,7 @@ index 0f2dcb8c..4cd9ae58 100644
 -      label: "StructProperty",
 -      type: { valueFormat: "Struct", typeName: "TestStruct" },
 -    });
- 
+
      // test retrieving struct array member field
      const structArrayRecord = properties.records["/selected-item/"].find((r) =>
 @@ -482,18 +465,6 @@ describe("PropertyDataProvider", async () => {
@@ -328,8 +341,20 @@ index 0f2dcb8c..4cd9ae58 100644
 -      type: { valueFormat: "Array", typeName: "TestStruct[]" },
 -    });
    });
- 
+
    it("gets property data after re-initializing Presentation", async () => {
+diff --git a/apps/full-stack-tests/src/components/unified-selection/PropertyGrid.test.tsx b/apps/full-stack-tests/src/components/unified-selection/PropertyGrid.test.tsx
+index 6ce5628f..3d8b3a2c 100644
+--- a/apps/full-stack-tests/src/components/unified-selection/PropertyGrid.test.tsx
++++ b/apps/full-stack-tests/src/components/unified-selection/PropertyGrid.test.tsx
+@@ -86,7 +86,6 @@ describe("Learning snippets", async () => {
+             dataProvider={dataProvider}
+             width={width}
+             height={height}
+-            editorSystem="new"
+           />
+         );
+       }
 diff --git a/apps/full-stack-tests/src/hierarchies/Update.test.ts b/apps/full-stack-tests/src/hierarchies/Update.test.ts
 index 59791724..06e41466 100644
 --- a/apps/full-stack-tests/src/hierarchies/Update.test.ts
@@ -344,57 +369,57 @@ index 59791724..06e41466 100644
  import {
 @@ -118,6 +117,7 @@ describe("Hierarchies", () => {
            validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
- 
+
            const subjectId = insertSubject("0x1", "test subject");
 +          db.saveChanges();
- 
+
            validateHierarchyLevel({
              nodes: await collect(provider.getNodes({ parentNode: undefined })),
 @@ -131,6 +131,7 @@ describe("Hierarchies", () => {
- 
+
          it("updates hierarchy when an element is updated", async () => {
            const subjectId = insertSubject("0x1", "test subject");
 +          db.saveChanges();
- 
+
            const provider = createRootSubjectChildrenProvider();
            validateHierarchyLevel({
 @@ -144,6 +145,7 @@ describe("Hierarchies", () => {
            });
- 
+
            updateSubject(subjectId, "modified label");
 +          db.saveChanges();
- 
+
            validateHierarchyLevel({
              nodes: await collect(provider.getNodes({ parentNode: undefined })),
 @@ -158,6 +160,7 @@ describe("Hierarchies", () => {
- 
+
          it("updates hierarchy when an element is deleted", async () => {
            const subjectId = insertSubject("0x1", "test subject");
 +          db.saveChanges();
- 
+
            const provider = createRootSubjectChildrenProvider();
            validateHierarchyLevel({
 @@ -171,12 +174,14 @@ describe("Hierarchies", () => {
            });
- 
+
            deleteElement(subjectId);
 +          db.saveChanges();
- 
+
            validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
          });
- 
+
          it("updates hierarchy when an aspect is inserted", async () => {
            const subjectId = insertSubject("0x1", "test subject");
 +          db.saveChanges();
- 
+
            const provider = createRootSubjectChildrenProvider({ label: "aspectIdentifier" });
            validateHierarchyLevel({
 @@ -190,6 +195,7 @@ describe("Hierarchies", () => {
            });
- 
+
            insertExternalSourceAspect(subjectId, "test aspect");
 +          db.saveChanges();
- 
+
            validateHierarchyLevel({
              nodes: await collect(provider.getNodes({ parentNode: undefined })),
 @@ -205,6 +211,7 @@ describe("Hierarchies", () => {
@@ -402,15 +427,15 @@ index 59791724..06e41466 100644
            const subjectId = insertSubject("0x1", "test subject");
            const aspectId = insertExternalSourceAspect(subjectId, "test aspect");
 +          db.saveChanges();
- 
+
            const provider = createRootSubjectChildrenProvider({ label: "aspectIdentifier" });
            validateHierarchyLevel({
 @@ -218,6 +225,7 @@ describe("Hierarchies", () => {
            });
- 
+
            updateExternalSourceAspect(aspectId, "modified aspect");
 +          db.saveChanges();
- 
+
            validateHierarchyLevel({
              nodes: await collect(provider.getNodes({ parentNode: undefined })),
 @@ -233,6 +241,7 @@ describe("Hierarchies", () => {
@@ -418,29 +443,29 @@ index 59791724..06e41466 100644
            const subjectId = insertSubject("0x1", "test subject");
            const aspectId = insertExternalSourceAspect(subjectId, "test aspect");
 +          db.saveChanges();
- 
+
            const provider = createRootSubjectChildrenProvider({ label: "aspectIdentifier" });
            validateHierarchyLevel({
 @@ -246,6 +255,7 @@ describe("Hierarchies", () => {
            });
- 
+
            deleteAspect(aspectId);
 +          db.saveChanges();
- 
+
            validateHierarchyLevel({
              nodes: await collect(provider.getNodes({ parentNode: undefined })),
 @@ -260,11 +270,13 @@ describe("Hierarchies", () => {
- 
+
          it("updates hierarchy when a model is inserted", async () => {
            const partitionId = insertPhysicalPartition("0x1");
 +          db.saveChanges();
- 
+
            const provider = createPhysicalModelsProvider();
            validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
- 
+
            const modelId = insertPhysicalModel(partitionId, false);
 +          db.saveChanges();
- 
+
            validateHierarchyLevel({
              nodes: await collect(provider.getNodes({ parentNode: undefined })),
 @@ -279,6 +291,7 @@ describe("Hierarchies", () => {
@@ -448,15 +473,15 @@ index 59791724..06e41466 100644
            const partitionId = insertPhysicalPartition("0x1", "test");
            const modelId = insertPhysicalModel(partitionId, false);
 +          db.saveChanges();
- 
+
            const provider = createPhysicalModelsProvider();
            validateHierarchyLevel({
 @@ -292,6 +305,7 @@ describe("Hierarchies", () => {
            });
- 
+
            updatePhysicalModel(modelId, true);
 +          db.saveChanges();
- 
+
            validateHierarchyLevel({
              nodes: await collect(provider.getNodes({ parentNode: undefined })),
 @@ -307,6 +321,7 @@ describe("Hierarchies", () => {
@@ -464,15 +489,15 @@ index 59791724..06e41466 100644
            const partitionId = insertPhysicalPartition("0x1");
            const modelId = insertPhysicalModel(partitionId, false);
 +          db.saveChanges();
- 
+
            const provider = createPhysicalModelsProvider();
            validateHierarchyLevel({
 @@ -319,6 +334,7 @@ describe("Hierarchies", () => {
            });
- 
+
            deleteModel(modelId);
 +          db.saveChanges();
- 
+
            validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
          });
 @@ -326,11 +342,13 @@ describe("Hierarchies", () => {
@@ -480,13 +505,13 @@ index 59791724..06e41466 100644
          it.skip("updates hierarchy when a many-to-many relationship is inserted", async function () {
            const subjectId = insertSubject("0x1", "test subject");
 +          db.saveChanges();
- 
+
            const provider = createRootSubjectReferredElementsProvider();
            validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
- 
+
            insertElementRefersToElementRelationship("0x1", subjectId);
 +          db.saveChanges();
- 
+
            validateHierarchyLevel({
              nodes: await collect(provider.getNodes({ parentNode: undefined })),
 @@ -347,6 +365,7 @@ describe("Hierarchies", () => {
@@ -494,15 +519,15 @@ index 59791724..06e41466 100644
            const subject2Id = insertSubject("0x1", "test subject 2");
            const relationshipProps = insertElementRefersToElementRelationship("0x1", subject1Id);
 +          db.saveChanges();
- 
+
            const provider = createRootSubjectReferredElementsProvider();
            validateHierarchyLevel({
 @@ -359,6 +378,7 @@ describe("Hierarchies", () => {
            });
- 
+
            updateElementRefersToElementRelationship({ ...relationshipProps, targetId: subject2Id });
 +          db.saveChanges();
- 
+
            validateHierarchyLevel({
              nodes: await collect(provider.getNodes({ parentNode: undefined })),
 @@ -374,6 +394,7 @@ describe("Hierarchies", () => {
@@ -510,20 +535,20 @@ index 59791724..06e41466 100644
            const subjectId = insertSubject("0x1", "test subject");
            const relationshipProps = insertElementRefersToElementRelationship("0x1", subjectId);
 +          db.saveChanges();
- 
+
            const provider = createRootSubjectReferredElementsProvider();
            validateHierarchyLevel({
 @@ -386,6 +407,7 @@ describe("Hierarchies", () => {
            });
- 
+
            deleteRelationship(relationshipProps);
 +          db.saveChanges();
- 
+
            validateHierarchyLevel({ nodes: await collect(provider.getNodes({ parentNode: undefined })), expect: [] });
          });
 @@ -513,115 +535,85 @@ describe("Hierarchies", () => {
          }
- 
+
          function insertSubject(parentId: Id64String, codeValue: string) {
 -          return withEditTxn(db, (txn) => {
 -            return txn.insertElement({
@@ -539,7 +564,7 @@ index 59791724..06e41466 100644
 +            code: { scope: parentId, spec: db.codeSpecs.getByName(BisCodeSpec.subject).id, value: codeValue },
            });
          }
- 
+
          function updateSubject(subjectId: Id64String, newCodeValue: string) {
            const props = db.elements.getElementProps(subjectId);
 -          withEditTxn(db, (txn) => {
@@ -547,14 +572,14 @@ index 59791724..06e41466 100644
 -          });
 +          db.elements.updateElement({ ...props, code: { ...props.code, value: newCodeValue } });
          }
- 
+
          function deleteElement(subjectId: Id64String) {
 -          withEditTxn(db, (txn) => {
 -            txn.deleteElement(subjectId);
 -          });
 +          db.elements.deleteElement(subjectId);
          }
- 
+
          function insertExternalSourceAspect(elementId: Id64String, identifier: string) {
 -          return withEditTxn(db, (txn) => {
 -            return txn.insertAspect({
@@ -569,7 +594,7 @@ index 59791724..06e41466 100644
 +            identifier,
 +          } as ExternalSourceAspectProps);
          }
- 
+
          function updateExternalSourceAspect(aspectId: Id64String, newIdentifier: string) {
            const props = db.elements.getAspect(aspectId).toJSON();
 -          withEditTxn(db, (txn) => {
@@ -577,14 +602,14 @@ index 59791724..06e41466 100644
 -          });
 +          db.elements.updateAspect({ ...props, identifier: newIdentifier } as ExternalSourceAspectProps);
          }
- 
+
          function deleteAspect(aspectId: Id64String) {
 -          withEditTxn(db, (txn) => {
 -            txn.deleteAspect(aspectId);
 -          });
 +          db.elements.deleteAspect(aspectId);
          }
- 
+
          function insertPhysicalPartition(parentSubjectId: Id64String, codeValue = "test partition") {
 -          return withEditTxn(db, (txn) => {
 -            return txn.insertElement({
@@ -608,7 +633,7 @@ index 59791724..06e41466 100644
 +            },
            });
          }
- 
+
          function insertPhysicalModel(modeledElementId: Id64String, isPrivate: boolean) {
 -          return withEditTxn(db, (txn) => {
 -            return txn.insertModel({
@@ -622,7 +647,7 @@ index 59791724..06e41466 100644
 +            isPrivate,
            });
          }
- 
+
          function updatePhysicalModel(modelId: Id64String, newIsPrivate: boolean) {
            const props = db.models.getModelProps(modelId);
 -          withEditTxn(db, (txn) => {
@@ -630,14 +655,14 @@ index 59791724..06e41466 100644
 -          });
 +          db.models.updateModel({ ...props, isPrivate: newIsPrivate });
          }
- 
+
          function deleteModel(modelId: Id64String) {
 -          withEditTxn(db, (txn) => {
 -            txn.deleteModel(modelId);
 -          });
 +          db.models.deleteModel(modelId);
          }
- 
+
          function insertElementRefersToElementRelationship(
            sourceId: Id64String,
            targetId: Id64String,
@@ -655,14 +680,14 @@ index 59791724..06e41466 100644
 +          const id = db.relationships.insertInstance(props);
 +          return { ...props, id };
          }
- 
+
          function updateElementRefersToElementRelationship(props: RelationshipProps) {
 -          withEditTxn(db, (txn) => {
 -            txn.updateRelationship(props);
 -          });
 +          db.relationships.updateInstance(props);
          }
- 
+
          function deleteRelationship(props: RelationshipProps) {
 -          withEditTxn(db, (txn) => {
 -            txn.deleteRelationship(props);
@@ -681,13 +706,13 @@ index 7b4f75f9..7c00f68b 100644
  import { buildTestIModel } from "../../TestIModelSetup.js";
 +import { SchemaContext } from "@itwin/ecschema-metadata";
 +import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
- 
+
  describe("Unified selection", () => {
    describe("Learning snippets", () => {
 @@ -48,7 +50,15 @@ describe("Unified selection", () => {
            return { modelKey, categoryKey, elementKey };
          });
- 
+
 -        const getIModelConnection = () => imodel;
 +        // The accessor was introduced in iTwin.js Core 5.1.0
 +        Object.defineProperty(imodel, "schemaContext", {
@@ -699,7 +724,7 @@ index 7b4f75f9..7c00f68b 100644
 +        });
 +        const getIModelConnection = (): any => imodel;
          const selectables = Selectables.create([keys.elementKey]);
- 
+
          // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.BasicProvider
 @@ -79,6 +89,8 @@ describe("Unified selection", () => {
            });
@@ -707,7 +732,7 @@ index 7b4f75f9..7c00f68b 100644
          });
 +        const schemas = new SchemaContext();
 +        schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
- 
+
          const selectionStorage = createStorage();
          selectionStorage.addToSelection({
 @@ -91,9 +103,7 @@ describe("Unified selection", () => {
@@ -722,7 +747,7 @@ index 7b4f75f9..7c00f68b 100644
              };
            }
 diff --git a/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx b/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
-index 87f50924..73f709bf 100644
+index 87f50924..21506ca9 100644
 --- a/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
 +++ b/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
 @@ -30,6 +30,8 @@ import { initialize, terminate } from "../../IntegrationTests.js";
@@ -731,7 +756,7 @@ index 87f50924..73f709bf 100644
  import { buildTestIModel } from "../../TestIModelSetup.js";
 +import { SchemaContext } from "@itwin/ecschema-metadata";
 +import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
- 
+
  describe("Unified selection", () => {
    describe("Learning snippets", () => {
 @@ -115,7 +117,15 @@ describe("Unified selection", () => {
@@ -750,22 +775,13 @@ index 87f50924..73f709bf 100644
 +        function useActiveIModelConnection(): any {
            return imodel;
          }
- 
+
 @@ -137,7 +147,7 @@ describe("Unified selection", () => {
          /** An iModel-based component that handles iModel selection directly, through its `SelectionSet` */
          function IModelComponent({ selectionStorage }: { selectionStorage: SelectionStorage }) {
            // get the active iModel connection (implementation is outside the scope of this example)
 -          const iModelConnection: IModelConnection = useActiveIModelConnection();
 +          const iModelConnection = useActiveIModelConnection();
- 
+
            // enable unified selection sync with the iModel
            useEffect(
-@@ -218,7 +228,7 @@ describe("Unified selection", () => {
-           // __PUBLISH_EXTRACT_END__
- 
-           expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key }))).toBe(true);
--
-+          
-           // eslint-disable-next-line @typescript-eslint/no-deprecated
-           Presentation.selection.addToSelection("test", imodel, new KeySet([keys.elementKey]));
-           await waitFor(() => {

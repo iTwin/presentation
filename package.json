@@ -4,7 +4,7 @@
   "repository": {
     "url": "https://github.com/iTwin/presentation.git"
   },
-  "packageManager": "pnpm@10.32.1",
+  "packageManager": "pnpm@11.1.0",
   "engines": {
     "node": "^24.0.0"
   },
@@ -54,7 +54,7 @@
     "npm-run-all": "^4.1.5",
     "oxfmt": "^0.47.0",
     "rimraf": "catalog:build-tools",
-    "yaml": "^2.8.4",
+    "yaml": "^2.9.0",
     "yargs": "^17.7.2"
   },
   "lint-staged": {
@@ -64,17 +64,5 @@
     "./scripts/*.js": [
       "pnpm lint:copyright --fix"
     ]
-  },
-  "pnpm": {
-    "overrides": {
-      "@itwin/build-tools@^5.8.0>@microsoft/api-extractor@<7.58": "^7.58.1",
-      "@opentelemetry/exporter-metrics-otlp-grpc@^0.41.2": "^0.52.0",
-      "@opentelemetry/exporter-metrics-otlp-http@^0.41.2": "^0.52.0",
-      "@opentelemetry/exporter-metrics-otlp-proto@^0.41.2": "^0.52.0",
-      "@opentelemetry/exporter-trace-otlp-grpc@^0.43.0": "^0.52.0",
-      "@opentelemetry/exporter-trace-otlp-http@^0.41.2": "^0.52.0",
-      "@opentelemetry/exporter-trace-otlp-proto@^0.41.2": "^0.52.0",
-      "uuid@<14": "^14.0.0"
-    }
   }
 }
