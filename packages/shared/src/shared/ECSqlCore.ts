@@ -36,6 +36,11 @@ export interface ECSqlQueryDef {
 
   /**
    * Values to bind to the query.
+   *
+   * Provide bindings either as an array or as a record:
+   * - `ECSqlBinding[]` binds values by parameter position.
+   * - `Record<string, ECSqlBinding>` binds values by parameter name, where each key is the ECSQL parameter name.
+   *
    * @see https://www.itwinjs.org/learning/ecsql/#ecsql-parameters
    */
   bindings?: ECSqlBinding[] | Record<string, ECSqlBinding>;
