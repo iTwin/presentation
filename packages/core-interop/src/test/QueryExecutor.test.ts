@@ -147,12 +147,14 @@ describe("createECSqlQueryExecutor", () => {
       const bindings: Record<string, ECSqlBinding> = {
         boolParam: { type: "boolean", value: true },
         idParam: { type: "id", value: "0x123" },
+        idsetParam: { type: "idset", value: ["0x456", "0x789"] },
         nullParam: { type: "string", value: undefined },
       };
 
       const expectedBinder = new QueryBinder();
       expectedBinder.bindBoolean("boolParam", true);
       expectedBinder.bindId("idParam", "0x123");
+      expectedBinder.bindIdSet("idsetParam", ["0x456", "0x789"]);
       expectedBinder.bindNull("nullParam");
 
       const executor = createECSqlQueryExecutor(imodel);
