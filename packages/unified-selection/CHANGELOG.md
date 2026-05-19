@@ -1,5 +1,11 @@
 # @itwin/unified-selection
 
+## 1.7.4
+
+### Patch Changes
+
+- [#1353](https://github.com/iTwin/presentation/pull/1353): `HiliteSetProvider`: Fix transient elements not being included in the hilite set and causing an error. Transient element keys are now correctly recognized and emitted without querying the iModel for class hierarchy information.
+
 ## 1.7.3
 
 ### Patch Changes
