@@ -18,6 +18,7 @@ import {
   ECSQL_COLUMN_NAME_SearchClassName,
   ECSQL_COLUMN_NAME_SearchECInstanceId,
 } from "../../hierarchies/imodel/SearchHierarchyDefinition.js";
+import { ECSQL_PREFIX } from "../../hierarchies/imodel/Utils.js";
 import {
   createIModelAccessStub,
   createInstanceLabelSelectClauseFactoryStub,
@@ -1688,10 +1689,10 @@ describe("createIModelHierarchyProvider", () => {
       {
         const cachedQueryArg = imodelAccess.createQueryReader.mock.calls[0][0];
         expect(cachedQueryArg.ecsql).toContain("FROM (ROOT)");
-        expect(cachedQueryArg.ecsql).toContain("IdSet(:targetInstanceKeys)");
+        expect(cachedQueryArg.ecsql).toContain(`IdSet(:${ECSQL_PREFIX}targetInstanceKeys)`);
         expect(cachedQueryArg.bindings).to.deep.eq({
           param1: { type: "string", value: "test" },
-          targetInstanceKeys: { type: "idset", value: ["0x1"] },
+          [`${ECSQL_PREFIX}targetInstanceKeys`]: { type: "idset", value: ["0x1"] },
         });
       }
       expect(rootInstanceNodes2).toEqual(rootInstanceNodes);
