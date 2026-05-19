@@ -5,9 +5,10 @@
 
 import { ResolvablePromise } from "presentation-test-utilities";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { TransientIdSequence } from "@itwin/core-bentley";
 import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, HiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
-import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable.js";
+import { SelectableInstanceKey, Selectables, TRANSIENT_ELEMENT_CLASSNAME } from "../unified-selection/Selectable.js";
 import {
   createCustomSelectable,
   createECInstanceId,
@@ -154,6 +155,19 @@ describe("HiliteSetProvider", () => {
         expect(result.models).toHaveLength(0);
         expect(result.subCategories).toHaveLength(0);
         expect(result.elements).toEqual([resultKey]);
+      });
+    });
+
+    describe("Hilites transient element", () => {
+      it("creates result for transient element keys", async () => {
+        const transientKey = { className: TRANSIENT_ELEMENT_CLASSNAME, id: new TransientIdSequence().getNext() };
+        mockQuery([], [], []);
+
+        const selection = Selectables.create([transientKey]);
+        const result = await loadHiliteSet(selection);
+        expect(result.models).toHaveLength(0);
+        expect(result.subCategories).toHaveLength(0);
+        expect(result.elements).toEqual([transientKey.id]);
       });
     });
 

@@ -28,7 +28,7 @@ import {
   ECSqlQueryRow,
   normalizeFullClassName,
 } from "@itwin/presentation-shared";
-import { SelectableInstanceKey, Selectables } from "./Selectable.js";
+import { SelectableInstanceKey, Selectables, TRANSIENT_ELEMENT_CLASSNAME } from "./Selectable.js";
 import { formIdBindings, genericExecuteQuery, releaseMainThreadOnItemsCount } from "./Utils.js";
 
 const HILITE_SET_EMIT_FREQUENCY = 20;
@@ -151,6 +151,10 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
   }
 
   private async getType(key: SelectableInstanceKey): Promise<InstanceIdType> {
+    if (key.className === TRANSIENT_ELEMENT_CLASSNAME) {
+      return "transient";
+    }
+
     const normalizedClassName = normalizeFullClassName(key.className);
     const cachedType = this._classRelationCache.get(normalizedClassName);
     if (cachedType) {
@@ -327,29 +331,32 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
       geometricElementKeys: instancesByType.geometricElement.pipe(toArray()),
       functionalElements: instancesByType.functionalElement.pipe(toArray()),
       elementKeys: instancesByType.element.pipe(toArray()),
+      transientKeys: instancesByType.transient.pipe(toArray()),
     }).pipe(
-      mergeMap(({ groupInformationElementKeys, geometricElementKeys, functionalElements, elementKeys }) => {
-        const hasFunctionalElements = !!functionalElements.length;
-        if (
-          !groupInformationElementKeys.length &&
-          !geometricElementKeys.length &&
-          !elementKeys.length &&
-          !hasFunctionalElements
-        ) {
-          return EMPTY;
-        }
+      mergeMap(
+        ({ groupInformationElementKeys, geometricElementKeys, functionalElements, elementKeys, transientKeys }) => {
+          const hasFunctionalElements = !!functionalElements.length;
+          if (
+            !groupInformationElementKeys.length &&
+            !geometricElementKeys.length &&
+            !elementKeys.length &&
+            !transientKeys.length &&
+            !hasFunctionalElements
+          ) {
+            return EMPTY;
+          }
 
-        const bindings: ECSqlBinding[] = [];
-        const ctes = [
-          ...(hasFunctionalElements ? this.getHilitedFunctionalElementsQueryCTEs(functionalElements, bindings) : []),
-          `
+          const bindings: ECSqlBinding[] = [];
+          const ctes = [
+            ...(hasFunctionalElements ? this.getHilitedFunctionalElementsQueryCTEs(functionalElements, bindings) : []),
+            `
             GroupMembers(ECInstanceId, ECClassId) AS (
               SELECT TargetECInstanceId, TargetECClassId
               FROM BisCore.ElementGroupsMembers
               WHERE ${formIdBindings("SourceECInstanceId", groupInformationElementKeys, bindings)}
             )
           `,
-          `
+            `
             GroupGeometricElements(ECInstanceId, ECClassId) AS (
               SELECT ECInstanceId, ECClassId FROM GroupMembers
               UNION ALL
@@ -358,7 +365,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
               JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
             )
           `,
-          `
+            `
             ElementGeometricElements(ECInstanceId, ECClassId) AS (
               SELECT ECInstanceId, ECClassId
               FROM BisCore.Element
@@ -369,7 +376,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
               JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
             )
           `,
-          `
+            `
             GeometricElementGeometricElements(ECInstanceId, ECClassId) AS (
               SELECT ECInstanceId, ECClassId
               FROM BisCore.GeometricElement
@@ -380,25 +387,29 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
               JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
             )
           `,
-        ];
-        const ecsql = [
-          ...(hasFunctionalElements
-            ? [
-                "SELECT ECInstanceId FROM FunctionalElementChildGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
-              ]
-            : []),
-          "SELECT ECInstanceId FROM GeometricElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
-          "SELECT ECInstanceId FROM GroupGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
-          "SELECT ECInstanceId FROM ElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
-        ].join(" UNION ");
-        return from(
-          executeQuery({
-            queryExecutor: this._imodelAccess,
-            query: { ctes, ecsql, bindings },
-            config: { restartToken: `${this.#componentName}/${this.#componentId}/elements/${Guid.createValue()}` },
-          }),
-        );
-      }),
+          ];
+          const ecsql = [
+            ...(hasFunctionalElements
+              ? [
+                  "SELECT ECInstanceId FROM FunctionalElementChildGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
+                ]
+              : []),
+            "SELECT ECInstanceId FROM GeometricElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
+            "SELECT ECInstanceId FROM GroupGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
+            "SELECT ECInstanceId FROM ElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
+          ].join(" UNION ");
+          return merge(
+            from(
+              executeQuery({
+                queryExecutor: this._imodelAccess,
+                query: { ctes, ecsql, bindings },
+                config: { restartToken: `${this.#componentName}/${this.#componentId}/elements/${Guid.createValue()}` },
+              }),
+            ),
+            from(transientKeys),
+          );
+        },
+      ),
     );
   }
 
@@ -467,6 +478,7 @@ const INSTANCE_TYPES = [
   "groupInformationElement",
   "geometricElement",
   "element",
+  "transient",
   "unknown",
 ] as const;
 

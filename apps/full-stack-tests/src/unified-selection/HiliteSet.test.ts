@@ -19,8 +19,14 @@ import {
   insertSubject,
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { TransientIdSequence } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { createHiliteSetProvider, SelectableInstanceKey, Selectables } from "@itwin/unified-selection";
+import {
+  createHiliteSetProvider,
+  SelectableInstanceKey,
+  Selectables,
+  TRANSIENT_ELEMENT_CLASSNAME,
+} from "@itwin/unified-selection";
 import { createIModelAccess } from "../hierarchies/Utils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { buildTestIModel } from "../TestIModelSetup.js";
@@ -442,7 +448,7 @@ describe("HiliteSet", () => {
       });
     });
 
-    describe("Hilites GroupInformationElement", () => {
+    describe("GroupInformationElement", () => {
       it("hilites group information element related physical elements", async () => {
         let groupInformationElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
@@ -453,8 +459,6 @@ describe("HiliteSet", () => {
               builder,
               codeValue: "group information model",
             });
-            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-            await builder.importSchema(schema);
             const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
             const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
             groupInformationElement = insertGroupInformationElement({ builder, modelId: groupModel.id });
@@ -501,6 +505,23 @@ describe("HiliteSet", () => {
         expect(hiliteSet.subCategories).toHaveLength(0);
         expect(hiliteSet.elements).toHaveLength(expectedElements!.length);
         expect(hiliteSet.elements).toEqual(expect.arrayContaining(expectedElements!.map((k) => k.id)));
+      });
+    });
+
+    describe("Transient elements", () => {
+      it("hilites transient elements", async () => {
+        iModel = (await buildTestIModel()).imodel;
+
+        const transientKey: SelectableInstanceKey = {
+          className: TRANSIENT_ELEMENT_CLASSNAME,
+          id: new TransientIdSequence().getNext(),
+        };
+
+        const hiliteSet = await loadHiliteSet(Selectables.create([transientKey]));
+        expect(hiliteSet.models).toHaveLength(0);
+        expect(hiliteSet.subCategories).toHaveLength(0);
+        expect(hiliteSet.elements).toHaveLength(1);
+        expect(hiliteSet.elements).toEqual(expect.arrayContaining([transientKey.id]));
       });
     });
   });
