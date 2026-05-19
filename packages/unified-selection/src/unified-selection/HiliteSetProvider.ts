@@ -327,69 +327,72 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
 
   private getHilitedElements(instancesByType: InstancesByType): Observable<string> {
     return forkJoin({
-      groupInformationElementKeys: instancesByType.groupInformationElement.pipe(toArray()),
-      geometricElementKeys: instancesByType.geometricElement.pipe(toArray()),
-      functionalElements: instancesByType.functionalElement.pipe(toArray()),
-      elementKeys: instancesByType.element.pipe(toArray()),
-      transientKeys: instancesByType.transient.pipe(toArray()),
+      groupInformationElementIds: instancesByType.groupInformationElement.pipe(toArray()),
+      geometricElementIds: instancesByType.geometricElement.pipe(toArray()),
+      functionalElementIds: instancesByType.functionalElement.pipe(toArray()),
+      elementIds: instancesByType.element.pipe(toArray()),
+      transientIds: instancesByType.transient.pipe(toArray()),
     }).pipe(
       mergeMap(
-        ({ groupInformationElementKeys, geometricElementKeys, functionalElements, elementKeys, transientKeys }) => {
-          const hasFunctionalElements = !!functionalElements.length;
-          if (
-            !groupInformationElementKeys.length &&
-            !geometricElementKeys.length &&
-            !elementKeys.length &&
-            !transientKeys.length &&
-            !hasFunctionalElements
-          ) {
+        ({ groupInformationElementIds, geometricElementIds, functionalElementIds, elementIds, transientIds }) => {
+          const hasFunctionalElementIds = !!functionalElementIds.length;
+          const hasPersistentElementIds =
+            hasFunctionalElementIds ||
+            !!(groupInformationElementIds.length || geometricElementIds.length || elementIds.length);
+          const hasTransientElementIds = !!transientIds.length;
+          if (!hasPersistentElementIds && !hasTransientElementIds) {
             return EMPTY;
+          }
+          if (!hasPersistentElementIds) {
+            return from(transientIds);
           }
 
           const bindings: ECSqlBinding[] = [];
           const ctes = [
-            ...(hasFunctionalElements ? this.getHilitedFunctionalElementsQueryCTEs(functionalElements, bindings) : []),
+            ...(hasFunctionalElementIds
+              ? this.getHilitedFunctionalElementsQueryCTEs(functionalElementIds, bindings)
+              : []),
             `
-            GroupMembers(ECInstanceId, ECClassId) AS (
-              SELECT TargetECInstanceId, TargetECClassId
-              FROM BisCore.ElementGroupsMembers
-              WHERE ${formIdBindings("SourceECInstanceId", groupInformationElementKeys, bindings)}
-            )
-          `,
+              GroupMembers(ECInstanceId, ECClassId) AS (
+                SELECT TargetECInstanceId, TargetECClassId
+                FROM BisCore.ElementGroupsMembers
+                WHERE ${formIdBindings("SourceECInstanceId", groupInformationElementIds, bindings)}
+              )
+            `,
             `
-            GroupGeometricElements(ECInstanceId, ECClassId) AS (
-              SELECT ECInstanceId, ECClassId FROM GroupMembers
-              UNION ALL
-              SELECT r.ECInstanceId, r.ECClassId
-              FROM GroupGeometricElements s
-              JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
-            )
-          `,
+              GroupGeometricElements(ECInstanceId, ECClassId) AS (
+                SELECT ECInstanceId, ECClassId FROM GroupMembers
+                UNION ALL
+                SELECT r.ECInstanceId, r.ECClassId
+                FROM GroupGeometricElements s
+                JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
+              )
+            `,
             `
-            ElementGeometricElements(ECInstanceId, ECClassId) AS (
-              SELECT ECInstanceId, ECClassId
-              FROM BisCore.Element
-              WHERE ${formIdBindings("ECInstanceId", elementKeys, bindings)}
-              UNION ALL
-              SELECT r.ECInstanceId, r.ECClassId
-              FROM ElementGeometricElements s
-              JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
-            )
-          `,
+              ElementGeometricElements(ECInstanceId, ECClassId) AS (
+                SELECT ECInstanceId, ECClassId
+                FROM BisCore.Element
+                WHERE ${formIdBindings("ECInstanceId", elementIds, bindings)}
+                UNION ALL
+                SELECT r.ECInstanceId, r.ECClassId
+                FROM ElementGeometricElements s
+                JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
+              )
+            `,
             `
-            GeometricElementGeometricElements(ECInstanceId, ECClassId) AS (
-              SELECT ECInstanceId, ECClassId
-              FROM BisCore.GeometricElement
-              WHERE ${formIdBindings("ECInstanceId", geometricElementKeys, bindings)}
-              UNION ALL
-              SELECT r.ECInstanceId, r.ECClassId
-              FROM GeometricElementGeometricElements s
-              JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
-            )
-          `,
+              GeometricElementGeometricElements(ECInstanceId, ECClassId) AS (
+                SELECT ECInstanceId, ECClassId
+                FROM BisCore.GeometricElement
+                WHERE ${formIdBindings("ECInstanceId", geometricElementIds, bindings)}
+                UNION ALL
+                SELECT r.ECInstanceId, r.ECClassId
+                FROM GeometricElementGeometricElements s
+                JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
+              )
+            `,
           ];
           const ecsql = [
-            ...(hasFunctionalElements
+            ...(hasFunctionalElementIds
               ? [
                   "SELECT ECInstanceId FROM FunctionalElementChildGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
                 ]
@@ -406,7 +409,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
                 config: { restartToken: `${this.#componentName}/${this.#componentId}/elements/${Guid.createValue()}` },
               }),
             ),
-            from(transientKeys),
+            from(transientIds),
           );
         },
       ),
