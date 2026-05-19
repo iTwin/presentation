@@ -62,6 +62,7 @@ import { createHideIfNoChildrenOperator } from "./operators/HideIfNoChildren.js"
 import { createHideNodesInHierarchyOperator } from "./operators/HideNodesInHierarchy.js";
 import { SearchHierarchyDefinition } from "./SearchHierarchyDefinition.js";
 import { readNodes } from "./TreeNodesReader.js";
+import { ECSQL_PREFIX } from "./Utils.js";
 
 import type { Observable, ObservableInput, ObservedValueOf } from "rxjs";
 import type { GuidString } from "@itwin/core-bentley";
@@ -993,15 +994,19 @@ function createInstanceKeysFilteredQuery(
       bindings: [...query.bindings, { type: "idset", value: targetInstanceKeys.map((k) => k.id) }],
     };
   }
+  const ecsqlVarTargetInstanceKeys = `${ECSQL_PREFIX}targetInstanceKeys`;
   return {
     ...query,
     ecsql: `
       SELECT *
       FROM (${query.ecsql}) q
-      JOIN IdSet(:targetInstanceKeys) targetInstanceKeys ON targetInstanceKeys.id = q.ECInstanceId
+      JOIN IdSet(:${ecsqlVarTargetInstanceKeys}) targetInstanceKeys ON targetInstanceKeys.id = q.ECInstanceId
       ECSQLOPTIONS ENABLE_EXPERIMENTAL_FEATURES
     `,
-    bindings: { ...query.bindings, targetInstanceKeys: { type: "idset", value: targetInstanceKeys.map((k) => k.id) } },
+    bindings: {
+      ...query.bindings,
+      [ecsqlVarTargetInstanceKeys]: { type: "idset", value: targetInstanceKeys.map((k) => k.id) },
+    },
   };
 }
 
