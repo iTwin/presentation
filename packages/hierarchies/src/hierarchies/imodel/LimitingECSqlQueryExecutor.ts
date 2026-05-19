@@ -142,14 +142,18 @@ function createQueryLogger(query: ECSqlQueryDef, firstStepWarningThreshold = 300
 /* v8 ignore start */
 function createQueryLogMessage(query: ECSqlQueryDef): string {
   const ctes = query.ctes?.map((cte) => `    ${trimWhitespace(cte)}`).join(", \n");
-  const bindings = query.bindings?.map((b) => JSON.stringify(b.value)).join(", ");
+  const bindings = query.bindings
+    ? Array.isArray(query.bindings)
+      ? `[${query.bindings.map((b) => JSON.stringify(b.value)).join(", ")}]`
+      : JSON.stringify(query.bindings)
+    : undefined;
   let output = "{\n";
   if (ctes) {
     output += `  ctes: [ \n${ctes} \n], \n`;
   }
   output += `  ecsql: ${trimWhitespace(query.ecsql)}, \n`;
   if (bindings) {
-    output += `  bindings: [${bindings}], \n`;
+    output += `  bindings: ${bindings}, \n`;
   }
   output += "}";
   return output;

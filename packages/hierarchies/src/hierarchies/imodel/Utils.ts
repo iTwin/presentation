@@ -12,6 +12,8 @@ import type {
   ProcessedInstanceHierarchyNode,
 } from "./IModelHierarchyNode.js";
 
+export const ECSQL_PREFIX = "pres_";
+
 function mergeNodeHandlingParams(
   lhs: InstanceHierarchyNodeProcessingParams | undefined,
   rhs: InstanceHierarchyNodeProcessingParams | undefined,

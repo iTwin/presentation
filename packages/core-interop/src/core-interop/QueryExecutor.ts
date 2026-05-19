@@ -62,7 +62,11 @@ export function createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQ
         opts.setRestartToken(config.restartToken);
       }
       return new ECSqlQueryReaderImpl(
-        imodel.createQueryReader(trimWhitespace(addCTEs(ecsql, ctes)), bind(bindings ?? []), opts.getOptions()),
+        imodel.createQueryReader(
+          trimWhitespace(addCTEs(ecsql, ctes)),
+          bindings ? bind(bindings) : undefined,
+          opts.getOptions(),
+        ),
         config?.rowFormat === "Indexes" ? "array" : "object",
       );
     },
@@ -86,43 +90,46 @@ class ECSqlQueryReaderImpl implements ReturnType<ECSqlQueryExecutor["createQuery
   }
 }
 
-function bind(bindings: ECSqlBinding[]): QueryBinder {
+function bind(bindings: ECSqlBinding[] | Record<string, ECSqlBinding>): QueryBinder {
   const binder = new QueryBinder();
-  bindings.forEach((b, i) => {
+  const entries: Array<[string | number, ECSqlBinding]> = Array.isArray(bindings)
+    ? bindings.map((b, i) => [i + 1, b])
+    : Object.entries(bindings);
+  for (const [key, b] of entries) {
     if (b.value === undefined) {
-      binder.bindNull(i + 1);
-      return;
+      binder.bindNull(key);
+      continue;
     }
     switch (b.type) {
       case "boolean":
-        binder.bindBoolean(i + 1, b.value);
+        binder.bindBoolean(key, b.value);
         break;
       case "double":
-        binder.bindDouble(i + 1, b.value);
+        binder.bindDouble(key, b.value);
         break;
       case "id":
-        binder.bindId(i + 1, b.value);
+        binder.bindId(key, b.value);
         break;
       case "idset":
-        binder.bindIdSet(i + 1, OrderedId64Iterable.sortArray(b.value));
+        binder.bindIdSet(key, OrderedId64Iterable.sortArray(b.value));
         break;
       case "int":
-        binder.bindInt(i + 1, b.value);
+        binder.bindInt(key, b.value);
         break;
       case "long":
-        binder.bindLong(i + 1, b.value);
+        binder.bindLong(key, b.value);
         break;
       case "point2d":
-        binder.bindPoint2d(i + 1, Point2d.fromJSON(b.value));
+        binder.bindPoint2d(key, Point2d.fromJSON(b.value));
         break;
       case "point3d":
-        binder.bindPoint3d(i + 1, Point3d.fromJSON(b.value));
+        binder.bindPoint3d(key, Point3d.fromJSON(b.value));
         break;
       case "string":
-        binder.bindString(i + 1, b.value);
+        binder.bindString(key, b.value);
         break;
     }
-  });
+  }
   return binder;
 }
 
