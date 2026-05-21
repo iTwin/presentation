@@ -1,6 +1,7 @@
 {
   "name": "@itwin/presentation-content",
   "version": "0.1.0",
+  "private": true,
   "description": "A package for loading property content from iTwin.js iModels.",
   "license": "MIT",
   "author": {

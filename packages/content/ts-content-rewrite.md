@@ -55,11 +55,13 @@ A path with zero steps means "same class as the target" (direct properties — n
 The resolved join shape for a **single content target**. A 1:1 output of source resolution. Contains:
 
 - The **content target** (the primary table — class, optional instance IDs, optional instance filter).
-- The list of **relationship paths** to related classes (the JOINs). Each path defines a navigation route to additional classes that may be queried.
+- **Resolved declaration groups** — one group per provider declaration that produced concrete paths during resolution. Each group carries a reference back to the originating provider (`providerId` + `declarationIndex`), allowing Stage 2 to re-fetch the declaration's property specs, cardinality hint, and other metadata without storing them on the cached source.
 
-Fields declared against the target class itself require no relationship path (zero-step path — no traversal needed). Each relationship path in the content source also carries the **property specs** from the provider's related properties declaration (which properties to include/exclude, overrides, etc.). The paths define the JOINs; the property specs tell Stage 2 which properties to enumerate from the JOINed classes.
+The content source is purely structural — it records only the expensive-to-compute resolved paths and their provenance. Provider-specific interpretation metadata (property specs, cardinality hints) lives on the provider declarations and is re-derived cheaply in Stage 2 by re-calling providers.
 
-A content source defines everything needed to construct the FROM + JOINs of an ECSQL query for one target class. The SELECT clause (which columns) is determined later by Stage 2, which reads EC schema metadata and applies the property specs to generate fields.
+Fields declared against the target class itself require no relationship path (zero-step path — no traversal needed).
+
+A content source defines everything needed to construct the FROM + JOINs of an ECSQL query for one target class. The SELECT clause (which columns) is determined later by Stage 2, which re-calls providers for property specs and reads EC schema metadata to generate fields.
 
 Which relationship paths are included depends on both the target class _and_ the target instance IDs:
 
@@ -133,16 +135,17 @@ Content is produced through a multi-stage pipeline. Each stage has a clear input
 ### Stage 1: Source resolution
 
 **Input:** Content target (singular — one class with optional instance IDs and optional instance filter).
-**Output:** Content source (target + list of concrete relationship paths with property specs).
+**Output:** Content source (target + resolved declaration groups).
 
 This stage:
 
 1. Calls each applicable iModel fields provider, which returns **related properties declarations** — relationship paths (possibly generic, e.g., targeting `ElementAspect` base class) with optional per-step property specifications — and optionally calculated field declarations.
-2. Resolves generic paths to **concrete paths** by querying the data. For example, a generic path to `ElementAspect` is expanded into separate paths for each concrete subclass (`MyCustomAspect`, `PhysicalMaterialAspect`, etc.) that actually exists for the target instances. The property specs from the original generic declaration are carried forward to each concrete path.
+2. Resolves generic paths to **concrete paths** by querying the data. For example, a generic path to `ElementAspect` is expanded into separate paths for each concrete subclass (`MyCustomAspect`, `PhysicalMaterialAspect`, etc.) that actually exists for the target instances.
+3. Groups the resolved concrete paths by their originating declaration, recording the provider ID and declaration index for each group.
 
 When instance IDs are provided, resolution queries only those specific instances to narrow the set of concrete paths. Without instance IDs, the system queries all instances of the target class.
 
-The result is one content source — the full join shape for that target, with concrete paths and their associated property specs.
+The result is one content source — the resolved paths grouped by declaration, with back-references to the originating providers. Property specs and cardinality hints are NOT stored on the content source — they remain on the provider declarations and are re-fetched cheaply in Stage 2.
 
 The higher-level API runs source resolution once per target class and collects the results into a list of content sources for descriptor building.
 
@@ -151,13 +154,16 @@ The higher-level API runs source resolution once per target class and collects t
 **Input:** Content source[] (one or more content sources, from one or more targets).
 **Output:** Content descriptor (unified field list with metadata).
 
-This stage enumerates fields from the concrete paths in each content source. For each path, the system:
+iModel fields providers are called again in this stage (via `getContribution`) to retrieve their full declarations — **related properties declarations** (for property specs and cardinality hints), **calculated field declarations**, and **category definitions**. This call is cheap — providers return static declaration objects without performing data queries. The system uses the `declarationIndex` on each resolved group to look up the originating declaration and apply its property specs and cardinality hint to the concrete paths in that group.
 
-1. Reads the EC schema metadata for the concrete classes along the path (target classes at each step, relationship classes).
-2. Applies the property specs from the related properties declaration — which properties to include/exclude, label overrides, category assignments, etc. If no property specs were provided, all properties from the final step's target class are included by default.
-3. Generates field objects with full metadata (identity, label, type, path, category, flags).
+For each resolved declaration group, the system:
 
-Providers are **not** called again in this stage — it operates entirely on the content sources from Stage 1 plus EC schema metadata. Additionally, any registered external fields providers contribute their declared fields to the descriptor at this point.
+1. Looks up the originating declaration (by `providerId` + `declarationIndex`) from the re-called provider contribution.
+2. For each concrete path in the group, reads EC schema metadata for the classes along the path.
+3. Applies the declaration's property specs — which properties to include/exclude, label overrides, category assignments, etc. If no property specs were provided, all properties from the final step's target class are included by default.
+4. Generates field objects with full metadata (identity, label, type, path, category, flags).
+
+Additionally, calculated field declarations from providers are collected and turned into field objects, and any registered external fields providers contribute their declared fields to the descriptor at this point.
 
 Descriptor transformers then run to apply further customizations (hide fields, override categories, etc.).
 
@@ -201,32 +207,60 @@ Suppose the consumer selects a single `Pump` element (class `ProcessPhysical:Pum
 ```
 Input:  ContentTarget { class: "ProcessPhysical:Pump", instanceIds: ["0x3a"] }
 
-iModel fields provider returns:
+iModel fields provider ("pump-fields_v1") returns:
   relatedProperties: [
-    { path: [Pump → PumpType via TypeDefinition] }
-    { path: [Pump → ElementAspect (generic)] }
+    {                                                         // declaration index 0
+      path: [Pump → PumpType via TypeDefinition],
+      properties: [{ stepIndex: 0, target: { select: { include: ["Manufacturer", "Model"] },
+                                             overrides: { "Model": { label: "Type Model" } } } }],
+      cardinalityHint: "one"
+    }
+    { path: [Pump → ElementAspect (generic)] }               // declaration index 1
   ]
   calculatedFields: [
     { id: "flowRate_gpm", expression: "this.FlowRate * 15850.3", label: "Flow Rate (GPM)" }
   ]
 
 System resolves generic paths by querying instance 0x3a:
-  Pump → ElementAspect  ──resolves to──►  Pump → OperatingParametersAspect
+  Declaration 0: [Pump → PumpType] already concrete → [Pump → PumpType]
+  Declaration 1: [Pump → ElementAspect] resolves to → [Pump → OperatingParametersAspect]
 
 Output: ContentSource {
   target: { class: "ProcessPhysical:Pump", instanceIds: ["0x3a"] }
-  paths: [
-    Pump → PumpType (concrete, 1:1)
-    Pump → OperatingParametersAspect (concrete, 1:1)
+  resolvedDeclarations: [
+    { providerId: "pump-fields_v1", declarationIndex: 0, concretePaths: [[Pump → PumpType]] }
+    { providerId: "pump-fields_v1", declarationIndex: 1, concretePaths: [[Pump → OperatingParametersAspect]] }
   ]
-  calculatedFields: [{ id: "flowRate_gpm", ... }]
 }
+
+(Property specs, cardinality hints, and calculated fields are NOT stored on ContentSource —
+they are re-derived cheaply by re-calling the provider in Stage 2.)
 ```
 
 **Stage 2 — Descriptor building:**
 
 ```
 Input:  ContentSource (from above)
+
+System re-calls provider "pump-fields_v1" to get declarations (cheap — no data queries):
+  → relatedProperties[0]: properties = [{ stepIndex: 0, target: { select: { include: ["Manufacturer", "Model"] },
+                                                                   overrides: { "Model": { label: "Type Model" } } } }]
+                           cardinalityHint = "one"
+  → relatedProperties[1]: properties = undefined (default: all properties from final step)
+  → calculatedFields: [{ id: "flowRate_gpm", ... }]
+
+Processing resolvedDeclarations[0] (concretePaths: [[Pump → PumpType]]):
+  - Looks up declaration at index 0 → has property spec for step 0
+  - Reads EC metadata for PumpType: has properties [Manufacturer, Model, Weight, Material, ...]
+  - Applies spec: select = { include: ["Manufacturer", "Model"] } → only those two
+  - Applies override: "Model" label → "Type Model"
+  - cardinalityHint = "one" → values inlined (no array nesting)
+
+Processing resolvedDeclarations[1] (concretePaths: [[Pump → OperatingParametersAspect]]):
+  - Looks up declaration at index 1 → no property spec (default)
+  - Default behavior: all properties from final step's target class
+  - Reads EC metadata for OperatingParametersAspect: [MaxPressure, MaxTemp]
+  - All properties included with default labels
 
 Additionally, a registered external fields provider contributes IoT sensor fields:
   ExternalFieldsProvider {
@@ -237,14 +271,20 @@ Additionally, a registered external fields provider contributes IoT sensor field
       { id: "iot.currentFlow", label: "Current Flow (GPM)", type: double, categoryId: "iot_sensors" }
       { id: "iot.lastMaintenance", label: "Last Maintenance", type: dateTime, categoryId: "iot_sensors" }
     ]
-    inputs: (descriptor) => [
-      findFieldByProperty(descriptor, "Pump.Name").identity
-    ]
-    resolve: async (items) => { /* fetch from IoT service, attach values */ }
+    inputs: {
+      pumpName: { className: "ProcessPhysical:Pump", propertyName: "Name" }
+    }
+    getValues: async ({ items }) => {
+      const names = items.map(i => i.inputValues.pumpName);
+      const data = await fetchFromIoTService(names);
+      return items.map((_, i) => ({
+        "iot.currentFlow": data[i].flow,
+        "iot.lastMaintenance": data[i].lastMaintenance,
+      }));
+    }
   }
 
-System reads EC metadata for Pump, PumpType, OperatingParametersAspect.
-Generates fields from iModel sources, then appends external provider fields:
+Final field list:
 
   Direct fields (from Pump):
     - "Pump.Name"         (string)
@@ -253,7 +293,7 @@ Generates fields from iModel sources, then appends external provider fields:
 
   Related field group [→ PumpType]:
     - "PumpType.Manufacturer"  (string)
-    - "PumpType.Model"         (string)
+    - "PumpType.Model"         (string, label: "Type Model")  ← label override from spec
 
   Related field group [→ OperatingParametersAspect]:
     - "OperatingParametersAspect.MaxPressure"  (double)
@@ -263,9 +303,9 @@ Generates fields from iModel sources, then appends external provider fields:
     - "iot.currentFlow"       (double, external)
     - "iot.lastMaintenance"   (dateTime, external)
 
-  ExternalFieldsProvider's inputs callback receives the finalized descriptor, returns:
-    - reference to "Pump.Name" field (needed as lookup key)
-    - "Pump.Name" is already declared by the iModel fields provider → stays visible
+  Input resolution:
+    - "pumpName" input → matches existing field "Pump.Name" → pinned (stays visible)
+    - (If no matching field existed, pipeline would add it as hidden)
 
 Descriptor transformer runs (e.g., "hide all read-only fields"):
   - "Pump.FlowRate" is marked read-only in EC metadata → transformer hides it
@@ -306,10 +346,11 @@ Output (simplified ECSQL):
 Input:  Built query + paging cursor
 
 Query returns 1 row. Value loader maps columns to iModel fields.
-Then pipeline calls external fields provider's resolve(items):
-  - Provider reads "Pump.Name" = "Main Circulation Pump" from each item
-  - Fetches sensor data from IoT service
-  - Attaches "iot.currentFlow" and "iot.lastMaintenance" values to items
+Then pipeline calls external fields provider's getValues({ items }):
+  - Each item has inputValues.pumpName = "Main Circulation Pump"
+  - Provider fetches sensor data from IoT service using pump names
+  - Returns [{ "iot.currentFlow": 187.3, "iot.lastMaintenance": "2026-04-22T08:00:00Z" }]
+  - Pipeline merges external values into the content item
 
 Output: ContentValues {
   primaryKey: { className: "ProcessPhysical:Pump", id: "0x3a" },
@@ -368,7 +409,7 @@ Each related properties declaration consists of:
 interface FieldsProviderContribution {
   relatedProperties?: RelatedPropertiesDeclaration[];
   calculatedFields?: CalculatedFieldDeclaration[];
-  categories?: CategoryDefinition[]; // shared pool referenced by both relatedProperties and calculatedFields
+  categories?: Record<string, CategoryDefinition>; // keyed by category ID, referenced by both relatedProperties and calculatedFields
 }
 
 interface CalculatedFieldDeclaration {
@@ -417,7 +458,7 @@ Design notes:
 
 These shorthands can be added later without breaking the canonical object form.
 
-**Resolution flow:** The system takes the provider's (possibly generic) related properties declarations, resolves them to concrete classes by querying the data (Stage 1), then uses the concrete classes' EC schema metadata plus the provider's property specs to enumerate and customize fields (Stage 2). The provider is not called again — Stage 2 is system logic.
+**Resolution flow:** The system takes the provider's (possibly generic) related properties declarations, resolves them to concrete classes by querying the data (Stage 1), and stores the concrete paths grouped by declaration (with back-references to the provider). In Stage 2, the provider is called again (cheap — no data queries) to re-fetch the declaration's property specs, which are then applied to the concrete paths when enumerating fields from EC schema metadata.
 
 **Provider-controlled resolution:** A provider can optionally supply a `resolve` callback on a related properties declaration. When present, the system delegates resolution of that path to the callback instead of using its default discovery logic. The callback receives the iModel accessor (for running ECSQL queries) and the content target, and returns concrete paths. This lets providers that know the most efficient query for their domain avoid the system's generic resolution query.
 
@@ -429,9 +470,10 @@ interface RelatedPropertiesDeclaration {
 }
 ```
 
-- If `resolve` is provided, the system calls it and uses the returned concrete paths (carrying forward the declaration's property specs to each).
+- If `resolve` is provided, the system calls it and uses the returned concrete paths (grouped under this declaration in the content source).
 - If `resolve` is omitted, the system resolves the path using its default ECSQL-based discovery.
 - The callback is expected to return only paths to concrete classes that actually have data for the target — same contract as the default resolver, just a different (provider-optimized) implementation.
+- In both cases, the declaration's property specs and cardinality hint remain on the declaration object (re-fetched in Stage 2) — they are not stored on the content source.
 
 Multiple providers can contribute to the same request. Their contributions are _additive_ — related properties declarations from all applicable providers are collected and their resulting fields are merged into a single descriptor.
 
@@ -477,33 +519,41 @@ A self-contained extension that both declares new fields and populates them with
 An external fields provider declares:
 
 - **Output fields** — field declarations (identity, label, type, category, etc.) that the provider will populate. The pipeline adds these to the descriptor during Stage 2.
-- **Input dependencies** (optional) — a callback that receives the finalized descriptor and returns the field identities the provider needs as input data for its `resolve` function. The pipeline ensures these fields are queried (never removed). **Visibility is determined automatically:** if an iModel fields provider already declared the field (it exists in the descriptor for its own reasons), it remains visible; if the field exists only because this external provider requires it, the system adds it as hidden (queried but not displayed). This late-binding approach decouples the provider from internal field identity formats — it inspects the actual descriptor using utility methods (find by class + property name, by label, by path, etc.) rather than hardcoding identity strings.
-- **Resolve function** — receives a batch of `ContentValues` (the current page) after SQL-backed fields are populated, and fills in output field values in bulk.
+- **Input dependencies** (optional) — a static record of property declarations specifying the iModel properties the provider needs as input data for its `getValues` function. Each entry declares the property by class name, property name, and optional relationship path. The keys of the record become the typed accessor names available in `items[].inputValues` within `getValues`. The pipeline ensures each declared property is queried and its value is pre-extracted into `inputValues` for each item in the batch.
+- **Value population function (`getValues`)** — receives a batch of items (with pre-extracted `inputValues`) after SQL-backed fields are populated, and returns output field values for each item.
+
+**Why static declarations instead of a dynamic callback:**
+
+The plan originally proposed `inputs?: (descriptor: Descriptor) => string[]` — a callback that receives the finalized descriptor and returns field identity strings. This was rejected because:
+
+1. **External fields providers cannot know what fields exist** — The descriptor's field set depends on which iModel fields providers are registered and what schema the iModel has. An external provider has no way to predict field identities at registration time, and making it search the descriptor by class + property + path is fragile (what if the field isn't there?).
+2. **Static declarations are self-describing** — The provider declares exactly what it needs (`className`, `propertyName`, `path?`). The pipeline takes responsibility for ensuring the property is queried — either by finding an existing field that matches, or by adding a hidden field. The provider never needs to "find" anything in the descriptor.
+3. **Type safety** — Static declarations enable compile-time type inference. The record keys become the typed `inputValues` accessor names in `getValues`, so TypeScript catches typos and missing inputs at compile time. A dynamic callback returning `string[]` provides no such guarantee.
+4. **Decouples from field identity encoding** — Field identities are an internal encoding concern (class + property + path hash, etc.). Static declarations use semantic coordinates (class name + property name + path) — stable, readable, and independent of identity encoding strategy.
 
 ```ts
-interface ExternalFieldsProvider {
+interface ExternalFieldsProvider<TInputKeys, TOutputFieldIds> {
   // Descriptor contribution (applied during Stage 2)
-  fields: FieldDeclaration[]; // fields this provider will populate
-  categories?: CategoryDefinition[]; // shared pool referenced by fields via categoryId
+  fields: ExternalFieldDeclaration<TOutputFieldIds>[]; // fields this provider will populate
+  categories?: Record<string, CategoryDefinition>;
 
-  // Input discovery (called after descriptor is finalized)
-  inputs?: (descriptor: Descriptor) => string[]; // field identities this provider needs as input
+  // Input declarations (static — evaluated by pipeline during Stage 2)
+  inputs?: { [K in TInputKeys]: InputPropertyDeclaration };
 
   // Value population (called during Stage 4)
-  resolve: (items: ContentValues[]) => Promise<void>;
+  getValues(props: {
+    items: Array<{ inputValues: { [K in TInputKeys]: Value } }>;
+  }): Promise<Array<{ [F in TOutputFieldIds]: Value }>>;
 }
 
-interface FieldDeclaration {
-  id: string; // stable identity
-  label: string;
-  type: FieldType;
-  categoryId?: string; // references a CategoryDefinition.id
+interface InputPropertyDeclaration {
+  className: EC.FullClassName; // class that owns the property
+  propertyName: string; // the EC property name
+  path?: RelationshipPath; // path from target to property's class (omit for direct)
 }
 ```
 
-**Input field visibility rule:** A field referenced as input by an external provider is hidden only if no iModel fields provider independently declared it. If the field was already part of the descriptor (declared by a provider or a property spec), it stays visible — the external provider is simply "piggybacking" on a field that exists for other reasons. If the field needs to be added solely for the external provider's benefit, the system adds it as hidden.
-
-The `Descriptor` provides utility methods for field lookup — find by class + property name, by label, by path, by category, etc. External fields provider authors use these utilities inside `inputs` rather than depending on internal identity encoding.
+**Input field visibility rule:** For each declared input property, the pipeline checks whether a matching field already exists in the descriptor (same class + property + path). If yes, it pins the field (prevents removal by transformers). If no, it adds the property as a hidden field (queried but not displayed). The provider never observes the descriptor directly — it just declares what it needs and the pipeline handles the rest.
 
 External fields providers run during Stage 4, after query execution but before items are emitted to the consumer. They enable external data to be first-class in the descriptor — their declared fields appear in the field list, carry categories and metadata, and can be hidden/shown like any other field.
 
@@ -512,7 +562,7 @@ External fields providers run during Stage 4, after query execution but before i
 - External fields cannot participate in SQL-level sorting, filtering, or distinct values (their data doesn't exist in the query).
 - External fields providers must not modify fields they don't own.
 
-**Example:** An external fields provider declares an `inputs` callback that uses `descriptor.findFieldByProperty("BisCore", "Element", "CodeValue")` to locate the field carrying external IDs, returning `[field.identity]`. It declares `fields: [{ id: "externalName", ... }, { id: "externalStatus", ... }]`. Since no iModel fields provider independently declared `CodeValue`, the system adds it as hidden (queried but not displayed). During Stage 4, the provider's `resolve` function reads the input value from each item, calls an external service once with all values, and fills in `externalName` and `externalStatus` across the batch.
+**Example:** An external fields provider declares `inputs: { externalId: { className: "BisCore:Element", propertyName: "CodeValue" } }`. It declares `fields: [{ id: "externalName", ... }, { id: "externalStatus", ... }]`. Since no iModel fields provider independently declared `CodeValue`, the pipeline adds it as a hidden field (queried but not displayed). During Stage 4, the provider's `getValues` function reads `item.inputValues.externalId` from each item, calls an external service once with all values, and returns `externalName` and `externalStatus` for each item in the batch.
 
 ### Registration and ordering
 
@@ -550,9 +600,9 @@ The descriptor is the single artifact that flows between "what exists" and "load
 
 The expensive work in building a descriptor is **path resolution (Stage 1)** — ECSQL queries against the iModel to resolve generic paths to concrete ones. This can take tens of seconds. Stage 2 (field enumeration from EC metadata) is fast — schema metadata is already loaded in memory.
 
-**What to cache:** Only the **content sources** — the output of Stage 1 (resolved concrete paths + calculated field declarations per target). The descriptor itself is not cached.
+**What to cache:** Only the **content sources** — the output of Stage 1 (resolved declaration groups with concrete paths per target). Property specs, cardinality hints, calculated fields, and categories are NOT cached — they are re-derived cheaply by re-calling providers in Stage 2. The descriptor itself is not cached.
 
-**Why cache only Stage 1:** Stage 2 is cheap (in-memory metadata reads), so re-running it from cached sources adds negligible cost. This avoids all complexity around "restoring" a descriptor:
+**Why cache only Stage 1:** Stage 2 is cheap (re-call providers for declarations + in-memory metadata reads), so re-running it from cached sources adds negligible cost. This avoids all complexity around "restoring" a descriptor:
 
 - No partial re-application of external fields.
 - No "delta" transformer pass.
@@ -562,8 +612,8 @@ The expensive work in building a descriptor is **path resolution (Stage 1)** —
 
 **Restore flow:**
 
-1. Deserialize cached content sources (concrete paths + calculated field declarations).
-2. Run Stage 2 fresh — enumerate fields from EC schema metadata, append external fields, call `inputs`, run transformers.
+1. Deserialize cached content sources (resolved declaration groups with concrete paths + provider/declaration references).
+2. Run Stage 2 fresh — re-call providers for property specs/cardinality/calculated fields/categories, enumerate fields from EC schema metadata, append external fields, call `inputs`, run transformers.
 3. Descriptor is ready for Stage 3/4.
 
 **Cache key:** `(content target, iModel data version, sorted iModel fields provider ID set)`.

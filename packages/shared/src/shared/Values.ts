@@ -179,3 +179,23 @@ export namespace TypedPrimitiveValue {
     throw new Error(`PrimitiveValueType ${type} isn't compatible with value ${JSON.stringify(value)}`);
   }
 }
+
+/**
+ * A composite value representing a struct (named record with member values).
+ * @public
+ */
+export interface StructValue {
+  [memberName: string]: Value;
+}
+
+/**
+ * A composite value representing an array of values.
+ * @public
+ */
+export type ArrayValue = Value[];
+
+/**
+ * Any value that can be assigned to an ECInstance — a primitive, struct, array, or undefined (null/empty).
+ * @public
+ */
+export type Value = PrimitiveValue | StructValue | ArrayValue | undefined;

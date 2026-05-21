@@ -6,6 +6,8 @@
 import { LRUMap } from "@itwin/core-bentley";
 import { parseFullClassName } from "./Utils.js";
 
+import type { ECSqlBinding } from "./ECSqlCore.js";
+
 /**
  * An interface for an object that knows how to get an ECSchema from an iModel.
  *
@@ -339,6 +341,96 @@ export namespace EC {
 export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
 /**
+ * A type descriptor for a value's shape.
+ *
+ * - `PrimitiveValueDescriptor`: a scalar primitive.
+ * - `StructValueDescriptor`: a named struct with typed members.
+ * - `ArrayValueDescriptor`: an ordered collection of a single element type.
+ *
+ * @public
+ */
+export type ValueDescriptor = PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor;
+
+/** @public */
+interface PrimitiveValueDescriptor {
+  kind: "primitive";
+  primitiveType: PrimitiveValueType;
+  /**
+   * Full name of the KindOfQuantity associated with this property (e.g., `"Units.LENGTH"`).
+   * Only meaningful for numeric primitive types (`double`, `int`, `long`).
+   * Determines how the value should be formatted and which units to display.
+   */
+  kindOfQuantity?: string;
+}
+
+/** @public */
+interface StructValueDescriptor {
+  kind: "struct";
+  members: StructMember[];
+}
+
+/** @public */
+interface StructMember {
+  name: string;
+  label: string;
+  type: ValueDescriptor;
+}
+
+/** @public */
+interface ArrayValueDescriptor {
+  kind: "array";
+  elementType: ValueDescriptor;
+}
+
+/**
+ * A filter predicate expressed as a raw ECSQL WHERE clause.
+ *
+ * Used to restrict which instances participate at a given point in the pipeline
+ * (e.g., filtering target instances of a relationship path step).
+ *
+ * @public
+ */
+export interface InstanceFilter {
+  /**
+   * ECSQL WHERE clause expression (without the WHERE keyword).
+   *
+   * Use `targetAlias` (defaults to `"this"`) followed by a dot to reference properties
+   * of the filtered class, and `relationshipAlias` (defaults to `"rel"`) to reference
+   * properties on the relationship class. At query generation time, the pipeline performs
+   * a literal replacement of all `{alias}.` occurrences with the actual query aliases.
+   *
+   * @example
+   * ```
+   * expression: "this.Area > :minArea AND rel.Priority > 0"
+   * ```
+   */
+  expression: string;
+
+  /**
+   * The placeholder used in `expression` to reference the filtered class.
+   * Every occurrence of `{targetAlias}.` in the expression will be replaced with the
+   * actual query alias at query generation time.
+   *
+   * @default "this"
+   */
+  targetAlias?: string;
+
+  /**
+   * The placeholder used in `expression` to reference the relationship class.
+   * Every occurrence of `{relationshipAlias}.` in the expression will be replaced with the
+   * actual relationship alias at query generation time.
+   *
+   * @default "rel"
+   */
+  relationshipAlias?: string;
+
+  /**
+   * Bind values for the expression, keyed by parameter name.
+   */
+  bindings?: Record<string, ECSqlBinding>;
+}
+
+/**
  * Describes a single step through an ECRelationship from source ECClass to target ECClass.
  * @public
  */
@@ -355,6 +447,12 @@ export interface RelationshipPathStep {
    * describes a step from `B` to `A`.
    */
   relationshipReverse?: boolean;
+  /**
+   * Optional filter applied to instances at this step.
+   * Only instances matching the filter will be included when traversing this relationship.
+   * The filter expression can reference both target class and relationship class properties.
+   */
+  instanceFilter?: InstanceFilter;
 }
 
 /**
