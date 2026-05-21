@@ -3,10 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { EC } from "@itwin/presentation-shared";
+import { compareFullClassNames } from "@itwin/presentation-shared";
+
+import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
 import type { CategoryDefinition } from "./Category.js";
-import type { Field, RelatedFieldGroup } from "./Field.js";
+import type { Field, PropertyField, RelatedFieldGroup } from "./Field.js";
 
 /**
  * The schema of the content result. Computed before loading any values.
@@ -64,22 +66,40 @@ export namespace ContentDescriptor {
 
   /**
    * Find a property field by source class full name and property name.
+   *
+   * When the same property appears multiple times via different relationship paths,
+   * supply `pathFromTarget` to disambiguate. Without it, the first match is returned.
    */
   export function findFieldByProperty(
     descriptor: ContentDescriptor,
     sourceClassName: EC.FullClassName,
     propertyName: string,
-  ): Field | undefined {
+    pathFromTarget?: RelationshipPath,
+  ): PropertyField | undefined {
     for (const field of iterateFields(descriptor)) {
       if (
         field.kind === "property" &&
         field.sourceClassName === sourceClassName &&
-        field.propertyName === propertyName
+        field.propertyName === propertyName &&
+        (!pathFromTarget || relationshipPathsEqual(field.pathFromTarget, pathFromTarget))
       ) {
         return field;
       }
     }
     return undefined;
+  }
+
+  function relationshipPathsEqual(a: RelationshipPath, b: RelationshipPath): boolean {
+    if (a.length !== b.length) {
+      return false;
+    }
+    return a.every(
+      (step, i) =>
+        compareFullClassNames(step.sourceClassName, b[i].sourceClassName) === 0 &&
+        compareFullClassNames(step.targetClassName, b[i].targetClassName) === 0 &&
+        compareFullClassNames(step.relationshipName, b[i].relationshipName) === 0 &&
+        (step.relationshipReverse ?? false) === (b[i].relationshipReverse ?? false),
+    );
   }
 
   function* iterateFields(descriptor: ContentDescriptor): Iterable<Field> {
