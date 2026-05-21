@@ -15,8 +15,6 @@ interface BaseField {
    * Stable identity key that uniquely identifies this field across descriptor rebuilds.
    * Derived from: sourceClassName + propertyAccessPath (for property fields),
    * or a declared stable name (for calculated/external fields).
-   *
-   * @see {@link ../OPEN_QUESTIONS.md | Open Questions} — encoding strategy for long paths.
    */
   identity: string;
   /** Display name shown to the user. */
@@ -33,8 +31,6 @@ interface BaseField {
 
 /**
  * A field backed by a real EC property.
- *
- * @see {@link ../OPEN_QUESTIONS.md | Open Questions} — multi-source property fields (merging same property from different classes).
  *
  * @public
  */
@@ -113,8 +109,6 @@ export type Field = PropertyField | CalculatedField | ExternalField;
  *
  * Groups are purely structural — they carry no value themselves.
  * Values in content items are keyed by leaf field identity.
- *
- * @see {@link ../OPEN_QUESTIONS.md | Open Questions} — whether to keep this or flatten into a single field list.
  *
  * @public
  */
