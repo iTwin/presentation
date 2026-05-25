@@ -67,7 +67,7 @@ export function defineDescriptorTransformer(transformer: DescriptorTransformer):
  *
  * @public
  */
-type TransformableField = Field & { readonly identity: string };
+type TransformableField = Omit<Field, "identity"> & { readonly identity: string };
 
 /**
  * A related field group exposed to transformers — nested fields have frozen identities.
