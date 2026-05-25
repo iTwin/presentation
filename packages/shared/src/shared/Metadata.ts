@@ -363,7 +363,7 @@ export type ValueDescriptor = PrimitiveValueDescriptor | StructValueDescriptor |
  * Describes a scalar primitive value.
  * @public
  */
-type PrimitiveValueDescriptor = { kind: "primitive" } & (
+export type PrimitiveValueDescriptor = { kind: "primitive" } & (
   | {
       /** The primitive value type. */
       type: Exclude<PrimitiveValueType, NumericPrimitiveValueType>;
@@ -384,7 +384,7 @@ type PrimitiveValueDescriptor = { kind: "primitive" } & (
  * Describes a named struct value with typed members.
  * @public
  */
-interface StructValueDescriptor {
+export interface StructValueDescriptor {
   kind: "struct";
   /** The list of named, typed members that make up this struct. */
   members: StructMember[];
@@ -407,7 +407,7 @@ interface StructMember {
  * Describes an ordered collection of values of a single element type.
  * @public
  */
-interface ArrayValueDescriptor {
+export interface ArrayValueDescriptor {
   kind: "array";
   /** The type descriptor for each element in the array. */
   elementType: ValueDescriptor;

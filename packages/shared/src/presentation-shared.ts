@@ -24,8 +24,16 @@ export { createIModelInstanceLabelSelectClauseFactory } from "./shared/instance-
 export type { ILogger, LogFunction, LogLevel } from "./shared/Logging.js";
 export { NOOP_LOGGER } from "./shared/Logging.js";
 export type { ArrayElement, OmitOverUnion, Props } from "./shared/MappedTypes.js";
-export type { EC, ECClassHierarchyInspector, ECSchemaProvider, ValueDescriptor } from "./shared/Metadata.js";
-export type { RelationshipPath } from "./shared/Metadata.js";
+export type {
+  ArrayValueDescriptor,
+  EC,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+  PrimitiveValueDescriptor,
+  RelationshipPath,
+  StructValueDescriptor,
+  ValueDescriptor,
+} from "./shared/Metadata.js";
 export { createCachingECClassHierarchyInspector, getClass } from "./shared/Metadata.js";
 export {
   createMainThreadReleaseOnTimePassedHandler,

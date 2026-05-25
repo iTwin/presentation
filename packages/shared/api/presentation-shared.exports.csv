@@ -1,6 +1,8 @@
 sep=;
 Release Tag;API Item Type;API Item Name
 public;type;ArrayElement
+public;type;ArrayValue
+public;interface;ArrayValueDescriptor
 public;function;compareFullClassNames
 public;type;ConcatenatedValue
 public;namespace;ConcatenatedValue
@@ -39,10 +41,16 @@ public;function;parseFullClassName
 public;function;parseInstanceLabel
 public;type;PrimitiveValue
 public;namespace;PrimitiveValue
+public;type;PrimitiveValueDescriptor
 public;type;Props
 public;interface;RaisableEvent
+public;type;RelationshipPath
 public;function;releaseMainThread
+public;interface;StructValue
+public;interface;StructValueDescriptor
 public;function;trimWhitespace
 public;function;trimWhitespace
 public;type;TypedPrimitiveValue
 public;namespace;TypedPrimitiveValue
+public;type;Value
+public;type;ValueDescriptor
