@@ -3,7 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ContentDescriptor } from "../model/ContentDescriptor.js";
+import type { ContentSource } from "../ContentTarget.js";
+import type { CategoryDefinition } from "../model/Category.js";
+import type { Field, RelatedFieldGroup } from "../model/Field.js";
 
 /**
  * Default priority for descriptor transformers.
@@ -47,7 +49,7 @@ export interface DescriptorTransformer {
    * Transform the descriptor in place. May mutate fields, categories,
    * and related field groups.
    */
-  transform(descriptor: ContentDescriptor): void;
+  transform(descriptor: TransformableDescriptor): void;
 }
 
 /**
@@ -57,4 +59,40 @@ export interface DescriptorTransformer {
  */
 export function defineDescriptorTransformer(transformer: DescriptorTransformer): DescriptorTransformer {
   return transformer;
+}
+
+/**
+ * A field with its identity made readonly — transformers may modify metadata
+ * (label, categoryId, hidden, readOnly) but must not change identity.
+ *
+ * @public
+ */
+type TransformableField = Field & { readonly identity: string };
+
+/**
+ * A related field group exposed to transformers — nested fields have frozen identities.
+ *
+ * @public
+ */
+interface TransformableRelatedFieldGroup extends Omit<RelatedFieldGroup, "fields" | "nestedGroups"> {
+  fields: TransformableField[];
+  nestedGroups?: TransformableRelatedFieldGroup[];
+}
+
+/**
+ * A constrained view of {@link ContentDescriptor} exposed to descriptor transformers.
+ *
+ * Enforces transformer rules at the type level:
+ * - `sources` is readonly — the resolved source structure is immutable at this stage.
+ * - Field `identity` is readonly — must not be changed.
+ * - Field metadata (`label`, `categoryId`, `hidden`, `readOnly`) remains mutable.
+ * - Field arrays remain mutable to allow removal.
+ *
+ * @public
+ */
+interface TransformableDescriptor {
+  readonly sources: readonly ContentSource[];
+  directFields: TransformableField[];
+  relatedFieldGroups: TransformableRelatedFieldGroup[];
+  categories: Record<string, CategoryDefinition>;
 }
