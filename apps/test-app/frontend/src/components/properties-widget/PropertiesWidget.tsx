@@ -170,7 +170,7 @@ function PropertyGrid(props: PropertyGridProps) {
     return null;
   }
 
-  return <FilterablePropertyGrid {...restProps} imodel={imodel} dataProvider={dataProvider} />;
+  return <FilterablePropertyGrid {...restProps} dataProvider={dataProvider} />;
 }
 
 function FilterablePropertyGrid({
@@ -178,7 +178,9 @@ function FilterablePropertyGrid({
   filtering,
   width,
   height,
-}: Omit<PropertyGridProps, "rulesetId" | "diagnostics"> & { dataProvider: PresentationPropertyDataProvider }) {
+}: Omit<PropertyGridProps, "rulesetId" | "diagnostics" | "imodel"> & {
+  dataProvider: PresentationPropertyDataProvider;
+}) {
   const unifiedSelectionContext = useUnifiedSelectionContext();
   if (!unifiedSelectionContext) {
     throw new Error("Unified selection context is not available");
