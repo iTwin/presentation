@@ -88,7 +88,14 @@ export async function createRelationshipPathJoinClause(
     const navigationProperty = await getNavigationProperty(step);
     const filterCondition = resolveInstanceFilterCondition(step);
     if (step.instanceFilter?.bindings) {
-      Object.assign(bindings, step.instanceFilter.bindings);
+      for (const [key, value] of Object.entries(step.instanceFilter.bindings)) {
+        if (key in bindings) {
+          throw new Error(
+            `Binding key "${key}" is used in multiple steps of the relationship path. Each binding key must be unique across all steps.`,
+          );
+        }
+        bindings[key] = value;
+      }
     }
     if (navigationProperty) {
       const isNavigationPropertyForward = navigationProperty.direction === "Forward";

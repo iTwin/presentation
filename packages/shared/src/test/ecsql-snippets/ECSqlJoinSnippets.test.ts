@@ -640,6 +640,42 @@ describe("createRelationshipPathJoinClause", () => {
         minWeight: { type: "double", value: 5.0 },
       });
     });
+
+    it("throws when two steps use the same binding key", async () => {
+      const step1 = setupLinkTableRelationshipClasses({ source: "a", relationship: "r1", target: "b" });
+      const step2 = setupLinkTableRelationshipClasses({ source: step1.targetClass, relationship: "r2", target: "c" });
+      await expect(
+        createRelationshipPathJoinClause({
+          schemaProvider,
+          path: [
+            {
+              sourceClassName: step1.sourceClass.fullName,
+              sourceAlias: "a",
+              relationshipName: step1.relationship.fullName,
+              relationshipAlias: "r1",
+              targetClassName: step1.targetClass.fullName,
+              targetAlias: "b",
+              instanceFilter: {
+                expression: "this.Value > :threshold",
+                bindings: { threshold: { type: "double", value: 1.0 } },
+              },
+            },
+            {
+              sourceClassName: step2.sourceClass.fullName,
+              sourceAlias: "b",
+              relationshipName: step2.relationship.fullName,
+              relationshipAlias: "r2",
+              targetClassName: step2.targetClass.fullName,
+              targetAlias: "c",
+              instanceFilter: {
+                expression: "this.Value < :threshold",
+                bindings: { threshold: { type: "double", value: 9.0 } },
+              },
+            },
+          ],
+        }),
+      ).rejects.toThrow(`Binding key "threshold" is used in multiple steps`);
+    });
   });
 
   async function setupNavigationPropertyRelationshipClasses(props: {
