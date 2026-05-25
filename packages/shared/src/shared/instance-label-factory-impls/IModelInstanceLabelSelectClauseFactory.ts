@@ -440,15 +440,17 @@ async function buildRelationshipPathSubquery(props: {
     finalTargetAlias: props.finalTargetAlias,
     depth: props.depth,
   });
-
-  const joinClauses = await createRelationshipPathJoinClause({ schemaProvider: props.schemaProvider, path: joinPath });
+  const joinResult = await createRelationshipPathJoinClause({ schemaProvider: props.schemaProvider, path: joinPath });
+  assert(
+    !joinResult.bindings,
+    "Output of `toJoinRelationshipPath` should not contain an instance filter, thus no bindings",
+  );
 
   const { schemaName, className } = parseFullClassName(props.ruleClassName);
-
   return `(
     SELECT ${props.selectExpression}
     FROM [${schemaName}].[${className}] [${sourceAlias}]
-    ${joinClauses}
+    ${joinResult.joins}
     WHERE [${sourceAlias}].[ECInstanceId] = [${props.classAlias}].[ECInstanceId]
     LIMIT 1
   )`;

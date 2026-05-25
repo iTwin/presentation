@@ -106,17 +106,16 @@ export namespace PrimitiveValue {
  * @public
  */
 export type TypedPrimitiveValue = (
-  | { value: number; type: "Integer" | "Long" }
-  | { value: number; type: "Double"; koqName?: string }
-  | { value: boolean; type: "Boolean" }
-  | { value: Id64String; type: "Id" }
-  | { value: string; type: "String" }
+  | { value: number; type: Extract<PrimitiveValueType, "Double" | "Integer" | "Long">; koqName?: string }
+  | { value: boolean; type: Extract<PrimitiveValueType, "Boolean"> }
+  | { value: Id64String; type: Extract<PrimitiveValueType, "Id"> }
+  | { value: string; type: Extract<PrimitiveValueType, "String"> }
   | {
       value: number | string | Date; // julian day format, ISO format or `Date`
-      type: "DateTime";
+      type: Extract<PrimitiveValueType, "DateTime">;
     }
-  | { value: Point2d; type: "Point2d" }
-  | { value: Point3d; type: "Point3d" }
+  | { value: Point2d; type: Extract<PrimitiveValueType, "Point2d"> }
+  | { value: Point3d; type: Extract<PrimitiveValueType, "Point3d"> }
 ) & { extendedType?: string };
 
 /** @public */
@@ -134,13 +133,9 @@ export namespace TypedPrimitiveValue {
     extendedType?: string,
   ): TypedPrimitiveValue {
     switch (type) {
+      case "Double":
       case "Integer":
       case "Long":
-        if (typeof value === "number") {
-          return { type, extendedType, value };
-        }
-        break;
-      case "Double":
         if (typeof value === "number") {
           return { type, koqName, extendedType, value };
         }
