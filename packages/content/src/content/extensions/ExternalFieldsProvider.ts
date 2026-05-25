@@ -121,12 +121,12 @@ type ExternalFieldValueRecord<TFieldIds extends readonly string[]> = {
  * const iotProvider = defineExternalFieldsProvider({
  *   id: "iot-sensors_v1",
  *   fields: [
- *     { id: "currentFlow", label: "Current Flow", type: { kind: "primitive", primitiveType: "double" } },
- *     { id: "lastMaintenance", label: "Last Maintenance", type: { kind: "primitive", primitiveType: "dateTime" } },
+ *     { id: "currentFlow", label: "Current Flow", type: { kind: "primitive", type: "Double" } },
+ *     { id: "lastMaintenance", label: "Last Maintenance", type: { kind: "primitive", type: "DateTime" } },
  *   ],
  *   inputs: {
  *     serialNo: { className: "MySchema:Pump", propertyName: "SerialNumber" },
- *     deviceId: { className: "MySchema:Device", propertyName: "DeviceId", path: [{ relationship: "MySchema:PumpHasDevice", direction: "forward", target: "MySchema:Device" }] },
+ *     deviceId: { className: "MySchema:Device", propertyName: "DeviceId", path: [{ sourceClassName: "MySchema:Pump", targetClassName: "MySchema:Device", relationshipName: "MySchema:PumpHasDevice" }] },
  *   },
  *   async getValues({ items }) {
  *     const serials = items.map((item) => item.inputValues.serialNo);

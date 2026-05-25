@@ -144,7 +144,7 @@ interface CalculatedFieldDeclaration {
  *     }
  *     return {
  *       relatedProperties: [{ path: [...] }],
- *       calculatedFields: [{ id: "calc1", label: "Calc", expression: "...", type: { kind: "primitive", primitiveType: "double" } }],
+ *       calculatedFields: [{ id: "calc1", label: "Calc", expression: "...", type: { kind: "primitive", type: "Double" } }],
  *     };
  *   },
  * });
