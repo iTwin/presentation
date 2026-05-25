@@ -17,6 +17,8 @@ import {
 import { NumericEditorName, NumericPropertyEditorBase } from "./NumericPropertyEditor.js";
 import { QuantityEditorName, QuantityPropertyEditorBase } from "./QuantityPropertyEditor.js";
 
+/* eslint-disable @typescript-eslint/no-deprecated */
+
 export {
   NavigationPropertyEditorContextProvider,
   NavigationPropertyEditorContextProviderProps,

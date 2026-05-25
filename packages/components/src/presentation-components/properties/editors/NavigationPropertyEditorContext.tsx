@@ -13,6 +13,8 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { NavigationPropertyInfo } from "@itwin/presentation-common";
 import { IContentDataProvider } from "../../common/ContentDataProvider.js";
 
+/* eslint-disable @typescript-eslint/no-deprecated */
+
 /**
  * A context providing necessary information for [[NavigationPropertyEditor]].
  * @internal
@@ -29,6 +31,7 @@ const navigationPropertyEditorContext = createContext<NavigationPropertyEditorCo
 /**
  * Props for [[NavigationPropertyEditorContextProvider]].
  * @public
+ * @deprecated in 5.14. Not used anymore.
  */
 export interface NavigationPropertyEditorContextProviderProps {
   /** iModel connection to pull data from. */
@@ -40,6 +43,7 @@ export interface NavigationPropertyEditorContextProviderProps {
 /**
  * Creates context that supplies necessary navigation property-related information for [[NavigationPropertyEditor]].
  * @public
+ * @deprecated in 5.14. Not used anymore.
  */
 export function NavigationPropertyEditorContextProvider({
   children,
@@ -61,6 +65,7 @@ export function useNavigationPropertyEditorContext() {
 /**
  * Custom hook that creates props for [[NavigationPropertyEditorContextProvider]].
  * @public
+ * @deprecated in 5.14. Not used anymore.
  */
 export function useNavigationPropertyEditorContextProviderProps(
   imodel: IModelConnection,
