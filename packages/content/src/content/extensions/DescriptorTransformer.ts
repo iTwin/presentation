@@ -7,6 +7,8 @@ import type { ContentSource } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { Field, RelatedFieldGroup } from "../model/Field.js";
 
+// cspell:words spliceable
+
 /**
  * Default priority for descriptor transformers.
  *
@@ -70,13 +72,20 @@ export function defineDescriptorTransformer(transformer: DescriptorTransformer):
 type TransformableField = Omit<Field, "identity"> & { readonly identity: string };
 
 /**
+ * A readonly array that permits element removal via `splice` but disallows insertion and direct mutation.
+ *
+ * @public
+ */
+type SpliceableReadonlyArray<T> = ReadonlyArray<T> & { splice(start: number, deleteCount: number): T[] };
+
+/**
  * A related field group exposed to transformers — nested fields have frozen identities.
  *
  * @public
  */
 interface TransformableRelatedFieldGroup extends Omit<RelatedFieldGroup, "fields" | "nestedGroups"> {
-  fields: TransformableField[];
-  nestedGroups?: TransformableRelatedFieldGroup[];
+  fields: SpliceableReadonlyArray<TransformableField>;
+  nestedGroups?: SpliceableReadonlyArray<TransformableRelatedFieldGroup>;
 }
 
 /**
@@ -86,13 +95,13 @@ interface TransformableRelatedFieldGroup extends Omit<RelatedFieldGroup, "fields
  * - `sources` is readonly — the resolved source structure is immutable at this stage.
  * - Field `identity` is readonly — must not be changed.
  * - Field metadata (`label`, `categoryId`, `hidden`, `readOnly`) remains mutable.
- * - Field arrays remain mutable to allow removal.
+ * - Field arrays are readonly but allow element removal via `splice`.
  *
  * @public
  */
 interface TransformableDescriptor {
   readonly sources: readonly ContentSource[];
-  directFields: TransformableField[];
-  relatedFieldGroups: TransformableRelatedFieldGroup[];
-  categories: Record<string, CategoryDefinition>;
+  readonly directFields: SpliceableReadonlyArray<TransformableField>;
+  readonly relatedFieldGroups: SpliceableReadonlyArray<TransformableRelatedFieldGroup>;
+  readonly categories: Record<string, CategoryDefinition>;
 }
