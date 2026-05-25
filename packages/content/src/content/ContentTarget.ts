@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { Id64String } from "@itwin/core-bentley";
-import type { EC, InstanceFilter, RelationshipPath } from "@itwin/presentation-shared";
+import type { EC, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
 import type { BaseFieldsProvider } from "./extensions/BaseFieldsProvider.js";
 
 /**
@@ -45,7 +45,35 @@ export interface ContentTarget {
    * Optional filter predicate to further restrict which instances are in scope.
    * Applied during source resolution (Stage 1) — affects which paths are discovered.
    */
-  instanceFilter?: InstanceFilter;
+  instanceFilter?: {
+    /**
+     * ECSQL WHERE clause expression (without the WHERE keyword).
+     *
+     * Use `primaryClassAlias` (defaults to `"this"`) followed by a dot to reference properties
+     * of the primary class. At query generation time, the pipeline performs
+     * a literal replacement of all `{primaryClassAlias}.` occurrences with the actual query alias.
+     *
+     * @example
+     * ```
+     * expression: "this.Area > :minArea"
+     * ```
+     */
+    expression: string;
+
+    /**
+     * The placeholder used in `expression` to reference the primary class (`primaryClass`).
+     * Every occurrence of `{primaryClassAlias}.` in the expression will be replaced with the
+     * actual query alias at query generation time.
+     *
+     * @default "this"
+     */
+    primaryClassAlias?: string;
+
+    /**
+     * Bind values for the expression, keyed by parameter name.
+     */
+    bindings?: Record<string, ECSqlBinding>;
+  };
 }
 
 /**
