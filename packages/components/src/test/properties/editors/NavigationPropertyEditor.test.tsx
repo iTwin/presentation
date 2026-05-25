@@ -27,6 +27,8 @@ import {
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { renderHook, render as renderRTL, waitFor } from "../../TestUtils.js";
 
+/* eslint-disable @typescript-eslint/no-deprecated */
+
 function createNavigationPropertyInfo(): NavigationPropertyInfo {
   return {
     classInfo: { name: "TestSchema:PropClass", label: "Prop Class", id: "1" },
