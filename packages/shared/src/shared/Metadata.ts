@@ -359,11 +359,19 @@ type NumericPrimitiveValueType = Extract<PrimitiveValueType, "Double" | "Int" | 
  */
 export type ValueDescriptor = PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor;
 
-/** @public */
+/**
+ * Describes a scalar primitive value.
+ * @public
+ */
 type PrimitiveValueDescriptor = { kind: "primitive" } & (
-  | { primitiveType: Exclude<PrimitiveValueType, NumericPrimitiveValueType>; kindOfQuantity?: undefined }
   | {
-      primitiveType: NumericPrimitiveValueType;
+      /** The primitive value type. */
+      type: Exclude<PrimitiveValueType, NumericPrimitiveValueType>;
+      kindOfQuantity?: undefined;
+    }
+  | {
+      /** The primitive value type. */
+      type: NumericPrimitiveValueType;
       /**
        * Full name of the KindOfQuantity associated with this property (e.g., `"Units.LENGTH"`).
        * Determines how the value should be formatted and which units to display.
@@ -372,22 +380,36 @@ type PrimitiveValueDescriptor = { kind: "primitive" } & (
     }
 );
 
-/** @public */
+/**
+ * Describes a named struct value with typed members.
+ * @public
+ */
 interface StructValueDescriptor {
   kind: "struct";
+  /** The list of named, typed members that make up this struct. */
   members: StructMember[];
 }
 
-/** @public */
+/**
+ * Describes a single member of a `StructValueDescriptor`.
+ * @public
+ */
 interface StructMember {
+  /** The member's property name. */
   name: string;
+  /** A human-readable label for display purposes. */
   label: string;
+  /** The type descriptor for this member's value. */
   type: ValueDescriptor;
 }
 
-/** @public */
+/**
+ * Describes an ordered collection of values of a single element type.
+ * @public
+ */
 interface ArrayValueDescriptor {
   kind: "array";
+  /** The type descriptor for each element in the array. */
   elementType: ValueDescriptor;
 }
 
