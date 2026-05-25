@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.10.4
+
+### Patch Changes
+
+- [#1358](https://github.com/iTwin/presentation/pull/1358): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.15
+  - @itwin/presentation-shared@1.2.14
+  - @itwin/unified-selection@1.7.5
+
 ## 1.10.3
 
 ### Patch Changes
