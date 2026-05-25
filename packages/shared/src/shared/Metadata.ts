@@ -335,7 +335,12 @@ export namespace EC {
 }
 
 /**
- * An identifiers' union of all supported primitive value types.
+ * A union of all primitive value types supported by the Presentation packages.
+ *
+ * Compared to `EC.PrimitiveType`:
+ * - Adds `"Id"` to support id properties such as `ECInstanceId` or `ECClassId`, which have no equivalent in `EC.PrimitiveType`.
+ * - Excludes `"Binary"` and `"IGeometry"`, as properties of those types are not supported by the Presentation packages.
+ *
  * @public
  */
 export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;

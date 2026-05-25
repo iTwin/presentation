@@ -561,29 +561,26 @@ export function trimWhitespace(str: string | undefined): string | undefined;
 // @public
 export type TypedPrimitiveValue = ({
     value: number;
-    type: "Integer" | "Long";
-} | {
-    value: number;
-    type: "Double";
+    type: Extract<PrimitiveValueType, "Double" | "Integer" | "Long">;
     koqName?: string;
 } | {
     value: boolean;
-    type: "Boolean";
+    type: Extract<PrimitiveValueType, "Boolean">;
 } | {
     value: Id64String;
-    type: "Id";
+    type: Extract<PrimitiveValueType, "Id">;
 } | {
     value: string;
-    type: "String";
+    type: Extract<PrimitiveValueType, "String">;
 } | {
     value: number | string | Date;
-    type: "DateTime";
+    type: Extract<PrimitiveValueType, "DateTime">;
 } | {
     value: Point2d;
-    type: "Point2d";
+    type: Extract<PrimitiveValueType, "Point2d">;
 } | {
     value: Point3d;
-    type: "Point3d";
+    type: Extract<PrimitiveValueType, "Point3d">;
 }) & {
     extendedType?: string;
 };
