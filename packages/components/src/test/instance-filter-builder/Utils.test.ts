@@ -7,15 +7,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyFilterBuilderRuleRangeValue } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import { Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import {
   createInstanceFilterPropertyInfos,
   DEFAULT_ROOT_CATEGORY_NAME,
   filterRuleValidator,
-  INSTANCE_FILTER_FIELD_SEPARATOR,
-  useFilterBuilderNavigationPropertyEditorContextProviderProps,
 } from "../../presentation-components/instance-filter-builder/Utils.js";
 import { createTestECClassInfo } from "../_helpers/Common.js";
 import {
@@ -23,9 +19,7 @@ import {
   createTestContentDescriptor,
   createTestNestedContentField,
   createTestPropertiesContentField,
-  createTestSimpleContentField,
 } from "../_helpers/Content.js";
-import { renderHook } from "../TestUtils.js";
 
 describe("createInstanceFilterPropertyInfos", () => {
   it("creates property infos when fields are in root category", () => {
@@ -279,73 +273,5 @@ describe("filterRuleValidator", () => {
         }),
       }),
     ).toBeUndefined();
-  });
-});
-
-describe("useFilterBuilderNavigationPropertyEditorContextProviderProps", () => {
-  interface Props {
-    imodel: IModelConnection;
-    descriptor: Descriptor;
-  }
-  const testImodel = {} as IModelConnection;
-
-  it("returns navigation property info", async () => {
-    const navigationPropertyInfo: NavigationPropertyInfo = {
-      classInfo: { id: "2", label: "Prop Class", name: "TestSchema:PropClass" },
-      targetClassInfo: { id: "3", label: "Target Class", name: "TestSchema:TargetClass" },
-      isForwardRelationship: true,
-      isTargetPolymorphic: true,
-    };
-    const fieldName = "field_name";
-    const testDescriptor = createTestContentDescriptor({
-      fields: [
-        createTestPropertiesContentField({
-          name: fieldName,
-          properties: [
-            {
-              property: {
-                classInfo: { id: "1", label: "Field Class", name: "TestSchema:FieldClass" },
-                name: "nav_prop",
-                type: "navigation",
-                navigationPropertyInfo,
-              },
-            },
-          ],
-        }),
-      ],
-    });
-    const propertyDescription: PropertyDescription = {
-      displayLabel: "TestProp",
-      name: `test_category${INSTANCE_FILTER_FIELD_SEPARATOR}${fieldName}`,
-      typename: "navigation",
-    };
-
-    const { result } = renderHook(
-      ({ imodel, descriptor }: Props) =>
-        useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor),
-      { initialProps: { imodel: testImodel, descriptor: testDescriptor } },
-    );
-
-    const info = await result.current.getNavigationPropertyInfo(propertyDescription);
-    expect(info).toEqual(navigationPropertyInfo);
-  });
-
-  it("returns `undefined` for non properties field", async () => {
-    const fieldName = "field_name";
-    const testDescriptor = createTestContentDescriptor({ fields: [createTestSimpleContentField({ name: fieldName })] });
-    const propertyDescription: PropertyDescription = {
-      displayLabel: "TestProp",
-      name: `test_category${INSTANCE_FILTER_FIELD_SEPARATOR}${fieldName}`,
-      typename: "navigation",
-    };
-
-    const { result } = renderHook(
-      ({ imodel, descriptor }: Props) =>
-        useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor),
-      { initialProps: { imodel: testImodel, descriptor: testDescriptor } },
-    );
-
-    const info = await result.current.getNavigationPropertyInfo(propertyDescription);
-    expect(info).toBeUndefined();
   });
 });

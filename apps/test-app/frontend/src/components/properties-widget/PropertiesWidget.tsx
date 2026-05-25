@@ -33,9 +33,7 @@ import { Field } from "@itwin/presentation-common";
 import {
   DiagnosticsProps,
   FavoritePropertiesDataFilterer,
-  NavigationPropertyEditorContextProvider,
   PresentationPropertyDataProvider,
-  useNavigationPropertyEditorContextProviderProps,
   usePropertyDataProviderWithUnifiedSelection,
 } from "@itwin/presentation-components";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
@@ -178,7 +176,6 @@ function PropertyGrid(props: PropertyGridProps) {
 function FilterablePropertyGrid({
   dataProvider,
   filtering,
-  imodel,
   width,
   height,
 }: Omit<PropertyGridProps, "rulesetId" | "diagnostics"> & { dataProvider: PresentationPropertyDataProvider }) {
@@ -247,10 +244,6 @@ function FilterablePropertyGrid({
   const onCloseContextMenu = useCallback(() => {
     setContextMenuArgs(undefined);
   }, []);
-  const navigationPropertyEditorContextProviderProps = useNavigationPropertyEditorContextProviderProps(
-    imodel,
-    dataProvider,
-  );
 
   if (!filteringDataProvider) {
     return null;
@@ -274,29 +267,27 @@ function FilterablePropertyGrid({
 
   return (
     <>
-      <NavigationPropertyEditorContextProvider {...navigationPropertyEditorContextProviderProps}>
-        <VirtualizedPropertyGridWithDataProvider
-          width={width}
-          height={height}
-          dataProvider={filteringDataProvider}
-          isPropertyHoverEnabled={true}
-          onPropertyContextMenu={onPropertyContextMenu}
-          actionButtonRenderers={[renderFavoritesActionButton, renderCopyActionButton]}
-          orientation={Orientation.Horizontal}
-          horizontalOrientationMinWidth={500}
-          highlight={
-            filterText && filterText.length !== 0
-              ? { highlightedText: filterText, activeHighlight, filteredTypes: filteringResult?.filteredTypes }
-              : undefined
-          }
-          isPropertyEditingEnabled={true}
-          onPropertyUpdated={async ({ newValue }) => {
-            console.log(`Updated new value`, newValue); // eslint-disable-line no-console
-            return true;
-          }}
-          editorSystem="new"
-        />
-      </NavigationPropertyEditorContextProvider>
+      <VirtualizedPropertyGridWithDataProvider
+        width={width}
+        height={height}
+        dataProvider={filteringDataProvider}
+        isPropertyHoverEnabled={true}
+        onPropertyContextMenu={onPropertyContextMenu}
+        actionButtonRenderers={[renderFavoritesActionButton, renderCopyActionButton]}
+        orientation={Orientation.Horizontal}
+        horizontalOrientationMinWidth={500}
+        highlight={
+          filterText && filterText.length !== 0
+            ? { highlightedText: filterText, activeHighlight, filteredTypes: filteringResult?.filteredTypes }
+            : undefined
+        }
+        isPropertyEditingEnabled={true}
+        onPropertyUpdated={async ({ newValue }) => {
+          console.log(`Updated new value`, newValue); // eslint-disable-line no-console
+          return true;
+        }}
+        editorSystem="new"
+      />
       {contextMenuArgs && (
         <PropertiesWidgetContextMenu
           args={contextMenuArgs}

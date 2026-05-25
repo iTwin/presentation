@@ -24,16 +24,12 @@ import {
   PropertiesField,
 } from "@itwin/presentation-common";
 import { WithConstraints } from "../common/ContentBuilder.js";
-import { NavigationPropertyEditorContextProvider } from "../properties/editors/NavigationPropertyEditorContext.js";
 import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector.js";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder.js";
 import { createFilterClassExpression, createInstanceFilterDefinitionBase } from "./InstanceFilterConverter.js";
 import { PresentationInstanceFilter, PresentationInstanceFilterConditionGroup } from "./PresentationInstanceFilter.js";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty.js";
-import {
-  createInstanceFilterPropertyInfos,
-  useFilterBuilderNavigationPropertyEditorContextProviderProps,
-} from "./Utils.js";
+import { createInstanceFilterPropertyInfos } from "./Utils.js";
 
 /**
  * Function that checks if supplied [[PresentationInstanceFilter]] is [[PresentationInstanceFilterConditionGroup]].
@@ -158,10 +154,6 @@ export function PresentationFilterBuilderValueRenderer({
   selectedClasses,
   ...props
 }: PresentationFilterBuilderValueRendererProps) {
-  const navigationPropertyContextProviderProps = useFilterBuilderNavigationPropertyEditorContextProviderProps(
-    imodel,
-    descriptor,
-  );
   if (props.operator === "is-equal" || props.operator === "is-not-equal") {
     return (
       <UniquePropertyValuesSelector
@@ -174,11 +166,7 @@ export function PresentationFilterBuilderValueRenderer({
     );
   }
 
-  return (
-    <NavigationPropertyEditorContextProvider {...navigationPropertyContextProviderProps}>
-      <PropertyFilterBuilderRuleValue {...props} />
-    </NavigationPropertyEditorContextProvider>
-  );
+  return <PropertyFilterBuilderRuleValue {...props} />;
 }
 
 /**
