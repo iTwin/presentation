@@ -36,7 +36,7 @@ export interface ExternalFieldsProvider<
   /**
    * Category definitions used by this provider's fields, keyed by category ID.
    */
-  categories?: Record<string, CategoryDefinition>;
+  categories?: Record<CategoryDefinition["id"], CategoryDefinition>;
 
   /**
    * Input property declarations. Declares iModel properties that this provider needs

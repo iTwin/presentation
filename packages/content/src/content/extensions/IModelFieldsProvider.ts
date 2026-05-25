@@ -53,7 +53,7 @@ interface FieldsProviderContribution {
   /** Calculated field declarations — ECSQL expressions evaluated in the query. */
   calculatedFields?: CalculatedFieldDeclaration[];
   /** Category definitions contributed by this provider, keyed by category ID. */
-  categories?: Record<string, CategoryDefinition>;
+  categories?: Record<CategoryDefinition["id"], CategoryDefinition>;
 }
 
 /**

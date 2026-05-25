@@ -40,7 +40,7 @@ export interface ContentDescriptor {
   /**
    * All category definitions referenced by fields in this descriptor, keyed by category ID.
    */
-  categories: Record<string, CategoryDefinition>;
+  categories: Record<CategoryDefinition["id"], CategoryDefinition>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace

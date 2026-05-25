@@ -103,5 +103,5 @@ interface TransformableDescriptor {
   readonly sources: readonly ContentSource[];
   readonly directFields: SpliceableReadonlyArray<TransformableField>;
   readonly relatedFieldGroups: SpliceableReadonlyArray<TransformableRelatedFieldGroup>;
-  readonly categories: Record<string, CategoryDefinition>;
+  readonly categories: Record<CategoryDefinition["id"], CategoryDefinition>;
 }
