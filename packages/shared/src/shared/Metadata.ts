@@ -360,7 +360,10 @@ export interface RelationshipPathStep {
   /**
    * Optional filter applied to instances at this step.
    * Only instances matching the filter will be included when traversing this relationship.
-   * The filter expression can reference both target class and relationship class properties.
+   * The filter expression can reference target class properties and, for non-navigation-property
+   * relationships (link table relationships), also relationship class properties.
+   * Referencing relationship class properties via `relationshipAlias` is not supported for
+   * navigation-property steps because the relationship table is not part of the query in that case.
    */
   instanceFilter?: {
     /**
@@ -391,6 +394,10 @@ export interface RelationshipPathStep {
      * The placeholder used in `expression` to reference the relationship class (`relationshipName`).
      * Every occurrence of `{relationshipAlias}.` in the expression will be replaced with the
      * actual relationship alias at query generation time.
+     *
+     * Only meaningful for non-navigation-property (link table) relationships. When the step uses a
+     * navigation property, the relationship table is not part of the query, so any reference via
+     * this alias will produce invalid ECSQL.
      *
      * @default "rel"
      */
