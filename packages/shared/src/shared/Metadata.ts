@@ -340,6 +340,9 @@ export namespace EC {
  */
 export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
+/** @public */
+type NumericPrimitiveValueType = Extract<PrimitiveValueType, "Double" | "Int" | "Long">;
+
 /**
  * A type descriptor for a value's shape.
  *
@@ -352,16 +355,17 @@ export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IG
 export type ValueDescriptor = PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor;
 
 /** @public */
-interface PrimitiveValueDescriptor {
-  kind: "primitive";
-  primitiveType: PrimitiveValueType;
-  /**
-   * Full name of the KindOfQuantity associated with this property (e.g., `"Units.LENGTH"`).
-   * Only meaningful for numeric primitive types (`double`, `int`, `long`).
-   * Determines how the value should be formatted and which units to display.
-   */
-  kindOfQuantity?: string;
-}
+type PrimitiveValueDescriptor = { kind: "primitive" } & (
+  | { primitiveType: Exclude<PrimitiveValueType, NumericPrimitiveValueType>; kindOfQuantity?: undefined }
+  | {
+      primitiveType: NumericPrimitiveValueType;
+      /**
+       * Full name of the KindOfQuantity associated with this property (e.g., `"Units.LENGTH"`).
+       * Determines how the value should be formatted and which units to display.
+       */
+      kindOfQuantity?: string;
+    }
+);
 
 /** @public */
 interface StructValueDescriptor {
