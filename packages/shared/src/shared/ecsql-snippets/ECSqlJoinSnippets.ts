@@ -146,9 +146,10 @@ function resolveInstanceFilterCondition(step: ResolvedRelationshipPathStep): str
     return "";
   }
   const { expression, targetAlias = "this", relationshipAlias = "rel" } = step.instanceFilter;
-  return ` AND ${expression
+  const resolvedExpression = expression
     .replaceAll(`${targetAlias}.`, `[${step.targetAlias}].`)
-    .replaceAll(`${relationshipAlias}.`, `[${step.relationshipAlias}].`)}`;
+    .replaceAll(`${relationshipAlias}.`, `[${step.relationshipAlias}].`);
+  return ` AND (${resolvedExpression})`;
 }
 
 type ResolvedRelationshipPathStep = Omit<

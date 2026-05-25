@@ -505,7 +505,7 @@ describe("createRelationshipPathJoinClause", () => {
       });
       expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(
-          `INNER JOIN [${schemaName}].[PhysicalMaterial] [t] ON [t].[ECInstanceId] = [s].[PhysicalMaterial].[Id] AND [t].Area > 0`,
+          `INNER JOIN [${schemaName}].[PhysicalMaterial] [t] ON [t].[ECInstanceId] = [s].[PhysicalMaterial].[Id] AND ([t].Area > 0)`,
         ),
       );
       expect(result.bindings).toBeUndefined();
@@ -530,7 +530,7 @@ describe("createRelationshipPathJoinClause", () => {
       expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${relationship.name}] [r] ON [r].[SourceECInstanceId] = [s].[ECInstanceId]
-          INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND [t].Name = :name AND [r].Priority > 0
+          INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND ([t].Name = :name AND [r].Priority > 0)
         `),
       );
       expect(result.bindings).toBeUndefined();
@@ -558,9 +558,9 @@ describe("createRelationshipPathJoinClause", () => {
           OUTER JOIN (
             SELECT [r].*
             FROM [${schemaName}].[${relationship.name}] [r]
-            INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND [t].Area > 0
+            INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND ([t].Area > 0)
           ) [r] ON [r].[SourceECInstanceId] = [s].[ECInstanceId]
-          OUTER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND [t].Area > 0
+          OUTER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND ([t].Area > 0)
         `),
       );
       expect(result.bindings).toBeUndefined();
@@ -589,7 +589,7 @@ describe("createRelationshipPathJoinClause", () => {
       expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${relationship.name}] [r] ON [r].[SourceECInstanceId] = [s].[ECInstanceId]
-          INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND [t].Area > :minArea
+          INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND ([t].Area > :minArea)
         `),
       );
       expect(result.bindings).toEqual({ minArea: { type: "double", value: 10.5 } });
@@ -630,9 +630,9 @@ describe("createRelationshipPathJoinClause", () => {
       expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${step1.relationship.name}] [r1] ON [r1].[SourceECInstanceId] = [a].[ECInstanceId]
-          INNER JOIN [${schemaName}].[${step1.targetClass.name}] [b] ON [b].[ECInstanceId] = [r1].[TargetECInstanceId] AND [b].Active = :isActive
+          INNER JOIN [${schemaName}].[${step1.targetClass.name}] [b] ON [b].[ECInstanceId] = [r1].[TargetECInstanceId] AND ([b].Active = :isActive)
           INNER JOIN [${schemaName}].[${step2.relationship.name}] [r2] ON [r2].[SourceECInstanceId] = [b].[ECInstanceId]
-          INNER JOIN [${schemaName}].[${step2.targetClass.name}] [c] ON [c].[ECInstanceId] = [r2].[TargetECInstanceId] AND [r2].Weight > :minWeight
+          INNER JOIN [${schemaName}].[${step2.targetClass.name}] [c] ON [c].[ECInstanceId] = [r2].[TargetECInstanceId] AND ([r2].Weight > :minWeight)
         `),
       );
       expect(result.bindings).toEqual({
