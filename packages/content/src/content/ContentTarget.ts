@@ -84,7 +84,10 @@ interface ResolvedDeclarationGroup {
   /** ID of the provider that contributed the originating declaration. */
   providerId: BaseFieldsProvider["id"];
 
-  /** 0-based index into the provider's `relatedProperties` array. */
+  /**
+   * 0-based index into the `relatedProperties` array of the `FieldsProviderContribution`
+   * returned by the {@link IModelFieldsProvider}'s `getContribution()` call.
+   */
   declarationIndex: number;
 
   /**
