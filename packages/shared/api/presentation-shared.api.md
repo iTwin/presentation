@@ -119,7 +119,10 @@ function createRawPrimitiveValueSelector(value: PrimitiveValue | undefined): str
 function createRawPropertyValueSelector(classAlias: string, propertyName: string, componentName?: string): string;
 
 // @public
-function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps): Promise<string>;
+function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps): Promise<{
+    joins: string;
+    bindings?: Record<string, ECSqlBinding>;
+}>;
 
 // @public
 interface CreateRelationshipPathJoinClauseProps {
@@ -534,6 +537,12 @@ type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep>
 
 // @public
 interface RelationshipPathStep {
+    instanceFilter?: {
+        expression: string;
+        targetAlias?: string;
+        relationshipAlias?: string;
+        bindings?: Record<string, ECSqlBinding>;
+    };
     relationshipName: EC.FullClassName;
     relationshipReverse?: boolean;
     sourceClassName: EC.FullClassName;

@@ -6,6 +6,8 @@
 import { LRUMap } from "@itwin/core-bentley";
 import { parseFullClassName } from "./Utils.js";
 
+import type { ECSqlBinding } from "./ECSqlCore.js";
+
 /**
  * An interface for an object that knows how to get an ECSchema from an iModel.
  *
@@ -360,6 +362,57 @@ export interface RelationshipPathStep {
    * describes a step from `B` to `A`.
    */
   relationshipReverse?: boolean;
+  /**
+   * Optional filter applied to instances at this step.
+   * Only instances matching the filter will be included when traversing this relationship.
+   * The filter expression can reference target class properties and, for non-navigation-property
+   * relationships (link table relationships), also relationship class properties.
+   * Referencing relationship class properties via `relationshipAlias` is not supported for
+   * navigation-property steps because the relationship table is not part of the query in that case.
+   */
+  instanceFilter?: {
+    /**
+     * ECSQL WHERE clause expression (without the WHERE keyword).
+     *
+     * Use `targetAlias` (defaults to `"this"`) followed by a dot to reference properties
+     * of the filtered class, and `relationshipAlias` (defaults to `"rel"`) to reference
+     * properties on the relationship class. At query generation time, the pipeline performs
+     * a literal replacement of all `{alias}.` occurrences with the actual query aliases.
+     *
+     * @example
+     * ```
+     * expression: "this.Area > :minArea AND rel.Priority > 0"
+     * ```
+     */
+    expression: string;
+
+    /**
+     * The placeholder used in `expression` to reference the target class (`targetClassName`).
+     * Every occurrence of `{targetAlias}.` in the expression will be replaced with the
+     * actual query alias at query generation time.
+     *
+     * @default "this"
+     */
+    targetAlias?: string;
+
+    /**
+     * The placeholder used in `expression` to reference the relationship class (`relationshipName`).
+     * Every occurrence of `{relationshipAlias}.` in the expression will be replaced with the
+     * actual relationship alias at query generation time.
+     *
+     * Only meaningful for non-navigation-property (link table) relationships. When the step uses a
+     * navigation property, the relationship table is not part of the query, so any reference via
+     * this alias will produce invalid ECSQL.
+     *
+     * @default "rel"
+     */
+    relationshipAlias?: string;
+
+    /**
+     * Bind values for the expression, keyed by parameter name.
+     */
+    bindings?: Record<string, ECSqlBinding>;
+  };
 }
 
 /**
