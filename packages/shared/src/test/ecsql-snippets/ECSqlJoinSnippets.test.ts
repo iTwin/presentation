@@ -20,7 +20,9 @@ describe("createRelationshipPathJoinClause", () => {
   });
 
   it("returns empty string if given empty relationship path", async () => {
-    expect(await createRelationshipPathJoinClause({ schemaProvider, path: [] })).toBe("");
+    const result = await createRelationshipPathJoinClause({ schemaProvider, path: [] });
+    expect(result.joins).toBe("");
+    expect(result.bindings).toBeUndefined();
   });
 
   describe("using navigation properties", () => {
@@ -32,23 +34,20 @@ describe("createRelationshipPathJoinClause", () => {
         target: "PhysicalMaterial",
         relationship: { name: "PhysicalElementIsOfPhysicalMaterial", direction: "Forward" },
       });
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: sourceClass.fullName,
-                sourceAlias: "s",
-                relationshipName: relationship.fullName,
-                relationshipAlias: "r",
-                targetClassName: targetClass.fullName,
-                targetAlias: "t",
-              },
-            ],
-          }),
-        ),
-      ).toBe(
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: sourceClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            targetClassName: targetClass.fullName,
+            targetAlias: "t",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(
           `INNER JOIN [${schemaName}].[PhysicalMaterial] [t] ON [t].[ECInstanceId] = [s].[PhysicalMaterial].[Id]`,
         ),
@@ -63,23 +62,20 @@ describe("createRelationshipPathJoinClause", () => {
         target: "Element",
         relationship: { name: "ModelModelsElement", direction: "Backward" },
       });
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: sourceClass.fullName,
-                sourceAlias: "s",
-                relationshipName: relationship.fullName,
-                relationshipAlias: "r",
-                targetClassName: targetClass.fullName,
-                targetAlias: "t",
-              },
-            ],
-          }),
-        ),
-      ).toBe(
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: sourceClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            targetClassName: targetClass.fullName,
+            targetAlias: "t",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[ECInstanceId] = [s].[ModeledElement].[Id]`),
       );
     });
@@ -92,23 +88,22 @@ describe("createRelationshipPathJoinClause", () => {
         target: "Element",
         relationship: { name: "ModelContainsElements", direction: "Forward" },
       });
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: sourceClass.fullName,
-                sourceAlias: "s",
-                relationshipName: relationship.fullName,
-                relationshipAlias: "r",
-                targetClassName: targetClass.fullName,
-                targetAlias: "t",
-              },
-            ],
-          }),
-        ),
-      ).toBe(trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[Model].[Id] = [s].[ECInstanceId]`));
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: sourceClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            targetClassName: targetClass.fullName,
+            targetAlias: "t",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
+        trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[Model].[Id] = [s].[ECInstanceId]`),
+      );
     });
 
     it("creates a forward join on backward navigation property with backward relationship", async () => {
@@ -119,23 +114,20 @@ describe("createRelationshipPathJoinClause", () => {
         target: "ExternalSourceAspect",
         relationship: { name: "ElementScopesExternalSourceIdentifier", direction: "Backward" },
       });
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: sourceClass.fullName,
-                sourceAlias: "s",
-                relationshipName: relationship.fullName,
-                relationshipAlias: "r",
-                targetClassName: targetClass.fullName,
-                targetAlias: "t",
-              },
-            ],
-          }),
-        ),
-      ).toBe(
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: sourceClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            targetClassName: targetClass.fullName,
+            targetAlias: "t",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(
           `INNER JOIN [${schemaName}].[ExternalSourceAspect] [t] ON [t].[Scope].[Id] = [s].[ECInstanceId]`,
         ),
@@ -150,24 +142,21 @@ describe("createRelationshipPathJoinClause", () => {
         target: "PhysicalMaterial",
         relationship: { name: "PhysicalElementIsOfPhysicalMaterial", direction: "Forward" },
       });
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: targetClass.fullName,
-                sourceAlias: "s",
-                relationshipName: relationship.fullName,
-                relationshipAlias: "r",
-                relationshipReverse: true,
-                targetClassName: sourceClass.fullName,
-                targetAlias: "t",
-              },
-            ],
-          }),
-        ),
-      ).toBe(
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: targetClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            relationshipReverse: true,
+            targetClassName: sourceClass.fullName,
+            targetAlias: "t",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(
           `INNER JOIN [${schemaName}].[PhysicalElement] [t] ON [t].[PhysicalMaterial].[Id] = [s].[ECInstanceId]`,
         ),
@@ -182,24 +171,21 @@ describe("createRelationshipPathJoinClause", () => {
         target: "Element",
         relationship: { name: "ModelModelsElement", direction: "Backward" },
       });
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: targetClass.fullName,
-                sourceAlias: "s",
-                relationshipName: relationship.fullName,
-                relationshipAlias: "r",
-                relationshipReverse: true,
-                targetClassName: sourceClass.fullName,
-                targetAlias: "t",
-              },
-            ],
-          }),
-        ),
-      ).toBe(
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: targetClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            relationshipReverse: true,
+            targetClassName: sourceClass.fullName,
+            targetAlias: "t",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(`INNER JOIN [${schemaName}].[Model] [t] ON [t].[ModeledElement].[Id] = [s].[ECInstanceId]`),
       );
     });
@@ -212,24 +198,23 @@ describe("createRelationshipPathJoinClause", () => {
         target: "Element",
         relationship: { name: "ModelContainsElements", direction: "Forward" },
       });
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: targetClass.fullName,
-                sourceAlias: "s",
-                relationshipName: relationship.fullName,
-                relationshipAlias: "r",
-                relationshipReverse: true,
-                targetClassName: sourceClass.fullName,
-                targetAlias: "t",
-              },
-            ],
-          }),
-        ),
-      ).toBe(trimWhitespace(`INNER JOIN [${schemaName}].[Model] [t] ON [t].[ECInstanceId] = [s].[Model].[Id]`));
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: targetClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            relationshipReverse: true,
+            targetClassName: sourceClass.fullName,
+            targetAlias: "t",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
+        trimWhitespace(`INNER JOIN [${schemaName}].[Model] [t] ON [t].[ECInstanceId] = [s].[Model].[Id]`),
+      );
     });
 
     it("creates a reversed join on backward navigation property with backward relationship", async () => {
@@ -240,47 +225,43 @@ describe("createRelationshipPathJoinClause", () => {
         target: "ExternalSourceAspect",
         relationship: { name: "ElementScopesExternalSourceIdentifier", direction: "Backward" },
       });
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: targetClass.fullName,
-                sourceAlias: "s",
-                relationshipName: relationship.fullName,
-                relationshipAlias: "r",
-                relationshipReverse: true,
-                targetClassName: sourceClass.fullName,
-                targetAlias: "t",
-              },
-            ],
-          }),
-        ),
-      ).toBe(trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[ECInstanceId] = [s].[Scope].[Id]`));
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: targetClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            relationshipReverse: true,
+            targetClassName: sourceClass.fullName,
+            targetAlias: "t",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
+        trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[ECInstanceId] = [s].[Scope].[Id]`),
+      );
     });
   });
 
   describe("using link table relationships", () => {
     it("creates a forward inner join", async () => {
       const { sourceClass, targetClass, relationship } = setupLinkTableRelationshipClasses();
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: sourceClass.fullName,
-                sourceAlias: "s",
-                relationshipName: relationship.fullName,
-                relationshipAlias: "r",
-                targetClassName: targetClass.fullName,
-                targetAlias: "t",
-              },
-            ],
-          }),
-        ),
-      ).toBe(
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: sourceClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            targetClassName: targetClass.fullName,
+            targetAlias: "t",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${relationship.name}] [r] ON [r].[SourceECInstanceId] = [s].[ECInstanceId]
           INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId]
@@ -290,24 +271,21 @@ describe("createRelationshipPathJoinClause", () => {
 
     it("creates a forward outer join", async () => {
       const { sourceClass, targetClass, relationship } = setupLinkTableRelationshipClasses();
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: sourceClass.fullName,
-                sourceAlias: "s",
-                relationshipName: relationship.fullName,
-                relationshipAlias: "r",
-                targetClassName: targetClass.fullName,
-                targetAlias: "t",
-                joinType: "outer",
-              },
-            ],
-          }),
-        ),
-      ).toBe(
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: sourceClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            targetClassName: targetClass.fullName,
+            targetAlias: "t",
+            joinType: "outer",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(`
           OUTER JOIN (
             SELECT [r].*
@@ -321,24 +299,21 @@ describe("createRelationshipPathJoinClause", () => {
 
     it("creates a reversed inner join", async () => {
       const { sourceClass, targetClass, relationship } = setupLinkTableRelationshipClasses();
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: targetClass.fullName,
-                sourceAlias: "s",
-                relationshipName: relationship.fullName,
-                relationshipAlias: "r",
-                relationshipReverse: true,
-                targetClassName: sourceClass.fullName,
-                targetAlias: "t",
-              },
-            ],
-          }),
-        ),
-      ).toBe(
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: targetClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            relationshipReverse: true,
+            targetClassName: sourceClass.fullName,
+            targetAlias: "t",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${relationship.name}] [r] ON [r].[TargetECInstanceId] = [s].[ECInstanceId]
           INNER JOIN [${schemaName}].[${sourceClass.name}] [t] ON [t].[ECInstanceId] = [r].[SourceECInstanceId]
@@ -363,31 +338,28 @@ describe("createRelationshipPathJoinClause", () => {
         relationship: "r2",
         target: "c",
       });
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: step1.sourceClass.fullName,
-                sourceAlias: "a",
-                relationshipName: step1.relationship.fullName,
-                relationshipAlias: "r1",
-                targetClassName: step1.targetClass.fullName,
-                targetAlias: "b",
-              },
-              {
-                sourceClassName: step2.sourceClass.fullName,
-                sourceAlias: "b",
-                relationshipName: step2.relationship.fullName,
-                relationshipAlias: "r2",
-                targetClassName: step2.targetClass.fullName,
-                targetAlias: "c",
-              },
-            ],
-          }),
-        ),
-      ).toBe(
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: step1.sourceClass.fullName,
+            sourceAlias: "a",
+            relationshipName: step1.relationship.fullName,
+            relationshipAlias: "r1",
+            targetClassName: step1.targetClass.fullName,
+            targetAlias: "b",
+          },
+          {
+            sourceClassName: step2.sourceClass.fullName,
+            sourceAlias: "b",
+            relationshipName: step2.relationship.fullName,
+            relationshipAlias: "r2",
+            targetClassName: step2.targetClass.fullName,
+            targetAlias: "c",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${step1.targetClass.name}] [b] ON [b].[ECInstanceId] = [a].[${step1.navigationProperty.name}].[Id]
           INNER JOIN [${schemaName}].[${step2.targetClass.name}] [c] ON [c].[${step2.navigationProperty.name}].[Id] = [b].[ECInstanceId]
@@ -398,31 +370,28 @@ describe("createRelationshipPathJoinClause", () => {
     it("creates 2 link table relationship joins", async () => {
       const step1 = setupLinkTableRelationshipClasses({ source: "a", relationship: "r1", target: "b" });
       const step2 = setupLinkTableRelationshipClasses({ source: step1.targetClass, relationship: "r2", target: "c" });
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: step1.sourceClass.fullName,
-                sourceAlias: "a",
-                relationshipName: step1.relationship.fullName,
-                relationshipAlias: "r1",
-                targetClassName: step1.targetClass.fullName,
-                targetAlias: "b",
-              },
-              {
-                sourceClassName: step2.sourceClass.fullName,
-                sourceAlias: "b",
-                relationshipName: step2.relationship.fullName,
-                relationshipAlias: "r2",
-                targetClassName: step2.targetClass.fullName,
-                targetAlias: "c",
-              },
-            ],
-          }),
-        ),
-      ).toBe(
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: step1.sourceClass.fullName,
+            sourceAlias: "a",
+            relationshipName: step1.relationship.fullName,
+            relationshipAlias: "r1",
+            targetClassName: step1.targetClass.fullName,
+            targetAlias: "b",
+          },
+          {
+            sourceClassName: step2.sourceClass.fullName,
+            sourceAlias: "b",
+            relationshipName: step2.relationship.fullName,
+            relationshipAlias: "r2",
+            targetClassName: step2.targetClass.fullName,
+            targetAlias: "c",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${step1.relationship.name}] [r1] ON [r1].[SourceECInstanceId] = [a].[ECInstanceId]
           INNER JOIN [${schemaName}].[${step1.targetClass.name}] [b] ON [b].[ECInstanceId] = [r1].[TargetECInstanceId]
@@ -441,31 +410,28 @@ describe("createRelationshipPathJoinClause", () => {
         target: "b",
       });
       const step2 = setupLinkTableRelationshipClasses({ source: step1.targetClass, relationship: "r2", target: "c" });
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: step1.sourceClass.fullName,
-                sourceAlias: "a",
-                relationshipName: step1.relationship.fullName,
-                relationshipAlias: "r1",
-                targetClassName: step1.targetClass.fullName,
-                targetAlias: "b",
-              },
-              {
-                sourceClassName: step2.sourceClass.fullName,
-                sourceAlias: "b",
-                relationshipName: step2.relationship.fullName,
-                relationshipAlias: "r2",
-                targetClassName: step2.targetClass.fullName,
-                targetAlias: "c",
-              },
-            ],
-          }),
-        ),
-      ).toBe(
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: step1.sourceClass.fullName,
+            sourceAlias: "a",
+            relationshipName: step1.relationship.fullName,
+            relationshipAlias: "r1",
+            targetClassName: step1.targetClass.fullName,
+            targetAlias: "b",
+          },
+          {
+            sourceClassName: step2.sourceClass.fullName,
+            sourceAlias: "b",
+            relationshipName: step2.relationship.fullName,
+            relationshipAlias: "r2",
+            targetClassName: step2.targetClass.fullName,
+            targetAlias: "c",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${step1.targetClass.name}] [b] ON [b].[ECInstanceId] = [a].[${step1.navigationProperty.name}].[Id]
           INNER JOIN [${schemaName}].[${step2.relationship.name}] [r2] ON [r2].[SourceECInstanceId] = [b].[ECInstanceId]
@@ -483,37 +449,196 @@ describe("createRelationshipPathJoinClause", () => {
         relationship: "r2",
         target: "c",
       });
-      expect(
-        trimWhitespace(
-          await createRelationshipPathJoinClause({
-            schemaProvider,
-            path: [
-              {
-                sourceClassName: step1.sourceClass.fullName,
-                sourceAlias: "a",
-                relationshipName: step1.relationship.fullName,
-                relationshipAlias: "r1",
-                targetClassName: step1.targetClass.fullName,
-                targetAlias: "b",
-              },
-              {
-                sourceClassName: step2.sourceClass.fullName,
-                sourceAlias: "b",
-                relationshipName: step2.relationship.fullName,
-                relationshipAlias: "r2",
-                targetClassName: step2.targetClass.fullName,
-                targetAlias: "c",
-              },
-            ],
-          }),
-        ),
-      ).toBe(
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: step1.sourceClass.fullName,
+            sourceAlias: "a",
+            relationshipName: step1.relationship.fullName,
+            relationshipAlias: "r1",
+            targetClassName: step1.targetClass.fullName,
+            targetAlias: "b",
+          },
+          {
+            sourceClassName: step2.sourceClass.fullName,
+            sourceAlias: "b",
+            relationshipName: step2.relationship.fullName,
+            relationshipAlias: "r2",
+            targetClassName: step2.targetClass.fullName,
+            targetAlias: "c",
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(`
           INNER JOIN [${schemaName}].[${step1.relationship.name}] [r1] ON [r1].[SourceECInstanceId] = [a].[ECInstanceId]
           INNER JOIN [${schemaName}].[${step1.targetClass.name}] [b] ON [b].[ECInstanceId] = [r1].[TargetECInstanceId]
           INNER JOIN [${schemaName}].[${step2.targetClass.name}] [c] ON [c].[${step2.navigationProperty.name}].[Id] = [b].[ECInstanceId]
         `),
       );
+    });
+  });
+
+  describe("with instanceFilter", () => {
+    it("appends instance filter expression to navigation property join ON clause", async () => {
+      const { sourceClass, targetClass, relationship } = await setupNavigationPropertyRelationshipClasses({
+        navigationPropertyDirection: "Forward",
+        navigationPropertyName: "PhysicalMaterial",
+        source: "PhysicalElement",
+        target: "PhysicalMaterial",
+        relationship: { name: "PhysicalElementIsOfPhysicalMaterial", direction: "Forward" },
+      });
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: sourceClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            targetClassName: targetClass.fullName,
+            targetAlias: "t",
+            instanceFilter: { expression: "this.Area > 0" },
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
+        trimWhitespace(
+          `INNER JOIN [${schemaName}].[PhysicalMaterial] [t] ON [t].[ECInstanceId] = [s].[PhysicalMaterial].[Id] AND [t].Area > 0`,
+        ),
+      );
+      expect(result.bindings).toBeUndefined();
+    });
+
+    it("appends instance filter expression to link table target INNER JOIN ON clause", async () => {
+      const { sourceClass, targetClass, relationship } = setupLinkTableRelationshipClasses();
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: sourceClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            targetClassName: targetClass.fullName,
+            targetAlias: "t",
+            instanceFilter: { expression: "this.Name = :name AND rel.Priority > 0" },
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
+        trimWhitespace(`
+          INNER JOIN [${schemaName}].[${relationship.name}] [r] ON [r].[SourceECInstanceId] = [s].[ECInstanceId]
+          INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND [t].Name = :name AND [r].Priority > 0
+        `),
+      );
+      expect(result.bindings).toBeUndefined();
+    });
+
+    it("appends instance filter expression to link table target OUTER JOIN ON clause", async () => {
+      const { sourceClass, targetClass, relationship } = setupLinkTableRelationshipClasses();
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: sourceClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            targetClassName: targetClass.fullName,
+            targetAlias: "t",
+            joinType: "outer",
+            instanceFilter: { expression: "this.Area > 0" },
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
+        trimWhitespace(`
+          OUTER JOIN (
+            SELECT [r].*
+            FROM [${schemaName}].[${relationship.name}] [r]
+            INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND [t].Area > 0
+          ) [r] ON [r].[SourceECInstanceId] = [s].[ECInstanceId]
+          OUTER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND [t].Area > 0
+        `),
+      );
+      expect(result.bindings).toBeUndefined();
+    });
+
+    it("collects bindings from instanceFilter and substitutes custom alias placeholders", async () => {
+      const { sourceClass, targetClass, relationship } = setupLinkTableRelationshipClasses();
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: sourceClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            targetClassName: targetClass.fullName,
+            targetAlias: "t",
+            instanceFilter: {
+              expression: "target.Area > :minArea",
+              targetAlias: "target",
+              bindings: { minArea: { type: "double", value: 10.5 } },
+            },
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
+        trimWhitespace(`
+          INNER JOIN [${schemaName}].[${relationship.name}] [r] ON [r].[SourceECInstanceId] = [s].[ECInstanceId]
+          INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND [t].Area > :minArea
+        `),
+      );
+      expect(result.bindings).toEqual({ minArea: { type: "double", value: 10.5 } });
+    });
+
+    it("applies instanceFilter on each step of a multi-step path and merges bindings", async () => {
+      const step1 = setupLinkTableRelationshipClasses({ source: "a", relationship: "r1", target: "b" });
+      const step2 = setupLinkTableRelationshipClasses({ source: step1.targetClass, relationship: "r2", target: "c" });
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: step1.sourceClass.fullName,
+            sourceAlias: "a",
+            relationshipName: step1.relationship.fullName,
+            relationshipAlias: "r1",
+            targetClassName: step1.targetClass.fullName,
+            targetAlias: "b",
+            instanceFilter: {
+              expression: "this.Active = :isActive",
+              bindings: { isActive: { type: "boolean", value: true } },
+            },
+          },
+          {
+            sourceClassName: step2.sourceClass.fullName,
+            sourceAlias: "b",
+            relationshipName: step2.relationship.fullName,
+            relationshipAlias: "r2",
+            targetClassName: step2.targetClass.fullName,
+            targetAlias: "c",
+            instanceFilter: {
+              expression: "rel.Weight > :minWeight",
+              bindings: { minWeight: { type: "double", value: 5.0 } },
+            },
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
+        trimWhitespace(`
+          INNER JOIN [${schemaName}].[${step1.relationship.name}] [r1] ON [r1].[SourceECInstanceId] = [a].[ECInstanceId]
+          INNER JOIN [${schemaName}].[${step1.targetClass.name}] [b] ON [b].[ECInstanceId] = [r1].[TargetECInstanceId] AND [b].Active = :isActive
+          INNER JOIN [${schemaName}].[${step2.relationship.name}] [r2] ON [r2].[SourceECInstanceId] = [b].[ECInstanceId]
+          INNER JOIN [${schemaName}].[${step2.targetClass.name}] [c] ON [c].[ECInstanceId] = [r2].[TargetECInstanceId] AND [r2].Weight > :minWeight
+        `),
+      );
+      expect(result.bindings).toEqual({
+        isActive: { type: "boolean", value: true },
+        minWeight: { type: "double", value: 5.0 },
+      });
     });
   });
 

@@ -411,12 +411,14 @@ async function createInstanceFilterClauses(props: {
   let joins: string[] | undefined;
   try {
     joins = await Promise.all(
-      filter.relatedInstances.map(async (rel, i) =>
-        ECSql.createRelationshipPathJoinClause({
+      filter.relatedInstances.map(async (rel, i) => {
+        const res = await ECSql.createRelationshipPathJoinClause({
           schemaProvider: imodelAccess,
           path: assignRelationshipPathAliases(rel.path, i, contentClass.alias, rel.alias),
-        }),
-      ),
+        });
+        assert(!res.bindings, "Expecting no bindings as the relationship path has no instance filter.");
+        return res.joins;
+      }),
     );
   } catch (e) {
     /* v8 ignore else -- @preserve */
