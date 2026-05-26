@@ -78,11 +78,10 @@ export namespace EC {
   export type FullClassName = FullClassNameColonNotation | FullClassNameDotNotation;
 
   /**
-   * Represents an ECSchema that contains classes, relationships, etc.
-   * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/schema/
+   * Schema version components.
+   * Note: comparison order is write > read > minor (not left-to-right).
    * @public
    */
-  /** Schema version components. Note: comparison order is write > read > minor (not left-to-right). */
   export interface SchemaVersion {
     /** First component in "read.write.minor" string format. */
     read: number;
@@ -92,6 +91,11 @@ export namespace EC {
     minor: number;
   }
 
+  /**
+   * Represents an ECSchema that contains classes, relationships, etc.
+   * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/schema/
+   * @public
+   */
   export interface Schema {
     name: string;
     /** The schema version. Format: `"read.write.minor"`, comparison order: write > read > minor. */

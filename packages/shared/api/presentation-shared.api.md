@@ -269,7 +269,6 @@ export namespace EC {
         // (undocumented)
         upperLimit: number;
     }
-    // (undocumented)
     export interface Schema {
         // (undocumented)
         getClass(name: string): Promise<Class | undefined>;
