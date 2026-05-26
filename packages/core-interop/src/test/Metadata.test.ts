@@ -24,7 +24,7 @@ import type {
 } from "@itwin/ecschema-metadata";
 import type { EC } from "@itwin/presentation-shared";
 
-function stubSchema(name: string, version = { read: 0, write: 0, minor: 0 }) {
+function stubSchema(name: string, version: EC.SchemaVersion = { read: 0, write: 0, minor: 0 }) {
   return { name, schemaKey: { version } };
 }
 

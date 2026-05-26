@@ -164,7 +164,7 @@ export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
 }
 export interface StubbedSchema {
   name: string;
-  version: { read: number; write: number; minor: number };
+  version: EC.SchemaVersion;
   getClass: EC.Schema["getClass"];
   getCustomAttributes: EC.Schema["getCustomAttributes"];
 }
