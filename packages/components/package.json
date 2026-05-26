@@ -23,23 +23,20 @@
     "url": "http://www.bentley.com"
   },
   "type": "module",
-  "main": "lib/cjs/presentation-components.js",
-  "types": "lib/cjs/presentation-components",
-  "module": "lib/esm/presentation-components.js",
+  "types": "lib/presentation-components",
+  "module": "lib/presentation-components.js",
   "exports": {
     ".": {
-      "import": "./lib/esm/presentation-components.js",
-      "require": "./lib/cjs/presentation-components.js"
+      "import": "./lib/presentation-components.js"
     },
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "npm run -s copy:locale && npm run -s typecheck && npm run -s build:cjs && npm run -s build:esm ",
-    "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && npm run -s copy:cjs && tsc -p tsconfig.cjs.json",
-    "build:esm": "npm run -s copy:esm && tsc -p tsconfig.esm.json",
+    "build": "npm run -s copy && npm run -s typecheck && npm run -s build:lib",
+    "build:lib": "tsc -p tsconfig.lib.json",
+    "copy": "npm run -s copy:assets && npm run -s copy:locale",
     "copy:locale": "cpx \"./public/**/*\" ./lib/public",
-    "copy:cjs": "cpx \"./src/**/*.{scss,json}\" ./lib/cjs",
-    "copy:esm": "cpx \"./src/**/*.{scss,json}\" ./lib/esm",
+    "copy:assets": "cpx \"./src/**/*.{scss,json}\" ./lib",
     "clean": "rimraf lib build",
     "cover": "vitest run --coverage",
     "lint": "eslint \"./src/**/*.{ts,tsx}\"",
@@ -50,7 +47,7 @@
     "docs:changelog": "cpx ./CHANGELOG.md ./build/docs/reference/presentation-components",
     "docs:reference": "cross-env NODE_PROJECT_ROOT_DIRECTORY=../../ betools docs --json=./build/docs/reference/presentation-components/file.json --tsIndexFile=presentation-components.ts --onlyJson",
     "docs:extract": "betools extract --fileExt=ts,tsx --extractFrom=./src/test --recursive --out=./build/docs/extract",
-    "extract-api": "betools extract-api --entry=lib/esm/presentation-components --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "extract-api": "betools extract-api --entry=lib/presentation-components --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-components.api.md"
   },
   "dependencies": {
