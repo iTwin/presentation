@@ -54,7 +54,7 @@ export function createECSchemaProviderStub() {
     return schemaStub;
   };
   const createBaseClassProps = (props: StubClassFuncProps) => ({
-    schema: { name: props.schemaName },
+    schema: getSchemaStub(props.schemaName),
     fullName: `${props.schemaName}.${props.className}`,
     name: props.className,
     label: props.classLabel,
