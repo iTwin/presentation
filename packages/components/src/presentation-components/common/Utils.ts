@@ -66,12 +66,10 @@ export const getDisplayName = <P>(component: React.ComponentType<P>): string => 
  * @internal
  */
 export const findField = (descriptor: Descriptor, recordPropertyName: string): Field | undefined => {
-  // note: define `fieldsSource` as an object with optional `getFieldByName` method, because some field sources received this
-  // method later than our minimum required version of `@itwin/presentation-common`
-  let fieldsSource: { getFieldByName?: (name: string) => Field | undefined } = descriptor;
+  let fieldsSource: { getFieldByName: (name: string) => Field | undefined } = descriptor;
   const fieldNames = parseCombinedFieldNames(recordPropertyName);
   while (fieldNames.length) {
-    const field: Field | undefined = fieldsSource.getFieldByName?.(fieldNames.shift()!);
+    const field: Field | undefined = fieldsSource.getFieldByName(fieldNames.shift()!);
     if (!fieldNames.length) {
       return field;
     }
@@ -80,7 +78,7 @@ export const findField = (descriptor: Descriptor, recordPropertyName: string): F
     }
     if (field.isNestedContentField()) {
       fieldsSource = field;
-    } else if (field.isPropertiesField() && (field.isStructPropertiesField?.() || field.isArrayPropertiesField?.())) {
+    } else if (field.isPropertiesField() && (field.isStructPropertiesField() || field.isArrayPropertiesField())) {
       fieldsSource = field;
     } else {
       return undefined;

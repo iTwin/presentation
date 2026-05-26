@@ -92,7 +92,6 @@ function NonPrimitiveCellRenderer(props: NonPrimitiveCellRendererProps) {
         className="presentation-components-non-primitive-value"
       >
         <ModalContent>
-          {/* Can't change our import to `components-react`, because it was added there in a version later than our peer dependency */}
           <NonPrimitivePropertyRenderer
             uniqueKey={uniqueKey}
             propertyRecord={record}

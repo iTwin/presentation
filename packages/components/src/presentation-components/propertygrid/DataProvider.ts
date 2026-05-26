@@ -22,6 +22,7 @@ import {
   addFieldHierarchy,
   CategoryDescription,
   ContentFlags,
+  createContentTraverser,
   createFieldHierarchies,
   DefaultContentDisplayTypes,
   Descriptor,
@@ -38,7 +39,6 @@ import {
   StartArrayProps,
   StartContentProps,
   StartStructProps,
-  traverseContentItem,
   Value,
   ValuesMap,
 } from "@itwin/presentation-common";
@@ -309,9 +309,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
       wantNestedCategories: this._isNestedPropertyCategoryGroupingEnabled,
       callbacks,
     });
-    // note: using deprecated `traverseContent`, because we can't use the replacement `createContentTraverser` due to our peer dep version
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    traverseContentItem(builder, content.descriptor, contentItem);
+    createContentTraverser(builder, content.descriptor)([contentItem]);
     return builder.getPropertyData();
   });
 

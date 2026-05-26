@@ -167,13 +167,6 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     return this._parentDataProvider.createRequestOptions(parentKey, instanceFilter);
   }
 
-  /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
-  /* v8 ignore start -- @preserve */
-  public getNodeKey(node: TreeNodeItem): NodeKey {
-    return this._parentDataProvider.getNodeKey(node);
-  }
-  /* v8 ignore stop -- @preserve */
-
   /** Check if node matches currently applied filter */
   public nodeMatchesFilter(node: TreeNodeItem): boolean {
     return this._filteredResultMatches.some((result) => result.id === node.id);

@@ -5,7 +5,7 @@
 
 import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
 import { afterEach, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
-import { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
+import { PropertyDescription } from "@itwin/appui-abstract";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import { FormatsChangedArgs, FormatsProvider } from "@itwin/core-quantity";
@@ -683,31 +683,6 @@ describe("ContentDataProvider", () => {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContentAndSize).not.toHaveBeenCalled();
       });
-    });
-  });
-
-  describe("[deprecated] getFieldByPropertyRecord", () => {
-    it("passes record's description to `getFieldByPropertyDescription`", async () => {
-      const value: PrimitiveValue = { displayValue: "displayValue", value: "rawValue", valueFormat: 0 };
-      const description: PropertyDescription = {
-        name: "propertyName",
-        displayLabel: "labelString",
-        typename: "number",
-        editor: undefined,
-      };
-      const record = new PropertyRecord(value, description);
-
-      const field = createTestPropertiesContentField({
-        name: "test-field",
-        properties: [{ property: createTestPropertyInfo({ name: "test-property" }) }],
-      });
-      provider.getFieldByPropertyDescription = vi.fn(async () => field);
-
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      const actualField = await provider.getFieldByPropertyRecord(record);
-
-      expect(provider.getFieldByPropertyDescription).toHaveBeenCalledExactlyOnceWith(record.property);
-      expect(actualField).toBe(field);
     });
   });
 

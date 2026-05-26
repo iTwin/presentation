@@ -13,12 +13,12 @@ import { assert } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import {
   Content,
+  createContentTraverser,
   DefaultContentDisplayTypes,
   KeySet,
   PageOptions,
   Ruleset,
   StartItemProps,
-  traverseContent,
 } from "@itwin/presentation-common";
 import { createIModelKey } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -251,9 +251,7 @@ async function loadRows(
 
 function createRows(content: Content, imodel: IModelConnection) {
   const rowsBuilder = new RowsBuilder({ imodel });
-  // note: using deprecated `traverseContent`, because we can't use the replacement `createContentTraverser` due to our peer dep version
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  traverseContent(rowsBuilder, content);
+  createContentTraverser(rowsBuilder, content.descriptor)(content.contentSet);
   return rowsBuilder.rows;
 }
 

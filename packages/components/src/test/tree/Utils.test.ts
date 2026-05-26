@@ -35,12 +35,6 @@ describe("Utils", () => {
       expect(treeNode).toMatchSnapshot();
     });
 
-    it("creates tree node with custom label styles", () => {
-      const node = { ...createTestECInstancesNode(), fontStyle: "Bold Italic" };
-      const treeNode = createTreeNodeItem(node);
-      expect(treeNode).toMatchSnapshot();
-    });
-
     it("creates auto expanded tree node", () => {
       const node = createTestECInstancesNode({ isExpanded: true });
       const treeNode = createTreeNodeItem(node);

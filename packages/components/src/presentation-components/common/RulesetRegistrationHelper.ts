@@ -40,6 +40,7 @@ export class RulesetRegistrationHelper implements Disposable {
   }
 
   /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
+  /* v8 ignore next -- @preserve */
   public dispose() {
     this.#dispose();
   }
