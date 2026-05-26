@@ -77,4 +77,4 @@ Currently `PropertyField` has a single `sourceClassName: EC.FullClassName`. This
 - Option 2 keeps a single field but introduces magic-string semantics.
 - Either way, per-property entries should take precedence over the blanket override.
 
-**Decision:** TBD
+**Decision:** Use `defaultOverrides?: PropertyOverrides` (Option 1). It is applied to all selected properties; per-property entries in `overrides` take precedence.
