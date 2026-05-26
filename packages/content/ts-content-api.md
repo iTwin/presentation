@@ -59,7 +59,7 @@ Currently `PropertyField` has a single `sourceClassName: EC.FullClassName`. This
 - Separate fields are simpler but push complexity to every consumer
 - The existing native implementation merges them — do we want to preserve that behavior?
 
-**Decision:** TBD
+**Decision:** No merging in this package. Fields are kept separate (one per source class) and it is left to UI components to detect and merge duplicates as needed.
 
 ## Blanket property overrides in `ClassPropertySpec`
 
