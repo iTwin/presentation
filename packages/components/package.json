@@ -67,21 +67,21 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@itwin/appui-abstract": "^4.4.0 || ^5.0.0",
-    "@itwin/components-react": "^4.9.0 || ^5.0.0",
-    "@itwin/core-bentley": "^4.4.0 || ^5.0.0",
-    "@itwin/core-common": "^4.4.0 || ^5.0.0",
-    "@itwin/core-frontend": "^4.4.0 || ^5.0.0",
-    "@itwin/core-quantity": "^4.4.0 || ^5.0.0",
-    "@itwin/core-react": "^4.9.0 || ^5.0.0",
-    "@itwin/ecschema-metadata": "^4.4.0 || ^5.0.0",
-    "@itwin/imodel-components-react": "^4.9.0 || ^5.0.0",
-    "@itwin/itwinui-react": "^3.0.0",
-    "@itwin/presentation-common": "^4.4.0 || ^5.0.0",
-    "@itwin/presentation-frontend": "^4.4.0 || ^5.0.0",
+    "@itwin/appui-abstract": "^5.9.0",
+    "@itwin/components-react": "^5.31.0",
+    "@itwin/core-bentley": "^5.9.0",
+    "@itwin/core-common": "^5.9.0",
+    "@itwin/core-frontend": "^5.9.0",
+    "@itwin/core-quantity": "^5.9.0",
+    "@itwin/core-react": "^5.31.0",
+    "@itwin/ecschema-metadata": "^5.9.0",
+    "@itwin/imodel-components-react": "^5.31.0",
+    "@itwin/itwinui-react": "^3.20.0",
+    "@itwin/presentation-common": "^5.9.0",
+    "@itwin/presentation-frontend": "^5.9.0",
     "@itwin/unified-selection-react": "^1.0.0",
-    "react": "^17.0.0 || ^18.0.0",
-    "react-dom": "^17.0.0 || ^18.0.0"
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
   "peerDependenciesMeta": {
     "@itwin/unified-selection-react": {
