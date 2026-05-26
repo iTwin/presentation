@@ -8,7 +8,7 @@ import { compareFullClassNames } from "@itwin/presentation-shared";
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
 import type { CategoryDefinition } from "./Category.js";
-import type { Field, PropertyField, RelatedFieldGroup } from "./Field.js";
+import type { Field, PropertyField } from "./Field.js";
 
 /**
  * The schema of the content result. Computed before loading any values.
@@ -26,16 +26,11 @@ export interface ContentDescriptor {
   sources: ContentSource[];
 
   /**
-   * Direct fields — property fields and calculated fields that belong to the
-   * target class directly (no relationship path).
+   * All fields in this descriptor — property fields, calculated fields, and external fields.
+   * Related fields carry a non-empty `pathFromTarget` indicating the relationship path
+   * from the target class to the field's source class.
    */
-  directFields: Field[];
-
-  /**
-   * Related field groups — containers that group fields loaded via a specific
-   * relationship path. Groups can nest for multi-step paths.
-   */
-  relatedFieldGroups: RelatedFieldGroup[];
+  fields: Field[];
 
   /**
    * All category definitions referenced by fields in this descriptor, keyed by category ID.
@@ -46,22 +41,10 @@ export interface ContentDescriptor {
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ContentDescriptor {
   /**
-   * Collect all fields from a descriptor into a flat array.
-   */
-  export function collectAllFields(descriptor: ContentDescriptor): Field[] {
-    return [...iterateFields(descriptor)];
-  }
-
-  /**
    * Find a field in the descriptor by its identity.
    */
   export function findFieldByIdentity(descriptor: ContentDescriptor, identity: string): Field | undefined {
-    for (const field of iterateFields(descriptor)) {
-      if (field.identity === identity) {
-        return field;
-      }
-    }
-    return undefined;
+    return descriptor.fields.find((field) => field.identity === identity);
   }
 
   /**
@@ -76,7 +59,7 @@ export namespace ContentDescriptor {
     propertyName: string,
     pathFromTarget?: RelationshipPath,
   ): PropertyField | undefined {
-    for (const field of iterateFields(descriptor)) {
+    for (const field of descriptor.fields) {
       if (
         field.kind === "property" &&
         field.sourceClassName === sourceClassName &&
@@ -100,19 +83,5 @@ export namespace ContentDescriptor {
         compareFullClassNames(step.relationshipName, b[i].relationshipName) === 0 &&
         (step.relationshipReverse ?? false) === (b[i].relationshipReverse ?? false),
     );
-  }
-
-  function* iterateFields(descriptor: ContentDescriptor): Iterable<Field> {
-    yield* descriptor.directFields;
-    yield* iterateGroups(descriptor.relatedFieldGroups);
-  }
-
-  function* iterateGroups(groups: RelatedFieldGroup[]): Iterable<Field> {
-    for (const group of groups) {
-      yield* group.fields;
-      if (group.nestedGroups) {
-        yield* iterateGroups(group.nestedGroups);
-      }
-    }
   }
 }

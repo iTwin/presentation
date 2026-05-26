@@ -102,25 +102,3 @@ export interface ExternalField extends BaseField {
  * @public
  */
 export type Field = PropertyField | CalculatedField | ExternalField;
-
-/**
- * An organizational container that groups related fields loaded via a specific
- * relationship path. Groups can nest for multi-step paths.
- *
- * Groups are purely structural — they carry no value themselves.
- * Values in content items are keyed by leaf field identity.
- *
- * @public
- */
-export interface RelatedFieldGroup {
-  /** The relationship path this group represents. */
-  path: RelationshipPath;
-  /** Display label for this group (typically the target class display label). */
-  label: string;
-  /** Category for fields in this group that don't have an explicit category. */
-  defaultCategoryId?: string;
-  /** Fields belonging to this group. */
-  fields: Field[];
-  /** Nested sub-groups for further path steps. */
-  nestedGroups?: RelatedFieldGroup[];
-}

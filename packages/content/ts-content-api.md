@@ -16,7 +16,11 @@
 - Simpler descriptor serialization/comparison
 - Less complex descriptor schema
 
-**Decision:** TBD
+**Decision:** Flatten. The descriptor holds a single `fields: Field[]` array; `RelatedFieldGroup` is removed.
+
+Category nesting for related fields is handled by the existing `CategoryDefinition` mechanism (`categories` registry + `categoryId` on fields + `parentId` for nesting). Providers that resolve related fields know the path split points and create categories accordingly.
+
+`CategoryDefinition.computeIdFromRelationshipPath(path)` produces a deterministic ID from a relationship path, ensuring multiple providers reaching the same path converge on the same category without coordination. `CategoryDefinition.createFromRelationshipPath(...)` is a convenience that builds the full definition.
 
 ## Field identity encoding for related property fields
 

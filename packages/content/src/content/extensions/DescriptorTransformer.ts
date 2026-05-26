@@ -5,7 +5,7 @@
 
 import type { ContentSource } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
-import type { Field, RelatedFieldGroup } from "../model/Field.js";
+import type { Field } from "../model/Field.js";
 
 // cspell:words spliceable
 
@@ -79,29 +79,18 @@ type TransformableField = Omit<Field, "identity"> & { readonly identity: string 
 type SpliceableReadonlyArray<T> = ReadonlyArray<T> & { splice(start: number, deleteCount?: number): T[] };
 
 /**
- * A related field group exposed to transformers — nested fields have frozen identities.
- *
- * @public
- */
-interface TransformableRelatedFieldGroup extends Omit<RelatedFieldGroup, "fields" | "nestedGroups"> {
-  fields: SpliceableReadonlyArray<TransformableField>;
-  nestedGroups?: SpliceableReadonlyArray<TransformableRelatedFieldGroup>;
-}
-
-/**
  * A constrained view of {@link ContentDescriptor} exposed to descriptor transformers.
  *
  * Enforces transformer rules at the type level:
  * - `sources` is readonly — the resolved source structure is immutable at this stage.
  * - Field `identity` is readonly — must not be changed.
  * - Field metadata (`label`, `categoryId`, `hidden`, `readOnly`) remains mutable.
- * - Field arrays are readonly but allow element removal via `splice`.
+ * - Field array is readonly but allows element removal via `splice`.
  *
  * @public
  */
 interface TransformableDescriptor {
   readonly sources: readonly ContentSource[];
-  readonly directFields: SpliceableReadonlyArray<TransformableField>;
-  readonly relatedFieldGroups: SpliceableReadonlyArray<TransformableRelatedFieldGroup>;
+  readonly fields: SpliceableReadonlyArray<TransformableField>;
   readonly categories: Record<CategoryDefinition["id"], CategoryDefinition>;
 }
