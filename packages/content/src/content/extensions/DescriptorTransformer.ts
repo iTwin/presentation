@@ -76,7 +76,7 @@ type TransformableField = Omit<Field, "identity"> & { readonly identity: string 
  *
  * @public
  */
-type SpliceableReadonlyArray<T> = ReadonlyArray<T> & { splice(start: number, deleteCount: number): T[] };
+type SpliceableReadonlyArray<T> = ReadonlyArray<T> & { splice(start: number, deleteCount?: number): T[] };
 
 /**
  * A related field group exposed to transformers — nested fields have frozen identities.
