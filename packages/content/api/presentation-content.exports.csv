@@ -1,0 +1,27 @@
+sep=;
+Release Tag;API Item Type;API Item Name
+public;interface;CalculatedField
+public;interface;CategoryDefinition
+public;namespace;CategoryDefinition
+public;interface;ContentConfiguration
+public;interface;ContentDescriptor
+public;namespace;ContentDescriptor
+public;interface;ContentItem
+public;interface;ContentSource
+public;interface;ContentTarget
+public;interface;ContentValues
+public;function;createContentProvider
+public;const;DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY
+public;const;DEFAULT_FIELDS_PROVIDER_PRIORITY
+public;function;defineDescriptorTransformer
+public;function;defineExternalFieldsProvider
+public;function;defineIModelFieldsProvider
+public;function;defineQueryFilterer
+public;interface;ExternalField
+public;type;Field
+public;function;getDistinctFieldValues
+public;function;mapItems
+public;interface;PropertyField
+public;namespace;PropertyField
+public;function;reduceItems
+public;function;resolveContentSources

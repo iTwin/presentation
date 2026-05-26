@@ -33,7 +33,7 @@
  *   - Merges external values into the final `ContentItem` accessors.
  */
 
-import type { ECSqlQueryExecutor, ECSchemaProvider, InstanceKey, Value } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, ECSqlQueryExecutor, InstanceKey, Value } from "@itwin/presentation-shared";
 import type { ContentSource, ContentTarget } from "./ContentTarget.js";
 import type { DescriptorTransformer } from "./extensions/DescriptorTransformer.js";
 import type { ExternalFieldsProvider } from "./extensions/ExternalFieldsProvider.js";
@@ -160,6 +160,7 @@ interface ResolveContentSourcesProps {
  *
  * @public
  */
+/* v8 ignore next 3 */
 export async function resolveContentSources(_props: ResolveContentSourcesProps): Promise<ContentSource[]> {
   throw new Error("Not implemented");
 }
@@ -233,6 +234,7 @@ interface ContentProvider {
  *
  * @public
  */
+/* v8 ignore next 3 */
 export function createContentProvider(_props: ContentProviderProps): ContentProvider {
   throw new Error("Not implemented");
 }

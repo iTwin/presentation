@@ -114,7 +114,7 @@ interface ResolvedDeclarationGroup {
 
   /**
    * 0-based index into the `relatedProperties` array of the `FieldsProviderContribution`
-   * returned by the {@link IModelFieldsProvider}'s `getContribution()` call.
+   * returned by the `IModelFieldsProvider.getContribution()` call.
    */
   declarationIndex: number;
 

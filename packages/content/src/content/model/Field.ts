@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import {
-  normalizeFullClassName,
   type EC,
+  normalizeFullClassName,
   type RelationshipPath,
   type ValueDescriptor,
 } from "@itwin/presentation-shared";
@@ -51,8 +51,7 @@ export interface PropertyField extends BaseField {
    */
   pathFromTarget: RelationshipPath;
 }
-
-// eslint-disable-next-line @typescript-eslint/no-namespace
+/** @public */
 export namespace PropertyField {
   /**
    * Computes the ID of a property field from its source class, property name,

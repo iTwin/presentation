@@ -3,7 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { normalizeFullClassName, type RelationshipPath } from "@itwin/presentation-shared";
+import { normalizeFullClassName } from "@itwin/presentation-shared";
+
+import type { RelationshipPath } from "@itwin/presentation-shared";
 
 /**
  * A lightweight category definition used by providers to logically group fields for display.
@@ -26,7 +28,7 @@ export interface CategoryDefinition {
 }
 
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-namespace
+
 export namespace CategoryDefinition {
   /**
    * Computes a deterministic category ID from a relationship path.

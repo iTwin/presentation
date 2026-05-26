@@ -36,13 +36,13 @@ interface ClassPropertySpec {
 
   /**
    * Overrides applied to all selected properties.
-   * Per-property entries in {@link ClassPropertySpec.overrides} take precedence over this.
+   * Per-property entries in `overrides` take precedence over this.
    */
   defaultOverrides?: PropertyOverrides;
 
   /**
    * Per-property metadata overrides, keyed by property name.
-   * Takes precedence over {@link ClassPropertySpec.defaultOverrides}.
+   * Takes precedence over `defaultOverrides`.
    * Applied regardless of `select` — can override label, category, etc.
    */
   overrides?: Record<string, PropertyOverrides>;

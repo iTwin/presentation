@@ -141,6 +141,7 @@ type ExternalFieldValueRecord<TFieldIds extends readonly string[]> = {
  *
  * @public
  */
+/* v8 ignore next 6 */
 export function defineExternalFieldsProvider<
   const TInputKeys extends string,
   const TOutputFieldIds extends readonly string[],
