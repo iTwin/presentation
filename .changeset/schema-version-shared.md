@@ -1,5 +1,5 @@
 ---
-"@itwin/presentation-shared": minor
+"@itwin/presentation-shared": major
 ---
 
 **Breaking:** Add `version` property to `EC.Schema` interface. Any code that manually implements the `EC.Schema` interface must now provide a `version: { read: number; write: number; minor: number }` object matching the EC schema version format `"read.write.minor"`.
