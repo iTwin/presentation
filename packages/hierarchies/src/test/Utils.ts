@@ -164,6 +164,7 @@ export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
 }
 export interface StubbedSchema {
   name: string;
+  version: { read: number; write: number; minor: number };
   getClass: EC.Schema["getClass"];
   getCustomAttributes: EC.Schema["getCustomAttributes"];
 }
@@ -187,6 +188,7 @@ export function createECSchemaProviderStub() {
     if (!schemaStub) {
       schemaStub = {
         name: schemaName,
+        version: { read: 1, write: 0, minor: 0 },
         getClass: async (className) => classes.get(`${schemaName}.${className}`),
         getCustomAttributes: async () => customAttributes.get(schemaName) ?? new Map(),
       };

@@ -82,8 +82,20 @@ export namespace EC {
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/schema/
    * @public
    */
+  /** Schema version components. Note: comparison order is write > read > minor (not left-to-right). */
+  export interface SchemaVersion {
+    /** First component in "read.write.minor" string format. */
+    read: number;
+    /** Second component in "read.write.minor" string format (most significant for compatibility). */
+    write: number;
+    /** Third component in "read.write.minor" string format. */
+    minor: number;
+  }
+
   export interface Schema {
     name: string;
+    /** The schema version. Format: `"read.write.minor"`, comparison order: write > read > minor. */
+    version: SchemaVersion;
     getClass(name: string): Promise<Class | undefined>;
     getCustomAttributes(): Promise<CustomAttributeSet>;
   }
