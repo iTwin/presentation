@@ -498,7 +498,7 @@ export const NOOP_LOGGER: ILogger;
 export function normalizeFullClassName(fullClassName: string): EC.FullClassNameDotNotation;
 
 // @public (undocumented)
-type NumericPrimitiveValueType = Extract<PrimitiveValueType, "Double" | "Int" | "Long">;
+type NumericPrimitiveValueType = Extract<PrimitiveValueType, "Double" | "Integer" | "Long">;
 
 // @public
 export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
