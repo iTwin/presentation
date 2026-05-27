@@ -7,8 +7,6 @@ import type { ContentSource } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { Field } from "../model/Field.js";
 
-// cspell:words spliceable
-
 /**
  * Default priority for descriptor transformers.
  *
@@ -72,25 +70,19 @@ export function defineDescriptorTransformer(transformer: DescriptorTransformer):
 type TransformableField = Omit<Field, "id"> & { readonly id: string };
 
 /**
- * A readonly array that permits element removal via `splice` but disallows insertion and direct mutation.
- *
- * @public
- */
-type SpliceableReadonlyArray<T> = ReadonlyArray<T> & { splice(start: number, deleteCount?: number): T[] };
-
-/**
  * A constrained view of {@link ContentDescriptor} exposed to descriptor transformers.
  *
  * Enforces transformer rules at the type level:
  * - `sources` is readonly — the resolved source structure is immutable at this stage.
  * - Field `id` is readonly — must not be changed.
  * - Field metadata (`label`, `categoryId`, `hidden`, `readOnly`) remains mutable.
- * - Field array is readonly but allows element removal via `splice`.
+ * - Fields can be removed via `descriptor.removeField(id)`.
  *
  * @public
  */
 interface TransformableDescriptor {
   readonly sources: readonly ContentSource[];
-  readonly fields: SpliceableReadonlyArray<TransformableField>;
+  readonly fields: Readonly<Record<Field["id"], TransformableField>>;
   readonly categories: Record<CategoryDefinition["id"], CategoryDefinition>;
+  removeField(id: string): void;
 }
