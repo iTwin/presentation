@@ -3,7 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { EC, RelationshipPath, ValueDescriptor } from "@itwin/presentation-shared";
+import {
+  normalizeFullClassName,
+  type EC,
+  type RelationshipPath,
+  type ValueDescriptor,
+} from "@itwin/presentation-shared";
 
 /**
  * Base attributes shared by all field kinds.
@@ -45,6 +50,34 @@ export interface PropertyField extends BaseField {
    * Empty array means the field belongs to the target class directly.
    */
   pathFromTarget: RelationshipPath;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace PropertyField {
+  /**
+   * Computes the identity of a property field from its source class, property name,
+   * and relationship path from the target. Use this to look up property fields
+   * directly in `descriptor.fields`.
+   */
+  export function computeIdentity(props: {
+    propertyClassName: EC.FullClassName;
+    propertyName: string;
+    pathFromTarget?: RelationshipPath;
+  }): string {
+    let identity = `${normalizeFullClassName(props.propertyClassName)}.${props.propertyName}`;
+    if (props.pathFromTarget && props.pathFromTarget.length > 0) {
+      identity += "(";
+      props.pathFromTarget.forEach((step, i) => {
+        const separator = step.relationshipReverse ? "<-" : "->";
+        if (i === 0) {
+          identity += normalizeFullClassName(step.sourceClassName);
+        }
+        identity += `${separator}${normalizeFullClassName(step.relationshipName)}${separator}${normalizeFullClassName(step.targetClassName)}`;
+      });
+      identity += ")";
+    }
+    return identity;
+  }
 }
 
 /**
