@@ -57,6 +57,8 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
    * - For *primitive* fields: `null`, `undefined`, `""` (empty string)
    * - For *array* fields: `[]` (empty array)
    * - For *struct* fields: `{}` (object with no members)
+   *
+   * @deprecated in 5.15. Use [FilteringPropertyDataProvider]($components-react) and [IPropertyDataFilterer]($components-react) APIs for filtering-out properties.
    */
   public includeFieldsWithNoValues: boolean;
 
@@ -65,12 +67,16 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
    * Fields with composite values:
    * - *array* fields.
    * - *struct* fields.
+   *
+   * @deprecated in 5.15. Use [FilteringPropertyDataProvider]($components-react) and [IPropertyDataFilterer]($components-react) APIs for filtering-out properties.
    */
   public includeFieldsWithCompositeValues: boolean;
 
   /** Constructor. */
   constructor(props?: FavoritePropertiesDataProviderProps) {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     this.includeFieldsWithNoValues = true;
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     this.includeFieldsWithCompositeValues = true;
     this._customRuleset = /* v8 ignore next -- @preserve */ props?.ruleset;
     /* v8 ignore start -- @preserve */
