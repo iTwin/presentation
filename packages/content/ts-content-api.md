@@ -43,7 +43,7 @@ Naively encoding the full path (e.g., `SourceClass.Prop/Rel1/Class2/Rel2/Class3/
 - Cross-session stability is **not required** — identities are not persisted to storage.
 - This means index-based or order-dependent schemes are viable as long as the ordering algorithm is deterministic for the same inputs.
 
-**Decision:** TBD
+**Decision:** Use full non-encoded field identities with format `{PropertyClassName}.{PropertyName}({serialized path from content target to property class})`. For direct (non-related) properties, the path portion is omitted. Memory impact is negligible at expected scale (~1K fields, average 2-step paths ≈ ~260 KB total).
 
 ## Multi-source property fields
 
