@@ -361,6 +361,74 @@ export namespace EC {
  */
 export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
+/** @public */
+type NumericPrimitiveValueType = Extract<PrimitiveValueType, "Double" | "Integer" | "Long">;
+
+/**
+ * A type descriptor for a value's shape.
+ *
+ * - `PrimitiveValueDescriptor`: a scalar primitive.
+ * - `StructValueDescriptor`: a named struct with typed members.
+ * - `ArrayValueDescriptor`: an ordered collection of a single element type.
+ *
+ * @public
+ */
+export type ValueDescriptor = PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor;
+
+/**
+ * Describes a scalar primitive value.
+ * @public
+ */
+export type PrimitiveValueDescriptor = { kind: "primitive" } & (
+  | {
+      /** The primitive value type. */
+      type: Exclude<PrimitiveValueType, NumericPrimitiveValueType>;
+      kindOfQuantity?: undefined;
+    }
+  | {
+      /** The primitive value type. */
+      type: NumericPrimitiveValueType;
+      /**
+       * Full name of the KindOfQuantity associated with this property (e.g., `"Units.LENGTH"`).
+       * Determines how the value should be formatted and which units to display.
+       */
+      kindOfQuantity?: string;
+    }
+);
+
+/**
+ * Describes a named struct value with typed members.
+ * @public
+ */
+export interface StructValueDescriptor {
+  kind: "struct";
+  /** The list of named, typed members that make up this struct. */
+  members: StructMember[];
+}
+
+/**
+ * Describes a single member of a `StructValueDescriptor`.
+ * @public
+ */
+interface StructMember {
+  /** The member's property name. */
+  name: string;
+  /** A human-readable label for display purposes. */
+  label: string;
+  /** The type descriptor for this member's value. */
+  type: ValueDescriptor;
+}
+
+/**
+ * Describes an ordered collection of values of a single element type.
+ * @public
+ */
+export interface ArrayValueDescriptor {
+  kind: "array";
+  /** The type descriptor for each element in the array. */
+  elementType: ValueDescriptor;
+}
+
 /**
  * Describes a single step through an ECRelationship from source ECClass to target ECClass.
  * @public

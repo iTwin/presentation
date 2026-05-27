@@ -24,7 +24,16 @@ export { createIModelInstanceLabelSelectClauseFactory } from "./shared/instance-
 export type { ILogger, LogFunction, LogLevel } from "./shared/Logging.js";
 export { NOOP_LOGGER } from "./shared/Logging.js";
 export type { ArrayElement, OmitOverUnion, Props } from "./shared/MappedTypes.js";
-export type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "./shared/Metadata.js";
+export type {
+  ArrayValueDescriptor,
+  EC,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+  PrimitiveValueDescriptor,
+  RelationshipPath,
+  StructValueDescriptor,
+  ValueDescriptor,
+} from "./shared/Metadata.js";
 export { createCachingECClassHierarchyInspector, getClass } from "./shared/Metadata.js";
 export {
   createMainThreadReleaseOnTimePassedHandler,
@@ -36,4 +45,5 @@ export {
   trimWhitespace,
 } from "./shared/Utils.js";
 export { InstanceKey, PrimitiveValue, TypedPrimitiveValue } from "./shared/Values.js";
+export type { ArrayValue, StructValue, Value } from "./shared/Values.js";
 export type { Event, RaisableEvent, EventArgs, EventListener } from "./shared/Event.js";

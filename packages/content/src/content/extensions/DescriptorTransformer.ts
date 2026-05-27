@@ -1,0 +1,88 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import type { ContentSource } from "../ContentTarget.js";
+import type { CategoryDefinition } from "../model/Category.js";
+import type { Field } from "../model/Field.js";
+
+/**
+ * Default priority for descriptor transformers.
+ *
+ * @public
+ */
+export const DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY = 1000;
+
+/**
+ * Modifies the descriptor after all providers have contributed their fields.
+ *
+ * **Pipeline stage: 2 (descriptor building)**
+ *
+ * Runs after all iModel and external fields providers have declared their fields,
+ * allowing cross-provider adjustments to the final descriptor shape.
+ *
+ * Use cases:
+ * - Hiding specific fields based on user preferences or component needs.
+ * - Overriding field labels, categories, priorities.
+ * - Cross-provider decisions (e.g., "move all BisCore fields to a System category").
+ *
+ * Rules:
+ * - Transformers may hide, remove, or modify field metadata.
+ * - Transformers must NOT change field ID (the stable key).
+ * - Transformers must NOT add new fields (that's the provider's responsibility).
+ * - Transformers must NOT reorder fields (display order is a UI concern).
+ *
+ * Multiple transformers run sequentially in ascending priority order. Each receives
+ * the descriptor as modified by previous transformers.
+ *
+ * @public
+ */
+export interface DescriptorTransformer {
+  /**
+   * Numeric priority — transformers run in ascending priority order.
+   * @default {@link DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY} (1000)
+   */
+  priority?: number;
+
+  /**
+   * Transform the descriptor in place. May mutate fields, categories,
+   * and related field groups.
+   */
+  transform(descriptor: TransformableDescriptor): void;
+}
+
+/**
+ * Helper to define a descriptor transformer inline.
+ *
+ * @public
+ */
+export function defineDescriptorTransformer(transformer: DescriptorTransformer): DescriptorTransformer {
+  return transformer;
+}
+
+/**
+ * A field with its ID made readonly — transformers may modify metadata
+ * (label, categoryId, hidden, readOnly) but must not change ID.
+ *
+ * @public
+ */
+type TransformableField = Omit<Field, "id"> & { readonly id: string };
+
+/**
+ * A constrained view of {@link ContentDescriptor} exposed to descriptor transformers.
+ *
+ * Enforces transformer rules at the type level:
+ * - `sources` is readonly — the resolved source structure is immutable at this stage.
+ * - Field `id` is readonly — must not be changed.
+ * - Field metadata (`label`, `categoryId`, `hidden`, `readOnly`) remains mutable.
+ * - Fields can be removed via `descriptor.removeField(id)`.
+ *
+ * @public
+ */
+interface TransformableDescriptor {
+  readonly sources: readonly ContentSource[];
+  readonly fields: Readonly<Record<Field["id"], TransformableField>>;
+  readonly categories: Record<CategoryDefinition["id"], CategoryDefinition>;
+  removeField(id: string): void;
+}

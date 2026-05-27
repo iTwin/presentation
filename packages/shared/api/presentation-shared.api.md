@@ -10,6 +10,16 @@ import type { Id64String } from '@itwin/core-bentley';
 export type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
 
 // @public
+export type ArrayValue = Value[];
+
+// @public
+export interface ArrayValueDescriptor {
+    elementType: ValueDescriptor;
+    // (undocumented)
+    kind: "array";
+}
+
+// @public
 interface BisInstanceLabelSelectClauseFactoryProps {
     // (undocumented)
     classHierarchyInspector: ECClassHierarchyInspector;
@@ -487,6 +497,9 @@ export const NOOP_LOGGER: ILogger;
 // @public
 export function normalizeFullClassName(fullClassName: string): EC.FullClassNameDotNotation;
 
+// @public (undocumented)
+type NumericPrimitiveValueType = Extract<PrimitiveValueType, "Double" | "Integer" | "Long">;
+
 // @public
 export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
 
@@ -527,6 +540,17 @@ export namespace PrimitiveValue {
 }
 
 // @public
+export type PrimitiveValueDescriptor = {
+    kind: "primitive";
+} & ({
+    type: Exclude<PrimitiveValueType, NumericPrimitiveValueType>;
+    kindOfQuantity?: undefined;
+} | {
+    type: NumericPrimitiveValueType;
+    kindOfQuantity?: string;
+});
+
+// @public
 type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
 // @public
@@ -539,7 +563,7 @@ export interface RaisableEvent<TListener extends (...args: any[]) => void = () =
 }
 
 // @public
-type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
+export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
 
 // @public
 interface RelationshipPathStep {
@@ -557,6 +581,26 @@ interface RelationshipPathStep {
 
 // @public
 export function releaseMainThread(): Promise<void>;
+
+// @public
+interface StructMember {
+    label: string;
+    name: string;
+    type: ValueDescriptor;
+}
+
+// @public
+export interface StructValue {
+    // (undocumented)
+    [memberName: string]: Value;
+}
+
+// @public
+export interface StructValueDescriptor {
+    // (undocumented)
+    kind: "struct";
+    members: StructMember[];
+}
 
 // @public
 export function trimWhitespace(str: string): string;
@@ -620,6 +664,12 @@ namespace TypedValueSelectClauseProps {
     // (undocumented)
     function isPrimitiveValueSelector(props: TypedValueSelectClauseProps): props is TypedPrimitiveValueSelectorProps;
 }
+
+// @public
+export type Value = PrimitiveValue | StructValue | ArrayValue | undefined;
+
+// @public
+export type ValueDescriptor = PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor;
 
 // (No @packageDocumentation comment for this package)
 

@@ -1,0 +1,44 @@
+{
+  "name": "@itwin/presentation-content",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A package for loading property content from iTwin.js iModels.",
+  "license": "MIT",
+  "author": {
+    "name": "Bentley Systems, Inc.",
+    "url": "http://www.bentley.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iTwin/presentation.git",
+    "directory": "packages/content"
+  },
+  "keywords": [
+    "Bentley",
+    "Content",
+    "ECSQL",
+    "iModel",
+    "iTwin.js",
+    "Presentation",
+    "Properties"
+  ],
+  "type": "module",
+  "main": "lib/presentation-content.js",
+  "types": "lib/presentation-content.d.ts",
+  "exports": {
+    ".": "./lib/presentation-content.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rimraf lib"
+  },
+  "dependencies": {
+    "@itwin/core-bentley": "catalog:itwinjs-core",
+    "@itwin/presentation-shared": "workspace:*"
+  },
+  "devDependencies": {
+    "rimraf": "catalog:build-tools",
+    "typescript": "catalog:build-tools"
+  }
+}
