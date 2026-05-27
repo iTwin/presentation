@@ -33,6 +33,7 @@ import type { EC } from "@itwin/presentation-shared";
 export function createECSchema(schema: CoreSchema): EC.Schema {
   return {
     name: schema.name,
+    version: schema.schemaKey.version,
     async getClass(name) {
       const item = await schema.getItem(name, CoreClass);
       return item ? createECClass(item, this) : undefined;

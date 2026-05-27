@@ -26,6 +26,7 @@ export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass
 export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass;
 interface SchemaStub {
   name: string;
+  version: EC.SchemaVersion;
   getClass: Mock<EC.Schema["getClass"]>;
   getCustomAttributes: Mock<EC.Schema["getCustomAttributes"]>;
   classes: Map<string, EC.Class>;
@@ -43,6 +44,7 @@ export function createECSchemaProviderStub() {
       const classMap = new Map<string, EC.Class>();
       schemaStub = {
         name: schemaName,
+        version: { read: 1, write: 0, minor: 0 },
         classes: classMap,
         getClass: vi.fn(async (className: string) => classMap.get(className)),
         getCustomAttributes: vi.fn<EC.Schema["getCustomAttributes"]>(),
@@ -52,7 +54,7 @@ export function createECSchemaProviderStub() {
     return schemaStub;
   };
   const createBaseClassProps = (props: StubClassFuncProps) => ({
-    schema: { name: props.schemaName },
+    schema: getSchemaStub(props.schemaName),
     fullName: `${props.schemaName}.${props.className}`,
     name: props.className,
     label: props.classLabel,

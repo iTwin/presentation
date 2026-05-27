@@ -276,6 +276,7 @@ export namespace EC {
         getCustomAttributes(): Promise<CustomAttributeSet>;
         // (undocumented)
         name: string;
+        version: SchemaVersion;
     }
     export interface SchemaItem {
         // (undocumented)
@@ -286,6 +287,11 @@ export namespace EC {
         name: string;
         // (undocumented)
         schema: Schema;
+    }
+    export interface SchemaVersion {
+        minor: number;
+        read: number;
+        write: number;
     }
     export type StructArrayProperty = StructProperty & ArrayPropertyAttributes;
     export type StructClass = Class;
