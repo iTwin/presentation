@@ -49,30 +49,6 @@ describe("FavoritePropertiesDataFilterer", () => {
     expect(matchResult).toEqual({ matchesFilter: true, shouldExpandNodeParents: true });
   });
 
-  it("uses `FavoritePropertiesManager.has` to determine favorites if `hasAsync` is not available and callback is not provided through props", async () => {
-    const record = createPrimitiveStringProperty("Property", "Value");
-    const matchingField = createTestSimpleContentField();
-
-    dataProvider.getFieldByPropertyDescription.mockResolvedValue(matchingField);
-
-    const manager = createMocked(FavoritePropertiesManager);
-    Object.assign(manager, { hasAsync: undefined });
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    manager.has.mockImplementation((field) => field === matchingField);
-
-    vi.spyOn(Presentation, "favoriteProperties", "get").mockReturnValue(manager);
-
-    const filterer = new FavoritePropertiesDataFilterer({
-      source: getProvider(),
-      favoritesScope: FavoritePropertiesScope.Global,
-      isActive: true,
-    });
-    const matchResult = await filterer.recordMatchesFilter(record, []);
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    expect(manager.has).toHaveBeenCalled();
-    expect(matchResult).toEqual({ matchesFilter: true, shouldExpandNodeParents: true });
-  });
-
   it("raises `onFilterChanged` event when filterer is enabled / disabled", () => {
     const filterer = new FavoritePropertiesDataFilterer({
       source: getProvider(),

@@ -436,33 +436,22 @@ export class ContentDataProvider implements IContentDataProvider {
         },
       };
 
-      if (Presentation.presentation.getContentIterator) {
-        const result = await Presentation.presentation.getContentIterator(options);
-        return result
-          ? {
-              size: result.total,
-              content: new Content(
-                result.descriptor,
-                await (async () => {
-                  const items = [];
-                  for await (const item of result.items) {
-                    items.push(item);
-                  }
-                  return items;
-                })(),
-              ),
-            }
-          : undefined;
-      }
-      const requestSize = undefined !== pageOptions && 0 === pageOptions.start && undefined !== pageOptions.size;
-      if (requestSize) {
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        return await Presentation.presentation.getContentAndSize(options);
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      const content = await Presentation.presentation.getContent(options);
-      return content ? { content, size: content.contentSet.length } : undefined;
+      const result = await Presentation.presentation.getContentIterator(options);
+      return result
+        ? {
+            size: result.total,
+            content: new Content(
+              result.descriptor,
+              await (async () => {
+                const items = [];
+                for await (const item of result.items) {
+                  items.push(item);
+                }
+                return items;
+              })(),
+            ),
+          }
+        : undefined;
     },
     { isMatchingKey: areContentRequestsEqual as any },
   );

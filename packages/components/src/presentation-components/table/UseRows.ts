@@ -221,23 +221,18 @@ async function loadRows(
     paging,
   };
   return new Promise((resolve, reject) => {
-    (Presentation.presentation.getContentIterator
-      ? from(Presentation.presentation.getContentIterator(requestProps)).pipe(
-          mergeMap((result) => {
-            if (!result) {
-              return of(undefined);
-            }
-            return from(result.items).pipe(
-              toArray(),
-              map((items) => ({ total: result.total, content: new Content(result.descriptor, items) })),
-            );
-          }),
-        )
-      : // eslint-disable-next-line @typescript-eslint/no-deprecated
-        from(Presentation.presentation.getContentAndSize(requestProps)).pipe(
-          map((result) => (result ? { total: result.size, content: result.content } : undefined)),
-        )
-    )
+    from(Presentation.presentation.getContentIterator(requestProps))
+      .pipe(
+        mergeMap((result) => {
+          if (!result) {
+            return of(undefined);
+          }
+          return from(result.items).pipe(
+            toArray(),
+            map((items) => ({ total: result.total, content: new Content(result.descriptor, items) })),
+          );
+        }),
+      )
       .pipe(
         map((result) =>
           result

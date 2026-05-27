@@ -7,7 +7,7 @@ import { createAsyncIterator } from "presentation-test-utilities";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import { Content, DescriptorOverrides, KeySet, SortDirection } from "@itwin/presentation-common";
+import { DescriptorOverrides, KeySet, SortDirection } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { ROWS_RELOAD_PAGE_SIZE, useRows, UseRowsProps } from "../../presentation-components/table/UseRows.js";
 import { createTestECInstanceKey, createTestPropertyInfo, TestErrorBoundary } from "../_helpers/Common.js";
@@ -31,13 +31,12 @@ describe("useRows", () => {
     options: {},
   };
 
-  let presentationManagerSpy: ReturnType<typeof vi.spyOn>;
   const getContentIteratorStub = vi.fn<PresentationManager["getContentIterator"]>();
 
   beforeEach(() => {
-    presentationManagerSpy = vi
-      .spyOn(Presentation, "presentation", "get")
-      .mockReturnValue({ getContentIterator: getContentIteratorStub } as unknown as PresentationManager);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
+      getContentIterator: getContentIteratorStub,
+    } as unknown as PresentationManager);
     onActiveFormattingUnitSystemChanged = new BeUiEvent<FormattingUnitSystemChangedArgs>();
     vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
       onActiveFormattingUnitSystemChanged,
@@ -46,41 +45,6 @@ describe("useRows", () => {
 
   afterEach(() => {
     getContentIteratorStub.mockReset();
-  });
-
-  describe("when `getContentIterator` is not available", () => {
-    const getContentAndSizeStub = vi.fn<PresentationManager["getContentAndSize"]>();
-
-    beforeEach(() => {
-      presentationManagerSpy.mockReturnValue({ getContentAndSize: getContentAndSizeStub });
-    });
-
-    it("loads rows", async () => {
-      const propertiesField = createTestPropertiesContentField({
-        name: "first_field",
-        label: "First Field",
-        properties: [{ property: createTestPropertyInfo() }],
-      });
-      const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-      const item = createTestContentItem({
-        values: { [propertiesField.name]: "test_value" },
-        displayValues: { [propertiesField.name]: "Test value" },
-      });
-      getContentAndSizeStub.mockResolvedValue({ content: new Content(descriptor, [item]), size: 1 });
-
-      const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
-
-      await waitFor(() => expect(result.current.rows).toHaveLength(1));
-      const cell = result.current.rows[0].cells[0];
-      expect(cell).toMatchObject({ key: propertiesField.name });
-    });
-
-    it("returns empty rows list if there are no content", async () => {
-      getContentAndSizeStub.mockImplementation(async () => undefined);
-      const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
-      expect(result.current.rows).toHaveLength(0);
-    });
   });
 
   it("loads rows when `getContentIterator` is available", async () => {

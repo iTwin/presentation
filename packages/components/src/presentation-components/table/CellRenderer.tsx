@@ -8,8 +8,7 @@
 
 import { useState } from "react";
 import { ArrayValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { NonPrimitivePropertyRenderer, PropertyValueRendererManager } from "@itwin/components-react";
-import { Orientation } from "@itwin/core-react";
+import { NonPrimitivePropertyRenderer, Orientation, PropertyValueRendererManager } from "@itwin/components-react";
 import { Anchor, Modal, ModalContent } from "@itwin/itwinui-react";
 
 /**
@@ -95,7 +94,6 @@ function NonPrimitiveCellRenderer(props: NonPrimitiveCellRendererProps) {
           <NonPrimitivePropertyRenderer
             uniqueKey={uniqueKey}
             propertyRecord={record}
-            /* eslint-disable-next-line @typescript-eslint/no-deprecated */
             orientation={Orientation.Horizontal}
           />
         </ModalContent>
