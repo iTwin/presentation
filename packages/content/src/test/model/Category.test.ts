@@ -8,8 +8,10 @@ import { CategoryDefinition } from "../../content/model/Category.js";
 
 describe("CategoryDefinition", () => {
   describe("computeId", () => {
-    it("returns empty string for empty path", () => {
-      expect(CategoryDefinition.computeId({ path: [] })).to.equal("");
+    it("throws for empty path", () => {
+      expect(() => CategoryDefinition.computeId({ path: [] })).to.throw(
+        "Cannot compute category ID from an empty relationship path.",
+      );
     });
 
     it("computes id for single-step forward path", () => {
@@ -22,7 +24,7 @@ describe("CategoryDefinition", () => {
           },
         ],
       });
-      expect(result).to.equal("BisCore.Element->BisCore.ElementOwnsUniqueAspect->BisCore.ElementAspect");
+      expect(result).to.equal("BisCore.Element-[BisCore.ElementOwnsUniqueAspect]->BisCore.ElementAspect");
     });
 
     it("computes id for single-step reverse path", () => {
@@ -36,7 +38,7 @@ describe("CategoryDefinition", () => {
           },
         ],
       });
-      expect(result).to.equal("BisCore.Element<-BisCore.ModelContainsElements<-BisCore.Model");
+      expect(result).to.equal("BisCore.Element-[!BisCore.ModelContainsElements]->BisCore.Model");
     });
 
     it("computes id for multi-step path", () => {
@@ -56,7 +58,7 @@ describe("CategoryDefinition", () => {
         ],
       });
       expect(result).to.equal(
-        "BisCore.Element<-BisCore.ModelContainsElements<-BisCore.Model->BisCore.ModelModelsElement->BisCore.Element",
+        "BisCore.Element-[!BisCore.ModelContainsElements]->BisCore.Model-[BisCore.ModelModelsElement]->BisCore.Element",
       );
     });
 
@@ -64,7 +66,7 @@ describe("CategoryDefinition", () => {
       const result = CategoryDefinition.computeId({
         path: [{ sourceClassName: "S:A", targetClassName: "S:B", relationshipName: "S:Rel" }],
       });
-      expect(result).to.equal("S.A->S.Rel->S.B");
+      expect(result).to.equal("S.A-[S.Rel]->S.B");
     });
   });
 
@@ -74,7 +76,7 @@ describe("CategoryDefinition", () => {
         path: [{ sourceClassName: "S:A", targetClassName: "S:B", relationshipName: "S:Rel" }],
         label: "Related B",
       });
-      expect(result).to.deep.equal({ id: "S.A->S.Rel->S.B", label: "Related B" });
+      expect(result).to.deep.equal({ id: "S.A-[S.Rel]->S.B", label: "Related B" });
     });
 
     it("includes parentId when provided", () => {
@@ -83,7 +85,7 @@ describe("CategoryDefinition", () => {
         path: [{ sourceClassName: "S:A", targetClassName: "S:B", relationshipName: "S:Rel" }],
         label: "Related B",
       });
-      expect(result).to.deep.equal({ id: "S.A->S.Rel->S.B", label: "Related B", parentId: "parent-cat" });
+      expect(result).to.deep.equal({ id: "S.A-[S.Rel]->S.B", label: "Related B", parentId: "parent-cat" });
     });
 
     it("includes description when provided", () => {
@@ -92,7 +94,7 @@ describe("CategoryDefinition", () => {
         label: "Related B",
         description: "Some description",
       });
-      expect(result).to.deep.equal({ id: "S.A->S.Rel->S.B", label: "Related B", description: "Some description" });
+      expect(result).to.deep.equal({ id: "S.A-[S.Rel]->S.B", label: "Related B", description: "Some description" });
     });
 
     it("omits parentId and description when not provided", () => {

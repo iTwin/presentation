@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { normalizeFullClassName } from "@itwin/presentation-shared";
+import { serializeRelationshipPath } from "./Utils.js";
 
 import type { RelationshipPath } from "@itwin/presentation-shared";
 
@@ -33,17 +33,14 @@ export namespace CategoryDefinition {
    * Computes a deterministic category ID from a relationship path.
    * Two providers using the same path will produce the same ID, allowing their fields
    * to merge under one category.
+   *
+   * @throws Error if the path is empty.
    */
   export function computeId(props: { path: RelationshipPath }): CategoryDefinition["id"] {
-    let identifier = "";
-    for (const step of props.path) {
-      const separator = step.relationshipReverse ? "<-" : "->";
-      if (identifier.length === 0) {
-        identifier = normalizeFullClassName(step.sourceClassName);
-      }
-      identifier += `${separator}${normalizeFullClassName(step.relationshipName)}${separator}${normalizeFullClassName(step.targetClassName)}`;
+    if (props.path.length === 0) {
+      throw new Error("Cannot compute category ID from an empty relationship path.");
     }
-    return identifier;
+    return serializeRelationshipPath(props.path);
   }
 
   /**

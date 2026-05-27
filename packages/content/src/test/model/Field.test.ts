@@ -52,7 +52,7 @@ describe("PropertyField", () => {
         ],
       });
       expect(result).to.equal(
-        "BisCore.ElementAspect.Value(BisCore.Element->BisCore.ElementOwnsUniqueAspect->BisCore.ElementAspect)",
+        "BisCore.ElementAspect.Value(BisCore.Element-[BisCore.ElementOwnsUniqueAspect]->BisCore.ElementAspect)",
       );
     });
 
@@ -69,7 +69,7 @@ describe("PropertyField", () => {
           },
         ],
       });
-      expect(result).to.equal("BisCore.Model.Name(BisCore.Element<-BisCore.ModelContainsElements<-BisCore.Model)");
+      expect(result).to.equal("BisCore.Model.Name(BisCore.Element-[!BisCore.ModelContainsElements]->BisCore.Model)");
     });
 
     it("appends multi-step path", () => {
@@ -91,7 +91,7 @@ describe("PropertyField", () => {
         ],
       });
       expect(result).to.equal(
-        "BisCore.Element.UserLabel(BisCore.Element<-BisCore.ModelContainsElements<-BisCore.Model->BisCore.ModelModelsElement->BisCore.Element)",
+        "BisCore.Element.UserLabel(BisCore.Element-[!BisCore.ModelContainsElements]->BisCore.Model-[BisCore.ModelModelsElement]->BisCore.Element)",
       );
     });
   });

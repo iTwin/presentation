@@ -9,6 +9,7 @@ import {
   type RelationshipPath,
   type ValueDescriptor,
 } from "@itwin/presentation-shared";
+import { serializeRelationshipPath } from "./Utils.js";
 
 /**
  * Base attributes shared by all field kinds.
@@ -65,15 +66,7 @@ export namespace PropertyField {
   }): Field["id"] {
     let identity = `${normalizeFullClassName(props.propertyClassName)}.${props.propertyName}`;
     if (props.pathFromTarget && props.pathFromTarget.length > 0) {
-      identity += "(";
-      props.pathFromTarget.forEach((step, i) => {
-        const separator = step.relationshipReverse ? "<-" : "->";
-        if (i === 0) {
-          identity += normalizeFullClassName(step.sourceClassName);
-        }
-        identity += `${separator}${normalizeFullClassName(step.relationshipName)}${separator}${normalizeFullClassName(step.targetClassName)}`;
-      });
-      identity += ")";
+      identity += `(${serializeRelationshipPath(props.pathFromTarget)})`;
     }
     return identity;
   }
