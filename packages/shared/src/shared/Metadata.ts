@@ -362,7 +362,7 @@ export namespace EC {
 export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
 /** @public */
-type NumericPrimitiveValueType = Extract<PrimitiveValueType, "Double" | "Int" | "Long">;
+type NumericPrimitiveValueType = Extract<PrimitiveValueType, "Double" | "Integer" | "Long">;
 
 /**
  * A type descriptor for a value's shape.
