@@ -55,6 +55,12 @@ The new generation packages can be divided into the following groups:
 | [`@itwin/presentation-hierarchies-react`](https://github.com/iTwin/presentation/tree/master/packages/hierarchies-react/README.md) | APIs for building a headless UI for rendering tree components based on data in an [iModel](https://www.itwinjs.org/learning/imodels/). Also contains a set of [iTwinUI](https://github.com/iTwin/iTwinUI/tree/main/packages/itwinui-react)-based components for rendering the tree. | You're creating a React application and want a tree component.                                                 |
 | [`@itwin/presentation-hierarchies`](https://github.com/iTwin/presentation/tree/master/packages/hierarchies/README.md)             | APIs for creating hierarchical data structures. The package doesn't depend on any backend, frontend or UI specific packages, which allows it to be used in both backend and frontend applications, and in case of the latter, it can be used with any UI framework.                 | You want to create hierarchical data structures for use cases other than displaying them in a React component. |
 
+#### Content loading
+
+| Package                                                                                                       | Description                                                                                                                                                                                              | When to use                                                                                  |
+| ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| [`@itwin/presentation-content`](https://github.com/iTwin/presentation/tree/master/packages/content/README.md) | APIs for loading property content from iModels. Implements a modular pipeline for resolving EC schemas, building content descriptors, and loading property values — with extension points at each stage. | You want to load and display property data from iModel instances (e.g., in a property grid). |
+
 #### Utility
 
 | Package                                                                                                                 | Description                                                                                                                                    | When to use                                                                                                                                                                                  |
@@ -75,6 +81,7 @@ flowchart TB
     pkgUnifiedSelectionReact["<div style='text-align:center;white-space:nowrap;'><a href='./packages/unified-selection-react/README.md'>@itwin/unified-selection-react</a></div><br/><div style='text-align:left;font-weight:normal;'>Provides APIs for making it easier to implement unified selection-driven React components.</div>"]
     pkgHierarchiesReact["<div style='text-align:center;white-space:nowrap;'><a href='./packages/hierarchies-react/README.md'>@itwin/presentation-hierarchies-react</a></div><br/><div style='text-align:left;font-weight:normal;'>Provides headless UI components for creating hierarchical React components as well as iTwinUI-based renderers.</div>"]
     pkgHierarchies["<div style='text-align:center;white-space:nowrap;'><a href='./packages/hierarchies/README.md'>@itwin/presentation-hierarchies</a></div><br/><div style='text-align:left;font-weight:normal;'>Provides framework-agnostic APIs to create hierarchies. May be used on any frontend as well as backend.</div>"]
+    pkgContent["<div style='text-align:center;white-space:nowrap;'><a href='./packages/content/README.md'>@itwin/presentation-content</a></div><br/><div style='text-align:left;font-weight:normal;'>Provides APIs for loading property content from iModels through a modular, extensible pipeline.</div>"]
   end
 
   pkgCoreInterop["<div style='text-align:center;white-space:nowrap;'><a href='./packages/core-interop/README.md'>@itwin/presentation-core-interop</a></div><br/><div style='text-align:left;font-weight:normal;'>This interop package allows avoiding peer dependencies on core packages.</div>"]
@@ -89,6 +96,7 @@ flowchart TB
   app -->|may use to provide unified selection React context| pkgUnifiedSelectionReact
   app -->|uses to create tree components| pkgHierarchiesReact
   app -->|uses to define hierarchies for tree components| pkgHierarchies
+  app -->|uses to load property content| pkgContent
   app -->|uses to define hierarchies for tree components| pkgShared
   app -->|uses to map itwinjs-core types to Presentation ones| pkgCoreInterop
   app -->|uses| pkgCoreLegacy
@@ -97,6 +105,7 @@ flowchart TB
   pkgHierarchiesReact -->|uses to manage tree selection| pkgUnifiedSelection
   pkgHierarchiesReact -->|uses to create hierarchies| pkgHierarchies
   pkgHierarchies -->|uses| pkgShared
+  pkgContent -->|uses| pkgShared
   pkgCoreInterop -->|creates types for| pkgShared
   pkgCoreInterop -.->|creates Presentation types from| pkgCoreLegacy
 
@@ -104,6 +113,7 @@ flowchart TB
     direction LR
     lGray["Platform-agnostic packages that can be used on the frontend with any UI components library as well as the backend"]:::clsPlatformAgnosticPackageNode
     lRed["React-based frontend package"]:::clsReactPackageNode
+    lYellow["Unreleased, in-development package"]:::clsUnreleasedPackageNode
 
     subgraph legendRegular[ ]
       direction LR
@@ -129,9 +139,11 @@ flowchart TB
 
   classDef clsReactPackageNode fill:#f8cecc,stroke:#b85450,color:#333333,stroke-width:1.2px;
   classDef clsPlatformAgnosticPackageNode fill:#f5f5f5,stroke:#666666,color:#333333,stroke-width:1.2px;
+  classDef clsUnreleasedPackageNode fill:#fff2cc,stroke:#d6ae00,color:#333333,stroke-width:1.2px,stroke-dasharray:5 5;
 
   class app,pkgHierarchiesReact,pkgUnifiedSelectionReact clsReactPackageNode;
   class pkgHierarchies,pkgUnifiedSelection,pkgCoreInterop,pkgShared,pkgCoreLegacy clsPlatformAgnosticPackageNode;
+  class pkgContent clsUnreleasedPackageNode;
 ```
 
 ## Contribution
