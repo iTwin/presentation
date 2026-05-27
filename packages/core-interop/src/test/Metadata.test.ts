@@ -24,6 +24,10 @@ import type {
 } from "@itwin/ecschema-metadata";
 import type { EC } from "@itwin/presentation-shared";
 
+function stubSchema(name: string, version: EC.SchemaVersion = { read: 0, write: 0, minor: 0 }) {
+  return { name, schemaKey: { version } };
+}
+
 describe("createECSchemaProvider", () => {
   describe("getSchema", () => {
     it("returns schema from schema context", async () => {
@@ -32,7 +36,7 @@ describe("createECSchemaProvider", () => {
           .fn<(key: SchemaKey) => Promise<CoreSchema | undefined>>()
           .mockImplementation(async (key: SchemaKey) => {
             if (key.compareByName("x")) {
-              return { name: "y" } as unknown as CoreSchema;
+              return stubSchema("y", { read: 1, write: 2, minor: 3 }) as unknown as CoreSchema;
             }
             return undefined;
           }),
@@ -46,6 +50,7 @@ describe("createECSchemaProvider", () => {
       const calledKey = schemaContext.getSchema.mock.calls[0][0];
       expect(calledKey.compareByName("x")).toBe(true);
       expect(schema.name).toBe("y");
+      expect(schema.version).toEqual({ read: 1, write: 2, minor: 3 });
       expect(typeof schema.getClass === "function").toBe(true);
     });
 
@@ -84,7 +89,7 @@ describe("createECSchemaProvider", () => {
       const schemaContext = {
         getSchema: vi
           .fn<(key: SchemaKey) => Promise<CoreSchema | undefined>>()
-          .mockResolvedValue({ name: "x" } as unknown as CoreSchema),
+          .mockResolvedValue(stubSchema("x") as unknown as CoreSchema),
       };
 
       const provider = createECSchemaProvider(schemaContext);
@@ -98,7 +103,7 @@ describe("createECSchemaProvider", () => {
         getSchema: vi
           .fn<(key: SchemaKey) => Promise<CoreSchema | undefined>>()
           .mockRejectedValueOnce(new Error("The schema, x.01.02.03, already exists within this cache"))
-          .mockResolvedValueOnce({ name: "x" } as unknown as CoreSchema),
+          .mockResolvedValueOnce(stubSchema("x") as unknown as CoreSchema),
       };
 
       const provider = createECSchemaProvider(schemaContext);
@@ -113,7 +118,7 @@ describe("createECSchema", () => {
   describe("getClass", () => {
     it("returns class from core schema", async () => {
       const coreSchema = {
-        name: "s",
+        ...stubSchema("s"),
         getItem: vi
           .fn()
           .mockResolvedValue({ fullName: "s.c", name: "c", label: "C", schemaItemType: SchemaItemType.EntityClass }),
@@ -132,7 +137,7 @@ describe("createECSchema", () => {
     });
 
     it("returns undefined from core schema", async () => {
-      const coreSchema = { name: "s", getItem: vi.fn().mockResolvedValue(undefined) };
+      const coreSchema = { ...stubSchema("s"), getItem: vi.fn().mockResolvedValue(undefined) };
 
       const schema = createECSchema(coreSchema as unknown as CoreSchema);
       const result = await schema.getClass("c");
@@ -145,7 +150,10 @@ describe("createECSchema", () => {
   describe("getCustomAttributes", () => {
     it("returns custom attributes from core schema", async () => {
       const ca: EC.CustomAttribute = { className: "schema.class", name: "x", label: "y" };
-      const coreSchema = { name: "s", customAttributes: new Map([["schema.class", ca]]) } as unknown as CoreSchema;
+      const coreSchema = {
+        ...stubSchema("s"),
+        customAttributes: new Map([["schema.class", ca]]),
+      } as unknown as CoreSchema;
 
       const schema = createECSchema(coreSchema);
       const result = await schema.getCustomAttributes();
@@ -157,7 +165,7 @@ describe("createECSchema", () => {
     });
 
     it("returns empty set when core schema's custom attributes are not defined", async () => {
-      const coreSchema = { name: "s", customAttributes: undefined } as unknown as CoreSchema;
+      const coreSchema = { ...stubSchema("s"), customAttributes: undefined } as unknown as CoreSchema;
 
       const schema = createECSchema(coreSchema);
       const result = await schema.getCustomAttributes();
@@ -169,7 +177,7 @@ describe("createECSchema", () => {
 
     it("returns undefined custom attribute when there are custom attributes but the requested one does not exist", async () => {
       const coreSchema = {
-        name: "s",
+        ...stubSchema("s"),
         customAttributes: new Map([["schema.class", { className: "schema.class", name: "x", label: "y" }]]),
       } as unknown as CoreSchema;
       const schema = createECSchema(coreSchema);
@@ -182,6 +190,7 @@ describe("createECSchema", () => {
 describe("createECClass", () => {
   const schema: EC.Schema = {
     name: "s",
+    version: { read: 1, write: 0, minor: 0 },
     async getClass() {
       return undefined;
     },
@@ -196,7 +205,7 @@ describe("createECClass", () => {
       fullName: "s.c",
       name: "c",
       label: "C",
-      schema: { name: "core-schema" },
+      schema: stubSchema("core-schema"),
     } as unknown as CoreClass;
     const result = createECClass(coreClass);
     expect(result.schema.name).toBe("core-schema");
@@ -717,7 +726,7 @@ describe("createECProperty", () => {
         ...propertyStub,
         isPrimitive: () => true,
         name: "test-property",
-        kindOfQuantity: Promise.resolve({ fullName: "SchemaName.TestKoq", schema: { name: "SchemaName" } }),
+        kindOfQuantity: Promise.resolve({ fullName: "SchemaName.TestKoq", schema: stubSchema("SchemaName") }),
       } as unknown as CorePrimitiveProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveProperty;
       const koq = (await property.kindOfQuantity)!;
@@ -773,7 +782,7 @@ describe("createECProperty", () => {
         name: "test-property",
         relationshipClass: Promise.resolve({
           fullName: "SchemaName.RelationshipClass",
-          schema: { name: "SchemaName" },
+          schema: stubSchema("SchemaName"),
         }),
       } as unknown as CoreNavigationProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.NavigationProperty;
@@ -808,7 +817,7 @@ describe("createECProperty", () => {
         ...propertyStub,
         isEnumeration: () => true,
         name: "test-property",
-        enumeration: Promise.resolve({ schema: { name: "SchemaName" } }),
+        enumeration: Promise.resolve({ schema: stubSchema("SchemaName") }),
       } as unknown as CoreEnumerationProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.EnumerationProperty;
       expect(await property.enumeration).toBeDefined();
@@ -816,7 +825,7 @@ describe("createECProperty", () => {
 
     describe("ECEnumeration implementation", () => {
       const coreEnumeration = {
-        schema: { name: "SchemaName" },
+        schema: stubSchema("SchemaName"),
         isStrict: false,
         type: undefined,
         enumerators: new Array<CoreEnumerator<number>>(),
@@ -888,7 +897,7 @@ describe("createECProperty", () => {
         ...propertyStub,
         isStruct: () => true,
         name: "test-property",
-        structClass: { fullName: "SchemaName.StructClass", schema: { name: "SchemaName" } },
+        structClass: { fullName: "SchemaName.StructClass", schema: stubSchema("SchemaName") },
       } as unknown as CoreStructProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.StructProperty;
       expect(property.structClass.fullName).toBe("SchemaName.StructClass");
