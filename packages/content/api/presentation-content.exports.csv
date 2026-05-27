@@ -5,7 +5,6 @@ public;interface;CategoryDefinition
 public;namespace;CategoryDefinition
 public;interface;ContentConfiguration
 public;interface;ContentDescriptor
-public;namespace;ContentDescriptor
 public;interface;ContentItem
 public;interface;ContentSource
 public;interface;ContentTarget

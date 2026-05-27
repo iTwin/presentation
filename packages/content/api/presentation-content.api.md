@@ -18,7 +18,7 @@ import { ValueDescriptor } from '@itwin/presentation-shared';
 interface BaseField {
     categoryId?: string;
     hidden?: boolean;
-    identity: string;
+    id: string;
     label: string;
     readOnly?: boolean;
     type: ValueDescriptor;
@@ -87,22 +87,8 @@ export interface ContentConfiguration {
 // @public
 export interface ContentDescriptor {
     categories: Record<CategoryDefinition["id"], CategoryDefinition>;
-    fields: Field[];
+    fields: Record<Field["id"], Field>;
     sources: ContentSource[];
-}
-
-// @public (undocumented)
-export namespace ContentDescriptor {
-    export function findFieldByIdentity(props: {
-        descriptor: ContentDescriptor;
-        identity: string;
-    }): Field | undefined;
-    export function findFieldByProperty(props: {
-        descriptor: Pick<ContentDescriptor, "fields">;
-        sourceClassName: EC.FullClassName;
-        propertyName: string;
-        pathFromTarget?: RelationshipPath;
-    }): PropertyField | undefined;
 }
 
 // @public
@@ -166,7 +152,7 @@ interface ContentValueFilter {
 // @public
 export interface ContentValues {
     primaryKey: InstanceKey;
-    values: Record<Field["identity"], Value>;
+    values: Record<Field["id"], Value>;
 }
 
 // @public
@@ -288,7 +274,7 @@ export namespace PropertyField {
         propertyClassName: EC.FullClassName;
         propertyName: string;
         pathFromTarget?: RelationshipPath;
-    }): Field["identity"];
+    }): Field["id"];
 }
 
 // @public
@@ -367,7 +353,7 @@ interface TransformableDescriptor {
     // (undocumented)
     readonly categories: Record<CategoryDefinition["id"], CategoryDefinition>;
     // (undocumented)
-    readonly fields: Readonly<Record<Field["identity"], TransformableField>>;
+    readonly fields: Readonly<Record<Field["id"], TransformableField>>;
     // (undocumented)
     removeField(id: string): void;
     // (undocumented)
