@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { RelationshipPath } from "@itwin/presentation-shared";
+import { normalizeFullClassName, type RelationshipPath } from "@itwin/presentation-shared";
 
 /**
  * A lightweight category definition used by providers to logically group fields for display.
@@ -38,9 +38,9 @@ export namespace CategoryDefinition {
     for (const step of path) {
       const separator = step.relationshipReverse ? "<-" : "->";
       if (identifier.length === 0) {
-        identifier = step.sourceClassName;
+        identifier = normalizeFullClassName(step.sourceClassName);
       }
-      identifier += `${separator}${step.relationshipName}${separator}${step.targetClassName}`;
+      identifier += `${separator}${normalizeFullClassName(step.relationshipName)}${separator}${normalizeFullClassName(step.targetClassName)}`;
     }
     return identifier;
   }
