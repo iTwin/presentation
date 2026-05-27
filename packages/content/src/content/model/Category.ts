@@ -33,9 +33,9 @@ export namespace CategoryDefinition {
    * Two providers using the same path will produce the same ID, allowing their fields
    * to merge under one category.
    */
-  export function computeIdFromRelationshipPath(path: RelationshipPath): string {
+  export function computeId(props: { path: RelationshipPath }): CategoryDefinition["id"] {
     let identifier = "";
-    for (const step of path) {
+    for (const step of props.path) {
       const separator = step.relationshipReverse ? "<-" : "->";
       if (identifier.length === 0) {
         identifier = normalizeFullClassName(step.sourceClassName);
@@ -50,17 +50,10 @@ export namespace CategoryDefinition {
    * The `id` is deterministically derived from `path`, so multiple providers
    * producing fields via the same path will share the same category.
    */
-  export function createFromRelationshipPath(props: {
-    parentCategoryId?: string;
-    path: RelationshipPath;
-    label: string;
-    description?: string;
-  }): CategoryDefinition {
-    return {
-      id: computeIdFromRelationshipPath(props.path),
-      label: props.label,
-      ...(props.parentCategoryId ? { parentId: props.parentCategoryId } : undefined),
-      ...(props.description ? { description: props.description } : undefined),
-    };
+  export function create(
+    props: { path: RelationshipPath } & Pick<CategoryDefinition, "label" | "description" | "parentId">,
+  ): CategoryDefinition {
+    const { path, ...rest } = props;
+    return { ...rest, id: computeId({ path }) };
   }
 }

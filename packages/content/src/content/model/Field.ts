@@ -63,7 +63,7 @@ export namespace PropertyField {
     propertyClassName: EC.FullClassName;
     propertyName: string;
     pathFromTarget?: RelationshipPath;
-  }): string {
+  }): Field["id"] {
     let identity = `${normalizeFullClassName(props.propertyClassName)}.${props.propertyName}`;
     if (props.pathFromTarget && props.pathFromTarget.length > 0) {
       identity += "(";
