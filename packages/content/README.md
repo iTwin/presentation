@@ -47,7 +47,7 @@ The content loading process is split into four stages:
 | **Query building**      | Constructs an ECSQL query from the descriptor, applying any registered query filterers.                            |
 | **Value loading**       | Executes the query and populates field values, calling external providers for non-iModel fields.                   |
 
-Not all requests execute every stage. For example, `getDescriptor()` only runs stages 1–2, and `getSize()` runs a simplified COUNT query after stage 1.
+Not all requests execute every stage. For example, `ContentProvider.getContentDescriptor()` only runs stages 1–2, and `getSize()` runs a simplified COUNT query after stage 1.
 
 ## Extension points
 
