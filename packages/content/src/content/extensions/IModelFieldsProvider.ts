@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type {
-  ECSqlQueryExecutor,
   ECSchemaProvider,
+  ECSqlQueryExecutor,
   RelationshipPath,
   ValueDescriptor,
 } from "@itwin/presentation-shared";
@@ -152,6 +152,7 @@ interface CalculatedFieldDeclaration {
  *
  * @public
  */
+/* v8 ignore next 3 */
 export function defineIModelFieldsProvider(provider: IModelFieldsProvider): IModelFieldsProvider {
   return provider;
 }

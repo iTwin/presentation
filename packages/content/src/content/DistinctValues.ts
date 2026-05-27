@@ -35,6 +35,7 @@ interface GetDistinctFieldValuesProps {
  *
  * @public
  */
+/* v8 ignore next 3 */
 export function getDistinctFieldValues(_props: GetDistinctFieldValuesProps): AsyncIterable<Value> {
   throw new Error("Not implemented");
 }

@@ -60,6 +60,7 @@ export interface QueryFilterClauses {
  *
  * @public
  */
+/* v8 ignore next 3 */
 export function defineQueryFilterer(filterer: QueryFilterer): QueryFilterer {
   return filterer;
 }

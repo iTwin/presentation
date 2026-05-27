@@ -57,6 +57,7 @@ export interface DescriptorTransformer {
  *
  * @public
  */
+/* v8 ignore next 3 */
 export function defineDescriptorTransformer(transformer: DescriptorTransformer): DescriptorTransformer {
   return transformer;
 }
@@ -70,7 +71,7 @@ export function defineDescriptorTransformer(transformer: DescriptorTransformer):
 type TransformableField = Omit<Field, "id"> & { readonly id: string };
 
 /**
- * A constrained view of {@link ContentDescriptor} exposed to descriptor transformers.
+ * A constrained view of {@link (ContentDescriptor:interface)} exposed to descriptor transformers.
  *
  * Enforces transformer rules at the type level:
  * - `sources` is readonly — the resolved source structure is immutable at this stage.

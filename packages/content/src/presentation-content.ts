@@ -5,7 +5,7 @@
 
 // Core data model
 export type { ContentTarget, ContentSource } from "./content/ContentTarget.js";
-export { ContentDescriptor } from "./content/model/ContentDescriptor.js";
+export type { ContentDescriptor } from "./content/model/ContentDescriptor.js";
 export type { Field, PropertyField, CalculatedField, ExternalField } from "./content/model/Field.js";
 export { CategoryDefinition } from "./content/model/Category.js";
 export type { ContentItem, ContentValues } from "./content/model/ContentItem.js";
