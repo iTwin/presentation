@@ -24,11 +24,11 @@ export interface ContentDescriptor {
 
   /**
    * All fields in this descriptor — property fields, calculated fields, and external fields,
-   * keyed by field identity.
+   * keyed by field ID.
    * Related fields carry a non-empty `pathFromTarget` indicating the relationship path
    * from the target class to the field's source class.
    */
-  fields: Record<Field["identity"], Field>;
+  fields: Record<Field["id"], Field>;
 
   /**
    * All category definitions referenced by fields in this descriptor, keyed by category ID.

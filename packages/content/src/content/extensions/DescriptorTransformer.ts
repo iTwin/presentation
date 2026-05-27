@@ -31,7 +31,7 @@ export const DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY = 1000;
  *
  * Rules:
  * - Transformers may hide, remove, or modify field metadata.
- * - Transformers must NOT change field identity (the stable key).
+ * - Transformers must NOT change field ID (the stable key).
  * - Transformers must NOT add new fields (that's the provider's responsibility).
  * - Transformers must NOT reorder fields (display order is a UI concern).
  *
@@ -64,12 +64,12 @@ export function defineDescriptorTransformer(transformer: DescriptorTransformer):
 }
 
 /**
- * A field with its identity made readonly — transformers may modify metadata
- * (label, categoryId, hidden, readOnly) but must not change identity.
+ * A field with its ID made readonly — transformers may modify metadata
+ * (label, categoryId, hidden, readOnly) but must not change ID.
  *
  * @public
  */
-type TransformableField = Omit<Field, "identity"> & { readonly identity: string };
+type TransformableField = Omit<Field, "id"> & { readonly id: string };
 
 /**
  * A readonly array that permits element removal via `splice` but disallows insertion and direct mutation.
@@ -83,7 +83,7 @@ type SpliceableReadonlyArray<T> = ReadonlyArray<T> & { splice(start: number, del
  *
  * Enforces transformer rules at the type level:
  * - `sources` is readonly — the resolved source structure is immutable at this stage.
- * - Field `identity` is readonly — must not be changed.
+ * - Field `id` is readonly — must not be changed.
  * - Field metadata (`label`, `categoryId`, `hidden`, `readOnly`) remains mutable.
  * - Field array is readonly but allows element removal via `splice`.
  *

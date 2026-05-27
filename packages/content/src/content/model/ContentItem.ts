@@ -19,8 +19,8 @@ import type { Field } from "./Field.js";
 export interface ContentValues {
   /** The primary instance this row represents. */
   primaryKey: InstanceKey;
-  /** Map of field identity → raw value. */
-  values: Record<string, Value>;
+  /** Map of field ID → raw value. */
+  values: Record<Field["id"], Value>;
 }
 
 /**

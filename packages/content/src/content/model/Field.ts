@@ -17,11 +17,11 @@ import {
  */
 interface BaseField {
   /**
-   * Stable identity key that uniquely identifies this field across descriptor rebuilds.
+   * Stable ID that uniquely identifies this field across descriptor rebuilds.
    * Derived from: sourceClassName + propertyAccessPath (for property fields),
    * or a declared stable name (for calculated/external fields).
    */
-  identity: string;
+  id: string;
   /** Display name shown to the user. */
   label: string;
   /** The value shape for this field. */
@@ -55,11 +55,11 @@ export interface PropertyField extends BaseField {
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace PropertyField {
   /**
-   * Computes the identity of a property field from its source class, property name,
+   * Computes the ID of a property field from its source class, property name,
    * and relationship path from the target. Use this to look up property fields
    * directly in `descriptor.fields`.
    */
-  export function computeIdentity(props: {
+  export function computeId(props: {
     propertyClassName: EC.FullClassName;
     propertyName: string;
     pathFromTarget?: RelationshipPath;
