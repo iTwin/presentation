@@ -28,7 +28,6 @@ export interface CategoryDefinition {
 }
 
 /** @public */
-
 export namespace CategoryDefinition {
   /**
    * Computes a deterministic category ID from a relationship path.
