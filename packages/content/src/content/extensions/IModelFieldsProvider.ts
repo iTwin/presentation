@@ -82,7 +82,7 @@ interface RelatedPropertiesDeclaration {
    * path resolution to this callback instead of using default discovery.
    *
    * The callback receives the iModel accessor and target, and returns concrete paths.
-   * The declaration's `properties` are carried forward to each returned path.
+   * The declaration's `properties` and `cardinalityHint` still apply to each resolved path.
    */
   resolve?(props: {
     imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
