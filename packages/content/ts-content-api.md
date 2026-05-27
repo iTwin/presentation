@@ -16,15 +16,15 @@
 - Simpler descriptor serialization/comparison
 - Less complex descriptor schema
 
-**Decision:** Flatten. The descriptor holds a single `fields: Field[]` array; `RelatedFieldGroup` is removed.
+**Decision:** Flatten. The descriptor holds `fields: Record<Field["id"], Field>` keyed by field ID; `RelatedFieldGroup` is removed.
 
 Category nesting for related fields is handled by the existing `CategoryDefinition` mechanism (`categories` registry + `categoryId` on fields + `parentId` for nesting). Providers that resolve related fields know the path split points and create categories accordingly.
 
 `CategoryDefinition.computeIdFromRelationshipPath(path)` produces a deterministic ID from a relationship path, ensuring multiple providers reaching the same path converge on the same category without coordination. `CategoryDefinition.createFromRelationshipPath(...)` is a convenience that builds the full definition.
 
-## Field identity encoding for related property fields
+## Field ID encoding for related property fields
 
-A `PropertyField`'s identity must be unique within the descriptor. Since the same class + property can appear multiple times (joined through different relationship paths from the target), the path **must** be part of the identity.
+A `PropertyField`'s ID must be unique within the descriptor. Since the same class + property can appear multiple times (joined through different relationship paths from the target), the path **must** be part of the ID.
 
 Naively encoding the full path (e.g., `SourceClass.Prop/Rel1/Class2/Rel2/Class3/...`) can get very long for deeply nested related properties.
 
@@ -37,13 +37,13 @@ Naively encoding the full path (e.g., `SourceClass.Prop/Rel1/Class2/Rel2/Class3/
 
 **Constraints:**
 
-- Must be unique within a descriptor (same property via different paths → different identities)
+- Must be unique within a descriptor (same property via different paths → different IDs)
 - Must be deterministic for the same descriptor inputs (so rebuilding a descriptor matches already-loaded values within the same session)
 - Used as keys in `ContentValues.values` map (client-side only, not in SQL)
-- Cross-session stability is **not required** — identities are not persisted to storage.
+- Cross-session stability is **not required** — IDs are not persisted to storage.
 - This means index-based or order-dependent schemes are viable as long as the ordering algorithm is deterministic for the same inputs.
 
-**Decision:** Use full non-encoded field identities with format `{PropertyClassName}.{PropertyName}({serialized path from content target to property class})`. For direct (non-related) properties, the path portion is omitted. Memory impact is negligible at expected scale (~1K fields, average 2-step paths ≈ ~260 KB total).
+**Decision:** Use full non-encoded field IDs with format `{PropertyClassName}.{PropertyName}({serialized path from content target to property class})`. For direct (non-related) properties, the path portion is omitted. Memory impact is negligible at expected scale (~1K fields, average 2-step paths ≈ ~260 KB total).
 
 ## Multi-source property fields
 
@@ -59,7 +59,7 @@ Currently `PropertyField` has a single `sourceClassName: EC.FullClassName`. This
 
 **Considerations:**
 
-- Merging at descriptor level simplifies consumers but complicates identity (which source class does the identity reference?)
+- Merging at descriptor level simplifies consumers but complicates the ID (which source class does it reference?)
 - Separate fields are simpler but push complexity to every consumer
 - The existing native implementation merges them — do we want to preserve that behavior?
 

@@ -79,7 +79,7 @@ The schema of the content result. Computed _before_ loading any values. Describe
 - The list of **content sources** that were used to compute it (one per target class).
 - The full list of fields, organized as a two-level structure:
   - **Direct fields** — property fields and calculated fields that belong to the target class directly (no relationship path).
-  - **Related field groups** — containers that group fields loaded via a specific relationship path. Each group carries its relationship path. Groups can nest for multi-step paths. Fields inside a group that have no explicit category are implicitly categorized by the group's target class (its display label becomes the category label). Groups are purely organizational — they carry no value themselves; values in content items are keyed by leaf field identity as usual.
+  - **Related field groups** — containers that group fields loaded via a specific relationship path. Each group carries its relationship path. Groups can nest for multi-step paths. Fields inside a group that have no explicit category are implicitly categorized by the group's target class (its display label becomes the category label). Groups are purely organizational — they carry no value themselves; values in content items are keyed by leaf field ID as usual.
 
 The descriptor is the contract between the "what exists" phase and the "load values" phase. Consumers can inspect and modify it (hide fields, remove fields, override categories) before passing it to value loading. Display ordering of fields is a UI concern handled after the pipeline.
 
@@ -89,7 +89,7 @@ Sorting, filtering, and paging are **request options** passed alongside the desc
 
 Describes a single data column in the content result. Key attributes:
 
-- **Identity** — a stable key that uniquely identifies this field across descriptor rebuilds. Must survive label changes and category moves. Derived from: source class + property name + path (for related), or a stable name for calculated fields.
+- **ID** — a stable key that uniquely identifies this field across descriptor rebuilds. Must survive label changes and category moves. Derived from: source class + property name + path (for related), or a stable name for calculated fields.
 - **Label** — display name shown to the user.
 - **Value type** — primitive type, struct, array, or navigation.
 - **Relationship path** — which relationship path this field comes from, and which class along that path the field belongs to. Empty path means the field belongs to the target class directly. The path tells the query builder how to JOIN to the field's class; the class identifies which table the column lives in.
@@ -108,7 +108,7 @@ Note: The current system's "related content field" (a field that contains child 
 **Content values (`ContentValues`)** — the raw data for one row of the content result:
 
 - **`primaryKey`** — `{ className, id }` identifying which instance this row represents.
-- **`values`** — a map of field identity → raw value. All fields (property, SQL calculated, and external) are populated by the pipeline.
+- **`values`** — a map of field ID → raw value. All fields (property, SQL calculated, and external) are populated by the pipeline.
 
 This is a plain data bag — serializable, no behavior, no reference to the descriptor.
 
@@ -161,7 +161,7 @@ For each resolved declaration group, the system:
 1. Looks up the originating declaration (by `providerId` + `declarationIndex`) from the re-called provider contribution.
 2. For each concrete path in the group, reads EC schema metadata for the classes along the path.
 3. Applies the declaration's property specs — which properties to include/exclude, label overrides, category assignments, etc. If no property specs were provided, all properties from the final step's target class are included by default.
-4. Generates field objects with full metadata (identity, label, type, path, category, flags).
+4. Generates field objects with full metadata (ID, label, type, path, category, flags).
 
 Additionally, calculated field declarations from providers are collected and turned into field objects, and any registered external fields providers contribute their declared fields to the descriptor at this point.
 
@@ -413,7 +413,7 @@ interface FieldsProviderContribution {
 }
 
 interface CalculatedFieldDeclaration {
-  id: string; // stable identity
+  id: string; // stable ID
   label: string;
   expression: string; // ECSQL expression
   type: FieldType;
@@ -495,7 +495,7 @@ Modifies the descriptor _after_ all providers have contributed their fields. Use
 
 Multiple transformers run sequentially in priority order. Each receives the descriptor as modified by previous transformers.
 
-**Rule:** Transformers may hide, remove, or modify field metadata. They must not change field identity (the stable key). They do not add new fields — field contribution is the iModel fields provider's (or external fields provider's) responsibility. They do not reorder fields — display order is a UI concern handled by consumers after the pipeline.
+**Rule:** Transformers may hide, remove, or modify field metadata. They must not change field ID (the stable key). They do not add new fields — field contribution is the iModel fields provider's (or external fields provider's) responsibility. They do not reorder fields — display order is a UI concern handled by consumers after the pipeline.
 
 Inspiration: [PropertySpecification](https://www.itwinjs.org/presentation/content/propertyspecification/), [PropertyCategorySpecification](https://www.itwinjs.org/presentation/content/propertycategoryspecification/).
 
@@ -518,18 +518,18 @@ A self-contained extension that both declares new fields and populates them with
 
 An external fields provider declares:
 
-- **Output fields** — field declarations (identity, label, type, category, etc.) that the provider will populate. The pipeline adds these to the descriptor during Stage 2.
+- **Output fields** — field declarations (ID, label, type, category, etc.) that the provider will populate. The pipeline adds these to the descriptor during Stage 2.
 - **Input dependencies** (optional) — a static record of property declarations specifying the iModel properties the provider needs as input data for its `getValues` function. Each entry declares the property by class name, property name, and optional relationship path. The keys of the record become the typed accessor names available in `items[].inputValues` within `getValues`. The pipeline ensures each declared property is queried and its value is pre-extracted into `inputValues` for each item in the batch.
 - **Value population function (`getValues`)** — receives a batch of items (with pre-extracted `inputValues`) after SQL-backed fields are populated, and returns output field values for each item.
 
 **Why static declarations instead of a dynamic callback:**
 
-The plan originally proposed `inputs?: (descriptor: Descriptor) => string[]` — a callback that receives the finalized descriptor and returns field identity strings. This was rejected because:
+The plan originally proposed `inputs?: (descriptor: Descriptor) => string[]` — a callback that receives the finalized descriptor and returns field ID strings. This was rejected because:
 
-1. **External fields providers cannot know what fields exist** — The descriptor's field set depends on which iModel fields providers are registered and what schema the iModel has. An external provider has no way to predict field identities at registration time, and making it search the descriptor by class + property + path is fragile (what if the field isn't there?).
+1. **External fields providers cannot know what fields exist** — The descriptor's field set depends on which iModel fields providers are registered and what schema the iModel has. An external provider has no way to predict field IDs at registration time, and making it search the descriptor by class + property + path is fragile (what if the field isn't there?).
 2. **Static declarations are self-describing** — The provider declares exactly what it needs (`className`, `propertyName`, `path?`). The pipeline takes responsibility for ensuring the property is queried — either by finding an existing field that matches, or by adding a hidden field. The provider never needs to "find" anything in the descriptor.
 3. **Type safety** — Static declarations enable compile-time type inference. The record keys become the typed `inputValues` accessor names in `getValues`, so TypeScript catches typos and missing inputs at compile time. A dynamic callback returning `string[]` provides no such guarantee.
-4. **Decouples from field identity encoding** — Field identities are an internal encoding concern (class + property + path hash, etc.). Static declarations use semantic coordinates (class name + property name + path) — stable, readable, and independent of identity encoding strategy.
+4. **Decouples from field ID encoding** — Field IDs are an internal encoding concern (class + property + path hash, etc.). Static declarations use semantic coordinates (class name + property name + path) — stable, readable, and independent of ID encoding strategy.
 
 ```ts
 interface ExternalFieldsProvider<TInputKeys, TOutputFieldIds> {
@@ -646,7 +646,7 @@ The content pipeline returns raw values only. Formatting (converting raw values 
 
 ### Renderer and editor selection is a view-model concern
 
-The pipeline field describes _what_ the data is (type, identity, category); it does not carry renderer or editor hints. Consumers decide _how_ to render or edit values based on their own configuration (type-based defaults, class + property mappings, explicit overrides in UI component props, etc.). This keeps the field data model purely about data semantics and avoids coupling the pipeline to any particular UI framework or rendering strategy.
+The pipeline field describes _what_ the data is (type, ID, category); it does not carry renderer or editor hints. Consumers decide _how_ to render or edit values based on their own configuration (type-based defaults, class + property mappings, explicit overrides in UI component props, etc.). This keeps the field data model purely about data semantics and avoids coupling the pipeline to any particular UI framework or rendering strategy.
 
 ### No pipeline-level computed fields
 
@@ -732,17 +732,17 @@ Stage 4 executes the queries and produces two ContentValues:
 The consumer iterates ContentItem accessors (descriptor + ContentValues), which expose typed value access per field.
 ```
 
-### Field identity must be stable
+### Field ID must be stable
 
-A field's identity key must not change when:
+A field's ID must not change when:
 
 - Its label is overridden by a transformer.
 - Its category is moved.
 - The descriptor is rebuilt after a schema change (as long as the underlying property still exists).
 
-Identity is derived from: `sourceClassName + propertyAccessPath` for schema properties, or a declared stable name for calculated fields.
+The ID is derived from: `sourceClassName + propertyAccessPath` for schema properties, or a declared stable name for calculated fields.
 
-When using the ECSQL `$` selector (which returns all properties as a JSON blob), values are keyed by property name within the blob. The query builder assigns a deterministic alias to each JOINed table that encodes the path and step (e.g., `p0_s1` = path 0, step 1) and selects `alias.$` for each. The value loader uses the column alias to identify which path step the blob belongs to, then uses property names within the JSON to map values to fields. Together, `columnAlias (→ path + step + className) + jsonKey (→ propertyName)` reconstruct the full field identity.
+When using the ECSQL `$` selector (which returns all properties as a JSON blob), values are keyed by property name within the blob. The query builder assigns a deterministic alias to each JOINed table that encodes the path and step (e.g., `p0_s1` = path 0, step 1) and selects `alias.$` for each. The value loader uses the column alias to identify which path step the blob belongs to, then uses property names within the JSON to map values to fields. Together, `columnAlias (→ path + step + className) + jsonKey (→ propertyName)` reconstruct the full field ID.
 
 ---
 
@@ -778,7 +778,7 @@ Request options are passed alongside the descriptor when loading values. They co
 
 ### Sorting
 
-By field identity + direction (ascending/descending). Applied as ORDER BY in the generated query.
+By field ID + direction (ascending/descending). Applied as ORDER BY in the generated query.
 
 ### Filtering
 
