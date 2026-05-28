@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.15.0
+
+### Minor Changes
+
+- [#1370](https://github.com/iTwin/presentation/pull/1370): Deprecated `FavoritePropertiesDataProvider.includeFieldsWithNoValues` and `FavoritePropertiesDataProvider.includeFieldsWithCompositeValues`.
+
 ## 5.14.0
 
 ### Minor Changes
