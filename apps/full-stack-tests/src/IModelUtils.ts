@@ -56,7 +56,7 @@ async function cloneIModel<TResult extends {}>(
   targetIModelName: string,
   setup: (db: IModelDb) => Promise<TResult>,
 ): Promise<TResult & { imodelConnection: IModelConnection; imodelPath: string }> {
-  const targetIModelPath = setupOutputFileLocation(`${targetIModelName}.bim`);
+  const targetIModelPath = setupOutputFileLocation(`${createFileNameFromString(targetIModelName)}.bim`);
   IModelJsFs.existsSync(targetIModelPath) && IModelJsFs.unlinkSync(targetIModelPath);
   IModelJsFs.copySync(sourceIModelPath, targetIModelPath);
 
