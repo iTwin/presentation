@@ -6,7 +6,6 @@
  * @module InstancesFilter
  */
 
-import { useMemo } from "react";
 import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import {
   defaultPropertyFilterBuilderRuleValidator,
@@ -23,7 +22,6 @@ import type {
   PropertyFilterBuilderRuleGroup,
   PropertyFilterBuilderRuleOperator,
 } from "@itwin/components-react";
-import type { IModelConnection } from "@itwin/core-frontend";
 import type {
   CategoryDescription,
   ClassInfo,
@@ -32,7 +30,6 @@ import type {
   NestedContentField,
   PropertiesField,
 } from "@itwin/presentation-common";
-import type { NavigationPropertyEditorContextProviderProps } from "../properties/editors/NavigationPropertyEditorContext.js";
 import type { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder.js";
 
 /** @internal */
@@ -137,27 +134,6 @@ export function isFilterNonEmpty(rootGroup: PropertyFilterBuilderRuleGroup) {
 export const INSTANCE_FILTER_FIELD_SEPARATOR = "#";
 function getCategorizedFieldName(fieldName: string, categoryName?: string) {
   return `${categoryName ?? ""}${INSTANCE_FILTER_FIELD_SEPARATOR}${fieldName}`;
-}
-
-/** @internal */
-export function useFilterBuilderNavigationPropertyEditorContextProviderProps(
-  imodel: IModelConnection,
-  descriptor: Descriptor,
-) {
-  return useMemo<NavigationPropertyEditorContextProviderProps>(
-    () => ({
-      imodel,
-      getNavigationPropertyInfo: async (property) => {
-        const field = descriptor.getFieldByName(getInstanceFilterFieldName(property));
-        if (!field || !field.isPropertiesField()) {
-          return undefined;
-        }
-
-        return field.properties[0].property.navigationPropertyInfo;
-      },
-    }),
-    [imodel, descriptor],
-  );
 }
 
 /** @internal */
