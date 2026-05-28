@@ -206,7 +206,9 @@ export interface FavoritePropertiesDataFiltererProps {
 export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataProvider {
     constructor(props?: FavoritePropertiesDataProviderProps);
     getData(imodel: IModelConnection, elementIds: Id64Arg | KeySet): Promise<PropertyData>;
+    // @deprecated
     includeFieldsWithCompositeValues: boolean;
+    // @deprecated
     includeFieldsWithNoValues: boolean;
 }
 
@@ -340,10 +342,10 @@ export interface IUnifiedSelectionComponent {
 // @beta @deprecated
 export const NavigationPropertyEditor: new () => PropertyEditorBase;
 
-// @public
+// @public @deprecated
 export function NavigationPropertyEditorContextProvider(input: PropsWithChildren<NavigationPropertyEditorContextProviderProps>): JSX_2.Element;
 
-// @public
+// @public @deprecated
 export interface NavigationPropertyEditorContextProviderProps {
     getNavigationPropertyInfo: (property: PropertyDescription) => Promise<NavigationPropertyInfo | undefined>;
     imodel: IModelConnection;
@@ -832,7 +834,7 @@ export interface UseInstanceFilterPropertyInfosProps {
     descriptor: Descriptor;
 }
 
-// @public
+// @public @deprecated
 export function useNavigationPropertyEditorContextProviderProps(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContextProviderProps;
 
 // @public

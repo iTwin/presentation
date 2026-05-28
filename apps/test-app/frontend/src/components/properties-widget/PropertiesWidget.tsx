@@ -25,9 +25,7 @@ import { GlobalContextMenu } from "@itwin/core-react";
 import { Flex, MenuItem, ToggleSwitch } from "@itwin/itwinui-react";
 import {
   FavoritePropertiesDataFilterer,
-  NavigationPropertyEditorContextProvider,
   PresentationPropertyDataProvider,
-  useNavigationPropertyEditorContextProviderProps,
   usePropertyDataProviderWithUnifiedSelection,
 } from "@itwin/presentation-components";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
@@ -177,16 +175,17 @@ function PropertyGrid(props: PropertyGridProps) {
     return null;
   }
 
-  return <FilterablePropertyGrid {...restProps} imodel={imodel} dataProvider={dataProvider} />;
+  return <FilterablePropertyGrid {...restProps} dataProvider={dataProvider} />;
 }
 
 function FilterablePropertyGrid({
   dataProvider,
   filtering,
-  imodel,
   width,
   height,
-}: Omit<PropertyGridProps, "rulesetId" | "diagnostics"> & { dataProvider: PresentationPropertyDataProvider }) {
+}: Omit<PropertyGridProps, "rulesetId" | "diagnostics" | "imodel"> & {
+  dataProvider: PresentationPropertyDataProvider;
+}) {
   const unifiedSelectionContext = useUnifiedSelectionContext();
   if (!unifiedSelectionContext) {
     throw new Error("Unified selection context is not available");
@@ -252,10 +251,6 @@ function FilterablePropertyGrid({
   const onCloseContextMenu = useCallback(() => {
     setContextMenuArgs(undefined);
   }, []);
-  const navigationPropertyEditorContextProviderProps = useNavigationPropertyEditorContextProviderProps(
-    imodel,
-    dataProvider,
-  );
 
   if (!filteringDataProvider) {
     return null;
@@ -279,29 +274,27 @@ function FilterablePropertyGrid({
 
   return (
     <>
-      <NavigationPropertyEditorContextProvider {...navigationPropertyEditorContextProviderProps}>
-        <VirtualizedPropertyGridWithDataProvider
-          width={width}
-          height={height}
-          dataProvider={filteringDataProvider}
-          isPropertyHoverEnabled={true}
-          onPropertyContextMenu={onPropertyContextMenu}
-          actionButtonRenderers={[renderFavoritesActionButton, renderCopyActionButton]}
-          orientation={Orientation.Horizontal}
-          horizontalOrientationMinWidth={500}
-          highlight={
-            searchText && searchText.length !== 0
-              ? { highlightedText: searchText, activeHighlight, filteredTypes: filteringResult?.filteredTypes }
-              : undefined
-          }
-          isPropertyEditingEnabled={true}
-          onPropertyUpdated={async ({ newValue }) => {
-            console.log(`Updated new value`, newValue); // eslint-disable-line no-console
-            return true;
-          }}
-          editorSystem="new"
-        />
-      </NavigationPropertyEditorContextProvider>
+      <VirtualizedPropertyGridWithDataProvider
+        width={width}
+        height={height}
+        dataProvider={filteringDataProvider}
+        isPropertyHoverEnabled={true}
+        onPropertyContextMenu={onPropertyContextMenu}
+        actionButtonRenderers={[renderFavoritesActionButton, renderCopyActionButton]}
+        orientation={Orientation.Horizontal}
+        horizontalOrientationMinWidth={500}
+        highlight={
+          searchText && searchText.length !== 0
+            ? { highlightedText: searchText, activeHighlight, filteredTypes: filteringResult?.filteredTypes }
+            : undefined
+        }
+        isPropertyEditingEnabled={true}
+        onPropertyUpdated={async ({ newValue }) => {
+          console.log(`Updated new value`, newValue); // eslint-disable-line no-console
+          return true;
+        }}
+        editorSystem="new"
+      />
       {contextMenuArgs && (
         <PropertiesWidgetContextMenu
           args={contextMenuArgs}
