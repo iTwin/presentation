@@ -14,7 +14,7 @@ import { HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { getFullSchemaXml } from "presentation-test-utilities";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { getTestName, setupOutputFileLocation } from "../../FilenameUtils.js";
+import { createFileNameFromString, getTestName, setupOutputFileLocation } from "../../FilenameUtils.js";
 
 describe("Core interop", () => {
   describe("Learning snippets", () => {
@@ -28,10 +28,10 @@ describe("Core interop", () => {
       });
 
       it("triggers given callback on iModel changes", async function () {
-        const testIModel = StandaloneDb.createEmpty(setupOutputFileLocation(`${getTestName()}.bim`), {
-          rootSubject: { name: "Test iModel" },
-          allowEdit: JSON.stringify({ txns: true }),
-        });
+        const testIModel = StandaloneDb.createEmpty(
+          setupOutputFileLocation(`${createFileNameFromString(getTestName())}.bim`),
+          { rootSubject: { name: "Test iModel" }, allowEdit: JSON.stringify({ txns: true }) },
+        );
         function getIModel() {
           return testIModel;
         }
