@@ -325,12 +325,12 @@ interface RelatedPropertiesDeclaration {
 }
 
 // @public
-export function resolveContentSources(_props: ResolveContentSourcesProps): Promise<ContentSource[]>;
+export function resolveContentSources(props: ResolveContentSourcesProps): Promise<ContentSource[]>;
 
 // @public
 interface ResolveContentSourcesProps {
     config?: Pick<ContentConfiguration, "fieldsProviders">;
-    imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
     targets: ContentTarget[];
 }
 
