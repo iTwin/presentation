@@ -203,7 +203,9 @@ export interface FavoritePropertiesDataFiltererProps {
 export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataProvider {
     constructor(props?: FavoritePropertiesDataProviderProps);
     getData(imodel: IModelConnection, elementIds: Id64Arg | KeySet): Promise<PropertyData>;
+    // @deprecated
     includeFieldsWithCompositeValues: boolean;
+    // @deprecated
     includeFieldsWithNoValues: boolean;
 }
 

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://unpkg.com/@changesets/config@2.3.1/schema.json",
+  "$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
   "changelog": ["./changelog-github.cjs", { "repo": "iTwin/presentation" }],
   "commit": false,
   "fixed": [],
@@ -7,15 +7,8 @@
   "access": "public",
   "baseBranch": "master",
   "updateInternalDependencies": "patch",
-  "ignore": [
-    "@itwin/presentation-models-tree",
-    "presentation-full-stack-tests",
-    "presentation-performance-tests",
-    "@load-tests/backend",
-    "@load-tests/frontend",
-    "@test-app/backend",
-    "@test-app/common",
-    "@test-app/frontend"
-  ],
-  "bumpVersionsWithWorkspaceProtocolOnly": true
+  "bumpVersionsWithWorkspaceProtocolOnly": true,
+  "privatePackages": {
+    "version": false
+  }
 }
