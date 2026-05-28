@@ -79,6 +79,9 @@ export function createCachingECClassHierarchyInspector(props: {
 export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
 
 // @public
+function createClassSelector(fullClassName: EC.FullClassName): string;
+
+// @public
 function createConcatenatedValueJsonSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string): string;
 
 // @public
@@ -325,6 +328,7 @@ export interface ECSchemaProvider {
 
 declare namespace ECSql {
     export {
+        createClassSelector,
         createRawPropertyValueSelector,
         createRawPrimitiveValueSelector,
         createNullableSelector,
