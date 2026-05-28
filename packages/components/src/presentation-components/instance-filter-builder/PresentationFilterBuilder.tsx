@@ -9,16 +9,12 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { PropertyFilterBuilderRuleValue, usePropertyFilterBuilder } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
-import { NavigationPropertyEditorContextProvider } from "../properties/editors/NavigationPropertyEditorContext.js";
 import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector.js";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder.js";
 import { createFilterClassExpression, createInstanceFilterDefinitionBase } from "./InstanceFilterConverter.js";
 import { PresentationInstanceFilter } from "./PresentationInstanceFilter.js";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty.js";
-import {
-  createInstanceFilterPropertyInfos,
-  useFilterBuilderNavigationPropertyEditorContextProviderProps,
-} from "./Utils.js";
+import { createInstanceFilterPropertyInfos } from "./Utils.js";
 
 import type { PropertyDescription } from "@itwin/appui-abstract";
 import type { PropertyFilterBuilderRuleValueRendererProps } from "@itwin/components-react";
@@ -157,10 +153,6 @@ export function PresentationFilterBuilderValueRenderer({
   selectedClasses,
   ...props
 }: PresentationFilterBuilderValueRendererProps) {
-  const navigationPropertyContextProviderProps = useFilterBuilderNavigationPropertyEditorContextProviderProps(
-    imodel,
-    descriptor,
-  );
   if (props.operator === "is-equal" || props.operator === "is-not-equal") {
     return (
       <UniquePropertyValuesSelector
@@ -173,11 +165,7 @@ export function PresentationFilterBuilderValueRenderer({
     );
   }
 
-  return (
-    <NavigationPropertyEditorContextProvider {...navigationPropertyContextProviderProps}>
-      <PropertyFilterBuilderRuleValue {...props} />
-    </NavigationPropertyEditorContextProvider>
-  );
+  return <PropertyFilterBuilderRuleValue {...props} />;
 }
 
 /**

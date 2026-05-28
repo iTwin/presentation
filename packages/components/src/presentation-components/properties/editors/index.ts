@@ -19,6 +19,8 @@ import { QuantityEditorName, QuantityPropertyEditorBase } from "./QuantityProper
 import type { PureComponent } from "react";
 import type { PropertyEditorBase, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
 
+/* eslint-disable @typescript-eslint/no-deprecated */
+
 export type { NavigationPropertyEditorContextProviderProps } from "./NavigationPropertyEditorContext.js";
 export {
   NavigationPropertyEditorContextProvider,
@@ -26,7 +28,6 @@ export {
 } from "./NavigationPropertyEditorContext.js";
 
 /* v8 ignore start -- @preserve */
-/* eslint-disable @typescript-eslint/no-deprecated */
 
 /**
  * Editor for navigation properties.
