@@ -8,39 +8,25 @@
 
 import "./DisposePolyfill.js";
 
-import { PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
-import { assert, Logger } from "@itwin/core-bentley";
+import { PropertyDescription } from "@itwin/appui-abstract";
+import { Logger } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { UnitSystemKey } from "@itwin/core-quantity";
 import {
-  ArrayPropertiesField,
   ClientDiagnosticsOptions,
   Content,
+  createContentFormatter,
   DEFAULT_KEYS_BATCH_SIZE,
   Descriptor,
   DescriptorOverrides,
-  DisplayValue,
-  DisplayValuesArray,
-  DisplayValuesMap,
   Field,
-  Item,
   KeySet,
-  KindOfQuantityInfo,
   KoqPropertyValueFormatter,
-  NestedContentValue,
   PageOptions,
-  PropertiesField,
-  PropertyInfo,
   RegisteredRuleset,
   RequestOptionsWithRuleset,
   Ruleset,
   RulesetVariable,
   SelectionInfo,
-  StructPropertiesField,
-  Value,
-  ValuesArray,
-  ValuesDictionary,
-  ValuesMap,
 } from "@itwin/presentation-common";
 import { IModelContentChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
 import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
@@ -130,12 +116,6 @@ export interface IContentDataProvider extends IPresentationDataProvider {
    * @param pageOptions Paging options.
    */
   getContent: (pageOptions?: PageOptions) => Promise<Content | undefined>;
-
-  /**
-   * Get field that was used to create the given property record.
-   * @deprecated in 4.0. Use [[getFieldByPropertyDescription]] instead.
-   */
-  getFieldByPropertyRecord: (propertyRecord: PropertyRecord) => Promise<Field | undefined>;
 
   /** Get field that was used to create a property record with given property description. */
   getFieldByPropertyDescription: (description: PropertyDescription) => Promise<Field | undefined>;
@@ -418,14 +398,6 @@ export class ContentDataProvider implements IContentDataProvider {
     return contentAndSize?.content;
   }
 
-  /**
-   * Get field using PropertyRecord.
-   * @deprecated in 4.0. Use [[getFieldByPropertyDescription]] instead.
-   */
-  public async getFieldByPropertyRecord(propertyRecord: PropertyRecord): Promise<Field | undefined> {
-    return this.getFieldByPropertyDescription(propertyRecord.property);
-  }
-
   /** Get field that was used to create a property record with given property description. */
   public async getFieldByPropertyDescription(description: PropertyDescription): Promise<Field | undefined> {
     const descriptor = await this.getContentDescriptor();
@@ -464,33 +436,22 @@ export class ContentDataProvider implements IContentDataProvider {
         },
       };
 
-      if (Presentation.presentation.getContentIterator) {
-        const result = await Presentation.presentation.getContentIterator(options);
-        return result
-          ? {
-              size: result.total,
-              content: new Content(
-                result.descriptor,
-                await (async () => {
-                  const items = [];
-                  for await (const item of result.items) {
-                    items.push(item);
-                  }
-                  return items;
-                })(),
-              ),
-            }
-          : undefined;
-      }
-      const requestSize = undefined !== pageOptions && 0 === pageOptions.start && undefined !== pageOptions.size;
-      if (requestSize) {
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        return await Presentation.presentation.getContentAndSize(options);
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      const content = await Presentation.presentation.getContent(options);
-      return content ? { content, size: content.contentSet.length } : undefined;
+      const result = await Presentation.presentation.getContentIterator(options);
+      return result
+        ? {
+            size: result.total,
+            content: new Content(
+              result.descriptor,
+              await (async () => {
+                const items = [];
+                for await (const item of result.items) {
+                  items.push(item);
+                }
+                return items;
+              })(),
+            ),
+          }
+        : undefined;
     },
     { isMatchingKey: areContentRequestsEqual as any },
   );
@@ -499,7 +460,12 @@ export class ContentDataProvider implements IContentDataProvider {
     async (pageOptions?: PageOptions): Promise<{ content: Content; size: number } | undefined> => {
       const result = await this._getContentAndSize(pageOptions);
       if (result && !this._isContentFormatted) {
-        const formatter = new ContentFormatter(this._imodel);
+        const formatter = createContentFormatter({
+          propertyValueFormatter: new KoqPropertyValueFormatter({
+            schemaContext: this._imodel.schemaContext,
+            formatsProvider: IModelApp.formatsProvider,
+          }),
+        });
         result.content = await formatter.formatContent(result.content);
         this._isContentFormatted = true;
       }
@@ -550,275 +516,3 @@ function areContentRequestsEqual(lhsArgs: [PageOptions?], rhsArgs: [PageOptions?
   }
   return true;
 }
-
-/* v8 ignore start -- @preserve */
-/**
- * This is copied from https://github.com/iTwin/itwinjs-core/blob/846393ad2cd49033923f3e7abf100968c2414918/presentation/common/src/presentation-common/content/PropertyValueFormatter.ts#L21
- * and should be removed once https://github.com/iTwin/itwinjs-core/issues/8441 is done.
- */
-class ContentFormatter {
-  private _propertyValueFormatter: ContentPropertyValueFormatter;
-  private _unitSystem: UnitSystemKey;
-
-  constructor(imodel: IModelConnection) {
-    // note: using deprecated version of `KoqPropertyValueFormatter` constructor because we
-    // support 4.x core, where the updated overload doesn't exist
-    this._propertyValueFormatter = new ContentPropertyValueFormatter(
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      new KoqPropertyValueFormatter(imodel.schemaContext, undefined, IModelApp.formatsProvider),
-    );
-    this._unitSystem = IModelApp.quantityFormatter.activeUnitSystem;
-  }
-
-  public async formatContent(content: Content) {
-    const formattedItems = await this.formatContentItems(content.contentSet, content.descriptor);
-    return new Content(content.descriptor, formattedItems);
-  }
-
-  private async formatContentItems(items: Item[], descriptor: Descriptor) {
-    return Promise.all(
-      items.map(async (item) => {
-        await this.formatValues(item.values, item.displayValues, descriptor.fields, item.mergedFieldNames);
-        return item;
-      }),
-    );
-  }
-
-  private async formatValues(
-    values: ValuesDictionary<Value>,
-    displayValues: ValuesDictionary<DisplayValue>,
-    fields: Field[],
-    mergedFieldNames?: string[],
-  ) {
-    for (const field of fields) {
-      const value = values[field.name];
-      // for merged quantity fields, format display value as "-- unit"
-      if (value === undefined && mergedFieldNames?.includes(field.name) && isFieldWithKoq(field)) {
-        const unitLabel = await this._propertyValueFormatter.getUnitLabel(field, this._unitSystem);
-        if (unitLabel) {
-          displayValues[field.name] = `-- ${unitLabel}`;
-        }
-        continue;
-      }
-
-      // do not add undefined value to display values
-      if (value === undefined) {
-        continue;
-      }
-
-      // format display values of nested content field
-      if (field.isNestedContentField()) {
-        assert(Value.isNestedContent(value));
-        await this.formatNestedContentDisplayValues(value, field.nestedFields);
-        continue;
-      }
-
-      // format property items
-      if (field.isPropertiesField()) {
-        displayValues[field.name] = await this.formatPropertyValue(value, displayValues[field.name], field);
-        continue;
-      }
-
-      displayValues[field.name] = await this._propertyValueFormatter.formatPropertyValue(
-        field,
-        value,
-        this._unitSystem,
-      );
-    }
-  }
-
-  private async formatNestedContentDisplayValues(nestedValues: NestedContentValue[], fields: Field[]) {
-    await Promise.all(
-      nestedValues.map(async (nestedValue) => {
-        await this.formatValues(nestedValue.values, nestedValue.displayValues, fields);
-      }),
-    );
-  }
-
-  private async formatPropertyValue(
-    value: Value,
-    fallbackDisplayValue: DisplayValue,
-    field: PropertiesField,
-  ): Promise<DisplayValue> {
-    if (field.isArrayPropertiesField()) {
-      assert(Value.isArray(value));
-      assert(DisplayValue.isArray(fallbackDisplayValue));
-      return this.formatArrayItems(value, fallbackDisplayValue, field);
-    }
-    if (field.isStructPropertiesField()) {
-      assert(Value.isMap(value));
-      assert(DisplayValue.isMap(fallbackDisplayValue));
-      return this.formatStructMembers(value, fallbackDisplayValue, field);
-    }
-    return this._propertyValueFormatter.formatPropertyValue(field, value, fallbackDisplayValue, this._unitSystem);
-  }
-
-  private async formatArrayItems(
-    itemValues: ValuesArray,
-    itemFallbackDisplayValues: DisplayValuesArray,
-    field: ArrayPropertiesField,
-  ) {
-    return Promise.all(
-      itemValues.map(async (value, index) =>
-        this.formatPropertyValue(value, itemFallbackDisplayValues[index], field.itemsField),
-      ),
-    );
-  }
-
-  private async formatStructMembers(
-    memberValues: ValuesMap,
-    memberFallbackDisplayValues: DisplayValuesMap,
-    field: StructPropertiesField,
-  ) {
-    const displayValues: DisplayValuesMap = {};
-    await Promise.all(
-      field.memberFields.map(async (memberField) => {
-        displayValues[memberField.name] = await this.formatPropertyValue(
-          memberValues[memberField.name],
-          memberFallbackDisplayValues[memberField.name],
-          memberField,
-        );
-      }),
-    );
-    return displayValues;
-  }
-}
-
-class ContentPropertyValueFormatter {
-  constructor(private _koqValueFormatter: KoqPropertyValueFormatter) {}
-
-  public async getUnitLabel(field: FieldWithKoq, unitSystem?: UnitSystemKey): Promise<string | undefined> {
-    const koq = field.properties[0].property.kindOfQuantity;
-    const formatterSpec = await this._koqValueFormatter.getFormatterSpec({ koqName: koq.name, unitSystem });
-    return formatterSpec?.unitConversions[0]?.label;
-  }
-
-  public async formatPropertyValue(
-    field: Field,
-    value: Value,
-    fallbackDisplayValue: DisplayValue,
-    unitSystem?: UnitSystemKey,
-  ): Promise<DisplayValue> {
-    const doubleFormatter = isFieldWithKoq(field)
-      ? async (rawValue: number) => {
-          const koq = field.properties[0].property.kindOfQuantity;
-          const formattedValue = await this._koqValueFormatter.format(rawValue, { koqName: koq.name, unitSystem });
-          if (formattedValue !== undefined) {
-            return formattedValue;
-          }
-          return formatDouble(rawValue);
-        }
-      : async (rawValue: number) => formatDouble(rawValue);
-
-    return this.formatValue(field, value, fallbackDisplayValue, { doubleFormatter });
-  }
-
-  private async formatValue(
-    field: Field,
-    value: Value,
-    fallbackDisplayValue: DisplayValue,
-    ctx?: { doubleFormatter: (raw: number) => Promise<string> },
-  ): Promise<DisplayValue> {
-    if (field.isPropertiesField()) {
-      if (field.isArrayPropertiesField()) {
-        return this.formatArrayValue(field, value, fallbackDisplayValue);
-      }
-
-      if (field.isStructPropertiesField()) {
-        return this.formatStructValue(field, value, fallbackDisplayValue);
-      }
-    }
-
-    return this.formatPrimitiveValue(field, value, fallbackDisplayValue, ctx);
-  }
-
-  /**
-   * Note: This function only handles numeric properties, handling of all other kinds was intentionally removed. We only need to re-format content
-   * to react to changes in property formats, and they only affect numeric properties. Skipping the rest allows us to avoid doing localization afterwards.
-   */
-  private async formatPrimitiveValue(
-    field: Field,
-    value: Value,
-    fallbackDisplayValue: DisplayValue,
-    ctx?: { doubleFormatter: (raw: number) => Promise<string> },
-  ) {
-    if (value === undefined) {
-      return "";
-    }
-
-    const formatDoubleValue = async (raw: number) => (ctx ? ctx.doubleFormatter(raw) : formatDouble(raw));
-
-    if (field.type.typeName === "point2d" && isPoint2d(value)) {
-      return `X: ${await formatDoubleValue(value.x)}; Y: ${await formatDoubleValue(value.y)}`;
-    }
-    if (field.type.typeName === "point3d" && isPoint3d(value)) {
-      return `X: ${await formatDoubleValue(value.x)}; Y: ${await formatDoubleValue(value.y)}; Z: ${await formatDoubleValue(value.z)}`;
-    }
-    if (field.type.typeName === "int" || field.type.typeName === "long") {
-      assert(isNumber(value));
-      return value.toFixed(0);
-    }
-    if (field.type.typeName === "double") {
-      assert(isNumber(value));
-      return formatDoubleValue(value);
-    }
-    return fallbackDisplayValue;
-  }
-
-  private async formatStructValue(field: StructPropertiesField, value: Value, fallbackDisplayValue: DisplayValue) {
-    if (!Value.isMap(value) || !DisplayValue.isMap(fallbackDisplayValue)) {
-      return {};
-    }
-
-    const formattedMember: DisplayValuesMap = {};
-    for (const member of field.memberFields) {
-      formattedMember[member.name] = await this.formatValue(
-        member,
-        value[member.name],
-        fallbackDisplayValue[member.name],
-      );
-    }
-    return formattedMember;
-  }
-
-  private async formatArrayValue(field: ArrayPropertiesField, value: Value, fallbackDisplayValue: DisplayValue) {
-    if (!Value.isArray(value) || !DisplayValue.isArray(fallbackDisplayValue)) {
-      return [];
-    }
-
-    return Promise.all(
-      value.map(async (arrayVal, i) => {
-        return this.formatValue(field.itemsField, arrayVal, fallbackDisplayValue[i]);
-      }),
-    );
-  }
-}
-
-function formatDouble(value: number) {
-  return value.toFixed(2);
-}
-
-type FieldWithKoq = PropertiesField & {
-  properties: [{ property: PropertyInfo & { kindOfQuantity: KindOfQuantityInfo } }];
-};
-
-function isFieldWithKoq(field: Field): field is FieldWithKoq {
-  return (
-    field.isPropertiesField() &&
-    field.properties.length > 0 &&
-    field.properties[0].property.kindOfQuantity !== undefined
-  );
-}
-
-function isPoint2d(obj: Value): obj is { x: number; y: number } {
-  return obj !== undefined && isNumber((obj as any).x) && isNumber((obj as any).y);
-}
-
-function isPoint3d(obj: Value): obj is { x: number; y: number; z: number } {
-  return isPoint2d(obj) && isNumber((obj as any).z);
-}
-
-function isNumber(obj: Value): obj is number {
-  return !isNaN(Number(obj));
-}
-/* v8 ignore stop -- @preserve */

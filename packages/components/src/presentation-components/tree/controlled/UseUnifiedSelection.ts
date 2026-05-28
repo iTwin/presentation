@@ -9,7 +9,6 @@
 
 import "../../common/DisposePolyfill.js";
 
-import { useCallback } from "react";
 import { Subject, takeUntil, tap } from "rxjs";
 import {
   AbstractTreeNodeLoaderWithProvider,
@@ -23,7 +22,6 @@ import {
   TreeSelectionReplacementEventArgs,
 } from "@itwin/components-react";
 import { Guid } from "@itwin/core-bentley";
-import { useDisposable } from "@itwin/core-react";
 import { Keys, KeySet, NodeKey } from "@itwin/presentation-common";
 import {
   Presentation,
@@ -80,6 +78,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
   constructor(params: UnifiedSelectionTreeEventHandlerParams) {
     super({ ...params, modelSource: params.nodeLoader.modelSource });
     this.#dataProvider = params.nodeLoader.dataProvider;
+    /* v8 ignore next -- @preserve */
     this.#selectionSourceName = params.name ?? `Tree_${this.#dataProvider.rulesetId}_${Guid.createValue()}`;
     this.#listeners.push(Presentation.selection.selectionChange.addListener((args) => this.onSelectionChanged(args)));
     this.#listeners.push(this.modelSource.onModelChanged.addListener((args) => this.selectNodes(args[1])));
@@ -98,6 +97,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
   }
 
   /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
+  /* v8 ignore next -- @preserve */
   public override dispose() {
     this.#dispose();
   }
@@ -151,13 +151,6 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
       this.updateAllNodes();
     }
   }
-
-  /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
-  /* v8 ignore start -- @preserve */
-  protected getNodeKey(node: TreeNodeItem): NodeKey {
-    return this.#dataProvider.getNodeKey(node);
-  }
-  /* v8 ignore stop -- @preserve */
 
   /**
    * Determines if node should be selected.
@@ -283,20 +276,4 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
       node.isSelected = false;
     }
   }
-}
-
-/**
- * A custom hook which creates and disposes [[UnifiedSelectionTreeEventHandler]]
- * @public
- * @deprecated in 4.4. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTreeState]] and
- * [[UsePresentationTreeProps.eventHandlerFactory]] instead or manually create and dispose [[UnifiedSelectionTreeEventHandler]].
- */
-export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams) {
-  return useDisposable(
-    useCallback(
-      () => new UnifiedSelectionTreeEventHandler(props),
-      /* eslint-disable-next-line react-hooks/exhaustive-deps */ /* want to re-create the handler whenever any prop changes */
-      Object.values(props),
-    ),
-  );
 }

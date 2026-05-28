@@ -22,6 +22,7 @@ import {
   addFieldHierarchy,
   CategoryDescription,
   ContentFlags,
+  createContentTraverser,
   createFieldHierarchies,
   DefaultContentDisplayTypes,
   Descriptor,
@@ -38,7 +39,6 @@ import {
   StartArrayProps,
   StartContentProps,
   StartStructProps,
-  traverseContentItem,
   Value,
   ValuesMap,
 } from "@itwin/presentation-common";
@@ -309,9 +309,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
       wantNestedCategories: this._isNestedPropertyCategoryGroupingEnabled,
       callbacks,
     });
-    // note: using deprecated `traverseContent`, because we can't use the replacement `createContentTraverser` due to our peer dep version
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    traverseContentItem(builder, content.descriptor, contentItem);
+    createContentTraverser(builder, content.descriptor)([contentItem]);
     return builder.getPropertyData();
   });
 
@@ -372,20 +370,11 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
 }
 
 async function isFieldFavorite(field: Field, imodel: IModelConnection) {
-  if (Presentation.favoriteProperties.hasAsync) {
-    return Presentation.favoriteProperties.hasAsync(field, imodel, FavoritePropertiesScope.IModel);
-  }
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  return Presentation.favoriteProperties.has(field, imodel, FavoritePropertiesScope.IModel);
+  return Presentation.favoriteProperties.hasAsync(field, imodel, FavoritePropertiesScope.IModel);
 }
 
 async function sortFavoriteFields(fields: Field[], imodel: IModelConnection) {
-  if (Presentation.favoriteProperties.sortFieldsAsync) {
-    await Presentation.favoriteProperties.sortFieldsAsync(imodel, fields);
-    return;
-  }
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  Presentation.favoriteProperties.sortFields(imodel, fields);
+  await Presentation.favoriteProperties.sortFieldsAsync(imodel, fields);
 }
 
 const createDefaultPropertyData = (): PropertyData => ({

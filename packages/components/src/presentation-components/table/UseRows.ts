@@ -13,12 +13,12 @@ import { assert } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import {
   Content,
+  createContentTraverser,
   DefaultContentDisplayTypes,
   KeySet,
   PageOptions,
   Ruleset,
   StartItemProps,
-  traverseContent,
 } from "@itwin/presentation-common";
 import { createIModelKey } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -221,23 +221,18 @@ async function loadRows(
     paging,
   };
   return new Promise((resolve, reject) => {
-    (Presentation.presentation.getContentIterator
-      ? from(Presentation.presentation.getContentIterator(requestProps)).pipe(
-          mergeMap((result) => {
-            if (!result) {
-              return of(undefined);
-            }
-            return from(result.items).pipe(
-              toArray(),
-              map((items) => ({ total: result.total, content: new Content(result.descriptor, items) })),
-            );
-          }),
-        )
-      : // eslint-disable-next-line @typescript-eslint/no-deprecated
-        from(Presentation.presentation.getContentAndSize(requestProps)).pipe(
-          map((result) => (result ? { total: result.size, content: result.content } : undefined)),
-        )
-    )
+    from(Presentation.presentation.getContentIterator(requestProps))
+      .pipe(
+        mergeMap((result) => {
+          if (!result) {
+            return of(undefined);
+          }
+          return from(result.items).pipe(
+            toArray(),
+            map((items) => ({ total: result.total, content: new Content(result.descriptor, items) })),
+          );
+        }),
+      )
       .pipe(
         map((result) =>
           result
@@ -251,9 +246,7 @@ async function loadRows(
 
 function createRows(content: Content, imodel: IModelConnection) {
   const rowsBuilder = new RowsBuilder({ imodel });
-  // note: using deprecated `traverseContent`, because we can't use the replacement `createContentTraverser` due to our peer dep version
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  traverseContent(rowsBuilder, content);
+  createContentTraverser(rowsBuilder, content.descriptor)(content.contentSet);
   return rowsBuilder.rows;
 }
 

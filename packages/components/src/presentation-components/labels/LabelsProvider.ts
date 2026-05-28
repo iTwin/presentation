@@ -6,7 +6,7 @@
  * @module DisplayLabels
  */
 
-import { bufferCount, from, map, mergeAll, mergeMap, reduce } from "rxjs";
+import { bufferCount, from, map, mergeMap, reduce } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
 import { DEFAULT_KEYS_BATCH_SIZE, InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -71,25 +71,13 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
         .pipe(
           bufferCount(DEFAULT_KEYS_BATCH_SIZE),
           mergeMap((keysBatch, batchIndex) => {
-            if (Presentation.presentation.getDisplayLabelDefinitionsIterator) {
-              return from(
-                Presentation.presentation.getDisplayLabelDefinitionsIterator({ imodel: this.imodel, keys: keysBatch }),
-              ).pipe(
-                mergeMap((result) => result.items),
-                map((item, itemIndex) => ({
-                  value: item.displayValue,
-                  index: batchIndex * DEFAULT_KEYS_BATCH_SIZE + itemIndex,
-                })),
-              );
-            }
             return from(
-              // eslint-disable-next-line @typescript-eslint/no-deprecated
-              Presentation.presentation.getDisplayLabelDefinitions({ imodel: this.imodel, keys: keysBatch }),
+              Presentation.presentation.getDisplayLabelDefinitionsIterator({ imodel: this.imodel, keys: keysBatch }),
             ).pipe(
-              mergeAll(),
-              map((item, valueIndex) => ({
+              mergeMap((result) => result.items),
+              map((item, itemIndex) => ({
                 value: item.displayValue,
-                index: batchIndex * DEFAULT_KEYS_BATCH_SIZE + valueIndex,
+                index: batchIndex * DEFAULT_KEYS_BATCH_SIZE + itemIndex,
               })),
             );
           }),

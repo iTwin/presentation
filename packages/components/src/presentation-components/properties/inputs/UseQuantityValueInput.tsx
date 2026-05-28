@@ -142,8 +142,7 @@ function useFormatterAndParser(
 
   useEffect(() => {
     const findFormatterAndParser = async () => {
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      const koqFormatter = new KoqPropertyValueFormatter(schemaContext, undefined, IModelApp.formatsProvider);
+      const koqFormatter = new KoqPropertyValueFormatter({ schemaContext, formatsProvider: IModelApp.formatsProvider });
       const highPrecisionFormatter = await koqFormatter.getFormatterSpec({
         koqName,
         unitSystem: IModelApp.quantityFormatter.activeUnitSystem,

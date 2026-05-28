@@ -39,7 +39,6 @@ import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
 import { render, waitFor } from "../../TestUtils.js";
 
 describe("UniquePropertyValuesSelector", () => {
-  let presentationManagerStub: ReturnType<typeof vi.spyOn>;
   const getDistinctValuesIteratorStub = vi.fn<PresentationManager["getDistinctValuesIterator"]>();
 
   stubVirtualization();
@@ -49,9 +48,9 @@ describe("UniquePropertyValuesSelector", () => {
     vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
     vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
     vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
-    presentationManagerStub = vi
-      .spyOn(Presentation, "presentation", "get")
-      .mockReturnValue({ getDistinctValuesIterator: getDistinctValuesIteratorStub } as unknown as PresentationManager);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
+      getDistinctValuesIterator: getDistinctValuesIteratorStub,
+    } as unknown as PresentationManager);
     getDistinctValuesIteratorStub.mockResolvedValue({ total: 0, items: createAsyncIterator([]) });
   });
 
@@ -89,36 +88,6 @@ describe("UniquePropertyValuesSelector", () => {
   };
 
   const testImodel = {} as IModelConnection;
-
-  it("loads values using `getPagedDistinctValues` when `getDistinctValuesIterator` is not available", async () => {
-    presentationManagerStub.mockReset();
-    presentationManagerStub.mockReturnValue({
-      getPagedDistinctValues: async () => ({
-        total: 2,
-        items: [
-          { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
-          { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
-        ],
-      }),
-    });
-
-    const { getByText, getByPlaceholderText, user } = render(
-      <UniquePropertyValuesSelector
-        property={propertyDescription}
-        onChange={() => {}}
-        imodel={testImodel}
-        descriptor={descriptor}
-      />,
-    );
-
-    // open menu
-    const selector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
-    await user.click(selector);
-
-    // ensure both menu items are shown
-    await waitFor(() => getByText("TestValue1"));
-    await waitFor(() => getByText("TestValue2"));
-  });
 
   it("opens menu upwards when not enough space below", async () => {
     window.innerHeight = 0;

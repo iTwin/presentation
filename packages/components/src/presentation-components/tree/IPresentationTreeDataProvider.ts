@@ -25,13 +25,6 @@ import { IPresentationDataProvider } from "../common/IPresentationDataProvider.j
  */
 export interface IPresentationTreeDataProvider extends ITreeDataProvider, IPresentationDataProvider {
   /**
-   * Returns a [NodeKey]($presentation-common) from given [TreeNodeItem]($components-react).
-   *
-   * @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common).
-   */
-  getNodeKey(node: TreeNodeItem): NodeKey;
-
-  /**
    * Returns filtered node paths.
    */
   getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
