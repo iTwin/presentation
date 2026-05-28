@@ -6,13 +6,13 @@
 
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
-import type { ECSqlReader } from '@itwin/core-common';
-import type { Event } from '@itwin/presentation-shared';
+import type { Event as Event_2 } from '@itwin/presentation-shared';
 import type { ILogger } from '@itwin/presentation-shared';
 import type { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { LogLevel } from '@itwin/core-bentley';
 import { QueryBinder } from '@itwin/core-common';
 import type { QueryOptions } from '@itwin/core-common';
+import type { QueryRowProxy } from '@itwin/core-common';
 import type { Schema } from '@itwin/ecschema-metadata';
 import type { SchemaContext } from '@itwin/ecschema-metadata';
 import { SchemaKey } from '@itwin/ecschema-metadata';
@@ -21,7 +21,7 @@ import type { UnitSystemKey } from '@itwin/core-quantity';
 // @public
 interface CoreECSqlReaderFactory {
     // (undocumented)
-    createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): ECSqlReader;
+    createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): AsyncIterableIterator<QueryRowProxy>;
 }
 
 // @public
@@ -76,9 +76,9 @@ interface ICoreLogger {
 
 // @public
 interface ICoreTxnManager {
-    onChangesApplied: Event;
-    onCommit: Event;
-    onCommitted: Event;
+    onChangesApplied: Event_2;
+    onCommit: Event_2;
+    onCommitted: Event_2;
 }
 
 // @public
