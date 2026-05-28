@@ -447,6 +447,34 @@ describe("resolveContentSources", () => {
 
       expect(result[0].resolvedDeclarations.map((d) => d.providerId)).to.deep.equal(["active_v1"]);
     });
+
+    it("preserves provider and declaration order even when later providers resolve faster", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
+      // provider1 resolves after extra microtask tick, provider2 resolves immediately
+      const provider1: IModelFieldsProvider = {
+        id: "slow_v1",
+        getContribution: vi.fn(async () => {
+          await Promise.resolve();
+          return { relatedProperties: [{ path }] };
+        }),
+      };
+      const provider2 = createMockIModelFieldsProvider("fast_v1", { relatedProperties: [{ path }] });
+      const imodelAccess = createMockIModelAccess({ resolvePathsQueryResults: [{ 0: "TestSchema.ConcreteB" }] });
+
+      const result = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { fieldsProviders: [provider1, provider2] },
+      });
+
+      expect(result[0].resolvedDeclarations.map((d) => d.providerId)).to.deep.equal(["slow_v1", "fast_v1"]);
+    });
   });
 
   describe("instance IDs filter", () => {
@@ -526,6 +554,30 @@ describe("resolveContentSources", () => {
       const query = call[0];
       expect(query.ecsql).to.include('[this].Name = "test"');
       expect(query.ecsql).not.to.include("x.");
+    });
+
+    it("replaces bracket-quoted primaryClassAlias in expression", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
+      const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
+      const target: ContentTarget = {
+        primaryClass: "TestSchema.ClassA",
+        instanceFilter: { expression: '[x].Name = "test"', primaryClassAlias: "x" },
+      };
+      const imodelAccess = createMockIModelAccess({ resolvePathsQueryResults: [{ 0: "TestSchema.ConcreteB" }] });
+
+      await resolveContentSources({ imodelAccess, targets: [target], config: { fieldsProviders: [provider] } });
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
+      const query = call[0];
+      expect(query.ecsql).to.include('[this].Name = "test"');
+      expect(query.ecsql).not.to.include("[x].");
     });
 
     it("passes bindings through all strategies for multi-step paths", async () => {

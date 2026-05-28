@@ -56,7 +56,8 @@ function buildTargetFilter(target: ContentTarget): {
 
   if (target.instanceFilter) {
     const alias = target.instanceFilter.primaryClassAlias ?? "this";
-    const expression = target.instanceFilter.expression.replaceAll(`${alias}.`, "[this].");
+    const aliasPattern = new RegExp(`(?:\\[${alias}\\]|\\b${alias})\\.`, "g");
+    const expression = target.instanceFilter.expression.replace(aliasPattern, "[this].");
     clauses.push(expression);
     if (target.instanceFilter.bindings) {
       Object.assign(bindings, target.instanceFilter.bindings);
@@ -97,7 +98,7 @@ const originalStrategy: ResolutionQueryStrategy = {
     const allBindings = { ...joinBindings, ...targetFilter.bindings };
     const ecsql = `
       SELECT DISTINCT ${buildClassNameColumns(joinPath)}
-      FROM ${target.primaryClass} [this]
+      FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
       ${joins} ${targetFilter.joins ?? ""}
       ${whereClause}
     `;
@@ -139,11 +140,11 @@ const rewriteStrategy: ResolutionQueryStrategy = {
 
     const ecsql = `
       SELECT DISTINCT ${buildClassNameColumns(joinPath)}
-      FROM ${firstHopTarget} [${firstHopAlias}]
+      FROM ${ECSql.createClassSelector(firstHopTarget)} [${firstHopAlias}]
       ${remainingJoins}
       WHERE [${firstHopAlias}].ECClassId IN (
         SELECT [${firstHopAlias}].ECClassId
-        FROM ${target.primaryClass} [this]
+        FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
         ${firstStepJoins} ${targetFilter.joins ?? ""}
         ${instanceFilterClauses}
       )
@@ -174,7 +175,7 @@ const crossJoinStrategy: ResolutionQueryStrategy = {
     const allBindings = { ...joinBindings, ...targetFilter.bindings };
     const ecsql = `
       SELECT DISTINCT ${buildClassNameColumns(joinPath)}
-      FROM ${target.primaryClass} [this]
+      FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
       ${crossJoins} ${targetFilter.joins ?? ""}
       ${whereClause}
     `;
@@ -189,13 +190,13 @@ const ALL_STRATEGIES: ResolutionQueryStrategy[] = [originalStrategy, rewriteStra
 async function raceQueryExecution(executor: ECSqlQueryExecutor, queries: ECSqlQueryDef[]): Promise<ECSqlQueryRow[]> {
   if (queries.length === 1) {
     const result: ECSqlQueryRow[] = [];
-    for await (const row of executor.createQueryReader(queries[0])) {
+    for await (const row of executor.createQueryReader(queries[0], { rowFormat: "Indexes" })) {
       result.push(row);
     }
     return result;
   }
 
-  const readers = queries.map((query) => executor.createQueryReader(query));
+  const readers = queries.map((query) => executor.createQueryReader(query, { rowFormat: "Indexes" }));
 
   const { rows, winnerIndex } = await Promise.race(
     readers.map(async (reader, index) => {
@@ -207,7 +208,7 @@ async function raceQueryExecution(executor: ECSqlQueryExecutor, queries: ECSqlQu
     }),
   );
 
-  // Calling `return()` on the iterator is should cancel the query execution on the backend and free up resources
+  // Calling `return()` on the iterator should cancel the query execution on the backend and free up resources
   for (let i = 0; i < readers.length; i++) {
     if (i !== winnerIndex) {
       void readers[i].return?.(undefined);
@@ -273,17 +274,19 @@ function resolveTarget(
   providers: IModelFieldsProvider[],
   target: ContentTarget,
 ): Observable<ContentSource> {
-  return from(providers).pipe(
-    mergeMap(async (provider) => ({
+  return from(providers.map((provider, providerIdx) => ({ provider, providerIdx }))).pipe(
+    mergeMap(async ({ provider, providerIdx }) => ({
       provider,
+      providerIdx,
       contribution: await provider.getContribution({ imodelAccess, target }),
     })),
-    mergeMap(({ provider, contribution }) => {
+    mergeMap(({ provider, providerIdx, contribution }) => {
       if (!contribution?.relatedProperties) {
         return [];
       }
       return from(contribution.relatedProperties).pipe(
         mergeMap(async (declaration, declIdx) => ({
+          providerIdx,
           providerId: provider.id,
           declarationIndex: declIdx,
           paths: await resolveDeclarationPaths(imodelAccess, target, declaration),
@@ -292,7 +295,17 @@ function resolveTarget(
     }),
     filter(({ paths }) => paths.length > 0),
     toArray(),
-    map((resolvedDeclarations): ContentSource => ({ target, resolvedDeclarations })),
+    map((resolvedDeclarations): ContentSource => {
+      resolvedDeclarations.sort((a, b) => a.providerIdx - b.providerIdx || a.declarationIndex - b.declarationIndex);
+      return {
+        target,
+        resolvedDeclarations: resolvedDeclarations.map(({ providerId, declarationIndex, paths }) => ({
+          providerId,
+          declarationIndex,
+          paths,
+        })),
+      };
+    }),
   );
 }
 
@@ -308,9 +321,15 @@ export async function resolveContentSources(props: {
   }
 
   return lastValueFrom(
-    from(props.targets).pipe(
-      mergeMap((target) => resolveTarget(props.imodelAccess, props.fieldsProviders, target)),
+    from(props.targets.map((target, idx) => ({ target, idx }))).pipe(
+      mergeMap(({ target, idx }) =>
+        resolveTarget(props.imodelAccess, props.fieldsProviders, target).pipe(map((source) => ({ source, idx }))),
+      ),
       toArray(),
+      map((items) => {
+        items.sort((a, b) => a.idx - b.idx);
+        return items.map(({ source }) => source);
+      }),
     ),
   );
 }

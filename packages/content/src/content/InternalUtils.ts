@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * Prefix applied to all ECSQL aliases and binding names generated internally
- * to avoid collisions with consumer-supplied expressions.
+ * Prefix applied to internally generated ECSQL binding names
+ * to avoid collisions with consumer-supplied filter bindings.
  *
  * @internal
  */
