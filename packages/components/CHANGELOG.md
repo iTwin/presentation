@@ -1,5 +1,17 @@
 # Change Log - @itwin/presentation-components
 
+## 5.14.0
+
+### Minor Changes
+
+- [#1362](https://github.com/iTwin/presentation/pull/1362): Deprecated `NavigationPropertyEditorContextProvider` and `useNavigationPropertyEditorContextProviderProps`. They are used by navigation property editor based on old editor system that is now deprecated.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.14
+  - @itwin/unified-selection@1.7.5
+
 ## 5.13.7
 
 ### Patch Changes
