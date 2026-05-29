@@ -623,7 +623,7 @@ export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "
 export interface PropertyDataProviderWithUnifiedSelectionProps {
     dataProvider: IPresentationPropertyDataProvider;
     requestedContentInstancesLimit?: number;
-    selectionStorage?: SelectionStorage;
+    selectionStorage: SelectionStorage;
 }
 
 // @public
