@@ -18,11 +18,7 @@ import { IPresentationPropertyDataProvider } from "./DataProvider.js";
 
 const DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT = 100;
 
-/**
- * Props for the [[usePropertyDataProviderWithUnifiedSelection]] hook
- * @public
- */
-export interface PropertyDataProviderWithUnifiedSelectionProps {
+interface PropertyDataProviderWithUnifiedSelectionPropsBase {
   /** The data provider used by the property grid. */
   dataProvider: IPresentationPropertyDataProvider;
 
@@ -35,14 +31,62 @@ export interface PropertyDataProviderWithUnifiedSelectionProps {
    * Defaults to `100`.
    */
   requestedContentInstancesLimit?: number;
+}
 
+/**
+ * Props for the [[usePropertyDataProviderWithUnifiedSelection]] hook
+ * @public
+ * @deprecated in 5.16. Use [[PropertyDataProviderWithUnifiedSelectionProps]] with `selectionStorage` required.
+ */
+interface PropertyDataProviderWithUnifiedSelectionPropsDeprecated extends PropertyDataProviderWithUnifiedSelectionPropsBase {
   /**
    * Unified selection storage to use for listening and getting active selection.
    *
    * When not specified, the deprecated `SelectionManager` from `@itwin/presentation-frontend` package
    * is used.
    */
-  selectionStorage?: SelectionStorage;
+  selectionStorage?: never;
+}
+
+/**
+ * Props for the [[usePropertyDataProviderWithUnifiedSelection]] hook
+ * @public
+ */
+interface PropertyDataProviderWithUnifiedSelectionPropsNew extends PropertyDataProviderWithUnifiedSelectionPropsBase {
+  /**
+   * Unified selection storage to use for listening and getting active selection.
+   */
+  selectionStorage: SelectionStorage;
+}
+
+/**
+ * Props for the [[usePropertyDataProviderWithUnifiedSelection]] hook
+ * @public
+ */
+export type PropertyDataProviderWithUnifiedSelectionProps =
+  | PropertyDataProviderWithUnifiedSelectionPropsNew
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  | PropertyDataProviderWithUnifiedSelectionPropsDeprecated;
+
+interface UsePropertyDataProviderWithUnifiedSelectionHook {
+  /**
+   * A React hook that adds unified selection functionality to the provided data provider.
+   * @public
+   */
+  (props: PropertyDataProviderWithUnifiedSelectionPropsNew): UsePropertyDataProviderWithUnifiedSelectionResult;
+  /**
+   * A React hook that adds unified selection functionality to the provided data provider.
+   * @public
+   * @deprecated in 5.16. Use [[usePropertyDataProviderWithUnifiedSelection]] with `selectionStorage` required.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  (props: PropertyDataProviderWithUnifiedSelectionPropsDeprecated): UsePropertyDataProviderWithUnifiedSelectionResult;
+  /**
+   * A React hook that adds unified selection functionality to the provided data provider.
+   * @public
+   */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
+  (props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult;
 }
 
 /**
@@ -77,9 +121,9 @@ export function useSelectionHandlerContext() {
  * A React hook that adds unified selection functionality to the provided data provider.
  * @public
  */
-export function usePropertyDataProviderWithUnifiedSelection(
+export const usePropertyDataProviderWithUnifiedSelection: UsePropertyDataProviderWithUnifiedSelectionHook = (
   props: PropertyDataProviderWithUnifiedSelectionProps,
-): UsePropertyDataProviderWithUnifiedSelectionResult {
+) => {
   const { dataProvider, selectionStorage } = props;
   const { imodel, rulesetId } = dataProvider;
   const requestedContentInstancesLimit =
@@ -105,7 +149,7 @@ export function usePropertyDataProviderWithUnifiedSelection(
   }, [dataProvider, imodel, rulesetId, requestedContentInstancesLimit, suppliedSelectionHandler, selectionStorage]);
 
   return { isOverLimit: isOverLimit(numSelectedElements, requestedContentInstancesLimit), numSelectedElements };
-}
+};
 
 function initUnifiedSelectionFromStorage({
   imodel,

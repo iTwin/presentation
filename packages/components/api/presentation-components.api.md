@@ -643,10 +643,22 @@ export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "
 }
 
 // @public
-export interface PropertyDataProviderWithUnifiedSelectionProps {
+export type PropertyDataProviderWithUnifiedSelectionProps = PropertyDataProviderWithUnifiedSelectionPropsNew | PropertyDataProviderWithUnifiedSelectionPropsDeprecated;
+
+// @public (undocumented)
+interface PropertyDataProviderWithUnifiedSelectionPropsBase {
     dataProvider: IPresentationPropertyDataProvider;
     requestedContentInstancesLimit?: number;
-    selectionStorage?: SelectionStorage;
+}
+
+// @public @deprecated
+interface PropertyDataProviderWithUnifiedSelectionPropsDeprecated extends PropertyDataProviderWithUnifiedSelectionPropsBase {
+    selectionStorage?: never;
+}
+
+// @public
+interface PropertyDataProviderWithUnifiedSelectionPropsNew extends PropertyDataProviderWithUnifiedSelectionPropsBase {
+    selectionStorage: SelectionStorage;
 }
 
 // @public
@@ -910,7 +922,15 @@ export interface UsePresentationTreeStateResult<TEventHandler extends TreeEventH
 }
 
 // @public
-export function usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult;
+export const usePropertyDataProviderWithUnifiedSelection: UsePropertyDataProviderWithUnifiedSelectionHook;
+
+// @public (undocumented)
+interface UsePropertyDataProviderWithUnifiedSelectionHook {
+    (props: PropertyDataProviderWithUnifiedSelectionPropsNew): UsePropertyDataProviderWithUnifiedSelectionResult;
+    // @deprecated
+    (props: PropertyDataProviderWithUnifiedSelectionPropsDeprecated): UsePropertyDataProviderWithUnifiedSelectionResult;
+    (props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult;
+}
 
 // @public
 export interface UsePropertyDataProviderWithUnifiedSelectionResult {
