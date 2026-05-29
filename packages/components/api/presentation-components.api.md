@@ -840,7 +840,7 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: U
 
 // @public
 export interface UsePresentationTableWithUnifiedSelectionProps<TColumn, TRow> extends Omit<UsePresentationTableProps<TColumn, TRow>, "keys"> {
-    selectionStorage?: SelectionStorage;
+    selectionStorage: SelectionStorage;
 }
 
 // @public
