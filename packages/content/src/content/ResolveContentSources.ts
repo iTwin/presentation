@@ -118,17 +118,18 @@ const rewriteStrategy: ResolutionQueryStrategy = {
     const { target, joinPath, schemaProvider } = ctx;
     const targetFilter = buildTargetFilter(target);
 
-    // First step joins (for the subquery anchoring at source)
-    const { joins: firstStepJoins, bindings: firstStepBindings } = await ECSql.createRelationshipPathJoinClause({
-      schemaProvider,
-      path: [joinPath[0]],
-    });
-
-    // Remaining step joins (for the outer query anchored at first hop's target)
-    const { joins: remainingJoins, bindings: remainingBindings } = await ECSql.createRelationshipPathJoinClause({
-      schemaProvider,
-      path: joinPath.slice(1),
-    });
+    const [{ joins: firstStepJoins, bindings: firstStepBindings }, { joins: remainingJoins, bindings: remainingBindings }] = await Promise.all([
+      // First step joins (for the subquery anchoring at source)
+      ECSql.createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [joinPath[0]],
+      }),
+      // Remaining step joins (for the outer query anchored at first hop's target)
+      ECSql.createRelationshipPathJoinClause({
+        schemaProvider,
+        path: joinPath.slice(1),
+      }),
+    ]);
 
     // Anchor at first hop's target class
     const firstStep = joinPath[0];
