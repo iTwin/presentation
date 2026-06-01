@@ -292,8 +292,8 @@ function resolveTarget({
   providers: IModelFieldsProvider[];
   target: ContentTarget;
 }): Observable<ContentSource> {
-  return from(providers.map((provider, providerIdx) => ({ provider, providerIdx }))).pipe(
-    mergeMap(async ({ provider, providerIdx }) => ({
+  return from(providers).pipe(
+    mergeMap(async (provider, providerIdx) => ({
       provider,
       providerIdx,
       contribution: await provider.getContribution({ imodelAccess, target }),
@@ -339,8 +339,8 @@ export async function resolveContentSources(props: {
   }
 
   return lastValueFrom(
-    from(props.targets.map((target, idx) => ({ target, idx }))).pipe(
-      mergeMap(({ target, idx }) =>
+    from(props.targets).pipe(
+      mergeMap((target, idx) =>
         resolveTarget({ imodelAccess: props.imodelAccess, providers: props.fieldsProviders, target }).pipe(
           map((source) => ({ source, idx })),
         ),
