@@ -19,7 +19,7 @@ import type {
   RelationshipPath,
 } from "@itwin/presentation-shared";
 import type { ContentSource, ContentTarget } from "./ContentTarget.js";
-import type { IModelFieldsProvider } from "./extensions/IModelFieldsProvider.js";
+import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "./extensions/IModelFieldsProvider.js";
 
 // --- Types ---
 
@@ -253,13 +253,7 @@ async function resolveDeclarationPaths({
 }: {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   target: ContentTarget;
-  declaration: {
-    path: RelationshipPath;
-    resolve?: (props: {
-      imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
-      target: ContentTarget;
-    }) => Promise<RelationshipPath[]>;
-  };
+  declaration: Pick<RelatedPropertiesDeclaration, "path" | "resolve">;
 }): Promise<RelationshipPath[]> {
   if (declaration.resolve) {
     return declaration.resolve({ imodelAccess, target });

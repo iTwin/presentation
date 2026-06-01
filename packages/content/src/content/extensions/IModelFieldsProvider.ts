@@ -61,7 +61,7 @@ interface FieldsProviderContribution {
  *
  * @public
  */
-interface RelatedPropertiesDeclaration {
+export interface RelatedPropertiesDeclaration {
   /**
    * The relationship path to navigate (possibly generic — e.g., targeting a base class).
    * Will be resolved to concrete paths by querying the data.
