@@ -9,6 +9,7 @@
 import { compareStrings, Guid, GuidString, Id64, Id64String, LRUDictionary } from "@itwin/core-bentley";
 import { ECSqlReader, QueryBinder, QueryOptions, QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
+import { parseFullClassName } from "@itwin/presentation-shared";
 
 /* v8 ignore start -- @preserve */
 
@@ -81,7 +82,7 @@ export class ECMetadataProvider {
       `;
       classInfo = await this.createECClassInfo(
         this._queryReaderFactory(classQuery, QueryBinder.from({ id }), {
-          rowFormat: QueryRowFormat.UseJsPropertyNames,
+          rowFormat: QueryRowFormat.UseECSqlPropertyNames,
           restartToken: `${this.#componentName}/${this.#componentId}/class-by-id/${id}`,
         }),
       );
@@ -97,10 +98,9 @@ export class ECMetadataProvider {
         ${classQueryBase}
         WHERE classDef.Name = :className AND schemaDef.Name = :schemaName
       `;
-      const [schemaName, className] = this.splitFullClassName(name);
       classInfo = await this.createECClassInfo(
-        this._queryReaderFactory(classQuery, QueryBinder.from({ schemaName, className }), {
-          rowFormat: QueryRowFormat.UseJsPropertyNames,
+        this._queryReaderFactory(classQuery, QueryBinder.from(parseFullClassName(name)), {
+          rowFormat: QueryRowFormat.UseECSqlPropertyNames,
           restartToken: `${this.#componentName}/${this.#componentId}/class-by-name/${name}`,
         }),
       );
@@ -111,11 +111,11 @@ export class ECMetadataProvider {
 
   private async createECClassInfo(reader: ECSqlReader) {
     while (await reader.step()) {
-      const classHierarchy = await this.queryClassHierarchyInfo(reader.current.id);
+      const classHierarchy = await this.queryClassHierarchyInfo(reader.current.Id);
       return new ECClassInfo(
-        reader.current.id,
-        reader.current.name,
-        reader.current.label,
+        reader.current.Id,
+        reader.current.Name,
+        reader.current.Label,
         classHierarchy.baseClasses,
         classHierarchy.derivedClasses,
       );
@@ -127,35 +127,30 @@ export class ECMetadataProvider {
     id: Id64String,
   ): Promise<{ baseClasses: Set<Id64String>; derivedClasses: Set<Id64String> }> {
     const classHierarchyQuery = `
-      SELECT chc.TargetECInstanceId baseId, chc.SourceECInstanceId derivedId
+      SELECT chc.TargetECInstanceId BaseId, chc.SourceECInstanceId DerivedId
       FROM meta.ClassHasAllBaseClasses chc
       WHERE chc.SourceECInstanceId = :id OR chc.TargetECInstanceId = :id
     `;
 
     const hierarchy = { baseClasses: new Set<Id64String>(), derivedClasses: new Set<Id64String>() };
     const reader = this._queryReaderFactory(classHierarchyQuery, QueryBinder.from({ id }), {
-      rowFormat: QueryRowFormat.UseJsPropertyNames,
+      rowFormat: QueryRowFormat.UseECSqlPropertyNames,
       restartToken: `${this.#componentName}/${this.#componentId}/class-hierarchy/${id}`,
     });
     while (await reader.step()) {
-      if (reader.current.baseId === id) {
-        hierarchy.derivedClasses.add(reader.current.derivedId);
+      if (reader.current.BaseId === id) {
+        hierarchy.derivedClasses.add(reader.current.DerivedId);
       }
-      if (reader.current.derivedId === id) {
-        hierarchy.baseClasses.add(reader.current.baseId);
+      if (reader.current.DerivedId === id) {
+        hierarchy.baseClasses.add(reader.current.BaseId);
       }
     }
     return hierarchy;
   }
-
-  private splitFullClassName(fullName: string): [string, string] {
-    const [schemaName, className] = fullName.split(fullName.includes(".") ? "." : ":");
-    return [schemaName, className];
-  }
 }
 
 const classQueryBase = `
-  SELECT classDef.ECInstanceId id, (schemaDef.Name || ':' || classDef.Name) name, COALESCE(classDef.DisplayLabel, classDef.name) label
+  SELECT classDef.ECInstanceId Id, (schemaDef.Name || ':' || classDef.Name) Name, COALESCE(classDef.DisplayLabel, classDef.Name) Label
   FROM meta.ECClassDef classDef
   JOIN meta.ECSchemaDef schemaDef ON classDef.Schema.Id = schemaDef.ECInstanceId
 `;
