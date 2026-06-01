@@ -354,7 +354,10 @@ describe("createClassSelector", () => {
   });
 
   it("throws on invalid full class name", () => {
-    expect(() => createClassSelector("invalid" as any)).to.throw();
+    expect(() => createClassSelector(".c")).to.throw();
+    expect(() => createClassSelector(":c")).to.throw();
+    expect(() => createClassSelector("s.")).to.throw();
+    expect(() => createClassSelector("s:")).to.throw();
   });
 });
 
