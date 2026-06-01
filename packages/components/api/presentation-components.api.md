@@ -204,6 +204,10 @@ export interface FavoritePropertiesDataFiltererProps {
 
 // @public
 export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataProvider {
+    constructor(props: FavoritePropertiesDataProviderProps & {
+        activeScopeProvider: NonNullable<FavoritePropertiesDataProviderProps["activeScopeProvider"]>;
+    });
+    // @deprecated
     constructor(props?: FavoritePropertiesDataProviderProps);
     getData(imodel: IModelConnection, elementIds: Id64Arg | KeySet): Promise<PropertyData>;
     // @deprecated
