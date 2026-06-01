@@ -11,9 +11,23 @@ import { assert } from "@itwin/core-bentley";
  * @public
  */
 export function parseFullClassName(fullClassName: string) {
-  const [schemaName, className] = fullClassName.split(/[\.:]/);
-  assert(!!schemaName && !!className, "Invalid full class name");
-  return { schemaName, className };
+  let idx = fullClassName.indexOf(".");
+  let includesDot = true;
+  if (idx <= 0) {
+    includesDot = false;
+    idx = fullClassName.indexOf(":");
+    if (idx <= 0) {
+      throw new Error(`Invalid full class name: ${fullClassName}`);
+    }
+  }
+  assert(() => {
+    if (includesDot) {
+      return fullClassName.lastIndexOf(".") === idx && fullClassName.indexOf(":") === -1;
+    }
+    return fullClassName.lastIndexOf(":") === idx;
+  }, `Invalid full class name: ${fullClassName}`);
+
+  return { schemaName: fullClassName.slice(0, idx), className: fullClassName.slice(idx + 1) };
 }
 
 /**

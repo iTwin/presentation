@@ -3,13 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { beforeEach, describe, expect, it, MockInstance, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createMainThreadReleaseOnTimePassedHandler,
   normalizeFullClassName,
   parseFullClassName,
   trimWhitespace,
 } from "../shared/Utils.js";
+
+import type { MockInstance } from "vitest";
 
 describe("parseFullClassName", () => {
   it("parses valid full class names", () => {
@@ -19,6 +21,10 @@ describe("parseFullClassName", () => {
 
   it("throws on invalid full class name", () => {
     expect(() => parseFullClassName("invalid")).toThrow();
+    expect(() => parseFullClassName("schema.class.invalid")).toThrow();
+    expect(() => parseFullClassName("schema.class:invalid")).toThrow();
+    expect(() => parseFullClassName("schema:class:invalid")).toThrow();
+    expect(() => parseFullClassName("schema:class.invalid")).toThrow();
   });
 });
 
