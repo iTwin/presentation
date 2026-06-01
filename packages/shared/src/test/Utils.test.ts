@@ -19,6 +19,14 @@ describe("parseFullClassName", () => {
 
   it("throws on invalid full class name", () => {
     expect(() => parseFullClassName("invalid")).toThrow();
+    expect(() => parseFullClassName("schema.class.invalid")).toThrow();
+    expect(() => parseFullClassName("schema.class:invalid")).toThrow();
+    expect(() => parseFullClassName("schema:class:invalid")).toThrow();
+    expect(() => parseFullClassName("schema:class.invalid")).toThrow();
+    expect(() => parseFullClassName("schema.")).toThrow();
+    expect(() => parseFullClassName("schema:")).toThrow();
+    expect(() => parseFullClassName(".class")).toThrow();
+    expect(() => parseFullClassName(":class")).toThrow();
   });
 });
 
