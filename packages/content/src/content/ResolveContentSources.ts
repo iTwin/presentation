@@ -187,7 +187,13 @@ const ALL_STRATEGIES: ResolutionQueryStrategy[] = [originalStrategy, rewriteStra
 
 // --- Query execution ---
 
-async function raceQueryExecution(executor: ECSqlQueryExecutor, queries: ECSqlQueryDef[]): Promise<ECSqlQueryRow[]> {
+async function raceQueryExecution({
+  executor,
+  queries,
+}: {
+  executor: ECSqlQueryExecutor;
+  queries: ECSqlQueryDef[];
+}): Promise<ECSqlQueryRow[]> {
   if (queries.length === 1) {
     const result: ECSqlQueryRow[] = [];
     for await (const row of executor.createQueryReader(queries[0], { rowFormat: "Indexes" })) {
@@ -220,11 +226,15 @@ async function raceQueryExecution(executor: ECSqlQueryExecutor, queries: ECSqlQu
 
 // --- Result mapping ---
 
-function mapRowsToConcretePaths(
-  rows: ECSqlQueryRow[],
-  originalPath: RelationshipPath,
-  target: ContentTarget,
-): RelationshipPath[] {
+function mapRowsToConcretePaths({
+  rows,
+  originalPath,
+  target,
+}: {
+  rows: ECSqlQueryRow[];
+  originalPath: RelationshipPath;
+  target: ContentTarget;
+}): RelationshipPath[] {
   return rows.map((row) =>
     originalPath.map((step: RelationshipPath[number], i: number) => ({
       ...step,
@@ -236,17 +246,21 @@ function mapRowsToConcretePaths(
 
 // --- Declaration resolution ---
 
-async function resolveDeclarationPaths(
-  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider,
-  target: ContentTarget,
+async function resolveDeclarationPaths({
+  imodelAccess,
+  target,
+  declaration,
+}: {
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  target: ContentTarget;
   declaration: {
     path: RelationshipPath;
     resolve?: (props: {
       imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
       target: ContentTarget;
     }) => Promise<RelationshipPath[]>;
-  },
-): Promise<RelationshipPath[]> {
+  };
+}): Promise<RelationshipPath[]> {
   if (declaration.resolve) {
     return declaration.resolve({ imodelAccess, target });
   }
@@ -262,18 +276,22 @@ async function resolveDeclarationPaths(
 
   const applicable = ALL_STRATEGIES.filter((s) => s.isApplicable(ctx));
   const queries = await Promise.all(applicable.map(async (s) => s.buildQuery(ctx)));
-  const rows = await raceQueryExecution(imodelAccess, queries);
+  const rows = await raceQueryExecution({ executor: imodelAccess, queries });
 
-  return mapRowsToConcretePaths(rows, declaration.path, target);
+  return mapRowsToConcretePaths({ rows, originalPath: declaration.path, target });
 }
 
 // --- Target resolution ---
 
-function resolveTarget(
-  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider,
-  providers: IModelFieldsProvider[],
-  target: ContentTarget,
-): Observable<ContentSource> {
+function resolveTarget({
+  imodelAccess,
+  providers,
+  target,
+}: {
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  providers: IModelFieldsProvider[];
+  target: ContentTarget;
+}): Observable<ContentSource> {
   return from(providers.map((provider, providerIdx) => ({ provider, providerIdx }))).pipe(
     mergeMap(async ({ provider, providerIdx }) => ({
       provider,
@@ -289,7 +307,7 @@ function resolveTarget(
           providerIdx,
           providerId: provider.id,
           declarationIndex: declIdx,
-          paths: await resolveDeclarationPaths(imodelAccess, target, declaration),
+          paths: await resolveDeclarationPaths({ imodelAccess, target, declaration }),
         })),
       );
     }),
@@ -323,7 +341,9 @@ export async function resolveContentSources(props: {
   return lastValueFrom(
     from(props.targets.map((target, idx) => ({ target, idx }))).pipe(
       mergeMap(({ target, idx }) =>
-        resolveTarget(props.imodelAccess, props.fieldsProviders, target).pipe(map((source) => ({ source, idx }))),
+        resolveTarget({ imodelAccess: props.imodelAccess, providers: props.fieldsProviders, target }).pipe(
+          map((source) => ({ source, idx })),
+        ),
       ),
       toArray(),
       map((items) => {
