@@ -29,8 +29,8 @@ import {
   Ruleset,
   Value,
 } from "@itwin/presentation-common";
-import { createSelectionScopeProps, Presentation, SelectionScopesManager } from "@itwin/presentation-frontend";
-import { computeSelection, Selectables } from "@itwin/unified-selection";
+import { Presentation } from "@itwin/presentation-frontend";
+import { Selectables } from "@itwin/unified-selection";
 
 /** @internal */
 export const localizationNamespaceName = "PresentationComponents";
@@ -277,37 +277,6 @@ export async function createKeySetFromSelectables(selectables: Selectables): Pro
   }
   return keys;
 }
-
-/* v8 ignore start -- @preserve */
-
-export function mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  scope: SelectionScopesManager["activeScope"],
-): Parameters<typeof computeSelection>[0]["scope"] {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  const scopeProps = createSelectionScopeProps(scope);
-  switch (scopeProps.id) {
-    case "functional-element":
-      return { id: "functional" };
-    case "functional-assembly":
-      return { id: "functional", ancestorLevel: 1 };
-    case "functional-top-assembly":
-      return { id: "functional", ancestorLevel: -1 };
-    case "element":
-      return { id: "element" };
-    case "assembly":
-      return { id: "element", ancestorLevel: 1 };
-    case "top-assembly":
-      return { id: "element", ancestorLevel: -1 };
-    case "category":
-      return { id: "category" };
-    case "model":
-      return { id: "model" };
-  }
-  throw new Error(`Unknown selection scope: "${scopeProps.id}"`);
-}
-
-/* v8 ignore stop -- @preserve */
 
 /**
  * A helper that disposes the given object, if it's disposable.

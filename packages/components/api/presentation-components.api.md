@@ -201,7 +201,7 @@ export interface FavoritePropertiesDataFiltererProps {
 
 // @public
 export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataProvider {
-    constructor(props?: FavoritePropertiesDataProviderProps);
+    constructor(props: FavoritePropertiesDataProviderProps);
     getData(imodel: IModelConnection, elementIds: Id64Arg | KeySet): Promise<PropertyData>;
     // @deprecated
     includeFieldsWithCompositeValues: boolean;
@@ -211,7 +211,7 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
 
 // @public
 export interface FavoritePropertiesDataProviderProps {
-    activeScopeProvider?: () => Parameters<typeof computeSelection>[0]["scope"];
+    activeScopeProvider: () => Parameters<typeof computeSelection>[0]["scope"];
     ruleset?: Ruleset | string;
 }
 
