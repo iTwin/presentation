@@ -3,11 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { filter, from, lastValueFrom, map, mergeMap, toArray } from "rxjs";
+import { Observable, filter, finalize, from, lastValueFrom, map, mergeMap, race, toArray } from "rxjs";
 import { ECSql } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX } from "./InternalUtils.js";
 
-import type { Observable } from "rxjs";
 import type {
   EC,
   ECSchemaProvider,
@@ -187,61 +186,21 @@ const ALL_STRATEGIES: ResolutionQueryStrategy[] = [originalStrategy, rewriteStra
 
 // --- Query execution ---
 
-async function raceQueryExecution({
+function raceQueryExecution({
   executor,
   queries,
 }: {
   executor: ECSqlQueryExecutor;
   queries: ECSqlQueryDef[];
-}): Promise<ECSqlQueryRow[]> {
-  if (queries.length === 1) {
-    const result: ECSqlQueryRow[] = [];
-    for await (const row of executor.createQueryReader(queries[0], { rowFormat: "Indexes" })) {
-      result.push(row);
+}): Observable<ECSqlQueryRow> {
+  const streams = queries.map(
+    (query) => {
+      const reader = executor.createQueryReader(query, { rowFormat: "Indexes" });
+      // Calling `return()` on the iterator should cancel the query execution on the backend and free up resources
+      return from(reader).pipe(finalize(() => void reader.return?.(undefined)));
     }
-    return result;
-  }
-
-  const readers = queries.map((query) => executor.createQueryReader(query, { rowFormat: "Indexes" }));
-
-  const { rows, winnerIndex } = await Promise.race(
-    readers.map(async (reader, index) => {
-      const collected: ECSqlQueryRow[] = [];
-      for await (const row of reader) {
-        collected.push(row);
-      }
-      return { rows: collected, winnerIndex: index };
-    }),
   );
-
-  // Calling `return()` on the iterator should cancel the query execution on the backend and free up resources
-  for (let i = 0; i < readers.length; i++) {
-    if (i !== winnerIndex) {
-      void readers[i].return?.(undefined);
-    }
-  }
-
-  return rows;
-}
-
-// --- Result mapping ---
-
-function mapRowsToConcretePaths({
-  rows,
-  originalPath,
-  target,
-}: {
-  rows: ECSqlQueryRow[];
-  originalPath: RelationshipPath;
-  target: ContentTarget;
-}): RelationshipPath[] {
-  return rows.map((row) =>
-    originalPath.map((step: RelationshipPath[number], i: number) => ({
-      ...step,
-      sourceClassName: (i === 0 ? target.primaryClass : row[i - 1]) as EC.FullClassName,
-      targetClassName: row[i] as EC.FullClassName,
-    })),
-  );
+  return race(streams);
 }
 
 // --- Declaration resolution ---
@@ -267,12 +226,19 @@ async function resolveDeclarationPaths({
     joinType: "inner" as const,
   }));
   const ctx: ResolutionQueryContext = { target, joinPath, schemaProvider: imodelAccess };
-
-  const applicable = ALL_STRATEGIES.filter((s) => s.isApplicable(ctx));
-  const queries = await Promise.all(applicable.map(async (s) => s.buildQuery(ctx)));
-  const rows = await raceQueryExecution({ executor: imodelAccess, queries });
-
-  return mapRowsToConcretePaths({ rows, originalPath: declaration.path, target });
+  const strategies = ALL_STRATEGIES.filter((s) => s.isApplicable(ctx));
+  const queries = await Promise.all(strategies.map(async (s) => s.buildQuery(ctx)));
+  const rows = raceQueryExecution({ executor: imodelAccess, queries });
+  return lastValueFrom(rows.pipe(
+    map((row) =>
+      declaration.path.map((step: RelationshipPath[number], i: number) => ({
+        ...step,
+        sourceClassName: (i === 0 ? target.primaryClass : row[i - 1]) as EC.FullClassName,
+        targetClassName: row[i] as EC.FullClassName,
+      })),
+    ),
+    toArray(),
+  ));
 }
 
 // --- Target resolution ---

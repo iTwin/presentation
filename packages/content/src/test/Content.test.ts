@@ -116,6 +116,27 @@ describe("resolveContentSources", () => {
       });
       expect(result[0].resolvedDeclarations).to.deep.equal([]);
     });
+
+    it("propagates error when query reader throws", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
+      const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
+      const queryError = new Error("query failed");
+      const imodelAccess = {
+        ...createMockIModelAccess(),
+        createQueryReader: vi.fn(
+          (): AsyncIterableIterator<ECSqlQueryRow> => (async function* (): AsyncGenerator<ECSqlQueryRow> { throw queryError; })(),
+        ),
+      };
+      await expect(
+        resolveContentSources({ imodelAccess, targets: [targetA], config: { fieldsProviders: [provider] } }),
+      ).rejects.toThrow(queryError);
+    });
   });
 
   describe("single-step path resolution", () => {
