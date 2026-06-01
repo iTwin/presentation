@@ -21,10 +21,12 @@ export function parseFullClassName(fullClassName: string) {
     }
   }
   assert(() => {
-    if (includesDot) {
-      return fullClassName.lastIndexOf(".") === idx && fullClassName.indexOf(":") === -1;
-    }
-    return fullClassName.lastIndexOf(":") === idx;
+    return (
+      idx < fullClassName.length - 1 &&
+      (includesDot
+        ? fullClassName.lastIndexOf(".") === idx && fullClassName.indexOf(":") === -1
+        : fullClassName.lastIndexOf(":") === idx)
+    );
   }, `Invalid full class name: ${fullClassName}`);
 
   return { schemaName: fullClassName.slice(0, idx), className: fullClassName.slice(idx + 1) };
