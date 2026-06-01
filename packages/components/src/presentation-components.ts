@@ -57,6 +57,7 @@ export * from "./presentation-components/propertygrid/FavoritePropertiesDataFilt
 export {
   PropertyDataProviderWithUnifiedSelectionProps,
   UsePropertyDataProviderWithUnifiedSelectionResult,
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   usePropertyDataProviderWithUnifiedSelection,
 } from "./presentation-components/propertygrid/UseUnifiedSelection.js";
 
