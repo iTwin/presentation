@@ -290,7 +290,7 @@ function resolveTarget({
 
 // --- Public entry point ---
 
-export async function resolveContentSources(props: {
+export async function resolveContentSourcesImpl(props: {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   targets: ContentTarget[];
   fieldsProviders: IModelFieldsProvider[];

@@ -33,7 +33,7 @@
  *   - Merges external values into the final `ContentItem` accessors.
  */
 
-import { resolveContentSources as resolveContentSourcesImpl } from "./ResolveContentSources.js";
+import { resolveContentSourcesImpl } from "./ResolveContentSources.js";
 
 import type { ECSchemaProvider, ECSqlQueryExecutor, InstanceKey, Value } from "@itwin/presentation-shared";
 import type { ContentSource, ContentTarget } from "./ContentTarget.js";
