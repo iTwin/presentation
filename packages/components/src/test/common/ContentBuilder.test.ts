@@ -15,8 +15,11 @@ import {
 import { createContentTraverser, EnumerationInfo, PropertyValueFormat } from "@itwin/presentation-common";
 import { PropertyValueConstraints, WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
 import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder.js";
-import { NumericEditorName } from "../../presentation-components/properties/editors/NumericPropertyEditor.js";
-import { QuantityEditorName } from "../../presentation-components/properties/editors/QuantityPropertyEditor.js";
+import {
+  NavigationEditorName,
+  NumericEditorName,
+  QuantityEditorName,
+} from "../../presentation-components/properties/editors/EditorNames.js";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -173,6 +176,20 @@ describe("PropertyRecordsBuilder", () => {
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries).toHaveLength(1);
     expect(builder.entries[0].property.editor).toEqual({ name: NumericEditorName });
+  });
+
+  it("sets editor name when field typeName is Navigation", () => {
+    const descriptor = createTestContentDescriptor({
+      fields: [
+        createTestSimpleContentField({
+          type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Navigation },
+        }),
+      ],
+    });
+    const item = createTestContentItem({ values: {}, displayValues: {} });
+    createContentTraverser(builder)(descriptor, [item]);
+    expect(builder.entries).toHaveLength(1);
+    expect(builder.entries[0].property.editor).toEqual({ name: NavigationEditorName });
   });
 
   it("does not override custom editor when field typeName is Number", () => {

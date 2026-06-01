@@ -9,12 +9,6 @@ import { QuantityPropertyEditorInput } from "../inputs/QuantityPropertyEditorInp
 import { PropertyEditorAttributes } from "./Common.js";
 
 /**
- * Name for `QuantityPropertyEditor`.
- * @internal
- */
-export const QuantityEditorName = "presentation-quantity-editor";
-
-/**
  * Editor for quantity properties.
  * @internal
  */
