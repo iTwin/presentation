@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Observable, filter, finalize, from, lastValueFrom, map, mergeMap, race, toArray } from "rxjs";
+import { filter, finalize, from, lastValueFrom, map, mergeMap, race, toArray } from "rxjs";
 import { ECSql } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX } from "./InternalUtils.js";
 
+import type { Observable } from "rxjs";
 import type {
   EC,
   ECSchemaProvider,
@@ -118,17 +119,14 @@ const rewriteStrategy: ResolutionQueryStrategy = {
     const { target, joinPath, schemaProvider } = ctx;
     const targetFilter = buildTargetFilter(target);
 
-    const [{ joins: firstStepJoins, bindings: firstStepBindings }, { joins: remainingJoins, bindings: remainingBindings }] = await Promise.all([
+    const [
+      { joins: firstStepJoins, bindings: firstStepBindings },
+      { joins: remainingJoins, bindings: remainingBindings },
+    ] = await Promise.all([
       // First step joins (for the subquery anchoring at source)
-      ECSql.createRelationshipPathJoinClause({
-        schemaProvider,
-        path: [joinPath[0]],
-      }),
+      ECSql.createRelationshipPathJoinClause({ schemaProvider, path: [joinPath[0]] }),
       // Remaining step joins (for the outer query anchored at first hop's target)
-      ECSql.createRelationshipPathJoinClause({
-        schemaProvider,
-        path: joinPath.slice(1),
-      }),
+      ECSql.createRelationshipPathJoinClause({ schemaProvider, path: joinPath.slice(1) }),
     ]);
 
     // Anchor at first hop's target class
@@ -194,13 +192,11 @@ function raceQueryExecution({
   executor: ECSqlQueryExecutor;
   queries: ECSqlQueryDef[];
 }): Observable<ECSqlQueryRow> {
-  const streams = queries.map(
-    (query) => {
-      const reader = executor.createQueryReader(query, { rowFormat: "Indexes" });
-      // Calling `return()` on the iterator should cancel the query execution on the backend and free up resources
-      return from(reader).pipe(finalize(() => void reader.return?.(undefined)));
-    }
-  );
+  const streams = queries.map((query) => {
+    const reader = executor.createQueryReader(query, { rowFormat: "Indexes" });
+    // Calling `return()` on the iterator should cancel the query execution on the backend and free up resources
+    return from(reader).pipe(finalize(() => void reader.return?.(undefined)));
+  });
   return race(streams);
 }
 
@@ -230,16 +226,18 @@ async function resolveDeclarationPaths({
   const strategies = ALL_STRATEGIES.filter((s) => s.isApplicable(ctx));
   const queries = await Promise.all(strategies.map(async (s) => s.buildQuery(ctx)));
   const rows = raceQueryExecution({ executor: imodelAccess, queries });
-  return lastValueFrom(rows.pipe(
-    map((row) =>
-      declaration.path.map((step: RelationshipPath[number], i: number) => ({
-        ...step,
-        sourceClassName: (i === 0 ? target.primaryClass : row[i - 1]) as EC.FullClassName,
-        targetClassName: row[i] as EC.FullClassName,
-      })),
+  return lastValueFrom(
+    rows.pipe(
+      map((row) =>
+        declaration.path.map((step: RelationshipPath[number], i: number) => ({
+          ...step,
+          sourceClassName: (i === 0 ? target.primaryClass : row[i - 1]) as EC.FullClassName,
+          targetClassName: row[i] as EC.FullClassName,
+        })),
+      ),
+      toArray(),
     ),
-    toArray(),
-  ));
+  );
 }
 
 // --- Target resolution ---

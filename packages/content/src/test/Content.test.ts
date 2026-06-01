@@ -130,7 +130,10 @@ describe("resolveContentSources", () => {
       const imodelAccess = {
         ...createMockIModelAccess(),
         createQueryReader: vi.fn(
-          (): AsyncIterableIterator<ECSqlQueryRow> => (async function* (): AsyncGenerator<ECSqlQueryRow> { throw queryError; })(),
+          (): AsyncIterableIterator<ECSqlQueryRow> =>
+            (async function* (): AsyncGenerator<ECSqlQueryRow> {
+              throw queryError;
+            })(),
         ),
       };
       await expect(
