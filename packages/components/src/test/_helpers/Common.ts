@@ -159,7 +159,7 @@ export class TestErrorBoundary extends Component<TestErrorBoundaryProps, TestErr
   public override componentDidCatch(error: Error, info: any) {
     this.props.onError(error, info.componentStack);
   }
-  public override render() {
+  public override async render() {
     if (this.state.hasError) {
       return null;
     }
