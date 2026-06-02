@@ -34,6 +34,11 @@ if (uiVersion) {
   applyGitPatch(`ui-${uiVersion}.patch`);
 }
 
+// AppUI 4.9 does not support React 19
+if (uiVersion === "4.9.0") {
+  downgradeReactCatalog();
+}
+
 const [{ name: workspaceRootName, path: workspaceRootPath }] = JSON.parse(
   execSync("pnpm list -w --only-projects --json", { encoding: "utf-8" }),
 );
@@ -172,4 +177,20 @@ function applyGitPatch(patchFile) {
     console.log(`Error applying patch file "${patchFile}": ${e.message}`);
     process.exit(1);
   }
+}
+
+function downgradeReactCatalog() {
+  const workspaceFilePath = path.join(__dirname, "../../pnpm-workspace.yaml");
+  const workspaceFile = fs.readFileSync(workspaceFilePath, "utf8");
+  const workspace = YAML.parse(workspaceFile);
+
+  if (workspace.catalogs["react"]) {
+    console.log("Downgrading react catalog entries to ^18.0.0 (required by AppUI 4.9)");
+    workspace.catalogs["react"]["react"] = "^18.0.0";
+    workspace.catalogs["react"]["react-dom"] = "^18.0.0";
+    workspace.catalogs["react"]["@types/react"] = "^18.0.0";
+    workspace.catalogs["react"]["@types/react-dom"] = "^18.0.0";
+  }
+
+  fs.writeFileSync(workspaceFilePath, YAML.stringify(workspace), "utf8");
 }
