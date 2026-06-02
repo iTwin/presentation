@@ -120,7 +120,7 @@ export function stubVirtualization() {
 
 /** Props for `TestErrorBoundary` */
 export interface TestErrorBoundaryProps {
-  children: React.ReactNode;
+  children: React.ReactElement;
   onError: (error: Error, componentStack: any) => void;
 }
 /** Internal state of `TestErrorBoundary` */
@@ -159,7 +159,7 @@ export class TestErrorBoundary extends Component<TestErrorBoundaryProps, TestErr
   public override componentDidCatch(error: Error, info: any) {
     this.props.onError(error, info.componentStack);
   }
-  public override async render() {
+    public override render() {
     if (this.state.hasError) {
       return null;
     }
