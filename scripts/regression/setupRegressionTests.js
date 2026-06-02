@@ -34,10 +34,8 @@ if (uiVersion) {
   applyGitPatch(`ui-${uiVersion}.patch`);
 }
 
-// AppUI 4.9 does not support React 19
-if (uiVersion === "4.9.0") {
-  downgradeReactCatalog();
-}
+// React 19 support was added in AppUI 5.x, downgrade for all regression versions
+downgradeReactCatalog();
 
 const [{ name: workspaceRootName, path: workspaceRootPath }] = JSON.parse(
   execSync("pnpm list -w --only-projects --json", { encoding: "utf-8" }),
@@ -103,6 +101,12 @@ function overrideDevDeps(pkgJsonData, coreVersion, uiVersion) {
     // add all core and appui package to devDependencies to make sure they are resolved to expected versions
     pkgJsonData.devDependencies[packageName] = version;
   });
+
+  // React 19 support was added in AppUI 5.x, downgrade for all regression versions
+  pkgJsonData.devDependencies["react"] = "^18.0.0";
+  pkgJsonData.devDependencies["react-dom"] = "^18.0.0";
+  pkgJsonData.devDependencies["@types/react"] = "^18.0.0";
+  pkgJsonData.devDependencies["@types/react-dom"] = "^18.0.0";
 }
 
 function useLocalTarballs(pkgJsonData, localPackagesPath) {
@@ -197,6 +201,9 @@ function downgradeReactCatalog() {
   workspace.overrides["react-dom"] = "^18.0.0";
   workspace.overrides["@types/react"] = "^18.0.0";
   workspace.overrides["@types/react-dom"] = "^18.0.0";
+
+  // Remove peerDependencyRules for react 19 since we're downgrading to 18
+  delete workspace.peerDependencyRules;
 
   fs.writeFileSync(workspaceFilePath, YAML.stringify(workspace), "utf8");
 }
