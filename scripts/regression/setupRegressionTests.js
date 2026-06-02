@@ -103,10 +103,10 @@ function overrideDevDeps(pkgJsonData, coreVersion, uiVersion) {
   });
 
   // React 19 support was added in AppUI 5.x, downgrade for all regression versions
-  pkgJsonData.devDependencies["react"] = "^18.0.0";
-  pkgJsonData.devDependencies["react-dom"] = "^18.0.0";
-  pkgJsonData.devDependencies["@types/react"] = "^18.0.0";
-  pkgJsonData.devDependencies["@types/react-dom"] = "^18.0.0";
+  pkgJsonData.devDependencies["react"] = "18.3.1";
+  pkgJsonData.devDependencies["react-dom"] = "18.3.1";
+  pkgJsonData.devDependencies["@types/react"] = "18.3.1";
+  pkgJsonData.devDependencies["@types/react-dom"] = "18.3.1";
 }
 
 function useLocalTarballs(pkgJsonData, localPackagesPath) {
@@ -189,18 +189,18 @@ function downgradeReactCatalog() {
   const workspace = YAML.parse(workspaceFile);
 
   if (workspace.catalogs["react"]) {
-    console.log("Downgrading react catalog entries to ^18.0.0 (required by AppUI 4.9)");
-    workspace.catalogs["react"]["react"] = "^18.0.0";
-    workspace.catalogs["react"]["react-dom"] = "^18.0.0";
-    workspace.catalogs["react"]["@types/react"] = "^18.0.0";
-    workspace.catalogs["react"]["@types/react-dom"] = "^18.0.0";
+    console.log("Downgrading react catalog entries to 18.3.1 (required by AppUI < 5.x)");
+    workspace.catalogs["react"]["react"] = "18.3.1";
+    workspace.catalogs["react"]["react-dom"] = "18.3.1";
+    workspace.catalogs["react"]["@types/react"] = "18.3.1";
+    workspace.catalogs["react"]["@types/react-dom"] = "18.3.1";
   }
 
-  // Force all react resolutions to 18 (overrides autoInstallPeers resolving to 19)
-  workspace.overrides["react"] = "^18.0.0";
-  workspace.overrides["react-dom"] = "^18.0.0";
-  workspace.overrides["@types/react"] = "^18.0.0";
-  workspace.overrides["@types/react-dom"] = "^18.0.0";
+  // Pin exact versions to prevent dual-instance with resolutionMode: lowest-direct
+  workspace.overrides["react"] = "18.3.1";
+  workspace.overrides["react-dom"] = "18.3.1";
+  workspace.overrides["@types/react"] = "18.3.1";
+  workspace.overrides["@types/react-dom"] = "18.3.1";
 
   // Remove peerDependencyRules for react 19 since we're downgrading to 18
   delete workspace.peerDependencyRules;
