@@ -180,22 +180,22 @@ async function getRelationshipPathStepClasses(
 async function getNavigationProperty(step: ResolvedRelationshipPathStep): Promise<EC.NavigationProperty | undefined> {
   const source = !step.relationshipReverse ? step.source : step.target;
   const target = !step.relationshipReverse ? step.target : step.source;
-  for (const prop of await source.getProperties()) {
+  for (const prop of source.getProperties()) {
     /* v8 ignore else -- @preserve */
     if (
       prop.isNavigation() &&
       prop.direction === "Forward" &&
-      (await prop.relationshipClass).fullName === step.relationship.fullName
+      prop.relationshipClass.fullName === step.relationship.fullName
     ) {
       return prop;
     }
   }
-  for (const prop of await target.getProperties()) {
+  for (const prop of target.getProperties()) {
     /* v8 ignore else -- @preserve */
     if (
       prop.isNavigation() &&
       prop.direction === "Backward" &&
-      (await prop.relationshipClass).fullName === step.relationship.fullName
+      prop.relationshipClass.fullName === step.relationship.fullName
     ) {
       return prop;
     }

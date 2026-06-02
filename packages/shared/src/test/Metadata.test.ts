@@ -15,12 +15,12 @@ describe("createCachingECClassHierarchyInspector", () => {
 
   it("returns `true` when candidate is base class", async () => {
     schemaProvider.getSchema.mockResolvedValue({
-      getClass: async (className: string) => {
+      getClass: (className: string) => {
         switch (className) {
           case "b":
-            return { fullName: "a.b", is: async () => true };
+            return { fullName: "a.b", is: () => true };
           case "d":
-            return { fullName: "c.d", is: async () => false };
+            return { fullName: "c.d", is: () => false };
         }
         return undefined;
       },
@@ -31,12 +31,12 @@ describe("createCachingECClassHierarchyInspector", () => {
 
   it("returns `false` when candidate is not base class", async () => {
     schemaProvider.getSchema.mockResolvedValue({
-      getClass: async (className: string) => {
+      getClass: (className: string) => {
         switch (className) {
           case "b":
-            return { fullName: "a.b", is: async () => false };
+            return { fullName: "a.b", is: () => false };
           case "d":
-            return { fullName: "c.d", is: async () => true };
+            return { fullName: "c.d", is: () => true };
         }
         return undefined;
       },
@@ -46,12 +46,12 @@ describe("createCachingECClassHierarchyInspector", () => {
   });
 
   it("returns the same Promise when called with exact same arguments", async () => {
-    const getClassStub = vi.fn(async (className: string) => {
+    const getClassStub = vi.fn((className: string) => {
       switch (className) {
         case "b":
-          return { fullName: "a.b", is: async () => false };
+          return { fullName: "a.b", is: () => false };
         case "d":
-          return { fullName: "c.d", is: async () => false };
+          return { fullName: "c.d", is: () => false };
       }
       return undefined;
     });
@@ -68,12 +68,12 @@ describe("createCachingECClassHierarchyInspector", () => {
   });
 
   it("returns cached non-Promise value when called with exact same arguments after awaiting on the initial call", async () => {
-    const getClassStub = vi.fn(async (className: string) => {
+    const getClassStub = vi.fn((className: string) => {
       switch (className) {
         case "b":
-          return { fullName: "a.b", is: async () => false };
+          return { fullName: "a.b", is: () => false };
         case "d":
-          return { fullName: "c.d", is: async () => false };
+          return { fullName: "c.d", is: () => false };
       }
       return undefined;
     });
@@ -107,13 +107,13 @@ describe("getClass", () => {
   });
 
   it("throws when class does not exist", async () => {
-    schemaProvider.getSchema.mockResolvedValue({ getClass: async () => undefined });
+    schemaProvider.getSchema.mockResolvedValue({ getClass: () => undefined });
     await expect(getClass(schemaProvider, "x.y")).rejects.toThrow();
   });
 
   it("throws when `getClass` call throws", async () => {
     schemaProvider.getSchema.mockResolvedValue({
-      getClass: async () => {
+      getClass: () => {
         throw new Error("some error");
       },
     });
@@ -121,7 +121,7 @@ describe("getClass", () => {
   });
 
   it("returns class", async () => {
-    const getClassStub = vi.fn().mockResolvedValue({ fullName: "result class" });
+    const getClassStub = vi.fn().mockReturnValue({ fullName: "result class" });
     schemaProvider.getSchema.mockResolvedValue({ getClass: getClassStub });
     const result = await getClass(schemaProvider, "x.y");
     expect(schemaProvider.getSchema).toHaveBeenCalledExactlyOnceWith("x");

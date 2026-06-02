@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResolvablePromise } from "presentation-test-utilities";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createRelationshipPathJoinClause } from "../../shared/ecsql-snippets/ECSqlJoinSnippets.js";
 import { trimWhitespace } from "../../shared/Utils.js";
@@ -685,23 +684,14 @@ describe("createRelationshipPathJoinClause", () => {
     relationship?: Partial<Omit<EC.RelationshipClass, "is">> | string;
     target?: Partial<Omit<EC.Class, "is">> | string;
   }) {
-    const navigationRelationshipRes = new ResolvablePromise<EC.RelationshipClass>();
-    const navigationProperty = {
-      name: props.navigationPropertyName ?? "navigation-property",
-      isNavigation: () => true,
-      direction: props.navigationPropertyDirection,
-      relationshipClass: navigationRelationshipRes,
-    } as unknown as EC.NavigationProperty;
     const sourceClass = schemaProvider.stubEntityClass({
       schemaName,
       className: typeof props.source === "string" ? props.source : "source",
-      properties: props.navigationPropertyDirection === "Forward" ? [navigationProperty] : [],
       ...(typeof props.source === "object" ? props.source : undefined),
     });
     const targetClass = schemaProvider.stubEntityClass({
       schemaName,
       className: typeof props.target === "string" ? props.target : "target",
-      properties: props.navigationPropertyDirection === "Backward" ? [navigationProperty] : [],
       ...(typeof props.target === "object" ? props.target : undefined),
     });
     const relationship = schemaProvider.stubRelationshipClass({
@@ -711,16 +701,33 @@ describe("createRelationshipPathJoinClause", () => {
       source: {
         polymorphic: false,
         multiplicity: { lowerLimit: 0, upperLimit: 1 },
-        abstractConstraint: Promise.resolve(sourceClass),
+        abstractConstraint: sourceClass,
       },
       target: {
         polymorphic: false,
         multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
-        abstractConstraint: Promise.resolve(targetClass),
+        abstractConstraint: targetClass,
       },
       ...(typeof props.relationship === "object" ? props.relationship : undefined),
     });
-    await navigationRelationshipRes.resolve(relationship);
+    const navigationProperty = {
+      name: props.navigationPropertyName ?? "navigation-property",
+      isNavigation: () => true,
+      direction: props.navigationPropertyDirection,
+      relationshipClass: relationship,
+    } as unknown as EC.NavigationProperty;
+    schemaProvider.stubEntityClass({
+      schemaName,
+      className: typeof props.source === "string" ? props.source : "source",
+      properties: props.navigationPropertyDirection === "Forward" ? [navigationProperty] : [],
+      ...(typeof props.source === "object" ? props.source : undefined),
+    });
+    schemaProvider.stubEntityClass({
+      schemaName,
+      className: typeof props.target === "string" ? props.target : "target",
+      properties: props.navigationPropertyDirection === "Backward" ? [navigationProperty] : [],
+      ...(typeof props.target === "object" ? props.target : undefined),
+    });
     return { sourceClass, targetClass, relationship, navigationProperty };
   }
 
@@ -746,12 +753,12 @@ describe("createRelationshipPathJoinClause", () => {
             direction: "Forward",
             source: {
               polymorphic: false,
-              abstractConstraint: Promise.resolve(sourceClass),
+              abstractConstraint: sourceClass,
               multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
             },
             target: {
               polymorphic: false,
-              abstractConstraint: Promise.resolve(targetClass),
+              abstractConstraint: targetClass,
               multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
             },
           });

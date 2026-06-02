@@ -125,7 +125,7 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
           isPrimitive: () => true,
           isNavigation: () => false,
           primitiveType: "Double",
-          kindOfQuantity: Promise.resolve({ fullName: "TestSchema.TestKindOfQuantity" }),
+          kindOfQuantity: { fullName: "TestSchema.TestKindOfQuantity" },
           extendedTypeName: "TestExtendedType",
         } as unknown as EC.PrimitiveProperty,
       ],

@@ -14,7 +14,7 @@ export interface StubClassFuncProps {
   className: string;
   classLabel?: string;
   properties?: EC.Property[];
-  is?: (fullClassName: EC.FullClassName) => Promise<boolean>;
+  is?: (fullClassName: EC.FullClassName) => boolean;
 }
 export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
   source?: EC.RelationshipConstraint;
@@ -27,8 +27,8 @@ export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps)
 interface SchemaStub {
   name: string;
   version: EC.SchemaVersion;
+  isHidden: boolean;
   getClass: Mock<EC.Schema["getClass"]>;
-  getCustomAttributes: Mock<EC.Schema["getCustomAttributes"]>;
   classes: Map<string, EC.Class>;
 }
 export function createECSchemaProviderStub() {
@@ -45,9 +45,9 @@ export function createECSchemaProviderStub() {
       schemaStub = {
         name: schemaName,
         version: { read: 1, write: 0, minor: 0 },
+        isHidden: false,
         classes: classMap,
-        getClass: vi.fn(async (className: string) => classMap.get(className)),
-        getCustomAttributes: vi.fn<EC.Schema["getCustomAttributes"]>(),
+        getClass: vi.fn((className: string) => classMap.get(className)),
       };
       schemaStubs.set(schemaName, schemaStub);
     }
@@ -58,14 +58,15 @@ export function createECSchemaProviderStub() {
     fullName: `${props.schemaName}.${props.className}`,
     name: props.className,
     label: props.classLabel,
-    getProperty: async (propertyName: string): Promise<EC.Property | undefined> => {
+    isHidden: undefined,
+    getProperty: (propertyName: string): EC.Property | undefined => {
       if (!props.properties) {
         return undefined;
       }
       return props.properties.find((p) => p.name === propertyName);
     },
-    getProperties: async (): Promise<Array<EC.Property>> => props.properties ?? [],
-    is: vi.fn(async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
+    getProperties: (): Array<EC.Property> => props.properties ?? [],
+    is: vi.fn((targetClassOrClassName: EC.Class | string, schemaName?: string) => {
       if (!props.is) {
         return false;
       }
@@ -90,8 +91,8 @@ export function createECSchemaProviderStub() {
     const res = {
       ...createBaseClassProps(props),
       direction: props.direction ?? "Forward",
-      source: props.source ?? { polymorphic: true, abstractConstraint: async () => undefined },
-      target: props.target ?? { polymorphic: true, abstractConstraint: async () => undefined },
+      source: props.source ?? { polymorphic: true, abstractConstraint: undefined },
+      target: props.target ?? { polymorphic: true, abstractConstraint: undefined },
       isRelationshipClass: () => true,
     } as unknown as EC.RelationshipClass;
     getSchemaStub(props.schemaName).classes.set(props.className, res);
