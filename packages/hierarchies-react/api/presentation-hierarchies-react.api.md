@@ -14,7 +14,7 @@ import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
-import { JSX as JSX_2 } from 'react/jsx-runtime';
+import { JSX } from 'react/jsx-runtime';
 import { NodeData } from '@itwin/itwinui-react';
 import { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import { Props } from '@itwin/presentation-shared';
@@ -58,7 +58,7 @@ type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;
 
 // @public
-export function LocalizationContextProvider(input: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
+export function LocalizationContextProvider(input: PropsWithChildren<LocalizationContextProviderProps>): JSX.Element;
 
 // @public
 interface LocalizationContextProviderProps {
@@ -207,7 +207,7 @@ type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof TreeNodeRenderer>
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 
 // @public
-export function TreeRenderer(input: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer(input: TreeRendererProps): JSX.Element;
 
 // @public (undocumented)
 interface TreeRendererOwnProps {
@@ -221,7 +221,7 @@ type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandN
 // @public @deprecated
 export function UnifiedSelectionProvider(input: PropsWithChildren<{
     storage: SelectionStorage;
-}>): JSX_2.Element;
+}>): JSX.Element;
 
 // @public
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult;

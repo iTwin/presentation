@@ -165,7 +165,7 @@ export function useMergedRefs<T>(...refs: Array<RefObject<T | null> | Ref<T>>): 
         if (typeof ref === "function") {
           ref(instance);
         } else if (ref) {
-          (ref).current = instance;
+          ref.current = instance;
         }
       });
     },
