@@ -153,7 +153,7 @@ Array [
     "propertyDescription": Object {
       "displayLabel": "Properties Field",
       "editor": Object {
-        "name": "presentation-quantity-editor-placeholder",
+        "name": "presentation-quantity-editor-{guid}",
       },
       "kindOfQuantityName": "Test:KoQ",
       "name": "root#PropertiesField",
