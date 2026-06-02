@@ -308,7 +308,7 @@ function useInitialFilter(
   descriptor: Descriptor,
   initialFilter?: PresentationInstanceFilterInfo | ((descriptor: Descriptor) => PresentationInstanceFilterInfo),
 ) {
-  const initializedFilter = useRef<{ filterInfo: PresentationInstanceFilterInfo | undefined }>();
+  const initializedFilter = useRef<{ filterInfo: PresentationInstanceFilterInfo | undefined }>(undefined);
   if (initializedFilter.current === undefined) {
     initializedFilter.current = {
       filterInfo: typeof initialFilter === "function" ? initialFilter(descriptor) : initialFilter,
