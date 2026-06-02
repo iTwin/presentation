@@ -49,14 +49,14 @@ describe("createInstanceFilterPropertyInfos", () => {
     });
 
     const input = createInstanceFilterPropertyInfos(descriptor);
-    // replace editor name with a placeholder in snapshot to avoid having to update snapshots every time source code changes.
+    // replace editor name with a placeholder in snapshot to avoid it changing everytime the test is run
     const expected = input.map((info) =>
       info.propertyDescription.editor?.name === QuantityEditorName
         ? {
             ...info,
             propertyDescription: {
               ...info.propertyDescription,
-              editor: { name: "presentation-quantity-editor-placeholder" },
+              editor: { name: "presentation-quantity-editor-{guid}" },
             },
           }
         : info,
