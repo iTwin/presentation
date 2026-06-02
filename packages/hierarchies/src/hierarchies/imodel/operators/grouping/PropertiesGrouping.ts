@@ -118,7 +118,7 @@ export async function createPropertyGroups(
     }
     const currentProperty = byProperties.propertyGroups[handlerGroupingParams.previousPropertiesGroupingInfo.length];
     const propertyClass = handlerGroupingParams.ecClass;
-    const property = await propertyClass.getProperty(currentProperty.propertyName);
+    const property = propertyClass.getProperty(currentProperty.propertyName);
 
     if (
       !property?.isNavigation() &&
@@ -154,7 +154,7 @@ export async function createPropertyGroups(
       continue;
     }
 
-    const koqName = (await property.kindOfQuantity)?.fullName;
+    const koqName = property.kindOfQuantity?.fullName;
     if (currentProperty.ranges) {
       if (typeof currentProperty.propertyValue === "number") {
         const propValue = currentProperty.propertyValue;

@@ -74,8 +74,8 @@ describe("createNodesQueryClauseFactory", () => {
             name: "PropertyName",
             isNavigation: () => true,
             direction: "Forward",
-            relationshipClass: Promise.resolve({ target: { abstractConstraint: Promise.resolve(undefined) } }),
-          } as EC.NavigationProperty,
+            relationshipClass: { target: { abstractConstraint: undefined } },
+          } as unknown as EC.NavigationProperty,
         ],
       });
       await expect(
@@ -167,9 +167,7 @@ describe("createNodesQueryClauseFactory", () => {
             name: "PropertyName",
             isNavigation: () => true,
             direction: "Backward",
-            relationshipClass: Promise.resolve({
-              source: { abstractConstraint: Promise.resolve({ fullName: "testSchema.SourceClass" }) },
-            }),
+            relationshipClass: { source: { abstractConstraint: { fullName: "testSchema.SourceClass" } } },
           } as unknown as EC.NavigationProperty,
         ],
       });
@@ -1063,12 +1061,12 @@ describe("createNodesQueryClauseFactory", () => {
             className: "rel",
             source: {
               polymorphic: false,
-              abstractConstraint: Promise.resolve(contentClass),
+              abstractConstraint: contentClass,
               multiplicity: { lowerLimit: 0, upperLimit: 1 },
             },
             target: {
               polymorphic: false,
-              abstractConstraint: Promise.resolve(propertyClass),
+              abstractConstraint: propertyClass,
               multiplicity: { lowerLimit: 0, upperLimit: 1 },
             },
           });
@@ -1119,12 +1117,12 @@ describe("createNodesQueryClauseFactory", () => {
             className: "rel",
             source: {
               polymorphic: false,
-              abstractConstraint: Promise.resolve(contentClass),
+              abstractConstraint: contentClass,
               multiplicity: { lowerLimit: 0, upperLimit: 1 },
             },
             target: {
               polymorphic: false,
-              abstractConstraint: Promise.resolve(propertyClass),
+              abstractConstraint: propertyClass,
               multiplicity: { lowerLimit: 0, upperLimit: 1 },
             },
           });
@@ -1272,7 +1270,7 @@ describe("createNodesQueryClauseFactory", () => {
             schemaName: "s",
             className: "y",
             baseClass: selectClass,
-            customAttributes: new Map([["CoreCustomAttributes.HiddenClass", {}]]),
+            isHidden: true,
           });
           const clauses = await factory.createFilterClauses({
             contentClass: { fullName: selectClass.fullName, alias: "content-class" },
@@ -1290,14 +1288,9 @@ describe("createNodesQueryClauseFactory", () => {
             schemaName: "s",
             className: "y",
             baseClass: selectClass,
-            customAttributes: new Map([["CoreCustomAttributes.HiddenClass", { ["Show"]: false }]]),
+            isHidden: true,
           });
-          const showClass = imodelAccess.stubEntityClass({
-            schemaName: "s",
-            className: "z",
-            baseClass: hideClass,
-            customAttributes: new Map([["CoreCustomAttributes.HiddenClass", { ["Show"]: true }]]),
-          });
+          const showClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "z", baseClass: hideClass, isHidden: false });
           const clauses = await factory.createFilterClauses({
             contentClass: { fullName: selectClass.fullName, alias: "content-class" },
           });
@@ -1314,20 +1307,15 @@ describe("createNodesQueryClauseFactory", () => {
             schemaName: "s",
             className: "y",
             baseClass: selectClass,
-            customAttributes: new Map([["CoreCustomAttributes.HiddenClass", { ["Show"]: false }]]),
+            isHidden: true,
           });
           const showClass = imodelAccess.stubEntityClass({
             schemaName: "s",
             className: "z",
             baseClass: hideClass1,
-            customAttributes: new Map([["CoreCustomAttributes.HiddenClass", { ["Show"]: true }]]),
+            isHidden: false,
           });
-          const hideClass2 = imodelAccess.stubEntityClass({
-            schemaName: "s",
-            className: "w",
-            baseClass: showClass,
-            customAttributes: new Map([["CoreCustomAttributes.HiddenClass", { ["Show"]: false }]]),
-          });
+          const hideClass2 = imodelAccess.stubEntityClass({ schemaName: "s", className: "w", baseClass: showClass, isHidden: true });
           const clauses = await factory.createFilterClauses({
             contentClass: { fullName: selectClass.fullName, alias: "content-class" },
           });
@@ -1341,12 +1329,7 @@ describe("createNodesQueryClauseFactory", () => {
         it("excludes classes from hidden schemas", async () => {
           const selectClass = imodelAccess.stubEntityClass({ schemaName: "s1", className: "x" });
           const hideClass = imodelAccess.stubEntityClass({ schemaName: "s2", className: "y", baseClass: selectClass });
-          imodelAccess.stubCustomAttribute({
-            schemaName: "s2",
-            attributes: new Map<EC.FullClassName, EC.CustomAttribute>([
-              ["CoreCustomAttributes.HiddenSchema", { className: "CoreCustomAttributes.HiddenSchema" }],
-            ]),
-          });
+          (await imodelAccess.getSchema("s2"))!.isHidden = true;
           const clauses = await factory.createFilterClauses({
             contentClass: { fullName: selectClass.fullName, alias: "content-class" },
           });
@@ -1357,62 +1340,31 @@ describe("createNodesQueryClauseFactory", () => {
           });
         });
 
-        it("overrides class from hidden schema with subclass from visible schema", async () => {
-          const selectClass = imodelAccess.stubEntityClass({ schemaName: "s1", className: "x" });
-          const hideClass = imodelAccess.stubEntityClass({ schemaName: "s2", className: "y", baseClass: selectClass });
-          const showClass = imodelAccess.stubEntityClass({ schemaName: "s3", className: "z", baseClass: hideClass });
-          imodelAccess.stubCustomAttribute({
-            schemaName: "s2",
-            attributes: new Map<EC.FullClassName, EC.CustomAttribute>([
-              [
-                "CoreCustomAttributes.HiddenSchema",
-                { className: "CoreCustomAttributes.HiddenSchema", ["ShowClasses"]: false },
-              ],
-            ]),
-          });
-          imodelAccess.stubCustomAttribute({
-            schemaName: "s3",
-            attributes: new Map<EC.FullClassName, EC.CustomAttribute>([
-              [
-                "CoreCustomAttributes.HiddenSchema",
-                { className: "CoreCustomAttributes.HiddenSchema", ["ShowClasses"]: true },
-              ],
-            ]),
-          });
+        it("passes through non-hidden derived class to find hidden descendants", async () => {
+          const selectClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "x" });
+          const neutralClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "n", baseClass: selectClass });
+          const hideClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "y", baseClass: neutralClass, isHidden: true });
           const clauses = await factory.createFilterClauses({
             contentClass: { fullName: selectClass.fullName, alias: "content-class" },
           });
           expect({ ...clauses, where: trimWhitespace(clauses.where) }).toEqual({
             from: selectClass.fullName,
             joins: "",
-            where: `([content-class].[ECClassId] IS NOT (${hideClass.ecsqlSelector}) OR [content-class].[ECClassId] IS (${showClass.ecsqlSelector}))`,
+            where: `[content-class].[ECClassId] IS NOT (${hideClass.ecsqlSelector})`,
           });
         });
 
-        it("hidden class attribute takes precedence over hidden schema", async () => {
-          const selectClass = imodelAccess.stubEntityClass({ schemaName: "s1", className: "x" });
-          imodelAccess.stubEntityClass({
-            schemaName: "s2",
-            className: "y",
-            baseClass: selectClass,
-            customAttributes: new Map([["CoreCustomAttributes.HiddenClass", { ["Show"]: true }]]),
-          });
-          imodelAccess.stubCustomAttribute({
-            schemaName: "s2",
-            attributes: new Map<EC.FullClassName, EC.CustomAttribute>([
-              [
-                "CoreCustomAttributes.HiddenSchema",
-                { className: "CoreCustomAttributes.HiddenSchema", ["ShowClasses"]: false },
-              ],
-            ]),
-          });
+        it("excludes nested hidden classes via outermost hidden ancestor", async () => {
+          const selectClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "x" });
+          const hideClass1 = imodelAccess.stubEntityClass({ schemaName: "s", className: "y", baseClass: selectClass, isHidden: true });
+          imodelAccess.stubEntityClass({ schemaName: "s", className: "z", baseClass: hideClass1, isHidden: true });
           const clauses = await factory.createFilterClauses({
             contentClass: { fullName: selectClass.fullName, alias: "content-class" },
           });
           expect({ ...clauses, where: trimWhitespace(clauses.where) }).toEqual({
             from: selectClass.fullName,
             joins: "",
-            where: "",
+            where: `[content-class].[ECClassId] IS NOT (${hideClass1.ecsqlSelector})`,
           });
         });
       });
@@ -1426,12 +1378,12 @@ describe("createNodesQueryClauseFactory", () => {
           className: "r",
           direction: "Forward",
           source: {
-            abstractConstraint: Promise.resolve(sourceClass),
+            abstractConstraint: sourceClass,
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
-            abstractConstraint: Promise.resolve(imodelAccess.stubEntityClass({ schemaName: "x", className: "t" })),
+            abstractConstraint: imodelAccess.stubEntityClass({ schemaName: "x", className: "t" }),
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
@@ -1474,12 +1426,12 @@ describe("createNodesQueryClauseFactory", () => {
           className: "r1",
           direction: "Forward",
           source: {
-            abstractConstraint: Promise.resolve(sourceClass),
+            abstractConstraint: sourceClass,
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
-            abstractConstraint: Promise.resolve(intermediateClass),
+            abstractConstraint: intermediateClass,
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
@@ -1489,12 +1441,12 @@ describe("createNodesQueryClauseFactory", () => {
           className: "r2",
           direction: "Forward",
           source: {
-            abstractConstraint: Promise.resolve(intermediateClass),
+            abstractConstraint: intermediateClass,
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
-            abstractConstraint: Promise.resolve(targetClass),
+            abstractConstraint: targetClass,
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
@@ -1545,12 +1497,12 @@ describe("createNodesQueryClauseFactory", () => {
           className: "r1",
           direction: "Forward",
           source: {
-            abstractConstraint: Promise.resolve(sourceClass),
+            abstractConstraint: sourceClass,
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
-            abstractConstraint: Promise.resolve(targetClass1),
+            abstractConstraint: targetClass1,
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
@@ -1560,12 +1512,12 @@ describe("createNodesQueryClauseFactory", () => {
           className: "r2",
           direction: "Forward",
           source: {
-            abstractConstraint: Promise.resolve(sourceClass),
+            abstractConstraint: sourceClass,
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
-            abstractConstraint: Promise.resolve(targetClass2),
+            abstractConstraint: targetClass2,
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
