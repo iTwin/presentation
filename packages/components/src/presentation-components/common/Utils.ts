@@ -9,7 +9,7 @@
 import "../common/DisposePolyfill.js";
 
 import * as mm from "micro-memoize";
-import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useState } from "react";
+import { Ref, RefCallback, RefObject, useCallback, useEffect, useState } from "react";
 import {
   Primitives,
   PrimitiveValue,
@@ -158,14 +158,14 @@ export class AsyncTasksTracker {
 
 /** @internal */
 /* v8 ignore start -- @preserve */
-export function useMergedRefs<T>(...refs: Array<MutableRefObject<T | null> | LegacyRef<T>>): RefCallback<T> {
+export function useMergedRefs<T>(...refs: Array<RefObject<T | null> | Ref<T>>): RefCallback<T> {
   return useCallback(
     (instance: T | null) => {
       refs.forEach((ref) => {
         if (typeof ref === "function") {
           ref(instance);
         } else if (ref) {
-          (ref as MutableRefObject<T | null>).current = instance;
+          (ref).current = instance;
         }
       });
     },

@@ -9,8 +9,6 @@ import cx from "classnames";
 import {
   ComponentPropsWithoutRef,
   forwardRef,
-  LegacyRef,
-  MutableRefObject,
   ReactElement,
   Ref,
   RefAttributes,
@@ -541,7 +539,7 @@ function createLocalizedMessage(message: string, limit: number, onClick?: () => 
   };
 }
 
-function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | undefined | null>) {
+function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | Ref<T> | undefined | null>) {
   return useCallback(
     (instance: T | null) => {
       refs.forEach((ref) => {
@@ -549,7 +547,7 @@ function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | undefin
         if (typeof ref === "function") {
           ref(instance);
         } else if (ref) {
-          (ref as MutableRefObject<T | null>).current = instance;
+          ref.current = instance;
         }
       });
     }, // eslint-disable-next-line react-hooks/exhaustive-deps
