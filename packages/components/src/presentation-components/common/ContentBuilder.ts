@@ -41,6 +41,10 @@ import {
   TypeDescription,
 } from "@itwin/presentation-common";
 import { NavigationEditorName, NumericEditorName, QuantityEditorName } from "../properties/editors/EditorNames.js";
+import {
+  InstanceKeyValueRendererName,
+  InstanceKeyValueRendererNameInRules,
+} from "../properties/InstanceKeyValueRenderer.js";
 import { WithIModelKey } from "./Utils.js";
 
 /**
@@ -97,7 +101,11 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
   };
 
   if (info.renderer) {
-    description.renderer = { name: info.renderer.name };
+    if (info.renderer.name === InstanceKeyValueRendererNameInRules) {
+      description.renderer = { name: InstanceKeyValueRendererName };
+    } else {
+      description.renderer = { name: info.renderer.name };
+    }
   }
 
   if (info.editor) {

@@ -43,7 +43,7 @@ export * from "./presentation-components/ComponentsLoggerCategory.js";
  * @docs-group-description Properties
  * Presentation-specific [Properties]($components-react:Properties).
  */
-export * from "./presentation-components/properties/InstanceKeyValueRenderer.js";
+export { InstanceKeyValueRenderer } from "./presentation-components/properties/InstanceKeyValueRenderer.js";
 export * from "./presentation-components/properties/editors/index.js";
 
 /**

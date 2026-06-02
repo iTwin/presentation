@@ -20,6 +20,10 @@ import {
   NumericEditorName,
   QuantityEditorName,
 } from "../../presentation-components/properties/editors/EditorNames.js";
+import {
+  InstanceKeyValueRendererName,
+  InstanceKeyValueRendererNameInRules,
+} from "../../presentation-components/properties/InstanceKeyValueRenderer.js";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -152,6 +156,16 @@ describe("PropertyRecordsBuilder", () => {
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries).toHaveLength(1);
     expect(builder.entries[0].property.renderer).toEqual({ name: "custom-renderer" });
+  });
+
+  it("replaces `InstanceKeyValueRendererNameInRules` with runtime renderer name", () => {
+    const descriptor = createTestContentDescriptor({
+      fields: [createTestSimpleContentField({ renderer: { name: InstanceKeyValueRendererNameInRules } })],
+    });
+    const item = createTestContentItem({ values: {}, displayValues: {} });
+    createContentTraverser(builder)(descriptor, [item]);
+    expect(builder.entries).toHaveLength(1);
+    expect(builder.entries[0].property.renderer).toEqual({ name: InstanceKeyValueRendererName });
   });
 
   it("sets custom `editor`", () => {
