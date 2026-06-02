@@ -23,7 +23,7 @@ export class ErrorBoundary extends Component<{ children: React.ReactNode }, { er
     return { error };
   }
 
-  public override render() {
+  public override async render() {
     // in case we got an error - render the error message
     if (this.state.error) {
       return this.state.error?.message ?? "Error";
