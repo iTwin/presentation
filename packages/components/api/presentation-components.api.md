@@ -201,7 +201,7 @@ export interface FavoritePropertiesDataFiltererProps {
 
 // @public
 export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataProvider {
-    constructor(props?: FavoritePropertiesDataProviderProps);
+    constructor(props: FavoritePropertiesDataProviderProps);
     getData(imodel: IModelConnection, elementIds: Id64Arg | KeySet): Promise<PropertyData>;
     // @deprecated
     includeFieldsWithCompositeValues: boolean;
@@ -211,7 +211,7 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
 
 // @public
 export interface FavoritePropertiesDataProviderProps {
-    activeScopeProvider?: () => Parameters<typeof computeSelection>[0]["scope"];
+    activeScopeProvider: () => Parameters<typeof computeSelection>[0]["scope"];
     ruleset?: Ruleset | string;
 }
 
@@ -623,7 +623,7 @@ export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "
 export interface PropertyDataProviderWithUnifiedSelectionProps {
     dataProvider: IPresentationPropertyDataProvider;
     requestedContentInstancesLimit?: number;
-    selectionStorage?: SelectionStorage;
+    selectionStorage: SelectionStorage;
 }
 
 // @public
@@ -840,7 +840,7 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: U
 
 // @public
 export interface UsePresentationTableWithUnifiedSelectionProps<TColumn, TRow> extends Omit<UsePresentationTableProps<TColumn, TRow>, "keys"> {
-    selectionStorage?: SelectionStorage;
+    selectionStorage: SelectionStorage;
 }
 
 // @public
