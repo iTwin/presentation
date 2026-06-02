@@ -50,11 +50,11 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@itwin/core-bentley": "^5.0.0",
-    "@itwin/core-common": "^5.0.0",
-    "@itwin/core-geometry": "^5.0.0",
-    "@itwin/core-quantity": "^5.0.0",
-    "@itwin/ecschema-metadata": "^5.0.0"
+    "@itwin/core-bentley": "^5.10.0-dev.23",
+    "@itwin/core-common": "^5.10.0-dev.23",
+    "@itwin/core-geometry": "^5.10.0-dev.23",
+    "@itwin/core-quantity": "^5.10.0-dev.23",
+    "@itwin/ecschema-metadata": "^5.10.0-dev.23"
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
