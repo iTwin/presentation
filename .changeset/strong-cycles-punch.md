@@ -1,3 +1,4 @@
+---
 "@itwin/presentation-components": minor
 ---
 

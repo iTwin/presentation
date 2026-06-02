@@ -101,11 +101,10 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
   };
 
   if (info.renderer) {
-    if (info.renderer.name === InstanceKeyValueRendererNameInRules) {
-      description.renderer = { name: InstanceKeyValueRendererName };
-    } else {
-      description.renderer = { name: info.renderer.name };
-    }
+    description.renderer = {
+      name:
+        info.renderer.name === InstanceKeyValueRendererNameInRules ? InstanceKeyValueRendererName : info.renderer.name,
+    };
   }
 
   if (info.editor) {
