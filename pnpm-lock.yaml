@@ -1025,6 +1025,9 @@ importers:
       '@itwin/presentation-shared':
         specifier: workspace:*
         version: link:../shared
+      rxjs:
+        specifier: catalog:rxjs
+        version: 7.8.2
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools

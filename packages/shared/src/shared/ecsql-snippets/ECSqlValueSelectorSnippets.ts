@@ -5,6 +5,7 @@
 
 import { Id64 } from "@itwin/core-bentley";
 import { getClass } from "../Metadata.js";
+import { parseFullClassName } from "../Utils.js";
 import { PrimitiveValue } from "../Values.js";
 
 import type { EC, ECSchemaProvider, PrimitiveValueType } from "../Metadata.js";
@@ -168,6 +169,18 @@ export function createRawPrimitiveValueSelector(value: PrimitiveValue | undefine
     case "boolean":
       return value ? "TRUE" : "FALSE";
   }
+}
+
+/**
+ * Converts a full class name (`SchemaName.ClassName` or `SchemaName:ClassName`) into a
+ * bracket-quoted ECSQL class selector: `[SchemaName].[ClassName]`.
+ *
+ * @throws Error if the provided full class name is not valid.
+ * @public
+ */
+export function createClassSelector(fullClassName: EC.FullClassName): string {
+  const { schemaName, className } = parseFullClassName(fullClassName);
+  return `[${schemaName}].[${className}]`;
 }
 
 /**

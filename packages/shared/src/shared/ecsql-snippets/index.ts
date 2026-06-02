@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 export {
+  createClassSelector,
   createRawPropertyValueSelector,
   createRawPrimitiveValueSelector,
   createNullableSelector,

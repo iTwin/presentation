@@ -33,6 +33,8 @@
  *   - Merges external values into the final `ContentItem` accessors.
  */
 
+import { resolveContentSourcesImpl } from "./ResolveContentSources.js";
+
 import type { ECSchemaProvider, ECSqlQueryExecutor, InstanceKey, Value } from "@itwin/presentation-shared";
 import type { ContentSource, ContentTarget } from "./ContentTarget.js";
 import type { DescriptorTransformer } from "./extensions/DescriptorTransformer.js";
@@ -138,7 +140,7 @@ export interface ContentConfiguration {
  */
 interface ResolveContentSourcesProps {
   /** Access to the iModel for schema introspection and path resolution. */
-  imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   /** The content targets to resolve. */
   targets: ContentTarget[];
   /** Extension point configuration (only `fieldsProviders` is used for resolution). */
@@ -160,9 +162,12 @@ interface ResolveContentSourcesProps {
  *
  * @public
  */
-/* v8 ignore next 3 */
-export async function resolveContentSources(_props: ResolveContentSourcesProps): Promise<ContentSource[]> {
-  throw new Error("Not implemented");
+export async function resolveContentSources(props: ResolveContentSourcesProps): Promise<ContentSource[]> {
+  return resolveContentSourcesImpl({
+    imodelAccess: props.imodelAccess,
+    targets: props.targets,
+    fieldsProviders: props.config?.fieldsProviders ?? [],
+  });
 }
 
 /**

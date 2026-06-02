@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  createClassSelector,
   createConcatenatedValueJsonSelector,
   createConcatenatedValueStringSelector,
   createInstanceKeySelector,
@@ -340,6 +341,23 @@ describe("createNullableSelector", () => {
     expect(createNullableSelector({ checkSelector: "CHECK", valueSelector: "VALUE" })).toEqual(
       "IIF(CHECK, VALUE, NULL)",
     );
+  });
+});
+
+describe("createClassSelector", () => {
+  it("bracket-quotes a dot-separated full class name", () => {
+    expect(createClassSelector("TestSchema.TestClass")).to.equal("[TestSchema].[TestClass]");
+  });
+
+  it("bracket-quotes a colon-separated full class name", () => {
+    expect(createClassSelector("TestSchema:TestClass")).to.equal("[TestSchema].[TestClass]");
+  });
+
+  it("throws on invalid full class name", () => {
+    expect(() => createClassSelector(".c")).to.throw();
+    expect(() => createClassSelector(":c")).to.throw();
+    expect(() => createClassSelector("s.")).to.throw();
+    expect(() => createClassSelector("s:")).to.throw();
   });
 });
 
