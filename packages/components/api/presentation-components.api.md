@@ -204,6 +204,10 @@ export interface FavoritePropertiesDataFiltererProps {
 
 // @public
 export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataProvider {
+    constructor(props: FavoritePropertiesDataProviderProps & {
+        activeScopeProvider: NonNullable<FavoritePropertiesDataProviderProps["activeScopeProvider"]>;
+    });
+    // @deprecated
     constructor(props?: FavoritePropertiesDataProviderProps);
     getData(imodel: IModelConnection, elementIds: Id64Arg | KeySet): Promise<PropertyData>;
     // @deprecated
@@ -910,6 +914,11 @@ export interface UsePresentationTreeStateResult<TEventHandler extends TreeEventH
 }
 
 // @public
+export function usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps & {
+    selectionStorage: NonNullable<PropertyDataProviderWithUnifiedSelectionProps["selectionStorage"]>;
+}): UsePropertyDataProviderWithUnifiedSelectionResult;
+
+// @public @deprecated
 export function usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult;
 
 // @public
