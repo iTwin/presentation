@@ -192,5 +192,11 @@ function downgradeReactCatalog() {
     workspace.catalogs["react"]["@types/react-dom"] = "^18.0.0";
   }
 
+  // Force all react resolutions to 18 (overrides autoInstallPeers resolving to 19)
+  workspace.overrides["react"] = "^18.0.0";
+  workspace.overrides["react-dom"] = "^18.0.0";
+  workspace.overrides["@types/react"] = "^18.0.0";
+  workspace.overrides["@types/react-dom"] = "^18.0.0";
+
   fs.writeFileSync(workspaceFilePath, YAML.stringify(workspace), "utf8");
 }
