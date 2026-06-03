@@ -129,7 +129,6 @@ export function stubSchemaViewForClasses(
   }
 
   const classesByFullName = new Map<string, SchemaViewClass>();
-  const classesById = new Map<string, SchemaViewClass>();
 
   const getOrCreateClass = (classInfo: ClassInfo): SchemaViewClass => {
     let schemaClass = classesByFullName.get(classInfo.name);
@@ -140,7 +139,6 @@ export function stubSchemaViewForClasses(
         baseClass: undefined,
       };
       classesByFullName.set(classInfo.name, schemaClass);
-      classesById.set(classInfo.id, schemaClass);
     }
     return schemaClass;
   };
@@ -161,9 +159,7 @@ export function stubSchemaViewForClasses(
     }
   });
 
-  return {
-    findClass: (identifier: string) => classesById.get(identifier) ?? classesByFullName.get(identifier),
-  } as SchemaView;
+  return { findClass: (fullClassName: string) => classesByFullName.get(fullClassName) } as SchemaView;
 }
 
 /** Props for `TestErrorBoundary` */

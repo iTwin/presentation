@@ -6,11 +6,11 @@
  * @module InstancesFilter
  */
 
-import { Id64 } from "@itwin/core-bentley";
+import { Id64, Id64String } from "@itwin/core-bentley";
 import { SchemaView } from "@itwin/ecschema-metadata";
 
 /** @internal */
-export function hasBaseClass(derivedClass: SchemaView.Class, expectedBase: SchemaView.Class | string): boolean {
+export function hasBaseClass(derivedClass: SchemaView.Class, expectedBase: SchemaView.Class | Id64String): boolean {
   return (
     !!derivedClass.baseClass &&
     (getClassId(derivedClass.baseClass) === getClassId(expectedBase) ||
@@ -19,7 +19,7 @@ export function hasBaseClass(derivedClass: SchemaView.Class, expectedBase: Schem
 }
 
 /** @internal */
-export function getClassId(classView: SchemaView.Class | string): string {
+export function getClassId(classView: SchemaView.Class | Id64String): Id64String {
   if (typeof classView === "string") {
     return classView;
   }
