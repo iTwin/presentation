@@ -34,9 +34,6 @@ if (uiVersion) {
   applyGitPatch(`ui-${uiVersion}.patch`);
 }
 
-// React 19 support was added in AppUI 5.x, downgrade for all regression versions
-downgradeReactCatalog();
-
 const [{ name: workspaceRootName, path: workspaceRootPath }] = JSON.parse(
   execSync("pnpm list -w --only-projects --json", { encoding: "utf-8" }),
 );
@@ -101,12 +98,6 @@ function overrideDevDeps(pkgJsonData, coreVersion, uiVersion) {
     // add all core and appui package to devDependencies to make sure they are resolved to expected versions
     pkgJsonData.devDependencies[packageName] = version;
   });
-
-  // React 19 support was added in AppUI 5.x, downgrade for all regression versions
-  pkgJsonData.devDependencies["react"] = "18.3.1";
-  pkgJsonData.devDependencies["react-dom"] = "18.3.1";
-  pkgJsonData.devDependencies["@types/react"] = "18.3.1";
-  pkgJsonData.devDependencies["@types/react-dom"] = "18.3.1";
 }
 
 function useLocalTarballs(pkgJsonData, localPackagesPath) {
@@ -181,29 +172,4 @@ function applyGitPatch(patchFile) {
     console.log(`Error applying patch file "${patchFile}": ${e.message}`);
     process.exit(1);
   }
-}
-
-function downgradeReactCatalog() {
-  const workspaceFilePath = path.join(__dirname, "../../pnpm-workspace.yaml");
-  const workspaceFile = fs.readFileSync(workspaceFilePath, "utf8");
-  const workspace = YAML.parse(workspaceFile);
-
-  if (workspace.catalogs["react"]) {
-    console.log("Downgrading react catalog entries to 18.3.1 (required by AppUI < 5.x)");
-    workspace.catalogs["react"]["react"] = "18.3.1";
-    workspace.catalogs["react"]["react-dom"] = "18.3.1";
-    workspace.catalogs["react"]["@types/react"] = "18.3.1";
-    workspace.catalogs["react"]["@types/react-dom"] = "18.3.1";
-  }
-
-  // Pin exact versions to prevent dual-instance with resolutionMode: lowest-direct
-  workspace.overrides["react"] = "18.3.1";
-  workspace.overrides["react-dom"] = "18.3.1";
-  workspace.overrides["@types/react"] = "18.3.1";
-  workspace.overrides["@types/react-dom"] = "18.3.1";
-
-  // Remove peerDependencyRules for react 19 since we're downgrading to 18
-  delete workspace.peerDependencyRules;
-
-  fs.writeFileSync(workspaceFilePath, YAML.stringify(workspace), "utf8");
 }
