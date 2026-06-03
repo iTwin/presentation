@@ -9,7 +9,7 @@
 import "../common/DisposePolyfill.js";
 
 import * as mm from "micro-memoize";
-import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Primitives,
   PrimitiveValue,
@@ -155,24 +155,6 @@ export class AsyncTasksTracker {
     return { [Symbol.dispose]: () => this._asyncsInProgress.delete(id) };
   }
 }
-
-/** @internal */
-/* v8 ignore start -- @preserve */
-export function useMergedRefs<T>(...refs: Array<MutableRefObject<T | null> | LegacyRef<T>>): RefCallback<T> {
-  return useCallback(
-    (instance: T | null) => {
-      refs.forEach((ref) => {
-        if (typeof ref === "function") {
-          ref(instance);
-        } else if (ref) {
-          (ref as MutableRefObject<T | null>).current = instance;
-        }
-      });
-    },
-    [...refs], // eslint-disable-line react-hooks/exhaustive-deps
-  );
-}
-/* v8 ignore stop -- @preserve */
 
 /**
  * A hook that helps components throw errors in React's render loop so they can be captured by React error

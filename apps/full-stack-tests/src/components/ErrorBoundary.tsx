@@ -12,8 +12,8 @@ import { getByText, waitFor } from "../RenderUtils.js";
  * rendering the error message. Check out React's Error Boundary documentation for how to
  * implement a more elaborate solution.
  */
-export class ErrorBoundary extends Component<{ children: React.ReactNode }, { error?: Error }> {
-  public constructor(props: { children: React.ReactNode }) {
+export class ErrorBoundary extends Component<{ children: React.ReactElement }, { error?: Error }> {
+  public constructor(props: { children: React.ReactElement }) {
     super(props);
     this.state = {};
   }
