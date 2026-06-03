@@ -12,17 +12,13 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../presentation-components/common/Utils.js";
-import {
-  ECClassInfo,
-  getIModelMetadataProvider,
-} from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
 import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
 import {
   PresentationInstanceFilterDialog,
   PresentationInstanceFilterPropertiesSource,
 } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
-import { createTestECClassInfo, stubVirtualization } from "../_helpers/Common.js";
+import { createTestECClassInfo, stubSchemaViewForClasses, stubVirtualization } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
@@ -68,7 +64,12 @@ describe("PresentationInstanceFilterDialog", () => {
   };
 
   const onCloseEvent = new BeEvent<() => void>();
-  const imodel = { key: "test_imodel", onClose: onCloseEvent } as IModelConnection;
+  const imodelMock = {
+    key: "test_imodel",
+    onClose: onCloseEvent,
+    getSchemaView: vi.fn().mockResolvedValue(stubSchemaViewForClasses([])),
+  };
+  const imodel = imodelMock as unknown as IModelConnection;
 
   beforeAll(async () => {
     await UiComponents.initialize(new EmptyLocalization());
@@ -80,10 +81,7 @@ describe("PresentationInstanceFilterDialog", () => {
     vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
     vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
 
-    const metadataProvider = getIModelMetadataProvider(imodel);
-    vi.spyOn(metadataProvider, "getECClassInfo").mockImplementation(async () => {
-      return new ECClassInfo(classInfo.id, classInfo.name, classInfo.label, new Set(), new Set());
-    });
+    imodelMock.getSchemaView.mockResolvedValue(stubSchemaViewForClasses([{ classInfo }]));
   });
 
   afterAll(() => {
