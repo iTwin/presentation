@@ -1,5 +1,55 @@
 # Change Log - @itwin/presentation-components
 
+## 5.16.0
+
+### Minor Changes
+
+- [#1386](https://github.com/iTwin/presentation/pull/1386): `FavoritePropertiesDataProvider`: Deprecated creating the provider without props or without an `activeScopeProvider`.
+
+  Always create the provider with props that include an `activeScopeProvider`. Creating it without props (or without `activeScopeProvider`) makes the provider rely on the deprecated `Presentation.selection.scopes` global from `@itwin/presentation-frontend`. The `activeScopeProvider` prop will be made required in the next major release.
+
+  Migration example:
+
+  ```ts
+  // Before (deprecated)
+  const provider = new FavoritePropertiesDataProvider();
+
+  // After
+  const provider = new FavoritePropertiesDataProvider({
+    activeScopeProvider: () => ({ id: "element" }),
+  });
+  ```
+
+- [#1386](https://github.com/iTwin/presentation/pull/1386): `usePropertyDataProviderWithUnifiedSelection`: Deprecated using the hook without a `selectionStorage` prop.
+
+  Always use the hook with a `selectionStorage` prop provided. Without it, the hook relies on the deprecated `SelectionManager` from `@itwin/presentation-frontend`. The `selectionStorage` prop will be made required in the next major release.
+
+  Migration example:
+
+  ```tsx
+  // Before (deprecated)
+  const { isOverLimit } = usePropertyDataProviderWithUnifiedSelection({
+    dataProvider,
+  });
+
+  // After
+  const { isOverLimit } = usePropertyDataProviderWithUnifiedSelection({
+    dataProvider,
+    selectionStorage,
+  });
+  ```
+
+- [#1387](https://github.com/iTwin/presentation/pull/1387): Added support for React version 19
+- [#1388](https://github.com/iTwin/presentation/pull/1388): Allowed multiple `@itwin/presentation-components` versions to coexist in the same application by giving built-in property editors and renderers unique registration names.
+
+  This avoids duplicate registration errors when different package versions are loaded together.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/unified-selection-react@1.1.0
+  - @itwin/presentation-shared@1.2.15
+
 ## 5.15.0
 
 ### Minor Changes
