@@ -882,6 +882,11 @@ export interface UsePresentationTreeStateResult<TEventHandler extends TreeEventH
 }
 
 // @public
+export function usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps & {
+    selectionStorage: NonNullable<PropertyDataProviderWithUnifiedSelectionProps["selectionStorage"]>;
+}): UsePropertyDataProviderWithUnifiedSelectionResult;
+
+// @public @deprecated
 export function usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult;
 
 // @public

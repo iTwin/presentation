@@ -57,6 +57,20 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
  * @public
  */
 export function usePropertyDataProviderWithUnifiedSelection(
+  props: PropertyDataProviderWithUnifiedSelectionProps & {
+    selectionStorage: NonNullable<PropertyDataProviderWithUnifiedSelectionProps["selectionStorage"]>;
+  },
+): UsePropertyDataProviderWithUnifiedSelectionResult;
+/**
+ * A React hook that adds unified selection functionality to the provided data provider.
+ * @public
+ * @deprecated in 5.16. Use the hook with a `selectionStorage` prop provided. The `selectionStorage` prop will be made
+ * required in the next major release.
+ */
+export function usePropertyDataProviderWithUnifiedSelection(
+  props: PropertyDataProviderWithUnifiedSelectionProps,
+): UsePropertyDataProviderWithUnifiedSelectionResult;
+export function usePropertyDataProviderWithUnifiedSelection(
   props: PropertyDataProviderWithUnifiedSelectionProps,
 ): UsePropertyDataProviderWithUnifiedSelectionResult {
   const { dataProvider, selectionStorage } = props;
