@@ -9,7 +9,7 @@
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
 import { Presentation } from "@itwin/presentation-frontend";
 import { localizationNamespaceName } from "./common/Utils.js";
-import { InstanceKeyValueRenderer } from "./properties/InstanceKeyValueRenderer.js";
+import { InstanceKeyValueRenderer, InstanceKeyValueRendererName } from "./properties/InstanceKeyValueRenderer.js";
 
 /**
  * Registers 'PresentationComponents' localization namespace and returns callback
@@ -27,7 +27,7 @@ export const initializeLocalization = async () => {
  */
 export const initializePropertyValueRenderers = async () => {
   const customRenderers: Array<{ name: string; renderer: IPropertyValueRenderer }> = [
-    { name: "SelectableInstance", renderer: new InstanceKeyValueRenderer() },
+    { name: InstanceKeyValueRendererName, renderer: new InstanceKeyValueRenderer() },
   ];
 
   for (const { name, renderer } of customRenderers) {

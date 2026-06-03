@@ -8,6 +8,7 @@ import { PropertyValueRendererManager } from "@itwin/components-react";
 import { Localization } from "@itwin/core-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { initializeLocalization, initializePropertyValueRenderers } from "../presentation-components/Initialization.js";
+import { InstanceKeyValueRendererName } from "../presentation-components/properties/InstanceKeyValueRenderer.js";
 import { createStub } from "./TestUtils.js";
 
 describe("initializeLocalization", () => {
@@ -31,10 +32,10 @@ describe("initializePropertyValueRenderers", () => {
     const unregisterSpy = vi.spyOn(PropertyValueRendererManager.defaultManager, "unregisterRenderer");
 
     const unregisterCallback = await initializePropertyValueRenderers();
-    expect(registerSpy).toHaveBeenCalledExactlyOnceWith("SelectableInstance", expect.any(Object));
+    expect(registerSpy).toHaveBeenCalledExactlyOnceWith(InstanceKeyValueRendererName, expect.any(Object));
     expect(unregisterSpy).not.toHaveBeenCalled();
 
     unregisterCallback();
-    expect(unregisterSpy).toHaveBeenCalledExactlyOnceWith("SelectableInstance");
+    expect(unregisterSpy).toHaveBeenCalledExactlyOnceWith(InstanceKeyValueRendererName);
   });
 });
