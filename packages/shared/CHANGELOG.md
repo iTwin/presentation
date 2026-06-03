@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 1.2.15
+
+### Patch Changes
+
+- [#1383](https://github.com/iTwin/presentation/pull/1383): Optimize `parseFullClassName` parsing performance.
+
 ## 1.2.14
 
 ### Patch Changes
