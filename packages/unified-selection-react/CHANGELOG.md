@@ -1,5 +1,11 @@
 # @itwin/unified-selection-react
 
+## 1.1.0
+
+### Minor Changes
+
+- [#1387](https://github.com/iTwin/presentation/pull/1387): Added support for React version 19
+
 ## 1.0.5
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-hierarchies-react",
-  "version": "1.10.4",
+  "version": "1.11.0",
   "description": "React components based on `@itwin/presentation-hierarchies`",
   "license": "MIT",
   "author": {
@@ -78,8 +78,8 @@
   },
   "peerDependencies": {
     "@itwin/itwinui-react": "^3.0.0",
-    "react": "^17.0.0 || ^18.0.0",
-    "react-dom": "^17.0.0 || ^18.0.0"
+    "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "@itwin/itwinui-react": {

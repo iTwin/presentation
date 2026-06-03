@@ -1,5 +1,16 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.11.0
+
+### Minor Changes
+
+- [#1387](https://github.com/iTwin/presentation/pull/1387): Added support for React version 19
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.15
+
 ## 1.10.4
 
 ### Patch Changes

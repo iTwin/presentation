@@ -4,7 +4,7 @@
 
 ```ts
 
-import { JSX as JSX_2 } from 'react/jsx-runtime';
+import { JSX } from 'react/jsx-runtime';
 import { PropsWithChildren } from 'react';
 import { SelectionStorage } from '@itwin/unified-selection';
 
@@ -14,7 +14,7 @@ interface UnifiedSelectionContext {
 }
 
 // @public
-export function UnifiedSelectionContextProvider(props: PropsWithChildren<UnifiedSelectionContext>): JSX_2.Element;
+export function UnifiedSelectionContextProvider(props: PropsWithChildren<UnifiedSelectionContext>): JSX.Element;
 
 // @public
 export function useUnifiedSelectionContext(): UnifiedSelectionContext | undefined;

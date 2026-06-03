@@ -146,7 +146,7 @@ describe("Hierarchies React", () => {
         // __PUBLISH_EXTRACT_END__
 
         const { getAllByRole, getByRole, user } = render(<MyTreeComponent imodelAccess={access} />);
-        const modelB = await waitFor(() => getByRole("treeitem", { name: "My Model B" }));
+        const modelB = await waitFor(() => getByRole("treeitem", { name: /My Model B/ }));
         await user.hover(modelB);
         await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).not.toHaveLength(0));
       });
@@ -193,7 +193,7 @@ describe("Hierarchies React", () => {
         }
 
         const { getAllByRole, getByRole, user } = render(<MyTreeComponent imodelAccess={access} />);
-        const modelB = await waitFor(() => getByRole("treeitem", { name: "My Model B" }));
+        const modelB = await waitFor(() => getByRole("treeitem", { name: /My Model B/ }));
         await user.hover(modelB);
         await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).not.toHaveLength(0));
       });
