@@ -9,13 +9,6 @@ import { NumericPropertyInput } from "../inputs/NumericPropertyInput.js";
 import { PropertyEditorAttributes } from "./Common.js";
 
 /**
- * Name for `NumericPropertyEditor`.
- *
- * @internal
- */
-export const NumericEditorName = "presentation-numeric-editor";
-
-/**
  * Editor for numeric properties.
  *
  * @internal

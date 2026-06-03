@@ -40,8 +40,11 @@ import {
   StartStructProps,
   TypeDescription,
 } from "@itwin/presentation-common";
-import { NumericEditorName } from "../properties/editors/NumericPropertyEditor.js";
-import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor.js";
+import { NavigationEditorName, NumericEditorName, QuantityEditorName } from "../properties/editors/EditorNames.js";
+import {
+  InstanceKeyValueRendererName,
+  InstanceKeyValueRendererNameInRules,
+} from "../properties/InstanceKeyValueRenderer.js";
 import { WithIModelKey } from "./Utils.js";
 
 /**
@@ -98,7 +101,10 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
   };
 
   if (info.renderer) {
-    description.renderer = { name: info.renderer.name };
+    description.renderer = {
+      name:
+        info.renderer.name === InstanceKeyValueRendererNameInRules ? InstanceKeyValueRendererName : info.renderer.name,
+    };
   }
 
   if (info.editor) {
@@ -123,6 +129,10 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
     description.typename === StandardTypeNames.Double
   ) {
     description.editor = { name: NumericEditorName, ...description.editor };
+  }
+
+  if (description.typename === StandardTypeNames.Navigation) {
+    description.editor = { name: NavigationEditorName, ...description.editor };
   }
 
   if (info.type.valueFormat === PresentationPropertyValueFormat.Primitive && info.enum) {
