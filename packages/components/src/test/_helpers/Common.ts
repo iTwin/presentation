@@ -6,6 +6,7 @@
 import { Component } from "react";
 import { beforeEach, vi } from "vitest";
 import { BeDuration } from "@itwin/core-bentley";
+import { SchemaView } from "@itwin/ecschema-metadata";
 import {
   ClassInfo,
   InstanceKey,
@@ -116,6 +117,53 @@ export function stubVirtualization() {
       toJSON: () => {},
     });
   });
+}
+
+export function stubSchemaViewForClasses(
+  classes: Array<{ classInfo: ClassInfo; baseClassFullName?: string }>,
+): SchemaView {
+  interface SchemaViewClass {
+    fullName: string;
+    ecInstanceId: number;
+    baseClass: SchemaViewClass | undefined;
+  }
+
+  const classesByFullName = new Map<string, SchemaViewClass>();
+  const classesById = new Map<string, SchemaViewClass>();
+
+  const getOrCreateClass = (classInfo: ClassInfo): SchemaViewClass => {
+    let schemaClass = classesByFullName.get(classInfo.name);
+    if (!schemaClass) {
+      schemaClass = {
+        fullName: classInfo.name,
+        ecInstanceId: Number.parseInt(classInfo.id.slice(2), 16),
+        baseClass: undefined,
+      };
+      classesByFullName.set(classInfo.name, schemaClass);
+      classesById.set(classInfo.id, schemaClass);
+    }
+    return schemaClass;
+  };
+
+  classes.forEach(({ classInfo }) => {
+    getOrCreateClass(classInfo);
+  });
+
+  classes.forEach(({ classInfo, baseClassFullName }) => {
+    if (!baseClassFullName) {
+      return;
+    }
+
+    const derivedClass = classesByFullName.get(classInfo.name);
+    const baseClass = classesByFullName.get(baseClassFullName);
+    if (derivedClass && baseClass) {
+      derivedClass.baseClass = baseClass;
+    }
+  });
+
+  return {
+    findClass: (identifier: string) => classesById.get(identifier) ?? classesByFullName.get(identifier),
+  } as SchemaView;
 }
 
 /** Props for `TestErrorBoundary` */

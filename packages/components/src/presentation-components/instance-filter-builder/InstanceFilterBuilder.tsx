@@ -19,15 +19,16 @@ import {
   PropertyFilterBuilderRuleValueRendererProps,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
+import { SchemaView } from "@itwin/ecschema-metadata";
 import { Alert, ComboBox, SelectOption } from "@itwin/itwinui-react";
 import { ClassInfo, Descriptor, Keys } from "@itwin/presentation-common";
 import { translate } from "../common/Utils.js";
-import { getIModelMetadataProvider } from "./ECMetadataProvider.js";
 import {
   PresentationFilterBuilderValueRenderer,
   PresentationInstanceFilterPropertyInfo,
   useInstanceFilterPropertyInfos,
 } from "./PresentationFilterBuilder.js";
+import { getClassId, hasBaseClass } from "./SchemaViewUtils.js";
 import { isFilterNonEmpty } from "./Utils.js";
 
 /**
@@ -281,14 +282,18 @@ async function computePropertiesByClasses(
   classes: ClassInfo[],
   imodel: IModelConnection,
 ): Promise<PresentationInstanceFilterPropertyInfo[] | undefined> {
-  const metadataProvider = getIModelMetadataProvider(imodel);
-  const ecClassInfos = await Promise.all(classes.map(async (info) => metadataProvider.getECClassInfo(info.id)));
+  const schemaView = await imodel.getSchemaView();
+  const ecClassInfos = classes
+    .map((info) => schemaView.findClass(info.name))
+    .filter((info): info is SchemaView.Class => !!info);
   const filteredProperties: PresentationInstanceFilterPropertyInfo[] = [];
   for (const prop of properties) {
     // property should be shown if at least one of selected classes is derived from property source class
     if (
-      ecClassInfos.some(
-        (info) => info && prop.sourceClassIds.some((sourceClassId) => info.isDerivedFrom(sourceClassId)),
+      ecClassInfos.some((info) =>
+        prop.sourceClassIds.some(
+          (sourceClassId) => sourceClassId === getClassId(info) || hasBaseClass(info, sourceClassId),
+        ),
       )
     ) {
       filteredProperties.push(prop);
@@ -303,24 +308,21 @@ async function computeClassesByProperty(
   property: PresentationInstanceFilterPropertyInfo,
   imodel: IModelConnection,
 ): Promise<ClassInfo[]> {
-  const metadataProvider = getIModelMetadataProvider(imodel);
-
-  const propertyClasses = (
-    await Promise.all(
-      property.sourceClassIds.map(async (sourceClassId) => {
-        return metadataProvider.getECClassInfo(sourceClassId);
-      }),
-    )
-  ).filter((propertyClass) => propertyClass !== undefined);
+  const schemaView = await imodel.getSchemaView();
 
   /* v8 ignore next 3 -- @preserve */
-  if (propertyClasses.length === 0) {
+  if (property.sourceClassIds.length === 0) {
     return classes;
   }
 
   const classesWithProperty: ClassInfo[] = [];
   for (const currentClass of classes) {
-    if (propertyClasses.some((propertyClass) => propertyClass.isBaseOf(currentClass.id))) {
+    if (
+      property.sourceClassIds.some((propertyClassId) => {
+        const current = schemaView.findClass(currentClass.name);
+        return current && (getClassId(current) === propertyClassId || hasBaseClass(current, propertyClassId));
+      })
+    ) {
       classesWithProperty.push(currentClass);
     }
   }

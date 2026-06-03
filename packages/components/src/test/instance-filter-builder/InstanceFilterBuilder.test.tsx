@@ -18,14 +18,10 @@ import { ClassInfo, Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../presentation-components/common/Utils.js";
 import {
-  ECClassInfo,
-  getIModelMetadataProvider,
-} from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
-import {
   InstanceFilterBuilder,
   usePresentationInstanceFilteringProps,
 } from "../../presentation-components/instance-filter-builder/InstanceFilterBuilder.js";
-import { createTestECClassInfo, stubVirtualization } from "../_helpers/Common.js";
+import { createTestECClassInfo, stubSchemaViewForClasses, stubVirtualization } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
@@ -253,7 +249,11 @@ describe("usePresentationInstanceFilteringProps", () => {
   });
 
   const onCloseEvent = new BeEvent<() => void>();
-  const imodelStub = { key: "test_imodel", onClose: onCloseEvent };
+  const imodelStub = {
+    key: "test_imodel",
+    onClose: onCloseEvent,
+    getSchemaView: vi.fn().mockResolvedValue(stubSchemaViewForClasses([])),
+  };
   let initialProps: HookProps;
 
   beforeEach(() => {
@@ -261,45 +261,14 @@ describe("usePresentationInstanceFilteringProps", () => {
 
     initialProps = { descriptor, imodel };
 
-    // stub metadataProvider for test imodel
-    const metadataProvider = getIModelMetadataProvider(imodel);
-    vi.spyOn(metadataProvider, "getECClassInfo").mockImplementation(async (id) => {
-      switch (id) {
-        case baseClass.id:
-          return new ECClassInfo(
-            baseClass.id,
-            baseClass.name,
-            baseClass.label,
-            new Set(),
-            new Set([concreteClass1.id, concreteClass2.id, derivedClass.id]),
-          );
-        case concreteClass1.id:
-          return new ECClassInfo(
-            concreteClass1.id,
-            concreteClass1.name,
-            concreteClass1.label,
-            new Set([baseClass.id]),
-            new Set([derivedClass.id]),
-          );
-        case concreteClass2.id:
-          return new ECClassInfo(
-            concreteClass2.id,
-            concreteClass2.name,
-            concreteClass2.label,
-            new Set([baseClass.id]),
-            new Set(),
-          );
-        case derivedClass.id:
-          return new ECClassInfo(
-            derivedClass.id,
-            derivedClass.name,
-            derivedClass.label,
-            new Set([baseClass.id, concreteClass1.id]),
-            new Set(),
-          );
-      }
-      return undefined;
-    });
+    imodelStub.getSchemaView.mockResolvedValue(
+      stubSchemaViewForClasses([
+        { classInfo: baseClass },
+        { classInfo: concreteClass1, baseClassFullName: baseClass.name },
+        { classInfo: concreteClass2, baseClassFullName: baseClass.name },
+        { classInfo: derivedClass, baseClassFullName: concreteClass1.name },
+      ]),
+    );
   });
 
   afterEach(() => {

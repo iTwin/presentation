@@ -11,15 +11,11 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, RelationshipPath, PropertyValueFormat as TypeValueFormat, Value } from "@itwin/presentation-common";
 import { serializeUniqueValues, UniqueValue } from "../../presentation-components/common/Utils.js";
 import {
-  ECClassInfo,
-  getIModelMetadataProvider,
-} from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
-import {
   createInstanceFilterDefinition,
   PresentationInstanceFilterInfo,
 } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationInstanceFilterCondition } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
-import { createTestECClassInfo, createTestPropertyInfo } from "../_helpers/Common.js";
+import { createTestECClassInfo, createTestPropertyInfo, stubSchemaViewForClasses } from "../_helpers/Common.js";
 import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content.js";
 
 describe("createInstanceFilterDefinition", () => {
@@ -498,44 +494,25 @@ describe("createInstanceFilterDefinition", () => {
 
   describe("returns base properties class", () => {
     const onClose = new BeEvent<() => void>();
-    const imodel = { key: "test_imodel", onClose } as IModelConnection;
+    const imodelMock = {
+      key: "test_imodel",
+      onClose,
+      getSchemaView: vi.fn().mockResolvedValue(stubSchemaViewForClasses([])),
+    };
+    const imodel = imodelMock as unknown as IModelConnection;
 
     const classAInfo: ClassInfo = { id: "0x1", name: "TestSchema:A", label: "A Class" };
     const classBInfo: ClassInfo = { id: "0x2", name: "TestSchema:B", label: "B Class" };
     const classCInfo: ClassInfo = { id: "0x3", name: "TestSchema:C", label: "C Class" };
 
     beforeEach(() => {
-      // stub metadataProvider for test imodel
-      const metadataProvider = getIModelMetadataProvider(imodel);
-      vi.spyOn(metadataProvider, "getECClassInfo").mockImplementation(async (name) => {
-        switch (name) {
-          case classAInfo.name:
-            return new ECClassInfo(
-              classAInfo.id,
-              classAInfo.name,
-              classAInfo.label,
-              new Set(),
-              new Set([classBInfo.id, classCInfo.id]),
-            );
-          case classBInfo.name:
-            return new ECClassInfo(
-              classBInfo.id,
-              classBInfo.name,
-              classBInfo.label,
-              new Set([classAInfo.id]),
-              new Set([classCInfo.id]),
-            );
-          case classCInfo.name:
-            return new ECClassInfo(
-              classCInfo.id,
-              classCInfo.name,
-              classCInfo.label,
-              new Set([classAInfo.id, classBInfo.id]),
-              new Set(),
-            );
-        }
-        return undefined;
-      });
+      imodelMock.getSchemaView.mockResolvedValue(
+        stubSchemaViewForClasses([
+          { classInfo: classAInfo },
+          { classInfo: classBInfo, baseClassFullName: classAInfo.name },
+          { classInfo: classCInfo, baseClassFullName: classBInfo.name },
+        ]),
+      );
     });
 
     afterEach(() => {
