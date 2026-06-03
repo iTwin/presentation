@@ -14,7 +14,7 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext.js";
 import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
-import { QuantityEditorName } from "../../../presentation-components/properties/editors/QuantityPropertyEditor.js";
+import { QuantityEditorName } from "../../../presentation-components/properties/editors/EditorNames.js";
 import { QuantityPropertyEditorInput } from "../../../presentation-components/properties/inputs/QuantityPropertyEditorInput.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";

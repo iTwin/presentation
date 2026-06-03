@@ -13,6 +13,7 @@ import {
   DEFAULT_ROOT_CATEGORY_NAME,
   filterRuleValidator,
 } from "../../presentation-components/instance-filter-builder/Utils.js";
+import { QuantityEditorName } from "../../presentation-components/properties/editors/EditorNames.js";
 import { createTestECClassInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -48,7 +49,19 @@ describe("createInstanceFilterPropertyInfos", () => {
     });
 
     const input = createInstanceFilterPropertyInfos(descriptor);
-    expect(input).toMatchSnapshot();
+    // replace editor name with a placeholder in snapshot to avoid it changing every time the test is run
+    const expected = input.map((info) =>
+      info.propertyDescription.editor?.name === QuantityEditorName
+        ? {
+            ...info,
+            propertyDescription: {
+              ...info.propertyDescription,
+              editor: { name: "presentation-quantity-editor-{guid}" },
+            },
+          }
+        : info,
+    );
+    expect(expected).toMatchSnapshot();
   });
 
   it("creates property info with default root category name and does not assign a label to it", () => {
