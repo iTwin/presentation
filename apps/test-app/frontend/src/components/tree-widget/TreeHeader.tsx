@@ -28,10 +28,7 @@ interface HeaderProps {
   onDiagnosticsOptionsChange?: (options: DiagnosticsProps) => void;
 }
 
-export const TreeWidgetHeader = forwardRef(function TreeWidgetHeader(
-  props: HeaderProps,
-  ref: React.ForwardedRef<HTMLDivElement>,
-) {
+export const TreeWidgetHeader = forwardRef((props: HeaderProps, ref: React.ForwardedRef<HTMLDivElement>) => {
   const { onFilterChange, filteringStatus, showFilteringInput } = props;
   return (
     <div ref={ref} className="tree-widget-header">
@@ -64,3 +61,4 @@ export const TreeWidgetHeader = forwardRef(function TreeWidgetHeader(
     </div>
   );
 });
+TreeWidgetHeader.displayName = "TreeWidgetHeader";

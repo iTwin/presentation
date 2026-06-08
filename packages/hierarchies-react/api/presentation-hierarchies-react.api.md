@@ -14,7 +14,7 @@ import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
-import { JSX } from 'react/jsx-runtime';
+import { JSX } from 'react';
 import { NodeData } from '@itwin/itwinui-react';
 import { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import { Props } from '@itwin/presentation-shared';

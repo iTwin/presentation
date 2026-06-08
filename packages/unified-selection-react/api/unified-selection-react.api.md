@@ -4,7 +4,7 @@
 
 ```ts
 
-import { JSX } from 'react/jsx-runtime';
+import { JSX } from 'react';
 import { PropsWithChildren } from 'react';
 import { SelectionStorage } from '@itwin/unified-selection';
 
