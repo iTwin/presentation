@@ -498,6 +498,7 @@ describe("Tree update", () => {
             },
             { timeout: 9999999 },
           );
+          await new Promise((resolve) => setTimeout(resolve, 0));
         }
       })();
     }
