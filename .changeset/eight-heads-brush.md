@@ -5,4 +5,4 @@
 "@itwin/unified-selection": patch
 ---
 
-Bump dependencies.
+Update `@itwin/core-*` dependencies to `^5.10.0`.
