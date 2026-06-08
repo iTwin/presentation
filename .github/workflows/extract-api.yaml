@@ -16,6 +16,7 @@ jobs:
     name: Detect what files changed
     outputs:
       packages: ${{ steps.changes.outputs.packages }}
+      workspace_config: ${{ steps.changes.outputs.workspace_config }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -27,10 +28,16 @@ jobs:
           filters: |
             packages:
               - 'packages/**'
+            workspace_config:
+              - 'pnpm-workspace.yaml'
+              - 'pnpm-lock.yaml'
+              - 'package.json'
+              - '.npmrc'
+              - '.pnpmfile.cjs'
 
   extract-api:
     needs: [files-changed]
-    if: ${{ needs.files-changed.outputs.packages == 'true' }}
+    if: ${{ needs.files-changed.outputs.packages == 'true' || needs.files-changed.outputs.workspace_config == 'true' }}
     runs-on: ubuntu-latest
     name: Extract API
     steps:
