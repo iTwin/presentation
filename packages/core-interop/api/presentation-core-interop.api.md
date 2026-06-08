@@ -7,7 +7,7 @@
 import { ECSchemaProvider } from '@itwin/presentation-shared';
 import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ECSqlReader } from '@itwin/core-common';
-import { Event as Event_2 } from '@itwin/presentation-shared';
+import { Event } from '@itwin/presentation-shared';
 import { ILogger } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { LogLevel } from '@itwin/core-bentley';
@@ -76,9 +76,9 @@ interface ICoreLogger {
 
 // @public
 interface ICoreTxnManager {
-    onChangesApplied: Event_2;
-    onCommit: Event_2;
-    onCommitted: Event_2;
+    onChangesApplied: Event;
+    onCommit: Event;
+    onCommitted: Event;
 }
 
 // @public
