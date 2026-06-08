@@ -30,6 +30,10 @@ jobs:
               - 'packages/**'
             workspace_config:
               - 'pnpm-workspace.yaml'
+              - 'pnpm-lock.yaml'
+              - 'package.json'
+              - '.npmrc'
+              - '.pnpmfile.cjs'
 
   extract-api:
     needs: [files-changed]
