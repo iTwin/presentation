@@ -47,7 +47,8 @@ function useModelSourceUpdateOnBriefcaseUpdate(params: TreeReloadParams): void {
     let subscription: Subscription | undefined;
     const reload = () => {
       const currentModelSource = modelSource?.current;
-      if (!currentModelSource || !dataProviderProps.imodel.isBriefcaseConnection()) {
+      /* v8 ignore if -- @preserve */
+      if (!currentModelSource) {
         return;
       }
       /* v8 ignore next -- @preserve */
@@ -87,6 +88,7 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: TreeReloadParams): 
         }
 
         const currentModelSource = modelSource?.current;
+        /* v8 ignore if -- @preserve */
         if (!currentModelSource) {
           return;
         }
@@ -121,6 +123,7 @@ function useModelSourceUpdateOnRulesetModification(params: TreeReloadParams): vo
       }
 
       const currentModelSource = modelSource?.current;
+      /* v8 ignore if -- @preserve */
       if (!currentModelSource) {
         return;
       }
@@ -153,6 +156,7 @@ function useModelSourceUpdateOnRulesetVariablesChange(params: TreeReloadParams):
       .vars(getRulesetId(dataProviderProps.ruleset))
       .onVariableChanged.addListener(() => {
         const currentModelSource = modelSource?.current;
+        /* v8 ignore if -- @preserve */
         if (!currentModelSource) {
           return;
         }
@@ -183,6 +187,7 @@ function useModelSourceUpdateOnUnitSystemChange(params: TreeReloadParams): void 
     let subscription: Subscription | undefined;
     const removeListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(() => {
       const currentModelSource = modelSource?.current;
+      /* v8 ignore if -- @preserve */
       if (!currentModelSource) {
         return;
       }
