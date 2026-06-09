@@ -16,6 +16,7 @@ import type { QueryRowProxy } from '@itwin/core-common';
 import type { Schema } from '@itwin/ecschema-metadata';
 import type { SchemaContext } from '@itwin/ecschema-metadata';
 import { SchemaKey } from '@itwin/ecschema-metadata';
+import { SchemaView } from '@itwin/ecschema-metadata';
 import type { UnitSystemKey } from '@itwin/core-quantity';
 
 // @public
@@ -40,6 +41,9 @@ interface CoreSchemaContext {
 
 // @public
 export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSchemaProvider;
+
+// @beta
+export function createECSchemaProvider(schemaView: SchemaView): ECSchemaProvider;
 
 // @public
 export function createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQueryExecutor;
