@@ -915,9 +915,12 @@ function getHiddenClassesTree(
   return derivedClasses.flatMap((ecClass): HiddenClassNode[] => {
     const hiddenClassAttr = (() => {
       switch (ecClass.isHidden) {
-        case true: return "hide";
-        case false: return "show";
-        default: return undefined;
+        case true:
+          return "hide";
+        case false:
+          return "show";
+        default:
+          return undefined;
       }
     })();
     const attr = hiddenClassAttr ?? hiddenSchemas.get(ecClass.schema.name);

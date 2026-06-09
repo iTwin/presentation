@@ -698,11 +698,7 @@ describe("createRelationshipPathJoinClause", () => {
       schemaName,
       className: typeof props.relationship === "string" ? props.relationship : "relationship",
       direction: "Forward",
-      source: {
-        polymorphic: false,
-        multiplicity: { lowerLimit: 0, upperLimit: 1 },
-        abstractConstraint: sourceClass,
-      },
+      source: { polymorphic: false, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: sourceClass },
       target: {
         polymorphic: false,
         multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },

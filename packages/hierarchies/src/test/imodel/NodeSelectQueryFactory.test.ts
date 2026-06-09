@@ -1290,7 +1290,12 @@ describe("createNodesQueryClauseFactory", () => {
             baseClass: selectClass,
             isHidden: true,
           });
-          const showClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "z", baseClass: hideClass, isHidden: false });
+          const showClass = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "z",
+            baseClass: hideClass,
+            isHidden: false,
+          });
           const clauses = await factory.createFilterClauses({
             contentClass: { fullName: selectClass.fullName, alias: "content-class" },
           });
@@ -1315,7 +1320,12 @@ describe("createNodesQueryClauseFactory", () => {
             baseClass: hideClass1,
             isHidden: false,
           });
-          const hideClass2 = imodelAccess.stubEntityClass({ schemaName: "s", className: "w", baseClass: showClass, isHidden: true });
+          const hideClass2 = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "w",
+            baseClass: showClass,
+            isHidden: true,
+          });
           const clauses = await factory.createFilterClauses({
             contentClass: { fullName: selectClass.fullName, alias: "content-class" },
           });
@@ -1329,7 +1339,7 @@ describe("createNodesQueryClauseFactory", () => {
         it("excludes classes from hidden schemas", async () => {
           const selectClass = imodelAccess.stubEntityClass({ schemaName: "s1", className: "x" });
           const hideClass = imodelAccess.stubEntityClass({ schemaName: "s2", className: "y", baseClass: selectClass });
-          (await imodelAccess.getSchema("s2"))!.isHidden = true;
+          (await imodelAccess.getSchema("s2")).isHidden = true;
           const clauses = await factory.createFilterClauses({
             contentClass: { fullName: selectClass.fullName, alias: "content-class" },
           });
@@ -1342,8 +1352,17 @@ describe("createNodesQueryClauseFactory", () => {
 
         it("passes through non-hidden derived class to find hidden descendants", async () => {
           const selectClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "x" });
-          const neutralClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "n", baseClass: selectClass });
-          const hideClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "y", baseClass: neutralClass, isHidden: true });
+          const neutralClass = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "n",
+            baseClass: selectClass,
+          });
+          const hideClass = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "y",
+            baseClass: neutralClass,
+            isHidden: true,
+          });
           const clauses = await factory.createFilterClauses({
             contentClass: { fullName: selectClass.fullName, alias: "content-class" },
           });
@@ -1356,7 +1375,12 @@ describe("createNodesQueryClauseFactory", () => {
 
         it("excludes nested hidden classes via outermost hidden ancestor", async () => {
           const selectClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "x" });
-          const hideClass1 = imodelAccess.stubEntityClass({ schemaName: "s", className: "y", baseClass: selectClass, isHidden: true });
+          const hideClass1 = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "y",
+            baseClass: selectClass,
+            isHidden: true,
+          });
           imodelAccess.stubEntityClass({ schemaName: "s", className: "z", baseClass: hideClass1, isHidden: true });
           const clauses = await factory.createFilterClauses({
             contentClass: { fullName: selectClass.fullName, alias: "content-class" },

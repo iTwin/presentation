@@ -327,7 +327,6 @@ export namespace EC {
     primitiveType: PrimitiveType;
     extendedTypeName?: string;
   }
-
 }
 
 /**
