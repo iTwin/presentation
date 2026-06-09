@@ -64,18 +64,18 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@itwin/appui-abstract": "^5.9.0",
-    "@itwin/components-react": "^5.31.0",
-    "@itwin/core-bentley": "^5.9.0",
-    "@itwin/core-common": "^5.9.0",
-    "@itwin/core-frontend": "^5.9.0",
-    "@itwin/core-quantity": "^5.9.0",
-    "@itwin/core-react": "^5.31.0",
-    "@itwin/ecschema-metadata": "^5.9.0",
-    "@itwin/imodel-components-react": "^5.31.0",
-    "@itwin/itwinui-react": "^3.20.0",
-    "@itwin/presentation-common": "^5.9.0",
-    "@itwin/presentation-frontend": "^5.9.0",
+    "@itwin/appui-abstract": "^5.10.0",
+    "@itwin/components-react": "^5.32.0",
+    "@itwin/core-bentley": "^5.10.0",
+    "@itwin/core-common": "^5.10.0",
+    "@itwin/core-frontend": "^5.10.0",
+    "@itwin/core-quantity": "^5.10.0",
+    "@itwin/core-react": "^5.32.0",
+    "@itwin/ecschema-metadata": "^5.10.0",
+    "@itwin/imodel-components-react": "^5.32.0",
+    "@itwin/itwinui-react": "^3.21.0",
+    "@itwin/presentation-common": "^5.10.0",
+    "@itwin/presentation-frontend": "^5.10.0",
     "@itwin/unified-selection-react": "^1.0.0",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0"
@@ -119,6 +119,7 @@
     "react": "catalog:react",
     "react-dom": "catalog:react",
     "rimraf": "catalog:build-tools",
-    "typescript": "catalog:build-tools"
+    "typescript": "catalog:build-tools",
+    "@itwin/presentation-core-interop": "workspace:^"
   }
 }
