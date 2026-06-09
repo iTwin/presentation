@@ -119,7 +119,6 @@
     "react": "catalog:react",
     "react-dom": "catalog:react",
     "rimraf": "catalog:build-tools",
-    "typescript": "catalog:build-tools",
-    "@itwin/presentation-core-interop": "workspace:^"
+    "typescript": "catalog:build-tools"
   }
 }
