@@ -484,9 +484,7 @@ describe("Tree update", () => {
       await waitFor(() => {
         expect(result.current).toBeDefined();
       });
-
-      let lastNodeLoader = result.current!.nodeLoader;
-      await expectTree(lastNodeLoader, expectedTree);
+      await expectTree(result.current!.nodeLoader, expectedTree);
 
       return new (class implements VerifiedHierarchy {
         public getModelSource(): TreeModelSource {
@@ -496,12 +494,9 @@ describe("Tree update", () => {
         public async verifyChange(expectedUpdatedTree: TreeHierarchy[]): Promise<void> {
           await waitFor(
             async () => {
-              // wait for tree to update
-              expect(lastNodeLoader).not.toBe(result.current!.nodeLoader);
               await expectTree(result.current!.nodeLoader, expectedUpdatedTree);
-              lastNodeLoader = result.current!.nodeLoader;
             },
-            { timeout: 9999999 },
+            { timeout: 30000 },
           );
         }
       })();

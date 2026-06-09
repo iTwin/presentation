@@ -7,7 +7,6 @@
 import { MutableRefObject, useEffect } from "react";
 import { RenderedItemsRange, Subscription, TreeModelSource } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
-import { Ruleset } from "@itwin/presentation-common";
 import { IModelHierarchyChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
 import { getRulesetId } from "../../common/Utils.js";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider.js";
@@ -23,8 +22,7 @@ export interface ReloadedTree {
 export interface TreeReloadParams {
   dataProviderProps: PresentationTreeDataProviderProps;
   pageSize: number;
-  ruleset: string | Ruleset;
-  modelSource?: TreeModelSource;
+  modelSource: MutableRefObject<TreeModelSource | undefined>;
   onReload: (params: ReloadedTree) => void;
   renderedItems: MutableRefObject<RenderedItemsRange | undefined>;
 }
@@ -39,19 +37,28 @@ export function useTreeReload(params: TreeReloadParams) {
 }
 
 function useModelSourceUpdateOnBriefcaseUpdate(params: TreeReloadParams): void {
-  const { dataProviderProps, ruleset, pageSize, modelSource, onReload, renderedItems } = params;
+  const { dataProviderProps, pageSize, modelSource, onReload, renderedItems } = params;
 
   useEffect(() => {
-    if (!modelSource || !dataProviderProps.imodel.isBriefcaseConnection()) {
+    if (!dataProviderProps.imodel.isBriefcaseConnection()) {
       return;
     }
 
     let subscription: Subscription | undefined;
-
     const reload = () => {
+      const currentModelSource = modelSource?.current;
+      if (!currentModelSource || !dataProviderProps.imodel.isBriefcaseConnection()) {
+        return;
+      }
       /* v8 ignore next -- @preserve */
       subscription?.unsubscribe();
-      subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
+      subscription = startTreeReload({
+        dataProviderProps,
+        pageSize,
+        modelSource: currentModelSource,
+        renderedItems: renderedItems.current,
+        onReload,
+      });
     };
 
     const removePullListener = dataProviderProps.imodel.txns.onChangesPulled.addListener(reload);
@@ -62,27 +69,37 @@ function useModelSourceUpdateOnBriefcaseUpdate(params: TreeReloadParams): void {
       removePushListener();
       subscription?.unsubscribe();
     };
-  }, [modelSource, pageSize, dataProviderProps, ruleset, onReload, renderedItems]);
+  }, [modelSource, pageSize, dataProviderProps, onReload, renderedItems]);
 }
 
 function useModelSourceUpdateOnIModelHierarchyUpdate(params: TreeReloadParams): void {
-  const { dataProviderProps, ruleset, pageSize, modelSource, onReload, renderedItems } = params;
+  const { dataProviderProps, pageSize, modelSource, onReload, renderedItems } = params;
 
   useEffect(() => {
-    if (!modelSource) {
-      return;
-    }
-
     let subscription: Subscription | undefined;
     const removeListener = Presentation.presentation.onIModelHierarchyChanged.addListener(
       (args: IModelHierarchyChangeEventArgs) => {
-        if (args.rulesetId !== getRulesetId(ruleset) || args.imodelKey !== dataProviderProps.imodel.key) {
+        if (
+          args.rulesetId !== getRulesetId(dataProviderProps.ruleset) ||
+          args.imodelKey !== dataProviderProps.imodel.key
+        ) {
+          return;
+        }
+
+        const currentModelSource = modelSource?.current;
+        if (!currentModelSource) {
           return;
         }
 
         /* v8 ignore next -- @preserve */
         subscription?.unsubscribe();
-        subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
+        subscription = startTreeReload({
+          dataProviderProps,
+          pageSize,
+          modelSource: currentModelSource,
+          renderedItems: renderedItems.current,
+          onReload,
+        });
       },
     );
 
@@ -90,20 +107,21 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: TreeReloadParams): 
       removeListener();
       subscription?.unsubscribe();
     };
-  }, [modelSource, pageSize, dataProviderProps, ruleset, onReload, renderedItems]);
+  }, [modelSource, pageSize, dataProviderProps, onReload, renderedItems]);
 }
 
 function useModelSourceUpdateOnRulesetModification(params: TreeReloadParams): void {
-  const { dataProviderProps, ruleset, pageSize, modelSource, onReload, renderedItems } = params;
+  const { dataProviderProps, pageSize, modelSource, onReload, renderedItems } = params;
 
   useEffect(() => {
-    if (!modelSource) {
-      return;
-    }
-
     let subscription: Subscription | undefined;
     const removeListener = Presentation.presentation.rulesets().onRulesetModified.addListener((modifiedRuleset) => {
-      if (modifiedRuleset.id !== getRulesetId(ruleset)) {
+      if (modifiedRuleset.id !== getRulesetId(dataProviderProps.ruleset)) {
+        return;
+      }
+
+      const currentModelSource = modelSource?.current;
+      if (!currentModelSource) {
         return;
       }
 
@@ -111,11 +129,10 @@ function useModelSourceUpdateOnRulesetModification(params: TreeReloadParams): vo
       /* v8 ignore next -- @preserve */
       subscription?.unsubscribe();
       subscription = startTreeReload({
-        dataProviderProps,
-        ruleset: modifiedRuleset.id,
+        dataProviderProps: { ...dataProviderProps, ruleset: modifiedRuleset.id },
         pageSize,
-        modelSource,
-        renderedItems,
+        modelSource: currentModelSource,
+        renderedItems: renderedItems.current,
         onReload,
       });
     });
@@ -124,64 +141,82 @@ function useModelSourceUpdateOnRulesetModification(params: TreeReloadParams): vo
       removeListener();
       subscription?.unsubscribe();
     };
-  }, [dataProviderProps, ruleset, modelSource, pageSize, onReload, renderedItems]);
+  }, [dataProviderProps, modelSource, pageSize, onReload, renderedItems]);
 }
 
 function useModelSourceUpdateOnRulesetVariablesChange(params: TreeReloadParams): void {
-  const { dataProviderProps, pageSize, ruleset, modelSource, onReload, renderedItems } = params;
+  const { dataProviderProps, pageSize, modelSource, onReload, renderedItems } = params;
 
   useEffect(() => {
-    if (!modelSource) {
-      return;
-    }
-
     let subscription: Subscription | undefined;
-    const removeListener = Presentation.presentation.vars(getRulesetId(ruleset)).onVariableChanged.addListener(() => {
-      // note: we should probably debounce these events while accumulating changed variables in case multiple vars are changed
-      /* v8 ignore next -- @preserve */
-      subscription?.unsubscribe();
-      subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
-    });
+    const removeListener = Presentation.presentation
+      .vars(getRulesetId(dataProviderProps.ruleset))
+      .onVariableChanged.addListener(() => {
+        const currentModelSource = modelSource?.current;
+        if (!currentModelSource) {
+          return;
+        }
+
+        // note: we should probably debounce these events while accumulating changed variables in case multiple vars are changed
+        /* v8 ignore next -- @preserve */
+        subscription?.unsubscribe();
+        subscription = startTreeReload({
+          dataProviderProps,
+          pageSize,
+          modelSource: currentModelSource,
+          renderedItems: renderedItems.current,
+          onReload,
+        });
+      });
 
     return () => {
       removeListener();
       subscription?.unsubscribe();
     };
-  }, [dataProviderProps, modelSource, pageSize, ruleset, onReload, renderedItems]);
+  }, [dataProviderProps, modelSource, pageSize, onReload, renderedItems]);
 }
 
 function useModelSourceUpdateOnUnitSystemChange(params: TreeReloadParams): void {
-  const { dataProviderProps, pageSize, ruleset, modelSource, onReload, renderedItems } = params;
+  const { dataProviderProps, pageSize, modelSource, onReload, renderedItems } = params;
 
   useEffect(() => {
-    if (!modelSource) {
-      return;
-    }
-
     let subscription: Subscription | undefined;
     const removeListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(() => {
+      const currentModelSource = modelSource?.current;
+      if (!currentModelSource) {
+        return;
+      }
+
       /* v8 ignore next -- @preserve */
       subscription?.unsubscribe();
-      subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
+      subscription = startTreeReload({
+        dataProviderProps,
+        pageSize,
+        modelSource: currentModelSource,
+        renderedItems: renderedItems.current,
+        onReload,
+      });
     });
 
     return () => {
       removeListener();
       subscription?.unsubscribe();
     };
-  }, [dataProviderProps, modelSource, pageSize, ruleset, onReload, renderedItems]);
+  }, [dataProviderProps, modelSource, pageSize, onReload, renderedItems]);
 }
 
 function startTreeReload({
   dataProviderProps,
-  ruleset,
   modelSource,
   pageSize,
   renderedItems,
   onReload,
-}: Required<TreeReloadParams>): Subscription {
-  const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset });
-  return reloadTree(modelSource.getModel(), dataProvider, pageSize, renderedItems.current).subscribe({
+}: Omit<Required<TreeReloadParams>, "modelSource" | "renderedItems"> & {
+  modelSource: TreeModelSource;
+  renderedItems: RenderedItemsRange | undefined;
+}): Subscription {
+  const dataProvider = new PresentationTreeDataProvider(dataProviderProps);
+  return reloadTree(modelSource.getModel(), dataProvider, pageSize, renderedItems).subscribe({
     next: (newModelSource) => onReload({ modelSource: newModelSource, dataProvider }),
   });
 }
