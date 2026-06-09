@@ -485,9 +485,8 @@ describe("Tree update", () => {
         expect(result.current).toBeDefined();
       });
 
-      let lastNodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider> | undefined;
-      await expectTree(result.current!.nodeLoader, expectedTree);
-      lastNodeLoader = result.current!.nodeLoader;
+      let lastNodeLoader = result.current!.nodeLoader;
+      await expectTree(lastNodeLoader, expectedTree);
 
       return new (class implements VerifiedHierarchy {
         public getModelSource(): TreeModelSource {
