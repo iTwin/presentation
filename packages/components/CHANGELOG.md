@@ -1,5 +1,14 @@
 # Change Log - @itwin/presentation-components
 
+## 5.16.1
+
+### Patch Changes
+
+- [#1393](https://github.com/iTwin/presentation/pull/1393): `usePresentationTreeState`: Fix a race condition where iModel and ruleset change notifications could be missed while the tree was reloading.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.16
+  - @itwin/unified-selection@1.7.6
+
 ## 5.16.0
 
 ### Minor Changes

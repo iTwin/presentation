@@ -1,5 +1,13 @@
 # @itwin/presentation-hierarchies
 
+## 1.7.16
+
+### Patch Changes
+
+- [#1390](https://github.com/iTwin/presentation/pull/1390): Update `@itwin/core-*` dependencies to `^5.10.0`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.16
+
 ## 1.7.15
 
 ### Patch Changes
