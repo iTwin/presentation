@@ -6,8 +6,9 @@
 import { createECSchemaProviderFromSchemaContext } from "./schema-provider/SchemaContextProvider.js";
 import { createECSchemaProviderFromSchemaView } from "./schema-provider/SchemaViewProvider.js";
 
-import type { ECSchemaProvider, Props } from "@itwin/presentation-shared";
+import type { ECSchemaProvider } from "@itwin/presentation-shared";
 import type { CoreSchemaContext } from "./schema-provider/SchemaContextProvider.js";
+import type { PublicSchemaView } from "./schema-provider/SchemaViewProvider.js";
 
 /**
  * Creates an `ECSchemaProvider` for given [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/).
@@ -52,7 +53,6 @@ export function createECSchemaProvider(input: CoreSchemaContext | PublicSchemaVi
   return createECSchemaProviderFromSchemaContext(input);
 }
 
-type PublicSchemaView = Props<typeof createECSchemaProviderFromSchemaView>;
 function isSchemaView(input: CoreSchemaContext | PublicSchemaView): input is PublicSchemaView {
   return "schemaToken" in input;
 }

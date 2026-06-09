@@ -15,7 +15,7 @@ import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
  *
  * @public
  */
-type PublicSchemaView = Pick<
+export type PublicSchemaView = Pick<
   SchemaView,
   | "schemaToken"
   | "isOutdated"

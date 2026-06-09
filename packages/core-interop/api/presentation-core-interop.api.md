@@ -16,7 +16,7 @@ import type { QueryRowProxy } from '@itwin/core-common';
 import type { Schema } from '@itwin/ecschema-metadata';
 import type { SchemaContext } from '@itwin/ecschema-metadata';
 import { SchemaKey } from '@itwin/ecschema-metadata';
-import { SchemaView } from '@itwin/ecschema-metadata';
+import type { SchemaView } from '@itwin/ecschema-metadata';
 import type { UnitSystemKey } from '@itwin/core-quantity';
 
 // @public
@@ -43,7 +43,7 @@ interface CoreSchemaContext {
 export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSchemaProvider;
 
 // @beta
-export function createECSchemaProvider(schemaView: SchemaView): ECSchemaProvider;
+export function createECSchemaProvider(schemaView: PublicSchemaView): ECSchemaProvider;
 
 // @public
 export function createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQueryExecutor;
@@ -84,6 +84,9 @@ interface ICoreTxnManager {
     onCommit: Event_2;
     onCommitted: Event_2;
 }
+
+// @public
+type PublicSchemaView = Pick<SchemaView, "schemaToken" | "isOutdated" | "schemaCount" | "classCount" | "getSchema" | "getSchemaByAlias" | "getSchemas" | "findClass" | "findEnumeration" | "findKindOfQuantity" | "findPropertyCategory">;
 
 // @public
 export function registerTxnListeners(txns: ICoreTxnManager, onChanged: () => void): () => void;

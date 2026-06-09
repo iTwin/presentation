@@ -156,39 +156,27 @@ export namespace EC {
     }
     export interface Class extends SchemaItem {
         // (undocumented)
-        baseClass: Promise<Class | undefined>;
+        baseClass: Class | undefined;
         // (undocumented)
-        getCustomAttributes(): Promise<CustomAttributeSet>;
+        getDerivedClasses(): Class[];
         // (undocumented)
-        getDerivedClasses(): Promise<Class[]>;
+        getProperties(): Array<Property>;
         // (undocumented)
-        getProperties(): Promise<Array<Property>>;
+        getProperty(name: string): Property | undefined;
         // (undocumented)
-        getProperty(name: string): Promise<Property | undefined>;
+        is(className: string, schemaName: string): boolean;
         // (undocumented)
-        is(className: string, schemaName: string): Promise<boolean>;
-        // (undocumented)
-        is(other: Class): Promise<boolean>;
+        is(other: Class): boolean;
         // (undocumented)
         isEntityClass(): this is EntityClass;
+        // (undocumented)
+        isHidden: boolean | undefined;
         // (undocumented)
         isMixin(): this is Mixin;
         // (undocumented)
         isRelationshipClass(): this is RelationshipClass;
         // (undocumented)
         isStructClass(): this is StructClass;
-    }
-    export interface CustomAttribute {
-        // (undocumented)
-        [propName: string]: any;
-        // (undocumented)
-        className: FullClassName;
-    }
-    export interface CustomAttributeSet {
-        // (undocumented)
-        [Symbol.iterator]: () => IterableIterator<[FullClassName, CustomAttribute]>;
-        // (undocumented)
-        get(className: FullClassName): CustomAttribute | undefined;
     }
     export type EntityClass = Class;
     export interface Enumeration extends SchemaItem {
@@ -202,7 +190,7 @@ export namespace EC {
     export type EnumerationArrayProperty = EnumerationProperty & ArrayPropertyAttributes;
     export interface EnumerationProperty extends Property {
         // (undocumented)
-        enumeration: Promise<Enumeration | undefined>;
+        enumeration: Enumeration | undefined;
         // (undocumented)
         extendedTypeName?: string;
     }
@@ -228,7 +216,7 @@ export namespace EC {
         // (undocumented)
         direction: "Forward" | "Backward";
         // (undocumented)
-        relationshipClass: Promise<RelationshipClass>;
+        relationshipClass: RelationshipClass;
     }
     export type PrimitiveArrayProperty = PrimitiveProperty & ArrayPropertyAttributes;
     export interface PrimitiveProperty extends Property {
@@ -242,11 +230,11 @@ export namespace EC {
         // (undocumented)
         class: Class;
         // (undocumented)
-        getCustomAttributes(): Promise<CustomAttributeSet>;
-        // (undocumented)
         isArray(): this is ArrayProperty;
         // (undocumented)
         isEnumeration(): this is EnumerationProperty;
+        // (undocumented)
+        isHidden: boolean;
         // (undocumented)
         isNavigation(): this is NavigationProperty;
         // (undocumented)
@@ -254,7 +242,7 @@ export namespace EC {
         // (undocumented)
         isStruct(): this is StructProperty;
         // (undocumented)
-        kindOfQuantity: Promise<KindOfQuantity | undefined>;
+        kindOfQuantity: KindOfQuantity | undefined;
         // (undocumented)
         label?: string;
         // (undocumented)
@@ -270,7 +258,7 @@ export namespace EC {
     }
     export interface RelationshipConstraint {
         // (undocumented)
-        abstractConstraint: Promise<EntityClass | Mixin | RelationshipClass | undefined>;
+        abstractConstraint: EntityClass | Mixin | RelationshipClass | undefined;
         // (undocumented)
         multiplicity: RelationshipConstraintMultiplicity;
         // (undocumented)
@@ -284,9 +272,9 @@ export namespace EC {
     }
     export interface Schema {
         // (undocumented)
-        getClass(name: string): Promise<Class | undefined>;
+        getClass(name: string): Class | undefined;
         // (undocumented)
-        getCustomAttributes(): Promise<CustomAttributeSet>;
+        isHidden: boolean;
         // (undocumented)
         name: string;
         version: SchemaVersion;
