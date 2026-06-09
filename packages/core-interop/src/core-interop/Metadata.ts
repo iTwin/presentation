@@ -9,7 +9,6 @@ import { createECSchemaProviderFromSchemaView } from "./schema-provider/SchemaVi
 import type { ECSchemaProvider, Props } from "@itwin/presentation-shared";
 import type { CoreSchemaContext } from "./schema-provider/SchemaContextProvider.js";
 
-
 /**
  * Creates an `ECSchemaProvider` for given [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/).
  *
