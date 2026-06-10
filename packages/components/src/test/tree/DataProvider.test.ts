@@ -6,7 +6,6 @@
 
 import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
 import { afterEach, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
-import { PropertyRecord } from "@itwin/appui-abstract";
 import { CheckBoxState, PageOptions } from "@itwin/components-react";
 import { assert, BeEvent, Logger } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -97,25 +96,6 @@ describe("TreeDataProvider", () => {
   describe("imodel", () => {
     it("returns imodel provider is initialized with", () => {
       expect(provider.imodel).toBe(imodel);
-    });
-  });
-
-  describe("getNodeKey", () => {
-    it("returns invalid key for non presentation tree node item", () => {
-      const key = provider.getNodeKey({ id: "test_id", label: PropertyRecord.fromString("Test Label") });
-      expect(key.type).toHaveLength(0);
-      expect(key.pathFromRoot).toHaveLength(0);
-      expect(key.version).toBe(0);
-    });
-
-    it("returns valid key for presentation tree node item", () => {
-      const nodeKey = createTestECInstancesNodeKey();
-      const item: PresentationTreeNodeItem = {
-        id: "test_id",
-        label: PropertyRecord.fromString("Test Label"),
-        key: nodeKey,
-      };
-      expect(provider.getNodeKey(item)).toBe(nodeKey);
     });
   });
 
@@ -337,14 +317,6 @@ describe("TreeDataProvider", () => {
       await provider.getNodes();
       expect(override).toHaveBeenCalledOnce();
       expect(presentationManager.getNodesIterator).not.toHaveBeenCalled();
-    });
-
-    it("uses `PresentationManager.getNodesAndCount` if `getNodesIterator` is not available", async () => {
-      Object.assign(presentationManager, { getNodesIterator: undefined });
-      presentationManager.getNodesAndCount.mockResolvedValue({ count: 1, nodes: [createTestECInstancesNode()] });
-      provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId });
-      await provider.getNodes();
-      expect(presentationManager.getNodesAndCount).toHaveBeenCalledOnce();
     });
 
     it("logs a warning when requesting nodes and pagingSize is not the same as passed pageOptions", async () => {

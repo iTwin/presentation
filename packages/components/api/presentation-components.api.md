@@ -43,7 +43,6 @@ import { Node as Node_2 } from '@itwin/presentation-common';
 import { NodeKey } from '@itwin/presentation-common';
 import { NodePathElement } from '@itwin/presentation-common';
 import { Paged } from '@itwin/presentation-common';
-import { PagedTreeNodeLoader } from '@itwin/components-react';
 import { PageOptions } from '@itwin/presentation-common';
 import { PageOptions as PageOptions_2 } from '@itwin/components-react';
 import { PrimitiveValue } from '@itwin/appui-abstract';
@@ -121,8 +120,6 @@ export class ContentDataProvider implements IContentDataProvider {
     getContentSetSize(): Promise<number>;
     protected getDescriptorOverrides(): Promise<DescriptorOverrides>;
     getFieldByPropertyDescription(description: PropertyDescription): Promise<Field | undefined>;
-    // @deprecated
-    getFieldByPropertyRecord(propertyRecord: PropertyRecord): Promise<Field | undefined>;
     get imodel(): IModelConnection;
     set imodel(imodel: IModelConnection);
     protected invalidateCache(props: CacheInvalidationProps): void;
@@ -204,11 +201,7 @@ export interface FavoritePropertiesDataFiltererProps {
 
 // @public
 export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataProvider {
-    constructor(props: FavoritePropertiesDataProviderProps & {
-        activeScopeProvider: NonNullable<FavoritePropertiesDataProviderProps["activeScopeProvider"]>;
-    });
-    // @deprecated
-    constructor(props?: FavoritePropertiesDataProviderProps);
+    constructor(props: FavoritePropertiesDataProviderProps);
     getData(imodel: IModelConnection, elementIds: Id64Arg | KeySet): Promise<PropertyData>;
     // @deprecated
     includeFieldsWithCompositeValues: boolean;
@@ -218,7 +211,7 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
 
 // @public
 export interface FavoritePropertiesDataProviderProps {
-    activeScopeProvider?: () => Parameters<typeof computeSelection>[0]["scope"];
+    activeScopeProvider: () => Parameters<typeof computeSelection>[0]["scope"];
     ruleset?: Ruleset | string;
 }
 
@@ -257,8 +250,6 @@ export interface IContentDataProvider extends IPresentationDataProvider {
     getContentDescriptor: () => Promise<Descriptor | undefined>;
     getContentSetSize: () => Promise<number>;
     getFieldByPropertyDescription: (description: PropertyDescription) => Promise<Field | undefined>;
-    // @deprecated
-    getFieldByPropertyRecord: (propertyRecord: PropertyRecord) => Promise<Field | undefined>;
     keys: KeySet;
     selectionInfo: SelectionInfo | undefined;
 }
@@ -321,8 +312,6 @@ export type IPresentationPropertyDataProvider = IPropertyDataProvider & IContent
 export interface IPresentationTreeDataProvider extends ITreeDataProvider, IPresentationDataProvider {
     createRequestOptions(parentKey?: NodeKey, instanceFilter?: InstanceFilterDefinition): HierarchyRequestOptions<IModelConnection, NodeKey>;
     getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
-    // @deprecated
-    getNodeKey(node: TreeNodeItem): NodeKey;
 }
 
 // @public @deprecated
@@ -538,8 +527,6 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     // @deprecated (undocumented)
     dispose(): void;
     getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
-    // @deprecated
-    getNodeKey(node: TreeNodeItem): NodeKey;
     getNodes(parentNode?: TreeNodeItem, pageOptions?: PageOptions_2): Promise<DelayLoadedTreeNodeItem[]>;
     getNodesCount(parentNode?: TreeNodeItem): Promise<number>;
     // (undocumented)
@@ -561,8 +548,6 @@ export interface PresentationTreeDataProviderDataSourceEntryPoints {
         nodes: Node_2[];
         count: number;
     }>;
-    // @deprecated (undocumented)
-    getNodesCount?: (requestOptions: HierarchyRequestOptions<IModelConnection, NodeKey>) => Promise<number>;
     // (undocumented)
     getNodesIterator: (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey> & {
         maxParallelRequests?: number;
@@ -605,18 +590,6 @@ export interface PresentationTreeNodeItemFilteringInfo {
 }
 
 // @public @deprecated
-export interface PresentationTreeNodeLoaderProps extends PresentationTreeDataProviderProps {
-    pagingSize: number;
-    seedTreeModel?: TreeModel;
-}
-
-// @public @deprecated
-export interface PresentationTreeNodeLoaderResult {
-    nodeLoader: PagedTreeNodeLoader<IPresentationTreeDataProvider>;
-    onItemsRendered: (items: RenderedItemsRange) => void;
-}
-
-// @public @deprecated
 export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps): JSX.Element;
 
 // @public @deprecated
@@ -650,7 +623,7 @@ export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "
 export interface PropertyDataProviderWithUnifiedSelectionProps {
     dataProvider: IPresentationPropertyDataProvider;
     requestedContentInstancesLimit?: number;
-    selectionStorage?: SelectionStorage;
+    selectionStorage: SelectionStorage;
 }
 
 // @public
@@ -774,8 +747,6 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
     dispose(): void;
     // (undocumented)
     protected getKeys(nodes: TreeNodeItem[]): Keys;
-    // @deprecated (undocumented)
-    protected getNodeKey(node: TreeNodeItem): NodeKey;
     // (undocumented)
     onSelectionModified(input: TreeSelectionModificationEventArgs): Subscription | undefined;
     // (undocumented)
@@ -869,7 +840,7 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: U
 
 // @public
 export interface UsePresentationTableWithUnifiedSelectionProps<TColumn, TRow> extends Omit<UsePresentationTableProps<TColumn, TRow>, "keys"> {
-    selectionStorage?: SelectionStorage;
+    selectionStorage: SelectionStorage;
 }
 
 // @public
@@ -877,9 +848,6 @@ export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> 
     onSelect: (selectedRowKeys: string[]) => void;
     selectedRows: TRow[];
 }
-
-// @public @deprecated
-export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult;
 
 // @public @deprecated
 export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>(input: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined;
@@ -914,11 +882,6 @@ export interface UsePresentationTreeStateResult<TEventHandler extends TreeEventH
 }
 
 // @public
-export function usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps & {
-    selectionStorage: NonNullable<PropertyDataProviderWithUnifiedSelectionProps["selectionStorage"]>;
-}): UsePropertyDataProviderWithUnifiedSelectionResult;
-
-// @public @deprecated
 export function usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult;
 
 // @public
@@ -927,17 +890,11 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
     numSelectedElements: number;
 }
 
-// @public @deprecated
-export function useRulesetRegistration(ruleset: Ruleset): void;
-
 // @public
 export function useSchemaMetadataContext(): SchemaMetadataContext | undefined;
 
 // @public @deprecated
 export function useUnifiedSelectionContext(): UnifiedSelectionContext | undefined;
-
-// @public @deprecated
-export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams): UnifiedSelectionTreeEventHandler;
 
 // @public @deprecated
 export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportComponent: React.ComponentType<P>): React.ComponentType<P>;

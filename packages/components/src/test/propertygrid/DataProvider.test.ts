@@ -232,17 +232,6 @@ describe("PropertyDataProvider", () => {
       );
     });
 
-    it("calls `FavoritePropertiesManager.has` when `hasAsync` is not available", async () => {
-      Object.assign(favoritePropertiesManager, { hasAsync: undefined });
-      await provider.isFieldFavoriteAsync(field);
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      expect(favoritePropertiesManager.has).toHaveBeenCalledExactlyOnceWith(
-        field,
-        imodel,
-        FavoritePropertiesScope.IModel,
-      );
-    });
-
     it("calls deprecated `isFieldFavorite` when it's overridden by a subclass", async () => {
       class Subclass extends Provider {
         public override isFieldFavorite(f: Field): boolean {
@@ -1546,44 +1535,6 @@ describe("PropertyDataProvider", () => {
             Object.assign(favoritePropertiesManager, {
               hasAsync: () => true,
               sortFieldsAsync: async (_imodel: IModelConnection, fields: Field[]) =>
-                fields.sort((lhs: Field, rhs: Field): number => {
-                  if (lhs.label < rhs.label) {
-                    return -1;
-                  }
-                  if (lhs.label > rhs.label) {
-                    return 1;
-                  }
-                  return 0;
-                }),
-            });
-            const category = createTestCategoryDescription();
-            const descriptor = createTestContentDescriptor({
-              fields: [
-                createTestSimpleContentField({ category, name: "b", priority: 1, label: "b" }),
-                createTestSimpleContentField({ category, name: "c", priority: 2, label: "c" }),
-                createTestSimpleContentField({ category, name: "a", priority: 3, label: "a" }),
-              ],
-            });
-            const values: ValuesDictionary<any> = {};
-            const displayValues: ValuesDictionary<any> = {};
-            const record = createTestContentItem({ values, displayValues });
-            provider.getContent = async () => new Content(descriptor, [record]);
-
-            const data = await provider.getData();
-            const records = data.records[category.name];
-            expect(records).toMatchObject([
-              { property: { displayLabel: "a" } },
-              { property: { displayLabel: "c" } },
-              { property: { displayLabel: "b" } },
-            ]);
-          });
-
-          it("sorts favorite records using `FavoritePropertiesManager.sortFields` when `sortFieldsAsync` is not available", async () => {
-            Object.assign(favoritePropertiesManager, {
-              hasAsync: undefined,
-              sortFieldsAsync: undefined,
-              has: () => true,
-              sortFields: (_imodel: IModelConnection, fields: Field[]) =>
                 fields.sort((lhs: Field, rhs: Field): number => {
                   if (lhs.label < rhs.label) {
                     return -1;

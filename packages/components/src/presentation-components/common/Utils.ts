@@ -29,8 +29,8 @@ import {
   Ruleset,
   Value,
 } from "@itwin/presentation-common";
-import { createSelectionScopeProps, Presentation, SelectionScopesManager } from "@itwin/presentation-frontend";
-import { computeSelection, Selectables } from "@itwin/unified-selection";
+import { Presentation } from "@itwin/presentation-frontend";
+import { Selectables } from "@itwin/unified-selection";
 
 /** @internal */
 export const localizationNamespaceName = "PresentationComponents";
@@ -66,12 +66,10 @@ export const getDisplayName = <P>(component: React.ComponentType<P>): string => 
  * @internal
  */
 export const findField = (descriptor: Descriptor, recordPropertyName: string): Field | undefined => {
-  // note: define `fieldsSource` as an object with optional `getFieldByName` method, because some field sources received this
-  // method later than our minimum required version of `@itwin/presentation-common`
-  let fieldsSource: { getFieldByName?: (name: string) => Field | undefined } = descriptor;
+  let fieldsSource: { getFieldByName: (name: string) => Field | undefined } = descriptor;
   const fieldNames = parseCombinedFieldNames(recordPropertyName);
   while (fieldNames.length) {
-    const field: Field | undefined = fieldsSource.getFieldByName?.(fieldNames.shift()!);
+    const field: Field | undefined = fieldsSource.getFieldByName(fieldNames.shift()!);
     if (!fieldNames.length) {
       return field;
     }
@@ -80,7 +78,7 @@ export const findField = (descriptor: Descriptor, recordPropertyName: string): F
     }
     if (field.isNestedContentField()) {
       fieldsSource = field;
-    } else if (field.isPropertiesField() && (field.isStructPropertiesField?.() || field.isArrayPropertiesField?.())) {
+    } else if (field.isPropertiesField() && (field.isStructPropertiesField() || field.isArrayPropertiesField())) {
       fieldsSource = field;
     } else {
       return undefined;
@@ -261,37 +259,6 @@ export async function createKeySetFromSelectables(selectables: Selectables): Pro
   }
   return keys;
 }
-
-/* v8 ignore start -- @preserve */
-
-export function mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  scope: SelectionScopesManager["activeScope"],
-): Parameters<typeof computeSelection>[0]["scope"] {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  const scopeProps = createSelectionScopeProps(scope);
-  switch (scopeProps.id) {
-    case "functional-element":
-      return { id: "functional" };
-    case "functional-assembly":
-      return { id: "functional", ancestorLevel: 1 };
-    case "functional-top-assembly":
-      return { id: "functional", ancestorLevel: -1 };
-    case "element":
-      return { id: "element" };
-    case "assembly":
-      return { id: "element", ancestorLevel: 1 };
-    case "top-assembly":
-      return { id: "element", ancestorLevel: -1 };
-    case "category":
-      return { id: "category" };
-    case "model":
-      return { id: "model" };
-  }
-  throw new Error(`Unknown selection scope: "${scopeProps.id}"`);
-}
-
-/* v8 ignore stop -- @preserve */
 
 /**
  * A helper that disposes the given object, if it's disposable.

@@ -6,7 +6,7 @@
 import "../../common/DisposePolyfill.js";
 
 import { useEffect, useMemo, useState } from "react";
-import { from, map, mergeMap, toArray } from "rxjs";
+import { from, mergeMap, toArray } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SelectOption } from "@itwin/itwinui-react";
 import {
@@ -154,14 +154,12 @@ async function getItems({
     keys,
   };
   const items = await new Promise<DisplayValueGroup[]>((resolve) => {
-    (Presentation.presentation.getDistinctValuesIterator
-      ? from(Presentation.presentation.getDistinctValuesIterator(requestProps)).pipe(
-          mergeMap((result) => result.items),
-          toArray(),
-        )
-      : // eslint-disable-next-line @typescript-eslint/no-deprecated
-        from(Presentation.presentation.getPagedDistinctValues(requestProps)).pipe(map((result) => result.items))
-    ).subscribe({ next: resolve, error: () => resolve([]) });
+    from(Presentation.presentation.getDistinctValuesIterator(requestProps))
+      .pipe(
+        mergeMap((result) => result.items),
+        toArray(),
+      )
+      .subscribe({ next: resolve, error: () => resolve([]) });
   });
 
   const hasMore = items.length === VALUE_BATCH_SIZE;

@@ -19,30 +19,29 @@ import {
 } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo } from "@itwin/presentation-common";
-import { getIModelMetadataProvider } from "./ECMetadataProvider.js";
 import { PresentationInstanceFilter } from "./PresentationInstanceFilter.js";
+import { hasBaseClass } from "./SchemaViewUtils.js";
 
 /** @internal */
 export async function findBaseExpressionClassName(imodel: IModelConnection, propertyClassNames: string[]) {
   if (propertyClassNames.length === 1) {
     return propertyClassNames[0];
   }
-
-  const metadataProvider = getIModelMetadataProvider(imodel);
+  const schemaView = await imodel.getSchemaView();
   const [firstClassName, ...restClassNames] = propertyClassNames;
-  let currentBaseClassInfo = await metadataProvider.getECClassInfo(firstClassName);
+  let currentBaseClass = schemaView.findClass(firstClassName);
   /* v8 ignore next 3 -- @preserve */
-  if (!currentBaseClassInfo) {
+  if (!currentBaseClass) {
     return firstClassName;
   }
 
   for (const propClassName of restClassNames) {
-    const propClassInfo = await metadataProvider.getECClassInfo(propClassName);
-    if (propClassInfo && propClassInfo.isDerivedFrom(currentBaseClassInfo.id)) {
-      currentBaseClassInfo = propClassInfo;
+    const propClass = schemaView.findClass(propClassName);
+    if (propClass && hasBaseClass(propClass, currentBaseClass)) {
+      currentBaseClass = propClass;
     }
   }
-  return currentBaseClassInfo.name;
+  return currentBaseClass.fullName;
 }
 
 /** @internal */

@@ -134,7 +134,6 @@ describe("useNavigationPropertyEditorContextProviderProps", () => {
       getContent: async () => undefined,
       getContentDescriptor: async () => undefined,
       getContentSetSize: async () => 0,
-      getFieldByPropertyRecord: async () => undefined,
       getFieldByPropertyDescription: async () => undefined,
       keys: new KeySet(),
       selectionInfo: undefined,

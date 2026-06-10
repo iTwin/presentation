@@ -101,9 +101,5 @@ async function defaultFavoritePropertyCheckCallback(
   imodel: IModelConnection,
   scope: FavoritePropertiesScope,
 ) {
-  if (Presentation.favoriteProperties.hasAsync) {
-    return Presentation.favoriteProperties.hasAsync(field, imodel, scope);
-  }
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  return Presentation.favoriteProperties.has(field, imodel, scope);
+  return Presentation.favoriteProperties.hasAsync(field, imodel, scope);
 }
