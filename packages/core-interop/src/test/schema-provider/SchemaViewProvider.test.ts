@@ -769,7 +769,7 @@ describe("createECPropertyFromSchemaView", () => {
 
     it("throws for uninitialized SchemaView primitive type", () => {
       const mockProp = createMockProperty({
-        name: "UninitProp",
+        name: "UninitializedProp",
         isPrimitive: () => true,
         isEnumeration: () => false,
         primitiveType: SchemaViewPrimitiveType.Uninitialized,
