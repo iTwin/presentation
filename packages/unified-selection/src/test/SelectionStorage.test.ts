@@ -5,7 +5,11 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable.js";
-import { CLEAR_SELECTION_STORAGE_SOURCE, createStorage, SelectionStorage } from "../unified-selection/SelectionStorage.js";
+import {
+  CLEAR_SELECTION_STORAGE_SOURCE,
+  createStorage,
+  SelectionStorage,
+} from "../unified-selection/SelectionStorage.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
 const generateSelection = (): SelectableInstanceKey[] => {
@@ -37,9 +41,7 @@ describe("SelectionStorage", () => {
       expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey }))).toBe(true);
       expect(listenerSpy, "Expected selectionChange.onSelectionChange to be called").toHaveBeenCalledOnce();
       expect(listenerSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          source: CLEAR_SELECTION_STORAGE_SOURCE,
-        }),
+        expect.objectContaining({ source: CLEAR_SELECTION_STORAGE_SOURCE }),
         selectionStorage,
       );
     });
