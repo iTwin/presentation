@@ -13,5 +13,8 @@ storage.selectionChangeEvent.addListener((args) => {
     // ignore change if it was caused by clearing selection storage
   }
   // handle selection change
-})
+});
+
+// this will trigger the `selectionChangeEvent` with `{ source: CLEAR_SELECTION_STORAGE_SOURCE }`
+storage.clearStorage({ imodelKey: imodel.key });
 ```
