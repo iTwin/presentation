@@ -35,7 +35,7 @@ export async function getBaseClassGroupingECClasses(
     await releaseMainThread();
     baseClasses.push(await getClass(schemaProvider, fullName));
   }
-  const sortedClasses = await sortByBaseClass(
+  const sortedClasses = sortByBaseClass(
     baseClasses.filter((baseClass) => baseClass.isRelationshipClass() || baseClass.isEntityClass()),
   );
 
@@ -118,7 +118,7 @@ async function getGroupingBaseClassNames(nodes: ProcessedInstanceHierarchyNode[]
   return baseClasses;
 }
 
-async function sortByBaseClass(classes: EC.Class[]): Promise<EC.Class[]> {
+function sortByBaseClass(classes: EC.Class[]): EC.Class[] {
   if (classes.length === 0) {
     return classes;
   }
@@ -126,7 +126,7 @@ async function sortByBaseClass(classes: EC.Class[]): Promise<EC.Class[]> {
   for (let inputIndex = 1; inputIndex < classes.length; ++inputIndex) {
     let wasAdded = false;
     for (let outputIndex = output.length - 1; outputIndex >= 0; --outputIndex) {
-      if (await classes[inputIndex].is(output[outputIndex])) {
+      if (classes[inputIndex].is(output[outputIndex])) {
         output.splice(outputIndex + 1, 0, classes[inputIndex]);
         wasAdded = true;
         break;

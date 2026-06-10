@@ -284,7 +284,7 @@ async function compileValueSpec(spec: InstanceLabelOverrideValueSpecification, c
           throw new Error(`Class ${relName} is not a relationship class`);
         }
         const endpoint = lastStep.direction === "Backward" ? relClass.source : relClass.target;
-        const constraintClass = await endpoint.abstractConstraint;
+        const constraintClass = endpoint.abstractConstraint;
         if (!constraintClass) {
           return "''";
         }
@@ -392,7 +392,7 @@ async function toJoinRelationshipPath(props: {
         throw new Error(`Class ${relationshipName} is not a relationship class`);
       }
       const endpoint = relationshipReverse ? relClass.source : relClass.target;
-      const constraintClass = await endpoint.abstractConstraint;
+      const constraintClass = endpoint.abstractConstraint;
       if (!constraintClass) {
         throw new Error(`Relationship's ${relationshipName} endpoint does not have an abstract constraint`);
       }

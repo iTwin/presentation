@@ -55,8 +55,8 @@ export function createCachingECClassHierarchyInspector(props: {
         result = Promise.all([
           getClass(props.schemaProvider, derivedClassFullName),
           getClass(props.schemaProvider, candidateBaseClassFullName),
-        ]).then(async ([derivedClass, baseClass]) => {
-          const resolvedResult = await derivedClass.is(baseClass);
+        ]).then(([derivedClass, baseClass]) => {
+          const resolvedResult = derivedClass.is(baseClass);
           map.set(cacheKey, resolvedResult);
           return resolvedResult;
         });
@@ -100,8 +100,8 @@ export namespace EC {
     name: string;
     /** The schema version. Format: `"read.write.minor"`, comparison order: write > read > minor. */
     version: SchemaVersion;
-    getClass(name: string): Promise<Class | undefined>;
-    getCustomAttributes(): Promise<CustomAttributeSet>;
+    isHidden: boolean;
+    getClass(name: string): Class | undefined;
   }
 
   /**
@@ -122,17 +122,17 @@ export namespace EC {
    * @public
    */
   export interface Class extends SchemaItem {
-    baseClass: Promise<Class | undefined>;
-    is(className: string, schemaName: string): Promise<boolean>;
-    is(other: Class): Promise<boolean>;
-    getProperty(name: string): Promise<Property | undefined>;
-    getProperties(): Promise<Array<Property>>;
+    baseClass: Class | undefined;
+    isHidden: boolean | undefined;
+    is(className: string, schemaName: string): boolean;
+    is(other: Class): boolean;
+    getProperty(name: string): Property | undefined;
+    getProperties(): Array<Property>;
     isEntityClass(): this is EntityClass;
     isRelationshipClass(): this is RelationshipClass;
     isStructClass(): this is StructClass;
     isMixin(): this is Mixin;
-    getDerivedClasses(): Promise<Class[]>;
-    getCustomAttributes(): Promise<CustomAttributeSet>;
+    getDerivedClasses(): Class[];
   }
 
   /**
@@ -181,7 +181,7 @@ export namespace EC {
   export interface RelationshipConstraint {
     multiplicity: RelationshipConstraintMultiplicity;
     polymorphic: boolean;
-    abstractConstraint: Promise<EntityClass | Mixin | RelationshipClass | undefined>;
+    abstractConstraint: EntityClass | Mixin | RelationshipClass | undefined;
   }
 
   /**
@@ -227,15 +227,14 @@ export namespace EC {
     name: string;
     class: Class;
     label?: string;
-    kindOfQuantity: Promise<KindOfQuantity | undefined>;
+    isHidden: boolean;
+    kindOfQuantity: KindOfQuantity | undefined;
 
     isArray(): this is ArrayProperty;
     isStruct(): this is StructProperty;
     isPrimitive(): this is PrimitiveProperty;
     isEnumeration(): this is EnumerationProperty;
     isNavigation(): this is NavigationProperty;
-
-    getCustomAttributes(): Promise<CustomAttributeSet>;
   }
 
   /**
@@ -288,7 +287,7 @@ export namespace EC {
    * @public
    */
   export interface EnumerationProperty extends Property {
-    enumeration: Promise<Enumeration | undefined>;
+    enumeration: Enumeration | undefined;
     extendedTypeName?: string;
   }
 
@@ -298,7 +297,7 @@ export namespace EC {
    * @public
    */
   export interface NavigationProperty extends Property {
-    relationshipClass: Promise<RelationshipClass>;
+    relationshipClass: RelationshipClass;
     direction: "Forward" | "Backward";
   }
 
@@ -327,26 +326,6 @@ export namespace EC {
   export interface PrimitiveProperty extends Property {
     primitiveType: PrimitiveType;
     extendedTypeName?: string;
-  }
-
-  /**
-   * Defines a set of custom attributes that may be applied to a class or property.
-   * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/customattribute/
-   * @public
-   */
-  export interface CustomAttributeSet {
-    [Symbol.iterator]: () => IterableIterator<[FullClassName, CustomAttribute]>;
-    get(className: FullClassName): CustomAttribute | undefined;
-  }
-
-  /**
-   * Defines a custom attribute that may be applied to a class or property.
-   * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/customattribute/
-   * @public
-   */
-  export interface CustomAttribute {
-    className: FullClassName;
-    [propName: string]: any;
   }
 }
 
@@ -516,7 +495,7 @@ export async function getClass(schemaProvider: ECSchemaProvider, fullClassName: 
   if (!schema) {
     throw new Error(`Schema "${schemaName}" not found.`);
   }
-  const lookupClass = await schema.getClass(className);
+  const lookupClass = schema.getClass(className);
   if (!lookupClass) {
     throw new Error(`Class "${className}" not found in schema "${schemaName}".`);
   }

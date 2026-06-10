@@ -1,6 +1,7 @@
 sep=;
 Release Tag;API Item Type;API Item Name
 public;function;createECSchemaProvider
+beta;function;createECSchemaProvider
 public;function;createECSqlQueryExecutor
 public;function;createIModelKey
 public;function;createLogger
