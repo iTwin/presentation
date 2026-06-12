@@ -1,5 +1,16 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.63
+
+### Patch Changes
+
+- [#1325](https://github.com/iTwin/presentation/pull/1325): Add accessible name for tree context menu.
+- f0a0cde7337470729674f8b56a709e671f9786c1: Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.11
+  - @itwin/presentation-hierarchies@2.0.0-alpha.16
+  - @itwin/unified-selection@1.8.1-alpha.0
+
 ## 2.0.0-alpha.62
 
 ### Patch Changes
