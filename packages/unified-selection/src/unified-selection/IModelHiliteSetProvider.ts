@@ -8,7 +8,7 @@ import "./DisposePolyfill.js";
 import { from, shareReplay } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { createHiliteSetProvider } from "./HiliteSetProvider.js";
-import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE } from "./SelectionStorage.js";
+import { CLEAR_SELECTION_STORAGE_SOURCE } from "./SelectionStorage.js";
 
 import type { Observable } from "rxjs";
 import type { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
@@ -85,7 +85,7 @@ class IModelHiliteSetProviderImpl implements IModelHiliteSetProvider {
     this._removeListener = this._selectionStorage.selectionChangeEvent.addListener(
       (args: StorageSelectionChangeEventArgs) => {
         this._cache.delete(args.imodelKey);
-        if (args.changeType === "clear" && args.source === IMODEL_CLOSE_SELECTION_CLEAR_SOURCE) {
+        if (args.changeType === "clear" && args.source === CLEAR_SELECTION_STORAGE_SOURCE) {
           this._hiliteSetProviders.delete(args.imodelKey);
         }
       },

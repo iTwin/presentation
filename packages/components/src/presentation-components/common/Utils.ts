@@ -16,7 +16,6 @@ import { KeySet, LabelDefinition, parseCombinedFieldNames } from "@itwin/present
 import { createSelectionScopeProps, Presentation } from "@itwin/presentation-frontend";
 import { Selectables } from "@itwin/unified-selection";
 
-import type { LegacyRef, MutableRefObject, RefCallback } from "react";
 import type { Primitives, PrimitiveValue, PropertyDescription } from "@itwin/appui-abstract";
 import type { GuidString } from "@itwin/core-bentley";
 import type { TranslationOptions } from "@itwin/core-common";
@@ -149,24 +148,6 @@ export class AsyncTasksTracker {
     return { [Symbol.dispose]: () => this._asyncsInProgress.delete(id) };
   }
 }
-
-/** @internal */
-/* v8 ignore start -- @preserve */
-export function useMergedRefs<T>(...refs: Array<MutableRefObject<T | null> | LegacyRef<T>>): RefCallback<T> {
-  return useCallback(
-    (instance: T | null) => {
-      refs.forEach((ref) => {
-        if (typeof ref === "function") {
-          ref(instance);
-        } else if (ref) {
-          (ref as MutableRefObject<T | null>).current = instance;
-        }
-      });
-    },
-    [...refs], // eslint-disable-line react-hooks/exhaustive-deps
-  );
-}
-/* v8 ignore stop -- @preserve */
 
 /**
  * A hook that helps components throw errors in React's render loop so they can be captured by React error

@@ -137,6 +137,18 @@
 
   In reality, consumers will likely use `@itwin/presentation-core-interop` package for creating them, and the package has been updated to handle the change, so reacting to the breaking change is as simple as bumping the version of `@itwin/presentation-core-interop` package in the consumer's `package.json`.
 
+## 1.2.16
+
+### Patch Changes
+
+- [#1390](https://github.com/iTwin/presentation/pull/1390): Update `@itwin/core-*` dependencies to `^5.10.0`.
+
+## 1.2.15
+
+### Patch Changes
+
+- [#1383](https://github.com/iTwin/presentation/pull/1383): Optimize `parseFullClassName` parsing performance.
+
 ## 1.2.14
 
 ### Patch Changes

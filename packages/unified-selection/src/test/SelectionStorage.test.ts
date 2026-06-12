@@ -5,7 +5,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Selectables } from "../unified-selection/Selectable.js";
-import { createStorage } from "../unified-selection/SelectionStorage.js";
+import { CLEAR_SELECTION_STORAGE_SOURCE, createStorage } from "../unified-selection/SelectionStorage.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
 import type { SelectableInstanceKey } from "../unified-selection/Selectable.js";
@@ -39,6 +39,10 @@ describe("SelectionStorage", () => {
       selectionStorage.clearStorage({ imodelKey });
       expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey }))).toBe(true);
       expect(listenerSpy, "Expected selectionChange.onSelectionChange to be called").toHaveBeenCalledOnce();
+      expect(listenerSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ source: CLEAR_SELECTION_STORAGE_SOURCE }),
+        selectionStorage,
+      );
     });
   });
 

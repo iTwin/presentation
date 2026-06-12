@@ -44,7 +44,7 @@ describe("NodesQueryClauseFactory", () => {
       FROM BisCore.GeometricModel3d e
     `;
     const reader = imodelConnection.createQueryReader(ecsql, undefined, {
-      rowFormat: QueryRowFormat.UseJsPropertyNames,
+      rowFormat: QueryRowFormat.UseECSqlPropertyNames,
     });
     const rows = await reader.toArray();
     expect(rows[0].label).to.eq("Test model");
@@ -67,7 +67,7 @@ describe("NodesQueryClauseFactory", () => {
       FROM BisCore.GeometricModel3d c
     `;
     const reader = imodelConnection.createQueryReader(ecsql, undefined, {
-      rowFormat: QueryRowFormat.UseJsPropertyNames,
+      rowFormat: QueryRowFormat.UseECSqlPropertyNames,
     });
     const rows = await reader.toArray();
     const labelParts = JSON.parse(rows[0].label);

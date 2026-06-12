@@ -5,7 +5,7 @@
 
 import { useCallback, useInsertionEffect, useRef } from "react";
 
-import type { LegacyRef, MutableRefObject, Ref } from "react";
+import type { LegacyRef, Ref } from "react";
 
 /** @internal */
 export function useLatest<T>(value: T) {
@@ -34,6 +34,7 @@ export function useEvent<TCallback extends (...args: any[]) => void>(callback: T
 
 /* c8 ignore start */
 /** @internal */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | undefined | null>) {
   return useCallback(
     (instance: T | null) => {
@@ -41,7 +42,7 @@ export function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | 
         if (typeof ref === "function") {
           ref(instance);
         } else if (ref) {
-          (ref as MutableRefObject<T | null>).current = instance;
+          ref.current = instance;
         }
       });
     }, // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo

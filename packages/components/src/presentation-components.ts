@@ -43,7 +43,7 @@ export * from "./presentation-components/ComponentsLoggerCategory.js";
  * @docs-group-description Properties
  * Presentation-specific [Properties]($components-react:Properties).
  */
-export * from "./presentation-components/properties/InstanceKeyValueRenderer.js";
+export { InstanceKeyValueRenderer } from "./presentation-components/properties/InstanceKeyValueRenderer.js";
 export * from "./presentation-components/properties/editors/index.js";
 
 /**
@@ -58,6 +58,7 @@ export type {
   PropertyDataProviderWithUnifiedSelectionProps,
   UsePropertyDataProviderWithUnifiedSelectionResult,
 } from "./presentation-components/propertygrid/UseUnifiedSelection.js";
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export { usePropertyDataProviderWithUnifiedSelection } from "./presentation-components/propertygrid/UseUnifiedSelection.js";
 
 /**

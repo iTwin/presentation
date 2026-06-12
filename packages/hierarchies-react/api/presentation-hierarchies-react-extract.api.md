@@ -17,7 +17,7 @@ import { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { HierarchySearchTree } from '@itwin/presentation-hierarchies';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
-import { JSX as JSX_2 } from 'react';
+import { JSX } from 'react';
 import { NamedExoticComponent } from 'react';
 import { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import { Props } from '@itwin/presentation-shared';
@@ -51,7 +51,7 @@ interface CommonRendererProps {
 export type ErrorInfo = GenericErrorInfo | ResultSetTooLargeErrorInfo | NoFilterMatchesErrorInfo | ChildrenLoadErrorInfo;
 
 // @alpha
-export function ErrorItemRenderer(input: ErrorItemRendererProps): JSX_2.Element;
+export function ErrorItemRenderer(input: ErrorItemRendererProps): JSX.Element;
 
 // @alpha (undocumented)
 interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
@@ -135,7 +135,7 @@ type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 export const LOCALIZATION_NAMESPACES: string[];
 
 // @public
-export function LocalizationContextProvider(input: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
+export function LocalizationContextProvider(input: PropsWithChildren<LocalizationContextProviderProps>): JSX.Element;
 
 // @public
 interface LocalizationContextProviderProps {
@@ -192,7 +192,7 @@ export { SelectionStorage }
 export { setLogger }
 
 // @alpha
-export function StrataKitRootErrorRenderer(input: StrataKitRootErrorRendererProps): JSX_2.Element;
+export function StrataKitRootErrorRenderer(input: StrataKitRootErrorRendererProps): JSX.Element;
 
 // @alpha (undocumented)
 type StrataKitRootErrorRendererProps = RootErrorRendererProps;
@@ -226,7 +226,7 @@ export interface TreeActionBaseAttributes {
 type TreeActionBaseProps = ComponentPropsWithoutRef<typeof Tree.ItemAction> & TreeActionBaseAttributes;
 
 // @alpha
-export function TreeErrorRenderer(input: TreeErrorRendererProps): JSX_2.Element;
+export function TreeErrorRenderer(input: TreeErrorRendererProps): JSX.Element;
 
 // @alpha
 interface TreeErrorRendererOwnProps {

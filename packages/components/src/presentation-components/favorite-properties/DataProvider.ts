@@ -75,6 +75,16 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
   public includeFieldsWithCompositeValues: boolean;
 
   /** Constructor. */
+  constructor(
+    props: FavoritePropertiesDataProviderProps & {
+      activeScopeProvider: NonNullable<FavoritePropertiesDataProviderProps["activeScopeProvider"]>;
+    },
+  );
+  /**
+   * Constructor.
+   * @deprecated in 5.16. Create the provider with props that include an `activeScopeProvider`. The `activeScopeProvider` prop will be made required in the next major release.
+   */
+  constructor(props?: FavoritePropertiesDataProviderProps);
   constructor(props?: FavoritePropertiesDataProviderProps) {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     this.includeFieldsWithNoValues = true;

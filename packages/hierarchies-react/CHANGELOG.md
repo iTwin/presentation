@@ -971,6 +971,27 @@
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
 
+## 1.11.1
+
+### Patch Changes
+
+- [#1390](https://github.com/iTwin/presentation/pull/1390): Update `@itwin/core-*` dependencies to `^5.10.0`.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.16
+  - @itwin/presentation-shared@1.2.16
+  - @itwin/unified-selection@1.7.6
+
+## 1.11.0
+
+### Minor Changes
+
+- [#1387](https://github.com/iTwin/presentation/pull/1387): Added support for React version 19
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.15
+
 ## 1.10.4
 
 ### Patch Changes
