@@ -188,7 +188,7 @@ function initUnifiedSelectionFromPresentationFrontend({
       return;
     }
     const size = selection.size;
-    onSelectionChanged(isOverLimit(size, limit) ? size : selection);
+    onSelectionChanged(isOverLimit(size, limit) ? size : new KeySet(selection));
   };
 
   /* v8 ignore start -- @preserve */
@@ -216,7 +216,7 @@ function initUnifiedSelectionFromPresentationFrontend({
 }
 
 // eslint-disable-next-line @typescript-eslint/no-deprecated
-function getSelectedKeys(selectionHandler: SelectionHandler, selectionLevel?: number): KeySet | undefined {
+function getSelectedKeys(selectionHandler: SelectionHandler, selectionLevel?: number): Readonly<KeySet> | undefined {
   if (undefined === selectionLevel) {
     const availableLevels = selectionHandler.getSelectionLevels();
     if (0 === availableLevels.length) {
@@ -228,7 +228,7 @@ function getSelectedKeys(selectionHandler: SelectionHandler, selectionLevel?: nu
   for (let i = selectionLevel; i >= 0; i--) {
     const selection = selectionHandler.getSelection(i);
     if (!selection.isEmpty) {
-      return new KeySet(selection);
+      return selection;
     }
   }
   return new KeySet();
