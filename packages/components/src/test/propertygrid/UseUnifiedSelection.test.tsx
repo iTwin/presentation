@@ -235,6 +235,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     it("sets empty keyset when selection storage contains more keys than set limit", async () => {
       const selectedInstances = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
       selectionStorage.addToSelection({ imodelKey, source: "test", selectables: selectedInstances });
+      const loadSpy = vi.spyOn(Selectables, "load");
 
       const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
         initialProps: { selectionStorage, requestedContentInstancesLimit: 1, dataProvider: getProvider() },
@@ -245,6 +246,8 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
         expect(result.current.numSelectedElements).toEqual(2);
         expect(setKeysSpy.mock.calls[setKeysSpy.mock.calls.length - 1][0].isEmpty).toBe(true);
       });
+      // verify that keys are not loaded when selection is over the limit
+      expect(loadSpy).not.toHaveBeenCalled();
     });
 
     it("changes KeySet according to selection", async () => {

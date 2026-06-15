@@ -12,7 +12,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { createIModelKey } from "@itwin/presentation-core-interop";
 import { Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
-import { SelectionStorage } from "@itwin/unified-selection";
+import { Selectables, SelectionStorage } from "@itwin/unified-selection";
 import { createKeySetFromSelectables, safeDispose } from "../common/Utils.js";
 import { IPresentationPropertyDataProvider } from "./DataProvider.js";
 
@@ -103,17 +103,23 @@ export function usePropertyDataProviderWithUnifiedSelection(
   const suppliedSelectionHandler = useSelectionHandlerContext();
 
   useEffect(() => {
-    function onSelectionChanged(newSelection: KeySet) {
-      setNumSelectedElements(newSelection.size);
-      dataProvider.keys = isOverLimit(newSelection.size, requestedContentInstancesLimit) ? new KeySet() : newSelection;
+    function onSelectionChanged(newSelectionOrSize: KeySet | number) {
+      setNumSelectedElements(typeof newSelectionOrSize === "number" ? newSelectionOrSize : newSelectionOrSize.size);
+      dataProvider.keys = typeof newSelectionOrSize === "number" ? new KeySet() : newSelectionOrSize;
     }
     if (selectionStorage) {
-      return initUnifiedSelectionFromStorage({ imodel, selectionStorage, onSelectionChanged });
+      return initUnifiedSelectionFromStorage({
+        imodel,
+        selectionStorage,
+        limit: requestedContentInstancesLimit,
+        onSelectionChanged,
+      });
     }
     return initUnifiedSelectionFromPresentationFrontend({
       imodel,
       rulesetId,
       suppliedSelectionHandler,
+      limit: requestedContentInstancesLimit,
       onSelectionChanged,
     });
   }, [dataProvider, imodel, rulesetId, requestedContentInstancesLimit, suppliedSelectionHandler, selectionStorage]);
@@ -124,18 +130,26 @@ export function usePropertyDataProviderWithUnifiedSelection(
 function initUnifiedSelectionFromStorage({
   imodel,
   selectionStorage,
+  limit,
   onSelectionChanged,
 }: {
   imodel: IModelConnection;
   selectionStorage: SelectionStorage;
-  onSelectionChanged: (newSelection: KeySet) => void;
+  limit: number;
+  onSelectionChanged: (newSelectionOrSize: KeySet | number) => void;
 }) {
   const imodelKey = createIModelKey(imodel);
   const update = new Subject<number>();
   const subscription = update
     .pipe(
       map((level) => selectionStorage.getSelection({ imodelKey, level })),
-      switchMap(async (selectables) => createKeySetFromSelectables(selectables)),
+      switchMap(async (selectables) => {
+        const size = Selectables.size(selectables);
+        if (isOverLimit(size, limit)) {
+          return size;
+        }
+        return size === 0 ? new KeySet() : createKeySetFromSelectables(selectables);
+      }),
     )
     .subscribe({ next: onSelectionChanged });
   const removeSelectionChangesListener = selectionStorage.selectionChangeEvent.addListener((args) => {
@@ -157,18 +171,24 @@ function initUnifiedSelectionFromPresentationFrontend({
   suppliedSelectionHandler,
   imodel,
   rulesetId,
+  limit,
   onSelectionChanged,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-deprecated
   suppliedSelectionHandler?: SelectionHandler;
   imodel: IModelConnection;
   rulesetId: string;
-  onSelectionChanged: (newSelection: KeySet) => void;
+  limit: number;
+  onSelectionChanged: (newSelectionOrSize: KeySet | number) => void;
 }) {
   // eslint-disable-next-line @typescript-eslint/no-deprecated
   const updateProviderSelection = (selectionHandler: SelectionHandler, selectionLevel?: number) => {
     const selection = getSelectedKeys(selectionHandler, selectionLevel);
-    selection && onSelectionChanged(selection);
+    if (!selection) {
+      return;
+    }
+    const size = selection.size;
+    onSelectionChanged(isOverLimit(size, limit) ? size : new KeySet(selection));
   };
 
   /* v8 ignore start -- @preserve */
@@ -196,7 +216,7 @@ function initUnifiedSelectionFromPresentationFrontend({
 }
 
 // eslint-disable-next-line @typescript-eslint/no-deprecated
-function getSelectedKeys(selectionHandler: SelectionHandler, selectionLevel?: number): KeySet | undefined {
+function getSelectedKeys(selectionHandler: SelectionHandler, selectionLevel?: number): Readonly<KeySet> | undefined {
   if (undefined === selectionLevel) {
     const availableLevels = selectionHandler.getSelectionLevels();
     if (0 === availableLevels.length) {
@@ -208,7 +228,7 @@ function getSelectedKeys(selectionHandler: SelectionHandler, selectionLevel?: nu
   for (let i = selectionLevel; i >= 0; i--) {
     const selection = selectionHandler.getSelection(i);
     if (!selection.isEmpty) {
-      return new KeySet(selection);
+      return selection;
     }
   }
   return new KeySet();
