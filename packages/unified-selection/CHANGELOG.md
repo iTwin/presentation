@@ -1,5 +1,11 @@
 # @itwin/unified-selection
 
+## 1.8.1
+
+### Patch Changes
+
+- 9f2f1f405e82bbb5bad83de67c265ea0407d6cf1: Avoid freezing main thread when loading huge amount of selectable instance keys.
+
 ## 1.8.0
 
 ### Minor Changes
