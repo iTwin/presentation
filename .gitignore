@@ -1,3 +1,4 @@
 *
-!dev/bench
+!dev
+!dev/**
 !.gitignore
