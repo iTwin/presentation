@@ -7,6 +7,7 @@ import {
   insertExternalSourceAspect,
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
+  insertPhysicalType,
   insertRepositoryLink,
   insertSpatialCategory,
 } from "presentation-test-utilities";
@@ -20,6 +21,7 @@ import {
 } from "@itwin/appui-abstract";
 import { PropertyCategory } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
+import { IModelConnection } from "@itwin/core-frontend";
 import {
   ArrayPropertiesField,
   combineFieldNames,
@@ -518,6 +520,187 @@ describe("PropertyDataProvider", async () => {
 
     // repeat request
     await checkDataProvider();
+  });
+
+  describe("with `propertiesMergeMode`", () => {
+    let imodel: IModelConnection;
+    let elementA: InstanceKey;
+    let elementB: InstanceKey;
+
+    beforeAll(async () => {
+      const result = await buildTestIModel("propertiesMergeMode", async (builder, testName) => {
+        const schema = await importSchema(
+          testName,
+          builder,
+          `
+            <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+            <ECEntityClass typeName="Base" modifier="Abstract">
+              <BaseClass>bis:PhysicalElement</BaseClass>
+              <ECProperty propertyName="SharedProp" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="ElementA">
+              <BaseClass>Base</BaseClass>
+              <ECProperty propertyName="PropA" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="ElementB">
+              <BaseClass>Base</BaseClass>
+              <ECProperty propertyName="PropB" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="CommonAspect">
+              <BaseClass>bis:ElementMultiAspect</BaseClass>
+              <ECProperty propertyName="CommonAspectProp" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="AspectAOnly">
+              <BaseClass>bis:ElementMultiAspect</BaseClass>
+              <ECProperty propertyName="AspectAOnlyProp" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="MyType">
+              <BaseClass>bis:PhysicalType</BaseClass>
+              <ECProperty propertyName="TypeProp" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="CommonTypeAspect">
+              <BaseClass>bis:ElementMultiAspect</BaseClass>
+              <ECProperty propertyName="CommonTypeAspectProp" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="TypeAspectAOnly">
+              <BaseClass>bis:ElementMultiAspect</BaseClass>
+              <ECProperty propertyName="TypeAspectAOnlyProp" typeName="string" />
+            </ECEntityClass>
+          `,
+        );
+        const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
+        const modelKey = insertPhysicalModelWithPartition({
+          builder,
+          fullClassNameSeparator: ":",
+          codeValue: "My Model",
+        });
+        // Both selected elements have a `MyType` type definition (`PhysicalElement -> PhysicalType`),
+        // and each type owns a `CommonTypeAspect` (`PhysicalType -> ElementAspect`), forming two
+        // levels of nested content below the selected elements.
+        const typeA = insertPhysicalType({
+          builder,
+          classFullName: schema.items.MyType.fullName,
+          userLabel: "Type A",
+          TypeProp: "type-a",
+        });
+        const typeB = insertPhysicalType({
+          builder,
+          classFullName: schema.items.MyType.fullName,
+          userLabel: "Type B",
+          TypeProp: "type-b",
+        });
+        const createdElementA = insertPhysicalElement({
+          builder,
+          classFullName: schema.items.ElementA.fullName,
+          userLabel: "Element A",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+          typeDefinitionId: typeA.id,
+          SharedProp: "shared-a",
+          PropA: "a-only",
+        });
+        const createdElementB = insertPhysicalElement({
+          builder,
+          classFullName: schema.items.ElementB.fullName,
+          userLabel: "Element B",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+          typeDefinitionId: typeB.id,
+          SharedProp: "shared-b",
+          PropB: "b-only",
+        });
+        // Both elements own a `CommonAspect` -> its nested content is common to both selected classes.
+        builder.insertAspect({
+          classFullName: schema.items.CommonAspect.fullName,
+          element: { id: createdElementA.id },
+          CommonAspectProp: "common-a",
+        });
+        builder.insertAspect({
+          classFullName: schema.items.CommonAspect.fullName,
+          element: { id: createdElementB.id },
+          CommonAspectProp: "common-b",
+        });
+        // Only `ElementA` owns an `AspectAOnly` -> its nested content is specific to one selected class.
+        builder.insertAspect({
+          classFullName: schema.items.AspectAOnly.fullName,
+          element: { id: createdElementA.id },
+          AspectAOnlyProp: "a-only-aspect",
+        });
+        // Both types own a `CommonTypeAspect`, which is deeply nested content
+        // (`PhysicalElement -> PhysicalType -> ElementAspect`) common to both selected classes.
+        builder.insertAspect({
+          classFullName: schema.items.CommonTypeAspect.fullName,
+          element: { id: typeA.id },
+          CommonTypeAspectProp: "common-type-a",
+        });
+        builder.insertAspect({
+          classFullName: schema.items.CommonTypeAspect.fullName,
+          element: { id: typeB.id },
+          CommonTypeAspectProp: "common-type-b",
+        });
+        // Only `typeA` owns an `TypeAspectAOnly` -> its nested content is specific to one selected class.
+        builder.insertAspect({
+          classFullName: schema.items.TypeAspectAOnly.fullName,
+          element: { id: typeA.id },
+          TypeAspectAOnlyProp: "a-only-type-aspect",
+        });
+        return { elementA: createdElementA, elementB: createdElementB };
+      });
+      imodel = result.imodel;
+      elementA = result.elementA;
+      elementB = result.elementB;
+    });
+
+    afterAll(async () => {
+      await imodel.close();
+    });
+
+    function getAllRecordLabels(records: { [categoryName: string]: PropertyRecord[] }) {
+      const collect = (recs: PropertyRecord[]): string[] =>
+        recs.flatMap((record) => [
+          record.property.displayLabel,
+          ...(record.value.valueFormat === PropertyValueFormat.Struct
+            ? collect(Object.values(record.value.members))
+            : []),
+          ...(record.value.valueFormat === PropertyValueFormat.Array ? collect(record.value.items) : []),
+        ]);
+      return Object.values(records).flatMap(collect);
+    }
+
+    it("shows union of properties from all selected classes by default", async () => {
+      using provider = new PresentationPropertyDataProvider({ imodel });
+      provider.keys = new KeySet([elementA, elementB]);
+
+      const properties = await provider.getData();
+      const propLabels = getAllRecordLabels(properties.records);
+      // own properties of both selected classes are shown
+      expect(propLabels).to.containSubset(["SharedProp", "PropA", "PropB"]);
+      // nested content (direct aspects) of both selected classes is shown
+      expect(propLabels).to.containSubset(["CommonAspectProp", "AspectAOnlyProp"]);
+      // first-level nested content (`MyType` type definition) is shown
+      expect(propLabels).to.containSubset(["TypeProp"]);
+      // deeply nested content common to both classes (`CommonTypeAspect` owned by both types) is shown
+      expect(propLabels).to.containSubset(["CommonTypeAspectProp"]);
+      // `TypeAspectAOnly` is deeply nested content (`PhysicalElement -> PhysicalType -> ElementAspect`)
+      // owned by only one type. Since only `typeA` owns the aspect, the merged value
+      // has nothing for the other instance and the field ends up with no value -> no record is
+      // produced for it even in union mode.
+      expect(propLabels).not.to.containSubset(["TypeAspectAOnlyProp"]);
+    });
+
+    it("shows only properties common to all selected classes when merge mode is `intersection`", async () => {
+      using provider = new PresentationPropertyDataProvider({ imodel });
+      provider.propertiesMergeMode = "intersection";
+      provider.keys = new KeySet([elementA, elementB]);
+
+      const properties = await provider.getData();
+      const propLabels = getAllRecordLabels(properties.records);
+      // only properties common to both selected classes are shown
+      expect(propLabels).to.containSubset(["SharedProp", "CommonAspectProp", "TypeProp", "CommonTypeAspectProp"]);
+      // properties specific to one of the selected classes are hidden. Note `TypeAspectAOnlyProp` is
+      // never produced (see the union test above), so it is absent here regardless of the merge mode.
+      expect(propLabels).not.to.containSubset(["PropA", "PropB", "AspectAOnlyProp", "TypeAspectAOnlyProp"]);
+    });
   });
 });
 

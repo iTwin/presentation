@@ -31,6 +31,7 @@ import {
   Value,
   ValuesDictionary,
 } from "@itwin/presentation-common";
+import { KeySet } from "@itwin/presentation-common";
 import {
   FavoritePropertiesManager,
   FavoritePropertiesScope,
@@ -45,6 +46,7 @@ import {
   DEFAULT_PROPERTY_GRID_RULESET,
   PresentationPropertyDataProvider,
 } from "../../presentation-components/propertygrid/DataProvider.js";
+import * as PropertiesIntersectionModule from "../../presentation-components/propertygrid/PropertiesIntersection.js";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -185,6 +187,85 @@ describe("PropertyDataProvider", () => {
       const overrides = await provider.getDescriptorOverrides();
       const flags = overrides.contentFlags!;
       expect(flags & (ContentFlags.MergeResults | ContentFlags.ShowLabels)).not.toBe(0);
+    });
+
+    it("does not apply fieldsSelector in union mode", async () => {
+      // default mode is "union"
+      const overrides = await provider.getDescriptorOverrides();
+      expect(overrides.fieldsSelector).toBeUndefined();
+    });
+
+    it("applies fieldsSelector from buildIntersectionFieldsSelector in intersection mode", async () => {
+      const simpleField = createTestSimpleContentField({ name: "SimpleField" });
+      const descriptor = createTestContentDescriptor({ fields: [simpleField] });
+      presentationManager.getContentDescriptor.mockResolvedValue(descriptor);
+
+      const selector = { type: "include" as const, fields: [simpleField.getFieldDescriptor()] };
+      const buildSpy = vi
+        .spyOn(PropertiesIntersectionModule, "buildIntersectionFieldsSelector")
+        .mockResolvedValue(selector);
+
+      provider = new Provider({ imodel, ruleset: rulesetId });
+      provider.propertiesMergeMode = "intersection";
+      provider.keys = new KeySet([
+        { className: "Schema:A", id: "0x1" },
+        { className: "Schema:B", id: "0x2" },
+      ]);
+
+      const overrides = await provider.getDescriptorOverrides();
+      expect(overrides.fieldsSelector).toEqual(selector);
+      expect(buildSpy).toHaveBeenCalledOnce();
+    });
+
+    it("does not apply fieldsSelector when intersection mode returns undefined", async () => {
+      const descriptor = createTestContentDescriptor({ fields: [] });
+      presentationManager.getContentDescriptor.mockResolvedValue(descriptor);
+      vi.spyOn(PropertiesIntersectionModule, "buildIntersectionFieldsSelector").mockResolvedValue(undefined);
+
+      provider = new Provider({ imodel, ruleset: rulesetId });
+      provider.propertiesMergeMode = "intersection";
+      provider.keys = new KeySet([{ className: "Schema:A", id: "0x1" }]);
+
+      const overrides = await provider.getDescriptorOverrides();
+      expect(overrides.fieldsSelector).toBeUndefined();
+    });
+
+    it("does not apply fieldsSelector when descriptor is unavailable", async () => {
+      presentationManager.getContentDescriptor.mockResolvedValue(undefined);
+
+      provider = new Provider({ imodel, ruleset: rulesetId });
+      provider.propertiesMergeMode = "intersection";
+      provider.keys = new KeySet([
+        { className: "Schema:A", id: "0x1" },
+        { className: "Schema:B", id: "0x2" },
+      ]);
+
+      const overrides = await provider.getDescriptorOverrides();
+      expect(overrides.fieldsSelector).toBeUndefined();
+    });
+  });
+
+  describe("propertiesMergeMode", () => {
+    it("defaults to 'union'", () => {
+      expect(provider.propertiesMergeMode).toBe("union");
+    });
+
+    it("can be set to 'intersection' via setter", () => {
+      using p = new PresentationPropertyDataProvider({ imodel });
+      p.propertiesMergeMode = "intersection";
+      expect(p.propertiesMergeMode).toBe("intersection");
+    });
+
+    it("invalidates cache when changing value", () => {
+      const spy = vi.spyOn(provider, "invalidateCache");
+      provider.propertiesMergeMode = "intersection";
+      expect(spy).toHaveBeenCalledOnce();
+    });
+
+    it("does not invalidate cache when setting to same value", () => {
+      const spy = vi.spyOn(provider, "invalidateCache");
+      provider.propertiesMergeMode = provider.propertiesMergeMode;
+      expect(spy).not.toHaveBeenCalled();
     });
   });
 
