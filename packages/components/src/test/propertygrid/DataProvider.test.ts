@@ -20,6 +20,7 @@ import {
   DisplayValue,
   Field,
   Item,
+  KeySet,
   KoqPropertyValueFormatter,
   LabelDefinition,
   PropertiesField,
@@ -31,7 +32,6 @@ import {
   Value,
   ValuesDictionary,
 } from "@itwin/presentation-common";
-import { KeySet } from "@itwin/presentation-common";
 import {
   FavoritePropertiesManager,
   FavoritePropertiesScope,
