@@ -34,6 +34,7 @@ import {
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostics.js";
+import { LocalizationKey } from "../common/LocalizedStrings.js";
 import { getRulesetId, memoize, translate } from "../common/Utils.js";
 import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
 import {
@@ -415,7 +416,11 @@ async function createNodesAndCountResult(
   }
 }
 
-function createStatusNodeResult(parentNode: TreeNodeItem | undefined, labelKey: string, type?: InfoTreeNodeItemType) {
+function createStatusNodeResult(
+  parentNode: TreeNodeItem | undefined,
+  labelKey: LocalizationKey,
+  type?: InfoTreeNodeItemType,
+) {
   return { nodes: [createInfoNode(parentNode, translate(labelKey), type)], count: 1 };
 }
 

@@ -32,8 +32,9 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "npm run -s copy && npm run -s typecheck && npm run -s build:lib",
+    "build": "npm run -s build:locale && npm run -s copy && npm run -s typecheck && npm run -s build:lib",
     "build:lib": "tsc -p tsconfig.lib.json",
+    "build:locale": "tsc -p tsconfig.utils.json && node ./lib/build/utils/BuildLocale.js",
     "copy": "npm run -s copy:assets && npm run -s copy:locale",
     "copy:locale": "cpx \"./public/**/*\" ./lib/public",
     "copy:assets": "cpx \"./src/**/*.{scss,json}\" ./lib",
