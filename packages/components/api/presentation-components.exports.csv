@@ -101,6 +101,7 @@ public;function;PresentationTreeRenderer
 deprecated;function;PresentationTreeRenderer
 public;interface;PresentationTreeRendererProps
 deprecated;interface;PresentationTreeRendererProps
+alpha;type;PropertiesMergeMode
 public;interface;PropertyDataProviderWithUnifiedSelectionProps
 public;class;PropertyRecordsBuilder
 public;interface;SchemaMetadataContext

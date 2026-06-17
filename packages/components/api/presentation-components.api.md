@@ -503,6 +503,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     set isNestedPropertyCategoryGroupingEnabled(value: boolean);
     // (undocumented)
     onDataChanged: PropertyDataChangeEvent;
+    // @alpha
+    get propertiesMergeMode(): PropertiesMergeMode;
+    set propertiesMergeMode(value: PropertiesMergeMode);
     protected sortCategories(categories: CategoryDescription[]): void;
     // @deprecated
     protected sortFields(category: CategoryDescription, fields: Field[]): void;
@@ -513,6 +516,8 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
 export interface PresentationPropertyDataProviderProps extends DiagnosticsProps {
     disableFavoritesCategory?: boolean;
     imodel: IModelConnection;
+    // @alpha
+    propertiesMergeMode?: PropertiesMergeMode;
     ruleset?: string | Ruleset;
 }
 
@@ -618,6 +623,9 @@ export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "
     // (undocumented)
     onFilterApplied?: () => void;
 }
+
+// @alpha
+export type PropertiesMergeMode = "union" | "intersection";
 
 // @public
 export interface PropertyDataProviderWithUnifiedSelectionProps {

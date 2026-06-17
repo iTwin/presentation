@@ -49,9 +49,20 @@ import { CacheInvalidationProps, ContentDataProvider, IContentDataProvider } fro
 import { DiagnosticsProps } from "../common/Diagnostics.js";
 import { createLabelRecord, findField, memoize, WithIModelKey } from "../common/Utils.js";
 import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils.js";
+import { buildIntersectionFieldsSelector } from "./PropertiesIntersection.js";
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
 const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
+
+/**
+ * Controls how properties from multiple selected elements of different classes are combined.
+ * - `"union"` (default): all properties from all selected element classes are shown.
+ * - `"intersection"`: only properties common to all selected element classes are shown.
+ *
+ * @see [[PresentationPropertyDataProvider.propertiesMergeMode]]
+ * @alpha
+ */
+export type PropertiesMergeMode = "union" | "intersection";
 
 /**
  * Default presentation ruleset used by [[PresentationPropertyDataProvider]]. The ruleset just gets properties
@@ -88,6 +99,14 @@ export interface PresentationPropertyDataProviderProps extends DiagnosticsProps 
    * If true, additional 'favorites' category is not created.
    */
   disableFavoritesCategory?: boolean;
+
+  /**
+   * Controls how properties from multiple selected elements of different classes are combined.
+   * Defaults to `"union"`.
+   * @see [[PropertiesMergeMode]]
+   * @alpha
+   */
+  propertiesMergeMode?: PropertiesMergeMode;
 }
 
 /**
@@ -101,6 +120,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
   private _isNestedPropertyCategoryGroupingEnabled: boolean;
   private _onFavoritesChangedRemoveListener?: () => void;
   private _shouldCreateFavoritesCategory: boolean;
+  private _propertiesMergeMode: PropertiesMergeMode;
 
   /**
    * Constructor
@@ -117,6 +137,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     this._includeFieldsWithCompositeValues = true;
     this._isNestedPropertyCategoryGroupingEnabled = true;
     this._shouldCreateFavoritesCategory = !props.disableFavoritesCategory;
+    this._propertiesMergeMode = props.propertiesMergeMode ?? "union";
   }
 
   #dispose() {
@@ -154,10 +175,22 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    * Provides content configuration for the property grid
    */
   protected override async getDescriptorOverrides(): Promise<DescriptorOverrides> {
-    return {
+    const baseOverrides = {
       ...(await super.getDescriptorOverrides()),
       contentFlags: ContentFlags.ShowLabels | ContentFlags.MergeResults,
     };
+
+    if (this._propertiesMergeMode === "intersection") {
+      const descriptor = await this.getContentDescriptor();
+      if (descriptor) {
+        const fieldsSelector = await buildIntersectionFieldsSelector(this.imodel, this.keys, descriptor.fields);
+        if (fieldsSelector) {
+          return { ...baseOverrides, fieldsSelector };
+        }
+      }
+    }
+
+    return baseOverrides;
   }
 
   /**
@@ -217,6 +250,24 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     }
     this._isNestedPropertyCategoryGroupingEnabled = value;
     this.invalidateCache({ content: true });
+  }
+
+  /**
+   * Controls how properties from multiple selected elements of different classes are combined.
+   * Defaults to `"union"`.
+   *
+   * @see [[PropertiesMergeMode]]
+   * @alpha
+   */
+  public get propertiesMergeMode(): PropertiesMergeMode {
+    return this._propertiesMergeMode;
+  }
+  public set propertiesMergeMode(value: PropertiesMergeMode) {
+    if (this._propertiesMergeMode === value) {
+      return;
+    }
+    this._propertiesMergeMode = value;
+    this.invalidateCache({ descriptorConfiguration: true });
   }
 
   /* eslint-disable @typescript-eslint/no-deprecated */
