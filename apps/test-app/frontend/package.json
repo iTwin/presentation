@@ -57,9 +57,9 @@
     "rimraf": "catalog:build-tools",
     "rss-parser": "^3.13.0",
     "rxjs": "catalog:rxjs",
-    "sass": "^1.100.0",
+    "sass": "^1.101.0",
     "typescript": "catalog:build-tools",
     "vite": "catalog:build-tools",
-    "vite-plugin-static-copy": "^4.1.0"
+    "vite-plugin-static-copy": "^4.1.1"
   }
 }

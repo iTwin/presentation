@@ -1,5 +1,13 @@
 # Change Log - @itwin/presentation-components
 
+## 5.16.2
+
+### Patch Changes
+
+- 9f2f1f405e82bbb5bad83de67c265ea0407d6cf1: Avoid loading all instance keys in selection if it exceeds limit.
+- Updated dependencies:
+  - @itwin/unified-selection@1.8.1
+
 ## 5.16.1
 
 ### Patch Changes
