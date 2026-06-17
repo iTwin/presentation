@@ -10,7 +10,7 @@ import { eachValueFrom } from "rxjs-for-await";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
 import { StorageSelectionChangeEventArgs } from "./SelectionChangeEvent.js";
-import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./SelectionStorage.js";
+import { CLEAR_SELECTION_STORAGE_SOURCE, SelectionStorage } from "./SelectionStorage.js";
 
 /**
  * Props for creating an `IModelHiliteSetProvider` instance.
@@ -81,7 +81,7 @@ class IModelHiliteSetProviderImpl implements IModelHiliteSetProvider {
     this._removeListener = this._selectionStorage.selectionChangeEvent.addListener(
       (args: StorageSelectionChangeEventArgs) => {
         this._cache.delete(args.imodelKey);
-        if (args.changeType === "clear" && args.source === IMODEL_CLOSE_SELECTION_CLEAR_SOURCE) {
+        if (args.changeType === "clear" && args.source === CLEAR_SELECTION_STORAGE_SOURCE) {
           this._hiliteSetProviders.delete(args.imodelKey);
         }
       },

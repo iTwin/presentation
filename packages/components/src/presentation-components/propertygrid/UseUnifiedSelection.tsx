@@ -11,7 +11,7 @@ import { from, map, Subject, switchMap, takeLast } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { createIModelKey } from "@itwin/presentation-core-interop";
-import { SelectionStorage } from "@itwin/unified-selection";
+import { Selectables, SelectionStorage } from "@itwin/unified-selection";
 import { createKeySetFromSelectables } from "../common/Utils.js";
 import { IPresentationPropertyDataProvider } from "./DataProvider.js";
 
@@ -66,11 +66,16 @@ export function usePropertyDataProviderWithUnifiedSelection(
   const [numSelectedElements, setNumSelectedElements] = useState(0);
 
   useEffect(() => {
-    function onSelectionChanged(newSelection: KeySet) {
-      setNumSelectedElements(newSelection.size);
-      dataProvider.keys = isOverLimit(newSelection.size, requestedContentInstancesLimit) ? new KeySet() : newSelection;
+    function onSelectionChanged(newSelectionOrSize: KeySet | number) {
+      setNumSelectedElements(typeof newSelectionOrSize === "number" ? newSelectionOrSize : newSelectionOrSize.size);
+      dataProvider.keys = typeof newSelectionOrSize === "number" ? new KeySet() : newSelectionOrSize;
     }
-    return initUnifiedSelectionFromStorage({ imodel, selectionStorage, onSelectionChanged });
+    return initUnifiedSelectionFromStorage({
+      imodel,
+      selectionStorage,
+      limit: requestedContentInstancesLimit,
+      onSelectionChanged,
+    });
   }, [dataProvider, imodel, rulesetId, requestedContentInstancesLimit, selectionStorage]);
 
   return { isOverLimit: isOverLimit(numSelectedElements, requestedContentInstancesLimit), numSelectedElements };
@@ -79,18 +84,26 @@ export function usePropertyDataProviderWithUnifiedSelection(
 function initUnifiedSelectionFromStorage({
   imodel,
   selectionStorage,
+  limit,
   onSelectionChanged,
 }: {
   imodel: IModelConnection;
   selectionStorage: SelectionStorage;
-  onSelectionChanged: (newSelection: KeySet) => void;
+  limit: number;
+  onSelectionChanged: (newSelectionOrSize: KeySet | number) => void;
 }) {
   const imodelKey = createIModelKey(imodel);
   const update = new Subject<number>();
   const subscription = update
     .pipe(
       map((level) => selectionStorage.getSelection({ imodelKey, level })),
-      switchMap(async (selectables) => createKeySetFromSelectables(selectables)),
+      switchMap(async (selectables) => {
+        const size = Selectables.size(selectables);
+        if (isOverLimit(size, limit)) {
+          return size;
+        }
+        return size === 0 ? new KeySet() : createKeySetFromSelectables(selectables);
+      }),
     )
     .subscribe({ next: onSelectionChanged });
   const removeSelectionChangesListener = selectionStorage.selectionChangeEvent.addListener((args) => {
