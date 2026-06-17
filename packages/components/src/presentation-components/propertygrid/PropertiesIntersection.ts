@@ -36,11 +36,9 @@ export function getDistinctClassNames(keys: KeySet): string[] {
  * Checks whether every resolved key class is equal to or derived from at least one of the given target classes.
  * A key class that could not be resolved in the schema never matches.
  */
-function matchesAllKeyClasses(keyClasses: Array<SchemaView.Class | undefined>, targetClassIds: Id64String[]): boolean {
-  return keyClasses.every(
-    (keyClass) =>
-      !!keyClass &&
-      targetClassIds.some((targetId) => getClassId(keyClass) === targetId || hasBaseClass(keyClass, targetId)),
+function matchesAllKeyClasses(keyClasses: Array<SchemaView.Class>, targetClassIds: Id64String[]): boolean {
+  return keyClasses.every((keyClass) =>
+    targetClassIds.some((targetId) => getClassId(keyClass) === targetId || hasBaseClass(keyClass, targetId)),
   );
 }
 
@@ -49,10 +47,7 @@ function matchesAllKeyClasses(keyClasses: Array<SchemaView.Class | undefined>, t
  * A field matches if, for each key class K, at least one of the field's properties
  * has a class that is equal to or a base of K (K is-a property's class).
  */
-function propertiesFieldMatchesAllClasses(
-  field: PropertiesField,
-  keyClasses: Array<SchemaView.Class | undefined>,
-): boolean {
+function propertiesFieldMatchesAllClasses(field: PropertiesField, keyClasses: Array<SchemaView.Class>): boolean {
   return matchesAllKeyClasses(
     keyClasses,
     field.properties.map(({ property }) => property.classInfo.id),
@@ -64,10 +59,7 @@ function propertiesFieldMatchesAllClasses(
  * A field matches if, for each key class K, at least one id in `actualPrimaryClassIds` is
  * equal to or a base of K (K is-a that primary class).
  */
-function nestedContentFieldMatchesAllClasses(
-  field: NestedContentField,
-  keyClasses: Array<SchemaView.Class | undefined>,
-): boolean {
+function nestedContentFieldMatchesAllClasses(field: NestedContentField, keyClasses: Array<SchemaView.Class>): boolean {
   return matchesAllKeyClasses(keyClasses, field.actualPrimaryClassIds);
 }
 
@@ -82,7 +74,7 @@ function nestedContentFieldMatchesAllClasses(
  */
 function collectMatchedNestedFieldDescriptors(
   nestedFields: Field[],
-  keyClasses: Array<SchemaView.Class | undefined>,
+  keyClasses: Array<SchemaView.Class>,
 ): FieldDescriptor[] {
   const descriptors: FieldDescriptor[] = [];
   for (const field of nestedFields) {
@@ -106,10 +98,7 @@ function collectMatchedNestedFieldDescriptors(
  *   covers every key class), the whole nested block is common, so its nested fields are included (with
  *   child nested content fields re-checked by their own `actualPrimaryClassIds`).
  */
-function collectMatchedFieldDescriptors(
-  fields: Field[],
-  keyClasses: Array<SchemaView.Class | undefined>,
-): FieldDescriptor[] {
+function collectMatchedFieldDescriptors(fields: Field[], keyClasses: Array<SchemaView.Class>): FieldDescriptor[] {
   const descriptors: FieldDescriptor[] = [];
   for (const field of fields) {
     if (field.isNestedContentField()) {
@@ -144,7 +133,13 @@ export async function buildIntersectionFieldsSelector(
   }
 
   const schemaView = await imodel.getSchemaView();
-  const keyClasses = keyClassNames.map((name) => schemaView.findClass(name));
+  const keyClasses = keyClassNames.map((name) => {
+    const classView = schemaView.findClass(name);
+    if (!classView) {
+      throw new Error(`Failed to resolve key class "${name}" in schema view`);
+    }
+    return classView;
+  });
 
   const descriptors = collectMatchedFieldDescriptors(fields, keyClasses);
   return { type: "include", fields: descriptors };

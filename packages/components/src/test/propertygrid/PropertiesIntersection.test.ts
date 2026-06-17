@@ -158,14 +158,14 @@ describe("buildIntersectionFieldsSelector", () => {
       ]);
     });
 
-    it("treats unresolved key classes as non-match", async () => {
+    it("throws on unresolved key class", async () => {
       // Schema view can't resolve the key classes
       imodelMock.getSchemaView.mockResolvedValue(stubSchemaViewForClasses([]));
       const field = createTestPropertiesContentField({
         name: "Prop",
         properties: [{ property: createTestPropertyInfo() }],
       });
-      expect(await getIncludedFields([field])).toHaveLength(0);
+      await expect(getIncludedFields([field])).rejects.toThrow(/Failed to resolve key class/);
     });
   });
 });
