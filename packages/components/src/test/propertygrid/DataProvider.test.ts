@@ -205,8 +205,7 @@ describe("PropertyDataProvider", () => {
         .spyOn(PropertiesIntersectionModule, "buildIntersectionFieldsSelector")
         .mockResolvedValue(selector);
 
-      provider = new Provider({ imodel, ruleset: rulesetId });
-      provider.propertiesMergeMode = "intersection";
+      provider = new Provider({ imodel, ruleset: rulesetId, propertiesMergeMode: "intersection" });
       provider.keys = new KeySet([
         { className: "Schema:A", id: "0x1" },
         { className: "Schema:B", id: "0x2" },
@@ -222,8 +221,7 @@ describe("PropertyDataProvider", () => {
       presentationManager.getContentDescriptor.mockResolvedValue(descriptor);
       vi.spyOn(PropertiesIntersectionModule, "buildIntersectionFieldsSelector").mockResolvedValue(undefined);
 
-      provider = new Provider({ imodel, ruleset: rulesetId });
-      provider.propertiesMergeMode = "intersection";
+      provider = new Provider({ imodel, ruleset: rulesetId, propertiesMergeMode: "intersection" });
       provider.keys = new KeySet([{ className: "Schema:A", id: "0x1" }]);
 
       const overrides = await provider.getDescriptorOverrides();
@@ -233,8 +231,7 @@ describe("PropertyDataProvider", () => {
     it("does not apply fieldsSelector when descriptor is unavailable", async () => {
       presentationManager.getContentDescriptor.mockResolvedValue(undefined);
 
-      provider = new Provider({ imodel, ruleset: rulesetId });
-      provider.propertiesMergeMode = "intersection";
+      provider = new Provider({ imodel, ruleset: rulesetId, propertiesMergeMode: "intersection" });
       provider.keys = new KeySet([
         { className: "Schema:A", id: "0x1" },
         { className: "Schema:B", id: "0x2" },

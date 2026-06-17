@@ -516,6 +516,8 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
 export interface PresentationPropertyDataProviderProps extends DiagnosticsProps {
     disableFavoritesCategory?: boolean;
     imodel: IModelConnection;
+    // @alpha
+    propertiesMergeMode?: PropertiesMergeMode;
     ruleset?: string | Ruleset;
 }
 

@@ -99,6 +99,14 @@ export interface PresentationPropertyDataProviderProps extends DiagnosticsProps 
    * If true, additional 'favorites' category is not created.
    */
   disableFavoritesCategory?: boolean;
+
+  /**
+   * Controls how properties from multiple selected elements of different classes are combined.
+   * Defaults to `"union"`.
+   * @see [[PropertiesMergeMode]]
+   * @alpha
+   */
+  propertiesMergeMode?: PropertiesMergeMode;
 }
 
 /**
@@ -129,7 +137,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     this._includeFieldsWithCompositeValues = true;
     this._isNestedPropertyCategoryGroupingEnabled = true;
     this._shouldCreateFavoritesCategory = !props.disableFavoritesCategory;
-    this._propertiesMergeMode = "union";
+    this._propertiesMergeMode = props.propertiesMergeMode ?? "union";
   }
 
   #dispose() {
