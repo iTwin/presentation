@@ -121,7 +121,11 @@ describe("buildIntersectionFieldsSelector", () => {
       const classBOnlyProp = propField("ClassBOnlyProp", classBInfo);
       const field = nestedField("RelatedStuff", [sharedProp, classAOnlyProp, classBOnlyProp], [baseClassInfo.id]);
 
-      expect(await getIncludedFields([field])).toEqual([sharedProp.getFieldDescriptor(), classAOnlyProp.getFieldDescriptor(), classBOnlyProp.getFieldDescriptor()]);
+      expect(await getIncludedFields([field])).toEqual([
+        sharedProp.getFieldDescriptor(),
+        classAOnlyProp.getFieldDescriptor(),
+        classBOnlyProp.getFieldDescriptor(),
+      ]);
     });
 
     it("omits NestedContentField when actualPrimaryClassIds does not cover all key classes", async () => {
@@ -148,7 +152,10 @@ describe("buildIntersectionFieldsSelector", () => {
       const childNestedField = nestedField("ChildRelated", [childLeafProp], [baseClassInfo.id]);
       const parentNestedField = nestedField("RelatedStuff", [leafProp, childNestedField], [baseClassInfo.id]);
 
-      expect(await getIncludedFields([parentNestedField])).toEqual([leafProp.getFieldDescriptor(), childLeafProp.getFieldDescriptor()]);
+      expect(await getIncludedFields([parentNestedField])).toEqual([
+        leafProp.getFieldDescriptor(),
+        childLeafProp.getFieldDescriptor(),
+      ]);
     });
 
     it("treats unresolved key classes as non-match", async () => {
