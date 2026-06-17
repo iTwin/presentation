@@ -31,20 +31,17 @@ import {
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { Selectables } from "@itwin/unified-selection";
-
-/** @internal */
-export const localizationNamespaceName = "PresentationComponents";
+import { LOCALIZATION_NAMESPACE, LocalizationKey } from "./LocalizedStrings.js";
 
 /**
- * Translate a string with the specified id from `PresentationComponents`
+ * Translate a string with the specified id from the `PresentationComponents`
  * localization namespace. The `stringId` should not contain namespace - it's
  * prepended automatically.
  *
  * @internal
  */
-export const translate = (stringId: string, options?: TranslationOptions): string => {
-  stringId = `${localizationNamespaceName}:${stringId}`;
-  return Presentation.localization.getLocalizedString(stringId, options);
+export const translate = (stringId: LocalizationKey, options?: TranslationOptions): string => {
+  return Presentation.localization.getLocalizedString(`${LOCALIZATION_NAMESPACE}:${stringId}`, options);
 };
 
 /**
