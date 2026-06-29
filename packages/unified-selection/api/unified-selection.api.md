@@ -29,6 +29,9 @@ interface CachingHiliteSetProviderProps {
 }
 
 // @public
+export const CLEAR_SELECTION_STORAGE_SOURCE = "Unified selection storage: clear";
+
+// @public
 export function computeSelection(props: ComputeSelectionProps): AsyncIterableIterator<SelectableInstanceKey>;
 
 // @public

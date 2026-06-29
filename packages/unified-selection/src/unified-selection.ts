@@ -23,3 +23,4 @@ export type {
   StorageSelectionChangeEventArgs,
   StorageSelectionChangesListener,
 } from "./unified-selection/SelectionChangeEvent.js";
+export { CLEAR_SELECTION_STORAGE_SOURCE } from "./unified-selection/SelectionStorage.js";

@@ -11,13 +11,6 @@ import type { PropertyEditorProps, TypeEditor } from "@itwin/components-react";
 import type { PropertyEditorAttributes } from "./Common.js";
 
 /**
- * Name for `NumericPropertyEditor`.
- *
- * @internal
- */
-export const NumericEditorName = "presentation-numeric-editor";
-
-/**
  * Editor for numeric properties.
  *
  * @internal

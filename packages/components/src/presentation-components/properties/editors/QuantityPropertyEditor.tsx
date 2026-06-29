@@ -11,12 +11,6 @@ import type { PropertyEditorProps, TypeEditor } from "@itwin/components-react";
 import type { PropertyEditorAttributes } from "./Common.js";
 
 /**
- * Name for `QuantityPropertyEditor`.
- * @internal
- */
-export const QuantityEditorName = "presentation-quantity-editor";
-
-/**
  * Editor for quantity properties.
  * @internal
  */

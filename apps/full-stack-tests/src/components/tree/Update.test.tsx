@@ -496,7 +496,7 @@ describe("Tree update", () => {
             async () => {
               await expectTree(result.current!.nodeLoader, expectedUpdatedTree);
             },
-            { timeout: 9999999 },
+            { timeout: 30000 },
           );
         }
       })();

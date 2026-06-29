@@ -10,10 +10,8 @@ import { IModelApp } from "@itwin/core-frontend";
 import { Format } from "@itwin/core-quantity";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext.js";
-import {
-  QuantityEditorName,
-  QuantityPropertyEditor,
-} from "../../../presentation-components/properties/editors/QuantityPropertyEditor.js";
+import { QuantityEditorName } from "../../../presentation-components/properties/editors/EditorNames.js";
+import { QuantityPropertyEditor } from "../../../presentation-components/properties/editors/QuantityPropertyEditor.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 

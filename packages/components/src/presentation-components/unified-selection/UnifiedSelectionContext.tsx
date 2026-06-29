@@ -85,7 +85,7 @@ export interface UnifiedSelectionContextProviderProps {
 export function UnifiedSelectionContextProvider(props: UnifiedSelectionContextProviderProps): React.ReactElement {
   const selectionLevel = props.selectionLevel ?? 0;
 
-  const contextRef = useRef<UnifiedSelectionContext>();
+  const contextRef = useRef<UnifiedSelectionContext | undefined>(undefined);
   if (contextRef.current?.imodel !== props.imodel || contextRef.current.selectionLevel !== selectionLevel) {
     contextRef.current = createSelectionContext(props.imodel, selectionLevel);
   }

@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-components",
-  "version": "5.15.0",
+  "version": "5.16.1",
   "description": "React components based on iTwin.js Presentation library",
   "license": "MIT",
   "repository": {
@@ -80,8 +80,8 @@
     "@itwin/presentation-common": "^4.4.0 || ^5.0.0",
     "@itwin/presentation-frontend": "^4.4.0 || ^5.0.0",
     "@itwin/unified-selection-react": "^1.0.0",
-    "react": "^17.0.0 || ^18.0.0",
-    "react-dom": "^17.0.0 || ^18.0.0"
+    "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "@itwin/unified-selection-react": {

@@ -9,12 +9,13 @@
 
 import { StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyEditorManager } from "@itwin/components-react";
+import { NavigationEditorName, NumericEditorName, QuantityEditorName } from "./EditorNames.js";
 import {
   NavigationPropertyEditor as NavigationPropertyEditorInternal,
   NavigationPropertyTargetEditor as NavigationPropertyTargetEditorInternal,
 } from "./NavigationPropertyEditor.js";
-import { NumericEditorName, NumericPropertyEditorBase } from "./NumericPropertyEditor.js";
-import { QuantityEditorName, QuantityPropertyEditorBase } from "./QuantityPropertyEditor.js";
+import { NumericPropertyEditorBase } from "./NumericPropertyEditor.js";
+import { QuantityPropertyEditorBase } from "./QuantityPropertyEditor.js";
 
 import type { PureComponent } from "react";
 import type { PropertyEditorBase, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
@@ -54,7 +55,11 @@ export { NavigationPropertyEditor, NavigationPropertyTargetEditor };
 PropertyEditorManager.registerEditor(StandardTypeNames.Double, QuantityPropertyEditorBase, QuantityEditorName);
 
 // register editor for navigation properties
-PropertyEditorManager.registerEditor(StandardTypeNames.Navigation, NavigationPropertyEditorInternal);
+PropertyEditorManager.registerEditor(
+  StandardTypeNames.Navigation,
+  NavigationPropertyEditorInternal,
+  NavigationEditorName,
+);
 
 // register editor for numeric properties
 PropertyEditorManager.registerEditor(StandardTypeNames.Number, NumericPropertyEditorBase, NumericEditorName);

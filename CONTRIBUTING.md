@@ -253,5 +253,5 @@ echo "Building full stack tests"
 pnpm lage build --to presentation-full-stack-tests --no-cache
 
 echo "Running full stack tests"
-pnpm --filter presentation-full-stack-tests test:dev
+pnpm --filter presentation-full-stack-tests test
 ```

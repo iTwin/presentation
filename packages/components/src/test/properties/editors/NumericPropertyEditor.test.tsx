@@ -5,10 +5,8 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { StandardTypeNames } from "@itwin/appui-abstract";
-import {
-  NumericEditorName,
-  NumericPropertyEditor,
-} from "../../../presentation-components/properties/editors/NumericPropertyEditor.js";
+import { NumericEditorName } from "../../../presentation-components/properties/editors/EditorNames.js";
+import { NumericPropertyEditor } from "../../../presentation-components/properties/editors/NumericPropertyEditor.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 

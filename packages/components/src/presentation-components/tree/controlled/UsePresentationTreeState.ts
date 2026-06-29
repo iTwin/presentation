@@ -173,11 +173,11 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
     renderedItems.current = items;
   }, []);
 
+  const modelSourceRef = useLatest(state?.nodeLoader.modelSource);
   useTreeReload({
     pageSize: dataProviderProps.pagingSize,
-    modelSource: state?.nodeLoader.modelSource,
+    modelSource: modelSourceRef,
     dataProviderProps: treeStateProps,
-    ruleset: dataProviderProps.ruleset,
     onReload,
     renderedItems,
   });

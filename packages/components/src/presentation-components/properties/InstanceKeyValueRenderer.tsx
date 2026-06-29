@@ -9,6 +9,7 @@
 
 import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { TypeConverterManager, useAsyncValue } from "@itwin/components-react";
+import { Guid } from "@itwin/core-bentley";
 import { Anchor } from "@itwin/itwinui-react";
 import { useOptionalUnifiedSelectionContext } from "../common/UnifiedSelection.js";
 import { translate } from "../common/Utils.js";
@@ -17,6 +18,16 @@ import { useUnifiedSelectionContext as useDeprecatedUnifiedSelectionContext } fr
 import type { Primitives, PrimitiveValue, PropertyRecord } from "@itwin/appui-abstract";
 import type { IPropertyValueRenderer, PropertyValueRendererContext } from "@itwin/components-react";
 import type { WithIModelKey } from "../common/Utils.js";
+
+/**
+ * Name of renderer that can be used in presentation rules to specify that a property should be rendered using [[InstanceKeyValueRenderer]].
+ * When building property records it will be replaced with [[InstanceKeyValueRendererName]].
+ * @internal
+ */
+export const InstanceKeyValueRendererNameInRules = "SelectableInstance";
+
+/** @internal */
+export const InstanceKeyValueRendererName = `SelectableInstance-${Guid.createValue()}`;
 
 /**
  * Property value renderer for instance keys. If application provides a [[UnifiedSelectionContext]] and this value is

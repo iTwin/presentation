@@ -176,7 +176,7 @@ function useTreeInternal({
         (props) => onHierarchyLoadErrorRef.current?.(props),
       ),
   );
-  const currentFormatter = useRef<IPrimitiveValueFormatter>();
+  const currentFormatter = useRef<IPrimitiveValueFormatter | undefined>(undefined);
 
   const [hierarchyProvider, setHierarchyProvider] = useState<HierarchyProvider | undefined>();
   useEffect(() => {
