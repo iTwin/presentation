@@ -181,8 +181,18 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         schemaProvider.stubRelationshipClass({
           schemaName: "S",
           className: "Rel",
-          source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classA },
-          target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classB },
+          source: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: classA,
+            constraintClasses: [classA],
+          },
+          target: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: classB,
+            constraintClasses: [classB],
+          },
         });
 
         const ruleset = makeRuleset([
@@ -232,8 +242,18 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         schemaProvider.stubRelationshipClass({
           schemaName: "S",
           className: "Rel",
-          source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classA },
-          target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classB },
+          source: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: classA,
+            constraintClasses: [classA],
+          },
+          target: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: classB,
+            constraintClasses: [classB],
+          },
         });
 
         const ruleset = makeRuleset([
@@ -284,14 +304,34 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         schemaProvider.stubRelationshipClass({
           schemaName: "S",
           className: "Rel1",
-          source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classA },
-          target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classB },
+          source: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: classA,
+            constraintClasses: [classA],
+          },
+          target: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: classB,
+            constraintClasses: [classB],
+          },
         });
         schemaProvider.stubRelationshipClass({
           schemaName: "S",
           className: "Rel2",
-          source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classC },
-          target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classB },
+          source: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: classC,
+            constraintClasses: [classC],
+          },
+          target: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: classB,
+            constraintClasses: [classB],
+          },
         });
 
         const ruleset = makeRuleset([
@@ -350,8 +390,18 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         schemaProvider.stubRelationshipClass({
           schemaName: "S",
           className: "Rel",
-          source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classA },
-          target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classB },
+          source: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: classA,
+            constraintClasses: [classA],
+          },
+          target: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: classB,
+            constraintClasses: [classB],
+          },
         });
 
         const ruleset = makeRuleset([
@@ -397,8 +447,18 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         schemaProvider.stubRelationshipClass({
           schemaName: "S",
           className: "Rel",
-          source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classA },
-          target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classB },
+          source: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: classA,
+            constraintClasses: [classA],
+          },
+          target: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: classB,
+            constraintClasses: [classB],
+          },
         });
 
         const ruleset = makeRuleset([
@@ -495,8 +555,18 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         schemaProvider.stubRelationshipClass({
           schemaName: "S",
           className: "Rel",
-          source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: undefined },
-          target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: undefined },
+          source: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: undefined,
+            constraintClasses: [],
+          },
+          target: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: undefined,
+            constraintClasses: [],
+          },
         });
         const ruleset = makeRuleset([
           {
@@ -523,8 +593,18 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         schemaProvider.stubRelationshipClass({
           schemaName: "S",
           className: "Rel",
-          source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: undefined },
-          target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: undefined },
+          source: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: undefined,
+            constraintClasses: [],
+          },
+          target: {
+            polymorphic: true,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            abstractConstraint: undefined,
+            constraintClasses: [],
+          },
         });
         const ruleset = makeRuleset([
           {
@@ -785,8 +865,18 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
       schemaProvider.stubRelationshipClass({
         schemaName: "S",
         className: "Rel",
-        source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classA },
-        target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classB },
+        source: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: classA,
+          constraintClasses: [classA],
+        },
+        target: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: classB,
+          constraintClasses: [classB],
+        },
       });
 
       const ruleset = makeRuleset([
@@ -835,8 +925,18 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
       schemaProvider.stubRelationshipClass({
         schemaName: "S",
         className: "Rel",
-        source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classA },
-        target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classB },
+        source: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: classA,
+          constraintClasses: [classA],
+        },
+        target: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: classB,
+          constraintClasses: [classB],
+        },
       });
 
       const ruleset = makeRuleset([
@@ -885,8 +985,18 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
       schemaProvider.stubRelationshipClass({
         schemaName: "S",
         className: "Rel",
-        source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classA },
-        target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classB },
+        source: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: classA,
+          constraintClasses: [classA],
+        },
+        target: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: classB,
+          constraintClasses: [classB],
+        },
       });
 
       const ruleset = makeRuleset([
@@ -931,8 +1041,18 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
       schemaProvider.stubRelationshipClass({
         schemaName: "S",
         className: "Rel",
-        source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classA },
-        target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classB },
+        source: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: classA,
+          constraintClasses: [classA],
+        },
+        target: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: classB,
+          constraintClasses: [classB],
+        },
       });
 
       const ruleset = makeRuleset([
@@ -988,14 +1108,34 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
       schemaProvider.stubRelationshipClass({
         schemaName: "S",
         className: "RelAB",
-        source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classA },
-        target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classB },
+        source: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: classA,
+          constraintClasses: [classA],
+        },
+        target: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: classB,
+          constraintClasses: [classB],
+        },
       });
       schemaProvider.stubRelationshipClass({
         schemaName: "S",
         className: "RelBA",
-        source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classB },
-        target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: classA },
+        source: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: classB,
+          constraintClasses: [classB],
+        },
+        target: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: classA,
+          constraintClasses: [classA],
+        },
       });
 
       classDerivesFromMock.mockImplementation(async (derived: string, base: string) => derived === base);
@@ -1155,8 +1295,18 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
       schemaProvider.stubRelationshipClass({
         schemaName: "S",
         className: "Rel",
-        source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: undefined },
-        target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: undefined },
+        source: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: undefined,
+          constraintClasses: [],
+        },
+        target: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: undefined,
+          constraintClasses: [],
+        },
       });
       const ruleset = makeRuleset([
         {
@@ -1187,8 +1337,18 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
       schemaProvider.stubRelationshipClass({
         schemaName: "S",
         className: "Rel",
-        source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: undefined },
-        target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: undefined },
+        source: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: undefined,
+          constraintClasses: [],
+        },
+        target: {
+          polymorphic: true,
+          multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          abstractConstraint: undefined,
+          constraintClasses: [],
+        },
       });
       const ruleset = makeRuleset([
         {

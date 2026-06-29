@@ -62,9 +62,8 @@ describe("createCachingECClassHierarchyInspector", () => {
     expect(p2).toBeInstanceOf(Promise);
     expect(p1).toBe(p2);
     await Promise.all([p1, p2]);
-    expect(getClassStub).toHaveBeenCalledTimes(2);
+    expect(getClassStub).toHaveBeenCalledTimes(1);
     expect(getClassStub).toHaveBeenCalledWith("b");
-    expect(getClassStub).toHaveBeenCalledWith("d");
   });
 
   it("returns cached non-Promise value when called with exact same arguments after awaiting on the initial call", async () => {
@@ -83,9 +82,8 @@ describe("createCachingECClassHierarchyInspector", () => {
     const p2 = inspector.classDerivesFrom("a.b", "c.d");
     expect(typeof p1).toBe("boolean");
     expect(p1).toBe(p2);
-    expect(getClassStub).toHaveBeenCalledTimes(2);
+    expect(getClassStub).toHaveBeenCalledTimes(1);
     expect(getClassStub).toHaveBeenCalledWith("b");
-    expect(getClassStub).toHaveBeenCalledWith("d");
   });
 });
 

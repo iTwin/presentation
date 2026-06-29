@@ -125,7 +125,12 @@ function useOrCreateSchema(svSchema: SchemaView.Schema, sv: PublicSchemaView, us
 }
 
 function createEmptyRelConstraint(): EC.RelationshipConstraint {
-  return { multiplicity: { lowerLimit: 0, upperLimit: 0 }, polymorphic: false, abstractConstraint: undefined };
+  return {
+    multiplicity: { lowerLimit: 0, upperLimit: 0 },
+    polymorphic: false,
+    constraintClasses: [],
+    abstractConstraint: undefined,
+  };
 }
 
 function createECRelConstraintFromSchemaView(
@@ -136,6 +141,11 @@ function createECRelConstraintFromSchemaView(
   return {
     multiplicity: { lowerLimit: svConstraint.multiplicityLower, upperLimit: svConstraint.multiplicityUpper },
     polymorphic: svConstraint.polymorphic,
+    get constraintClasses() {
+      return svConstraint.constraintClasses.map((c) =>
+        createECClassFromSchemaView(c, sv, useOrCreateSchema(c.schema, sv, schema)),
+      );
+    },
     get abstractConstraint(): EC.EntityClass | EC.Mixin | EC.RelationshipClass | undefined {
       const svClass = svConstraint.abstractConstraint;
       if (!svClass) {
@@ -156,7 +166,14 @@ export function createECPropertyFromSchemaView(
     name: svProp.name,
     label: svProp.label,
     isHidden: svProp.isHidden,
-    kindOfQuantity: undefined,
+    get category(): EC.PropertyCategory | undefined {
+      return svProp.category
+        ? createECPropertyCategoryFromSchemaView(
+            svProp.category,
+            useOrCreateSchema(svProp.category.schema, sv, ecClass.schema),
+          )
+        : undefined;
+    },
     isArray(): this is EC.ArrayProperty {
       return svProp.isArray();
     },
@@ -319,4 +336,16 @@ function createECEnumerationFromSchemaView(svEnum: SchemaView.Enumeration, schem
 
 function createECKoqFromSchemaView(svKoq: SchemaView.KindOfQuantity, schema: EC.Schema): EC.KindOfQuantity {
   return { schema, fullName: normalizeFullClassName(svKoq.fullName), name: svKoq.name, label: svKoq.label };
+}
+
+function createECPropertyCategoryFromSchemaView(
+  svCategory: SchemaView.PropertyCategory,
+  schema: EC.Schema,
+): EC.PropertyCategory {
+  return {
+    schema,
+    fullName: normalizeFullClassName(svCategory.fullName),
+    name: svCategory.name,
+    label: svCategory.label,
+  };
 }

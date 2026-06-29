@@ -698,11 +698,17 @@ describe("createRelationshipPathJoinClause", () => {
       schemaName,
       className: typeof props.relationship === "string" ? props.relationship : "relationship",
       direction: "Forward",
-      source: { polymorphic: false, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: sourceClass },
+      source: {
+        polymorphic: false,
+        multiplicity: { lowerLimit: 0, upperLimit: 1 },
+        abstractConstraint: sourceClass,
+        constraintClasses: [sourceClass],
+      },
       target: {
         polymorphic: false,
         multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
         abstractConstraint: targetClass,
+        constraintClasses: [targetClass],
       },
       ...(typeof props.relationship === "object" ? props.relationship : undefined),
     });
@@ -750,11 +756,13 @@ describe("createRelationshipPathJoinClause", () => {
             source: {
               polymorphic: false,
               abstractConstraint: sourceClass,
+              constraintClasses: [sourceClass],
               multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
             },
             target: {
               polymorphic: false,
               abstractConstraint: targetClass,
+              constraintClasses: [targetClass],
               multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
             },
           });

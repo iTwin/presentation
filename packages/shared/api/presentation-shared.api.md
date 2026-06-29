@@ -156,7 +156,7 @@ export namespace EC {
     }
     export interface Class extends SchemaItem {
         // (undocumented)
-        baseClass: Class | undefined;
+        baseClass?: Class;
         // (undocumented)
         getDerivedClasses(): Class[];
         // (undocumented)
@@ -170,7 +170,7 @@ export namespace EC {
         // (undocumented)
         isEntityClass(): this is EntityClass;
         // (undocumented)
-        isHidden: boolean | undefined;
+        isHidden?: boolean;
         // (undocumented)
         isMixin(): this is Mixin;
         // (undocumented)
@@ -190,7 +190,7 @@ export namespace EC {
     export type EnumerationArrayProperty = EnumerationProperty & ArrayPropertyAttributes;
     export interface EnumerationProperty extends Property {
         // (undocumented)
-        enumeration: Enumeration | undefined;
+        enumeration?: Enumeration;
         // (undocumented)
         extendedTypeName?: string;
     }
@@ -228,6 +228,8 @@ export namespace EC {
     export type PrimitiveType = "Binary" | "Boolean" | "DateTime" | "Double" | "Integer" | "Long" | "Point2d" | "Point3d" | "String" | "IGeometry";
     export interface Property {
         // (undocumented)
+        category?: PropertyCategory;
+        // (undocumented)
         class: Class;
         // (undocumented)
         isArray(): this is ArrayProperty;
@@ -242,12 +244,13 @@ export namespace EC {
         // (undocumented)
         isStruct(): this is StructProperty;
         // (undocumented)
-        kindOfQuantity: KindOfQuantity | undefined;
+        kindOfQuantity?: KindOfQuantity;
         // (undocumented)
         label?: string;
         // (undocumented)
         name: string;
     }
+    export type PropertyCategory = SchemaItem;
     export interface RelationshipClass extends Class {
         // (undocumented)
         direction: "Forward" | "Backward";
@@ -258,7 +261,9 @@ export namespace EC {
     }
     export interface RelationshipConstraint {
         // (undocumented)
-        abstractConstraint: EntityClass | Mixin | RelationshipClass | undefined;
+        abstractConstraint?: EntityClass | Mixin | RelationshipClass;
+        // (undocumented)
+        constraintClasses: Class[];
         // (undocumented)
         multiplicity: RelationshipConstraintMultiplicity;
         // (undocumented)

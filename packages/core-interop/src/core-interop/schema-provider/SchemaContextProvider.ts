@@ -575,6 +575,20 @@ class ECRelationshipConstraintImpl implements EC.RelationshipConstraint {
   public get polymorphic() {
     return this._coreConstraint.polymorphic;
   }
+  public get constraintClasses() {
+    return this._coreConstraint.constraintClasses
+      ? this._coreConstraint.constraintClasses
+          .map((c) => {
+            // After forceLoad, the abstract constraint class is cached in SchemaContext; retrieve it synchronously.
+            const cls = this._coreSchema.lookupItemSync(c, CoreClass);
+            if (!cls) {
+              return undefined;
+            }
+            return createECClass(cls, this._schema, this._derivedMap);
+          })
+          .filter((c): c is EC.Class => c !== undefined)
+      : [];
+  }
   public get abstractConstraint(): EC.EntityClass | EC.Mixin | EC.RelationshipClass | undefined {
     const ref = this._coreConstraint.abstractConstraint;
     if (!ref) {

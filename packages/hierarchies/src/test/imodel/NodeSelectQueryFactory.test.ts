@@ -1062,11 +1062,13 @@ describe("createNodesQueryClauseFactory", () => {
             source: {
               polymorphic: false,
               abstractConstraint: contentClass,
+              constraintClasses: [contentClass],
               multiplicity: { lowerLimit: 0, upperLimit: 1 },
             },
             target: {
               polymorphic: false,
               abstractConstraint: propertyClass,
+              constraintClasses: [propertyClass],
               multiplicity: { lowerLimit: 0, upperLimit: 1 },
             },
           });
@@ -1118,11 +1120,13 @@ describe("createNodesQueryClauseFactory", () => {
             source: {
               polymorphic: false,
               abstractConstraint: contentClass,
+              constraintClasses: [contentClass],
               multiplicity: { lowerLimit: 0, upperLimit: 1 },
             },
             target: {
               polymorphic: false,
               abstractConstraint: propertyClass,
+              constraintClasses: [propertyClass],
               multiplicity: { lowerLimit: 0, upperLimit: 1 },
             },
           });
@@ -1397,17 +1401,20 @@ describe("createNodesQueryClauseFactory", () => {
     describe("join", () => {
       it("creates joins for single-step related instance path", async () => {
         const sourceClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "y" });
+        const targetClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "t" });
         imodelAccess.stubRelationshipClass({
           schemaName: "x",
           className: "r",
           direction: "Forward",
           source: {
             abstractConstraint: sourceClass,
+            constraintClasses: [sourceClass],
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
-            abstractConstraint: imodelAccess.stubEntityClass({ schemaName: "x", className: "t" }),
+            abstractConstraint: targetClass,
+            constraintClasses: [targetClass],
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
@@ -1451,11 +1458,13 @@ describe("createNodesQueryClauseFactory", () => {
           direction: "Forward",
           source: {
             abstractConstraint: sourceClass,
+            constraintClasses: [sourceClass],
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
             abstractConstraint: intermediateClass,
+            constraintClasses: [intermediateClass],
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
@@ -1466,11 +1475,13 @@ describe("createNodesQueryClauseFactory", () => {
           direction: "Forward",
           source: {
             abstractConstraint: intermediateClass,
+            constraintClasses: [intermediateClass],
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
             abstractConstraint: targetClass,
+            constraintClasses: [targetClass],
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
@@ -1522,11 +1533,13 @@ describe("createNodesQueryClauseFactory", () => {
           direction: "Forward",
           source: {
             abstractConstraint: sourceClass,
+            constraintClasses: [sourceClass],
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
             abstractConstraint: targetClass1,
+            constraintClasses: [targetClass1],
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
@@ -1537,11 +1550,13 @@ describe("createNodesQueryClauseFactory", () => {
           direction: "Forward",
           source: {
             abstractConstraint: sourceClass,
+            constraintClasses: [sourceClass],
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
           target: {
             abstractConstraint: targetClass2,
+            constraintClasses: [targetClass2],
             polymorphic: false,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },

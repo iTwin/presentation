@@ -442,6 +442,34 @@ describe("createECClassFromSchemaView", () => {
       const rel = ecSchema.getClass("RelNoAbstract")! as EC.RelationshipClass;
       expect(rel.source.abstractConstraint).toBeUndefined();
     });
+
+    it("returns constraint classes from constraintClasses getter", () => {
+      const entityAProps: MockClassProps = { name: "EntityA", schemaName: "RelSchema" };
+      const entityBProps: MockClassProps = { name: "EntityB", schemaName: "RelSchema" };
+      const sourceConstraint = {
+        polymorphic: true,
+        multiplicityLower: 1,
+        multiplicityUpper: 1,
+        constraintClasses: [createMockClass(entityAProps), createMockClass(entityBProps)],
+        get abstractConstraint() {
+          return undefined;
+        },
+      } as unknown as SchemaView.RelConstraint;
+      const relProps: MockClassProps = {
+        name: "RelWithConstraints",
+        schemaName: "RelSchema",
+        type: "relationship",
+        strengthDirection: StrengthDirection.Forward,
+        source: sourceConstraint,
+        target: undefined,
+      };
+      const mockSchema = createMockSchema({ name: "RelSchema", classes: new Map([["RelWithConstraints", relProps]]) });
+      const sv = createMockSchemaView(new Map([["RelSchema", { name: "RelSchema" }]]));
+      const ecSchema = createECSchemaFromSchemaView(mockSchema, sv);
+      const rel = ecSchema.getClass("RelWithConstraints")! as EC.RelationshipClass;
+      const classes = rel.source.constraintClasses;
+      expect(classes.map((c) => c.name)).toEqual(["EntityA", "EntityB"]);
+    });
   });
 });
 
@@ -765,6 +793,32 @@ describe("createECPropertyFromSchemaView", () => {
 
       const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummySv) as EC.PrimitiveProperty;
       expect(prop.kindOfQuantity).toBeUndefined();
+    });
+
+    it("returns property category when set", () => {
+      const mockCategory = {
+        fullName: "PropSchema:TestCategory",
+        name: "TestCategory",
+        label: "Test Category",
+        schema: mockSchemaObj,
+      } as unknown as SchemaView.PropertyCategory;
+      const mockProp = createMockProperty({
+        name: "PropWithCategory",
+        category: mockCategory,
+        isPrimitive: () => true,
+        isEnumeration: () => false,
+        primitiveType: SchemaViewPrimitiveType.String,
+        extendedTypeName: undefined,
+        kindOfQuantity: undefined,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummySv);
+      const category = prop.category;
+      assert(category !== undefined);
+      expect(category.name).toBe("TestCategory");
+      expect(category.label).toBe("Test Category");
+      expect(category.fullName).toBe("PropSchema.TestCategory");
+      expect(category.schema.name).toBe("PropSchema");
     });
 
     it("throws for uninitialized SchemaView primitive type", () => {

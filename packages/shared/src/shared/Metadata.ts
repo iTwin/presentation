@@ -52,11 +52,10 @@ export function createCachingECClassHierarchyInspector(props: {
       const cacheKey = createCacheKey(derivedClassFullName, candidateBaseClassFullName);
       let result = map.get(cacheKey);
       if (result === undefined) {
-        result = Promise.all([
-          getClass(props.schemaProvider, derivedClassFullName),
-          getClass(props.schemaProvider, candidateBaseClassFullName),
-        ]).then(([derivedClass, baseClass]) => {
-          const resolvedResult = derivedClass.is(baseClass);
+        result = getClass(props.schemaProvider, derivedClassFullName).then((derivedClass) => {
+          const { schemaName: candidateBaseClassSchemaName, className: candidateBaseClassName } =
+            parseFullClassName(candidateBaseClassFullName);
+          const resolvedResult = derivedClass.is(candidateBaseClassName, candidateBaseClassSchemaName);
           map.set(cacheKey, resolvedResult);
           return resolvedResult;
         });
@@ -122,8 +121,8 @@ export namespace EC {
    * @public
    */
   export interface Class extends SchemaItem {
-    baseClass: Class | undefined;
-    isHidden: boolean | undefined;
+    baseClass?: Class;
+    isHidden?: boolean;
     is(className: string, schemaName: string): boolean;
     is(other: Class): boolean;
     getProperty(name: string): Property | undefined;
@@ -164,6 +163,13 @@ export namespace EC {
   export type KindOfQuantity = SchemaItem;
 
   /**
+   * Represents a property category.
+   * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/propertycategory/
+   * @public
+   */
+  export type PropertyCategory = SchemaItem;
+
+  /**
    * Represents a relationship constraint multiplicity.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/relationshipmultiplicity/
    * @public
@@ -181,7 +187,8 @@ export namespace EC {
   export interface RelationshipConstraint {
     multiplicity: RelationshipConstraintMultiplicity;
     polymorphic: boolean;
-    abstractConstraint: EntityClass | Mixin | RelationshipClass | undefined;
+    constraintClasses: Class[];
+    abstractConstraint?: EntityClass | Mixin | RelationshipClass;
   }
 
   /**
@@ -228,7 +235,8 @@ export namespace EC {
     class: Class;
     label?: string;
     isHidden: boolean;
-    kindOfQuantity: KindOfQuantity | undefined;
+    kindOfQuantity?: KindOfQuantity;
+    category?: PropertyCategory;
 
     isArray(): this is ArrayProperty;
     isStruct(): this is StructProperty;
@@ -287,7 +295,7 @@ export namespace EC {
    * @public
    */
   export interface EnumerationProperty extends Property {
-    enumeration: Enumeration | undefined;
+    enumeration?: Enumeration;
     extendedTypeName?: string;
   }
 

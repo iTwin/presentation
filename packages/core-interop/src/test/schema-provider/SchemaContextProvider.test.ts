@@ -685,6 +685,44 @@ describe("createECClass", () => {
           ) as EC.RelationshipClass;
           expect(rel.source.abstractConstraint).toBeUndefined();
         });
+
+        it("resolves constraint classes synchronously, filtering out unresolved ones", () => {
+          const coreConstraintClass = {
+            schemaItemType: SchemaItemType.EntityClass,
+            fullName: "Schema.TestConstraintClass",
+            name: "TestConstraintClass",
+          };
+          const resolvedRef = {};
+          const unresolvedRef = {};
+          const coreSchema = {
+            lookupItemSync: vi
+              .fn()
+              .mockImplementation((ref) => (ref === resolvedRef ? coreConstraintClass : undefined)),
+            customAttributes: undefined,
+          };
+          const rel = createECClass(
+            {
+              ...coreRelationshipClass,
+              source: { constraintClasses: [resolvedRef, unresolvedRef] },
+              schema: coreSchema,
+            } as unknown as CoreClass,
+            schema,
+          ) as EC.RelationshipClass;
+          const classes = rel.source.constraintClasses;
+          expect(classes.map((c) => c.fullName)).toEqual(["Schema.TestConstraintClass"]);
+        });
+
+        it("returns empty array when core constraint has no constraint classes", () => {
+          const rel = createECClass(
+            {
+              ...coreRelationshipClass,
+              source: { constraintClasses: undefined },
+              schema: { customAttributes: undefined },
+            } as unknown as CoreClass,
+            schema,
+          ) as EC.RelationshipClass;
+          expect(rel.source.constraintClasses).toEqual([]);
+        });
       });
     });
   });
@@ -979,7 +1017,7 @@ describe("createECProperty", () => {
           enumeration: enumRef,
           class: { schema: coreSchema },
         } as unknown as CoreEnumerationProperty;
-        property = createECProperty(coreProperty, propertyClass) as EC.EnumerationProperty;
+        property = createECProperty(coreProperty, propertyClass);
       });
 
       it("returns `isStrict` flag", () => {
