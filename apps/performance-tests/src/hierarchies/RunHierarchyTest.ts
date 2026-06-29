@@ -63,7 +63,7 @@ export function runHierarchyTest(
       };
     },
     test: async (props) => {
-      const provider = new StatelessHierarchyProvider({ ...props, rowLimit: "unbounded" });
+      const provider = await StatelessHierarchyProvider.create({ ...props, rowLimit: "unbounded" });
       const nodeCount = await provider.loadHierarchy();
       if (testProps.expectedNodeCount !== undefined) {
         expect(nodeCount).toBe(testProps.expectedNodeCount);
