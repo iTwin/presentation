@@ -14,6 +14,7 @@ export type { ContentItem, ContentValues } from "./content/model/ContentItem.js"
 export { DEFAULT_FIELDS_PROVIDER_PRIORITY } from "./content/extensions/fields-providers/BaseFieldsProvider.js";
 export { defineIModelFieldsProvider } from "./content/extensions/fields-providers/IModelFieldsProvider.js";
 export { defineExternalFieldsProvider } from "./content/extensions/fields-providers/ExternalFieldsProvider.js";
+export { createFieldsProviderFromContentModifierRule } from "./content/extensions/fields-providers/ContentModifierRuleFieldsProviderFactory.js";
 export {
   defineDescriptorTransformer,
   DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY,

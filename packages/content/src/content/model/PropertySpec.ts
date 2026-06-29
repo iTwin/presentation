@@ -24,7 +24,7 @@ export interface StepPropertySpec {
  *
  * @public
  */
-interface ClassPropertySpec {
+export interface ClassPropertySpec {
   /**
    * Which properties to select from this class.
    * - `"all"`: include all properties.

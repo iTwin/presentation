@@ -23,7 +23,7 @@
  *   polymorphically; there is no non-polymorphic mode.
  */
 
-interface RequiredSchemaSpecification {
+export interface RequiredSchemaSpecification {
   /** Specifies the schema to whom the requirement is being set. */
   name: string;
 
@@ -40,7 +40,7 @@ interface RequiredSchemaSpecification {
   maxVersion?: string;
 }
 
-interface SingleSchemaClassSpecification {
+export interface SingleSchemaClassSpecification {
   /** Specifies name of the schema which contains the target class. */
   schemaName: string;
 
@@ -48,7 +48,7 @@ interface SingleSchemaClassSpecification {
   className: string;
 }
 
-interface MultiSchemaClassesSpecification {
+export interface MultiSchemaClassesSpecification {
   /** Specifies the schema which contains the target classes. */
   schemaName: string;
 
@@ -59,7 +59,7 @@ interface MultiSchemaClassesSpecification {
   arePolymorphic?: boolean;
 }
 
-interface RelationshipStepSpecification {
+export interface RelationshipStepSpecification {
   /** This attribute specifies the ECRelationship that should be used to traverse to target class. */
   relationship: SingleSchemaClassSpecification;
 
@@ -70,15 +70,15 @@ interface RelationshipStepSpecification {
   targetClass?: SingleSchemaClassSpecification;
 }
 
-type RelationshipPathSpecification = RelationshipStepSpecification | RelationshipStepSpecification[];
+export type RelationshipPathSpecification = RelationshipStepSpecification | RelationshipStepSpecification[];
 
-type CategoryIdentifier =
+export type CategoryIdentifier =
   | string
   | { type: "Id"; categoryId: string }
   | { type: "None" }
   | { type: "DefaultParent" | "Root" };
 
-interface PropertySpecification {
+export interface PropertySpecification {
   name: string;
   /** This is an attribute that allows overriding the property label. May be [localized]($docs/presentation/advanced/Localization.md). */
   labelOverride?: string;
