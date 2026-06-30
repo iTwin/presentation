@@ -5,7 +5,6 @@
 ```ts
 
 import { EC } from '@itwin/presentation-shared';
-import type { ECClassHierarchyInspector } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { ECSqlBinding } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
@@ -160,15 +159,6 @@ export interface ContentValues {
 export function createContentProvider(_props: ContentProviderProps): ContentProvider;
 
 // @public
-export function createFieldsProviderFromContentModifierRule(props: CreateFieldsProviderFromContentModifierRuleProps): IModelFieldsProvider;
-
-// @public
-interface CreateFieldsProviderFromContentModifierRuleProps {
-    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
-    rule: PresentationRules.ContentModifierRule;
-}
-
-// @public
 export const DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY = 1000;
 
 // @public
@@ -268,101 +258,6 @@ interface InputPropertyDeclaration {
 
 // @public
 export function mapItems<TIn, TOut>(items: AsyncIterable<TIn>, transform: (item: TIn) => TOut | Promise<TOut>): AsyncIterable<TOut>;
-
-// @public
-namespace PresentationRules {
-    interface CalculatedPropertiesSpecification {
-        // (undocumented)
-        categoryId?: CategoryIdentifier;
-        // (undocumented)
-        label: string;
-        type?: "int" | "long" | "double" | "bool" | "string";
-        value: string;
-    }
-    type CategoryIdentifier = string | {
-        type: "Id";
-        categoryId: string;
-    } | {
-        type: "None";
-    } | {
-        type: "DefaultParent" | "Root";
-    };
-    interface ContentModifierRule {
-        // (undocumented)
-        applyOnNestedContent?: boolean;
-        // (undocumented)
-        calculatedProperties?: CalculatedPropertiesSpecification[];
-        class?: SingleSchemaClassSpecification;
-        // (undocumented)
-        priority?: number;
-        // (undocumented)
-        propertyCategories?: PropertyCategorySpecification[];
-        // (undocumented)
-        propertyOverrides?: PropertySpecification[];
-        // (undocumented)
-        relatedProperties?: RelatedPropertiesSpecification[];
-        // (undocumented)
-        requiredSchemas?: RequiredSchemaSpecification[];
-    }
-    interface MultiSchemaClassesSpecification {
-        arePolymorphic?: boolean;
-        classNames: string[];
-        schemaName: string;
-    }
-    interface PropertyCategorySpecification {
-        description?: string;
-        // (undocumented)
-        id: string;
-        label: string;
-        // (undocumented)
-        parentId?: CategoryIdentifier;
-    }
-    interface PropertySpecification {
-        categoryId?: CategoryIdentifier;
-        doNotHideOtherPropertiesOnDisplayOverride?: boolean;
-        isDisplayed?: boolean | string;
-        isReadOnly?: boolean;
-        labelOverride?: string;
-        // (undocumented)
-        name: string;
-    }
-    interface RelatedPropertiesSpecification {
-        // (undocumented)
-        forceCreateRelationshipCategory?: boolean;
-        instanceFilter?: string;
-        // (undocumented)
-        nestedRelatedProperties?: RelatedPropertiesSpecification[];
-        // (undocumented)
-        properties?: Array<string | PropertySpecification> | "_none_" | "*";
-        // (undocumented)
-        propertiesSource: RelationshipPathSpecification;
-        propertyNames?: string[] | string;
-        relatedClasses?: MultiSchemaClassesSpecification | MultiSchemaClassesSpecification[];
-        relatedClassNames?: string;
-        relationshipClassNames?: string;
-        // (undocumented)
-        relationshipMeaning?: "SameInstance" | "RelatedInstance";
-        // (undocumented)
-        relationshipProperties?: Array<string | PropertySpecification> | "_none_" | "*";
-        relationships?: MultiSchemaClassesSpecification | MultiSchemaClassesSpecification[];
-        requiredDirection?: "Forward" | "Backward" | "Both";
-    }
-    type RelationshipPathSpecification = RelationshipStepSpecification | RelationshipStepSpecification[];
-    interface RelationshipStepSpecification {
-        direction: "Forward" | "Backward";
-        relationship: SingleSchemaClassSpecification;
-        targetClass?: SingleSchemaClassSpecification;
-    }
-    interface RequiredSchemaSpecification {
-        maxVersion?: string;
-        minVersion?: string;
-        name: string;
-    }
-    interface SingleSchemaClassSpecification {
-        className: string;
-        schemaName: string;
-    }
-}
 
 // @public
 export interface PropertyField extends BaseField {

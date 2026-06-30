@@ -8,7 +8,7 @@ import { createFieldsProviderFromContentModifierRule } from "../../../content/ex
 
 import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../../../content/ContentTarget.js";
-import type { PresentationRules } from "../../../content/extensions/fields-providers/ContentModifierRuleFieldsProviderFactory.PresentationRules.js";
+import type * as PresentationRules from "../../../content/extensions/fields-providers/ContentModifierRuleFieldsProviderFactory.PresentationRules.js";
 
 function createStubSchema(name: string, version: EC.SchemaVersion = { read: 1, write: 0, minor: 0 }): EC.Schema {
   return {

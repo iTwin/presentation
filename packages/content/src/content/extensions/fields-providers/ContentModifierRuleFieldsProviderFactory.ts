@@ -16,7 +16,7 @@ import type {
 } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../../ContentTarget.js";
 import type { ClassPropertySpec, StepPropertySpec } from "../../model/PropertySpec.js";
-import type { PresentationRules } from "./ContentModifierRuleFieldsProviderFactory.PresentationRules.js";
+import type * as PresentationRules from "./ContentModifierRuleFieldsProviderFactory.PresentationRules.js";
 import type { IModelFieldsProvider } from "./IModelFieldsProvider.js";
 
 /** Local alias for the contribution type (not exported from IModelFieldsProvider). */
@@ -31,7 +31,6 @@ const FACTORY_VERSION = 1;
 
 /**
  * Props for `createFieldsProviderFromContentModifierRule`.
- * @public
  */
 interface CreateFieldsProviderFromContentModifierRuleProps {
   /** iModel access used for schema version checks and polymorphic class matching. */
@@ -50,10 +49,6 @@ interface CreateFieldsProviderFromContentModifierRuleProps {
  * - Maps `relatedProperties`, `calculatedProperties`, and `propertyCategories` into a
  *   `FieldsProviderContribution`.
  * - Returns `undefined` when the rule produces no fields or categories.
- *
- * TODO: We should reconsider if this should really be public. We don't really want to expose all the presentation rule stuff.
- *
- * @public
  */
 export function createFieldsProviderFromContentModifierRule(
   props: CreateFieldsProviderFromContentModifierRuleProps,
@@ -175,10 +170,10 @@ async function matchesClass(
 
 /**
  * Stub: returns the expression unchanged.
- * TODO: Implement proper ECExpression → ECSQL translation.
  */
 function convertECExpressionToECSql(expression: string): string {
-  // TODO: Implement proper ECExpression → ECSQL conversion.
+  // TODO: Implement proper ECExpression → ECSQL conversion
+  // https://github.com/iTwin/presentation/issues/1420
   return expression;
 }
 
