@@ -42,7 +42,6 @@ export interface ContentItem extends Readonly<ContentValues> {
 
 /**
  * Create a `ContentItem` accessor from a descriptor and raw content values.
- * Used internally by the pipeline's value loader (Stage 4).
  *
  * @internal
  */
