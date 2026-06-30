@@ -9,8 +9,7 @@ import { createFieldsProviderFromContentModifierRule } from "../../../content/ex
 import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../../../content/ContentTarget.js";
 import type {
-  ContentModifierRule,
-  RelatedPropertiesSpecification,
+  PresentationRules,
 } from "../../../content/extensions/fields-providers/ContentModifierRuleFieldsProviderFactory.PresentationRules.js";
 
 function createStubSchema(name: string, version: EC.SchemaVersion = { read: 1, write: 0, minor: 0 }): EC.Schema {
@@ -64,8 +63,16 @@ function createStubRelationshipClass(props: {
     getDerivedClasses: vi.fn().mockResolvedValue([]),
     getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
     direction: "Forward",
-    source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: Promise.resolve(props.sourceClass) },
-    target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: Promise.resolve(props.targetClass) },
+    source: {
+      polymorphic: true,
+      multiplicity: { lowerLimit: 0, upperLimit: 1 },
+      abstractConstraint: Promise.resolve(props.sourceClass),
+    },
+    target: {
+      polymorphic: true,
+      multiplicity: { lowerLimit: 0, upperLimit: 1 },
+      abstractConstraint: Promise.resolve(props.targetClass),
+    },
   } as unknown as EC.RelationshipClass;
 }
 
@@ -88,7 +95,7 @@ function createTarget(primaryClass: EC.FullClassName = "TestSchema.TestElement")
 describe("createFieldsProviderFromContentModifierRule", () => {
   describe("id generation", () => {
     it("generates a stable id from the rule content", () => {
-      const rule: ContentModifierRule = { calculatedProperties: [{ label: "X", value: "1+1" }] };
+      const rule: PresentationRules.ContentModifierRule = { calculatedProperties: [{ label: "X", value: "1+1" }] };
       const provider = createFieldsProviderFromContentModifierRule({ imodelAccess: createIModelAccess(), rule });
       expect(provider.id).toMatch(/^FieldsProviderFromContentModifierRule_[0-9a-f]{8}_v\d+$/);
     });
@@ -108,7 +115,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
 
     it("generates the same id for the same rule", () => {
       const imodelAccess = createIModelAccess();
-      const rule: ContentModifierRule = { calculatedProperties: [{ label: "X", value: "1" }] };
+      const rule: PresentationRules.ContentModifierRule = { calculatedProperties: [{ label: "X", value: "1" }] };
       const provider1 = createFieldsProviderFromContentModifierRule({ imodelAccess, rule });
       const provider2 = createFieldsProviderFromContentModifierRule({ imodelAccess, rule });
       expect(provider1.id).toEqual(provider2.id);
@@ -452,7 +459,10 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           name,
           version: { read: 1, write: 0, minor: 0 },
           // Return the registered class, or synthesize a stub for any other requested class.
-          getClass: vi.fn(async (className: string) => classes.get(`${name}.${className}`) ?? createStubClass({ schemaName: name, className })),
+          getClass: vi.fn(
+            async (className: string) =>
+              classes.get(`${name}.${className}`) ?? createStubClass({ schemaName: name, className }),
+          ),
           getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
         };
         return schema;
@@ -470,7 +480,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         targetClassName: "ChildElement",
       });
 
-      const relSpec: RelatedPropertiesSpecification = {
+      const relSpec: PresentationRules.RelatedPropertiesSpecification = {
         propertiesSource: {
           relationship: { schemaName: "TestSchema", className: "ElementOwnsChild" },
           direction: "Forward",
@@ -514,7 +524,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       const imodelAccess = { getSchema, classDerivesFrom: vi.fn(async () => true) } as unknown as ECSchemaProvider &
         ECClassHierarchyInspector;
 
-      const relSpec: RelatedPropertiesSpecification = {
+      const relSpec: PresentationRules.RelatedPropertiesSpecification = {
         propertiesSource: {
           relationship: { schemaName: "TestSchema", className: "ElementOwnsChild" },
           direction: "Backward",
@@ -538,7 +548,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         targetClassName: "ChildElement",
       });
 
-      const relSpec: RelatedPropertiesSpecification = {
+      const relSpec: PresentationRules.RelatedPropertiesSpecification = {
         propertiesSource: {
           relationship: { schemaName: "TestSchema", className: "ElementOwnsChild" },
           direction: "Forward",

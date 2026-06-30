@@ -16,15 +16,7 @@ import type {
 } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../../ContentTarget.js";
 import type { ClassPropertySpec, StepPropertySpec } from "../../model/PropertySpec.js";
-import type {
-  CalculatedPropertiesSpecification,
-  ContentModifierRule,
-  PropertyCategorySpecification,
-  PropertySpecification,
-  RelatedPropertiesSpecification,
-  RequiredSchemaSpecification,
-  SingleSchemaClassSpecification,
-} from "./ContentModifierRuleFieldsProviderFactory.PresentationRules.js";
+import type { PresentationRules } from "./ContentModifierRuleFieldsProviderFactory.PresentationRules.js";
 import type { IModelFieldsProvider } from "./IModelFieldsProvider.js";
 
 /** Local alias for the contribution type (not exported from IModelFieldsProvider). */
@@ -46,7 +38,7 @@ interface CreateFieldsProviderFromContentModifierRuleProps {
   imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
 
   /** The content modifier rule. */
-  rule: ContentModifierRule;
+  rule: PresentationRules.ContentModifierRule;
 }
 
 /**
@@ -58,6 +50,8 @@ interface CreateFieldsProviderFromContentModifierRuleProps {
  * - Maps `relatedProperties`, `calculatedProperties`, and `propertyCategories` into a
  *   `FieldsProviderContribution`.
  * - Returns `undefined` when the rule produces no fields or categories.
+ *
+ * TODO: We should reconsider if this should really be public. We don't really want to expose all the presentation rule stuff.
  *
  * @public
  */
@@ -102,11 +96,7 @@ export function createFieldsProviderFromContentModifierRule(
       if (!relatedProperties && !calculatedFields && !hasCategories) {
         return undefined;
       }
-      return {
-        relatedProperties,
-        calculatedFields,
-        categories: hasCategories ? categories : undefined,
-      };
+      return { relatedProperties, calculatedFields, categories: hasCategories ? categories : undefined };
     },
   };
 }
@@ -146,7 +136,7 @@ function isVersionBelow(version: EC.SchemaVersion, maxVersion: string): boolean 
  */
 async function checkRequiredSchemas(
   imodelAccess: ECSchemaProvider,
-  requiredSchemas: RequiredSchemaSpecification[] | undefined,
+  requiredSchemas: PresentationRules.RequiredSchemaSpecification[] | undefined,
 ): Promise<boolean> {
   if (!requiredSchemas || requiredSchemas.length === 0) {
     return true;
@@ -173,7 +163,7 @@ async function checkRequiredSchemas(
 async function matchesClass(
   imodelAccess: ECClassHierarchyInspector,
   target: ContentTarget,
-  classSpec: SingleSchemaClassSpecification | undefined,
+  classSpec: PresentationRules.SingleSchemaClassSpecification | undefined,
 ): Promise<boolean> {
   if (!classSpec) {
     return true;
@@ -202,7 +192,7 @@ async function getClassLabel(imodelAccess: ECSchemaProvider, className: EC.FullC
  * Extracts a plain string category ID from a `CategoryIdentifier`.
  * Returns `undefined` for non-string forms and `None`. Throws on types `DefaultParent`, `Root`.
  */
-function resolveCategoryId(id: PropertySpecification["categoryId"]): string | undefined {
+function resolveCategoryId(id: PresentationRules.PropertySpecification["categoryId"]): string | undefined {
   if (id === undefined) {
     return undefined;
   }
@@ -220,8 +210,8 @@ function resolveCategoryId(id: PropertySpecification["categoryId"]): string | un
  * Returns `undefined` when `propertyNames` is not set.
  */
 function normalizePropertyNames(
-  propertyNames: RelatedPropertiesSpecification["propertyNames"],
-): RelatedPropertiesSpecification["properties"] | undefined {
+  propertyNames: PresentationRules.RelatedPropertiesSpecification["propertyNames"],
+): PresentationRules.RelatedPropertiesSpecification["properties"] | undefined {
   if (propertyNames === undefined) {
     return undefined;
   }
@@ -247,7 +237,7 @@ function normalizePropertyNames(
  * Returns `undefined` when no customization is needed (pipeline defaults apply).
  */
 function mapPropertiesForStep(
-  props: RelatedPropertiesSpecification["properties"],
+  props: PresentationRules.RelatedPropertiesSpecification["properties"],
   forceCategoryId: CategoryDefinition["id"] | undefined,
 ): StepPropertySpec["target"] {
   const overrides: ClassPropertySpec["overrides"] = {};
@@ -332,7 +322,7 @@ function mapPropertiesForStep(
  */
 async function mapRelatedPropertiesSpec(props: {
   imodelAccess: ECSchemaProvider;
-  spec: RelatedPropertiesSpecification;
+  spec: PresentationRules.RelatedPropertiesSpecification;
   sourceClassName: EC.FullClassName;
   parentCategoryId?: CategoryDefinition["id"];
 }): Promise<{
@@ -430,7 +420,7 @@ async function mapRelatedPropertiesSpec(props: {
  */
 async function flattenRelatedPropertiesSpecs(props: {
   imodelAccess: ECSchemaProvider;
-  specs: RelatedPropertiesSpecification[];
+  specs: PresentationRules.RelatedPropertiesSpecification[];
   sourceClassName: EC.FullClassName;
   parentCategoryId?: CategoryDefinition["id"];
 }): Promise<{
@@ -472,7 +462,7 @@ async function flattenRelatedPropertiesSpecs(props: {
 // ── Task 5: Calculated fields mapping ────────────────────────────────────────
 
 const CALC_TYPE_MAP: Record<
-  NonNullable<CalculatedPropertiesSpecification["type"]>,
+  NonNullable<PresentationRules.CalculatedPropertiesSpecification["type"]>,
   PrimitiveValueDescriptor["type"]
 > = { int: "Integer", long: "Long", double: "Double", bool: "Boolean", ["string"]: "String" };
 
@@ -480,7 +470,9 @@ const CALC_TYPE_MAP: Record<
  * Maps an array of `CalculatedPropertiesSpecification` into `CalculatedFieldDeclaration[]`.
  * Generates a stable `id` for each field based on its index.
  */
-function mapCalculatedProperties(specs: CalculatedPropertiesSpecification[]): CalculatedFieldDeclaration[] {
+function mapCalculatedProperties(
+  specs: PresentationRules.CalculatedPropertiesSpecification[],
+): CalculatedFieldDeclaration[] {
   return specs.map((spec, i) => ({
     id: `calc_${i}`,
     label: spec.label,
@@ -496,7 +488,7 @@ function mapCalculatedProperties(specs: CalculatedPropertiesSpecification[]): Ca
  * Maps an array of `PropertyCategorySpecification` into a `Record<id, CategoryDefinition>`.
  */
 function mapPropertyCategories(
-  specs: PropertyCategorySpecification[],
+  specs: PresentationRules.PropertyCategorySpecification[],
 ): Record<CategoryDefinition["id"], CategoryDefinition> {
   const categories: Record<CategoryDefinition["id"], CategoryDefinition> = {};
   for (const spec of specs) {
