@@ -57,6 +57,7 @@ interface CreateFieldsProviderFromContentModifierRuleProps {
  * - Matches the target class **polymorphically** against `spec.class`.
  * - Maps `relatedProperties`, `calculatedProperties`, and `propertyCategories` into a
  *   `FieldsProviderContribution`.
+ * - Returns `undefined` when the rule produces no fields or categories.
  *
  * @public
  */
@@ -97,10 +98,14 @@ export function createFieldsProviderFromContentModifierRule(
         Object.assign(categories, mapPropertyCategories(rule.propertyCategories));
       }
 
+      const hasCategories = Object.keys(categories).length > 0;
+      if (!relatedProperties && !calculatedFields && !hasCategories) {
+        return undefined;
+      }
       return {
         relatedProperties,
         calculatedFields,
-        categories: Object.keys(categories).length > 0 ? categories : undefined,
+        categories: hasCategories ? categories : undefined,
       };
     },
   };
@@ -207,10 +212,7 @@ function resolveCategoryId(id: PropertySpecification["categoryId"]): string | un
   if (id.type === "Id") {
     return id.categoryId;
   }
-  if (id.type === "None") {
-    return undefined;
-  }
-  throw new Error(`Unsupported categoryId type: ${JSON.stringify(id)}`);
+  return undefined;
 }
 
 /**
@@ -379,7 +381,7 @@ async function mapRelatedPropertiesSpec(props: {
   }
 
   // Always create a target category for the last step's target class.
-  const baseId = CategoryDefinition.computeIdFromRelationshipPath(path);
+  const baseId = CategoryDefinition.computeId({ path });
   const targetCategory: CategoryDefinition = {
     id: `${baseId}/target`,
     label: await getClassLabel(imodelAccess, currentSourceClassName),

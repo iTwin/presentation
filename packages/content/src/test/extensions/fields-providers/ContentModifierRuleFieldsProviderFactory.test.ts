@@ -4,14 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { createFieldsProviderFromContentModifierRule } from "../../content/extensions/fields-providers/ContentModifierRuleFieldsProviderFactory.js";
+import { createFieldsProviderFromContentModifierRule } from "../../../content/extensions/fields-providers/ContentModifierRuleFieldsProviderFactory.js";
 
 import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
-import type { ContentTarget } from "../../content/ContentTarget.js";
+import type { ContentTarget } from "../../../content/ContentTarget.js";
 import type {
   ContentModifierRule,
   RelatedPropertiesSpecification,
-} from "../../content/extensions/fields-providers/ContentModifierRuleFieldsProviderFactory.PresentationRules.js";
+} from "../../../content/extensions/fields-providers/ContentModifierRuleFieldsProviderFactory.PresentationRules.js";
 
 function createStubSchema(name: string, version: EC.SchemaVersion = { read: 1, write: 0, minor: 0 }): EC.Schema {
   return {
@@ -64,8 +64,8 @@ function createStubRelationshipClass(props: {
     getDerivedClasses: vi.fn().mockResolvedValue([]),
     getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
     direction: "Forward",
-    source: { polymorphic: true, abstractConstraint: Promise.resolve(props.sourceClass) },
-    target: { polymorphic: true, abstractConstraint: Promise.resolve(props.targetClass) },
+    source: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: Promise.resolve(props.sourceClass) },
+    target: { polymorphic: true, multiplicity: { lowerLimit: 0, upperLimit: 1 }, abstractConstraint: Promise.resolve(props.targetClass) },
   } as unknown as EC.RelationshipClass;
 }
 
@@ -132,12 +132,15 @@ describe("createFieldsProviderFromContentModifierRule", () => {
 
   describe("requiredSchemas", () => {
     it("returns contribution when no requiredSchemas specified", async () => {
-      const provider = createFieldsProviderFromContentModifierRule({ imodelAccess: createIModelAccess(), rule: {} });
+      const provider = createFieldsProviderFromContentModifierRule({
+        imodelAccess: createIModelAccess(),
+        rule: { calculatedProperties: [{ label: "X", value: "1" }] },
+      });
       const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
       expect(result).toBeDefined();
     });
 
-    it("returns undefined when required schema is missing", async () => {
+    it("returns undefined when a required schema is missing", async () => {
       const imodelAccess = createIModelAccess({ schemas: new Map() });
       const provider = createFieldsProviderFromContentModifierRule({
         imodelAccess,
@@ -147,142 +150,178 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       expect(result).toBeUndefined();
     });
 
-    it("returns undefined when schema version is below minVersion", async () => {
-      const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 5 })]]);
-      const imodelAccess = createIModelAccess({ schemas });
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { requiredSchemas: [{ name: "TestSchema", minVersion: "1.0.10" }] },
+    describe("minVersion", () => {
+      it("returns contribution when version equals minVersion", async () => {
+        const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 10 })]]);
+        const imodelAccess = createIModelAccess({ schemas });
+        const provider = createFieldsProviderFromContentModifierRule({
+          imodelAccess,
+          rule: {
+            requiredSchemas: [{ name: "TestSchema", minVersion: "1.0.10" }],
+            calculatedProperties: [{ label: "X", value: "1" }],
+          },
+        });
+        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        expect(result).toBeDefined();
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result).toBeUndefined();
+
+      it("returns undefined when minor component is below minVersion", async () => {
+        const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 5 })]]);
+        const imodelAccess = createIModelAccess({ schemas });
+        const provider = createFieldsProviderFromContentModifierRule({
+          imodelAccess,
+          rule: { requiredSchemas: [{ name: "TestSchema", minVersion: "1.0.10" }] },
+        });
+        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        expect(result).toBeUndefined();
+      });
+
+      it("returns contribution when write component is above minVersion (taking precedence over lower minor)", async () => {
+        const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 2, minor: 0 })]]);
+        const imodelAccess = createIModelAccess({ schemas });
+        const provider = createFieldsProviderFromContentModifierRule({
+          imodelAccess,
+          rule: {
+            requiredSchemas: [{ name: "TestSchema", minVersion: "1.1.99" }],
+            calculatedProperties: [{ label: "X", value: "1" }],
+          },
+        });
+        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        expect(result).toBeDefined();
+      });
+
+      it("returns undefined when write component is below minVersion (taking precedence over higher minor)", async () => {
+        const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 99 })]]);
+        const imodelAccess = createIModelAccess({ schemas });
+        const provider = createFieldsProviderFromContentModifierRule({
+          imodelAccess,
+          rule: { requiredSchemas: [{ name: "TestSchema", minVersion: "1.1.0" }] },
+        });
+        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        expect(result).toBeUndefined();
+      });
+
+      it("returns contribution when read component is above minVersion (write being equal)", async () => {
+        const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 2, write: 0, minor: 0 })]]);
+        const imodelAccess = createIModelAccess({ schemas });
+        const provider = createFieldsProviderFromContentModifierRule({
+          imodelAccess,
+          rule: {
+            requiredSchemas: [{ name: "TestSchema", minVersion: "1.0.99" }],
+            calculatedProperties: [{ label: "X", value: "1" }],
+          },
+        });
+        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        expect(result).toBeDefined();
+      });
+
+      it("returns undefined when read component is below minVersion (write being equal)", async () => {
+        const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 0, write: 0, minor: 99 })]]);
+        const imodelAccess = createIModelAccess({ schemas });
+        const provider = createFieldsProviderFromContentModifierRule({
+          imodelAccess,
+          rule: { requiredSchemas: [{ name: "TestSchema", minVersion: "1.0.0" }] },
+        });
+        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        expect(result).toBeUndefined();
+      });
     });
 
-    it("returns contribution when schema version satisfies minVersion", async () => {
-      const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 10 })]]);
-      const imodelAccess = createIModelAccess({ schemas });
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { requiredSchemas: [{ name: "TestSchema", minVersion: "1.0.10" }] },
+    describe("maxVersion", () => {
+      it("returns contribution when version is below maxVersion", async () => {
+        const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 5 })]]);
+        const imodelAccess = createIModelAccess({ schemas });
+        const provider = createFieldsProviderFromContentModifierRule({
+          imodelAccess,
+          rule: {
+            requiredSchemas: [{ name: "TestSchema", maxVersion: "1.0.10" }],
+            calculatedProperties: [{ label: "X", value: "1" }],
+          },
+        });
+        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        expect(result).toBeDefined();
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result).toBeDefined();
-    });
 
-    it("returns undefined when schema version is at or above maxVersion", async () => {
-      const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 10 })]]);
-      const imodelAccess = createIModelAccess({ schemas });
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { requiredSchemas: [{ name: "TestSchema", maxVersion: "1.0.10" }] },
+      it("returns undefined when version equals maxVersion (exclusive bound)", async () => {
+        const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 10 })]]);
+        const imodelAccess = createIModelAccess({ schemas });
+        const provider = createFieldsProviderFromContentModifierRule({
+          imodelAccess,
+          rule: { requiredSchemas: [{ name: "TestSchema", maxVersion: "1.0.10" }] },
+        });
+        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        expect(result).toBeUndefined();
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result).toBeUndefined();
-    });
 
-    it("compares version by write component first", async () => {
-      const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 2, minor: 0 })]]);
-      const imodelAccess = createIModelAccess({ schemas });
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { requiredSchemas: [{ name: "TestSchema", minVersion: "1.1.99" }] },
+      it("returns undefined when minor component is above maxVersion", async () => {
+        const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 11 })]]);
+        const imodelAccess = createIModelAccess({ schemas });
+        const provider = createFieldsProviderFromContentModifierRule({
+          imodelAccess,
+          rule: { requiredSchemas: [{ name: "TestSchema", maxVersion: "1.0.10" }] },
+        });
+        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        expect(result).toBeUndefined();
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result).toBeDefined();
-    });
 
-    it("returns undefined when write component is below minVersion", async () => {
-      const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 99 })]]);
-      const imodelAccess = createIModelAccess({ schemas });
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { requiredSchemas: [{ name: "TestSchema", minVersion: "1.1.0" }] },
+      it("returns contribution when write component is below maxVersion (taking precedence over higher minor)", async () => {
+        const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 99 })]]);
+        const imodelAccess = createIModelAccess({ schemas });
+        const provider = createFieldsProviderFromContentModifierRule({
+          imodelAccess,
+          rule: {
+            requiredSchemas: [{ name: "TestSchema", maxVersion: "1.1.0" }],
+            calculatedProperties: [{ label: "X", value: "1" }],
+          },
+        });
+        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        expect(result).toBeDefined();
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result).toBeUndefined();
-    });
 
-    it("compares read component when write is equal", async () => {
-      const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 2, write: 0, minor: 0 })]]);
-      const imodelAccess = createIModelAccess({ schemas });
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { requiredSchemas: [{ name: "TestSchema", minVersion: "1.0.99" }] },
+      it("returns undefined when write component is above maxVersion (taking precedence over lower minor)", async () => {
+        const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 2, minor: 0 })]]);
+        const imodelAccess = createIModelAccess({ schemas });
+        const provider = createFieldsProviderFromContentModifierRule({
+          imodelAccess,
+          rule: { requiredSchemas: [{ name: "TestSchema", maxVersion: "1.1.99" }] },
+        });
+        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        expect(result).toBeUndefined();
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result).toBeDefined();
-    });
 
-    it("returns undefined when read component is below minVersion", async () => {
-      const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 0, write: 0, minor: 99 })]]);
-      const imodelAccess = createIModelAccess({ schemas });
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { requiredSchemas: [{ name: "TestSchema", minVersion: "1.0.0" }] },
+      it("returns contribution when read component is below maxVersion (write being equal)", async () => {
+        const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 0, write: 0, minor: 99 })]]);
+        const imodelAccess = createIModelAccess({ schemas });
+        const provider = createFieldsProviderFromContentModifierRule({
+          imodelAccess,
+          rule: {
+            requiredSchemas: [{ name: "TestSchema", maxVersion: "1.0.0" }],
+            calculatedProperties: [{ label: "X", value: "1" }],
+          },
+        });
+        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        expect(result).toBeDefined();
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result).toBeUndefined();
-    });
 
-    it("returns contribution when schema version is below maxVersion", async () => {
-      const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 5 })]]);
-      const imodelAccess = createIModelAccess({ schemas });
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { requiredSchemas: [{ name: "TestSchema", maxVersion: "1.0.10" }] },
+      it("returns undefined when read component is above maxVersion (write being equal)", async () => {
+        const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 2, write: 0, minor: 0 })]]);
+        const imodelAccess = createIModelAccess({ schemas });
+        const provider = createFieldsProviderFromContentModifierRule({
+          imodelAccess,
+          rule: { requiredSchemas: [{ name: "TestSchema", maxVersion: "1.0.99" }] },
+        });
+        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        expect(result).toBeUndefined();
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result).toBeDefined();
-    });
-
-    it("returns undefined when write component is at or above maxVersion", async () => {
-      const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 2, minor: 0 })]]);
-      const imodelAccess = createIModelAccess({ schemas });
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { requiredSchemas: [{ name: "TestSchema", maxVersion: "1.1.99" }] },
-      });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result).toBeUndefined();
-    });
-
-    it("returns undefined when read component is at or above maxVersion", async () => {
-      const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 2, write: 0, minor: 0 })]]);
-      const imodelAccess = createIModelAccess({ schemas });
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { requiredSchemas: [{ name: "TestSchema", maxVersion: "1.0.99" }] },
-      });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result).toBeUndefined();
-    });
-
-    it("returns contribution when write component is below maxVersion", async () => {
-      const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 99 })]]);
-      const imodelAccess = createIModelAccess({ schemas });
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { requiredSchemas: [{ name: "TestSchema", maxVersion: "1.1.0" }] },
-      });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result).toBeDefined();
-    });
-
-    it("returns contribution when read component is below maxVersion", async () => {
-      const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 0, write: 0, minor: 99 })]]);
-      const imodelAccess = createIModelAccess({ schemas });
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { requiredSchemas: [{ name: "TestSchema", maxVersion: "1.0.0" }] },
-      });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result).toBeDefined();
     });
   });
 
   describe("class matching", () => {
     it("matches all classes when rule.class is undefined", async () => {
-      const provider = createFieldsProviderFromContentModifierRule({ imodelAccess: createIModelAccess(), rule: {} });
+      const provider = createFieldsProviderFromContentModifierRule({
+        imodelAccess: createIModelAccess(),
+        rule: { calculatedProperties: [{ label: "X", value: "1" }] },
+      });
       const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
       expect(result).toBeDefined();
     });
@@ -302,10 +341,14 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       const classDerivesFrom = vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>().mockResolvedValue(true);
       const provider = createFieldsProviderFromContentModifierRule({
         imodelAccess: createIModelAccess({ classDerivesFrom }),
-        rule: { class: { schemaName: "TestSchema", className: "BaseElement" } },
+        rule: {
+          class: { schemaName: "TestSchema", className: "BaseElement" },
+          calculatedProperties: [{ label: "X", value: "1" }],
+        },
       });
       const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
       expect(result).toBeDefined();
+      expect(classDerivesFrom).toHaveBeenCalledWith("TestSchema.TestElement", "TestSchema.BaseElement");
     });
   });
 
@@ -332,6 +375,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         imodelAccess: createIModelAccess(),
         rule: {
           calculatedProperties: [
+            { label: "Description", value: "Blah", type: "string" },
             { label: "Count", value: "1", type: "int" },
             { label: "Total", value: "1.5", type: "double" },
             { label: "Id", value: "1", type: "long" },
@@ -340,11 +384,12 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         },
       });
       const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result?.calculatedFields).toHaveLength(4);
-      expect(result?.calculatedFields![0].type).toEqual({ kind: "primitive", type: "Integer" });
-      expect(result?.calculatedFields![1].type).toEqual({ kind: "primitive", type: "Double" });
-      expect(result?.calculatedFields![2].type).toEqual({ kind: "primitive", type: "Long" });
-      expect(result?.calculatedFields![3].type).toEqual({ kind: "primitive", type: "Boolean" });
+      expect(result?.calculatedFields).toHaveLength(5);
+      expect(result?.calculatedFields![0].type).toEqual({ kind: "primitive", type: "String" });
+      expect(result?.calculatedFields![1].type).toEqual({ kind: "primitive", type: "Integer" });
+      expect(result?.calculatedFields![2].type).toEqual({ kind: "primitive", type: "Double" });
+      expect(result?.calculatedFields![3].type).toEqual({ kind: "primitive", type: "Long" });
+      expect(result?.calculatedFields![4].type).toEqual({ kind: "primitive", type: "Boolean" });
     });
 
     it("maps categoryId from string", async () => {
@@ -406,7 +451,8 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         const schema: EC.Schema = {
           name,
           version: { read: 1, write: 0, minor: 0 },
-          getClass: vi.fn(async (className: string) => classes.get(`${name}.${className}`)),
+          // Return the registered class, or synthesize a stub for any other requested class.
+          getClass: vi.fn(async (className: string) => classes.get(`${name}.${className}`) ?? createStubClass({ schemaName: name, className })),
           getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
         };
         return schema;
@@ -416,14 +462,12 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         ECClassHierarchyInspector;
     }
 
-    it("maps a single-step forward relationship", async () => {
+    it("maps a single-step forward relationship without explicit target class", async () => {
       const imodelAccess = createIModelAccessWithRelationship({
         relSchemaName: "TestSchema",
         relClassName: "ElementOwnsChild",
-        relLabel: "Owns Child",
         targetSchemaName: "TestSchema",
         targetClassName: "ChildElement",
-        targetLabel: "Child Element",
       });
 
       const relSpec: RelatedPropertiesSpecification = {
@@ -659,23 +703,43 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       expect(result!.relatedProperties![0].properties![0].target!.select).toEqual("none");
     });
 
-    it("maps instance filter to last step", async () => {
-      const imodelAccess = createIModelAccessWithRelationship({
-        relSchemaName: "TestSchema",
-        relClassName: "ElementOwnsChild",
-        targetSchemaName: "TestSchema",
-        targetClassName: "ChildElement",
+    it("maps instance filter to the last step only", async () => {
+      const childClass = createStubClass({ schemaName: "TestSchema", className: "ChildElement" });
+      const grandChildClass = createStubClass({ schemaName: "TestSchema", className: "GrandChildElement" });
+      const relClass1 = createStubRelationshipClass({
+        schemaName: "TestSchema",
+        className: "ElementOwnsChild",
+        targetClass: childClass,
       });
+      const relClass2 = createStubRelationshipClass({
+        schemaName: "TestSchema",
+        className: "ChildOwnsGrandChild",
+        targetClass: grandChildClass,
+      });
+      const classes = new Map<string, EC.Class>([
+        ["TestSchema.ElementOwnsChild", relClass1],
+        ["TestSchema.ChildElement", childClass],
+        ["TestSchema.ChildOwnsGrandChild", relClass2],
+        ["TestSchema.GrandChildElement", grandChildClass],
+      ]);
+      const getSchema = vi.fn(async (name: string) => ({
+        name,
+        version: { read: 1, write: 0, minor: 0 },
+        getClass: vi.fn(async (className: string) => classes.get(`${name}.${className}`)),
+        getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
+      }));
+      const imodelAccess = { getSchema, classDerivesFrom: vi.fn(async () => true) } as unknown as ECSchemaProvider &
+        ECClassHierarchyInspector;
 
       const provider = createFieldsProviderFromContentModifierRule({
         imodelAccess,
         rule: {
           relatedProperties: [
             {
-              propertiesSource: {
-                relationship: { schemaName: "TestSchema", className: "ElementOwnsChild" },
-                direction: "Forward",
-              },
+              propertiesSource: [
+                { relationship: { schemaName: "TestSchema", className: "ElementOwnsChild" }, direction: "Forward" },
+                { relationship: { schemaName: "TestSchema", className: "ChildOwnsGrandChild" }, direction: "Forward" },
+              ],
               instanceFilter: "this.IsActive = true",
               properties: "*",
             },
@@ -683,7 +747,11 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         },
       });
       const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result!.relatedProperties![0].path[0].instanceFilter).toEqual({ expression: "this.IsActive = true" });
+      const path = result!.relatedProperties![0].path;
+      expect(path).toHaveLength(2);
+      // The filter is applied only to the last step, not the intermediate one.
+      expect(path[0].instanceFilter).toBeUndefined();
+      expect(path[1].instanceFilter).toEqual({ expression: "this.IsActive = true" });
     });
 
     it("defaults properties when neither properties nor propertyNames is specified", async () => {
@@ -709,9 +777,13 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         },
       });
       const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      // When no properties specified, target still gets a defaultOverrides with categoryId
-      expect(result!.relatedProperties![0].properties![0].target!.select).toBeUndefined();
-      expect(result!.relatedProperties![0].properties![0].target!.defaultOverrides!.categoryId).toBeDefined();
+      const target = result!.relatedProperties![0].properties![0].target!;
+      // When no properties are specified, no `select` customization is produced, but the target's
+      // default category is still applied via `defaultOverrides`.
+      expect(target.select).toBeUndefined();
+      const targetCategory = Object.values(result!.categories!).find((c) => c.id.endsWith("/target"));
+      expect(targetCategory).toBeDefined();
+      expect(target.defaultOverrides!.categoryId).toEqual(targetCategory!.id);
     });
 
     it("maps plain '*' string in properties array", async () => {
@@ -941,33 +1013,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       expect(result?.calculatedFields![0].categoryId).toBeUndefined();
     });
 
-    it("throws on unsupported categoryId type", async () => {
-      const imodelAccess = createIModelAccessWithRelationship({
-        relSchemaName: "TestSchema",
-        relClassName: "ElementOwnsChild",
-        targetSchemaName: "TestSchema",
-        targetClassName: "ChildElement",
-      });
-
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: {
-          relatedProperties: [
-            {
-              propertiesSource: {
-                relationship: { schemaName: "TestSchema", className: "ElementOwnsChild" },
-                direction: "Forward",
-              },
-              properties: [{ name: "Prop1", categoryId: { type: "Root" } }],
-            },
-          ],
-        },
-      });
-      await expect(
-        provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() }),
-      ).rejects.toThrow(/Unsupported categoryId type/);
-    });
-
     it("maps multi-step relationship path", async () => {
       const childClass = createStubClass({ schemaName: "TestSchema", className: "ChildElement" });
       const grandChildClass = createStubClass({ schemaName: "TestSchema", className: "GrandChildElement" });
@@ -1162,10 +1207,10 @@ describe("createFieldsProviderFromContentModifierRule", () => {
   });
 
   describe("empty rule", () => {
-    it("returns contribution with no fields when rule is empty", async () => {
+    it("returns no contribution when rule is empty", async () => {
       const provider = createFieldsProviderFromContentModifierRule({ imodelAccess: createIModelAccess(), rule: {} });
       const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      expect(result).toEqual({ relatedProperties: undefined, calculatedFields: undefined, categories: undefined });
+      expect(result).toBeUndefined();
     });
   });
 });

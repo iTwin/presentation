@@ -19,7 +19,7 @@ import type {
   RelationshipPath,
 } from "@itwin/presentation-shared";
 import type { ContentSource, ContentTarget } from "./ContentTarget.js";
-import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "./extensions/IModelFieldsProvider.js";
+import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "./extensions/fields-providers/IModelFieldsProvider.js";
 
 // --- Types ---
 
