@@ -23,7 +23,7 @@ function createTestPropertyField(id: string): PropertyField {
     kind: "property",
     id,
     label: id,
-    type: { valueFormat: 0, typeName: "string" },
+    type: { kind: "primitive", type: "String" },
     sourceClassName: "BisCore.Element",
     propertyName: id,
     pathFromTarget: [],
