@@ -185,7 +185,8 @@ async function getClassLabel(imodelAccess: ECSchemaProvider, className: EC.FullC
 
 /**
  * Extracts a plain string category ID from a `CategoryIdentifier`.
- * Returns `undefined` for non-string forms and `None`. Throws on types `DefaultParent`, `Root`.
+ * Returns `undefined` for all non-`Id` forms (`None`, `DefaultParent`, `Root`), which are not
+ * supported by this factory and fall back to the default category.
  */
 function resolveCategoryId(id: PresentationRules.PropertySpecification["categoryId"]): string | undefined {
   if (id === undefined) {
