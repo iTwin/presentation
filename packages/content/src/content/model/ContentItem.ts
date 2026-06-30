@@ -39,3 +39,20 @@ export interface ContentItem extends Readonly<ContentValues> {
    */
   getValue(field: Field): Value;
 }
+
+/**
+ * Create a `ContentItem` accessor from a descriptor and raw content values.
+ * Used internally by the pipeline's value loader (Stage 4).
+ *
+ * @internal
+ */
+export function createContentItem(descriptor: ContentDescriptor, contentValues: ContentValues): ContentItem {
+  return Object.freeze({
+    descriptor,
+    primaryKey: contentValues.primaryKey,
+    values: contentValues.values,
+    getValue(field: Field): Value {
+      return contentValues.values[field.id];
+    },
+  });
+}
