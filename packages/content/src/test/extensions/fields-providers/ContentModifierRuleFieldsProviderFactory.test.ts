@@ -988,6 +988,64 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       expect(target.defaultOverrides!.readOnly).toEqual(true);
     });
 
+    it("maps PropertySpecification objects without overrides", async () => {
+      const imodelAccess = createIModelAccessWithRelationship({
+        relSchemaName: "TestSchema",
+        relClassName: "ElementOwnsChild",
+        targetSchemaName: "TestSchema",
+        targetClassName: "ChildElement",
+      });
+
+      const provider = createFieldsProviderFromContentModifierRule({
+        imodelAccess,
+        rule: {
+          relatedProperties: [
+            {
+              propertiesSource: {
+                relationship: { schemaName: "TestSchema", className: "ElementOwnsChild" },
+                direction: "Forward",
+              },
+              properties: [{ name: "Prop1" }],
+            },
+          ],
+        },
+      });
+      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const target = result!.relatedProperties![0].properties![0].target!;
+      expect(target.select).toEqual({ include: ["Prop1"] });
+      expect(target.overrides).toBeUndefined();
+    });
+
+    it("maps wildcard PropertySpecification without overrides", async () => {
+      const imodelAccess = createIModelAccessWithRelationship({
+        relSchemaName: "TestSchema",
+        relClassName: "ElementOwnsChild",
+        targetSchemaName: "TestSchema",
+        targetClassName: "ChildElement",
+      });
+
+      const provider = createFieldsProviderFromContentModifierRule({
+        imodelAccess,
+        rule: {
+          relatedProperties: [
+            {
+              propertiesSource: {
+                relationship: { schemaName: "TestSchema", className: "ElementOwnsChild" },
+                direction: "Forward",
+              },
+              properties: [{ name: "*" }],
+            },
+          ],
+        },
+      });
+      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const target = result!.relatedProperties![0].properties![0].target!;
+      expect(target.select).toEqual("all");
+      expect(target.defaultOverrides!.readOnly).toBeUndefined();
+      expect(target.defaultOverrides!.label).toBeUndefined();
+      expect(target.defaultOverrides!.hidden).toBeUndefined();
+    });
+
     it("maps properties with categoryId { type: 'Id' }", async () => {
       const imodelAccess = createIModelAccessWithRelationship({
         relSchemaName: "TestSchema",
