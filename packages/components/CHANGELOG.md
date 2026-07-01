@@ -1,5 +1,14 @@
 # Change Log - @itwin/presentation-components
 
+## 5.16.3
+
+### Patch Changes
+
+- [#1423](https://github.com/iTwin/presentation/pull/1423): Fix property and table data providers not carrying Field's extended data to `PropertyRecord`.
+- Updated dependencies:
+  - @itwin/unified-selection@1.8.2
+  - @itwin/presentation-shared@1.2.17
+
 ## 5.16.2
 
 ### Patch Changes
