@@ -342,13 +342,12 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
         type: props.valueType,
       }),
     );
-    const itemExtendedData = IPropertiesAppender.isRoot(appender) ? appender.item.extendedData : undefined;
     applyPropertyRecordAttributes(
       record,
       props.field,
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
       props.displayValue?.toString(),
-      props.field.extendedData || itemExtendedData ? { ...props.field.extendedData, ...itemExtendedData } : undefined,
+      IPropertiesAppender.isRoot(appender) ? appender.item.extendedData : undefined,
       this._propertyRecordsProcessor,
     );
     appender.append({ record, fieldHierarchy: { field: props.field, childFields: [] } });
@@ -359,7 +358,7 @@ function applyPropertyRecordAttributes(
   record: WithIModelKey<PropertyRecord>,
   field: Field,
   displayValue: string | undefined,
-  extendedData: typeof Item.prototype.extendedData,
+  itemExtendedData: typeof Item.prototype.extendedData,
   propertyRecordsProcessor?: (record: PropertyRecord) => void,
 ) {
   if (displayValue) {
@@ -371,8 +370,8 @@ function applyPropertyRecordAttributes(
   if (field.isNestedContentField() && field.autoExpand) {
     record.autoExpand = true;
   }
-  if (extendedData) {
-    record.extendedData = extendedData;
+  if (field.extendedData || itemExtendedData) {
+    record.extendedData = { ...field.extendedData, ...itemExtendedData };
   }
   propertyRecordsProcessor?.(record);
 }
