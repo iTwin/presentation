@@ -1397,7 +1397,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         },
       });
       const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
-      const combos = result!.relatedProperties!.map((d) => `${d.path[0].relationshipName}->${d.path[0].targetClassName}`);
+      const combos = result!.relatedProperties!.map(
+        (d) => `${d.path[0].relationshipName}->${d.path[0].targetClassName}`,
+      );
       expect(combos).toEqual(["TestSchema.Rel1->TestSchema.Target1", "TestSchema.Rel2->TestSchema.Target1"]);
     });
 
