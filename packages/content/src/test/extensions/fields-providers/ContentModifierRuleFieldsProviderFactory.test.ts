@@ -1272,6 +1272,165 @@ describe("createFieldsProviderFromContentModifierRule", () => {
     });
   });
 
+  describe("relatedProperties (deprecated form)", () => {
+    function createAccess(entries: Array<{ name: string; cls: EC.Class }> = []) {
+      const classes = new Map<string, EC.Class>(entries.map((e) => [e.name, e.cls]));
+      const getSchema = vi.fn(async (name: string) => ({
+        name,
+        version: { read: 1, write: 0, minor: 0 },
+        getClass: vi.fn(
+          async (className: string) =>
+            classes.get(`${name}.${className}`) ?? createStubClass({ schemaName: name, className }),
+        ),
+        getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
+      }));
+      return { getSchema, classDerivesFrom: vi.fn(async () => true) } as unknown as ECSchemaProvider &
+        ECClassHierarchyInspector;
+    }
+
+    it("expands omitted requiredDirection ('Both') into forward and backward declarations", async () => {
+      const provider = createFieldsProviderFromContentModifierRule({
+        imodelAccess: createAccess(),
+        rule: {
+          relatedProperties: [
+            {
+              relationships: { schemaName: "TestSchema", classNames: ["ElementOwnsChild"] },
+              relatedClasses: { schemaName: "TestSchema", classNames: ["ChildElement"] },
+              properties: "*",
+            },
+          ],
+        },
+      });
+      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      expect(result!.relatedProperties).toHaveLength(2);
+      const [forward, backward] = result!.relatedProperties!;
+      expect(forward.path[0].relationshipName).toEqual("TestSchema.ElementOwnsChild");
+      expect(forward.path[0].targetClassName).toEqual("TestSchema.ChildElement");
+      expect(forward.path[0].relationshipReverse).toEqual(false);
+      expect(backward.path[0].relationshipReverse).toEqual(true);
+    });
+
+    it("uses only the specified direction when requiredDirection is set", async () => {
+      const provider = createFieldsProviderFromContentModifierRule({
+        imodelAccess: createAccess(),
+        rule: {
+          relatedProperties: [
+            {
+              relationships: { schemaName: "TestSchema", classNames: ["ElementOwnsChild"] },
+              relatedClasses: { schemaName: "TestSchema", classNames: ["ChildElement"] },
+              requiredDirection: "Backward",
+              properties: "*",
+            },
+          ],
+        },
+      });
+      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      expect(result!.relatedProperties).toHaveLength(1);
+      expect(result!.relatedProperties![0].path[0].relationshipReverse).toEqual(true);
+    });
+
+    it("expands one declaration per relationship × target-class combination", async () => {
+      const provider = createFieldsProviderFromContentModifierRule({
+        imodelAccess: createAccess(),
+        rule: {
+          relatedProperties: [
+            {
+              relationships: { schemaName: "TestSchema", classNames: ["Rel1", "Rel2"] },
+              relatedClasses: { schemaName: "TestSchema", classNames: ["Target1", "Target2"] },
+              requiredDirection: "Forward",
+              properties: "*",
+            },
+          ],
+        },
+      });
+      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      expect(result!.relatedProperties).toHaveLength(4);
+      const combos = result!.relatedProperties!.map(
+        (d) => `${d.path[0].relationshipName}->${d.path[0].targetClassName}`,
+      );
+      expect(combos).toEqual([
+        "TestSchema.Rel1->TestSchema.Target1",
+        "TestSchema.Rel1->TestSchema.Target2",
+        "TestSchema.Rel2->TestSchema.Target1",
+        "TestSchema.Rel2->TestSchema.Target2",
+      ]);
+    });
+
+    it("parses the legacy relationshipClassNames / relatedClassNames string format", async () => {
+      const provider = createFieldsProviderFromContentModifierRule({
+        imodelAccess: createAccess(),
+        rule: {
+          relatedProperties: [
+            {
+              relationshipClassNames: "TestSchema:Rel1,Rel2",
+              relatedClassNames: "TestSchema:Target1",
+              requiredDirection: "Forward",
+              properties: "*",
+            },
+          ],
+        },
+      });
+      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      expect(result!.relatedProperties).toHaveLength(2);
+      expect(result!.relatedProperties!.map((d) => d.path[0].relationshipName)).toEqual([
+        "TestSchema.Rel1",
+        "TestSchema.Rel2",
+      ]);
+      expect(result!.relatedProperties!.every((d) => d.path[0].targetClassName === "TestSchema.Target1")).toEqual(true);
+    });
+
+    it("derives the target class from the relationship constraint when no related class is specified", async () => {
+      const targetClass = createStubClass({ schemaName: "TestSchema", className: "ChildElement" });
+      const relClass = createStubRelationshipClass({
+        schemaName: "TestSchema",
+        className: "ElementOwnsChild",
+        targetClass,
+      });
+      const provider = createFieldsProviderFromContentModifierRule({
+        imodelAccess: createAccess([
+          { name: "TestSchema.ElementOwnsChild", cls: relClass },
+          { name: "TestSchema.ChildElement", cls: targetClass },
+        ]),
+        rule: {
+          relatedProperties: [
+            {
+              relationships: { schemaName: "TestSchema", classNames: ["ElementOwnsChild"] },
+              requiredDirection: "Forward",
+              properties: "*",
+            },
+          ],
+        },
+      });
+      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      expect(result!.relatedProperties).toHaveLength(1);
+      expect(result!.relatedProperties![0].path[0].targetClassName).toEqual("TestSchema.ChildElement");
+    });
+
+    it("throws when neither propertiesSource nor a relationship specifier is provided", async () => {
+      const provider = createFieldsProviderFromContentModifierRule({
+        imodelAccess: createAccess(),
+        rule: {
+          relatedProperties: [
+            { relatedClasses: { schemaName: "TestSchema", classNames: ["ChildElement"] }, properties: "*" },
+          ],
+        },
+      });
+      await expect(
+        provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() }),
+      ).rejects.toThrow(/`relationships` or `relationshipClassNames` must be specified/);
+    });
+
+    it("throws for a malformed class names string", async () => {
+      const provider = createFieldsProviderFromContentModifierRule({
+        imodelAccess: createAccess(),
+        rule: { relatedProperties: [{ relationshipClassNames: "MissingColon", properties: "*" }] },
+      });
+      await expect(
+        provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() }),
+      ).rejects.toThrow(/Invalid class names string/);
+    });
+  });
+
   describe("empty rule", () => {
     it("returns no contribution when rule is empty", async () => {
       const provider = createFieldsProviderFromContentModifierRule({ imodelAccess: createIModelAccess(), rule: {} });

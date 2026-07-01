@@ -120,11 +120,9 @@ export interface PropertySpecification {
 }
 
 /**
- * Specifies properties of related instances that should be included as fields, along with the
- * relationship path used to reach them.
+ * Members shared by both the current and the deprecated forms of `RelatedPropertiesSpecification`.
  */
-export interface RelatedPropertiesSpecification {
-  propertiesSource: RelationshipPathSpecification;
+interface RelatedPropertiesSpecificationBase {
   /**
    * ECExpression filter applied to the last step's target instances.
    * @see convertECExpressionToECSql
@@ -135,19 +133,8 @@ export interface RelatedPropertiesSpecification {
   properties?: Array<string | PropertySpecification> | "_none_" | "*";
   relationshipProperties?: Array<string | PropertySpecification> | "_none_" | "*";
   forceCreateRelationshipCategory?: boolean;
-
-  /** Deprecated, but needs to be handled. */
-  requiredDirection?: "Forward" | "Backward" | "Both";
-  /** Deprecated, but needs to be handled. */
-  relatedClasses?: MultiSchemaClassesSpecification | MultiSchemaClassesSpecification[];
-  /** Deprecated, but needs to be handled. Format: `{schemaName1}:{className1},{className2};{schemaName2}:{className3},...`. */
-  relatedClassNames?: string;
-  /** Deprecated, but needs to be handled. */
-  relationships?: MultiSchemaClassesSpecification | MultiSchemaClassesSpecification[];
-  /** Deprecated, but needs to be handled. Format: `{schemaName1}:{className1},{className2};{schemaName2}:{className3},...`. */
-  relationshipClassNames?: string;
   /**
-   * Deprecated, but needs to be handled. May be:
+   * Deprecated alternative to `properties`. May be:
    * - `"_none_"` to include no properties
    * - `"*"` to include all properties
    * - An array of property names to include
@@ -155,6 +142,85 @@ export interface RelatedPropertiesSpecification {
    */
   propertyNames?: string[] | string;
 }
+
+/**
+ * Current form: the path to the related instances is described by `propertiesSource`. The deprecated
+ * relationship attributes are not allowed in this form.
+ */
+interface CurrentRelatedPropertiesPathSpecifier {
+  /** Relationship path to the related instances whose properties should be included. */
+  propertiesSource: RelationshipPathSpecification;
+
+  requiredDirection?: never;
+  relationships?: never;
+  relationshipClassNames?: never;
+  relatedClasses?: never;
+  relatedClassNames?: never;
+}
+
+/**
+ * Deprecated: specifies the relationship(s) to follow. `relationships` and `relationshipClassNames`
+ * are mutually exclusive.
+ */
+type DeprecatedRelationshipsSpecifier =
+  | {
+      relationships: MultiSchemaClassesSpecification | MultiSchemaClassesSpecification[];
+      relationshipClassNames?: never;
+    }
+  | {
+      relationships?: never;
+      /** Format: `{schemaName1}:{className1},{className2};{schemaName2}:{className3},...`. */
+      relationshipClassNames: string;
+    };
+
+/** Deprecated form with neither relationship specifier set. */
+interface NoDeprecatedRelationships {
+  relationships?: never;
+  relationshipClassNames?: never;
+}
+
+/**
+ * Deprecated: specifies the target class(es) of the relationship. `relatedClasses` and
+ * `relatedClassNames` are mutually exclusive.
+ */
+type DeprecatedRelatedClassesSpecifier =
+  | { relatedClasses: MultiSchemaClassesSpecification | MultiSchemaClassesSpecification[]; relatedClassNames?: never }
+  | {
+      relatedClasses?: never;
+      /** Format: `{schemaName1}:{className1},{className2};{schemaName2}:{className3},...`. */
+      relatedClassNames: string;
+    };
+
+/** Deprecated form with neither related-class specifier set. */
+interface NoDeprecatedRelatedClasses {
+  relatedClasses?: never;
+  relatedClassNames?: never;
+}
+
+/**
+ * Deprecated form: the path to the related instances is described by the legacy `relationships` /
+ * `relationshipClassNames` + `relatedClasses` / `relatedClassNames` + `requiredDirection` attributes
+ * instead of `propertiesSource`. At least one of the relationship or related-class specifiers must be set.
+ */
+type DeprecatedRelatedPropertiesPathSpecifier = {
+  propertiesSource?: never;
+  /** Deprecated. Defaults to `"Both"`, which expands into separate `"Forward"` and `"Backward"` traversals. */
+  requiredDirection?: "Forward" | "Backward" | "Both";
+} & (
+  | (DeprecatedRelationshipsSpecifier & (DeprecatedRelatedClassesSpecifier | NoDeprecatedRelatedClasses))
+  | (NoDeprecatedRelationships & DeprecatedRelatedClassesSpecifier)
+);
+
+/**
+ * Specifies properties of related instances that should be included as fields, along with the
+ * relationship path used to reach them.
+ *
+ * The path may be described either by the current `propertiesSource` attribute or by the deprecated
+ * `relationships` / `relationshipClassNames` + `relatedClasses` / `relatedClassNames` +
+ * `requiredDirection` attributes. The two forms are mutually exclusive.
+ */
+export type RelatedPropertiesSpecification = RelatedPropertiesSpecificationBase &
+  (CurrentRelatedPropertiesPathSpecifier | DeprecatedRelatedPropertiesPathSpecifier);
 
 /**
  * Specifies a field whose value is computed from an ECExpression rather than read from a property.

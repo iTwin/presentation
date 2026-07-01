@@ -309,7 +309,22 @@ function mapPropertiesForStep(
 }
 
 /**
- * Maps a single `RelatedPropertiesSpecification` (excluding `nestedRelatedProperties`,
+ * A `RelatedPropertiesSpecification` with the relationship path resolved to `propertiesSource`.
+ * The deprecated relationship attributes are normalized into `propertiesSource` before mapping (see
+ * `normalizeRelatedPropertiesSpecs`).
+ */
+interface NormalizedRelatedPropertiesSpec {
+  propertiesSource: PresentationRules.RelationshipPathSpecification;
+  instanceFilter?: string;
+  nestedRelatedProperties?: PresentationRules.RelatedPropertiesSpecification[];
+  properties?: PresentationRules.RelatedPropertiesSpecification["properties"];
+  relationshipProperties?: PresentationRules.RelatedPropertiesSpecification["relationshipProperties"];
+  forceCreateRelationshipCategory?: boolean;
+  propertyNames?: PresentationRules.RelatedPropertiesSpecification["propertyNames"];
+}
+
+/**
+ * Maps a single normalized `RelatedPropertiesSpecification` (excluding `nestedRelatedProperties`,
  * which is handled in Task 4a) to a `RelatedPropertiesDeclaration` plus any
  * per-step `CategoryDefinition`s produced by `forceCreateRelationshipCategory`.
  *
@@ -318,7 +333,7 @@ function mapPropertiesForStep(
  */
 async function mapRelatedPropertiesSpec(props: {
   imodelAccess: ECSchemaProvider;
-  spec: PresentationRules.RelatedPropertiesSpecification;
+  spec: NormalizedRelatedPropertiesSpec;
   sourceClassName: EC.FullClassName;
   parentCategoryId?: CategoryDefinition["id"];
 }): Promise<{
@@ -428,31 +443,145 @@ async function flattenRelatedPropertiesSpecs(props: {
   const categories: Record<CategoryDefinition["id"], CategoryDefinition> = {};
 
   for (const spec of specs) {
-    const result = await mapRelatedPropertiesSpec({ imodelAccess, spec, sourceClassName, parentCategoryId });
-    Object.assign(categories, result.categories);
-    declarations.push(result.declaration);
-
-    // Recursively flatten nestedRelatedProperties.
-    if (spec.nestedRelatedProperties && spec.nestedRelatedProperties.length > 0) {
-      // The nested specs start from where this spec's path ends.
-      const lastTargetClassName = result.declaration.path[result.declaration.path.length - 1].targetClassName;
-
-      const nested = await flattenRelatedPropertiesSpecs({
+    for (const normalizedSpec of normalizeRelatedPropertiesSpec(spec)) {
+      const result = await mapRelatedPropertiesSpec({
         imodelAccess,
-        specs: spec.nestedRelatedProperties,
-        sourceClassName: lastTargetClassName,
-        parentCategoryId: result.targetCategoryId,
+        spec: normalizedSpec,
+        sourceClassName,
+        parentCategoryId,
       });
-      Object.assign(categories, nested.categories);
+      Object.assign(categories, result.categories);
+      declarations.push(result.declaration);
 
-      // Prepend the parent's path to each nested declaration.
-      for (const nestedDecl of nested.declarations) {
-        declarations.push({ ...nestedDecl, path: [...result.declaration.path, ...nestedDecl.path] });
+      // Recursively flatten nestedRelatedProperties.
+      if (normalizedSpec.nestedRelatedProperties && normalizedSpec.nestedRelatedProperties.length > 0) {
+        // The nested specs start from where this spec's path ends.
+        const lastTargetClassName = result.declaration.path[result.declaration.path.length - 1].targetClassName;
+
+        const nested = await flattenRelatedPropertiesSpecs({
+          imodelAccess,
+          specs: normalizedSpec.nestedRelatedProperties,
+          sourceClassName: lastTargetClassName,
+          parentCategoryId: result.targetCategoryId,
+        });
+        Object.assign(categories, nested.categories);
+
+        // Prepend the parent's path to each nested declaration.
+        for (const nestedDecl of nested.declarations) {
+          declarations.push({ ...nestedDecl, path: [...result.declaration.path, ...nestedDecl.path] });
+        }
       }
     }
   }
 
   return { declarations, categories };
+}
+
+/**
+ * Normalizes a `RelatedPropertiesSpecification` into one or more `NormalizedRelatedPropertiesSpec`s
+ * whose relationship path is always expressed via `propertiesSource`.
+ *
+ * Specs that already use `propertiesSource` are returned unchanged. Specs that use the deprecated
+ * `relationships` / `relationshipClassNames` + `relatedClasses` / `relatedClassNames` +
+ * `requiredDirection` attributes are expanded into a single-step `propertiesSource` per combination of
+ * relationship class × target class × direction, where `requiredDirection` of `"Both"` (or omitted)
+ * expands into both `"Forward"` and `"Backward"`.
+ */
+function normalizeRelatedPropertiesSpec(
+  spec: PresentationRules.RelatedPropertiesSpecification,
+): NormalizedRelatedPropertiesSpec[] {
+  // Current form: the relationship path is already expressed via `propertiesSource`.
+  if (spec.propertiesSource !== undefined) {
+    return [spec];
+  }
+
+  const common: Omit<NormalizedRelatedPropertiesSpec, "propertiesSource"> = {
+    instanceFilter: spec.instanceFilter,
+    nestedRelatedProperties: spec.nestedRelatedProperties,
+    properties: spec.properties,
+    relationshipProperties: spec.relationshipProperties,
+    forceCreateRelationshipCategory: spec.forceCreateRelationshipCategory,
+    propertyNames: spec.propertyNames,
+  };
+
+  // `requiredDirection` defaults to "Both", which expands into both traversal directions.
+  const directions: Array<"Forward" | "Backward"> =
+    spec.requiredDirection === "Forward" || spec.requiredDirection === "Backward"
+      ? [spec.requiredDirection]
+      : ["Forward", "Backward"];
+
+  const relationships = resolveDeprecatedClasses(spec.relationships, spec.relationshipClassNames);
+  if (relationships.length === 0) {
+    throw new Error(
+      `\`relationships\` or \`relationshipClassNames\` must be specified when \`propertiesSource\` is not used`,
+    );
+  }
+
+  const relatedClasses = resolveDeprecatedClasses(spec.relatedClasses, spec.relatedClassNames);
+  // When no target class is specified, the target is derived from the relationship constraint.
+  const targetClasses: Array<PresentationRules.SingleSchemaClassSpecification | undefined> =
+    relatedClasses.length > 0 ? relatedClasses : [undefined];
+
+  const result: NormalizedRelatedPropertiesSpec[] = [];
+  for (const relationship of relationships) {
+    for (const targetClass of targetClasses) {
+      for (const direction of directions) {
+        result.push({ ...common, propertiesSource: { relationship, direction, targetClass } });
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Resolves the deprecated relationship/related-class specifiers into a flat list of single-class
+ * specifications. Prefers the structured `MultiSchemaClassesSpecification` form and falls back to the
+ * legacy string form (`{schemaName1}:{className1},{className2};{schemaName2}:{className3},...`).
+ */
+function resolveDeprecatedClasses(
+  structured:
+    | PresentationRules.MultiSchemaClassesSpecification
+    | PresentationRules.MultiSchemaClassesSpecification[]
+    | undefined,
+  stringForm: string | undefined,
+): PresentationRules.SingleSchemaClassSpecification[] {
+  if (structured !== undefined) {
+    const specs = Array.isArray(structured) ? structured : [structured];
+    return specs.flatMap((s) => s.classNames.map((className) => ({ schemaName: s.schemaName, className })));
+  }
+  if (stringForm !== undefined) {
+    return parseClassNamesString(stringForm);
+  }
+  return [];
+}
+
+/**
+ * Parses the legacy class names string format
+ * `{schemaName1}:{className1},{className2};{schemaName2}:{className3},...` into a list of single-class
+ * specifications.
+ */
+function parseClassNamesString(value: string): PresentationRules.SingleSchemaClassSpecification[] {
+  const result: PresentationRules.SingleSchemaClassSpecification[] = [];
+  for (const group of value.split(";")) {
+    const trimmedGroup = group.trim();
+    if (trimmedGroup.length === 0) {
+      continue;
+    }
+    const separatorIndex = trimmedGroup.indexOf(":");
+    if (separatorIndex < 0) {
+      throw new Error(
+        `Invalid class names string "${value}". Expected format: "{schemaName}:{className1},{className2};...".`,
+      );
+    }
+    const schemaName = trimmedGroup.slice(0, separatorIndex).trim();
+    for (const className of trimmedGroup.slice(separatorIndex + 1).split(",")) {
+      const trimmedClassName = className.trim();
+      if (trimmedClassName.length > 0) {
+        result.push({ schemaName, className: trimmedClassName });
+      }
+    }
+  }
+  return result;
 }
 
 // ── Task 5: Calculated fields mapping ────────────────────────────────────────
