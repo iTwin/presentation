@@ -69,5 +69,14 @@ describe("createContentItem", () => {
     const item = createContentItem(descriptor, values);
 
     expect(Object.isFrozen(item)).to.be.true;
+    expect(Object.isFrozen(item.primaryKey)).to.be.true;
+    expect(Object.isFrozen(item.values)).to.be.true;
+
+    // Mutating the source objects should not affect the item.
+    values.primaryKey.className = "Changed.Class";
+    values.values[field.id] = "Changed";
+
+    expect(item.primaryKey.className).to.equal("BisCore.Element");
+    expect(item.getValue(field)).to.equal("Test");
   });
 });
