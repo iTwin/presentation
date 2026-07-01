@@ -54,6 +54,7 @@ export function createTestSimpleContentField(props?: {
   priority?: number;
   editor?: EditorDescription;
   renderer?: RendererDescription;
+  extendedData?: { [key: string]: any };
 }) {
   return new Field({
     ...props,

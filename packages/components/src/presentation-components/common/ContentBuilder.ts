@@ -342,12 +342,13 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
         type: props.valueType,
       }),
     );
+    const itemExtendedData = IPropertiesAppender.isRoot(appender) ? appender.item.extendedData : undefined;
     applyPropertyRecordAttributes(
       record,
       props.field,
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
       props.displayValue?.toString(),
-      IPropertiesAppender.isRoot(appender) ? appender.item.extendedData : undefined,
+      props.field.extendedData || itemExtendedData ? { ...props.field.extendedData, ...itemExtendedData } : undefined,
       this._propertyRecordsProcessor,
     );
     appender.append({ record, fieldHierarchy: { field: props.field, childFields: [] } });

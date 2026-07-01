@@ -115,6 +115,29 @@ describe("PropertyRecordsBuilder", () => {
     expect(builder.entries[0].extendedData).toEqual(extendedData);
   });
 
+  it("sets extended data from field", () => {
+    const fieldExtendedData = { fieldValue: 456 };
+    const descriptor = createTestContentDescriptor({
+      fields: [createTestSimpleContentField({ extendedData: fieldExtendedData })],
+    });
+    const item = createTestContentItem({ values: {}, displayValues: {} });
+    createContentTraverser(builder)(descriptor, [item]);
+    expect(builder.entries).toHaveLength(1);
+    expect(builder.entries[0].extendedData).toEqual(fieldExtendedData);
+  });
+
+  it("merges extended data from field and item", () => {
+    const fieldExtendedData = { fieldValue: 456 };
+    const itemExtendedData = { itemValue: 123 };
+    const descriptor = createTestContentDescriptor({
+      fields: [createTestSimpleContentField({ extendedData: fieldExtendedData })],
+    });
+    const item = createTestContentItem({ values: {}, displayValues: {}, extendedData: itemExtendedData });
+    createContentTraverser(builder)(descriptor, [item]);
+    expect(builder.entries).toHaveLength(1);
+    expect(builder.entries[0].extendedData).toEqual({ ...fieldExtendedData, ...itemExtendedData });
+  });
+
   it("sets `autoExpand` flag for nested content field based property records", () => {
     const category = createTestCategoryDescription();
     const descriptor = createTestContentDescriptor({
