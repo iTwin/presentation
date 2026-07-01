@@ -46,12 +46,13 @@ export interface ContentItem extends Readonly<ContentValues> {
  * @internal
  */
 export function createContentItem(descriptor: ContentDescriptor, contentValues: ContentValues): ContentItem {
+  const values = Object.freeze({ ...contentValues.values });
   return Object.freeze({
-    descriptor,
-    primaryKey: contentValues.primaryKey,
-    values: contentValues.values,
+    descriptor: Object.freeze({ ...descriptor }),
+    primaryKey: Object.freeze({ ...contentValues.primaryKey }),
+    values,
     getValue(field: Field): Value {
-      return contentValues.values[field.id];
+      return values[field.id];
     },
   });
 }
