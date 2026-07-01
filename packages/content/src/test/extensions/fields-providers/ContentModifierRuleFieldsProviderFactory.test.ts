@@ -1379,6 +1379,50 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       expect(result!.relatedProperties!.every((d) => d.path[0].targetClassName === "TestSchema.Target1")).toEqual(true);
     });
 
+    it("accepts relationships and relatedClasses as arrays of multi-schema specifications", async () => {
+      const provider = createFieldsProviderFromContentModifierRule({
+        imodelAccess: createAccess(),
+        rule: {
+          relatedProperties: [
+            {
+              relationships: [
+                { schemaName: "TestSchema", classNames: ["Rel1"] },
+                { schemaName: "TestSchema", classNames: ["Rel2"] },
+              ],
+              relatedClasses: [{ schemaName: "TestSchema", classNames: ["Target1"] }],
+              requiredDirection: "Forward",
+              properties: "*",
+            },
+          ],
+        },
+      });
+      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const combos = result!.relatedProperties!.map((d) => `${d.path[0].relationshipName}->${d.path[0].targetClassName}`);
+      expect(combos).toEqual(["TestSchema.Rel1->TestSchema.Target1", "TestSchema.Rel2->TestSchema.Target1"]);
+    });
+
+    it("ignores empty segments in the legacy class names string format", async () => {
+      const provider = createFieldsProviderFromContentModifierRule({
+        imodelAccess: createAccess(),
+        rule: {
+          relatedProperties: [
+            {
+              // Double semicolon yields an empty group; the trailing comma yields an empty class name.
+              relationshipClassNames: "TestSchema:Rel1;;TestSchema:Rel2,",
+              relatedClassNames: "TestSchema:Target1",
+              requiredDirection: "Forward",
+              properties: "*",
+            },
+          ],
+        },
+      });
+      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      expect(result!.relatedProperties!.map((d) => d.path[0].relationshipName)).toEqual([
+        "TestSchema.Rel1",
+        "TestSchema.Rel2",
+      ]);
+    });
+
     it("derives the target class from the relationship constraint when no related class is specified", async () => {
       const targetClass = createStubClass({ schemaName: "TestSchema", className: "ChildElement" });
       const relClass = createStubRelationshipClass({
