@@ -17,13 +17,14 @@ function createField(props: {
   categoryId?: string;
   hidden?: boolean;
   readOnly?: boolean;
+  type?: PropertyField["type"];
   pathFromTarget?: PropertyField["pathFromTarget"];
 }): PropertyField {
   return {
     kind: "property",
     id: "unused",
     label: props.label ?? "Label",
-    type: { kind: "primitive", type: "String" },
+    type: props.type ?? { kind: "primitive", type: "String" },
     categoryId: props.categoryId,
     hidden: props.hidden,
     readOnly: props.readOnly,
@@ -190,5 +191,49 @@ describe("mergePropertyFieldsByIdentity", () => {
       readOnly: false,
     });
     expect(() => mergePropertyFieldsByIdentity([a, b])).to.throw(/divergent metadata/);
+  });
+
+  it("throws when grouped candidates have divergent value type", () => {
+    const a = createField({
+      sourceClassName: "Stuff:Thing",
+      propertyName: "Height",
+      valueClassNames: ["Stuff:Door"],
+      type: { kind: "primitive", type: "String" },
+    });
+    const b = createField({
+      sourceClassName: "Stuff:Thing",
+      propertyName: "Height",
+      valueClassNames: ["Stuff:Window"],
+      type: { kind: "primitive", type: "Double" },
+    });
+    expect(() => mergePropertyFieldsByIdentity([a, b])).to.throw(/divergent metadata/);
+  });
+
+  it("merges candidates whose value types are structurally equal but distinct instances", () => {
+    const type = (): PropertyField["type"] => ({
+      kind: "struct",
+      members: [
+        {
+          name: "coords",
+          label: "Coords",
+          type: { kind: "array", elementType: { kind: "primitive", type: "Double", kindOfQuantity: "Units.LENGTH" } },
+        },
+      ],
+    });
+    const a = createField({
+      sourceClassName: "Stuff:Thing",
+      propertyName: "Point",
+      valueClassNames: ["Stuff:Door"],
+      type: type(),
+    });
+    const b = createField({
+      sourceClassName: "Stuff:Thing",
+      propertyName: "Point",
+      valueClassNames: ["Stuff:Window"],
+      type: type(),
+    });
+    const result = mergePropertyFieldsByIdentity([a, b]);
+    const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Point" });
+    expect(result[id].valueClassNames).to.deep.equal(["Stuff.Door", "Stuff.Window"]);
   });
 });

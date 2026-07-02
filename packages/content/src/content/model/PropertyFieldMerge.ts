@@ -6,6 +6,7 @@
 import { PropertyField } from "./Field.js";
 import { toSortedUniqueClassNames } from "./Utils.js";
 
+import type { ValueDescriptor } from "@itwin/presentation-shared";
 import type { Field } from "./Field.js";
 
 /**
@@ -17,7 +18,7 @@ import type { Field } from "./Field.js";
  *   variants of the same declared property therefore collapse into one field.
  * - Each group produces a single field whose `valueClassNames` is the sorted, de-duplicated
  *   union of the group's value-supplier classes.
- * - Field metadata (`label`, `categoryId`, `hidden`, `readOnly`, `type`, `kind`) comes from the
+ * - Field metadata (`label`, `categoryId`, `hidden`, `readOnly`, `type`) comes from the
  *   first candidate in a group. Grouped candidates are expected to be identical apart from their
  *   `valueClassNames`; a mismatch indicates a provider bug and throws.
  *
@@ -56,10 +57,33 @@ function assertMetadataAgrees(existing: PropertyField, candidate: PropertyField)
     existing.label !== candidate.label ||
     existing.categoryId !== candidate.categoryId ||
     existing.hidden !== candidate.hidden ||
-    existing.readOnly !== candidate.readOnly
+    existing.readOnly !== candidate.readOnly ||
+    !valueDescriptorsAgree(existing.type, candidate.type)
   ) {
     throw new Error(
       `Cannot merge property field "${existing.id}": candidates for the same declared property have divergent metadata.`,
     );
+  }
+}
+
+// Structural equality for value shapes. `ValueDescriptor` is a recursive union, so it cannot be
+// compared by reference (distinct candidates carry distinct instances) — a mismatch signals a
+// provider bug where the same declared property was given different value shapes. Both descriptors
+// are reduced to a canonical nested-tuple form and compared as JSON to avoid separator ambiguity.
+function valueDescriptorsAgree(a: ValueDescriptor, b: ValueDescriptor): boolean {
+  return JSON.stringify(toComparableValueDescriptor(a)) === JSON.stringify(toComparableValueDescriptor(b));
+}
+
+function toComparableValueDescriptor(descriptor: ValueDescriptor): unknown {
+  switch (descriptor.kind) {
+    case "primitive":
+      return ["primitive", descriptor.type, descriptor.kindOfQuantity ?? null];
+    case "array":
+      return ["array", toComparableValueDescriptor(descriptor.elementType)];
+    case "struct":
+      return [
+        "struct",
+        descriptor.members.map((member) => [member.name, member.label, toComparableValueDescriptor(member.type)]),
+      ];
   }
 }
