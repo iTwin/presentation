@@ -19,7 +19,7 @@ import type {
   Props,
   RelationshipPath,
 } from "@itwin/presentation-shared";
-import type { ContentSource, ContentTarget } from "./ContentTarget.js";
+import type { ContentSource, ContentTarget, ResolvedPath } from "./ContentTarget.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "./extensions/IModelFieldsProvider.js";
 
 // --- Types ---
@@ -74,8 +74,15 @@ function buildTargetFilter(target: ContentTarget): {
 
 function buildClassNameColumns(path: JoinRelationshipPath): string {
   return path
-    .map((step: JoinRelationshipPath[number]) => `ec_classname([${step.targetAlias}].ECClassId, 's.c')`)
+    .map((step: JoinRelationshipPath[number]) => `ec_classname([${step.targetAlias}].[ECClassId], 's.c')`)
     .join(", ");
+}
+
+// The `ECClassId` columns behind `buildClassNameColumns` — used for `GROUP BY`. Grouping on the
+// raw indexed `ECClassId` lets the engine use its index, unlike `DISTINCT` on the computed
+// `ec_classname(...)` string.
+function buildClassIdColumns(path: JoinRelationshipPath): string {
+  return path.map((step: JoinRelationshipPath[number]) => `[${step.targetAlias}].[ECClassId]`).join(", ");
 }
 
 // Distinct-class scan of the primary itself: enumerates the concrete classes that actually
@@ -114,10 +121,11 @@ const originalStrategy: ResolutionQueryStrategy = {
     const whereClause = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
     const allBindings = { ...joinBindings, ...targetFilter.bindings };
     const ecsql = `
-      SELECT DISTINCT ${buildClassNameColumns(joinPath)}
+      SELECT GROUP_CONCAT(DISTINCT ec_classname([this].[ECClassId], 's.c')), ${buildClassNameColumns(joinPath)}
       FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
       ${joins} ${targetFilter.joins ?? ""}
       ${whereClause}
+      GROUP BY ${buildClassIdColumns(joinPath)}
     `;
     return { ecsql, ...(Object.keys(allBindings).length > 0 ? { bindings: allBindings } : {}) };
   },
@@ -153,16 +161,21 @@ const rewriteStrategy: ResolutionQueryStrategy = {
 
     const instanceFilterClauses = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
 
+    // The inner scan is anchored at the (large) source, but only ever yields a small set of
+    // DISTINCT (first-hop class, near-end class) id pairs. Joining that derived table keeps the
+    // outer scan anchored at the first hop while still projecting the concrete near-end class.
     const ecsql = `
-      SELECT DISTINCT ${buildClassNameColumns(joinPath)}
+      SELECT GROUP_CONCAT(DISTINCT ec_classname([reachable].[NearEndClassId], 's.c')), ${buildClassNameColumns(joinPath)}
       FROM ${ECSql.createClassSelector(firstHopTarget)} [${firstHopAlias}]
       ${remainingJoins}
-      WHERE [${firstHopAlias}].ECClassId IN (
-        SELECT [${firstHopAlias}].ECClassId
+      INNER JOIN (
+        SELECT [${firstHopAlias}].[ECClassId] [FirstHopClassId], [this].[ECClassId] [NearEndClassId]
         FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
         ${firstStepJoins} ${targetFilter.joins ?? ""}
         ${instanceFilterClauses}
-      )
+        GROUP BY [${firstHopAlias}].[ECClassId], [this].[ECClassId]
+      ) [reachable] ON [reachable].[FirstHopClassId] = [${firstHopAlias}].[ECClassId]
+      GROUP BY ${buildClassIdColumns(joinPath)}
     `;
 
     const allBindings = { ...firstStepBindings, ...remainingBindings, ...targetFilter.bindings };
@@ -189,10 +202,11 @@ const crossJoinStrategy: ResolutionQueryStrategy = {
     const whereClause = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
     const allBindings = { ...joinBindings, ...targetFilter.bindings };
     const ecsql = `
-      SELECT DISTINCT ${buildClassNameColumns(joinPath)}
+      SELECT GROUP_CONCAT(DISTINCT ec_classname([this].[ECClassId], 's.c')), ${buildClassNameColumns(joinPath)}
       FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
       ${crossJoins} ${targetFilter.joins ?? ""}
       ${whereClause}
+      GROUP BY ${buildClassIdColumns(joinPath)}
     `;
     return { ecsql, ...(Object.keys(allBindings).length > 0 ? { bindings: allBindings } : {}) };
   },
@@ -227,7 +241,7 @@ async function resolveDeclarationPaths({
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   target: ContentTarget;
   declaration: Pick<RelatedPropertiesDeclaration, "path" | "resolve">;
-}): Promise<RelationshipPath[]> {
+}): Promise<ResolvedPath[]> {
   if (declaration.resolve) {
     return declaration.resolve({ imodelAccess, target });
   }
@@ -245,14 +259,19 @@ async function resolveDeclarationPaths({
   const rows = raceQueryExecution({ executor: imodelAccess, queries });
   return lastValueFrom(
     rows.pipe(
-      map((row) =>
-        declaration.path.map((step: RelationshipPath[number], i: number) => ({
-          ...step,
-          sourceClassName: (i === 0 ? target.primaryClass : row[i - 1]) as EC.FullClassName,
-          targetClassName: row[i] as EC.FullClassName,
+      toArray(),
+      // Each row is one resolved path: [nearEndClasses, step0Target, step1Target, ...]. The concrete
+      // content-target (near-end) classes are pre-aggregated by the query via `GROUP_CONCAT`.
+      map((allRows) =>
+        allRows.map((row) => ({
+          path: declaration.path.map((step: RelationshipPath[number], i: number) => ({
+            ...step,
+            sourceClassName: (i === 0 ? target.primaryClass : row[i]) as EC.FullClassName,
+            targetClassName: row[i + 1] as EC.FullClassName,
+          })),
+          targetClassNames: toSortedUniqueClassNames((row[0] as string).split(",") as EC.FullClassName[]),
         })),
       ),
-      toArray(),
     ),
   );
 }

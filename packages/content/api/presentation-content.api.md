@@ -324,7 +324,7 @@ interface RelatedPropertiesDeclaration {
     resolve?(props: {
         imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
         target: ContentTarget;
-    }): Promise<RelationshipPath[]>;
+    }): Promise<ResolvedPath[]>;
 }
 
 // @public
@@ -340,8 +340,14 @@ interface ResolveContentSourcesProps {
 // @public
 interface ResolvedDeclarationGroup {
     declarationIndex: number;
-    paths: RelationshipPath[];
+    paths: ResolvedPath[];
     providerId: BaseFieldsProvider["id"];
+}
+
+// @public
+interface ResolvedPath {
+    path: RelationshipPath;
+    targetClassNames: EC.FullClassName[];
 }
 
 // @public

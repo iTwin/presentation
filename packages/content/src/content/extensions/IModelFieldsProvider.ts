@@ -9,7 +9,7 @@ import type {
   RelationshipPath,
   ValueDescriptor,
 } from "@itwin/presentation-shared";
-import type { CardinalityHint, ContentTarget } from "../ContentTarget.js";
+import type { CardinalityHint, ContentTarget, ResolvedPath } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
 import type { BaseFieldsProvider } from "./BaseFieldsProvider.js";
@@ -81,13 +81,14 @@ export interface RelatedPropertiesDeclaration {
    * Optional custom resolution callback. When provided, the system delegates
    * path resolution to this callback instead of using default discovery.
    *
-   * The callback receives the iModel accessor and target, and returns concrete paths.
-   * The declaration's `properties` and `cardinalityHint` still apply to each resolved path.
+   * The callback receives the iModel accessor and target, and returns concrete paths, each
+   * paired with the concrete content-target classes it applies to. The declaration's
+   * `properties` and `cardinalityHint` still apply to each resolved path.
    */
   resolve?(props: {
     imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
     target: ContentTarget;
-  }): Promise<RelationshipPath[]>;
+  }): Promise<ResolvedPath[]>;
 }
 
 /**

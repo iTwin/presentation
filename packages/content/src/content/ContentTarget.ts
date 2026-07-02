@@ -114,6 +114,28 @@ export interface ContentSource {
 }
 
 /**
+ * A single concrete relationship path resolved from a declaration, paired with the
+ * concrete content-target classes it applies to.
+ *
+ * @public
+ */
+export interface ResolvedPath {
+  /**
+   * The concrete relationship path from the content target to the related property source.
+   */
+  path: RelationshipPath;
+
+  /**
+   * Concrete content-target (near-end primary) classes — a subset of
+   * `ContentSource.resolvedPrimaryClasses` — whose instances actually connect to this `path`.
+   *
+   * Discovered by a data-driven scan during source resolution, so it lists only the concrete
+   * classes that participate in this path, never a polymorphically-selected base.
+   */
+  targetClassNames: EC.FullClassName[];
+}
+
+/**
  * A group of concrete relationship paths resolved from a single provider declaration.
  *
  * During source resolution (Stage 1), each provider's `RelatedPropertiesDeclaration`
@@ -134,8 +156,8 @@ interface ResolvedDeclarationGroup {
   declarationIndex: number;
 
   /**
-   * Concrete relationship paths resolved from the declaration's generic path.
-   * All classes are concrete — no base classes.
+   * Concrete relationship paths resolved from the declaration's generic path, each with the
+   * concrete content-target classes it applies to. All path classes are concrete — no base classes.
    */
-  paths: RelationshipPath[];
+  paths: ResolvedPath[];
 }
