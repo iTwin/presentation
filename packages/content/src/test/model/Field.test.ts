@@ -94,5 +94,46 @@ describe("PropertyField", () => {
         "BisCore.Element.UserLabel(BisCore.Element-[!BisCore.ModelContainsElements]->BisCore.Model-[BisCore.ModelModelsElement]->BisCore.Element)",
       );
     });
+
+    it("appends fork key as a suffix", () => {
+      const result = PropertyField.computeId({
+        propertyClassName: "BisCore:Element",
+        propertyName: "CodeValue",
+        forkKey: "Stuff.Door",
+      });
+      expect(result).to.equal("BisCore.Element.CodeValue#Stuff.Door");
+    });
+
+    it("appends fork key after the path", () => {
+      const result = PropertyField.computeId({
+        propertyClassName: "BisCore:ElementAspect",
+        propertyName: "Value",
+        pathFromTarget: [
+          {
+            sourceClassName: "BisCore:Element",
+            targetClassName: "BisCore:ElementAspect",
+            relationshipName: "BisCore:ElementOwnsUniqueAspect",
+          },
+        ],
+        forkKey: "BisCore.ElementAspectX",
+      });
+      expect(result).to.equal(
+        "BisCore.ElementAspect.Value(BisCore.Element-[BisCore.ElementOwnsUniqueAspect]->BisCore.ElementAspect)#BisCore.ElementAspectX",
+      );
+    });
+
+    it("does not append fork key when provided as an empty string", () => {
+      const result = PropertyField.computeId({
+        propertyClassName: "BisCore.Element",
+        propertyName: "CodeValue",
+        forkKey: "",
+      });
+      expect(result).to.equal("BisCore.Element.CodeValue");
+    });
+
+    it("produces the same id for the same fork key", () => {
+      const props = { propertyClassName: "BisCore.Element" as const, propertyName: "CodeValue", forkKey: "Stuff.Door" };
+      expect(PropertyField.computeId(props)).to.equal(PropertyField.computeId(props));
+    });
   });
 });
