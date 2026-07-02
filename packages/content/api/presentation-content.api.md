@@ -92,9 +92,11 @@ export interface ContentDescriptor {
 }
 
 // @public
-export interface ContentItem extends Readonly<ContentValues> {
-    readonly descriptor: ContentDescriptor;
-    getValue(field: Field): Value;
+export interface ContentItem {
+    readonly descriptor: DeepReadonly<ContentDescriptor>;
+    getValue(field: Field): DeepReadonly<Value>;
+    readonly primaryKey: DeepReadonly<InstanceKey>;
+    readonly values: DeepReadonly<Record<Field["id"], Value>>;
 }
 
 // @public
@@ -157,6 +159,11 @@ export interface ContentValues {
 
 // @public
 export function createContentProvider(_props: ContentProviderProps): ContentProvider;
+
+// @alpha
+type DeepReadonly<T> = T extends (...args: any[]) => any ? T : T extends (infer U)[] ? ReadonlyArray<DeepReadonly<U>> : T extends object ? {
+    readonly [K in keyof T]: DeepReadonly<T[K]>;
+} : T;
 
 // @public
 export const DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY = 1000;

@@ -9,7 +9,7 @@ import type { RelationshipPath } from "@itwin/presentation-shared";
 
 /**
  * Recursively marks all properties as readonly with no depth limit.
- * @internal
+ * @alpha
  */
 export type DeepReadonly<T> = T extends (...args: any[]) => any
   ? T
