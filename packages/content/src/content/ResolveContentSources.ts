@@ -3,9 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { filter, finalize, from, lastValueFrom, map, mergeMap, race, toArray } from "rxjs";
-import { ECSql } from "@itwin/presentation-shared";
+import { filter, finalize, forkJoin, from, lastValueFrom, map, mergeMap, of, race, toArray } from "rxjs";
+import { ECSql, getClass, normalizeFullClassName } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX } from "./InternalUtils.js";
+import { toSortedUniqueClassNames } from "./model/Utils.js";
 
 import type { Observable } from "rxjs";
 import type {
@@ -75,6 +76,22 @@ function buildClassNameColumns(path: JoinRelationshipPath): string {
   return path
     .map((step: JoinRelationshipPath[number]) => `ec_classname([${step.targetAlias}].ECClassId, 's.c')`)
     .join(", ");
+}
+
+// Distinct-class scan of the primary itself: enumerates the concrete classes that actually
+// have instances in scope (honoring the target's instance IDs / filter). A plain class
+// selector is polymorphic, so this naturally spans the selected base and all its subclasses.
+function buildPrimaryEnumerationQuery(target: ContentTarget): ECSqlQueryDef {
+  const targetFilter = buildTargetFilter(target);
+  const whereClause = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
+  const ecsql = `
+    SELECT ec_classname([this].[ECClassId], 's.c')
+    FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
+    ${targetFilter.joins ?? ""}
+    ${whereClause}
+    GROUP BY [this].[ECClassId]
+  `;
+  return { ecsql, ...(targetFilter.bindings ? { bindings: targetFilter.bindings } : {}) };
 }
 
 // --- Strategies ---
@@ -242,6 +259,30 @@ async function resolveDeclarationPaths({
 
 // --- Target resolution ---
 
+// Enumerates the concrete primary classes present under the target's `primaryClass`.
+// A leaf class (no derived classes) can only ever resolve to itself, so the scan is skipped
+// and `[primaryClass]` is returned. Otherwise the data-driven distinct-class scan runs.
+async function resolvePrimaryClasses({
+  imodelAccess,
+  target,
+}: {
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  target: ContentTarget;
+}): Promise<EC.FullClassNameDotNotation[]> {
+  const primaryClass = await getClass(imodelAccess, target.primaryClass);
+  const derivedClasses = await primaryClass.getDerivedClasses();
+  if (derivedClasses.length === 0) {
+    return [normalizeFullClassName(target.primaryClass)];
+  }
+
+  const reader = imodelAccess.createQueryReader(buildPrimaryEnumerationQuery(target), { rowFormat: "Indexes" });
+  const classNames: EC.FullClassNameDotNotation[] = [];
+  for await (const row of reader) {
+    classNames.push(row[0] as EC.FullClassNameDotNotation);
+  }
+  return toSortedUniqueClassNames(classNames);
+}
+
 function resolveTarget({
   imodelAccess,
   providers,
@@ -251,7 +292,8 @@ function resolveTarget({
   providers: IModelFieldsProvider[];
   target: ContentTarget;
 }): Observable<ContentSource> {
-  return from(providers).pipe(
+  const resolvedPrimaryClasses = from(resolvePrimaryClasses({ imodelAccess, target }));
+  const resolvedDeclarations = from(providers).pipe(
     mergeMap(async (provider, providerIdx) => ({
       provider,
       providerIdx,
@@ -272,18 +314,12 @@ function resolveTarget({
     }),
     filter(({ paths }) => paths.length > 0),
     toArray(),
-    map((resolvedDeclarations): ContentSource => {
-      resolvedDeclarations.sort((a, b) => a.providerIdx - b.providerIdx || a.declarationIndex - b.declarationIndex);
-      return {
-        target,
-        resolvedDeclarations: resolvedDeclarations.map(({ providerId, declarationIndex, paths }) => ({
-          providerId,
-          declarationIndex,
-          paths,
-        })),
-      };
+    map((res) => {
+      res.sort((a, b) => a.providerIdx - b.providerIdx || a.declarationIndex - b.declarationIndex);
+      return res.map(({ providerId, declarationIndex, paths }) => ({ providerId, declarationIndex, paths }));
     }),
   );
+  return forkJoin({ target: of(target), resolvedPrimaryClasses, resolvedDeclarations });
 }
 
 // --- Public entry point ---
@@ -294,7 +330,7 @@ export async function resolveContentSourcesImpl(props: {
   fieldsProviders: IModelFieldsProvider[];
 }): Promise<ContentSource[]> {
   if (props.targets.length === 0 || props.fieldsProviders.length === 0) {
-    return props.targets.map((target) => ({ target, resolvedDeclarations: [] }));
+    return props.targets.map((target) => ({ target, resolvedPrimaryClasses: [], resolvedDeclarations: [] }));
   }
 
   return lastValueFrom(

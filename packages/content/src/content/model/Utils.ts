@@ -25,7 +25,9 @@ export function serializeRelationshipPath(path: RelationshipPath): string {
  * Normalizes, de-duplicates, and sorts the given class names. Produces the canonical
  * representation used for a property field's `valueClassNames` invariant.
  */
-export function toSortedUniqueClassNames(classNames: EC.FullClassName[]): EC.FullClassName[] {
+export function toSortedUniqueClassNames<TClassName extends string>(
+  classNames: TClassName[],
+): EC.FullClassNameDotNotation[] {
   return Array.from(new Set(classNames.map((name) => normalizeFullClassName(name)))).sort();
 }
 

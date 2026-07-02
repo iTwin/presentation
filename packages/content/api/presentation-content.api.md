@@ -127,6 +127,7 @@ interface ContentSortSpec {
 // @public
 export interface ContentSource {
     resolvedDeclarations: ResolvedDeclarationGroup[];
+    resolvedPrimaryClasses: EC.FullClassName[];
     target: ContentTarget;
 }
 

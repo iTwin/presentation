@@ -8,6 +8,7 @@ import { resolveContentSources } from "../content/Content.js";
 import { ECSQL_PREFIX } from "../content/InternalUtils.js";
 
 import type {
+  EC,
   ECSchemaProvider,
   ECSqlQueryDef,
   ECSqlQueryExecutor,
@@ -36,19 +37,38 @@ vi.mock("@itwin/presentation-shared", async (importOriginal) => {
   };
 });
 
+function createMockGetSchema(derivedClasses: Record<string, string[]> = {}) {
+  return vi.fn(
+    async (schemaName: string) =>
+      ({
+        getClass: async (className: string) => {
+          const fullName = `${schemaName}.${className}`;
+          const derived = derivedClasses[fullName] ?? [];
+          return { fullName, getDerivedClasses: async () => derived.map((d) => ({ fullName: d })) };
+        },
+      }) as unknown as EC.Schema,
+  );
+}
+
 function createMockIModelAccess(props?: {
   resolvePathsQueryResults?: ECSqlQueryRow[];
+  primaryClassScanResults?: ECSqlQueryRow[];
+  derivedClasses?: Record<string, string[]>;
 }): ECSqlQueryExecutor & ECSchemaProvider {
-  const { resolvePathsQueryResults = [] } = props ?? {};
+  const { resolvePathsQueryResults = [], primaryClassScanResults = [], derivedClasses = {} } = props ?? {};
   return {
-    createQueryReader: vi.fn((_query: ECSqlQueryDef) => {
+    createQueryReader: vi.fn((query: ECSqlQueryDef) => {
+      // The primary-enumeration scan selects from `[this]`; path-resolution scans select from step aliases.
+      const rows = query.ecsql.includes("ec_classname([this].[ECClassId]")
+        ? primaryClassScanResults
+        : resolvePathsQueryResults;
       return (async function* () {
-        for (const row of resolvePathsQueryResults) {
+        for (const row of rows) {
           yield row;
         }
       })();
     }),
-    getSchema: vi.fn(async () => undefined),
+    getSchema: createMockGetSchema(derivedClasses),
   };
 }
 
@@ -72,8 +92,8 @@ describe("resolveContentSources", () => {
       const targets: ContentTarget[] = [targetA, { primaryClass: "TestSchema.ClassB" }];
       const result = await resolveContentSources({ imodelAccess: createMockIModelAccess(), targets });
       expect(result).to.have.length(2);
-      expect(result[0]).to.deep.equal({ target: targets[0], resolvedDeclarations: [] });
-      expect(result[1]).to.deep.equal({ target: targets[1], resolvedDeclarations: [] });
+      expect(result[0]).to.deep.equal({ target: targets[0], resolvedPrimaryClasses: [], resolvedDeclarations: [] });
+      expect(result[1]).to.deep.equal({ target: targets[1], resolvedPrimaryClasses: [], resolvedDeclarations: [] });
     });
 
     it("returns empty resolvedDeclarations when provider returns undefined", async () => {
@@ -164,6 +184,7 @@ describe("resolveContentSources", () => {
       expect(result).to.deep.equal([
         {
           target: targetA,
+          resolvedPrimaryClasses: ["TestSchema.ClassA"],
           resolvedDeclarations: [
             {
               providerId: "test_v1",
@@ -205,6 +226,7 @@ describe("resolveContentSources", () => {
       expect(result).to.deep.equal([
         {
           target: targetA,
+          resolvedPrimaryClasses: ["TestSchema.ClassA"],
           resolvedDeclarations: [
             {
               providerId: "test_v1",
@@ -259,6 +281,7 @@ describe("resolveContentSources", () => {
       expect(result).to.deep.equal([
         {
           target: targetA,
+          resolvedPrimaryClasses: ["TestSchema.ClassA"],
           resolvedDeclarations: [
             {
               providerId: "test_v1",
@@ -323,6 +346,7 @@ describe("resolveContentSources", () => {
       expect(result).to.deep.equal([
         {
           target: targetA,
+          resolvedPrimaryClasses: ["TestSchema.ClassA"],
           resolvedDeclarations: [
             {
               providerId: "test_v1",
@@ -751,7 +775,7 @@ describe("resolveContentSources", () => {
             }
           })();
         }),
-        getSchema: vi.fn(async () => undefined),
+        getSchema: createMockGetSchema(),
       };
 
       const result = await resolveContentSources({
@@ -761,6 +785,138 @@ describe("resolveContentSources", () => {
       });
 
       expect(result[0].resolvedDeclarations.map((d) => d.declarationIndex)).to.deep.equal([1]);
+    });
+  });
+
+  describe("primary class enumeration", () => {
+    const provider = createMockIModelFieldsProvider("test_v1", {
+      relatedProperties: [
+        {
+          path: [
+            {
+              sourceClassName: "TestSchema.ClassA",
+              targetClassName: "TestSchema.ClassB",
+              relationshipName: "TestSchema.RelAB",
+            },
+          ],
+        },
+      ],
+    });
+
+    it("skips the scan and returns the primary class for a leaf class", async () => {
+      const imodelAccess = createMockIModelAccess({ resolvePathsQueryResults: [{ 0: "TestSchema.ConcreteB" }] });
+
+      const result = await resolveContentSources({
+        imodelAccess,
+        targets: [{ primaryClass: "TestSchema.ClassA" }],
+        config: { fieldsProviders: [provider] },
+      });
+
+      expect(result[0].resolvedPrimaryClasses).to.deep.equal(["TestSchema.ClassA"]);
+      // Only the path-resolution query runs — no primary-enumeration scan for a leaf class.
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const queries = vi.mocked(imodelAccess.createQueryReader).mock.calls.map((c) => c[0].ecsql);
+      expect(queries.some((ecsql) => ecsql.includes("ec_classname([this].[ECClassId]"))).to.equal(false);
+    });
+
+    it("normalizes the primary class name for a leaf class", async () => {
+      const imodelAccess = createMockIModelAccess({ resolvePathsQueryResults: [{ 0: "TestSchema.ConcreteB" }] });
+
+      const result = await resolveContentSources({
+        imodelAccess,
+        targets: [{ primaryClass: "TestSchema:ClassA" }],
+        config: { fieldsProviders: [provider] },
+      });
+
+      expect(result[0].resolvedPrimaryClasses).to.deep.equal(["TestSchema.ClassA"]);
+    });
+
+    it("enumerates concrete primary classes for a polymorphic base", async () => {
+      const imodelAccess = createMockIModelAccess({
+        resolvePathsQueryResults: [{ 0: "TestSchema.ConcreteB" }],
+        derivedClasses: { "TestSchema.ClassA": ["TestSchema.Door", "TestSchema.Window", "TestSchema.Ladder"] },
+        primaryClassScanResults: [{ 0: "TestSchema.Door" }, { 0: "TestSchema.Window" }],
+      });
+
+      const result = await resolveContentSources({
+        imodelAccess,
+        targets: [{ primaryClass: "TestSchema.ClassA" }],
+        config: { fieldsProviders: [provider] },
+      });
+
+      expect(result[0].resolvedPrimaryClasses).to.deep.equal(["TestSchema.Door", "TestSchema.Window"]);
+    });
+
+    it("de-duplicates and sorts enumerated classes", async () => {
+      const imodelAccess = createMockIModelAccess({
+        resolvePathsQueryResults: [{ 0: "TestSchema.ConcreteB" }],
+        derivedClasses: { "TestSchema.ClassA": ["TestSchema.Door"] },
+        primaryClassScanResults: [{ 0: "TestSchema.Window" }, { 0: "TestSchema.Door" }, { 0: "TestSchema.Window" }],
+      });
+
+      const result = await resolveContentSources({
+        imodelAccess,
+        targets: [{ primaryClass: "TestSchema.ClassA" }],
+        config: { fieldsProviders: [provider] },
+      });
+
+      expect(result[0].resolvedPrimaryClasses).to.deep.equal(["TestSchema.Door", "TestSchema.Window"]);
+    });
+
+    it("returns an empty list for a polymorphic base with no instances in scope", async () => {
+      const imodelAccess = createMockIModelAccess({
+        resolvePathsQueryResults: [{ 0: "TestSchema.ConcreteB" }],
+        derivedClasses: { "TestSchema.ClassA": ["TestSchema.Door"] },
+        primaryClassScanResults: [],
+      });
+
+      const result = await resolveContentSources({
+        imodelAccess,
+        targets: [{ primaryClass: "TestSchema.ClassA" }],
+        config: { fieldsProviders: [provider] },
+      });
+
+      expect(result[0].resolvedPrimaryClasses).to.deep.equal([]);
+    });
+
+    it("honors instanceFilter in the enumeration query", async () => {
+      const imodelAccess = createMockIModelAccess({
+        resolvePathsQueryResults: [{ 0: "TestSchema.ConcreteB" }],
+        derivedClasses: { "TestSchema.ClassA": ["TestSchema.Door"] },
+        primaryClassScanResults: [{ 0: "TestSchema.Door" }],
+      });
+
+      await resolveContentSources({
+        imodelAccess,
+        targets: [
+          {
+            primaryClass: "TestSchema.ClassA",
+            instanceFilter: {
+              expression: "this.Area > :minArea",
+              bindings: { minArea: { type: "double", value: 100.0 } },
+            },
+          },
+        ],
+        config: { fieldsProviders: [provider] },
+      });
+
+      const scanQuery = vi
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        .mocked(imodelAccess.createQueryReader)
+        .mock.calls.map((c) => c[0])
+        .find((q) => q.ecsql.includes("ec_classname([this].[ECClassId]"));
+      expect(scanQuery).to.not.equal(undefined);
+      expect(scanQuery!.ecsql).to.include("[this].Area > :minArea");
+      expect(scanQuery!.bindings).to.deep.equal({ minArea: { type: "double", value: 100.0 } });
+    });
+
+    it("returns an empty list when no fields providers are configured", async () => {
+      const result = await resolveContentSources({
+        imodelAccess: createMockIModelAccess({ derivedClasses: { "TestSchema.ClassA": ["TestSchema.Door"] } }),
+        targets: [{ primaryClass: "TestSchema.ClassA" }],
+      });
+
+      expect(result[0].resolvedPrimaryClasses).to.deep.equal([]);
     });
   });
 });
