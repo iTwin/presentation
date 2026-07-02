@@ -30,13 +30,9 @@ export interface ContentValues {
  *
  * @public
  */
-export interface ContentItem {
+export interface ContentItem extends Readonly<ContentValues> {
   /** The descriptor that defines the field schema for this item. */
-  descriptor: ContentDescriptor;
-  /** The primary instance this row represents. */
-  primaryKey: InstanceKey;
-  /** Map of field ID → raw value. */
-  values: Record<Field["id"], Value>;
+  readonly descriptor: ContentDescriptor;
 
   /**
    * Retrieve a value by field reference.
