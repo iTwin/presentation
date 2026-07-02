@@ -50,7 +50,10 @@ export interface ContentItem {
  *
  * @internal
  */
-export function createContentItem({ descriptor, contentValues }: {
+export function createContentItem({
+  descriptor,
+  contentValues,
+}: {
   descriptor: ContentDescriptor;
   contentValues: ContentValues;
 }): DeepReadonly<ContentItem> {
