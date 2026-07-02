@@ -177,6 +177,13 @@ describe("createTransformableDescriptor", () => {
       expect(() => transformable.forkField("calc", ["Stuff:Door"])).to.throw(/only property fields/);
     });
 
+    it("throws when the field represents no value-supplier classes", () => {
+      const field = propertyField({ sourceClassName: "Stuff:Thing", propertyName: "Height", valueClassNames: [] });
+      const descriptor = createDescriptor([field]);
+      const transformable = createTransformableDescriptor(descriptor);
+      expect(() => transformable.forkField(field.id, ["Stuff:Door"])).to.throw(/represents no value-supplier classes/);
+    });
+
     it("throws when the target class subset is empty", () => {
       const field = propertyField({
         sourceClassName: "Stuff:Thing",

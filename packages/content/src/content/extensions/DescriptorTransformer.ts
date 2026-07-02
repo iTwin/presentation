@@ -101,8 +101,9 @@ interface TransformableDescriptor {
    * clone is made and the original field is returned for in-place mutation. Forking the
    * same subset twice returns the same field.
    *
-   * @throws if `id` is missing or not a property field, if `valueClassNames` is empty, or
-   * if it contains a class not represented by the field.
+   * @throws if `id` is missing or not a property field, if the field itself represents no
+   * value-supplier classes, if `valueClassNames` is empty, or if it contains a class not
+   * represented by the field.
    */
   forkField(id: Field["id"], valueClassNames: EC.FullClassName[]): TransformableField<PropertyField>;
 }
@@ -128,6 +129,9 @@ export function createTransformableDescriptor(descriptor: ContentDescriptor): Tr
       const field = descriptor.fields[id];
       if (field.kind !== "property") {
         throw new Error(`Cannot fork field "${id}": only property fields can be forked.`);
+      }
+      if (field.valueClassNames.length === 0) {
+        throw new Error(`Cannot fork field "${id}": the field represents no value-supplier classes.`);
       }
       const subset = toSortedUniqueClassNames(valueClassNames);
       if (subset.length === 0) {
