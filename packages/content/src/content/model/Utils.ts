@@ -8,19 +8,16 @@ import { normalizeFullClassName } from "@itwin/presentation-shared";
 import type { RelationshipPath } from "@itwin/presentation-shared";
 
 /**
- * Recursively marks all properties as readonly, up to a bounded depth to avoid
- * infinite expansion on recursive types like `ValueDescriptor`.
+ * Recursively marks all properties as readonly with no depth limit.
  * @internal
  */
-export type DeepReadonly<T, Depth extends number[] = []> = Depth["length"] extends 5
-  ? Readonly<T>
-  : T extends (...args: any[]) => any
-    ? T
-    : T extends (infer U)[]
-      ? readonly DeepReadonly<U, [...Depth, 0]>[]
-      : T extends object
-        ? { readonly [K in keyof T]: DeepReadonly<T[K], [...Depth, 0]> }
-        : T;
+export type DeepReadonly<T> = T extends (...args: any[]) => any
+  ? T
+  : T extends (infer U)[]
+    ? ReadonlyArray<DeepReadonly<U>>
+    : T extends object
+      ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+      : T;
 
 export function serializeRelationshipPath(path: RelationshipPath): string {
   let result = "";

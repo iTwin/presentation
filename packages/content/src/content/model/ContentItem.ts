@@ -30,15 +30,21 @@ export interface ContentValues {
  *
  * @public
  */
-export interface ContentItem extends Readonly<ContentValues> {
+export interface ContentItem {
   /** The descriptor that defines the field schema for this item. */
-  readonly descriptor: ContentDescriptor;
+  readonly descriptor: DeepReadonly<ContentDescriptor>;
+
+  /** The primary instance this row represents. */
+  readonly primaryKey: DeepReadonly<InstanceKey>;
+
+  /** Map of field ID → raw value. */
+  readonly values: DeepReadonly<Record<Field["id"], Value>>;
 
   /**
    * Retrieve a value by field reference.
    * Returns `undefined` if the field doesn't apply to this item's class.
    */
-  getValue(field: Field): Value;
+  getValue(field: Field): DeepReadonly<Value>;
 }
 
 /**
@@ -52,7 +58,7 @@ export function createContentItem({
 }: {
   descriptor: ContentDescriptor;
   contentValues: ContentValues;
-}): DeepReadonly<ContentItem> {
+}): ContentItem {
   return {
     descriptor,
     primaryKey: contentValues.primaryKey,
