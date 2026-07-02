@@ -6,6 +6,7 @@
 import type { InstanceKey, Value } from "@itwin/presentation-shared";
 import type { ContentDescriptor } from "./ContentDescriptor.js";
 import type { Field } from "./Field.js";
+import type { DeepReadonly } from "./Utils.js";
 
 /**
  * Raw data for one row of the content result.
@@ -29,9 +30,13 @@ export interface ContentValues {
  *
  * @public
  */
-export interface ContentItem extends Readonly<ContentValues> {
+export interface ContentItem {
   /** The descriptor that defines the field schema for this item. */
-  readonly descriptor: ContentDescriptor;
+  descriptor: ContentDescriptor;
+  /** The primary instance this row represents. */
+  primaryKey: InstanceKey;
+  /** Map of field ID → raw value. */
+  values: Record<Field["id"], Value>;
 
   /**
    * Retrieve a value by field reference.
@@ -45,14 +50,16 @@ export interface ContentItem extends Readonly<ContentValues> {
  *
  * @internal
  */
-export function createContentItem(descriptor: ContentDescriptor, contentValues: ContentValues): ContentItem {
-  const values = Object.freeze({ ...contentValues.values });
-  return Object.freeze({
-    descriptor: Object.freeze({ ...descriptor }),
-    primaryKey: Object.freeze({ ...contentValues.primaryKey }),
-    values,
+export function createContentItem({ descriptor, contentValues }: {
+  descriptor: ContentDescriptor;
+  contentValues: ContentValues;
+}): DeepReadonly<ContentItem> {
+  return {
+    descriptor,
+    primaryKey: contentValues.primaryKey,
+    values: contentValues.values,
     getValue(field: Field): Value {
-      return values[field.id];
+      return contentValues.values[field.id];
     },
-  });
+  };
 }

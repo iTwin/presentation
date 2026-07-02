@@ -34,12 +34,12 @@ describe("createContentItem", () => {
   it("returns value by field reference via getValue", () => {
     const field = createTestPropertyField("BisCore.Element.CodeValue");
     const descriptor = createTestDescriptor([field]);
-    const values: ContentValues = {
+    const contentValues: ContentValues = {
       primaryKey: { className: "BisCore.Element", id: "0x1" },
       values: { "BisCore.Element.CodeValue": "MyCode" },
     };
 
-    const item = createContentItem(descriptor, values);
+    const item = createContentItem({ descriptor, contentValues });
 
     expect(item.getValue(field)).to.equal("MyCode");
   });
@@ -48,38 +48,13 @@ describe("createContentItem", () => {
     const field = createTestPropertyField("BisCore.Element.CodeValue");
     const otherField = createTestPropertyField("ProcessPhysical.Pump.FlowRate");
     const descriptor = createTestDescriptor([field, otherField]);
-    const values: ContentValues = {
+    const contentValues: ContentValues = {
       primaryKey: { className: "BisCore.Element", id: "0x1" },
       values: { "BisCore.Element.CodeValue": "MyCode" },
     };
 
-    const item = createContentItem(descriptor, values);
+    const item = createContentItem({ descriptor, contentValues });
 
     expect(item.getValue(otherField)).to.be.undefined;
-  });
-
-  it("is immutable", () => {
-    const field = createTestPropertyField("BisCore.Element.CodeValue");
-    const descriptor = createTestDescriptor([field]);
-    const values: ContentValues = {
-      primaryKey: { className: "BisCore.Element", id: "0x1" },
-      values: { "BisCore.Element.CodeValue": "Test" },
-    };
-
-    const item = createContentItem(descriptor, values);
-
-    expect(Object.isFrozen(item)).to.be.true;
-    expect(Object.isFrozen(item.primaryKey)).to.be.true;
-    expect(Object.isFrozen(item.values)).to.be.true;
-    expect(Object.isFrozen(item.descriptor)).to.be.true;
-
-    // Mutating the source objects should not affect the item.
-    values.primaryKey.className = "Changed.Class";
-    values.values[field.id] = "Changed";
-    descriptor.fields = {};
-
-    expect(item.primaryKey.className).to.equal("BisCore.Element");
-    expect(item.getValue(field)).to.equal("Test");
-    expect(item.descriptor.fields[field.id]).to.equal(field);
   });
 });
