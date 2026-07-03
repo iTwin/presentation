@@ -92,10 +92,11 @@ export interface ContentSource {
    * discovered by a data-driven distinct-class scan during source resolution.
    *
    * - When `primaryClass` is a leaf (has no derived classes), the scan is skipped and this
-   *   is `[primaryClass]`.
+   *   is the normalized `primaryClass` (dot-notation).
    * - When `primaryClass` is polymorphic, this lists the concrete subclasses that actually
-   *   have instances in scope, respecting the target's `instanceIds` / `instanceFilter`.
-   * - Empty only when enumeration was not performed (e.g. no iModel fields providers configured).
+   *   have instances in scope, respecting the target's `instanceIds` / `instanceFilter`. This
+   *   may be empty when no instances match.
+   * - Also empty when enumeration was not performed (e.g. no iModel fields providers configured).
    *
    * The library uses this to populate a direct field's `valueClassNames`, so overrides can be
    * scoped below a polymorphically-selected base primary via `TransformableDescriptor.forkField`.
