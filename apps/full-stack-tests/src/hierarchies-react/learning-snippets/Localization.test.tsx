@@ -15,7 +15,7 @@ import { Props } from "@itwin/presentation-shared";
 import {
   LOCALIZATION_NAMESPACES,
   LocalizationContextProvider,
-  useIModelUnifiedSelectionTree,
+  useIModelTree,
 } from "@itwin/presentation-hierarchies-react";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.TreeRenderer.Imports
@@ -28,10 +28,8 @@ import { initialize, terminate } from "../../IntegrationTests.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModelApp } from "@itwin/core-frontend";
-import { createStorage } from "@itwin/unified-selection";
 
-const selectionStorage = createStorage();
-type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
+type IModelAccess = Props<typeof useIModelTree>["imodelAccess"];
 
 describe("Hierarchies React", () => {
   describe("Learning snippets", () => {
@@ -60,7 +58,7 @@ describe("Hierarchies React", () => {
           ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
           ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodelConnection), 1000),
         };
-        const getHierarchyDefinition: Props<typeof useIModelUnifiedSelectionTree>["getHierarchyDefinition"] = () => ({
+        const getHierarchyDefinition: Props<typeof useIModelTree>["getHierarchyDefinition"] = () => ({
           defineHierarchyLevel: async ({ createSelectClause }) => [
             {
               fullClassName: "BisCore.PhysicalModel",
@@ -105,12 +103,7 @@ describe("Hierarchies React", () => {
         }
 
         function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
-          const treeProps = useIModelUnifiedSelectionTree({
-            sourceName: "MyTreeComponent",
-            imodelAccess,
-            getHierarchyDefinition,
-            selectionStorage,
-          });
+          const treeProps = useIModelTree({ imodelAccess, getHierarchyDefinition });
           if (treeProps.rootErrorRendererProps) {
             return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
           }

@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
 
-import { useEffect, useState } from "react";
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess.Imports
 import { IModelConnection } from "@itwin/core-frontend";
@@ -16,6 +15,7 @@ import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchie
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.CustomTreeExample.Imports
+import { useEffect, useState } from "react";
 import { Props } from "@itwin/presentation-shared";
 import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";

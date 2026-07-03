@@ -115,6 +115,7 @@ import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchie
 
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 
+import { useEffect, useState } from "react";
 import { Props } from "@itwin/presentation-shared";
 import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
@@ -218,7 +219,7 @@ Import the localization and tree APIs:
 import {
   LOCALIZATION_NAMESPACES,
   LocalizationContextProvider,
-  useIModelUnifiedSelectionTree,
+  useIModelTree,
 } from "@itwin/presentation-hierarchies-react";
 
 import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
@@ -258,12 +259,7 @@ function LocalizedTree({ imodelAccess }: { imodelAccess: IModelAccess }) {
 }
 
 function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
-  const treeProps = useIModelUnifiedSelectionTree({
-    sourceName: "MyTreeComponent",
-    imodelAccess,
-    getHierarchyDefinition,
-    selectionStorage,
-  });
+  const treeProps = useIModelTree({ imodelAccess, getHierarchyDefinition });
   if (treeProps.rootErrorRendererProps) {
     return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
   }
