@@ -250,6 +250,7 @@ Wrap the tree components with `LocalizationContextProvider`:
 ```tsx
 // Wrap the tree components with `LocalizationContextProvider`, passing the same localization provider
 // used to register the namespaces. The provider resolves the package's localized strings at runtime.
+type IModelAccess = Props<typeof useIModelTree>["imodelAccess"];
 function LocalizedTree({ imodelAccess }: { imodelAccess: IModelAccess }) {
   return (
     <LocalizationContextProvider localization={localization}>

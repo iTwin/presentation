@@ -29,8 +29,6 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModelApp } from "@itwin/core-frontend";
 
-type IModelAccess = Props<typeof useIModelTree>["imodelAccess"];
-
 describe("Hierarchies React", () => {
   describe("Learning snippets", () => {
     describe("Localization", () => {
@@ -94,6 +92,7 @@ describe("Hierarchies React", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Tree
         // Wrap the tree components with `LocalizationContextProvider`, passing the same localization provider
         // used to register the namespaces. The provider resolves the package's localized strings at runtime.
+        type IModelAccess = Props<typeof useIModelTree>["imodelAccess"];
         function LocalizedTree({ imodelAccess }: { imodelAccess: IModelAccess }) {
           return (
             <LocalizationContextProvider localization={localization}>
