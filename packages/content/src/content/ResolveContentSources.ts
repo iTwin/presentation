@@ -259,19 +259,17 @@ async function resolveDeclarationPaths({
   const rows = raceQueryExecution({ executor: imodelAccess, queries });
   return lastValueFrom(
     rows.pipe(
-      toArray(),
       // Each row is one resolved path: [nearEndClasses, step0Target, step1Target, ...]. The concrete
       // content-target (near-end) classes are pre-aggregated by the query via `GROUP_CONCAT`.
-      map((allRows) =>
-        allRows.map((row) => ({
-          path: declaration.path.map((step: RelationshipPath[number], i: number) => ({
-            ...step,
-            sourceClassName: (i === 0 ? target.primaryClass : row[i]) as EC.FullClassName,
-            targetClassName: row[i + 1] as EC.FullClassName,
-          })),
-          targetClassNames: toSortedUniqueClassNames((row[0] as string).split(",") as EC.FullClassName[]),
+      map((row) => ({
+        path: declaration.path.map((step: RelationshipPath[number], i: number) => ({
+          ...step,
+          sourceClassName: (i === 0 ? target.primaryClass : row[i]) as EC.FullClassName,
+          targetClassName: row[i + 1] as EC.FullClassName,
         })),
-      ),
+        targetClassNames: toSortedUniqueClassNames((row[0] as string).split(",") as EC.FullClassName[]),
+      })),
+      toArray(),
     ),
   );
 }
