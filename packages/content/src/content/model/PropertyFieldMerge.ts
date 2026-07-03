@@ -66,10 +66,12 @@ function assertMetadataAgrees(existing: PropertyField, candidate: PropertyField)
   }
 }
 
-// Structural equality for value shapes. `ValueDescriptor` is a recursive union, so it cannot be
-// compared by reference (distinct candidates carry distinct instances) — a mismatch signals a
-// provider bug where the same declared property was given different value shapes. Both descriptors
-// are reduced to a canonical nested-tuple form and compared as JSON to avoid separator ambiguity.
+/**
+ * Structural equality for value shapes. `ValueDescriptor` is a recursive union, so it cannot be
+ * compared by reference (distinct candidates carry distinct instances) — a mismatch signals a
+ * provider bug where the same declared property was given different value shapes. Both descriptors
+ * are reduced to a canonical nested-tuple form and compared as JSON to avoid separator ambiguity.
+ */
 function valueDescriptorsAgree(a: ValueDescriptor, b: ValueDescriptor): boolean {
   return JSON.stringify(toComparableValueDescriptor(a)) === JSON.stringify(toComparableValueDescriptor(b));
 }
