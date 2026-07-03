@@ -273,6 +273,7 @@ export interface PropertyField extends BaseField {
     pathFromTarget: RelationshipPath;
     propertyName: string;
     sourceClassName: EC.FullClassName;
+    valueClassNames: EC.FullClassName[];
 }
 
 // @public (undocumented)
@@ -281,6 +282,7 @@ export namespace PropertyField {
         propertyClassName: EC.FullClassName;
         propertyName: string;
         pathFromTarget?: RelationshipPath;
+        forkKey?: string;
     }): Field["id"];
 }
 
@@ -361,6 +363,7 @@ interface TransformableDescriptor {
     readonly categories: Record<CategoryDefinition["id"], CategoryDefinition>;
     // (undocumented)
     readonly fields: Readonly<Record<Field["id"], TransformableField>>;
+    forkField(id: Field["id"], valueClassNames: EC.FullClassName[]): TransformableField<PropertyField>;
     // (undocumented)
     removeField(id: string): void;
     // (undocumented)
@@ -368,7 +371,7 @@ interface TransformableDescriptor {
 }
 
 // @public
-type TransformableField = Omit<Field, "id"> & {
+type TransformableField<TField = Field> = Omit<TField, "id"> & {
     readonly id: string;
 };
 
