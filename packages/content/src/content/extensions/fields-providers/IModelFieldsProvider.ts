@@ -9,9 +9,9 @@ import type {
   RelationshipPath,
   ValueDescriptor,
 } from "@itwin/presentation-shared";
-import type { CardinalityHint, ContentTarget } from "../ContentTarget.js";
-import type { CategoryDefinition } from "../model/Category.js";
-import type { StepPropertySpec } from "../model/PropertySpec.js";
+import type { CardinalityHint, ContentTarget } from "../../ContentTarget.js";
+import type { CategoryDefinition } from "../../model/Category.js";
+import type { StepPropertySpec } from "../../model/PropertySpec.js";
 import type { BaseFieldsProvider } from "./BaseFieldsProvider.js";
 
 /**
