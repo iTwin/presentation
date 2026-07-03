@@ -16,7 +16,7 @@ import type {
   RelationshipPath,
 } from "@itwin/presentation-shared";
 import type { ContentTarget, ResolvedPath } from "../content/ContentTarget.js";
-import type { IModelFieldsProvider } from "../content/extensions/IModelFieldsProvider.js";
+import type { IModelFieldsProvider } from "../content/extensions/fields-providers/IModelFieldsProvider.js";
 
 // Mock `ECSql.createRelationshipPathJoinClause` because the real implementation requires
 // a functioning ECSchemaProvider that returns actual schema metadata to construct JOIN clauses.

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { EC, RelationshipPath, Value, ValueDescriptor } from "@itwin/presentation-shared";
-import type { CategoryDefinition } from "../model/Category.js";
+import type { CategoryDefinition } from "../../model/Category.js";
 import type { BaseFieldsProvider } from "./BaseFieldsProvider.js";
 
 /**
