@@ -5,6 +5,7 @@
 
 import type {
   ECSchemaProvider,
+  ECSqlBinding,
   ECSqlQueryExecutor,
   RelationshipPath,
   ValueDescriptor,
@@ -126,6 +127,8 @@ interface CalculatedFieldDeclaration {
    * @default "this"
    */
   targetAlias?: string;
+  /** Bind values for `expression`, keyed by parameter name. */
+  bindings?: Record<string, ECSqlBinding>;
   /** The value type of the computed result. */
   type: ValueDescriptor;
   /** Category to assign this field to (references a `CategoryDefinition.id`). */
