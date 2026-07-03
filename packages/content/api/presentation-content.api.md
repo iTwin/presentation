@@ -92,9 +92,11 @@ export interface ContentDescriptor {
 }
 
 // @public
-export interface ContentItem extends Readonly<ContentValues> {
-    readonly descriptor: ContentDescriptor;
-    getValue(field: Field): Value;
+export interface ContentItem {
+    readonly descriptor: DeepReadonly<ContentDescriptor>;
+    getValue(field: Field): DeepReadonly<Value>;
+    readonly primaryKey: DeepReadonly<InstanceKey>;
+    readonly values: DeepReadonly<Record<Field["id"], Value>>;
 }
 
 // @public
@@ -157,6 +159,11 @@ export interface ContentValues {
 
 // @public
 export function createContentProvider(_props: ContentProviderProps): ContentProvider;
+
+// @alpha
+type DeepReadonly<T> = T extends (...args: any[]) => any ? T : T extends (infer U)[] ? ReadonlyArray<DeepReadonly<U>> : T extends object ? {
+    readonly [K in keyof T]: DeepReadonly<T[K]>;
+} : T;
 
 // @public
 export const DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY = 1000;
@@ -266,6 +273,7 @@ export interface PropertyField extends BaseField {
     pathFromTarget: RelationshipPath;
     propertyName: string;
     sourceClassName: EC.FullClassName;
+    valueClassNames: EC.FullClassName[];
 }
 
 // @public (undocumented)
@@ -274,6 +282,7 @@ export namespace PropertyField {
         propertyClassName: EC.FullClassName;
         propertyName: string;
         pathFromTarget?: RelationshipPath;
+        forkKey?: string;
     }): Field["id"];
 }
 
@@ -354,6 +363,7 @@ interface TransformableDescriptor {
     readonly categories: Record<CategoryDefinition["id"], CategoryDefinition>;
     // (undocumented)
     readonly fields: Readonly<Record<Field["id"], TransformableField>>;
+    forkField(id: Field["id"], valueClassNames: EC.FullClassName[]): TransformableField<PropertyField>;
     // (undocumented)
     removeField(id: string): void;
     // (undocumented)
@@ -361,7 +371,7 @@ interface TransformableDescriptor {
 }
 
 // @public
-type TransformableField = Omit<Field, "id"> & {
+type TransformableField<TField = Field> = Omit<TField, "id"> & {
     readonly id: string;
 };
 
