@@ -10,7 +10,7 @@ import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.SelectionStorage.Imports
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
@@ -26,6 +26,7 @@ import { render, waitFor } from "../../RenderUtils.js";
 import { stubVirtualization } from "../../Utils.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
+import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess
 function createIModelAccess(imodel: IModelConnection) {

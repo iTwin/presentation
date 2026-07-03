@@ -67,7 +67,7 @@ The hook takes 2 required properties:
   import { IModelConnection } from "@itwin/core-frontend";
   import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
   import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-  import { createLimitingECSqlQueryExecutor, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+  import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 
   function createIModelAccess(imodel: IModelConnection) {
     const schemaProvider = createECSchemaProvider(imodel.schemaContext);
@@ -111,7 +111,7 @@ The component renders a virtualized tree using the `Tree` component from `@strat
 import { IModelConnection } from "@itwin/core-frontend";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 
