@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { type EC, normalizeFullClassName } from "@itwin/presentation-shared";
 import { PropertyField } from "../model/Field.js";
 import { computeFieldForkKey, toSortedUniqueClassNames } from "../model/Utils.js";
 
-import type { EC } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
@@ -156,7 +156,9 @@ export function createTransformableDescriptor(descriptor: ContentDescriptor): Tr
         // The subset covers every value-supplier class: mutate in place, no fork.
         return field;
       }
-      field.valueClassNames = field.valueClassNames.filter((className) => !subset.includes(className));
+      field.valueClassNames = field.valueClassNames.filter(
+        (className) => !subset.includes(normalizeFullClassName(className)),
+      );
       const fork: PropertyField = { ...field, id: forkedId, valueClassNames: subset };
       descriptor.fields[forkedId] = fork;
       return fork;
