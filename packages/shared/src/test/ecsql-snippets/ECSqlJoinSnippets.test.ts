@@ -595,6 +595,31 @@ describe("createRelationshipPathJoinClause", () => {
       expect(result.bindings).toEqual({ minArea: { type: "double", value: 10.5 } });
     });
 
+    it("substitutes bracket-quoted alias placeholders", async () => {
+      const { sourceClass, targetClass, relationship } = setupLinkTableRelationshipClasses();
+      const result = await createRelationshipPathJoinClause({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: sourceClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            targetClassName: targetClass.fullName,
+            targetAlias: "t",
+            instanceFilter: { expression: "[this].Name = :name AND [rel].Priority > 0" },
+          },
+        ],
+      });
+      expect(trimWhitespace(result.joins)).toBe(
+        trimWhitespace(`
+          INNER JOIN [${schemaName}].[${relationship.name}] [r] ON [r].[SourceECInstanceId] = [s].[ECInstanceId]
+          INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND ([t].Name = :name AND [r].Priority > 0)
+        `),
+      );
+      expect(result.bindings).toBeUndefined();
+    });
+
     it("applies instanceFilter on each step of a multi-step path and merges bindings", async () => {
       const step1 = setupLinkTableRelationshipClasses({ source: "a", relationship: "r1", target: "b" });
       const step2 = setupLinkTableRelationshipClasses({ source: step1.targetClass, relationship: "r2", target: "c" });
