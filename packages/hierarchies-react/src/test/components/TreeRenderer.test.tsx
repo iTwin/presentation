@@ -31,9 +31,13 @@ function createDefaultProps(overrides?: Partial<StrataKitTreeRendererProps>): St
   };
 }
 
-async function renderTree(props: StrataKitTreeRendererProps, colorScheme: "light" | "dark") {
+async function renderTree(
+  props: StrataKitTreeRendererProps,
+  colorScheme: "light" | "dark",
+  options?: { height?: number },
+) {
   return renderWithTheme(
-    <div style={{ height: 100, width: 300 }}>
+    <div style={{ height: options?.height ?? 100, width: 300 }}>
       <StrataKitTreeRenderer {...props} />
     </div>,
     { colorScheme },
@@ -172,6 +176,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
     });
 
     it("renders tree with context menu actions", async () => {
+      await page.viewport(300, 200);
       const props = createDefaultProps({
         rootNodes: [
           createTreeNode({ id: "node-1", label: "Node with context menu" }),
@@ -182,11 +187,10 @@ COLOR_SCHEMES.forEach((colorScheme) => {
           <TreeActionBase key="action-2" label="Context Action 2" icon={placeholderSvg} onClick={vi.fn()} />,
         ],
       });
-      const { locator } = await renderTree(props, colorScheme);
+      const { locator } = await renderTree(props, colorScheme, { height: 200 });
       await locator.getByText("Node with context menu").click({ button: "right" });
       await expect.element(page.getByText("Context Action 1")).toBeVisible();
-      // `aria-required-children` is being triggered because anchor element of context menu is rendered next to `treeitem` under `tree` and
-      // it expects that `tree` contains only `treeitem` children.
+      await expect.element(page.getByText("Context Action 2")).toBeVisible();
       await validateSnapshot(locator, { skipA11y: ["aria-hidden-focus", "aria-required-children"] });
     });
 

@@ -17,9 +17,9 @@ import {
   useRef,
   useState,
 } from "react";
-import { CircularProgress, FormHelperText, IconButton, TextField, Typography } from "@mui/material";
+import { CircularProgress, FormHelperText, IconButton, Menu, TextField, Typography } from "@mui/material";
 import { Icon } from "@stratakit/mui";
-import { DropdownMenu, unstable_Popover as Popover, Tree } from "@stratakit/structures";
+import { unstable_Popover as Popover, Tree } from "@stratakit/structures";
 import { useTranslation } from "../LocalizationContext.js";
 import { TreeActionBase } from "./TreeAction.js";
 import { useTreeNodeRenameContext } from "./TreeNodeRenameAction.js";
@@ -188,34 +188,27 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
             }}
           />
         </Popover>
-        <DropdownMenu.Provider
+        {/* Context menu */}
+        <Menu
           open={contextMenuProps !== undefined}
-          setOpen={(open) => {
-            if (!open) {
-              setContextMenuProps(undefined);
-            }
+          onClose={() => setContextMenuProps(undefined)}
+          anchorReference="anchorPosition"
+          anchorPosition={
+            contextMenuProps ? { top: contextMenuProps.position.y, left: contextMenuProps.position.x } : undefined
+          }
+          disablePortal
+          slotProps={{
+            list: { dense: true, "aria-label": translate("more") },
+            backdrop: {
+              onContextMenu: (e) => {
+                e.preventDefault();
+                setContextMenuProps(undefined);
+              },
+            },
           }}
-          key={`${node.id}-${contextMenuProps?.position.x ?? ""}-${contextMenuProps?.position.y ?? ""}`}
         >
-          {contextMenuProps ? (
-            // TODO: explore moving to Menu from MUI
-            <DropdownMenu.Button
-              render={(renderProps) => (
-                <div style={{ position: "fixed", top: contextMenuProps.position.y, left: contextMenuProps.position.x }}>
-                  {/* TODO: replace with a VisuallyHidden component */}
-                  <span {...renderProps}>{translate("more")}</span>
-                </div>
-              )}
-            />
-          ) : null}
-          {/* `autoFocus` prop is coming from ariakit and is not native HTML `autoFocus` prop. */}
-          {/* `focusable` is needed for `autoFocus` to work. StrataKit exposes only `autoFocus` and does not set `focusable` internally. */}
-          {/* eslint-disable jsx-a11y/no-autofocus */}
-          {/* @ts-expect-error focusable is passed through */}
-          <DropdownMenu.Content focusable autoFocus={true}>
-            {contextMenuProps?.actions}
-          </DropdownMenu.Content>
-        </DropdownMenu.Provider>
+          {contextMenuProps?.actions}
+        </Menu>
       </>
     );
   }),

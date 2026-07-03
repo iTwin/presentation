@@ -4,8 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { memo } from "react";
-import { DropdownMenu, Tree } from "@stratakit/structures";
+import { ListItemIcon, MenuItem, Typography } from "@mui/material";
+import { Icon } from "@stratakit/mui";
+import { Tree } from "@stratakit/structures";
 
+import type React from "react";
 import type { ComponentPropsWithoutRef, NamedExoticComponent } from "react";
 
 /**
@@ -63,7 +66,13 @@ export const TreeActionBase: NamedExoticComponent<TreeActionBaseProps> = memo(fu
   }
 
   if (variant === "context-menu") {
-    return <DropdownMenu.Item {...actionProps} />;
+    const { label, icon, onClick } = actionProps;
+    return (
+      <MenuItem dense onClick={onClick as unknown as React.MouseEventHandler<HTMLLIElement>}>
+        {icon ? <ListItemIcon>{typeof icon === "string" ? <Icon href={icon} /> : icon}</ListItemIcon> : null}
+        <Typography variant="caption">{label}</Typography>
+      </MenuItem>
+    );
   }
 
   return <Tree.ItemAction {...actionProps} dot={dot} visible={variant === "inline" ? visible : undefined} />;
