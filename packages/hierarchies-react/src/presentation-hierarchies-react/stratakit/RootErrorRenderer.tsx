@@ -80,7 +80,7 @@ function RootErrorContainer({ actions, message }: RootErrorContainerProps) {
         ?.filter(({ condition }) => condition())
         .map((action) => {
           return (
-            <Button key={action.label} onClick={() => action.action()}>
+            <Button key={action.label} onClick={() => action.action()} size="small">
               {action.label}
             </Button>
           );
