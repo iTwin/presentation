@@ -11,12 +11,7 @@ import type { ContentTarget } from "../../../content/ContentTarget.js";
 import type * as PresentationRules from "../../../content/extensions/fields-providers/ContentModifierRuleFieldsProviderFactory.PresentationRules.js";
 
 function createStubSchema(name: string, version: EC.SchemaVersion = { read: 1, write: 0, minor: 0 }): EC.Schema {
-  return {
-    name,
-    version,
-    getClass: vi.fn().mockResolvedValue(undefined),
-    getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
-  };
+  return { name, version, getClass: async () => undefined, getCustomAttributes: async () => new Map() };
 }
 
 function createStubClass(props: { schemaName: string; className: string; label?: string }): EC.Class {
@@ -26,15 +21,15 @@ function createStubClass(props: { schemaName: string; className: string; label?:
     name: props.className,
     label: props.label,
     baseClass: Promise.resolve(undefined),
-    is: vi.fn().mockResolvedValue(false),
-    getProperty: vi.fn().mockResolvedValue(undefined),
-    getProperties: vi.fn().mockResolvedValue([]),
+    is: async () => false,
+    getProperty: async () => undefined,
+    getProperties: async () => [],
     isEntityClass: () => true,
     isRelationshipClass: () => false,
     isStructClass: () => false,
     isMixin: () => false,
-    getDerivedClasses: vi.fn().mockResolvedValue([]),
-    getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
+    getDerivedClasses: async () => [],
+    getCustomAttributes: async () => new Map(),
   } as unknown as EC.Class;
 }
 
@@ -51,15 +46,15 @@ function createStubRelationshipClass(props: {
     name: props.className,
     label: props.label,
     baseClass: Promise.resolve(undefined),
-    is: vi.fn().mockResolvedValue(false),
-    getProperty: vi.fn().mockResolvedValue(undefined),
-    getProperties: vi.fn().mockResolvedValue([]),
+    is: async () => false,
+    getProperty: async () => undefined,
+    getProperties: async () => [],
     isEntityClass: () => false,
     isRelationshipClass: () => true,
     isStructClass: () => false,
     isMixin: () => false,
-    getDerivedClasses: vi.fn().mockResolvedValue([]),
-    getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
+    getDerivedClasses: async () => [],
+    getCustomAttributes: async () => new Map(),
     direction: "Forward",
     source: {
       polymorphic: true,
@@ -81,9 +76,25 @@ function createIModelAccess(props?: {
 }): ECSchemaProvider & ECClassHierarchyInspector {
   const schemas = props?.schemas ?? new Map();
   return {
-    getSchema: vi.fn(async (name: string) => schemas.get(name)),
-    classDerivesFrom: props?.classDerivesFrom ?? vi.fn(async () => false),
+    getSchema: async (name: string) => schemas.get(name),
+    classDerivesFrom: props?.classDerivesFrom ?? (async () => false),
   };
+}
+
+function createIModelAccessFromClasses(
+  classes: Map<string, EC.Class>,
+  options?: { synthesizeMissing?: boolean },
+): ECSchemaProvider & ECClassHierarchyInspector {
+  const getSchema = async (name: string) =>
+    ({
+      name,
+      version: { read: 1, write: 0, minor: 0 },
+      getClass: async (className: string) =>
+        classes.get(`${name}.${className}`) ??
+        (options?.synthesizeMissing ? createStubClass({ schemaName: name, className }) : undefined),
+      getCustomAttributes: async () => new Map(),
+    }) as unknown as EC.Schema;
+  return { getSchema, classDerivesFrom: async () => true };
 }
 
 function createTarget(primaryClass: EC.FullClassName = "TestSchema.TestElement"): ContentTarget {
@@ -452,22 +463,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         [`${props.targetSchemaName}.${props.targetClassName}`, targetClass],
       ]);
 
-      const getSchema = vi.fn(async (name: string) => {
-        const schema: EC.Schema = {
-          name,
-          version: { read: 1, write: 0, minor: 0 },
-          // Return the registered class, or synthesize a stub for any other requested class.
-          getClass: vi.fn(
-            async (className: string) =>
-              classes.get(`${name}.${className}`) ?? createStubClass({ schemaName: name, className }),
-          ),
-          getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
-        };
-        return schema;
-      });
-
-      return { getSchema, classDerivesFrom: vi.fn(async () => true) } as unknown as ECSchemaProvider &
-        ECClassHierarchyInspector;
+      return createIModelAccessFromClasses(classes, { synthesizeMissing: true });
     }
 
     it("maps a single-step forward relationship without explicit target class", async () => {
@@ -513,14 +509,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         ["TestSchema.ElementOwnsChild", relClass],
         ["TestSchema.ParentElement", sourceClass],
       ]);
-      const getSchema = vi.fn(async (name: string) => ({
-        name,
-        version: { read: 1, write: 0, minor: 0 },
-        getClass: vi.fn(async (className: string) => classes.get(`${name}.${className}`)),
-        getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
-      }));
-      const imodelAccess = { getSchema, classDerivesFrom: vi.fn(async () => true) } as unknown as ECSchemaProvider &
-        ECClassHierarchyInspector;
+      const imodelAccess = createIModelAccessFromClasses(classes);
 
       const relSpec: PresentationRules.RelatedPropertiesSpecification = {
         propertiesSource: {
@@ -730,14 +719,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         ["TestSchema.ChildOwnsGrandChild", relClass2],
         ["TestSchema.GrandChildElement", grandChildClass],
       ]);
-      const getSchema = vi.fn(async (name: string) => ({
-        name,
-        version: { read: 1, write: 0, minor: 0 },
-        getClass: vi.fn(async (className: string) => classes.get(`${name}.${className}`)),
-        getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
-      }));
-      const imodelAccess = { getSchema, classDerivesFrom: vi.fn(async () => true) } as unknown as ECSchemaProvider &
-        ECClassHierarchyInspector;
+      const imodelAccess = createIModelAccessFromClasses(classes);
 
       const provider = createFieldsProviderFromContentModifierRule({
         imodelAccess,
@@ -1099,14 +1081,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         ["TestSchema.ChildOwnsGrandChild", relClass2],
         ["TestSchema.GrandChildElement", grandChildClass],
       ]);
-      const getSchema = vi.fn(async (name: string) => ({
-        name,
-        version: { read: 1, write: 0, minor: 0 },
-        getClass: vi.fn(async (className: string) => classes.get(`${name}.${className}`)),
-        getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
-      }));
-      const imodelAccess = { getSchema, classDerivesFrom: vi.fn(async () => true) } as unknown as ECSchemaProvider &
-        ECClassHierarchyInspector;
+      const imodelAccess = createIModelAccessFromClasses(classes);
 
       const provider = createFieldsProviderFromContentModifierRule({
         imodelAccess,
@@ -1153,14 +1128,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         ["TestSchema.ChildOwnsGrandChild", relClass2],
         ["TestSchema.GrandChildElement", grandChildClass],
       ]);
-      const getSchema = vi.fn(async (name: string) => ({
-        name,
-        version: { read: 1, write: 0, minor: 0 },
-        getClass: vi.fn(async (className: string) => classes.get(`${name}.${className}`)),
-        getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
-      }));
-      const imodelAccess = { getSchema, classDerivesFrom: vi.fn(async () => true) } as unknown as ECSchemaProvider &
-        ECClassHierarchyInspector;
+      const imodelAccess = createIModelAccessFromClasses(classes);
 
       const provider = createFieldsProviderFromContentModifierRule({
         imodelAccess,
@@ -1197,14 +1165,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
     it("throws when propertiesSource class is not a relationship", async () => {
       const notARelClass = createStubClass({ schemaName: "TestSchema", className: "NotARel" });
       const classes = new Map<string, EC.Class>([["TestSchema.NotARel", notARelClass]]);
-      const getSchema = vi.fn(async (name: string) => ({
-        name,
-        version: { read: 1, write: 0, minor: 0 },
-        getClass: vi.fn(async (className: string) => classes.get(`${name}.${className}`)),
-        getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
-      }));
-      const imodelAccess = { getSchema, classDerivesFrom: vi.fn(async () => true) } as unknown as ECSchemaProvider &
-        ECClassHierarchyInspector;
+      const imodelAccess = createIModelAccessFromClasses(classes);
 
       const provider = createFieldsProviderFromContentModifierRule({
         imodelAccess,
@@ -1232,14 +1193,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         // No targetClass — abstractConstraint resolves to undefined
       });
       const classes = new Map<string, EC.Class>([["TestSchema.BadRel", relClass]]);
-      const getSchema = vi.fn(async (name: string) => ({
-        name,
-        version: { read: 1, write: 0, minor: 0 },
-        getClass: vi.fn(async (className: string) => classes.get(`${name}.${className}`)),
-        getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
-      }));
-      const imodelAccess = { getSchema, classDerivesFrom: vi.fn(async () => true) } as unknown as ECSchemaProvider &
-        ECClassHierarchyInspector;
+      const imodelAccess = createIModelAccessFromClasses(classes);
 
       const provider = createFieldsProviderFromContentModifierRule({
         imodelAccess,
@@ -1275,17 +1229,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
   describe("relatedProperties (deprecated form)", () => {
     function createAccess(entries: Array<{ name: string; cls: EC.Class }> = []) {
       const classes = new Map<string, EC.Class>(entries.map((e) => [e.name, e.cls]));
-      const getSchema = vi.fn(async (name: string) => ({
-        name,
-        version: { read: 1, write: 0, minor: 0 },
-        getClass: vi.fn(
-          async (className: string) =>
-            classes.get(`${name}.${className}`) ?? createStubClass({ schemaName: name, className }),
-        ),
-        getCustomAttributes: vi.fn().mockResolvedValue(new Map()),
-      }));
-      return { getSchema, classDerivesFrom: vi.fn(async () => true) } as unknown as ECSchemaProvider &
-        ECClassHierarchyInspector;
+      return createIModelAccessFromClasses(classes, { synthesizeMissing: true });
     }
 
     it("expands omitted requiredDirection ('Both') into forward and backward declarations", async () => {
