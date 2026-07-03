@@ -166,7 +166,7 @@ async function matchesClass(
   return imodelAccess.classDerivesFrom(target.primaryClass, `${classSpec.schemaName}.${classSpec.className}`);
 }
 
-// ── Task 4: Relationship path mapping ────────────────────────────────────────
+// ── Relationship path mapping ────────────────────────────────────────
 
 /**
  * Stub: returns the expression unchanged.
@@ -324,17 +324,18 @@ interface NormalizedRelatedPropertiesSpec {
 }
 
 /**
- * Maps a single normalized `RelatedPropertiesSpecification` (excluding `nestedRelatedProperties`,
- * which is handled in Task 4a) to a `RelatedPropertiesDeclaration` plus any
- * per-step `CategoryDefinition`s produced by `forceCreateRelationshipCategory`.
- *
- * @param sourceClassName - Full class name of the source for the first path step.
- * @param parentCategoryId - Category ID of the parent scope (used when flattening nested specs).
+ * Maps a single `NormalizedRelatedPropertiesSpec` (excluding its `nestedRelatedProperties`, which are
+ * handled by `flattenRelatedPropertiesSpecs`) to a `RelatedPropertiesDeclaration` and the
+ * `CategoryDefinition`s it produces: a target category for the last step's target class, plus a
+ * relationship category when `forceCreateRelationshipCategory` is set or relationship properties are
+ * requested.
  */
 async function mapRelatedPropertiesSpec(props: {
   imodelAccess: ECSchemaProvider;
   spec: NormalizedRelatedPropertiesSpec;
+  /** Full class name of the source for the first path step */
   sourceClassName: EC.FullClassName;
+  /** Category of the parent scope, used when flattening nested specs */
   parentCategoryId?: CategoryDefinition["id"];
 }): Promise<{
   declaration: RelatedPropertiesDeclaration;
@@ -585,7 +586,7 @@ function parseClassNamesString(value: string): PresentationRules.SingleSchemaCla
   return result;
 }
 
-// ── Task 5: Calculated fields mapping ────────────────────────────────────────
+// ── Calculated fields mapping ────────────────────────────────────────
 
 const CALC_TYPE_MAP: Record<
   NonNullable<PresentationRules.CalculatedPropertiesSpecification["type"]>,
@@ -608,7 +609,7 @@ function mapCalculatedProperties(
   }));
 }
 
-// ── Task 6: Category mapping ─────────────────────────────────────────────────
+// ── Category mapping ─────────────────────────────────────────────────
 
 /**
  * Maps an array of `PropertyCategorySpecification` into a `Record<id, CategoryDefinition>`.
