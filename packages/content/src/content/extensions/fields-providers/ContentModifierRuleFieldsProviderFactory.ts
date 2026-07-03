@@ -5,6 +5,7 @@
 
 import { getClass } from "@itwin/presentation-shared";
 import { CategoryDefinition } from "../../model/Category.js";
+import { hashString } from "../../model/Utils.js";
 
 import type {
   EC,
@@ -55,7 +56,7 @@ export function createFieldsProviderFromContentModifierRule(
 ): IModelFieldsProvider {
   const { imodelAccess, rule } = props;
   return {
-    id: `FieldsProviderFromContentModifierRule_${hashString(stableStringify(rule))}_v${FACTORY_VERSION}`,
+    id: `FieldsProviderFromContentModifierRule_${hashString(stableStringify(rule)).padStart(8, "0")}_v${FACTORY_VERSION}`,
     priority: rule.priority,
     async getContribution({ target }) {
       if (!(await checkRequiredSchemas(imodelAccess, rule.requiredSchemas))) {
@@ -628,16 +629,6 @@ function mapPropertyCategories(
     categories[cat.id] = cat;
   }
   return categories;
-}
-
-/** Deterministic hash of a string (FNV-1a, 32-bit). Returns an 8-char hex string. */
-function hashString(str: string): string {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < str.length; i++) {
-    hash ^= str.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return (hash >>> 0).toString(16).padStart(8, "0");
 }
 
 /** Produces a stable JSON representation with sorted keys for hashing. */

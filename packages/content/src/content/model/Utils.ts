@@ -60,7 +60,7 @@ const MAX_READABLE_FORK_KEY_LENGTH = 100;
  * Deterministic 32-bit FNV-1a hash rendered in base-36. Stable across runs so it can be
  * embedded in cache-stable field IDs.
  */
-function hashString(value: string): string {
+export function hashString(value: string): string {
   // FNV-1a 32-bit: start from the FNV offset basis, then for each char XOR it in and
   // multiply by the FNV prime (`Math.imul` keeps the multiply in 32-bit space).
   // eslint-disable-next-line @typescript-eslint/naming-convention

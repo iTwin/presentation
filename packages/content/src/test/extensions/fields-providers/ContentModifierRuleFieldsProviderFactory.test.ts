@@ -106,7 +106,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
     it("generates a stable id from the rule content", () => {
       const rule: PresentationRules.ContentModifierRule = { calculatedProperties: [{ label: "X", value: "1+1" }] };
       const provider = createFieldsProviderFromContentModifierRule({ imodelAccess: createIModelAccess(), rule });
-      expect(provider.id).toMatch(/^FieldsProviderFromContentModifierRule_[0-9a-f]{8}_v\d+$/);
+      expect(provider.id).toMatch(/^FieldsProviderFromContentModifierRule_[0-9a-z]{8}_v\d+$/);
     });
 
     it("generates different ids for different rules", () => {
