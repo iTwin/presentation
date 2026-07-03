@@ -42,7 +42,11 @@ interface BaseField {
  */
 export interface PropertyField extends BaseField {
   kind: "property";
-  /** Full class name of the class that owns this property (e.g., "BisCore.Element"). */
+  /**
+   * Full class name of the class that *declares* this property (e.g., "BisCore.Element").
+   * Drives the SQL column / property metadata. Distinct from {@link (PropertyField:interface).valueClassNames},
+   * which are the concrete *value-supplier* classes this field represents.
+   */
   sourceClassName: EC.FullClassName;
   /** The EC property name within the source class. */
   propertyName: string;
@@ -51,6 +55,25 @@ export interface PropertyField extends BaseField {
    * Empty array means the field belongs to the target class directly.
    */
   pathFromTarget: RelationshipPath;
+  /**
+   * Concrete classes of the instances that supply this field's value (the field's "value origin").
+   *
+   * For a direct property (empty {@link (PropertyField:interface).pathFromTarget}) these are the
+   * primary (selected) classes; for a related property they are the concrete classes at the
+   * relationship path's terminal end. For example, `["Stuff.Door", "Stuff.Window"]` for a
+   * `Height` declared on `Stuff.Thing`, or `["BisCore.ExternalSourceAspectX",
+   * "BisCore.ExternalSourceAspectY"]` for an `Identifier` declared on
+   * `BisCore.ExternalSourceAspect` and loaded over a relationship.
+   *
+   * Do not confuse this with:
+   * - {@link (PropertyField:interface).sourceClassName} — the class that *declares* the property.
+   * - The content *target* classes (the classes content was requested for). For a direct property the
+   *   value classes coincide with the target classes, but for a related property they are the
+   *   related-endpoint classes rather than the target.
+   *
+   * Always non-empty, normalized, de-duplicated, and sorted by normalized full name.
+   */
+  valueClassNames: EC.FullClassName[];
 }
 /** @public */
 export namespace PropertyField {
@@ -58,15 +81,24 @@ export namespace PropertyField {
    * Computes the ID of a property field from its source class, property name,
    * and relationship path from the target. Use this to look up property fields
    * directly in `descriptor.fields`.
+   *
+   * When a non-empty `forkKey` is provided, it is appended as a `#${forkKey}` suffix so a field
+   * that has been carved for a subset of its value-supplier classes gets a distinct, stable ID.
+   * An `undefined` or empty `forkKey` leaves the identity unchanged — so a survivor field keeps
+   * its original ID.
    */
   export function computeId(props: {
     propertyClassName: EC.FullClassName;
     propertyName: string;
     pathFromTarget?: RelationshipPath;
+    forkKey?: string;
   }): Field["id"] {
     let identity = `${normalizeFullClassName(props.propertyClassName)}.${props.propertyName}`;
     if (props.pathFromTarget && props.pathFromTarget.length > 0) {
       identity += `(${serializeRelationshipPath(props.pathFromTarget)})`;
+    }
+    if (props.forkKey) {
+      identity += `#${props.forkKey}`;
     }
     return identity;
   }
