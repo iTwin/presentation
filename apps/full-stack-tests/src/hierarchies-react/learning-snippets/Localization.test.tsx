@@ -1,122 +1,129 @@
-// /*---------------------------------------------------------------------------------------------
-//  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-//  * See LICENSE.md in the project root for license terms and full copyright notice.
-//  *--------------------------------------------------------------------------------------------*/
-// /* eslint-disable no-duplicate-imports */
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+/* eslint-disable no-duplicate-imports */
 
-// import { expect } from "chai";
-// import { IModelConnection } from "@itwin/core-frontend";
-// import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
-// import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-// import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-// import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-// // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.CommonImports
-// import { Props } from "@itwin/presentation-shared";
-// // __PUBLISH_EXTRACT_END__
-// // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Tree.Imports
-// import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
-// // __PUBLISH_EXTRACT_END__
-// // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.TreeRenderer.Imports
-// import {
-//   TreeRenderer,
-// } from "@itwin/presentation-hierarchies-react";
-// // __PUBLISH_EXTRACT_END__
-// import { buildIModel } from "../../IModelUtils.js";
-// import { render, waitFor } from "../../RenderUtils.js";
-// import { stubVirtualization } from "../../Utils.js";
-// import { initialize, terminate } from "../../IntegrationTests.js";
+import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
+import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
+import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+// __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.CommonImports
+import { Props } from "@itwin/presentation-shared";
+// __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Tree.Imports
+import {
+  LOCALIZATION_NAMESPACES,
+  LocalizationContextProvider,
+  useIModelUnifiedSelectionTree,
+} from "@itwin/presentation-hierarchies-react";
+// __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.TreeRenderer.Imports
+import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+// __PUBLISH_EXTRACT_END__
+import { buildTestIModel } from "../../IModelUtils.js";
+import { render, waitFor } from "../../RenderUtils.js";
+import { stubVirtualization } from "../../Utils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { withEditTxn } from "@itwin/core-backend";
+import { IModelApp } from "@itwin/core-frontend";
+import { createStorage } from "@itwin/unified-selection";
 
-// describe("Hierarchies React", () => {
-//   describe("Learning snippets", () => {
-//     describe("Localization", () => {
-//       stubVirtualization();
-//       // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Strings
-//       type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
+const selectionStorage = createStorage();
+type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
 
-//       const localizedStrings = {
-//         // strings for the `useIModelUnifiedSelectionTree` hook
-//         unspecified: "Unspecified",
-//         other: "Other",
+describe("Hierarchies React", () => {
+  describe("Learning snippets", () => {
+    describe("Localization", () => {
+      stubVirtualization();
 
-//         // strings for `TreeRenderer` and `TreeNodeRenderer`
-//         loading: "Loading...",
-//         filterHierarchyLevel: "Apply hierarchy filter",
-//         clearHierarchyLevelFilter: "Clear active filter",
-//         noFilteredChildren: "No child nodes match current filter",
-//         resultLimitExceeded: "There are more items than allowed limit of {{limit}}.",
-//         resultLimitExceededWithFiltering: "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
-//         increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
-//         increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
-//       };
-//       // __PUBLISH_EXTRACT_END__
+      beforeEach(async function () {
+        await initialize();
+      });
 
-//       let imodel: IModelConnection;
-//       let access: IModelAccess;
-//       let getHierarchyDefinition: Props<typeof useIModelUnifiedSelectionTree>["getHierarchyDefinition"];
+      afterEach(async () => {
+        await terminate();
+      });
 
-//       beforeEach(async function () {
-//         await initialize();
-//         imodel = (
-//           await buildIModel(this, async (builder) => {
-//             insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
-//             insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
-//           })
-//         ).imodel;
-//         const schemaProvider = createECSchemaProvider(imodel.schemaContext);
-//         access = {
-//           imodelKey: createIModelKey(imodel),
-//           ...schemaProvider,
-//           ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
-//           ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
-//         };
-//         getHierarchyDefinition = () => ({
-//           defineHierarchyLevel: async ({ createSelectClause }) => [
-//             {
-//               fullClassName: "BisCore.PhysicalModel",
-//               query: {
-//                 ecsql: `
-//                   SELECT
-//                     ${await createSelectClause({
-//                       ecClassId: { selector: "this.ECClassId" },
-//                       ecInstanceId: { selector: "this.ECInstanceId" },
-//                       nodeLabel: {
-//                         of: { classAlias: "this", className: "BisCore.PhysicalModel" },
-//                       },
-//                       hasChildren: true,
-//                       hideIfNoChildren: false,
-//                       supportsFiltering: true,
-//                     })}
-//                   FROM BisCore.PhysicalModel this
-//                 `,
-//               },
-//             },
-//           ],
-//         });
-//       });
+      it("Tree localization", async function () {
+        const { imodelConnection } = await buildTestIModel(async (imodel) => {
+          withEditTxn(imodel, (txn) => {
+            insertPhysicalModelWithPartition({ txn, codeValue: "My Model A" });
+            insertPhysicalModelWithPartition({ txn, codeValue: "My Model B" });
+          });
+        });
+        const schemaProvider = createECSchemaProvider(imodelConnection.schemaContext);
+        const access = {
+          imodelKey: createIModelKey(imodelConnection),
+          ...schemaProvider,
+          ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
+          ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodelConnection), 1000),
+        };
+        const getHierarchyDefinition: Props<typeof useIModelUnifiedSelectionTree>["getHierarchyDefinition"] = () => ({
+          defineHierarchyLevel: async ({ createSelectClause }) => [
+            {
+              fullClassName: "BisCore.PhysicalModel",
+              query: {
+                ecsql: `
+                  SELECT
+                    ${await createSelectClause({
+                      ecClassId: { selector: "this.ECClassId" },
+                      ecInstanceId: { selector: "this.ECInstanceId" },
+                      nodeLabel: { of: { classAlias: "this", className: "BisCore.PhysicalModel" } },
+                      hasChildren: true,
+                      hideIfNoChildren: false,
+                      supportsFiltering: true,
+                    })}
+                  FROM BisCore.PhysicalModel this
+                `,
+              },
+            },
+          ],
+        });
 
-//       afterEach(async () => {
-//         await terminate();
-//       });
+        // The localization provider used across the application. In an iTwin.js app this is usually `IModelApp.localization`.
+        const localization = IModelApp.localization;
 
-//       it("Tree localization", async function () {
-//         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Tree
-//         function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
-//           const { rootNodes, expandNode } = useIModelUnifiedSelectionTree({
-//             sourceName: "MyTreeComponent",
-//             imodelAccess,
-//             localizedStrings,
-//             getHierarchyDefinition,
-//           });
-//           if (!rootNodes) {
-//             return localizedStrings.loading;
-//           }
-//           return <TreeRenderer rootNodes={rootNodes} expandNode={expandNode} localizedStrings={localizedStrings} onFilterClick={() => {}} />;
-//         }
-//         // __PUBLISH_EXTRACT_END__
+        // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.RegisterNamespaces
+        // Register the localization namespaces delivered by the package with your localization provider
+        // (e.g. `IModelApp.localization`) during application initialization.
+        for (const namespace of LOCALIZATION_NAMESPACES) {
+          await localization.registerNamespace(namespace);
+        }
+        // __PUBLISH_EXTRACT_END__
 
-//         const { getAllByRole } = render(<MyTreeComponent imodelAccess={access} />);
-//         await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).to.not.be.empty);
-//       });
-//     });
-//   });
-// });
+        // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Tree
+        // Wrap the tree components with `LocalizationContextProvider`, passing the same localization provider
+        // used to register the namespaces. The provider resolves the package's localized strings at runtime.
+        function LocalizedTree({ imodelAccess }: { imodelAccess: IModelAccess }) {
+          return (
+            <LocalizationContextProvider localization={localization}>
+              <MyTreeComponent imodelAccess={imodelAccess} />
+            </LocalizationContextProvider>
+          );
+        }
+
+        function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
+          const treeProps = useIModelUnifiedSelectionTree({
+            sourceName: "MyTreeComponent",
+            imodelAccess,
+            getHierarchyDefinition,
+            selectionStorage,
+          });
+          if (treeProps.rootErrorRendererProps) {
+            return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
+          }
+          if (!treeProps.treeRendererProps || treeProps.isReloading) {
+            return "Loading";
+          }
+          return <StrataKitTreeRenderer {...treeProps.treeRendererProps} treeLabel="Localized tree" />;
+        }
+        // __PUBLISH_EXTRACT_END__
+
+        const { getByText } = render(<LocalizedTree imodelAccess={access} />);
+        await waitFor(() => expect(getByText("My Model A")).to.not.be.null);
+      });
+    });
+  });
+});

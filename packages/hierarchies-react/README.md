@@ -60,11 +60,14 @@ The hook takes 2 required properties:
 
 - `imodelAccess` provides access to iModel's data and metadata, required to build the hierarchy. Generally, `@itwin/presentation-core-interop` and `@itwin/presentation-shared` packages are used to create this object:
 
+  <!-- [[include: [Presentation.HierarchiesReact.iModelAccess.Imports, Presentation.HierarchiesReact.iModelAccess], tsx]] -->
+  <!-- BEGIN EXTRACTION -->
+
   ```tsx
   import { IModelConnection } from "@itwin/core-frontend";
   import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
   import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-  import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+  import { createLimitingECSqlQueryExecutor, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
   function createIModelAccess(imodel: IModelConnection) {
     const schemaProvider = createECSchemaProvider(imodel.schemaContext);
@@ -79,6 +82,8 @@ The hook takes 2 required properties:
     };
   }
   ```
+
+  <!-- END EXTRACTION -->
 
 - `getHierarchyDefinition` is a factory function that creates a hierarchy definition, describing the hierarchy the tree component will render. The `@itwin/presentation-hierarchies` package describes the concept of hierarchy definitions [in more detail](https://github.com/iTwin/presentation/blob/master/packages/hierarchies/learning/imodel/HierarchyDefinition.md).
 
@@ -99,16 +104,20 @@ The component renders a virtualized tree using the `Tree` component from `@strat
 
 ## Full example
 
+<!-- [[include: [Presentation.HierarchiesReact.iModelAccess.Imports, Presentation.HierarchiesReact.SelectionStorage.Imports, Presentation.HierarchiesReact.CustomTreeExample.Imports, Presentation.HierarchiesReact.iModelAccess, Presentation.HierarchiesReact.SelectionStorage, Presentation.HierarchiesReact.CustomTreeExample], tsx]] -->
+<!-- BEGIN EXTRACTION -->
+
 ```tsx
 import { IModelConnection } from "@itwin/core-frontend";
-import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
-import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
-import { StrataKitTreeRenderer, StrataKitRootErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
-import { useEffect, useState } from "react";
+
+import { Props } from "@itwin/presentation-shared";
+import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 
 function createIModelAccess(imodel: IModelConnection) {
   const schemaProvider = createECSchemaProvider(imodel.schemaContext);
@@ -143,9 +152,8 @@ function MyTreeComponent({ imodel }: { imodel: IModelConnection }) {
 type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
 
 // The hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all `BisCore.PhysicalModel` instances
-function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }): HierarchyDefinition {
+function getHierarchyDefinition(): HierarchyDefinition {
   return {
-    // The `createSelectClause` function is provided automatically by the hierarchy provider
     defineHierarchyLevel: async ({ createSelectClause }) => [
       {
         fullClassName: "BisCore.PhysicalModel",
@@ -184,13 +192,10 @@ function MyTreeComponentInternal({
     // supply the hierarchy definition
     getHierarchyDefinition,
   });
-
   if (treeProps.rootErrorRendererProps) {
-    // render error component if tree fails to load
     return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
   }
-
-  if (treeProps.isReloading || treeProps.treeRendererProps === undefined) {
+  if (!treeProps.treeRendererProps || treeProps.isReloading) {
     return "Loading...";
   }
 
@@ -198,25 +203,53 @@ function MyTreeComponentInternal({
 }
 ```
 
+<!-- END EXTRACTION -->
+
 ## Localization
 
-This package delivers a locale JSON file with English strings that follows the [`i18next JSON format`](https://www.i18next.com/misc/json-format). To enable localization, register `LOCALIZATION_NAMESPACES` during initialization and wrap components in `LocalizationContextProvider`:
+This package delivers a locale JSON file with English strings that follows the [`i18next JSON format`](https://www.i18next.com/misc/json-format). To enable localization, register `LOCALIZATION_NAMESPACES` during initialization and wrap components in `LocalizationContextProvider`.
+
+Import the localization and tree APIs:
+
+<!-- [[include: [Presentation.HierarchiesReact.Localization.Tree.Imports, Presentation.HierarchiesReact.Localization.TreeRenderer.Imports], tsx]] -->
+<!-- BEGIN EXTRACTION -->
 
 ```tsx
 import {
-  LocalizationContextProvider,
   LOCALIZATION_NAMESPACES,
+  LocalizationContextProvider,
   useIModelUnifiedSelectionTree,
 } from "@itwin/presentation-hierarchies-react";
-import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 
-// Register localization namespaces with `i18next` based localization provider.
+import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+```
+
+<!-- END EXTRACTION -->
+
+Register the localization namespaces with your localization provider during application initialization:
+
+<!-- [[include: Presentation.HierarchiesReact.Localization.RegisterNamespaces, tsx]] -->
+<!-- BEGIN EXTRACTION -->
+
+```tsx
+// Register the localization namespaces delivered by the package with your localization provider
+// (e.g. `IModelApp.localization`) during application initialization.
 for (const namespace of LOCALIZATION_NAMESPACES) {
   await localization.registerNamespace(namespace);
 }
+```
 
-// Wrap components with LocalizationContextProvider
-function Tree() {
+<!-- END EXTRACTION -->
+
+Wrap the tree components with `LocalizationContextProvider`:
+
+<!-- [[include: Presentation.HierarchiesReact.Localization.Tree, tsx]] -->
+<!-- BEGIN EXTRACTION -->
+
+```tsx
+// Wrap the tree components with `LocalizationContextProvider`, passing the same localization provider
+// used to register the namespaces. The provider resolves the package's localized strings at runtime.
+function LocalizedTree({ imodelAccess }: { imodelAccess: IModelAccess }) {
   return (
     <LocalizationContextProvider localization={localization}>
       <MyTreeComponent imodelAccess={imodelAccess} />
@@ -229,18 +262,18 @@ function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
     sourceName: "MyTreeComponent",
     imodelAccess,
     getHierarchyDefinition,
+    selectionStorage,
   });
-
   if (treeProps.rootErrorRendererProps) {
-    return <div>Error</div>;
+    return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
   }
-
-  if (treeProps.isReloading || treeProps.treeRendererProps === undefined) {
-    return <div>Loading...</div>;
+  if (!treeProps.treeRendererProps || treeProps.isReloading) {
+    return "Loading";
   }
-
-  return <StrataKitTreeRenderer {...treeProps.treeRendererProps} treeLabel="My Tree" />;
+  return <StrataKitTreeRenderer {...treeProps.treeRendererProps} treeLabel="Localized tree" />;
 }
 ```
+
+<!-- END EXTRACTION -->
 
 `LocalizationContextProvider` accepts a `localization` prop — an object with a `getLocalizedString(key: string): string` method. It is designed to work with the `Localization` interface from `@itwin/core-common`, but a custom implementation can be used as well by providing an object with a custom `getLocalizedString` function. The provider uses it internally to resolve translation keys prefixed with localization namespace.
