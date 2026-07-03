@@ -573,11 +573,12 @@ function parseClassNamesString(value: string): PresentationRules.SingleSchemaCla
         `Invalid class names string "${value}". Expected format: "{schemaName}:{className1},{className2};...".`,
       );
     }
-    const schemaName = trimmedGroup.slice(0, separatorIndex).trim();
-    for (const className of trimmedGroup.slice(separatorIndex + 1).split(",")) {
+    const [schemaName, classNamesStr] = trimmedGroup.split(":");
+    const schemaNameTrimmed = schemaName.trim();
+    for (const className of classNamesStr.split(",")) {
       const trimmedClassName = className.trim();
       if (trimmedClassName.length > 0) {
-        result.push({ schemaName, className: trimmedClassName });
+        result.push({ schemaName: schemaNameTrimmed, className: trimmedClassName });
       }
     }
   }
