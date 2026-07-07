@@ -392,6 +392,14 @@ export class Emitter {
       return `${expr} IN (${names.join(", ")})`;
     }
 
+    // When the condition does not reference the lambda parameter, its truth value is the same for
+    // every item. Since an empty list is already handled above, the result for a non-empty list is
+    // simply the condition evaluated once (repeating it per item would be redundant and would emit
+    // bindings for the — unused — list values).
+    if (!referencesParam(node.condition, node.param)) {
+      return `(${await this.#emit(node.condition)})`;
+    }
+
     const parts: string[] = [];
     for (const binding of items) {
       const name = this.#addBinding(binding);
@@ -500,6 +508,24 @@ function detectEquality(condition: Node, param: string): { otherSide: Node } | u
 
 function isParamReference(node: Node, param: string): boolean {
   return node.kind === "property" && node.root === param;
+}
+
+/**
+ * Whether the given AST subtree references the lambda `param` (as the root of any property access).
+ * Traverses the node generically so every nested position (operands, arguments, sub-conditions) is covered.
+ */
+function referencesParam(node: unknown, param: string): boolean {
+  if (Array.isArray(node)) {
+    return node.some((child) => referencesParam(child, param));
+  }
+  if (node !== null && typeof node === "object") {
+    const record = node as Record<string, unknown>;
+    if (record.kind === "property" && record.root === param) {
+      return true;
+    }
+    return Object.values(record).some((value) => referencesParam(value, param));
+  }
+  return false;
 }
 
 function toLowerCaseValues<T extends Record<string, string>>(names: T): Record<keyof T, string> {

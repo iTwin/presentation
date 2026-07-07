@@ -517,10 +517,10 @@ describe("convertECExpressionToECSql", () => {
       });
     });
 
-    it("emits an OR chain when neither side references the lambda parameter", async () => {
-      expect(await convertECExpressionToECSql({ expression: "Set(1).AnyMatches(x => this.A = this.B)" })).to.deep.equal(
-        { ecsql: "([this].[A] = [this].[B])", bindings: { pres_expr0: { type: "int", value: 1 } } },
-      );
+    it("emits the condition once when it does not reference the lambda parameter", async () => {
+      expect(
+        await convertECExpressionToECSql({ expression: "Set(1, 2).AnyMatches(x => this.A = this.B)" }),
+      ).to.deep.equal({ ecsql: "([this].[A] = [this].[B])" });
     });
 
     it("throws when SelectedInstanceKeys has no hook", async () => {
