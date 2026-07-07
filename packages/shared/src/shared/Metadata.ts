@@ -460,8 +460,9 @@ export interface RelationshipPathStep {
      *
      * Use `targetAlias` (defaults to `"this"`) followed by a dot to reference properties
      * of the filtered class, and `relationshipAlias` (defaults to `"rel"`) to reference
-     * properties on the relationship class. At query generation time, the pipeline performs
-     * a literal replacement of all `{alias}.` occurrences with the actual query aliases.
+     * properties on the relationship class. At query generation time, the pipeline replaces
+     * all `{alias}.` occurrences (in both their bare `{alias}.` and bracket-quoted `[{alias}].`
+     * forms) with the actual query aliases.
      *
      * @example
      * ```
@@ -472,8 +473,9 @@ export interface RelationshipPathStep {
 
     /**
      * The placeholder used in `expression` to reference the target class (`targetClassName`).
-     * Every occurrence of `{targetAlias}.` in the expression will be replaced with the
-     * actual query alias at query generation time.
+     * Every occurrence of `{targetAlias}.` in the expression, whether bare (`{targetAlias}.`)
+     * or bracket-quoted (`[{targetAlias}].`), will be replaced with the actual query alias at
+     * query generation time.
      *
      * @default "this"
      */
@@ -481,8 +483,9 @@ export interface RelationshipPathStep {
 
     /**
      * The placeholder used in `expression` to reference the relationship class (`relationshipName`).
-     * Every occurrence of `{relationshipAlias}.` in the expression will be replaced with the
-     * actual relationship alias at query generation time.
+     * Every occurrence of `{relationshipAlias}.` in the expression, whether bare (`{relationshipAlias}.`)
+     * or bracket-quoted (`[{relationshipAlias}].`), will be replaced with the actual relationship alias
+     * at query generation time.
      *
      * Only meaningful for non-navigation-property (link table) relationships. When the step uses a
      * navigation property, the relationship table is not part of the query, so any reference via
