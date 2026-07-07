@@ -317,7 +317,7 @@ describe("createDescriptorTransformerFromContentModifierRule", () => {
       expect((await run({ name: "Height", categoryId: { type: "Id", categoryId: "Cat" } })).categoryId).to.equal("Cat");
     });
 
-    it("ignores an unmappable categoryId", async () => {
+    it("ignores a categoryId that cannot be mapped", async () => {
       expect((await run({ name: "Height", categoryId: { type: "None" } })).categoryId).to.be.undefined;
     });
 
@@ -415,7 +415,7 @@ describe("createDescriptorTransformerFromContentModifierRule", () => {
           descriptor: createTransformableDescriptor(descriptor),
           imodelAccess: createImodelAccess(),
         });
-        // Both explicitly-displayed properties stay visible; only the untargeted `C` is hidden.
+        // Both explicitly-displayed properties stay visible; only the non-targeted `C` is hidden.
         expect(descriptor.fields[a.id].hidden).to.equal(false);
         expect(descriptor.fields[b.id].hidden).to.equal(false);
         expect(descriptor.fields[c.id].hidden).to.equal(true);
