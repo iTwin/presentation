@@ -11,9 +11,9 @@ export { CategoryDefinition } from "./content/model/Category.js";
 export type { ContentItem, ContentValues } from "./content/model/ContentItem.js";
 
 // Extension points
-export { DEFAULT_FIELDS_PROVIDER_PRIORITY } from "./content/extensions/fields-providers/BaseFieldsProvider.js";
-export { defineIModelFieldsProvider } from "./content/extensions/fields-providers/IModelFieldsProvider.js";
-export { defineExternalFieldsProvider } from "./content/extensions/fields-providers/ExternalFieldsProvider.js";
+export { DEFAULT_FIELDS_PROVIDER_PRIORITY } from "./content/extensions/BaseFieldsProvider.js";
+export { defineIModelFieldsProvider } from "./content/extensions/IModelFieldsProvider.js";
+export { defineExternalFieldsProvider } from "./content/extensions/ExternalFieldsProvider.js";
 export {
   defineDescriptorTransformer,
   DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY,

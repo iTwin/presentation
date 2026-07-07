@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { createFieldsProviderFromContentModifierRule } from "../../../content/extensions/fields-providers/ContentModifierRuleFieldsProviderFactory.js";
+import { createFieldsProviderFromContentModifierRule } from "../../../content/extensions/presentation-rules/FieldsProviderFactory.js";
 
 import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../../../content/ContentTarget.js";
-import type * as PresentationRules from "../../../content/extensions/fields-providers/ContentModifierRuleFieldsProviderFactory.PresentationRules.js";
+import type * as PresentationRules from "../../../content/extensions/presentation-rules/PresentationRules.js";
 
 function createStubSchema(name: string, version: EC.SchemaVersion = { read: 1, write: 0, minor: 0 }): EC.Schema {
   return { name, version, getClass: async () => undefined, getCustomAttributes: async () => new Map() };
@@ -105,43 +105,36 @@ describe("createFieldsProviderFromContentModifierRule", () => {
   describe("id generation", () => {
     it("generates a stable id from the rule content", () => {
       const rule: PresentationRules.ContentModifierRule = { calculatedProperties: [{ label: "X", value: "1+1" }] };
-      const provider = createFieldsProviderFromContentModifierRule({ imodelAccess: createIModelAccess(), rule });
+      const provider = createFieldsProviderFromContentModifierRule({ rule });
       expect(provider.id).toMatch(/^FieldsProviderFromContentModifierRule_[0-9a-z]{8}_v\d+$/);
     });
 
     it("generates different ids for different rules", () => {
-      const imodelAccess = createIModelAccess();
       const provider1 = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: { calculatedProperties: [{ label: "A", value: "1" }] },
       });
       const provider2 = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: { calculatedProperties: [{ label: "B", value: "2" }] },
       });
       expect(provider1.id).not.toEqual(provider2.id);
     });
 
     it("generates the same id for the same rule", () => {
-      const imodelAccess = createIModelAccess();
       const rule: PresentationRules.ContentModifierRule = { calculatedProperties: [{ label: "X", value: "1" }] };
-      const provider1 = createFieldsProviderFromContentModifierRule({ imodelAccess, rule });
-      const provider2 = createFieldsProviderFromContentModifierRule({ imodelAccess, rule });
+      const provider1 = createFieldsProviderFromContentModifierRule({ rule });
+      const provider2 = createFieldsProviderFromContentModifierRule({ rule });
       expect(provider1.id).toEqual(provider2.id);
     });
   });
 
   describe("priority", () => {
     it("uses the rule priority", () => {
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createIModelAccess(),
-        rule: { priority: 500 },
-      });
+      const provider = createFieldsProviderFromContentModifierRule({ rule: { priority: 500 } });
       expect(provider.priority).toEqual(500);
     });
 
     it("is undefined when rule has no priority", () => {
-      const provider = createFieldsProviderFromContentModifierRule({ imodelAccess: createIModelAccess(), rule: {} });
+      const provider = createFieldsProviderFromContentModifierRule({ rule: {} });
       expect(provider.priority).toBeUndefined();
     });
   });
@@ -149,20 +142,18 @@ describe("createFieldsProviderFromContentModifierRule", () => {
   describe("requiredSchemas", () => {
     it("returns contribution when no requiredSchemas specified", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createIModelAccess(),
         rule: { calculatedProperties: [{ label: "X", value: "1" }] },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
       expect(result).toBeDefined();
     });
 
     it("returns undefined when a required schema is missing", async () => {
       const imodelAccess = createIModelAccess({ schemas: new Map() });
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: { requiredSchemas: [{ name: "MissingSchema" }] },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       expect(result).toBeUndefined();
     });
 
@@ -171,13 +162,12 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 10 })]]);
         const imodelAccess = createIModelAccess({ schemas });
         const provider = createFieldsProviderFromContentModifierRule({
-          imodelAccess,
           rule: {
             requiredSchemas: [{ name: "TestSchema", minVersion: "1.0.10" }],
             calculatedProperties: [{ label: "X", value: "1" }],
           },
         });
-        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        const result = await provider.getContribution({ imodelAccess, target: createTarget() });
         expect(result).toBeDefined();
       });
 
@@ -185,10 +175,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 5 })]]);
         const imodelAccess = createIModelAccess({ schemas });
         const provider = createFieldsProviderFromContentModifierRule({
-          imodelAccess,
           rule: { requiredSchemas: [{ name: "TestSchema", minVersion: "1.0.10" }] },
         });
-        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        const result = await provider.getContribution({ imodelAccess, target: createTarget() });
         expect(result).toBeUndefined();
       });
 
@@ -196,13 +185,12 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 2, minor: 0 })]]);
         const imodelAccess = createIModelAccess({ schemas });
         const provider = createFieldsProviderFromContentModifierRule({
-          imodelAccess,
           rule: {
             requiredSchemas: [{ name: "TestSchema", minVersion: "1.1.99" }],
             calculatedProperties: [{ label: "X", value: "1" }],
           },
         });
-        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        const result = await provider.getContribution({ imodelAccess, target: createTarget() });
         expect(result).toBeDefined();
       });
 
@@ -210,10 +198,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 99 })]]);
         const imodelAccess = createIModelAccess({ schemas });
         const provider = createFieldsProviderFromContentModifierRule({
-          imodelAccess,
           rule: { requiredSchemas: [{ name: "TestSchema", minVersion: "1.1.0" }] },
         });
-        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        const result = await provider.getContribution({ imodelAccess, target: createTarget() });
         expect(result).toBeUndefined();
       });
 
@@ -221,13 +208,12 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 2, write: 0, minor: 0 })]]);
         const imodelAccess = createIModelAccess({ schemas });
         const provider = createFieldsProviderFromContentModifierRule({
-          imodelAccess,
           rule: {
             requiredSchemas: [{ name: "TestSchema", minVersion: "1.0.99" }],
             calculatedProperties: [{ label: "X", value: "1" }],
           },
         });
-        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        const result = await provider.getContribution({ imodelAccess, target: createTarget() });
         expect(result).toBeDefined();
       });
 
@@ -235,10 +221,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 0, write: 0, minor: 99 })]]);
         const imodelAccess = createIModelAccess({ schemas });
         const provider = createFieldsProviderFromContentModifierRule({
-          imodelAccess,
           rule: { requiredSchemas: [{ name: "TestSchema", minVersion: "1.0.0" }] },
         });
-        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        const result = await provider.getContribution({ imodelAccess, target: createTarget() });
         expect(result).toBeUndefined();
       });
     });
@@ -248,13 +233,12 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 5 })]]);
         const imodelAccess = createIModelAccess({ schemas });
         const provider = createFieldsProviderFromContentModifierRule({
-          imodelAccess,
           rule: {
             requiredSchemas: [{ name: "TestSchema", maxVersion: "1.0.10" }],
             calculatedProperties: [{ label: "X", value: "1" }],
           },
         });
-        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        const result = await provider.getContribution({ imodelAccess, target: createTarget() });
         expect(result).toBeDefined();
       });
 
@@ -262,10 +246,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 10 })]]);
         const imodelAccess = createIModelAccess({ schemas });
         const provider = createFieldsProviderFromContentModifierRule({
-          imodelAccess,
           rule: { requiredSchemas: [{ name: "TestSchema", maxVersion: "1.0.10" }] },
         });
-        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        const result = await provider.getContribution({ imodelAccess, target: createTarget() });
         expect(result).toBeUndefined();
       });
 
@@ -273,10 +256,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 11 })]]);
         const imodelAccess = createIModelAccess({ schemas });
         const provider = createFieldsProviderFromContentModifierRule({
-          imodelAccess,
           rule: { requiredSchemas: [{ name: "TestSchema", maxVersion: "1.0.10" }] },
         });
-        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        const result = await provider.getContribution({ imodelAccess, target: createTarget() });
         expect(result).toBeUndefined();
       });
 
@@ -284,13 +266,12 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 0, minor: 99 })]]);
         const imodelAccess = createIModelAccess({ schemas });
         const provider = createFieldsProviderFromContentModifierRule({
-          imodelAccess,
           rule: {
             requiredSchemas: [{ name: "TestSchema", maxVersion: "1.1.0" }],
             calculatedProperties: [{ label: "X", value: "1" }],
           },
         });
-        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        const result = await provider.getContribution({ imodelAccess, target: createTarget() });
         expect(result).toBeDefined();
       });
 
@@ -298,10 +279,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 1, write: 2, minor: 0 })]]);
         const imodelAccess = createIModelAccess({ schemas });
         const provider = createFieldsProviderFromContentModifierRule({
-          imodelAccess,
           rule: { requiredSchemas: [{ name: "TestSchema", maxVersion: "1.1.99" }] },
         });
-        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        const result = await provider.getContribution({ imodelAccess, target: createTarget() });
         expect(result).toBeUndefined();
       });
 
@@ -309,13 +289,12 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 0, write: 0, minor: 99 })]]);
         const imodelAccess = createIModelAccess({ schemas });
         const provider = createFieldsProviderFromContentModifierRule({
-          imodelAccess,
           rule: {
             requiredSchemas: [{ name: "TestSchema", maxVersion: "1.0.0" }],
             calculatedProperties: [{ label: "X", value: "1" }],
           },
         });
-        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        const result = await provider.getContribution({ imodelAccess, target: createTarget() });
         expect(result).toBeDefined();
       });
 
@@ -323,10 +302,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         const schemas = new Map([["TestSchema", createStubSchema("TestSchema", { read: 2, write: 0, minor: 0 })]]);
         const imodelAccess = createIModelAccess({ schemas });
         const provider = createFieldsProviderFromContentModifierRule({
-          imodelAccess,
           rule: { requiredSchemas: [{ name: "TestSchema", maxVersion: "1.0.99" }] },
         });
-        const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+        const result = await provider.getContribution({ imodelAccess, target: createTarget() });
         expect(result).toBeUndefined();
       });
     });
@@ -335,20 +313,21 @@ describe("createFieldsProviderFromContentModifierRule", () => {
   describe("class matching", () => {
     it("matches all classes when rule.class is undefined", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createIModelAccess(),
         rule: { calculatedProperties: [{ label: "X", value: "1" }] },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
       expect(result).toBeDefined();
     });
 
     it("returns undefined when classDerivesFrom returns false", async () => {
       const classDerivesFrom = vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>().mockResolvedValue(false);
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createIModelAccess({ classDerivesFrom }),
         rule: { class: { schemaName: "TestSchema", className: "BaseElement" } },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({
+        imodelAccess: createIModelAccess({ classDerivesFrom }),
+        target: createTarget(),
+      });
       expect(result).toBeUndefined();
       expect(classDerivesFrom).toHaveBeenCalledWith("TestSchema.TestElement", "TestSchema.BaseElement");
     });
@@ -356,13 +335,15 @@ describe("createFieldsProviderFromContentModifierRule", () => {
     it("returns contribution when classDerivesFrom returns true", async () => {
       const classDerivesFrom = vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>().mockResolvedValue(true);
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createIModelAccess({ classDerivesFrom }),
         rule: {
           class: { schemaName: "TestSchema", className: "BaseElement" },
           calculatedProperties: [{ label: "X", value: "1" }],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({
+        imodelAccess: createIModelAccess({ classDerivesFrom }),
+        target: createTarget(),
+      });
       expect(result).toBeDefined();
       expect(classDerivesFrom).toHaveBeenCalledWith("TestSchema.TestElement", "TestSchema.BaseElement");
     });
@@ -371,10 +352,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
   describe("calculatedProperties", () => {
     it("maps calculated properties with default type (string)", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createIModelAccess(),
         rule: { calculatedProperties: [{ label: "Full Name", value: "this.FirstName || ' ' || this.LastName" }] },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
       expect(result?.calculatedFields).toEqual([
         {
           id: "calc_0",
@@ -388,7 +368,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
 
     it("maps calculated property types correctly", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createIModelAccess(),
         rule: {
           calculatedProperties: [
             { label: "Description", value: "Blah", type: "string" },
@@ -399,7 +378,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
       expect(result?.calculatedFields).toHaveLength(5);
       expect(result?.calculatedFields![0].type).toEqual({ kind: "primitive", type: "String" });
       expect(result?.calculatedFields![1].type).toEqual({ kind: "primitive", type: "Integer" });
@@ -410,10 +389,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
 
     it("maps categoryId from string", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createIModelAccess(),
         rule: { calculatedProperties: [{ label: "X", value: "1", categoryId: "my-cat" }] },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
       expect(result?.calculatedFields![0].categoryId).toEqual("my-cat");
     });
   });
@@ -421,7 +399,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
   describe("propertyCategories", () => {
     it("maps property categories", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createIModelAccess(),
         rule: {
           propertyCategories: [
             { id: "cat1", label: "Category 1", description: "Desc", parentId: "parent-cat" },
@@ -429,7 +406,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
       expect(result?.categories).toEqual({
         cat1: { id: "cat1", label: "Category 1", description: "Desc", parentId: "parent-cat" },
         cat2: { id: "cat2", label: "Category 2", description: undefined, parentId: undefined },
@@ -482,11 +459,8 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         properties: "*",
       };
 
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { relatedProperties: [relSpec] },
-      });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const provider = createFieldsProviderFromContentModifierRule({ rule: { relatedProperties: [relSpec] } });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
 
       expect(result?.relatedProperties).toHaveLength(1);
       const decl = result!.relatedProperties![0];
@@ -519,11 +493,8 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         properties: "*",
       };
 
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { relatedProperties: [relSpec] },
-      });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const provider = createFieldsProviderFromContentModifierRule({ rule: { relatedProperties: [relSpec] } });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       expect(result!.relatedProperties![0].path[0].relationshipReverse).toEqual(true);
     });
 
@@ -544,11 +515,8 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         properties: "*",
       };
 
-      const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
-        rule: { relatedProperties: [relSpec] },
-      });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const provider = createFieldsProviderFromContentModifierRule({ rule: { relatedProperties: [relSpec] } });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       expect(result!.relatedProperties![0].path[0].targetClassName).toEqual("TestSchema.SpecificChild");
     });
 
@@ -562,7 +530,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -575,7 +542,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       const categories = Object.values(result!.categories!);
       const targetCat = categories.find((c) => c.id.endsWith("/target"));
       expect(targetCat).toBeDefined();
@@ -593,7 +560,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -607,7 +573,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       const categories = Object.values(result!.categories!);
       const relCat = categories.find((c) => c.id.endsWith("/rel"));
       expect(relCat).toBeDefined();
@@ -627,7 +593,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -641,7 +606,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       const categories = Object.values(result!.categories!);
       expect(categories.find((c) => c.id.endsWith("/rel"))).toBeDefined();
     });
@@ -655,7 +620,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -669,7 +633,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       const categories = Object.values(result!.categories!);
       expect(categories.find((c) => c.id.endsWith("/rel"))).toBeUndefined();
     });
@@ -683,7 +647,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -696,7 +659,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       expect(result!.relatedProperties![0].properties![0].target!.select).toEqual("none");
     });
 
@@ -722,7 +685,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       const imodelAccess = createIModelAccessFromClasses(classes);
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -736,7 +698,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       const path = result!.relatedProperties![0].path;
       expect(path).toHaveLength(2);
       // The filter is applied only to the last step, not the intermediate one.
@@ -753,7 +715,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -766,7 +727,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       const target = result!.relatedProperties![0].properties![0].target!;
       // When no properties are specified, no `select` customization is produced, but the target's
       // default category is still applied via `defaultOverrides`.
@@ -785,7 +746,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -798,7 +758,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       // "*" in the array means select all
       expect(result!.relatedProperties![0].properties![0].target!.select).toEqual("all");
     });
@@ -812,7 +772,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -825,7 +784,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       expect(result!.relatedProperties![0].properties![0].target!.select).toEqual({ include: ["PropA", "PropB"] });
     });
 
@@ -838,7 +797,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -851,7 +809,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       expect(result!.relatedProperties![0].properties![0].target!.select).toEqual("all");
     });
 
@@ -864,7 +822,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -877,7 +834,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       expect(result!.relatedProperties![0].properties![0].target!.select).toEqual({ include: ["PropA", "PropB"] });
     });
 
@@ -890,7 +847,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -903,7 +859,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       expect(result!.relatedProperties![0].properties![0].target!.select).toEqual("none");
     });
 
@@ -916,7 +872,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -933,7 +888,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       const target = result!.relatedProperties![0].properties![0].target!;
       expect(target.select).toEqual({ include: ["Prop1", "Prop2", "Prop3"] });
       expect(target.overrides!.Prop1).toEqual({ label: "Custom Label", readOnly: true });
@@ -949,7 +904,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -962,7 +916,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       const target = result!.relatedProperties![0].properties![0].target!;
       expect(target.select).toEqual("all");
       expect(target.defaultOverrides!.readOnly).toEqual(true);
@@ -977,7 +931,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -990,7 +943,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       const target = result!.relatedProperties![0].properties![0].target!;
       expect(target.select).toEqual({ include: ["Prop1"] });
       expect(target.overrides).toBeUndefined();
@@ -1005,7 +958,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -1018,7 +970,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       const target = result!.relatedProperties![0].properties![0].target!;
       expect(target.select).toEqual("all");
       expect(target.defaultOverrides!.readOnly).toBeUndefined();
@@ -1035,7 +987,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -1048,16 +999,15 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       expect(result!.relatedProperties![0].properties![0].target!.overrides!.Prop1.categoryId).toEqual("my-cat");
     });
 
     it("maps calculatedProperties with categoryId { type: 'None' }", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createIModelAccess(),
         rule: { calculatedProperties: [{ label: "X", value: "1", categoryId: { type: "None" } }] },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
       expect(result?.calculatedFields![0].categoryId).toBeUndefined();
     });
 
@@ -1084,7 +1034,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       const imodelAccess = createIModelAccessFromClasses(classes);
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -1097,7 +1046,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       expect(result!.relatedProperties![0].path).toHaveLength(2);
       expect(result!.relatedProperties![0].path[0].targetClassName).toEqual("TestSchema.ChildElement");
       expect(result!.relatedProperties![0].path[1].sourceClassName).toEqual("TestSchema.ChildElement");
@@ -1131,7 +1080,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       const imodelAccess = createIModelAccessFromClasses(classes);
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -1153,7 +1101,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       // Parent declaration + nested declaration
       expect(result!.relatedProperties).toHaveLength(2);
       // Nested declaration has concatenated path (parent + nested)
@@ -1168,7 +1116,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       const imodelAccess = createIModelAccessFromClasses(classes);
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -1181,9 +1128,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      await expect(
-        provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() }),
-      ).rejects.toThrow(/not a relationship class/);
+      await expect(provider.getContribution({ imodelAccess, target: createTarget() })).rejects.toThrow(
+        /not a relationship class/,
+      );
     });
 
     it("throws when constraint class cannot be determined", async () => {
@@ -1196,7 +1143,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       const imodelAccess = createIModelAccessFromClasses(classes);
 
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess,
         rule: {
           relatedProperties: [
             {
@@ -1209,19 +1155,18 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      await expect(
-        provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() }),
-      ).rejects.toThrow(/Cannot determine target class/);
+      await expect(provider.getContribution({ imodelAccess, target: createTarget() })).rejects.toThrow(
+        /Cannot determine target class/,
+      );
     });
 
     it("maps propertyCategories parentId with { type: 'Id' }", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createIModelAccess(),
         rule: {
           propertyCategories: [{ id: "cat1", label: "Cat 1", parentId: { type: "Id", categoryId: "parent-id" } }],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
       expect(result?.categories!.cat1.parentId).toEqual("parent-id");
     });
   });
@@ -1234,7 +1179,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
 
     it("expands omitted requiredDirection ('Both') into forward and backward declarations", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createAccess(),
         rule: {
           relatedProperties: [
             {
@@ -1245,7 +1189,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess: createAccess(), target: createTarget() });
       expect(result!.relatedProperties).toHaveLength(2);
       const [forward, backward] = result!.relatedProperties!;
       expect(forward.path[0].relationshipName).toEqual("TestSchema.ElementOwnsChild");
@@ -1256,7 +1200,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
 
     it("uses only the specified direction when requiredDirection is set", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createAccess(),
         rule: {
           relatedProperties: [
             {
@@ -1268,14 +1211,13 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess: createAccess(), target: createTarget() });
       expect(result!.relatedProperties).toHaveLength(1);
       expect(result!.relatedProperties![0].path[0].relationshipReverse).toEqual(true);
     });
 
     it("expands one declaration per relationship × target-class combination", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createAccess(),
         rule: {
           relatedProperties: [
             {
@@ -1287,7 +1229,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess: createAccess(), target: createTarget() });
       expect(result!.relatedProperties).toHaveLength(4);
       const combos = result!.relatedProperties!.map(
         (d) => `${d.path[0].relationshipName}->${d.path[0].targetClassName}`,
@@ -1302,7 +1244,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
 
     it("parses the legacy relationshipClassNames / relatedClassNames string format", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createAccess(),
         rule: {
           relatedProperties: [
             {
@@ -1314,7 +1255,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess: createAccess(), target: createTarget() });
       expect(result!.relatedProperties).toHaveLength(2);
       expect(result!.relatedProperties!.map((d) => d.path[0].relationshipName)).toEqual([
         "TestSchema.Rel1",
@@ -1325,7 +1266,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
 
     it("accepts relationships and relatedClasses as arrays of multi-schema specifications", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createAccess(),
         rule: {
           relatedProperties: [
             {
@@ -1340,7 +1280,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess: createAccess(), target: createTarget() });
       const combos = result!.relatedProperties!.map(
         (d) => `${d.path[0].relationshipName}->${d.path[0].targetClassName}`,
       );
@@ -1349,7 +1289,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
 
     it("ignores empty segments in the legacy class names string format", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createAccess(),
         rule: {
           relatedProperties: [
             {
@@ -1362,7 +1301,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({ imodelAccess: createAccess(), target: createTarget() });
       expect(result!.relatedProperties!.map((d) => d.path[0].relationshipName)).toEqual([
         "TestSchema.Rel1",
         "TestSchema.Rel2",
@@ -1377,10 +1316,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         targetClass,
       });
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createAccess([
-          { name: "TestSchema.ElementOwnsChild", cls: relClass },
-          { name: "TestSchema.ChildElement", cls: targetClass },
-        ]),
         rule: {
           relatedProperties: [
             {
@@ -1391,40 +1326,44 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const result = await provider.getContribution({
+        imodelAccess: createAccess([
+          { name: "TestSchema.ElementOwnsChild", cls: relClass },
+          { name: "TestSchema.ChildElement", cls: targetClass },
+        ]),
+        target: createTarget(),
+      });
       expect(result!.relatedProperties).toHaveLength(1);
       expect(result!.relatedProperties![0].path[0].targetClassName).toEqual("TestSchema.ChildElement");
     });
 
     it("throws when neither propertiesSource nor a relationship specifier is provided", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createAccess(),
         rule: {
           relatedProperties: [
             { relatedClasses: { schemaName: "TestSchema", classNames: ["ChildElement"] }, properties: "*" },
           ],
         },
       });
-      await expect(
-        provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() }),
-      ).rejects.toThrow(/`relationships` or `relationshipClassNames` must be specified/);
+      await expect(provider.getContribution({ imodelAccess: createAccess(), target: createTarget() })).rejects.toThrow(
+        /`relationships` or `relationshipClassNames` must be specified/,
+      );
     });
 
     it("throws for a malformed class names string", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        imodelAccess: createAccess(),
         rule: { relatedProperties: [{ relationshipClassNames: "MissingColon", properties: "*" }] },
       });
-      await expect(
-        provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() }),
-      ).rejects.toThrow(/Invalid class names string/);
+      await expect(provider.getContribution({ imodelAccess: createAccess(), target: createTarget() })).rejects.toThrow(
+        /Invalid class names string/,
+      );
     });
   });
 
   describe("empty rule", () => {
     it("returns no contribution when rule is empty", async () => {
-      const provider = createFieldsProviderFromContentModifierRule({ imodelAccess: createIModelAccess(), rule: {} });
-      const result = await provider.getContribution({ imodelAccess: {} as ECSchemaProvider, target: createTarget() });
+      const provider = createFieldsProviderFromContentModifierRule({ rule: {} });
+      const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
       expect(result).toBeUndefined();
     });
   });

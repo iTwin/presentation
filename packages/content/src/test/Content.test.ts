@@ -9,6 +9,7 @@ import { ECSQL_PREFIX } from "../content/InternalUtils.js";
 
 import type {
   EC,
+  ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlQueryDef,
   ECSqlQueryExecutor,
@@ -16,7 +17,7 @@ import type {
   RelationshipPath,
 } from "@itwin/presentation-shared";
 import type { ContentTarget, ResolvedPath } from "../content/ContentTarget.js";
-import type { IModelFieldsProvider } from "../content/extensions/fields-providers/IModelFieldsProvider.js";
+import type { IModelFieldsProvider } from "../content/extensions/IModelFieldsProvider.js";
 
 // Mock `ECSql.createRelationshipPathJoinClause` because the real implementation requires
 // a functioning ECSchemaProvider that returns actual schema metadata to construct JOIN clauses.
@@ -60,7 +61,7 @@ function createMockIModelAccess(props?: {
   resolvePathsQueryResults?: ECSqlQueryRow[];
   primaryClassScanResults?: ECSqlQueryRow[];
   derivedClasses?: Record<string, string[]>;
-}): ECSqlQueryExecutor & ECSchemaProvider {
+}): ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector {
   const { resolvePathsQueryResults = [], primaryClassScanResults = [], derivedClasses = {} } = props ?? {};
   return {
     createQueryReader: vi.fn((query: ECSqlQueryDef) => {
@@ -72,6 +73,7 @@ function createMockIModelAccess(props?: {
       })();
     }),
     getSchema: createMockGetSchema(derivedClasses),
+    classDerivesFrom: vi.fn(async () => false),
   };
 }
 
@@ -910,7 +912,7 @@ describe("resolveContentSources", () => {
         relatedProperties: [{ path: pathA }, { path: pathB }],
       });
       let callCount = 0;
-      const imodelAccess: ECSqlQueryExecutor & ECSchemaProvider = {
+      const imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector = {
         createQueryReader: vi.fn((_query: ECSqlQueryDef) => {
           callCount++;
           // First declaration gets no results, second gets results
@@ -922,6 +924,7 @@ describe("resolveContentSources", () => {
           })();
         }),
         getSchema: createMockGetSchema(),
+        classDerivesFrom: vi.fn(async () => false),
       };
 
       const result = await resolveContentSources({
