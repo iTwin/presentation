@@ -374,7 +374,11 @@ type NumericPrimitiveValueType = Extract<PrimitiveValueType, "Double" | "Integer
  *
  * @public
  */
-export type ValueDescriptor = PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor | NavigationValueDescriptor;
+export type ValueDescriptor =
+  | PrimitiveValueDescriptor
+  | StructValueDescriptor
+  | ArrayValueDescriptor
+  | NavigationValueDescriptor;
 
 /**
  * Describes a scalar primitive value.
