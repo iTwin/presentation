@@ -11,6 +11,7 @@ import { toSortedUniqueClassNames } from "./model/Utils.js";
 import type { Observable } from "rxjs";
 import type {
   EC,
+  ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryDef,
@@ -20,10 +21,7 @@ import type {
   RelationshipPath,
 } from "@itwin/presentation-shared";
 import type { ContentSource, ContentTarget, ResolvedPath } from "./ContentTarget.js";
-import type {
-  IModelFieldsProvider,
-  RelatedPropertiesDeclaration,
-} from "./extensions/fields-providers/IModelFieldsProvider.js";
+import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "./extensions/IModelFieldsProvider.js";
 
 // --- Types ---
 
@@ -308,7 +306,7 @@ function resolveTarget({
   providers,
   target,
 }: {
-  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
   providers: IModelFieldsProvider[];
   target: ContentTarget;
 }): Observable<ContentSource> {
@@ -345,7 +343,7 @@ function resolveTarget({
 // --- Public entry point ---
 
 export async function resolveContentSourcesImpl(props: {
-  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
   targets: ContentTarget[];
   fieldsProviders: IModelFieldsProvider[];
 }): Promise<ContentSource[]> {

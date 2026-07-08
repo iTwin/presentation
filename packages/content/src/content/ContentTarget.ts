@@ -5,7 +5,7 @@
 
 import type { Id64String } from "@itwin/core-bentley";
 import type { EC, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
-import type { BaseFieldsProvider } from "./extensions/fields-providers/BaseFieldsProvider.js";
+import type { BaseFieldsProvider } from "./extensions/BaseFieldsProvider.js";
 
 /**
  * Hint about the effective cardinality of a relationship path.

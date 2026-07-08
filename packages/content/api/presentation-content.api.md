@@ -5,6 +5,7 @@
 ```ts
 
 import { EC } from '@itwin/presentation-shared';
+import type { ECClassHierarchyInspector } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { ECSqlBinding } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
@@ -111,7 +112,7 @@ interface ContentProvider {
 // @public
 interface ContentProviderProps {
     config?: ContentConfiguration;
-    imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
     sources: ContentSource[];
 }
 
@@ -188,7 +189,10 @@ export function defineQueryFilterer(filterer: QueryFilterer): QueryFilterer;
 // @public
 interface DescriptorTransformer {
     priority?: number;
-    transform(descriptor: TransformableDescriptor): void;
+    transform(props: {
+        descriptor: TransformableDescriptor;
+        imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+    }): Promise<void>;
 }
 
 // @public
@@ -253,7 +257,7 @@ interface GetDistinctFieldValuesProps {
 // @public
 interface IModelFieldsProvider extends BaseFieldsProvider {
     getContribution(props: {
-        imodelAccess: ECSchemaProvider;
+        imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
         target: ContentTarget;
     }): Promise<FieldsProviderContribution | undefined>;
 }
@@ -341,7 +345,7 @@ export function resolveContentSources(props: ResolveContentSourcesProps): Promis
 // @public
 interface ResolveContentSourcesProps {
     config?: Pick<ContentConfiguration, "fieldsProviders">;
-    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
     targets: ContentTarget[];
 }
 
@@ -379,9 +383,9 @@ interface TransformableDescriptor {
 }
 
 // @public
-type TransformableField<TField = Field> = Omit<TField, "id"> & {
+type TransformableField<TField extends Field = Field> = TField extends Field ? Omit<TField, "id"> & {
     readonly id: string;
-};
+} : never;
 
 // @public (undocumented)
 type ValueFilterOperator = "is-equal" | "is-not-equal" | "is-null" | "is-not-null" | "less-than" | "less-than-or-equal" | "greater-than" | "greater-than-or-equal" | "like" | "is-in";
