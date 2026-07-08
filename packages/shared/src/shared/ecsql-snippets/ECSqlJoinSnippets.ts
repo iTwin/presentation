@@ -154,7 +154,9 @@ function resolveInstanceFilterCondition(step: ResolvedRelationshipPathStep): str
   }
   const { expression, targetAlias = "this", relationshipAlias = "rel" } = step.instanceFilter;
   const resolvedExpression = expression
+    .replaceAll(`[${targetAlias}].`, `[${step.targetAlias}].`)
     .replaceAll(`${targetAlias}.`, `[${step.targetAlias}].`)
+    .replaceAll(`[${relationshipAlias}].`, `[${step.relationshipAlias}].`)
     .replaceAll(`${relationshipAlias}.`, `[${step.relationshipAlias}].`);
   return ` AND (${resolvedExpression})`;
 }

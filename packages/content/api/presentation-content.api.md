@@ -41,6 +41,7 @@ export interface CalculatedField extends BaseField {
 
 // @public
 interface CalculatedFieldDeclaration {
+    bindings?: Record<string, ECSqlBinding>;
     categoryId?: string;
     expression: string;
     id: string;

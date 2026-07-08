@@ -352,14 +352,16 @@ describe("createFieldsProviderFromContentModifierRule", () => {
   describe("calculatedProperties", () => {
     it("maps calculated properties with default type (string)", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
-        rule: { calculatedProperties: [{ label: "Full Name", value: "this.FirstName || ' ' || this.LastName" }] },
+        rule: { calculatedProperties: [{ label: "Full Name", value: 'this.FirstName & " " & this.LastName' }] },
       });
       const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
       expect(result?.calculatedFields).toEqual([
         {
           id: "calc_0",
           label: "Full Name",
-          expression: "this.FirstName || ' ' || this.LastName",
+          expression: "[this].[FirstName] || :pres_expr0 || [this].[LastName]",
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          bindings: { pres_expr0: { type: "string", value: " " } },
           type: { kind: "primitive", type: "String" },
           categoryId: undefined,
         },
@@ -703,7 +705,37 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       expect(path).toHaveLength(2);
       // The filter is applied only to the last step, not the intermediate one.
       expect(path[0].instanceFilter).toBeUndefined();
-      expect(path[1].instanceFilter).toEqual({ expression: "this.IsActive = true" });
+      expect(path[1].instanceFilter).toEqual({ expression: "[this].[IsActive] = TRUE" });
+    });
+
+    it("threads instance filter bindings through", async () => {
+      const imodelAccess = createIModelAccessWithRelationship({
+        relSchemaName: "TestSchema",
+        relClassName: "ElementOwnsChild",
+        targetSchemaName: "TestSchema",
+        targetClassName: "ChildElement",
+      });
+
+      const provider = createFieldsProviderFromContentModifierRule({
+        rule: {
+          relatedProperties: [
+            {
+              propertiesSource: {
+                relationship: { schemaName: "TestSchema", className: "ElementOwnsChild" },
+                direction: "Forward",
+              },
+              instanceFilter: 'this.Name = "abc"',
+              properties: "*",
+            },
+          ],
+        },
+      });
+      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
+      expect(result!.relatedProperties![0].path[0].instanceFilter).toEqual({
+        expression: "[this].[Name] = :pres_expr0",
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        bindings: { pres_expr0: { type: "string", value: "abc" } },
+      });
     });
 
     it("defaults properties when neither properties nor propertyNames is specified", async () => {

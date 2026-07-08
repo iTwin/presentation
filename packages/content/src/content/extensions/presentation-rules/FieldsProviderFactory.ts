@@ -6,6 +6,7 @@
 import { getClass } from "@itwin/presentation-shared";
 import { CategoryDefinition } from "../../model/Category.js";
 import { hashString } from "../../model/Utils.js";
+import { convertECExpressionToECSql } from "../ecexpressions/ECExpressionToECSql.js";
 import { checkRequiredSchemas, classMatchesSpec, mapPropertyCategories, resolveCategoryId } from "./Utils.js";
 
 import type {
@@ -77,7 +78,7 @@ export function createFieldsProviderFromContentModifierRule(
 
       let calculatedFields: CalculatedFieldDeclaration[] | undefined;
       if (rule.calculatedProperties && rule.calculatedProperties.length > 0) {
-        calculatedFields = mapCalculatedProperties(rule.calculatedProperties);
+        calculatedFields = await mapCalculatedProperties(rule.calculatedProperties);
       }
 
       if (rule.propertyCategories && rule.propertyCategories.length > 0) {
@@ -94,15 +95,6 @@ export function createFieldsProviderFromContentModifierRule(
 }
 
 // ── Relationship path mapping ────────────────────────────────────────
-
-/**
- * Stub: returns the expression unchanged.
- */
-function convertECExpressionToECSql(expression: string): string {
-  // TODO: Implement proper ECExpression → ECSQL conversion
-  // https://github.com/iTwin/presentation/issues/1420
-  return expression;
-}
 
 /** Returns the display label of a class. */
 async function getClassLabel(imodelAccess: ECSchemaProvider, className: EC.FullClassName): Promise<string> {
@@ -279,13 +271,18 @@ async function mapRelatedPropertiesSpec(props: {
       targetClassName = constraintClass.fullName;
     }
 
+    let instanceFilter: RelationshipPath[number]["instanceFilter"];
+    if (isLastStep && spec.instanceFilter) {
+      const { ecsql, bindings } = await convertECExpressionToECSql({ expression: spec.instanceFilter });
+      instanceFilter = { expression: ecsql, ...(bindings ? { bindings } : undefined) };
+    }
+
     path.push({
       sourceClassName: currentSourceClassName,
       targetClassName,
       relationshipName: `${step.relationship.schemaName}.${step.relationship.className}`,
       relationshipReverse: step.direction === "Backward",
-      instanceFilter:
-        isLastStep && spec.instanceFilter ? { expression: convertECExpressionToECSql(spec.instanceFilter) } : undefined,
+      instanceFilter,
     });
 
     currentSourceClassName = targetClassName;
@@ -506,16 +503,22 @@ const CALC_TYPE_MAP: Record<
  * Maps an array of `CalculatedPropertiesSpecification` into `CalculatedFieldDeclaration[]`.
  * Generates a stable `id` for each field based on its index.
  */
-function mapCalculatedProperties(
+async function mapCalculatedProperties(
   specs: PresentationRules.CalculatedPropertiesSpecification[],
-): CalculatedFieldDeclaration[] {
-  return specs.map((spec, i) => ({
-    id: `calc_${i}`,
-    label: spec.label,
-    expression: convertECExpressionToECSql(spec.value),
-    type: { kind: "primitive", type: CALC_TYPE_MAP[spec.type ?? "string"] } satisfies ValueDescriptor,
-    categoryId: resolveCategoryId(spec.categoryId),
-  }));
+): Promise<CalculatedFieldDeclaration[]> {
+  return Promise.all(
+    specs.map(async (spec, i) => {
+      const { ecsql, bindings } = await convertECExpressionToECSql({ expression: spec.value });
+      return {
+        id: `calc_${i}`,
+        label: spec.label,
+        expression: ecsql,
+        ...(bindings ? { bindings } : undefined),
+        type: { kind: "primitive", type: CALC_TYPE_MAP[spec.type ?? "string"] } satisfies ValueDescriptor,
+        categoryId: resolveCategoryId(spec.categoryId),
+      };
+    }),
+  );
 }
 
 /** Produces a stable JSON representation with sorted keys for hashing. */

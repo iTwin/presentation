@@ -6,6 +6,7 @@
 import type {
   ECClassHierarchyInspector,
   ECSchemaProvider,
+  ECSqlBinding,
   ECSqlQueryExecutor,
   RelationshipPath,
   ValueDescriptor,
@@ -110,8 +111,9 @@ interface CalculatedFieldDeclaration {
    * ECSQL expression that computes this field's value.
    *
    * Use `targetAlias` (defaults to `"this"`) followed by a dot to reference properties
-   * of the content target class. At query generation time, the pipeline performs a literal
-   * replacement of all `{targetAlias}.` occurrences with the actual query alias.
+   * of the content target class. At query generation time, the pipeline replaces all
+   * `{targetAlias}.` occurrences (in both their bare `{targetAlias}.` and bracket-quoted
+   * `[{targetAlias}].` forms) with the actual query alias.
    *
    * @example
    * ```
@@ -121,12 +123,15 @@ interface CalculatedFieldDeclaration {
   expression: string;
   /**
    * The placeholder used in `expression` to reference the content target class.
-   * Every occurrence of `{targetAlias}.` in the expression will be replaced with the
-   * actual query alias at query generation time.
+   * Every occurrence of `{targetAlias}.` in the expression, whether bare (`{targetAlias}.`)
+   * or bracket-quoted (`[{targetAlias}].`), will be replaced with the actual query alias at
+   * query generation time.
    *
    * @default "this"
    */
   targetAlias?: string;
+  /** Bind values for `expression`, keyed by parameter name. */
+  bindings?: Record<string, ECSqlBinding>;
   /** The value type of the computed result. */
   type: ValueDescriptor;
   /** Category to assign this field to (references a `CategoryDefinition.id`). */
