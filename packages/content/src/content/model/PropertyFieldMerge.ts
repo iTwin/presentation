@@ -6,7 +6,7 @@
 import { PropertyField } from "./Field.js";
 import { toSortedUniqueClassNames } from "./Utils.js";
 
-import type { ValueDescriptor } from "@itwin/presentation-shared";
+import { normalizeFullClassName, type ValueDescriptor } from "@itwin/presentation-shared";
 import type { Field } from "./Field.js";
 
 /**
@@ -88,6 +88,6 @@ function toComparableValueDescriptor(descriptor: ValueDescriptor): unknown {
         descriptor.members.map((member) => [member.name, member.label, toComparableValueDescriptor(member.type)]),
       ];
     case "navigation":
-      return ["navigation", descriptor.targetClassName];
+      return ["navigation", normalizeFullClassName(descriptor.targetClassName)];
   }
 }
