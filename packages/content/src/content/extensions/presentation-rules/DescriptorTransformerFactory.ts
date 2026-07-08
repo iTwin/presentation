@@ -106,13 +106,13 @@ export function createDescriptorTransformerFromContentModifierRule({
           applyPropertySpecification(working, spec);
 
           // Making a property visible hides all other properties of the same class, unless opted out.
-          if (spec.isDisplayed === true && !spec.doNotHideOtherPropertiesOnDisplayOverride) {
+          if (!displaysAllProperties && spec.isDisplayed === true && !spec.doNotHideOtherPropertiesOnDisplayOverride) {
             for (const other of candidates) {
               if (other === candidate) {
                 continue;
               }
               // Don't hide a property that is itself explicitly displayed.
-              if (displaysAllProperties || displayedPropertyNames.has(other.propertyName)) {
+              if (displayedPropertyNames.has(other.propertyName)) {
                 continue;
               }
               const otherMatched = matchedByCandidate.get(other)!;
