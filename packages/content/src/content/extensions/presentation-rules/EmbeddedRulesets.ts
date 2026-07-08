@@ -7,7 +7,7 @@ import { createDescriptorTransformerFromContentModifierRule } from "./Descriptor
 import { createFieldsProviderFromContentModifierRule } from "./FieldsProviderFactory.js";
 import { checkRequiredSchemas } from "./Utils.js";
 
-import type { ECSchemaProvider, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import type { ContentConfiguration } from "../../Content.js";
 import type { DescriptorTransformer } from "../DescriptorTransformer.js";
 import type { IModelFieldsProvider } from "../IModelFieldsProvider.js";
@@ -79,23 +79,16 @@ async function* loadEmbeddedRulesets(imodelAccess: ECSqlQueryExecutor): AsyncIte
     { ecsql: "SELECT JsonProperties FROM PresentationRules.Ruleset" },
     { rowFormat: "Indexes" },
   );
-  const iterator = reader[Symbol.asyncIterator]();
-  while (true) {
-    let result: IteratorResult<ECSqlQueryRow>;
-    try {
-      result = await iterator.next();
-    } catch (error) {
-      // The `PresentationRules.Ruleset` class only exists in iModels that have imported the
-      // `PresentationRules` schema. Treat its absence as "no embedded rulesets"; surface anything else.
-      if (isPresentationRulesSchemaAbsenceError(error)) {
-        return;
-      }
+  try {
+    for await (const row of reader) {
+      yield JSON.parse(row[0]).jsonProperties as Ruleset;
+    }
+  } catch (error) {
+    // The `PresentationRules.Ruleset` class only exists in iModels that have imported the
+    // `PresentationRules` schema. Treat its absence as "no embedded rulesets"; surface anything else.
+    if (!isPresentationRulesSchemaAbsenceError(error)) {
       throw error;
     }
-    if (result.done) {
-      return;
-    }
-    yield JSON.parse(result.value[0]).jsonProperties as Ruleset;
   }
 }
 
