@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { normalizeFullClassName, type ValueDescriptor } from "@itwin/presentation-shared";
 import { PropertyField } from "./Field.js";
 import { toSortedUniqueClassNames } from "./Utils.js";
 
-import { normalizeFullClassName, type ValueDescriptor } from "@itwin/presentation-shared";
 import type { Field } from "./Field.js";
 
 /**
