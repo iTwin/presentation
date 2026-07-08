@@ -163,6 +163,14 @@ export interface ContentValues {
 // @public
 export function createContentProvider(_props: ContentProviderProps): ContentProvider;
 
+// @public
+export function createIModelContentConfiguration(props: CreateIModelContentConfigurationProps): Promise<ContentConfiguration>;
+
+// @public
+interface CreateIModelContentConfigurationProps {
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+}
+
 // @alpha
 type DeepReadonly<T> = T extends (...args: any[]) => any ? T : T extends (infer U)[] ? ReadonlyArray<DeepReadonly<U>> : T extends object ? {
     readonly [K in keyof T]: DeepReadonly<T[K]>;
