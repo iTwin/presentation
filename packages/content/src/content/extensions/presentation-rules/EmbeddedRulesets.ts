@@ -7,7 +7,7 @@ import { createDescriptorTransformerFromContentModifierRule } from "./Descriptor
 import { createFieldsProviderFromContentModifierRule } from "./FieldsProviderFactory.js";
 import { checkRequiredSchemas } from "./Utils.js";
 
-import type { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
 import type { ContentConfiguration } from "../../Content.js";
 import type { DescriptorTransformer } from "../DescriptorTransformer.js";
 import type { IModelFieldsProvider } from "../IModelFieldsProvider.js";
@@ -75,19 +75,39 @@ function isContentModifierRule(
  * completing without yielding.
  */
 async function* loadEmbeddedRulesets(imodelAccess: ECSqlQueryExecutor): AsyncIterableIterator<Ruleset> {
-  /** ECSQL used to read embedded presentation rulesets from an iModel. */
   const reader = imodelAccess.createQueryReader(
     { ecsql: "SELECT JsonProperties FROM PresentationRules.Ruleset" },
     { rowFormat: "Indexes" },
   );
-  try {
-    for await (const row of reader) {
-      yield JSON.parse(row[0]).jsonProperties as Ruleset;
+  const iterator = reader[Symbol.asyncIterator]();
+  while (true) {
+    let result: IteratorResult<ECSqlQueryRow>;
+    try {
+      result = await iterator.next();
+    } catch (error) {
+      // The `PresentationRules.Ruleset` class only exists in iModels that have imported the
+      // `PresentationRules` schema. Treat its absence as "no embedded rulesets"; surface anything else.
+      if (isPresentationRulesSchemaAbsenceError(error)) {
+        return;
+      }
+      throw error;
     }
-  } catch {
-    // The `PresentationRules.Ruleset` table does not exist in every iModel. Treat a failure to read it
-    // as "no embedded rulesets".
+    if (result.done) {
+      return;
+    }
+    yield JSON.parse(result.value[0]).jsonProperties as Ruleset;
   }
+}
+
+/**
+ * Returns whether an error indicates that the `PresentationRules.Ruleset` class is not present in the
+ * iModel (i.e. the `PresentationRules` schema has not been imported).
+ */
+function isPresentationRulesSchemaAbsenceError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    error.message.includes("'PresentationRules.Ruleset' does not exist or could not be loaded")
+  );
 }
 
 /**

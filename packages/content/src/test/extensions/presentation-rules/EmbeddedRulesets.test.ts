@@ -12,17 +12,17 @@ import type { Ruleset } from "../../../content/extensions/presentation-rules/Pre
 /** Builds an `imodelAccess` stub whose `PresentationRules.Ruleset` table returns the given rulesets. */
 function createIModelAccess(props: {
   rulesets?: Ruleset[];
-  /** When set, the ruleset-reading query throws (simulating a missing `PresentationRules.Ruleset` table). */
-  throwOnQuery?: boolean;
+  /** When set, the ruleset-reading query throws this error. */
+  queryError?: Error;
   /** Schema names present in the iModel (with versions). */
   schemas?: Map<string, EC.SchemaVersion>;
 }): ECSqlQueryExecutor & ECSchemaProvider {
-  const { rulesets = [], throwOnQuery = false, schemas } = props;
+  const { rulesets = [], queryError, schemas } = props;
   return {
     createQueryReader: (): AsyncIterableIterator<ECSqlQueryRow> => {
       return (async function* (): AsyncGenerator<ECSqlQueryRow> {
-        if (throwOnQuery) {
-          throw new Error("no such table: PresentationRules.Ruleset");
+        if (queryError !== undefined) {
+          throw queryError;
         }
         for (const ruleset of rulesets) {
           yield [JSON.stringify({ jsonProperties: ruleset })];
@@ -42,10 +42,21 @@ const supplemental: Pick<Ruleset, "id" | "supplementationInfo"> = {
 };
 
 describe("createIModelContentConfiguration", () => {
-  it("returns an empty configuration when the ruleset table does not exist", async () => {
-    const config = await createIModelContentConfiguration({ imodelAccess: createIModelAccess({ throwOnQuery: true }) });
+  it("returns an empty configuration when the ruleset class does not exist", async () => {
+    const config = await createIModelContentConfiguration({
+      imodelAccess: createIModelAccess({
+        queryError: new Error("ECClass 'PresentationRules.Ruleset' does not exist or could not be loaded."),
+      }),
+    });
     expect(config.fieldsProviders).to.deep.equal([]);
     expect(config.descriptorTransformers).to.deep.equal([]);
+  });
+
+  it("propagates unexpected query errors", async () => {
+    const error = new Error("database is locked");
+    await expect(
+      createIModelContentConfiguration({ imodelAccess: createIModelAccess({ queryError: error }) }),
+    ).rejects.toThrow(error);
   });
 
   it("returns an empty configuration when there are no embedded rulesets", async () => {
