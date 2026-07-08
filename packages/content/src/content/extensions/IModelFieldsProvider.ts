@@ -4,15 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type {
+  ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryExecutor,
   RelationshipPath,
   ValueDescriptor,
 } from "@itwin/presentation-shared";
-import type { CardinalityHint, ContentTarget, ResolvedPath } from "../../ContentTarget.js";
-import type { CategoryDefinition } from "../../model/Category.js";
-import type { StepPropertySpec } from "../../model/PropertySpec.js";
+import type { CardinalityHint, ContentTarget, ResolvedPath } from "../ContentTarget.js";
+import type { CategoryDefinition } from "../model/Category.js";
+import type { StepPropertySpec } from "../model/PropertySpec.js";
 import type { BaseFieldsProvider } from "./BaseFieldsProvider.js";
 
 /**
@@ -36,7 +37,7 @@ export interface IModelFieldsProvider extends BaseFieldsProvider {
    * Called once per target during source resolution.
    */
   getContribution(props: {
-    imodelAccess: ECSchemaProvider;
+    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
     target: ContentTarget;
   }): Promise<FieldsProviderContribution | undefined>;
 }

@@ -16,7 +16,7 @@
  * Stage 2 — Descriptor building (`createContentProvider` → `getContentDescriptor`)
  *   - Enumerates iModel fields from the resolved sources.
  *   - Appends `ExternalFieldsProvider.fields` declarations.
- *   - Runs `DescriptorTransformer.transform()` in ascending priority order.
+ *   - Runs `DescriptorTransformer.transform()` asynchronously in ascending priority order.
  *   - Output: frozen `ContentDescriptor`.
  *
  * Stage 3 — Query building (`getItems` / `getSize` / `getInstanceKeys`)
@@ -35,11 +35,17 @@
 
 import { resolveContentSourcesImpl } from "./ResolveContentSources.js";
 
-import type { ECSchemaProvider, ECSqlQueryExecutor, InstanceKey, Value } from "@itwin/presentation-shared";
+import type {
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+  ECSqlQueryExecutor,
+  InstanceKey,
+  Value,
+} from "@itwin/presentation-shared";
 import type { ContentSource, ContentTarget } from "./ContentTarget.js";
 import type { DescriptorTransformer } from "./extensions/DescriptorTransformer.js";
-import type { ExternalFieldsProvider } from "./extensions/fields-providers/ExternalFieldsProvider.js";
-import type { IModelFieldsProvider } from "./extensions/fields-providers/IModelFieldsProvider.js";
+import type { ExternalFieldsProvider } from "./extensions/ExternalFieldsProvider.js";
+import type { IModelFieldsProvider } from "./extensions/IModelFieldsProvider.js";
 import type { QueryFilterer } from "./extensions/QueryFilterer.js";
 import type { ContentDescriptor } from "./model/ContentDescriptor.js";
 import type { ContentItem } from "./model/ContentItem.js";
@@ -139,8 +145,8 @@ export interface ContentConfiguration {
  * @public
  */
 interface ResolveContentSourcesProps {
-  /** Access to the iModel for schema introspection and path resolution. */
-  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  /** Access to the iModel for schema introspection, class-hierarchy inspection, and path resolution. */
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
   /** The content targets to resolve. */
   targets: ContentTarget[];
   /** Extension point configuration (only `fieldsProviders` is used for resolution). */
@@ -176,8 +182,8 @@ export async function resolveContentSources(props: ResolveContentSourcesProps): 
  * @public
  */
 interface ContentProviderProps {
-  /** Access to the iModel for running ECSQL queries. */
-  imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
+  /** Access to the iModel for running ECSQL queries, schema introspection, and class-hierarchy checks. */
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
 
   /** Pre-resolved content sources (output of `resolveContentSources`). */
   sources: ContentSource[];

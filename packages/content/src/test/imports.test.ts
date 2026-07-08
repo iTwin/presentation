@@ -9,8 +9,8 @@ import { it } from "vitest";
 // counts them as covered by tests.
 it("Import non-testable modules", async () => {
   await import("../content/extensions/DescriptorTransformer.js");
-  await import("../content/extensions/fields-providers/BaseFieldsProvider.js");
-  await import("../content/extensions/fields-providers/ExternalFieldsProvider.js");
-  await import("../content/extensions/fields-providers/IModelFieldsProvider.js");
+  await import("../content/extensions/BaseFieldsProvider.js");
+  await import("../content/extensions/ExternalFieldsProvider.js");
+  await import("../content/extensions/IModelFieldsProvider.js");
   await import("../content/extensions/QueryFilterer.js");
 });
