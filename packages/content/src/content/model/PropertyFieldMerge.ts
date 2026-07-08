@@ -87,5 +87,7 @@ function toComparableValueDescriptor(descriptor: ValueDescriptor): unknown {
         "struct",
         descriptor.members.map((member) => [member.name, member.label, toComparableValueDescriptor(member.type)]),
       ];
+    case "navigation":
+      return ["navigation", descriptor.targetClassName];
   }
 }
