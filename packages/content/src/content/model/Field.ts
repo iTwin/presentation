@@ -5,6 +5,7 @@
 
 import {
   type EC,
+  type ECSqlBinding,
   normalizeFullClassName,
   type RelationshipPath,
   type ValueDescriptor,
@@ -74,6 +75,12 @@ export interface PropertyField extends BaseField {
    * Always non-empty, normalized, de-duplicated, and sorted by normalized full name.
    */
   valueClassNames: EC.FullClassName[];
+  /**
+   * ID of the {@link ValueSelector} (column) this field reads. Equals this field's *base* id (its
+   * {@link (PropertyField:namespace).computeId} result without a `forkKey`), so all fork/override
+   * variants of the same underlying property share one selector. Immutable in the transformer view.
+   */
+  selectorId: string;
 }
 /** @public */
 export namespace PropertyField {
@@ -138,6 +145,15 @@ export interface CalculatedField extends BaseField {
    * @default "this"
    */
   targetAlias?: string;
+  /**
+   * Bind values referenced by `expression`, keyed by parameter name.
+   */
+  bindings?: Record<string, ECSqlBinding>;
+  /**
+   * ID of the {@link ValueSelector} (column) this field reads. Equals this field's id
+   * (`${providerId}:${localId}`). Immutable in the transformer view.
+   */
+  selectorId: string;
 }
 
 /**

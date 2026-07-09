@@ -7,6 +7,7 @@
 export type { ContentTarget, ContentSource } from "./content/ContentTarget.js";
 export type { ContentDescriptor } from "./content/model/ContentDescriptor.js";
 export type { Field, PropertyField, CalculatedField, ExternalField } from "./content/model/Field.js";
+export type { ValueSelector, PropertyValueSelector, CalculatedValueSelector } from "./content/model/ValueSelector.js";
 export { CategoryDefinition } from "./content/model/Category.js";
 export type { ContentItem, ContentValues } from "./content/model/ContentItem.js";
 

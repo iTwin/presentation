@@ -22,13 +22,15 @@ function propertyField(props: {
   label?: string;
   hidden?: boolean;
 }): PropertyField {
+  const id = PropertyField.computeId({
+    propertyClassName: props.sourceClassName,
+    propertyName: props.propertyName,
+    pathFromTarget: props.pathFromTarget,
+  });
   return {
     kind: "property",
-    id: PropertyField.computeId({
-      propertyClassName: props.sourceClassName,
-      propertyName: props.propertyName,
-      pathFromTarget: props.pathFromTarget,
-    }),
+    id,
+    selectorId: id,
     label: props.label ?? "Label",
     type: { kind: "primitive", type: "String" },
     sourceClassName: props.sourceClassName,
@@ -50,7 +52,7 @@ function calculatedField(id: string): CalculatedField {
 }
 
 function createDescriptor(fields: Field[]): ContentDescriptor {
-  return { sources: [], categories: {}, fields: Object.fromEntries(fields.map((f) => [f.id, f])) };
+  return { sources: [], categories: {}, selectors: {}, fields: Object.fromEntries(fields.map((f) => [f.id, f])) };
 }
 
 function forkedId(props: {

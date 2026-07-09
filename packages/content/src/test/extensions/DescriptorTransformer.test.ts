@@ -18,13 +18,15 @@ function propertyField(props: {
   valueClassNames: EC.FullClassName[];
   pathFromTarget?: PropertyField["pathFromTarget"];
 }): PropertyField {
+  const fieldId = PropertyField.computeId({
+    propertyClassName: props.sourceClassName,
+    propertyName: props.propertyName,
+    pathFromTarget: props.pathFromTarget,
+  });
   return {
     kind: "property",
-    id: PropertyField.computeId({
-      propertyClassName: props.sourceClassName,
-      propertyName: props.propertyName,
-      pathFromTarget: props.pathFromTarget,
-    }),
+    id: fieldId,
+    selectorId: fieldId,
     label: "Label",
     type: { kind: "primitive", type: "String" },
     sourceClassName: props.sourceClassName,
@@ -35,7 +37,7 @@ function propertyField(props: {
 }
 
 function createDescriptor(fields: Field[]): ContentDescriptor {
-  return { sources: [], categories: {}, fields: Object.fromEntries(fields.map((f) => [f.id, f])) };
+  return { sources: [], categories: {}, selectors: {}, fields: Object.fromEntries(fields.map((f) => [f.id, f])) };
 }
 
 describe("createTransformableDescriptor", () => {
@@ -158,6 +160,20 @@ describe("createTransformableDescriptor", () => {
       expect(fork.valueClassNames).to.not.equal(field.valueClassNames);
     });
 
+    it("copies the parent's selectorId onto the fork", () => {
+      const field = propertyField({
+        sourceClassName: "Stuff:Thing",
+        propertyName: "Height",
+        valueClassNames: ["Stuff:Door", "Stuff:Window"],
+      });
+      const descriptor = createDescriptor([field]);
+      const transformable = createTransformableDescriptor(descriptor);
+
+      const fork = transformable.forkField(field.id, ["Stuff:Door"]);
+      expect(fork.id).to.not.equal(field.selectorId);
+      expect(fork.selectorId).to.equal(field.selectorId);
+    });
+
     it("throws when the field does not exist", () => {
       const descriptor = createDescriptor([]);
       const transformable = createTransformableDescriptor(descriptor);
@@ -168,6 +184,7 @@ describe("createTransformableDescriptor", () => {
       const calculated: CalculatedField = {
         kind: "calculated",
         id: "calc",
+        selectorId: "calc",
         label: "Calc",
         type: { kind: "primitive", type: "String" },
         expression: "1",
