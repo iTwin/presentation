@@ -172,6 +172,9 @@ catalogs:
       specifier: ^1.0.0
       version: 1.0.0
   stratakit:
+    '@mui/material':
+      specifier: ^9.0.0
+      version: 9.1.2
     '@stratakit/icons':
       specifier: ^0.4.0
       version: 0.4.0
@@ -800,7 +803,7 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/unified-selection-react
       '@mui/material':
-        specifier: ^9.0.0
+        specifier: catalog:stratakit
         version: 9.1.2(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.7))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.7))(@types/react@19.2.17)(react@19.2.7))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@rolldown/plugin-babel':
         specifier: catalog:build-tools
@@ -1204,13 +1207,13 @@ importers:
         specifier: catalog:build-tools
         version: 6.1.0(eslint@9.39.4)(typescript@6.0.3)
       '@mui/material':
-        specifier: ^9.0.0
+        specifier: catalog:stratakit
         version: 9.1.2(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.7))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.7))(@types/react@19.2.17)(react@19.2.7))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@rolldown/plugin-babel':
         specifier: catalog:build-tools
         version: 0.2.3(@babel/core@7.29.0)(@babel/runtime@7.29.2)(rolldown@1.0.3)(vite@8.0.16(@types/node@24.13.2)(sass@1.100.0)(yaml@2.9.0))
       '@stratakit/mui':
-        specifier: ^0.5.0
+        specifier: catalog:stratakit
         version: 0.5.0(@mui/material@9.1.2(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.7))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@19.2.7))(@types/react@19.2.17)(react@19.2.7))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@testing-library/dom':
         specifier: catalog:test-tools
