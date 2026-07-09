@@ -271,3 +271,42 @@ export interface ContentModifierRule {
   propertyCategories?: PropertyCategorySpecification[];
   propertyOverrides?: PropertySpecification[];
 }
+
+/**
+ * Marks a ruleset as supplemental — meaning it contributes to the content produced by primary
+ * rulesets rather than defining content on its own.
+ */
+interface SupplementationInfo {
+  /** Identifies the group of supplemental rulesets this ruleset belongs to. */
+  supplementationPurpose: string;
+}
+
+/**
+ * Deprecated form of declaring the schemas a ruleset depends on. Each listed schema name is treated
+ * as a versionless `RequiredSchemaSpecification`.
+ */
+interface SupportedSchemasSpecification {
+  schemaNames: string[];
+}
+
+/**
+ * A rule within a `Ruleset`. Only the `ContentModifier` rule type is consumed here; every other rule
+ * type is represented by its `ruleType` discriminator alone and ignored.
+ */
+type RulesetRule = ({ ruleType: "ContentModifier" } & ContentModifierRule) | { ruleType: string };
+
+/**
+ * A minimal presentation ruleset shape. Only the members needed to locate applicable
+ * `ContentModifier` rules are modeled.
+ */
+export interface Ruleset {
+  id: string;
+  /** Schemas (with optional version ranges) that must be present in the iModel for the ruleset to apply. */
+  requiredSchemas?: RequiredSchemaSpecification[];
+  /** Deprecated alternative to `requiredSchemas`. */
+  supportedSchemas?: SupportedSchemasSpecification;
+  /** When set, the ruleset is supplemental. */
+  supplementationInfo?: SupplementationInfo;
+  /** The rules that make up the ruleset. */
+  rules: RulesetRule[];
+}

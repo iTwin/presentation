@@ -25,5 +25,8 @@ export type { ContentConfiguration } from "./content/Content.js";
 export { resolveContentSources, createContentProvider } from "./content/Content.js";
 export { getDistinctFieldValues } from "./content/DistinctValues.js";
 
+// Default iModel configuration
+export { createIModelContentConfiguration } from "./content/extensions/presentation-rules/EmbeddedRulesets.js";
+
 // Consumer utilities
 export { mapItems, reduceItems } from "./content/Utilities.js";
