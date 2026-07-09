@@ -8,7 +8,6 @@ import { ListItemIcon, MenuItem, Typography } from "@mui/material";
 import { Icon } from "@stratakit/mui";
 import { Tree } from "@stratakit/structures";
 
-import type React from "react";
 import type { ComponentPropsWithoutRef, NamedExoticComponent } from "react";
 
 /**
@@ -33,7 +32,11 @@ export interface TreeActionBaseAttributes {
 }
 
 /** @alpha */
-export type TreeActionBaseProps = ComponentPropsWithoutRef<typeof Tree.ItemAction> & TreeActionBaseAttributes;
+export type TreeActionBaseProps = Omit<ComponentPropsWithoutRef<typeof Tree.ItemAction>, "onClick"> &
+  TreeActionBaseAttributes & {
+    /** Callback invoked when the action is clicked. */
+    onClick: () => void;
+  };
 
 /**
  * Base component used to render tree actions. It is designed to allow rendering same action in different contexts: inline, dropdown, context menu.
@@ -68,7 +71,7 @@ export const TreeActionBase: NamedExoticComponent<TreeActionBaseProps> = memo(fu
   if (variant === "context-menu") {
     const { label, icon, onClick } = actionProps;
     return (
-      <MenuItem dense onClick={onClick as React.MouseEventHandler}>
+      <MenuItem dense onClick={onClick}>
         {icon ? <ListItemIcon>{typeof icon === "string" ? <Icon href={icon} /> : icon}</ListItemIcon> : null}
         <Typography variant="caption">{label}</Typography>
       </MenuItem>
