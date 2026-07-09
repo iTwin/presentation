@@ -63,9 +63,9 @@ export interface ExternalFieldsProvider<
 /**
  * A request for an iModel property that the external fields provider needs as input.
  *
- * The system checks whether the property already exists in the descriptor:
- * - If yes, it pins the field (prevents removal by transformers).
- * - If no, it adds the property as a hidden field (queried but not displayed).
+ * The system ensures a value selector (column) exists for the requested property so it can be fed
+ * into `getValues`. The column is selected regardless of whether any output field references it, and
+ * cannot be removed by descriptor transformers.
  *
  * @public
  */

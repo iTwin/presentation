@@ -41,6 +41,7 @@ export function mergePropertyFieldsByIdentity(candidates: PropertyField[]): Reco
       result[baseId] = {
         ...candidate,
         id: baseId,
+        selectorId: baseId,
         valueClassNames: toSortedUniqueClassNames(candidate.valueClassNames),
       };
       continue;

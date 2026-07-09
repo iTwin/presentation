@@ -76,8 +76,9 @@ export function defineDescriptorTransformer(transformer: DescriptorTransformer):
 }
 
 /**
- * A field with its ID made readonly — transformers may modify metadata
- * (label, categoryId, hidden, readOnly) but must not change ID.
+ * A field with its ID and selector ID made readonly — transformers may modify metadata
+ * (label, categoryId, hidden, readOnly) but must not change the field's identity or the column
+ * it reads.
  *
  * Distributes over the {@link Field} union so the `kind` discriminant is preserved: a
  * `field.kind === "property"` check narrows a `TransformableField` to the property member
@@ -86,7 +87,9 @@ export function defineDescriptorTransformer(transformer: DescriptorTransformer):
  * @public
  */
 type TransformableField<TField extends Field = Field> = TField extends Field
-  ? Omit<TField, "id"> & { readonly id: string }
+  ? Omit<TField, "id" | "selectorId"> & { readonly id: string } & (TField extends { selectorId: string }
+        ? { readonly selectorId: string }
+        : {})
   : never;
 
 /**

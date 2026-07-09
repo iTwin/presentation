@@ -23,6 +23,7 @@ function createField(props: {
   return {
     kind: "property",
     id: "unused",
+    selectorId: "unused",
     label: props.label ?? "Label",
     type: props.type ?? { kind: "primitive", type: "String" },
     categoryId: props.categoryId,
@@ -48,7 +49,9 @@ describe("mergePropertyFieldsByIdentity", () => {
     });
     const result = mergePropertyFieldsByIdentity([field]);
     const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Height" });
-    expect(result).to.deep.equal({ [id]: { ...field, id, valueClassNames: ["Stuff.Door", "Stuff.Window"] } });
+    expect(result).to.deep.equal({
+      [id]: { ...field, id, selectorId: id, valueClassNames: ["Stuff.Door", "Stuff.Window"] },
+    });
   });
 
   it("does not mutate the input candidate", () => {
