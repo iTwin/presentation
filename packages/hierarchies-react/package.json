@@ -94,7 +94,6 @@
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@mui/material": "^9.0.0",
     "@rolldown/plugin-babel": "catalog:build-tools",
-    "@stratakit/foundations": "catalog:stratakit",
     "@stratakit/mui": "^0.5.0",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",

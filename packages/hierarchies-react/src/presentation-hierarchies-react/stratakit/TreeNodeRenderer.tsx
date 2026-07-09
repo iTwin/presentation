@@ -333,7 +333,7 @@ function LabelEditor({
         </IconButton>
       </div>
       {labelValidationHint !== undefined ? (
-        <FormHelperText id={inputId} error={hasError} style={{ display: "flex" }}>
+        <FormHelperText error={hasError} style={{ display: "flex" }}>
           <Typography variant="caption">{labelValidationHint}</Typography>
         </FormHelperText>
       ) : undefined}

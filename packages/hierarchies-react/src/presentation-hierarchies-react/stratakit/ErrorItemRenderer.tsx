@@ -124,7 +124,7 @@ function ErrorItemContainer({ treeNode, message, actions, scrollToElement }: Err
         ?.filter(({ condition }) => condition())
         .map(({ label, action }) => (
           <Typography key={label} variant="caption" component="span" sx={{ display: "block" }}>
-            <Link component="button" onClick={action}>
+            <Link component="button" type="button" onClick={action}>
               {label}
             </Link>
           </Typography>
@@ -146,7 +146,13 @@ function MessageWithLink({ linkLabel, scrollToElement, message }: MessageWithLin
   return (
     <div>
       {firstPart}{" "}
-      <Link component="button" onClick={scrollToElement} variant="caption" sx={{ verticalAlign: "baseline" }}>
+      <Link
+        component="button"
+        type="button"
+        onClick={scrollToElement}
+        variant="caption"
+        sx={{ verticalAlign: "baseline" }}
+      >
         {linkLabel}
       </Link>
       {secondPart ? " " : ""}
