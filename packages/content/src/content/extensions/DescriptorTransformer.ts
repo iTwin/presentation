@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { normalizeFullClassName } from "@itwin/presentation-shared";
 import { PropertyField } from "../model/Field.js";
 import { computeFieldForkKey, toSortedUniqueClassNames } from "../model/Utils.js";
 
-import type { EC } from "@itwin/presentation-shared";
+import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
@@ -54,8 +55,14 @@ export interface DescriptorTransformer {
   /**
    * Transform the descriptor in place. May mutate fields, categories,
    * and related field groups.
+   *
+   * Runs asynchronously and receives `imodelAccess` for schema and class-hierarchy
+   * lookups (e.g. polymorphic class matching via `classDerivesFrom`).
    */
-  transform(descriptor: TransformableDescriptor): void;
+  transform(props: {
+    descriptor: TransformableDescriptor;
+    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+  }): Promise<void>;
 }
 
 /**
@@ -72,9 +79,15 @@ export function defineDescriptorTransformer(transformer: DescriptorTransformer):
  * A field with its ID made readonly — transformers may modify metadata
  * (label, categoryId, hidden, readOnly) but must not change ID.
  *
+ * Distributes over the {@link Field} union so the `kind` discriminant is preserved: a
+ * `field.kind === "property"` check narrows a `TransformableField` to the property member
+ * without any cast.
+ *
  * @public
  */
-type TransformableField<TField = Field> = Omit<TField, "id"> & { readonly id: string };
+type TransformableField<TField extends Field = Field> = TField extends Field
+  ? Omit<TField, "id"> & { readonly id: string }
+  : never;
 
 /**
  * A constrained view of {@link (ContentDescriptor:interface)} exposed to descriptor transformers.
@@ -156,7 +169,9 @@ export function createTransformableDescriptor(descriptor: ContentDescriptor): Tr
         // The subset covers every value-supplier class: mutate in place, no fork.
         return field;
       }
-      field.valueClassNames = field.valueClassNames.filter((className) => !subset.includes(className));
+      field.valueClassNames = field.valueClassNames.filter(
+        (className) => !subset.includes(normalizeFullClassName(className)),
+      );
       const fork: PropertyField = { ...field, id: forkedId, valueClassNames: subset };
       descriptor.fields[forkedId] = fork;
       return fork;

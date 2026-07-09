@@ -496,6 +496,13 @@ export type LogFunction = (category: string, message: string) => void;
 export type LogLevel = "error" | "warning" | "info" | "trace";
 
 // @public
+export interface NavigationValueDescriptor {
+    // (undocumented)
+    kind: "navigation";
+    targetClassName: EC.FullClassName;
+}
+
+// @public
 export const NOOP_LOGGER: ILogger;
 
 // @public
@@ -673,7 +680,7 @@ namespace TypedValueSelectClauseProps {
 export type Value = PrimitiveValue | StructValue | ArrayValue | undefined;
 
 // @public
-export type ValueDescriptor = PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor;
+export type ValueDescriptor = PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor | NavigationValueDescriptor;
 
 // (No @packageDocumentation comment for this package)
 

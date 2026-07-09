@@ -5,19 +5,20 @@
 
 import { getClass } from "@itwin/presentation-shared";
 import { CategoryDefinition } from "../../model/Category.js";
+import { hashString } from "../../model/Utils.js";
+import { convertECExpressionToECSql } from "../ecexpressions/ECExpressionToECSql.js";
+import { checkRequiredSchemas, classMatchesSpec, mapPropertyCategories, resolveCategoryId } from "./Utils.js";
 
 import type {
   EC,
-  ECClassHierarchyInspector,
   ECSchemaProvider,
   PrimitiveValueDescriptor,
   RelationshipPath,
   ValueDescriptor,
 } from "@itwin/presentation-shared";
-import type { ContentTarget } from "../../ContentTarget.js";
 import type { ClassPropertySpec, StepPropertySpec } from "../../model/PropertySpec.js";
-import type * as PresentationRules from "./ContentModifierRuleFieldsProviderFactory.PresentationRules.js";
-import type { IModelFieldsProvider } from "./IModelFieldsProvider.js";
+import type { IModelFieldsProvider } from "../IModelFieldsProvider.js";
+import type * as PresentationRules from "./PresentationRules.js";
 
 /** Local alias for the contribution type (not exported from IModelFieldsProvider). */
 type Contribution = NonNullable<Awaited<ReturnType<IModelFieldsProvider["getContribution"]>>>;
@@ -33,9 +34,6 @@ const FACTORY_VERSION = 1;
  * Props for `createFieldsProviderFromContentModifierRule`.
  */
 interface CreateFieldsProviderFromContentModifierRuleProps {
-  /** iModel access used for schema version checks and polymorphic class matching. */
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
-
   /** The content modifier rule. */
   rule: PresentationRules.ContentModifierRule;
 }
@@ -53,15 +51,15 @@ interface CreateFieldsProviderFromContentModifierRuleProps {
 export function createFieldsProviderFromContentModifierRule(
   props: CreateFieldsProviderFromContentModifierRuleProps,
 ): IModelFieldsProvider {
-  const { imodelAccess, rule } = props;
+  const { rule } = props;
   return {
-    id: `FieldsProviderFromContentModifierRule_${hashString(stableStringify(rule))}_v${FACTORY_VERSION}`,
+    id: `FieldsProviderFromContentModifierRule_${hashString(stableStringify(rule)).padStart(8, "0")}_v${FACTORY_VERSION}`,
     priority: rule.priority,
-    async getContribution({ target }) {
+    async getContribution({ imodelAccess, target }) {
       if (!(await checkRequiredSchemas(imodelAccess, rule.requiredSchemas))) {
         return undefined;
       }
-      if (!(await matchesClass(imodelAccess, target, rule.class))) {
+      if (!(await classMatchesSpec(imodelAccess, target.primaryClass, rule.class))) {
         return undefined;
       }
 
@@ -80,7 +78,7 @@ export function createFieldsProviderFromContentModifierRule(
 
       let calculatedFields: CalculatedFieldDeclaration[] | undefined;
       if (rule.calculatedProperties && rule.calculatedProperties.length > 0) {
-        calculatedFields = mapCalculatedProperties(rule.calculatedProperties);
+        calculatedFields = await mapCalculatedProperties(rule.calculatedProperties);
       }
 
       if (rule.propertyCategories && rule.propertyCategories.length > 0) {
@@ -96,109 +94,12 @@ export function createFieldsProviderFromContentModifierRule(
   };
 }
 
-/**
- * Returns `true` if `version` is at or above `minVersion` (inclusive).
- * Comparison order: write > read > minor.
- */
-function isVersionAtLeast(version: EC.SchemaVersion, minVersion: string): boolean {
-  const [minRead, minWrite, minMinor] = minVersion.split(".").map(Number);
-  if (version.write !== minWrite) {
-    return version.write > minWrite;
-  }
-  if (version.read !== minRead) {
-    return version.read > minRead;
-  }
-  return version.minor >= minMinor;
-}
-
-/**
- * Returns `true` if `version` is strictly below `maxVersion` (exclusive).
- * Comparison order: write > read > minor.
- */
-function isVersionBelow(version: EC.SchemaVersion, maxVersion: string): boolean {
-  const [maxRead, maxWrite, maxMinor] = maxVersion.split(".").map(Number);
-  if (version.write !== maxWrite) {
-    return version.write < maxWrite;
-  }
-  if (version.read !== maxRead) {
-    return version.read < maxRead;
-  }
-  return version.minor < maxMinor;
-}
-
-/**
- * Returns `true` if all required schemas are present in the iModel and satisfy the version constraints.
- */
-async function checkRequiredSchemas(
-  imodelAccess: ECSchemaProvider,
-  requiredSchemas: PresentationRules.RequiredSchemaSpecification[] | undefined,
-): Promise<boolean> {
-  if (!requiredSchemas || requiredSchemas.length === 0) {
-    return true;
-  }
-  for (const req of requiredSchemas) {
-    const schema = await imodelAccess.getSchema(req.name);
-    if (!schema) {
-      return false;
-    }
-    if (req.minVersion && !isVersionAtLeast(schema.version, req.minVersion)) {
-      return false;
-    }
-    if (req.maxVersion && !isVersionBelow(schema.version, req.maxVersion)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/**
- * Returns `true` if the target's primary class is or derives from the given class spec.
- * When `classSpec` is `undefined` the rule applies to all classes.
- */
-async function matchesClass(
-  imodelAccess: ECClassHierarchyInspector,
-  target: ContentTarget,
-  classSpec: PresentationRules.SingleSchemaClassSpecification | undefined,
-): Promise<boolean> {
-  if (!classSpec) {
-    return true;
-  }
-  return imodelAccess.classDerivesFrom(target.primaryClass, `${classSpec.schemaName}.${classSpec.className}`);
-}
-
 // ── Relationship path mapping ────────────────────────────────────────
-
-/**
- * Stub: returns the expression unchanged.
- */
-function convertECExpressionToECSql(expression: string): string {
-  // TODO: Implement proper ECExpression → ECSQL conversion
-  // https://github.com/iTwin/presentation/issues/1420
-  return expression;
-}
 
 /** Returns the display label of a class. */
 async function getClassLabel(imodelAccess: ECSchemaProvider, className: EC.FullClassName): Promise<string> {
   const cls = await getClass(imodelAccess, className);
   return cls.label ?? cls.name;
-}
-
-/**
- * Extracts a plain string category ID from a `CategoryIdentifier`.
- * Returns `undefined` for all non-`Id` forms (`None`, `DefaultParent`, `Root`), which are not
- * supported by this factory and fall back to the default category.
- */
-function resolveCategoryId(id: PresentationRules.PropertySpecification["categoryId"]): string | undefined {
-  if (id === undefined) {
-    return undefined;
-  }
-  if (typeof id === "string") {
-    return id;
-  }
-  if (id.type === "Id") {
-    return id.categoryId;
-  }
-  return undefined;
 }
 
 /**
@@ -370,13 +271,18 @@ async function mapRelatedPropertiesSpec(props: {
       targetClassName = constraintClass.fullName;
     }
 
+    let instanceFilter: RelationshipPath[number]["instanceFilter"];
+    if (isLastStep && spec.instanceFilter) {
+      const { ecsql, bindings } = await convertECExpressionToECSql({ expression: spec.instanceFilter });
+      instanceFilter = { expression: ecsql, ...(bindings ? { bindings } : undefined) };
+    }
+
     path.push({
       sourceClassName: currentSourceClassName,
       targetClassName,
       relationshipName: `${step.relationship.schemaName}.${step.relationship.className}`,
       relationshipReverse: step.direction === "Backward",
-      instanceFilter:
-        isLastStep && spec.instanceFilter ? { expression: convertECExpressionToECSql(spec.instanceFilter) } : undefined,
+      instanceFilter,
     });
 
     currentSourceClassName = targetClassName;
@@ -597,47 +503,22 @@ const CALC_TYPE_MAP: Record<
  * Maps an array of `CalculatedPropertiesSpecification` into `CalculatedFieldDeclaration[]`.
  * Generates a stable `id` for each field based on its index.
  */
-function mapCalculatedProperties(
+async function mapCalculatedProperties(
   specs: PresentationRules.CalculatedPropertiesSpecification[],
-): CalculatedFieldDeclaration[] {
-  return specs.map((spec, i) => ({
-    id: `calc_${i}`,
-    label: spec.label,
-    expression: convertECExpressionToECSql(spec.value),
-    type: { kind: "primitive", type: CALC_TYPE_MAP[spec.type ?? "string"] } satisfies ValueDescriptor,
-    categoryId: resolveCategoryId(spec.categoryId),
-  }));
-}
-
-// ── Category mapping ─────────────────────────────────────────────────
-
-/**
- * Maps an array of `PropertyCategorySpecification` into a `Record<id, CategoryDefinition>`.
- */
-function mapPropertyCategories(
-  specs: PresentationRules.PropertyCategorySpecification[],
-): Record<CategoryDefinition["id"], CategoryDefinition> {
-  const categories: Record<CategoryDefinition["id"], CategoryDefinition> = {};
-  for (const spec of specs) {
-    const cat: CategoryDefinition = {
-      id: spec.id,
-      label: spec.label,
-      parentId: resolveCategoryId(spec.parentId),
-      description: spec.description,
-    };
-    categories[cat.id] = cat;
-  }
-  return categories;
-}
-
-/** Deterministic hash of a string (FNV-1a, 32-bit). Returns an 8-char hex string. */
-function hashString(str: string): string {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < str.length; i++) {
-    hash ^= str.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return (hash >>> 0).toString(16).padStart(8, "0");
+): Promise<CalculatedFieldDeclaration[]> {
+  return Promise.all(
+    specs.map(async (spec, i) => {
+      const { ecsql, bindings } = await convertECExpressionToECSql({ expression: spec.value });
+      return {
+        id: `calc_${i}`,
+        label: spec.label,
+        expression: ecsql,
+        ...(bindings ? { bindings } : undefined),
+        type: { kind: "primitive", type: CALC_TYPE_MAP[spec.type ?? "string"] } satisfies ValueDescriptor,
+        categoryId: resolveCategoryId(spec.categoryId),
+      };
+    }),
+  );
 }
 
 /** Produces a stable JSON representation with sorted keys for hashing. */

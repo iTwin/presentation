@@ -4,14 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type {
+  ECClassHierarchyInspector,
   ECSchemaProvider,
+  ECSqlBinding,
   ECSqlQueryExecutor,
   RelationshipPath,
   ValueDescriptor,
 } from "@itwin/presentation-shared";
-import type { CardinalityHint, ContentTarget } from "../../ContentTarget.js";
-import type { CategoryDefinition } from "../../model/Category.js";
-import type { StepPropertySpec } from "../../model/PropertySpec.js";
+import type { CardinalityHint, ContentTarget, ResolvedPath } from "../ContentTarget.js";
+import type { CategoryDefinition } from "../model/Category.js";
+import type { StepPropertySpec } from "../model/PropertySpec.js";
 import type { BaseFieldsProvider } from "./BaseFieldsProvider.js";
 
 /**
@@ -35,7 +37,7 @@ export interface IModelFieldsProvider extends BaseFieldsProvider {
    * Called once per target during source resolution.
    */
   getContribution(props: {
-    imodelAccess: ECSchemaProvider;
+    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
     target: ContentTarget;
   }): Promise<FieldsProviderContribution | undefined>;
 }
@@ -81,13 +83,14 @@ export interface RelatedPropertiesDeclaration {
    * Optional custom resolution callback. When provided, the system delegates
    * path resolution to this callback instead of using default discovery.
    *
-   * The callback receives the iModel accessor and target, and returns concrete paths.
-   * The declaration's `properties` and `cardinalityHint` still apply to each resolved path.
+   * The callback receives the iModel accessor and target, and returns concrete paths, each
+   * paired with the concrete content-target classes it applies to. The declaration's
+   * `properties` and `cardinalityHint` still apply to each resolved path.
    */
   resolve?(props: {
     imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
     target: ContentTarget;
-  }): Promise<RelationshipPath[]>;
+  }): Promise<ResolvedPath[]>;
 }
 
 /**
@@ -108,8 +111,9 @@ interface CalculatedFieldDeclaration {
    * ECSQL expression that computes this field's value.
    *
    * Use `targetAlias` (defaults to `"this"`) followed by a dot to reference properties
-   * of the content target class. At query generation time, the pipeline performs a literal
-   * replacement of all `{targetAlias}.` occurrences with the actual query alias.
+   * of the content target class. At query generation time, the pipeline replaces all
+   * `{targetAlias}.` occurrences (in both their bare `{targetAlias}.` and bracket-quoted
+   * `[{targetAlias}].` forms) with the actual query alias.
    *
    * @example
    * ```
@@ -119,12 +123,15 @@ interface CalculatedFieldDeclaration {
   expression: string;
   /**
    * The placeholder used in `expression` to reference the content target class.
-   * Every occurrence of `{targetAlias}.` in the expression will be replaced with the
-   * actual query alias at query generation time.
+   * Every occurrence of `{targetAlias}.` in the expression, whether bare (`{targetAlias}.`)
+   * or bracket-quoted (`[{targetAlias}].`), will be replaced with the actual query alias at
+   * query generation time.
    *
    * @default "this"
    */
   targetAlias?: string;
+  /** Bind values for `expression`, keyed by parameter name. */
+  bindings?: Record<string, ECSqlBinding>;
   /** The value type of the computed result. */
   type: ValueDescriptor;
   /** Category to assign this field to (references a `CategoryDefinition.id`). */

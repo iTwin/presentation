@@ -29,6 +29,7 @@ export type {
   EC,
   ECClassHierarchyInspector,
   ECSchemaProvider,
+  NavigationValueDescriptor,
   PrimitiveValueDescriptor,
   RelationshipPath,
   StructValueDescriptor,

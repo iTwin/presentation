@@ -5,7 +5,7 @@
 
 import type { Id64String } from "@itwin/core-bentley";
 import type { EC, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
-import type { BaseFieldsProvider } from "./extensions/fields-providers/BaseFieldsProvider.js";
+import type { BaseFieldsProvider } from "./extensions/BaseFieldsProvider.js";
 
 /**
  * Hint about the effective cardinality of a relationship path.
@@ -88,6 +88,22 @@ export interface ContentSource {
   target: ContentTarget;
 
   /**
+   * Concrete primary classes present in the data under the target's `primaryClass`,
+   * discovered by a data-driven distinct-class scan during source resolution.
+   *
+   * - When `primaryClass` is a leaf (has no derived classes), the scan is skipped and this
+   *   is the normalized `primaryClass` (dot-notation).
+   * - When `primaryClass` is polymorphic, this lists the concrete subclasses that actually
+   *   have instances in scope, respecting the target's `instanceIds` / `instanceFilter`. This
+   *   may be empty when no instances match.
+   * - Also empty when enumeration was not performed (e.g. no iModel fields providers configured).
+   *
+   * The library uses this to populate a direct field's `valueClassNames`, so overrides can be
+   * scoped below a polymorphically-selected base primary via `TransformableDescriptor.forkField`.
+   */
+  resolvedPrimaryClasses: EC.FullClassName[];
+
+  /**
    * Resolved declaration groups — one per provider declaration that produced
    * concrete paths during resolution.
    *
@@ -96,6 +112,28 @@ export interface ContentSource {
    * cardinality hint without storing them on the cached source.
    */
   resolvedDeclarations: ResolvedDeclarationGroup[];
+}
+
+/**
+ * A single concrete relationship path resolved from a declaration, paired with the
+ * concrete content-target classes it applies to.
+ *
+ * @public
+ */
+export interface ResolvedPath {
+  /**
+   * The concrete relationship path from the content target to the related property source.
+   */
+  path: RelationshipPath;
+
+  /**
+   * Concrete content-target (near-end primary) classes — a subset of
+   * `ContentSource.resolvedPrimaryClasses` — whose instances actually connect to this `path`.
+   *
+   * Discovered by a data-driven scan during source resolution, so it lists only the concrete
+   * classes that participate in this path, never a polymorphically-selected base.
+   */
+  targetClassNames: EC.FullClassName[];
 }
 
 /**
@@ -119,8 +157,8 @@ interface ResolvedDeclarationGroup {
   declarationIndex: number;
 
   /**
-   * Concrete relationship paths resolved from the declaration's generic path.
-   * All classes are concrete — no base classes.
+   * Concrete relationship paths resolved from the declaration's generic path, each with the
+   * concrete content-target classes it applies to. All path classes are concrete — no base classes.
    */
-  paths: RelationshipPath[];
+  paths: ResolvedPath[];
 }

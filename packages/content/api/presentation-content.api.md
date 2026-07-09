@@ -5,6 +5,7 @@
 ```ts
 
 import { EC } from '@itwin/presentation-shared';
+import type { ECClassHierarchyInspector } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { ECSqlBinding } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
@@ -40,6 +41,7 @@ export interface CalculatedField extends BaseField {
 
 // @public
 interface CalculatedFieldDeclaration {
+    bindings?: Record<string, ECSqlBinding>;
     categoryId?: string;
     expression: string;
     id: string;
@@ -110,7 +112,7 @@ interface ContentProvider {
 // @public
 interface ContentProviderProps {
     config?: ContentConfiguration;
-    imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
     sources: ContentSource[];
 }
 
@@ -129,6 +131,7 @@ interface ContentSortSpec {
 // @public
 export interface ContentSource {
     resolvedDeclarations: ResolvedDeclarationGroup[];
+    resolvedPrimaryClasses: EC.FullClassName[];
     target: ContentTarget;
 }
 
@@ -160,6 +163,14 @@ export interface ContentValues {
 // @public
 export function createContentProvider(_props: ContentProviderProps): ContentProvider;
 
+// @public
+export function createIModelContentConfiguration(props: CreateIModelContentConfigurationProps): Promise<ContentConfiguration>;
+
+// @public
+interface CreateIModelContentConfigurationProps {
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+}
+
 // @alpha
 type DeepReadonly<T> = T extends (...args: any[]) => any ? T : T extends (infer U)[] ? ReadonlyArray<DeepReadonly<U>> : T extends object ? {
     readonly [K in keyof T]: DeepReadonly<T[K]>;
@@ -186,7 +197,10 @@ export function defineQueryFilterer(filterer: QueryFilterer): QueryFilterer;
 // @public
 interface DescriptorTransformer {
     priority?: number;
-    transform(descriptor: TransformableDescriptor): void;
+    transform(props: {
+        descriptor: TransformableDescriptor;
+        imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+    }): Promise<void>;
 }
 
 // @public
@@ -251,7 +265,7 @@ interface GetDistinctFieldValuesProps {
 // @public
 interface IModelFieldsProvider extends BaseFieldsProvider {
     getContribution(props: {
-        imodelAccess: ECSchemaProvider;
+        imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
         target: ContentTarget;
     }): Promise<FieldsProviderContribution | undefined>;
 }
@@ -330,7 +344,7 @@ interface RelatedPropertiesDeclaration {
     resolve?(props: {
         imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
         target: ContentTarget;
-    }): Promise<RelationshipPath[]>;
+    }): Promise<ResolvedPath[]>;
 }
 
 // @public
@@ -339,15 +353,21 @@ export function resolveContentSources(props: ResolveContentSourcesProps): Promis
 // @public
 interface ResolveContentSourcesProps {
     config?: Pick<ContentConfiguration, "fieldsProviders">;
-    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
     targets: ContentTarget[];
 }
 
 // @public
 interface ResolvedDeclarationGroup {
     declarationIndex: number;
-    paths: RelationshipPath[];
+    paths: ResolvedPath[];
     providerId: BaseFieldsProvider["id"];
+}
+
+// @public
+interface ResolvedPath {
+    path: RelationshipPath;
+    targetClassNames: EC.FullClassName[];
 }
 
 // @public
@@ -371,9 +391,9 @@ interface TransformableDescriptor {
 }
 
 // @public
-type TransformableField<TField = Field> = Omit<TField, "id"> & {
+type TransformableField<TField extends Field = Field> = TField extends Field ? Omit<TField, "id"> & {
     readonly id: string;
-};
+} : never;
 
 // @public (undocumented)
 type ValueFilterOperator = "is-equal" | "is-not-equal" | "is-null" | "is-not-null" | "less-than" | "less-than-or-equal" | "greater-than" | "greater-than-or-equal" | "like" | "is-in";

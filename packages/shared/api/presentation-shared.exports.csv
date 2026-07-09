@@ -34,6 +34,7 @@ public;type;IPrimitiveValueFormatter
 public;function;julianToDateTime
 public;type;LogFunction
 public;type;LogLevel
+public;interface;NavigationValueDescriptor
 public;const;NOOP_LOGGER
 public;function;normalizeFullClassName
 public;type;OmitOverUnion

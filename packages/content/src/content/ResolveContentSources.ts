@@ -3,13 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { filter, finalize, from, lastValueFrom, map, mergeMap, race, toArray } from "rxjs";
-import { ECSql } from "@itwin/presentation-shared";
+import { filter, finalize, forkJoin, from, lastValueFrom, map, mergeMap, of, race, toArray } from "rxjs";
+import { ECSql, getClass, normalizeFullClassName } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX } from "./InternalUtils.js";
+import { toSortedUniqueClassNames } from "./model/Utils.js";
 
 import type { Observable } from "rxjs";
 import type {
   EC,
+  ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryDef,
@@ -18,11 +20,8 @@ import type {
   Props,
   RelationshipPath,
 } from "@itwin/presentation-shared";
-import type { ContentSource, ContentTarget } from "./ContentTarget.js";
-import type {
-  IModelFieldsProvider,
-  RelatedPropertiesDeclaration,
-} from "./extensions/fields-providers/IModelFieldsProvider.js";
+import type { ContentSource, ContentTarget, ResolvedPath } from "./ContentTarget.js";
+import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "./extensions/IModelFieldsProvider.js";
 
 // --- Types ---
 
@@ -76,8 +75,31 @@ function buildTargetFilter(target: ContentTarget): {
 
 function buildClassNameColumns(path: JoinRelationshipPath): string {
   return path
-    .map((step: JoinRelationshipPath[number]) => `ec_classname([${step.targetAlias}].ECClassId, 's.c')`)
+    .map((step: JoinRelationshipPath[number]) => `ec_classname([${step.targetAlias}].[ECClassId], 's.c')`)
     .join(", ");
+}
+
+// The `ECClassId` columns behind `buildClassNameColumns` — used for `GROUP BY`. Grouping on the
+// raw indexed `ECClassId` lets the engine use its index, unlike `DISTINCT` on the computed
+// `ec_classname(...)` string.
+function buildClassIdColumns(path: JoinRelationshipPath): string {
+  return path.map((step: JoinRelationshipPath[number]) => `[${step.targetAlias}].[ECClassId]`).join(", ");
+}
+
+// Distinct-class scan of the primary itself: enumerates the concrete classes that actually
+// have instances in scope (honoring the target's instance IDs / filter). A plain class
+// selector is polymorphic, so this naturally spans the selected base and all its subclasses.
+function buildPrimaryEnumerationQuery(target: ContentTarget): ECSqlQueryDef {
+  const targetFilter = buildTargetFilter(target);
+  const whereClause = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
+  const ecsql = `
+    SELECT ec_classname([this].[ECClassId], 's.c')
+    FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
+    ${targetFilter.joins ?? ""}
+    ${whereClause}
+    GROUP BY [this].[ECClassId]
+  `;
+  return { ecsql, ...(targetFilter.bindings ? { bindings: targetFilter.bindings } : {}) };
 }
 
 // --- Strategies ---
@@ -100,10 +122,11 @@ const originalStrategy: ResolutionQueryStrategy = {
     const whereClause = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
     const allBindings = { ...joinBindings, ...targetFilter.bindings };
     const ecsql = `
-      SELECT DISTINCT ${buildClassNameColumns(joinPath)}
+      SELECT GROUP_CONCAT(DISTINCT ec_classname([this].[ECClassId], 's.c')), ${buildClassNameColumns(joinPath)}
       FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
       ${joins} ${targetFilter.joins ?? ""}
       ${whereClause}
+      GROUP BY ${buildClassIdColumns(joinPath)}
     `;
     return { ecsql, ...(Object.keys(allBindings).length > 0 ? { bindings: allBindings } : {}) };
   },
@@ -139,16 +162,21 @@ const rewriteStrategy: ResolutionQueryStrategy = {
 
     const instanceFilterClauses = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
 
+    // The inner scan is anchored at the (large) source, but only ever yields a small set of
+    // DISTINCT (first-hop class, near-end class) id pairs. Joining that derived table keeps the
+    // outer scan anchored at the first hop while still projecting the concrete near-end class.
     const ecsql = `
-      SELECT DISTINCT ${buildClassNameColumns(joinPath)}
+      SELECT GROUP_CONCAT(DISTINCT ec_classname([reachable].[NearEndClassId], 's.c')), ${buildClassNameColumns(joinPath)}
       FROM ${ECSql.createClassSelector(firstHopTarget)} [${firstHopAlias}]
       ${remainingJoins}
-      WHERE [${firstHopAlias}].ECClassId IN (
-        SELECT [${firstHopAlias}].ECClassId
+      INNER JOIN (
+        SELECT [${firstHopAlias}].[ECClassId] [FirstHopClassId], [this].[ECClassId] [NearEndClassId]
         FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
         ${firstStepJoins} ${targetFilter.joins ?? ""}
         ${instanceFilterClauses}
-      )
+        GROUP BY [${firstHopAlias}].[ECClassId], [this].[ECClassId]
+      ) [reachable] ON [reachable].[FirstHopClassId] = [${firstHopAlias}].[ECClassId]
+      GROUP BY ${buildClassIdColumns(joinPath)}
     `;
 
     const allBindings = { ...firstStepBindings, ...remainingBindings, ...targetFilter.bindings };
@@ -175,10 +203,11 @@ const crossJoinStrategy: ResolutionQueryStrategy = {
     const whereClause = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
     const allBindings = { ...joinBindings, ...targetFilter.bindings };
     const ecsql = `
-      SELECT DISTINCT ${buildClassNameColumns(joinPath)}
+      SELECT GROUP_CONCAT(DISTINCT ec_classname([this].[ECClassId], 's.c')), ${buildClassNameColumns(joinPath)}
       FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
       ${crossJoins} ${targetFilter.joins ?? ""}
       ${whereClause}
+      GROUP BY ${buildClassIdColumns(joinPath)}
     `;
     return { ecsql, ...(Object.keys(allBindings).length > 0 ? { bindings: allBindings } : {}) };
   },
@@ -213,7 +242,7 @@ async function resolveDeclarationPaths({
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   target: ContentTarget;
   declaration: Pick<RelatedPropertiesDeclaration, "path" | "resolve">;
-}): Promise<RelationshipPath[]> {
+}): Promise<ResolvedPath[]> {
   if (declaration.resolve) {
     return declaration.resolve({ imodelAccess, target });
   }
@@ -231,13 +260,16 @@ async function resolveDeclarationPaths({
   const rows = raceQueryExecution({ executor: imodelAccess, queries });
   return lastValueFrom(
     rows.pipe(
-      map((row) =>
-        declaration.path.map((step: RelationshipPath[number], i: number) => ({
+      // Each row is one resolved path: [nearEndClasses, step0Target, step1Target, ...]. The concrete
+      // content-target (near-end) classes are pre-aggregated by the query via `GROUP_CONCAT`.
+      map((row) => ({
+        path: declaration.path.map((step: RelationshipPath[number], i: number) => ({
           ...step,
-          sourceClassName: (i === 0 ? target.primaryClass : row[i - 1]) as EC.FullClassName,
-          targetClassName: row[i] as EC.FullClassName,
+          sourceClassName: (i === 0 ? target.primaryClass : row[i]) as EC.FullClassName,
+          targetClassName: row[i + 1] as EC.FullClassName,
         })),
-      ),
+        targetClassNames: toSortedUniqueClassNames((row[0] as string).split(",") as EC.FullClassName[]),
+      })),
       toArray(),
     ),
   );
@@ -245,16 +277,41 @@ async function resolveDeclarationPaths({
 
 // --- Target resolution ---
 
+// Enumerates the concrete primary classes present under the target's `primaryClass`.
+// A leaf class (no derived classes) can only ever resolve to itself, so the scan is skipped
+// and `[primaryClass]` is returned. Otherwise the data-driven distinct-class scan runs.
+async function resolvePrimaryClasses({
+  imodelAccess,
+  target,
+}: {
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  target: ContentTarget;
+}): Promise<EC.FullClassNameDotNotation[]> {
+  const primaryClass = await getClass(imodelAccess, target.primaryClass);
+  const derivedClasses = await primaryClass.getDerivedClasses();
+  if (derivedClasses.length === 0) {
+    return [normalizeFullClassName(target.primaryClass)];
+  }
+
+  const reader = imodelAccess.createQueryReader(buildPrimaryEnumerationQuery(target), { rowFormat: "Indexes" });
+  const classNames: EC.FullClassNameDotNotation[] = [];
+  for await (const row of reader) {
+    classNames.push(row[0] as EC.FullClassNameDotNotation);
+  }
+  return toSortedUniqueClassNames(classNames);
+}
+
 function resolveTarget({
   imodelAccess,
   providers,
   target,
 }: {
-  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
   providers: IModelFieldsProvider[];
   target: ContentTarget;
 }): Observable<ContentSource> {
-  return from(providers).pipe(
+  const resolvedPrimaryClasses = from(resolvePrimaryClasses({ imodelAccess, target }));
+  const resolvedDeclarations = from(providers).pipe(
     mergeMap(async (provider, providerIdx) => ({
       provider,
       providerIdx,
@@ -275,29 +332,23 @@ function resolveTarget({
     }),
     filter(({ paths }) => paths.length > 0),
     toArray(),
-    map((resolvedDeclarations): ContentSource => {
-      resolvedDeclarations.sort((a, b) => a.providerIdx - b.providerIdx || a.declarationIndex - b.declarationIndex);
-      return {
-        target,
-        resolvedDeclarations: resolvedDeclarations.map(({ providerId, declarationIndex, paths }) => ({
-          providerId,
-          declarationIndex,
-          paths,
-        })),
-      };
+    map((res) => {
+      res.sort((a, b) => a.providerIdx - b.providerIdx || a.declarationIndex - b.declarationIndex);
+      return res.map(({ providerId, declarationIndex, paths }) => ({ providerId, declarationIndex, paths }));
     }),
   );
+  return forkJoin({ target: of(target), resolvedPrimaryClasses, resolvedDeclarations });
 }
 
 // --- Public entry point ---
 
 export async function resolveContentSourcesImpl(props: {
-  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
   targets: ContentTarget[];
   fieldsProviders: IModelFieldsProvider[];
 }): Promise<ContentSource[]> {
   if (props.targets.length === 0 || props.fieldsProviders.length === 0) {
-    return props.targets.map((target) => ({ target, resolvedDeclarations: [] }));
+    return props.targets.map((target) => ({ target, resolvedPrimaryClasses: [], resolvedDeclarations: [] }));
   }
 
   return lastValueFrom(

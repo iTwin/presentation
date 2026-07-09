@@ -37,7 +37,9 @@ export function serializeRelationshipPath(path: RelationshipPath): string {
  * Normalizes, de-duplicates, and sorts the given class names. Produces the canonical
  * representation used for a property field's `valueClassNames` invariant.
  */
-export function toSortedUniqueClassNames(classNames: EC.FullClassName[]): EC.FullClassName[] {
+export function toSortedUniqueClassNames<TClassName extends string>(
+  classNames: TClassName[],
+): EC.FullClassNameDotNotation[] {
   return Array.from(new Set(classNames.map((name) => normalizeFullClassName(name)))).sort();
 }
 
@@ -58,7 +60,7 @@ const MAX_READABLE_FORK_KEY_LENGTH = 100;
  * Deterministic 32-bit FNV-1a hash rendered in base-36. Stable across runs so it can be
  * embedded in cache-stable field IDs.
  */
-function hashString(value: string): string {
+export function hashString(value: string): string {
   // FNV-1a 32-bit: start from the FNV offset basis, then for each char XOR it in and
   // multiply by the FNV prime (`Math.imul` keeps the multiply in 32-bit space).
   // eslint-disable-next-line @typescript-eslint/naming-convention

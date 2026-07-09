@@ -10,6 +10,7 @@ public;interface;ContentSource
 public;interface;ContentTarget
 public;interface;ContentValues
 public;function;createContentProvider
+public;function;createIModelContentConfiguration
 public;const;DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY
 public;const;DEFAULT_FIELDS_PROVIDER_PRIORITY
 public;function;defineDescriptorTransformer
