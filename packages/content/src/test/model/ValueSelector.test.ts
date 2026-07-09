@@ -7,14 +7,9 @@ import { describe, expect, it } from "vitest";
 import { createTransformableDescriptor } from "../../content/extensions/DescriptorTransformer.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { toSortedUniqueClassNames } from "../../content/model/Utils.js";
-import {
-  collectSelectors,
-  computePropertySelectorId,
-  createCalculatedSelector,
-  createPropertySelector,
-} from "../../content/model/ValueSelector.js";
+import { collectSelectors, computePropertySelectorId } from "../../content/model/ValueSelector.js";
 
-import type { EC } from "@itwin/presentation-shared";
+import type { EC, ECSqlBinding } from "@itwin/presentation-shared";
 import type { ContentDescriptor } from "../../content/model/ContentDescriptor.js";
 import type { CalculatedField, Field, PropertyField as PropertyFieldType } from "../../content/model/Field.js";
 
@@ -43,7 +38,12 @@ function propertyField(props: {
   };
 }
 
-function calculatedField(props: { id: string; expression: string; targetAlias?: string }): CalculatedField {
+function calculatedField(props: {
+  id: string;
+  expression: string;
+  targetAlias?: string;
+  bindings?: Record<string, ECSqlBinding>;
+}): CalculatedField {
   return {
     kind: "calculated",
     id: props.id,
@@ -52,6 +52,7 @@ function calculatedField(props: { id: string; expression: string; targetAlias?: 
     type: { kind: "primitive", type: "String" },
     expression: props.expression,
     targetAlias: props.targetAlias,
+    bindings: props.bindings,
   };
 }
 
@@ -60,44 +61,6 @@ function createDescriptor(fields: Field[]): ContentDescriptor {
 }
 
 describe("ValueSelector", () => {
-  describe("computePropertySelectorId", () => {
-    it("returns the base property field id (delegates to PropertyField.computeId without a forkKey)", () => {
-      const props = { propertyClassName: "Stuff:Thing" as EC.FullClassName, propertyName: "Height" };
-      expect(computePropertySelectorId(props)).to.equal(PropertyField.computeId(props));
-    });
-  });
-
-  describe("createCalculatedSelector", () => {
-    it("builds a calculated selector from the given id and expression", () => {
-      expect(createCalculatedSelector({ id: "provider:calc", expression: "1 + 1" })).to.deep.equal({
-        kind: "calculated",
-        id: "provider:calc",
-        expression: "1 + 1",
-      });
-    });
-
-    it("includes targetAlias and bindings only when provided", () => {
-      expect(
-        createCalculatedSelector({
-          id: "a",
-          expression: "x",
-          targetAlias: "e",
-          bindings: { p: { type: "string", value: "v" } },
-        }),
-      ).to.deep.equal({
-        kind: "calculated",
-        id: "a",
-        expression: "x",
-        targetAlias: "e",
-        bindings: { p: { type: "string", value: "v" } },
-      });
-
-      const minimal = createCalculatedSelector({ id: "a", expression: "x" });
-      expect(minimal).to.not.have.property("targetAlias");
-      expect(minimal).to.not.have.property("bindings");
-    });
-  });
-
   describe("collectSelectors", () => {
     it("produces one selector per SQL-backed field", () => {
       const prop = propertyField({
@@ -110,6 +73,23 @@ describe("ValueSelector", () => {
       expect(Object.keys(selectors)).to.have.members([prop.selectorId, calc.selectorId]);
       expect(selectors[prop.selectorId].kind).to.equal("property");
       expect(selectors[calc.selectorId].kind).to.equal("calculated");
+    });
+
+    it("carries a calculated field's expression, targetAlias, and bindings onto its selector", () => {
+      const calc = calculatedField({
+        id: "provider:calc",
+        expression: "this.A * :factor",
+        targetAlias: "this",
+        bindings: { factor: { type: "double", value: 2 } },
+      });
+      const selectors = collectSelectors([calc], []);
+      expect(selectors[calc.selectorId]).to.deep.equal({
+        kind: "calculated",
+        id: calc.selectorId,
+        expression: "this.A * :factor",
+        targetAlias: "this",
+        bindings: { factor: { type: "double", value: 2 } },
+      });
     });
 
     it("deduplicates a property field and its fork into a single selector", () => {
@@ -127,12 +107,16 @@ describe("ValueSelector", () => {
     });
 
     it("adds a field-less selector for an external input with no matching field", () => {
-      const selectors = collectSelectors([], [{ className: "Stuff:Thing", propertyName: "Height" }]);
+      const selectors = collectSelectors([], [{ propertyClassName: "Stuff:Thing", propertyName: "Height" }]);
       const id = computePropertySelectorId({ propertyClassName: "Stuff:Thing", propertyName: "Height" });
       expect(Object.keys(selectors)).to.deep.equal([id]);
-      expect(selectors[id]).to.deep.equal(
-        createPropertySelector({ sourceClassName: "Stuff:Thing", propertyName: "Height" }),
-      );
+      expect(selectors[id]).to.deep.equal({
+        kind: "property",
+        id,
+        sourceClassName: "Stuff:Thing",
+        propertyName: "Height",
+        pathFromTarget: [],
+      });
     });
 
     it("reuses the field-backed selector for an external input matching a field (no duplicate)", () => {
@@ -141,7 +125,7 @@ describe("ValueSelector", () => {
         propertyName: "Height",
         valueClassNames: ["Stuff:Door"],
       });
-      const selectors = collectSelectors([prop], [{ className: "Stuff:Thing", propertyName: "Height" }]);
+      const selectors = collectSelectors([prop], [{ propertyClassName: "Stuff:Thing", propertyName: "Height" }]);
       expect(Object.keys(selectors)).to.deep.equal([prop.selectorId]);
     });
 
@@ -157,7 +141,7 @@ describe("ValueSelector", () => {
         valueClassNames: ["Stuff:Door"],
       });
       const descriptor = createDescriptor([removable, inputBacked]);
-      const externalInputs = [{ className: "Stuff:Thing" as EC.FullClassName, propertyName: "Width" }];
+      const externalInputs = [{ propertyClassName: "Stuff:Thing" as EC.FullClassName, propertyName: "Width" }];
 
       const transformable = createTransformableDescriptor(descriptor);
       transformable.removeField(removable.id);

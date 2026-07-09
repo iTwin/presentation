@@ -78,21 +78,16 @@ export function computePropertySelectorId(props: {
 
 /**
  * Creates a {@link PropertyValueSelector} with its id derived from the property's identity.
- *
- * @internal
  */
-export function createPropertySelector(props: {
+function createPropertySelector(props: {
+  id: string;
   sourceClassName: EC.FullClassName;
   propertyName: string;
   pathFromTarget?: RelationshipPath;
 }): PropertyValueSelector {
   return {
     kind: "property",
-    id: computePropertySelectorId({
-      propertyClassName: props.sourceClassName,
-      propertyName: props.propertyName,
-      pathFromTarget: props.pathFromTarget,
-    }),
+    id: props.id,
     sourceClassName: props.sourceClassName,
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
@@ -102,10 +97,8 @@ export function createPropertySelector(props: {
 /**
  * Creates a {@link CalculatedValueSelector}. Its id equals the calculated field id and must be
  * supplied by the caller (it is not derivable from the expression).
- *
- * @internal
  */
-export function createCalculatedSelector(props: {
+function createCalculatedSelector(props: {
   id: string;
   expression: string;
   targetAlias?: string;
@@ -136,27 +129,21 @@ export function createCalculatedSelector(props: {
  */
 export function collectSelectors(
   fields: Iterable<Field>,
-  externalInputs: Iterable<{ className: EC.FullClassName; propertyName: string; path?: RelationshipPath }>,
+  externalInputs: Iterable<{
+    propertyClassName: EC.FullClassName;
+    propertyName: string;
+    pathFromTarget?: RelationshipPath;
+  }>,
 ): Record<ValueSelector["id"], ValueSelector> {
   const result: Record<ValueSelector["id"], ValueSelector> = {};
   for (const field of fields) {
     switch (field.kind) {
       case "property": {
-        const selector = createPropertySelector({
-          sourceClassName: field.sourceClassName,
-          propertyName: field.propertyName,
-          pathFromTarget: field.pathFromTarget,
-        });
-        result[selector.id] = selector;
+        result[field.selectorId] = createPropertySelector({ ...field, id: field.selectorId });
         break;
       }
       case "calculated": {
-        const selector = createCalculatedSelector({
-          id: field.selectorId,
-          expression: field.expression,
-          targetAlias: field.targetAlias,
-          bindings: field.bindings,
-        });
+        const selector = createCalculatedSelector({ ...field, id: field.selectorId });
         result[selector.id] = selector;
         break;
       }
@@ -165,9 +152,10 @@ export function collectSelectors(
   }
   for (const input of externalInputs) {
     const selector = createPropertySelector({
-      sourceClassName: input.className,
+      id: computePropertySelectorId(input),
+      sourceClassName: input.propertyClassName,
       propertyName: input.propertyName,
-      pathFromTarget: input.path,
+      pathFromTarget: input.pathFromTarget,
     });
     result[selector.id] ??= selector;
   }
