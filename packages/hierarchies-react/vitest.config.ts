@@ -25,9 +25,7 @@ export default defineConfig({
       },
       {
         plugins: [react()],
-        optimizeDeps: {
-          include: ["@mui/material"],
-        },
+        optimizeDeps: { include: ["@mui/material"] },
         test: {
           name: "hierarchies-react-components",
           include: ["src/test/components/**/*.test.{ts,tsx}"],

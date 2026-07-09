@@ -29,7 +29,7 @@ import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { Selectable, Selectables } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
-import { Icon } from "@stratakit/foundations";
+import { Icon } from "@stratakit/mui";
 import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
 import { TreeRendererWithFilterAction } from "./TreeRendererWithFilterAction";
 
