@@ -7,7 +7,7 @@
 import { EC } from '@itwin/presentation-shared';
 import type { ECClassHierarchyInspector } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
-import type { ECSqlBinding } from '@itwin/presentation-shared';
+import { ECSqlBinding } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import type { Id64String } from '@itwin/core-bentley';
 import type { InstanceKey } from '@itwin/presentation-shared';
@@ -33,9 +33,11 @@ interface BaseFieldsProvider {
 
 // @public
 export interface CalculatedField extends BaseField {
+    bindings?: Record<string, ECSqlBinding>;
     expression: string;
     // (undocumented)
     kind: "calculated";
+    selectorId: string;
     targetAlias?: string;
 }
 
@@ -48,6 +50,13 @@ interface CalculatedFieldDeclaration {
     label: string;
     targetAlias?: string;
     type: ValueDescriptor;
+}
+
+// @public
+export interface CalculatedValueSelector extends Pick<CalculatedField, "expression" | "targetAlias" | "bindings"> {
+    id: string;
+    // (undocumented)
+    kind: "calculated";
 }
 
 // @public
@@ -90,6 +99,7 @@ export interface ContentConfiguration {
 export interface ContentDescriptor {
     categories: Record<CategoryDefinition["id"], CategoryDefinition>;
     fields: Record<Field["id"], Field>;
+    selectors: Record<ValueSelector["id"], ValueSelector>;
     sources: ContentSource[];
 }
 
@@ -171,7 +181,7 @@ interface CreateIModelContentConfigurationProps {
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
 }
 
-// @alpha
+// @public
 type DeepReadonly<T> = T extends (...args: any[]) => any ? T : T extends (infer U)[] ? ReadonlyArray<DeepReadonly<U>> : T extends object ? {
     readonly [K in keyof T]: DeepReadonly<T[K]>;
 } : T;
@@ -281,11 +291,15 @@ interface InputPropertyDeclaration {
 export function mapItems<TIn, TOut>(items: AsyncIterable<TIn>, transform: (item: TIn) => TOut | Promise<TOut>): AsyncIterable<TOut>;
 
 // @public
+type MutableFieldMetadata = "label" | "categoryId" | "hidden" | "readOnly";
+
+// @public
 export interface PropertyField extends BaseField {
     // (undocumented)
     kind: "property";
     pathFromTarget: RelationshipPath;
     propertyName: string;
+    selectorId: string;
     sourceClassName: EC.FullClassName;
     valueClassNames: EC.FullClassName[];
 }
@@ -318,6 +332,13 @@ type PropertySelection = "all" | "none" | {
 } | {
     exclude: string[];
 };
+
+// @public
+export interface PropertyValueSelector extends Pick<PropertyField, "sourceClassName" | "propertyName" | "pathFromTarget"> {
+    id: string;
+    // (undocumented)
+    kind: "property";
+}
 
 // @public
 interface QueryFilterClauses {
@@ -391,12 +412,13 @@ interface TransformableDescriptor {
 }
 
 // @public
-type TransformableField<TField extends Field = Field> = TField extends Field ? Omit<TField, "id"> & {
-    readonly id: string;
-} : never;
+type TransformableField<TField extends Field = Field> = TField extends Field ? DeepReadonly<Omit<TField, MutableFieldMetadata>> & Pick<TField, MutableFieldMetadata> : never;
 
 // @public (undocumented)
 type ValueFilterOperator = "is-equal" | "is-not-equal" | "is-null" | "is-not-null" | "less-than" | "less-than-or-equal" | "greater-than" | "greater-than-or-equal" | "like" | "is-in";
+
+// @public
+export type ValueSelector = PropertyValueSelector | CalculatedValueSelector;
 
 // (No @packageDocumentation comment for this package)
 
