@@ -68,7 +68,7 @@ export const TreeActionBase: NamedExoticComponent<TreeActionBaseProps> = memo(fu
   if (variant === "context-menu") {
     const { label, icon, onClick } = actionProps;
     return (
-      <MenuItem dense onClick={onClick as unknown as React.MouseEventHandler<HTMLLIElement>}>
+      <MenuItem dense onClick={onClick as React.MouseEventHandler}>
         {icon ? <ListItemIcon>{typeof icon === "string" ? <Icon href={icon} /> : icon}</ListItemIcon> : null}
         <Typography variant="caption">{label}</Typography>
       </MenuItem>

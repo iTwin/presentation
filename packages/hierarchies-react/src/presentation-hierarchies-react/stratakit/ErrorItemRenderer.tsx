@@ -123,7 +123,7 @@ function ErrorItemContainer({ treeNode, message, actions, scrollToElement }: Err
       actions={actions
         ?.filter(({ condition }) => condition())
         .map(({ label, action }) => (
-          <Typography key={label} variant="caption" component="span" sx={{ display: "block" }}>
+          <Typography key={label} variant="caption" component="div">
             <Link component="button" type="button" onClick={action}>
               {label}
             </Link>
