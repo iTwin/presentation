@@ -17,7 +17,17 @@ import {
   useRef,
   useState,
 } from "react";
-import { CircularProgress, FormHelperText, IconButton, Menu, TextField, Typography } from "@mui/material";
+import {
+  CircularProgress,
+  ClickAwayListener,
+  FormHelperText,
+  IconButton,
+  MenuList,
+  Paper,
+  Popper,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { Icon } from "@stratakit/mui";
 import { unstable_Popover as Popover, Tree } from "@stratakit/structures";
 import { useTranslation } from "../LocalizationContext.js";
@@ -188,27 +198,39 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
             }}
           />
         </Popover>
-        {/* Context menu */}
-        <Menu
-          open={contextMenuProps !== undefined}
-          onClose={() => setContextMenuProps(undefined)}
-          anchorReference="anchorPosition"
-          anchorPosition={
-            contextMenuProps ? { top: contextMenuProps.position.y, left: contextMenuProps.position.x } : undefined
-          }
-          disablePortal
-          slotProps={{
-            list: { dense: true, "aria-label": translate("more") },
-            backdrop: {
-              onContextMenu: (e) => {
-                e.preventDefault();
-                setContextMenuProps(undefined);
-              },
-            },
-          }}
-        >
-          {contextMenuProps?.actions}
-        </Menu>
+        {contextMenuProps && (
+          <Popper
+            open
+            anchorEl={{
+              getBoundingClientRect: () =>
+                DOMRect.fromRect({
+                  x: contextMenuProps.position.x,
+                  y: contextMenuProps.position.y,
+                  width: 0,
+                  height: 0,
+                }),
+            }}
+            placement="bottom-start"
+            style={{ zIndex: 1300 }}
+          >
+            <ClickAwayListener mouseEvent="onMouseDown" onClickAway={() => setContextMenuProps(undefined)}>
+              <Paper
+                elevation={8}
+                sx={{ bgcolor: "background.paper" }}
+                onKeyDown={(e) => e.key === "Escape" && setContextMenuProps(undefined)}
+              >
+                <MenuList
+                  dense
+                  autoFocusItem
+                  aria-label={translate("more")}
+                  onClick={() => setContextMenuProps(undefined)}
+                >
+                  {contextMenuProps.actions}
+                </MenuList>
+              </Paper>
+            </ClickAwayListener>
+          </Popper>
+        )}
       </>
     );
   }),
