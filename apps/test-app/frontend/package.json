@@ -41,7 +41,7 @@
     "@itwin/unified-selection": "workspace:*",
     "@itwin/unified-selection-react": "workspace:*",
     "@rolldown/plugin-babel": "catalog:build-tools",
-    "@mui/material": "^9.0.0",
+    "@mui/material": "catalog:stratakit",
     "@stratakit/icons": "catalog:stratakit",
     "@stratakit/mui": "catalog:stratakit",
     "@stratakit/structures": "catalog:stratakit",
