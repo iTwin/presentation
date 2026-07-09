@@ -370,10 +370,15 @@ type NumericPrimitiveValueType = Extract<PrimitiveValueType, "Double" | "Integer
  * - `PrimitiveValueDescriptor`: a scalar primitive.
  * - `StructValueDescriptor`: a named struct with typed members.
  * - `ArrayValueDescriptor`: an ordered collection of a single element type.
+ * - `NavigationValueDescriptor`: a reference to another EC instance, carrying the reference's target class name.
  *
  * @public
  */
-export type ValueDescriptor = PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor;
+export type ValueDescriptor =
+  | PrimitiveValueDescriptor
+  | StructValueDescriptor
+  | ArrayValueDescriptor
+  | NavigationValueDescriptor;
 
 /**
  * Describes a scalar primitive value.
@@ -427,6 +432,22 @@ export interface ArrayValueDescriptor {
   kind: "array";
   /** The type descriptor for each element in the array. */
   elementType: ValueDescriptor;
+}
+
+/**
+ * Describes a navigation property value — a reference to another EC instance.
+ * The runtime value is the referenced instance's id (`Id64String`); this descriptor
+ * additionally carries the reference's target class name as metadata, so consumers can
+ * build selects against the referenced instance (e.g. to resolve its label).
+ * @public
+ */
+export interface NavigationValueDescriptor {
+  kind: "navigation";
+  /**
+   * Full name of the relationship's target-constraint class the navigation points at
+   * (the referenced instance's class, or its base constraint class).
+   */
+  targetClassName: EC.FullClassName;
 }
 
 /**

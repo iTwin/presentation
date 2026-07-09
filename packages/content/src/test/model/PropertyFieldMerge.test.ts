@@ -212,6 +212,40 @@ describe("mergePropertyFieldsByIdentity", () => {
     expect(() => mergePropertyFieldsByIdentity([a, b])).to.throw(/divergent metadata/);
   });
 
+  it("throws when grouped navigation candidates have divergent target class", () => {
+    const a = createField({
+      sourceClassName: "Stuff:Thing",
+      propertyName: "Owner",
+      valueClassNames: ["Stuff:Door"],
+      type: { kind: "navigation", targetClassName: "Stuff.Person" },
+    });
+    const b = createField({
+      sourceClassName: "Stuff:Thing",
+      propertyName: "Owner",
+      valueClassNames: ["Stuff:Window"],
+      type: { kind: "navigation", targetClassName: "Stuff.Organization" },
+    });
+    expect(() => mergePropertyFieldsByIdentity([a, b])).to.throw(/divergent metadata/);
+  });
+
+  it("merges navigation candidates that share a target class", () => {
+    const a = createField({
+      sourceClassName: "Stuff:Thing",
+      propertyName: "Owner",
+      valueClassNames: ["Stuff:Door"],
+      type: { kind: "navigation", targetClassName: "Stuff.Person" },
+    });
+    const b = createField({
+      sourceClassName: "Stuff:Thing",
+      propertyName: "Owner",
+      valueClassNames: ["Stuff:Window"],
+      type: { kind: "navigation", targetClassName: "Stuff.Person" },
+    });
+    const result = mergePropertyFieldsByIdentity([a, b]);
+    const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Owner" });
+    expect(result[id].valueClassNames).to.deep.equal(["Stuff.Door", "Stuff.Window"]);
+  });
+
   it("merges candidates whose value types are structurally equal but distinct instances", () => {
     const type = (): PropertyField["type"] => ({
       kind: "struct",
