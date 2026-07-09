@@ -9,7 +9,6 @@ import {
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { PrimitiveValue } from "@itwin/appui-abstract";
 import { EditorContainer, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
@@ -101,9 +100,6 @@ describe("Property editors", () => {
     const propertyRecord = propertyData.records[field!.category.name].find((r) => r.property.name === field!.name);
     expect(propertyRecord).toBeDefined();
     expect(propertyRecord!.property.kindOfQuantityName).toBe(schema.items.TestKOQ.fullName.replaceAll(".", ":"));
-
-    // ensure the display value is formatted with the overridden format
-    expect((propertyRecord!.value as PrimitiveValue).displayValue).toBe("48.6 in");
 
     // render an editor for the property
     const commitSpy = vi.fn();

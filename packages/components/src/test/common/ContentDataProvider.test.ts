@@ -664,16 +664,6 @@ describe("ContentDataProvider", () => {
       onVariableChanged.raiseEvent("var_id", "prev", "curr");
       expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith(CacheInvalidationProps.full());
     });
-
-    it("invalidates cache when active unit system change", async () => {
-      onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
-      expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith({ formatting: true });
-    });
-
-    it("invalidates cache when formatting settings change", async () => {
-      onFormatsChanged.raiseEvent({ formatsChanged: "all" });
-      expect(invalidateCacheSpy).toHaveBeenCalledExactlyOnceWith({ formatting: true });
-    });
   });
 
   describe("diagnostics", () => {

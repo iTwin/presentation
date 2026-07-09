@@ -49,7 +49,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "",
+          "displayValue": undefined,
           "value": "",
           "valueFormat": 0,
         },
@@ -106,7 +106,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "",
+          "displayValue": undefined,
           "value": undefined,
           "valueFormat": 0,
         },
@@ -166,7 +166,7 @@ Object {
           "items": Array [
             PropertyRecord {
               "autoExpand": undefined,
-              "description": "test value",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -179,7 +179,7 @@ Object {
                 "typename": "MyArrayItemType",
               },
               "value": Object {
-                "displayValue": "test value",
+                "displayValue": undefined,
                 "value": "test value",
                 "valueFormat": 0,
               },
@@ -283,7 +283,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 1",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -296,14 +296,14 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 1",
+          "displayValue": undefined,
           "value": "value 1",
           "valueFormat": 0,
         },
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 2",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -316,7 +316,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 2",
+          "displayValue": undefined,
           "value": "value 2",
           "valueFormat": 0,
         },
@@ -365,7 +365,7 @@ Object {
     "Category1": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 1",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -378,14 +378,14 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 1",
+          "displayValue": undefined,
           "value": "value 1",
           "valueFormat": 0,
         },
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 4",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -398,7 +398,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 4",
+          "displayValue": undefined,
           "value": "value 4",
           "valueFormat": 0,
         },
@@ -423,7 +423,7 @@ Object {
           "members": Object {
             "nested-field-2": PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 2",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -436,7 +436,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 2",
+                "displayValue": undefined,
                 "value": "value 2",
                 "valueFormat": 0,
               },
@@ -447,7 +447,7 @@ Object {
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 3",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -460,7 +460,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 3",
+          "displayValue": undefined,
           "value": "value 3",
           "valueFormat": 0,
         },
@@ -557,7 +557,7 @@ Object {
                       "members": Object {
                         "nested-field-1": PropertyRecord {
                           "autoExpand": undefined,
-                          "description": "display value 1",
+                          "description": undefined,
                           "extendedData": undefined,
                           "imodelKey": "test-imodel",
                           "isDisabled": undefined,
@@ -570,7 +570,7 @@ Object {
                             "typename": "string",
                           },
                           "value": Object {
-                            "displayValue": "display value 1",
+                            "displayValue": undefined,
                             "value": "value 1",
                             "valueFormat": 0,
                           },
@@ -618,7 +618,7 @@ Object {
                       "members": Object {
                         "nested-field-3": PropertyRecord {
                           "autoExpand": undefined,
-                          "description": "display value 3",
+                          "description": undefined,
                           "extendedData": undefined,
                           "imodelKey": "test-imodel",
                           "isDisabled": undefined,
@@ -631,7 +631,7 @@ Object {
                             "typename": "string",
                           },
                           "value": Object {
-                            "displayValue": "display value 3",
+                            "displayValue": undefined,
                             "value": "value 3",
                             "valueFormat": 0,
                           },
@@ -651,7 +651,7 @@ Object {
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -664,7 +664,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value",
+          "displayValue": undefined,
           "value": "value",
           "valueFormat": 0,
         },
@@ -689,7 +689,7 @@ Object {
           "members": Object {
             "nested-field-2": PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 2",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -702,7 +702,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 2",
+                "displayValue": undefined,
                 "value": "value 2",
                 "valueFormat": 0,
               },
@@ -729,7 +729,7 @@ Object {
           "members": Object {
             "nested-field-4": PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 4",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -742,14 +742,14 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 4",
+                "displayValue": undefined,
                 "value": "value 4",
                 "valueFormat": 0,
               },
             },
             "nested-field-5": PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 5",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -762,7 +762,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 5",
+                "displayValue": undefined,
                 "value": "value 5",
                 "valueFormat": 0,
               },
@@ -810,7 +810,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 1",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -823,7 +823,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 1",
+          "displayValue": undefined,
           "value": "value 1",
           "valueFormat": 0,
         },
@@ -872,7 +872,7 @@ Object {
     "Category1": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 1",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -885,7 +885,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 1",
+          "displayValue": undefined,
           "value": "value 1",
           "valueFormat": 0,
         },
@@ -894,7 +894,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 2",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -907,7 +907,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 2",
+          "displayValue": undefined,
           "value": "value 2",
           "valueFormat": 0,
         },
@@ -972,7 +972,7 @@ Object {
           "members": Object {
             "nested-field-1": PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 1",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -985,7 +985,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 1",
+                "displayValue": undefined,
                 "value": "value 1",
                 "valueFormat": 0,
               },
@@ -996,7 +996,7 @@ Object {
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 3",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -1009,7 +1009,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 3",
+          "displayValue": undefined,
           "value": "value 3",
           "valueFormat": 0,
         },
@@ -1018,7 +1018,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 2",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -1031,7 +1031,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 2",
+          "displayValue": undefined,
           "value": "value 2",
           "valueFormat": 0,
         },
@@ -1091,7 +1091,7 @@ Object {
           "items": Array [
             PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 1",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -1104,14 +1104,14 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 1",
+                "displayValue": undefined,
                 "value": "value 1",
                 "valueFormat": 0,
               },
             },
             PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 2",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -1124,7 +1124,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 2",
+                "displayValue": undefined,
                 "value": "value 2",
                 "valueFormat": 0,
               },
@@ -1189,7 +1189,7 @@ Object {
           "items": Array [
             PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 1",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -1202,7 +1202,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 1",
+                "displayValue": undefined,
                 "value": "value 1",
                 "valueFormat": 0,
               },
@@ -1283,7 +1283,7 @@ Object {
                 "members": Object {
                   "struct-member-field": PropertyRecord {
                     "autoExpand": undefined,
-                    "description": "display value 1",
+                    "description": undefined,
                     "extendedData": undefined,
                     "imodelKey": "test-imodel",
                     "isDisabled": undefined,
@@ -1296,7 +1296,7 @@ Object {
                       "typename": "string",
                     },
                     "value": Object {
-                      "displayValue": "display value 1",
+                      "displayValue": undefined,
                       "value": "value 1",
                       "valueFormat": 0,
                     },
@@ -1323,7 +1323,7 @@ Object {
                 "members": Object {
                   "struct-member-field": PropertyRecord {
                     "autoExpand": undefined,
-                    "description": "display value 2",
+                    "description": undefined,
                     "extendedData": undefined,
                     "imodelKey": "test-imodel",
                     "isDisabled": undefined,
@@ -1336,7 +1336,7 @@ Object {
                       "typename": "string",
                     },
                     "value": Object {
-                      "displayValue": "display value 2",
+                      "displayValue": undefined,
                       "value": "value 2",
                       "valueFormat": 0,
                     },
@@ -1421,7 +1421,7 @@ Object {
                 "members": Object {
                   "struct-member-field": PropertyRecord {
                     "autoExpand": undefined,
-                    "description": "display value 1",
+                    "description": undefined,
                     "extendedData": undefined,
                     "imodelKey": "test-imodel",
                     "isDisabled": undefined,
@@ -1434,7 +1434,7 @@ Object {
                       "typename": "string",
                     },
                     "value": Object {
-                      "displayValue": "display value 1",
+                      "displayValue": undefined,
                       "value": "value 1",
                       "valueFormat": 0,
                     },
@@ -1535,7 +1535,7 @@ Object {
                       "members": Object {
                         "primitive-field-3": PropertyRecord {
                           "autoExpand": undefined,
-                          "description": "display value 1",
+                          "description": undefined,
                           "extendedData": undefined,
                           "imodelKey": "test-imodel",
                           "isDisabled": undefined,
@@ -1548,7 +1548,7 @@ Object {
                             "typename": "string",
                           },
                           "value": Object {
-                            "displayValue": "display value 1",
+                            "displayValue": undefined,
                             "value": "value 1",
                             "valueFormat": 0,
                           },
@@ -1575,7 +1575,7 @@ Object {
                       "members": Object {
                         "primitive-field-3": PropertyRecord {
                           "autoExpand": undefined,
-                          "description": "display value 2",
+                          "description": undefined,
                           "extendedData": undefined,
                           "imodelKey": "test-imodel",
                           "isDisabled": undefined,
@@ -1588,7 +1588,7 @@ Object {
                             "typename": "string",
                           },
                           "value": Object {
-                            "displayValue": "display value 2",
+                            "displayValue": undefined,
                             "value": "value 2",
                             "valueFormat": 0,
                           },
@@ -1604,7 +1604,7 @@ Object {
             },
             "primitive-field-2": PropertyRecord {
               "autoExpand": undefined,
-              "description": "test",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -1617,7 +1617,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "test",
+                "displayValue": undefined,
                 "value": "test",
                 "valueFormat": 0,
               },
@@ -1628,7 +1628,7 @@ Object {
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "test",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -1641,7 +1641,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "test",
+          "displayValue": undefined,
           "value": "test",
           "valueFormat": 0,
         },
@@ -1701,7 +1701,7 @@ Object {
           "members": Object {
             "primitive-field-2": PropertyRecord {
               "autoExpand": undefined,
-              "description": "test",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -1714,14 +1714,14 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "test",
+                "displayValue": undefined,
                 "value": "test",
                 "valueFormat": 0,
               },
             },
             "primitive-field-3": PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 1",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -1734,7 +1734,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 1",
+                "displayValue": undefined,
                 "value": "value 1",
                 "valueFormat": 0,
               },
@@ -1745,7 +1745,7 @@ Object {
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "test",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -1758,7 +1758,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "test",
+          "displayValue": undefined,
           "value": "test",
           "valueFormat": 0,
         },
@@ -1835,7 +1835,7 @@ Object {
                 "members": Object {
                   "nested-field": PropertyRecord {
                     "autoExpand": undefined,
-                    "description": "display value 1",
+                    "description": undefined,
                     "extendedData": undefined,
                     "imodelKey": "test-imodel",
                     "isDisabled": undefined,
@@ -1848,7 +1848,7 @@ Object {
                       "typename": "string",
                     },
                     "value": Object {
-                      "displayValue": "display value 1",
+                      "displayValue": undefined,
                       "value": "value 1",
                       "valueFormat": 0,
                     },
@@ -1875,7 +1875,7 @@ Object {
                 "members": Object {
                   "nested-field": PropertyRecord {
                     "autoExpand": undefined,
-                    "description": "display value 2",
+                    "description": undefined,
                     "extendedData": undefined,
                     "imodelKey": "test-imodel",
                     "isDisabled": undefined,
@@ -1888,7 +1888,7 @@ Object {
                       "typename": "string",
                     },
                     "value": Object {
-                      "displayValue": "display value 2",
+                      "displayValue": undefined,
                       "value": "value 2",
                       "valueFormat": 0,
                     },
@@ -1941,7 +1941,7 @@ Object {
     "test-category": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 1",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -1954,7 +1954,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 1",
+          "displayValue": undefined,
           "value": "value 1",
           "valueFormat": 0,
         },
@@ -2014,7 +2014,7 @@ Object {
           "members": Object {
             "nested-field": PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 1",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -2027,7 +2027,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 1",
+                "displayValue": undefined,
                 "value": "value 1",
                 "valueFormat": 0,
               },
@@ -2038,7 +2038,7 @@ Object {
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 3",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -2051,7 +2051,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 3",
+          "displayValue": undefined,
           "value": "value 3",
           "valueFormat": 0,
         },
@@ -2111,7 +2111,7 @@ Object {
           "members": Object {
             "primitive-field-2": PropertyRecord {
               "autoExpand": undefined,
-              "description": "p2",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -2124,7 +2124,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "p2",
+                "displayValue": undefined,
                 "value": "p2",
                 "valueFormat": 0,
               },
@@ -2135,7 +2135,7 @@ Object {
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "p1",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -2148,7 +2148,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "p1",
+          "displayValue": undefined,
           "value": "p1",
           "valueFormat": 0,
         },
@@ -2208,7 +2208,7 @@ Object {
           "items": Array [
             PropertyRecord {
               "autoExpand": undefined,
-              "description": "some display value 1",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -2221,14 +2221,14 @@ Object {
                 "typename": "MyArrayItemType",
               },
               "value": Object {
-                "displayValue": "some display value 1",
+                "displayValue": undefined,
                 "value": "some value 1",
                 "valueFormat": 0,
               },
             },
             PropertyRecord {
               "autoExpand": undefined,
-              "description": "some display value 2",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -2241,7 +2241,7 @@ Object {
                 "typename": "MyArrayItemType",
               },
               "value": Object {
-                "displayValue": "some display value 2",
+                "displayValue": undefined,
                 "value": "some value 2",
                 "valueFormat": 0,
               },
@@ -2290,7 +2290,7 @@ Object {
     "test-category": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "some display value",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -2303,7 +2303,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "some display value",
+          "displayValue": undefined,
           "value": "some value",
           "valueFormat": 0,
         },
@@ -2363,7 +2363,7 @@ Object {
           "members": Object {
             "MyMemberProperty": PropertyRecord {
               "autoExpand": undefined,
-              "description": "some display value",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -2376,7 +2376,7 @@ Object {
                 "typename": "MyMemberType",
               },
               "value": Object {
-                "displayValue": "some display value",
+                "displayValue": undefined,
                 "value": "some value",
                 "valueFormat": 0,
               },
@@ -2440,7 +2440,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "",
+          "displayValue": undefined,
           "value": "",
           "valueFormat": 0,
         },
@@ -2497,7 +2497,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "",
+          "displayValue": undefined,
           "value": undefined,
           "valueFormat": 0,
         },
@@ -2557,7 +2557,7 @@ Object {
           "items": Array [
             PropertyRecord {
               "autoExpand": undefined,
-              "description": "test value",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -2570,7 +2570,7 @@ Object {
                 "typename": "MyArrayItemType",
               },
               "value": Object {
-                "displayValue": "test value",
+                "displayValue": undefined,
                 "value": "test value",
                 "valueFormat": 0,
               },
@@ -2674,7 +2674,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 1",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -2687,14 +2687,14 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 1",
+          "displayValue": undefined,
           "value": "value 1",
           "valueFormat": 0,
         },
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 2",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -2707,7 +2707,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 2",
+          "displayValue": undefined,
           "value": "value 2",
           "valueFormat": 0,
         },
@@ -2756,7 +2756,7 @@ Object {
     "Category1": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 1",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -2769,14 +2769,14 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 1",
+          "displayValue": undefined,
           "value": "value 1",
           "valueFormat": 0,
         },
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 4",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -2789,7 +2789,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 4",
+          "displayValue": undefined,
           "value": "value 4",
           "valueFormat": 0,
         },
@@ -2814,7 +2814,7 @@ Object {
           "members": Object {
             "nested-field-2": PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 2",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -2827,7 +2827,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 2",
+                "displayValue": undefined,
                 "value": "value 2",
                 "valueFormat": 0,
               },
@@ -2838,7 +2838,7 @@ Object {
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 3",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -2851,7 +2851,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 3",
+          "displayValue": undefined,
           "value": "value 3",
           "valueFormat": 0,
         },
@@ -2948,7 +2948,7 @@ Object {
                       "members": Object {
                         "nested-field-1": PropertyRecord {
                           "autoExpand": undefined,
-                          "description": "display value 1",
+                          "description": undefined,
                           "extendedData": undefined,
                           "imodelKey": "test-imodel",
                           "isDisabled": undefined,
@@ -2961,7 +2961,7 @@ Object {
                             "typename": "string",
                           },
                           "value": Object {
-                            "displayValue": "display value 1",
+                            "displayValue": undefined,
                             "value": "value 1",
                             "valueFormat": 0,
                           },
@@ -3009,7 +3009,7 @@ Object {
                       "members": Object {
                         "nested-field-3": PropertyRecord {
                           "autoExpand": undefined,
-                          "description": "display value 3",
+                          "description": undefined,
                           "extendedData": undefined,
                           "imodelKey": "test-imodel",
                           "isDisabled": undefined,
@@ -3022,7 +3022,7 @@ Object {
                             "typename": "string",
                           },
                           "value": Object {
-                            "displayValue": "display value 3",
+                            "displayValue": undefined,
                             "value": "value 3",
                             "valueFormat": 0,
                           },
@@ -3042,7 +3042,7 @@ Object {
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -3055,7 +3055,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value",
+          "displayValue": undefined,
           "value": "value",
           "valueFormat": 0,
         },
@@ -3080,7 +3080,7 @@ Object {
           "members": Object {
             "nested-field-2": PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 2",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -3093,7 +3093,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 2",
+                "displayValue": undefined,
                 "value": "value 2",
                 "valueFormat": 0,
               },
@@ -3120,7 +3120,7 @@ Object {
           "members": Object {
             "nested-field-4": PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 4",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -3133,14 +3133,14 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 4",
+                "displayValue": undefined,
                 "value": "value 4",
                 "valueFormat": 0,
               },
             },
             "nested-field-5": PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 5",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -3153,7 +3153,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 5",
+                "displayValue": undefined,
                 "value": "value 5",
                 "valueFormat": 0,
               },
@@ -3201,7 +3201,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 1",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -3214,7 +3214,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 1",
+          "displayValue": undefined,
           "value": "value 1",
           "valueFormat": 0,
         },
@@ -3263,7 +3263,7 @@ Object {
     "Category1": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 1",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -3276,7 +3276,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 1",
+          "displayValue": undefined,
           "value": "value 1",
           "valueFormat": 0,
         },
@@ -3285,7 +3285,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 2",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -3298,7 +3298,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 2",
+          "displayValue": undefined,
           "value": "value 2",
           "valueFormat": 0,
         },
@@ -3363,7 +3363,7 @@ Object {
           "members": Object {
             "nested-field-1": PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 1",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -3376,7 +3376,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 1",
+                "displayValue": undefined,
                 "value": "value 1",
                 "valueFormat": 0,
               },
@@ -3387,7 +3387,7 @@ Object {
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 3",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -3400,7 +3400,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 3",
+          "displayValue": undefined,
           "value": "value 3",
           "valueFormat": 0,
         },
@@ -3409,7 +3409,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 2",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -3422,7 +3422,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 2",
+          "displayValue": undefined,
           "value": "value 2",
           "valueFormat": 0,
         },
@@ -3482,7 +3482,7 @@ Object {
           "items": Array [
             PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 1",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -3495,14 +3495,14 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 1",
+                "displayValue": undefined,
                 "value": "value 1",
                 "valueFormat": 0,
               },
             },
             PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 2",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -3515,7 +3515,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 2",
+                "displayValue": undefined,
                 "value": "value 2",
                 "valueFormat": 0,
               },
@@ -3580,7 +3580,7 @@ Object {
           "items": Array [
             PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 1",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -3593,7 +3593,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 1",
+                "displayValue": undefined,
                 "value": "value 1",
                 "valueFormat": 0,
               },
@@ -3674,7 +3674,7 @@ Object {
                 "members": Object {
                   "struct-member-field": PropertyRecord {
                     "autoExpand": undefined,
-                    "description": "display value 1",
+                    "description": undefined,
                     "extendedData": undefined,
                     "imodelKey": "test-imodel",
                     "isDisabled": undefined,
@@ -3687,7 +3687,7 @@ Object {
                       "typename": "string",
                     },
                     "value": Object {
-                      "displayValue": "display value 1",
+                      "displayValue": undefined,
                       "value": "value 1",
                       "valueFormat": 0,
                     },
@@ -3714,7 +3714,7 @@ Object {
                 "members": Object {
                   "struct-member-field": PropertyRecord {
                     "autoExpand": undefined,
-                    "description": "display value 2",
+                    "description": undefined,
                     "extendedData": undefined,
                     "imodelKey": "test-imodel",
                     "isDisabled": undefined,
@@ -3727,7 +3727,7 @@ Object {
                       "typename": "string",
                     },
                     "value": Object {
-                      "displayValue": "display value 2",
+                      "displayValue": undefined,
                       "value": "value 2",
                       "valueFormat": 0,
                     },
@@ -3812,7 +3812,7 @@ Object {
                 "members": Object {
                   "struct-member-field": PropertyRecord {
                     "autoExpand": undefined,
-                    "description": "display value 1",
+                    "description": undefined,
                     "extendedData": undefined,
                     "imodelKey": "test-imodel",
                     "isDisabled": undefined,
@@ -3825,7 +3825,7 @@ Object {
                       "typename": "string",
                     },
                     "value": Object {
-                      "displayValue": "display value 1",
+                      "displayValue": undefined,
                       "value": "value 1",
                       "valueFormat": 0,
                     },
@@ -3926,7 +3926,7 @@ Object {
                       "members": Object {
                         "primitive-field-3": PropertyRecord {
                           "autoExpand": undefined,
-                          "description": "display value 1",
+                          "description": undefined,
                           "extendedData": undefined,
                           "imodelKey": "test-imodel",
                           "isDisabled": undefined,
@@ -3939,7 +3939,7 @@ Object {
                             "typename": "string",
                           },
                           "value": Object {
-                            "displayValue": "display value 1",
+                            "displayValue": undefined,
                             "value": "value 1",
                             "valueFormat": 0,
                           },
@@ -3966,7 +3966,7 @@ Object {
                       "members": Object {
                         "primitive-field-3": PropertyRecord {
                           "autoExpand": undefined,
-                          "description": "display value 2",
+                          "description": undefined,
                           "extendedData": undefined,
                           "imodelKey": "test-imodel",
                           "isDisabled": undefined,
@@ -3979,7 +3979,7 @@ Object {
                             "typename": "string",
                           },
                           "value": Object {
-                            "displayValue": "display value 2",
+                            "displayValue": undefined,
                             "value": "value 2",
                             "valueFormat": 0,
                           },
@@ -3995,7 +3995,7 @@ Object {
             },
             "primitive-field-2": PropertyRecord {
               "autoExpand": undefined,
-              "description": "test",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -4008,7 +4008,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "test",
+                "displayValue": undefined,
                 "value": "test",
                 "valueFormat": 0,
               },
@@ -4019,7 +4019,7 @@ Object {
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "test",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -4032,7 +4032,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "test",
+          "displayValue": undefined,
           "value": "test",
           "valueFormat": 0,
         },
@@ -4092,7 +4092,7 @@ Object {
           "members": Object {
             "primitive-field-2": PropertyRecord {
               "autoExpand": undefined,
-              "description": "test",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -4105,14 +4105,14 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "test",
+                "displayValue": undefined,
                 "value": "test",
                 "valueFormat": 0,
               },
             },
             "primitive-field-3": PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 1",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -4125,7 +4125,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 1",
+                "displayValue": undefined,
                 "value": "value 1",
                 "valueFormat": 0,
               },
@@ -4136,7 +4136,7 @@ Object {
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "test",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -4149,7 +4149,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "test",
+          "displayValue": undefined,
           "value": "test",
           "valueFormat": 0,
         },
@@ -4226,7 +4226,7 @@ Object {
                 "members": Object {
                   "nested-field": PropertyRecord {
                     "autoExpand": undefined,
-                    "description": "display value 1",
+                    "description": undefined,
                     "extendedData": undefined,
                     "imodelKey": "test-imodel",
                     "isDisabled": undefined,
@@ -4239,7 +4239,7 @@ Object {
                       "typename": "string",
                     },
                     "value": Object {
-                      "displayValue": "display value 1",
+                      "displayValue": undefined,
                       "value": "value 1",
                       "valueFormat": 0,
                     },
@@ -4266,7 +4266,7 @@ Object {
                 "members": Object {
                   "nested-field": PropertyRecord {
                     "autoExpand": undefined,
-                    "description": "display value 2",
+                    "description": undefined,
                     "extendedData": undefined,
                     "imodelKey": "test-imodel",
                     "isDisabled": undefined,
@@ -4279,7 +4279,7 @@ Object {
                       "typename": "string",
                     },
                     "value": Object {
-                      "displayValue": "display value 2",
+                      "displayValue": undefined,
                       "value": "value 2",
                       "valueFormat": 0,
                     },
@@ -4332,7 +4332,7 @@ Object {
     "test-category": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 1",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -4345,7 +4345,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 1",
+          "displayValue": undefined,
           "value": "value 1",
           "valueFormat": 0,
         },
@@ -4405,7 +4405,7 @@ Object {
           "members": Object {
             "nested-field": PropertyRecord {
               "autoExpand": undefined,
-              "description": "display value 1",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -4418,7 +4418,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "display value 1",
+                "displayValue": undefined,
                 "value": "value 1",
                 "valueFormat": 0,
               },
@@ -4429,7 +4429,7 @@ Object {
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "display value 3",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -4442,7 +4442,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "display value 3",
+          "displayValue": undefined,
           "value": "value 3",
           "valueFormat": 0,
         },
@@ -4502,7 +4502,7 @@ Object {
           "members": Object {
             "primitive-field-2": PropertyRecord {
               "autoExpand": undefined,
-              "description": "p2",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -4515,7 +4515,7 @@ Object {
                 "typename": "string",
               },
               "value": Object {
-                "displayValue": "p2",
+                "displayValue": undefined,
                 "value": "p2",
                 "valueFormat": 0,
               },
@@ -4526,7 +4526,7 @@ Object {
       },
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "p1",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -4539,7 +4539,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "p1",
+          "displayValue": undefined,
           "value": "p1",
           "valueFormat": 0,
         },
@@ -4599,7 +4599,7 @@ Object {
           "items": Array [
             PropertyRecord {
               "autoExpand": undefined,
-              "description": "some display value 1",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -4612,14 +4612,14 @@ Object {
                 "typename": "MyArrayItemType",
               },
               "value": Object {
-                "displayValue": "some display value 1",
+                "displayValue": undefined,
                 "value": "some value 1",
                 "valueFormat": 0,
               },
             },
             PropertyRecord {
               "autoExpand": undefined,
-              "description": "some display value 2",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -4632,7 +4632,7 @@ Object {
                 "typename": "MyArrayItemType",
               },
               "value": Object {
-                "displayValue": "some display value 2",
+                "displayValue": undefined,
                 "value": "some value 2",
                 "valueFormat": 0,
               },
@@ -4681,7 +4681,7 @@ Object {
     "test-category": Array [
       PropertyRecord {
         "autoExpand": undefined,
-        "description": "some display value",
+        "description": undefined,
         "extendedData": undefined,
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
@@ -4694,7 +4694,7 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "some display value",
+          "displayValue": undefined,
           "value": "some value",
           "valueFormat": 0,
         },
@@ -4754,7 +4754,7 @@ Object {
           "members": Object {
             "MyMemberProperty": PropertyRecord {
               "autoExpand": undefined,
-              "description": "some display value",
+              "description": undefined,
               "extendedData": undefined,
               "imodelKey": "test-imodel",
               "isDisabled": undefined,
@@ -4767,7 +4767,7 @@ Object {
                 "typename": "MyMemberType",
               },
               "value": Object {
-                "displayValue": "some display value",
+                "displayValue": undefined,
                 "value": "some value",
                 "valueFormat": 0,
               },

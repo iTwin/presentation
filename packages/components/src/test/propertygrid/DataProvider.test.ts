@@ -4,13 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { afterEach, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
-import { PrimitiveValue, PropertyRecord, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
+import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyCategory } from "@itwin/components-react";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import { FormatsChangedArgs, FormatsProvider } from "@itwin/core-quantity";
-import { PrimitiveType, primitiveTypeToString, SchemaContext } from "@itwin/ecschema-metadata";
+import { SchemaContext } from "@itwin/ecschema-metadata";
 import {
   ArrayTypeDescription,
   CategoryDescription,
@@ -21,7 +20,6 @@ import {
   Field,
   Item,
   KeySet,
-  KoqPropertyValueFormatter,
   LabelDefinition,
   PropertiesField,
   PropertyValueFormat,
@@ -523,58 +521,6 @@ describe("PropertyDataProvider", () => {
           const record = createTestContentItem({ values, displayValues });
           provider.getContent = async () => new Content(descriptor, [record]);
           expect(await provider.getData()).toMatchSnapshot();
-        });
-
-        it("re-formats primitive property data", async () => {
-          // stub content
-          const field = createTestPropertiesContentField({
-            type: { valueFormat: PropertyValueFormat.Primitive, typeName: primitiveTypeToString(PrimitiveType.Double) },
-            properties: [
-              {
-                property: createTestPropertyInfo({
-                  kindOfQuantity: { name: "test.koq", label: "Test Koq", persistenceUnit: "Units.M" },
-                }),
-              },
-            ],
-          });
-          const descriptor = createTestContentDescriptor({ fields: [field] });
-          const values: ValuesDictionary<any> = { [field.name]: 123.456789 };
-          const displayValues: ValuesDictionary<any> = { [field.name]: "123.5 m" };
-          const record = createTestContentItem({ values, displayValues });
-          presentationManager.getContentIterator.mockResolvedValue({
-            descriptor,
-            total: 1,
-            items: (async function* () {
-              yield record;
-            })(),
-          });
-
-          // stub formats provider
-          const onFormatsChanged = new BeUiEvent<FormatsChangedArgs>();
-          vi.spyOn(IModelApp, "formatsProvider", "get").mockReturnValue({
-            onFormatsChanged,
-          } as unknown as FormatsProvider);
-
-          // setup provider
-          const dataChangedSpy = vi.fn();
-          provider.onDataChanged.addListener(dataChangedSpy);
-
-          // check the first (unformatted) request
-          expect((await provider.getData()).records[field.category.name][0].value).toEqual({
-            valueFormat: UiPropertyValueFormat.Primitive,
-            value: 123.456789,
-            displayValue: "123.5 m",
-          } satisfies PrimitiveValue);
-
-          // change the format and ensure the results are different
-          vi.spyOn(KoqPropertyValueFormatter.prototype, "format").mockResolvedValue("formatted value");
-          onFormatsChanged.raiseEvent({ formatsChanged: "all" });
-          expect(dataChangedSpy).toHaveBeenCalledOnce();
-          expect((await provider.getData()).records[field.category.name][0].value).toEqual({
-            valueFormat: UiPropertyValueFormat.Primitive,
-            value: 123.456789,
-            displayValue: "formatted value",
-          } satisfies PrimitiveValue);
         });
 
         it("returns array property data", async () => {

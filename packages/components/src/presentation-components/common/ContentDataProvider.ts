@@ -10,17 +10,15 @@ import "./DisposePolyfill.js";
 
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { Logger } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { IModelConnection } from "@itwin/core-frontend";
 import {
   ClientDiagnosticsOptions,
   Content,
-  createContentFormatter,
   DEFAULT_KEYS_BATCH_SIZE,
   Descriptor,
   DescriptorOverrides,
   Field,
   KeySet,
-  KoqPropertyValueFormatter,
   PageOptions,
   RegisteredRuleset,
   RequestOptionsWithRuleset,
@@ -69,12 +67,6 @@ export interface CacheInvalidationProps {
    * `sortDirection`, `filterExpression` and similar fields.
    */
   content?: boolean;
-
-  /**
-   * Invalidate content formatting. Should be set after changes to active formatting options:
-   * format specs, unit system, etc.
-   */
-  formatting?: boolean;
 }
 /** @public */
 export namespace CacheInvalidationProps {
@@ -170,7 +162,6 @@ export class ContentDataProvider implements IContentDataProvider {
   private _pagingSize?: number;
   private _diagnosticsOptions?: ClientDiagnosticsOptions;
   private _listeners: Array<() => void> = [];
-  private _isContentFormatted = false;
 
   /** Constructor. */
   constructor(props: ContentDataProviderProps) {
@@ -286,11 +277,6 @@ export class ContentDataProvider implements IContentDataProvider {
       this._getContentAndSize.cache.keys.length = 0;
       this._getContentAndSize.cache.values.length = 0;
     }
-    if ((props.formatting || props.content || props.size) && this._getFormattedContentAndSize) {
-      this._getFormattedContentAndSize.cache.keys.length = 0;
-      this._getFormattedContentAndSize.cache.values.length = 0;
-      this._isContentFormatted = false;
-    }
   }
 
   private createRequestOptions(): RequestOptionsWithRuleset<IModelConnection, RulesetVariable> {
@@ -313,11 +299,6 @@ export class ContentDataProvider implements IContentDataProvider {
         .vars(getRulesetId(this._ruleset))
         .onVariableChanged.addListener(this.onRulesetVariableChanged),
     );
-    this._listeners.push(
-      IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(this.onUnitSystemChanged),
-    );
-    IModelApp.formatsProvider &&
-      this._listeners.push(IModelApp.formatsProvider.onFormatsChanged.addListener(this.onFormatsChanged));
   }
 
   /**
@@ -394,7 +375,7 @@ export class ContentDataProvider implements IContentDataProvider {
         Make sure you set provider's pagingSize to avoid excessive backend requests.`;
       Logger.logWarning(PresentationComponentsLoggerCategory.Content, msg);
     }
-    const contentAndSize = await this._getFormattedContentAndSize(pageOptions);
+    const contentAndSize = await this._getContentAndSize(pageOptions);
     return contentAndSize?.content;
   }
 
@@ -425,15 +406,7 @@ export class ContentDataProvider implements IContentDataProvider {
         descriptor: descriptorOverrides,
         keys: this.keys,
         paging: pageOptions,
-      };
-
-      // we always get formatted content from presentation manager - ensure
-      // we set `_isContentFormatted = true` when we finish getting content, to
-      // avoid formatting it again unnecessarily
-      using _ = {
-        [Symbol.dispose]: () => {
-          this._isContentFormatted = true;
-        },
+        omitFormattedValues: true,
       };
 
       const result = await Presentation.presentation.getContentIterator(options);
@@ -452,24 +425,6 @@ export class ContentDataProvider implements IContentDataProvider {
             ),
           }
         : undefined;
-    },
-    { isMatchingKey: areContentRequestsEqual as any },
-  );
-
-  private _getFormattedContentAndSize = memoize(
-    async (pageOptions?: PageOptions): Promise<{ content: Content; size: number } | undefined> => {
-      const result = await this._getContentAndSize(pageOptions);
-      if (result && !this._isContentFormatted) {
-        const formatter = createContentFormatter({
-          propertyValueFormatter: new KoqPropertyValueFormatter({
-            schemaContext: this._imodel.schemaContext,
-            formatsProvider: IModelApp.formatsProvider,
-          }),
-        });
-        result.content = await formatter.formatContent(result.content);
-        this._isContentFormatted = true;
-      }
-      return result;
     },
     { isMatchingKey: areContentRequestsEqual as any },
   );
@@ -494,14 +449,6 @@ export class ContentDataProvider implements IContentDataProvider {
 
   private onRulesetVariableChanged = () => {
     this.onContentUpdate();
-  };
-
-  private onUnitSystemChanged = () => {
-    this.invalidateCache({ formatting: true });
-  };
-
-  private onFormatsChanged = () => {
-    this.invalidateCache({ formatting: true });
   };
 }
 
