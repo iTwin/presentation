@@ -6,7 +6,6 @@
 import { checkRequiredSchemas, classMatchesSpec, mapPropertyCategories, resolveCategoryId } from "./Utils.js";
 
 import type { EC, ECClassHierarchyInspector, ECSchemaProvider, Props } from "@itwin/presentation-shared";
-import type { PropertyField } from "../../model/Field.js";
 import type { DescriptorTransformer } from "../DescriptorTransformer.js";
 import type * as PresentationRules from "./PresentationRules.js";
 
@@ -57,7 +56,7 @@ export function createDescriptorTransformerFromContentModifierRule({
       // Snapshot the candidate property fields: direct fields always, related fields only when
       // `applyOnNestedContent` is set. Snapshotting up front means forks added during the pass are
       // not themselves re-processed.
-      const candidates: PropertyField[] = [];
+      const candidates: TransformablePropertyField[] = [];
       for (const field of Object.values(descriptor.fields)) {
         if (field.kind !== "property") {
           continue;
@@ -73,7 +72,7 @@ export function createDescriptorTransformerFromContentModifierRule({
 
       // Precompute the matched value-class subset per candidate (before any forking shrinks the
       // originals), so repeat specs and the cross-field "hide others" rule re-resolve the same forks.
-      const matchedByCandidate = new Map<PropertyField, EC.FullClassName[]>();
+      const matchedByCandidate = new Map<TransformablePropertyField, EC.FullClassName[]>();
       for (const candidate of candidates) {
         matchedByCandidate.set(candidate, await computeMatchedValueClasses(imodelAccess, candidate, rule.class));
       }
@@ -134,7 +133,7 @@ export function createDescriptorTransformerFromContentModifierRule({
  */
 async function computeMatchedValueClasses(
   imodelAccess: ECClassHierarchyInspector & ECSchemaProvider,
-  field: PropertyField,
+  field: TransformablePropertyField,
   classSpec: PresentationRules.SingleSchemaClassSpecification | undefined,
 ): Promise<EC.FullClassName[]> {
   if (!classSpec) {
@@ -151,11 +150,18 @@ async function computeMatchedValueClasses(
 
 /** The constrained descriptor view handed to a transformer. */
 type TransformableDescriptor = Props<DescriptorTransformer["transform"]>["descriptor"];
-/** A property field carved out for mutation by `forkField`. */
-type WorkingField = ReturnType<TransformableDescriptor["forkField"]>;
+/**
+ * A property field as seen through the transformer view: deeply readonly except for display
+ * metadata. This is the type of both the candidate fields read from the descriptor and the forks
+ * returned by `forkField` for mutation.
+ */
+type TransformablePropertyField = ReturnType<TransformableDescriptor["forkField"]>;
 
 /** Applies a single `PropertySpecification`'s supported overrides to a working field. */
-function applyPropertySpecification(field: WorkingField, spec: PresentationRules.PropertySpecification): void {
+function applyPropertySpecification(
+  field: TransformablePropertyField,
+  spec: PresentationRules.PropertySpecification,
+): void {
   if (spec.labelOverride !== undefined) {
     field.label = spec.labelOverride;
   }

@@ -12,6 +12,7 @@ import type { ContentSource } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
 import type { Field } from "../model/Field.js";
+import type { DeepReadonly } from "../model/Utils.js";
 
 /**
  * Default priority for descriptor transformers.
@@ -76,9 +77,24 @@ export function defineDescriptorTransformer(transformer: DescriptorTransformer):
 }
 
 /**
- * A field with its ID and selector ID made readonly — transformers may modify metadata
- * (label, categoryId, hidden, readOnly) but must not change the field's identity or the column
- * it reads.
+ * The set of {@link Field} properties a descriptor transformer is allowed to mutate. Everything
+ * else (identity, value shape, and the column-defining coordinates that back a field's selector) is
+ * made readonly in the transformer view.
+ *
+ * @public
+ */
+type MutableFieldMetadata = "label" | "categoryId" | "hidden" | "readOnly";
+
+/**
+ * A field exposed to descriptor transformers with everything except display metadata made readonly.
+ *
+ * Transformers may only modify metadata (`label`, `categoryId`, `hidden`, `readOnly`). Identity
+ * (`id`, `selectorId`), value shape (`type`), and the column-defining properties a field reads
+ * (`sourceClassName`/`propertyName`/`pathFromTarget` for property fields,
+ * `expression`/`targetAlias`/`bindings` for calculated fields) are deeply readonly, so a transformer
+ * can never silently change the column a field selects — not even by mutating a nested array or
+ * object (e.g. `pathFromTarget`, `valueClassNames`, or `type`). Value-supplier scoping is done
+ * through `forkField`, not by mutating `valueClassNames` directly.
  *
  * Distributes over the {@link Field} union so the `kind` discriminant is preserved: a
  * `field.kind === "property"` check narrows a `TransformableField` to the property member
@@ -87,9 +103,7 @@ export function defineDescriptorTransformer(transformer: DescriptorTransformer):
  * @public
  */
 type TransformableField<TField extends Field = Field> = TField extends Field
-  ? Omit<TField, "id" | "selectorId"> & { readonly id: string } & (TField extends { selectorId: string }
-        ? { readonly selectorId: string }
-        : {})
+  ? DeepReadonly<Omit<TField, MutableFieldMetadata>> & Pick<TField, MutableFieldMetadata>
   : never;
 
 /**
@@ -97,8 +111,8 @@ type TransformableField<TField extends Field = Field> = TField extends Field
  *
  * Enforces transformer rules at the type level:
  * - `sources` is readonly — the resolved source structure is immutable at this stage.
- * - Field `id` is readonly — must not be changed.
- * - Field metadata (`label`, `categoryId`, `hidden`, `readOnly`) remains mutable.
+ * - Only field display metadata (`label`, `categoryId`, `hidden`, `readOnly`) is mutable; a field's
+ *   identity, value shape, and column-defining properties are readonly.
  * - Fields can be removed via `descriptor.removeField(id)`.
  * - A field can be carved for a subset of its value-supplier classes via `descriptor.forkField(id, subset)`.
  *

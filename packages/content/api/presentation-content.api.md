@@ -181,7 +181,7 @@ interface CreateIModelContentConfigurationProps {
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
 }
 
-// @alpha
+// @public
 type DeepReadonly<T> = T extends (...args: any[]) => any ? T : T extends (infer U)[] ? ReadonlyArray<DeepReadonly<U>> : T extends object ? {
     readonly [K in keyof T]: DeepReadonly<T[K]>;
 } : T;
@@ -289,6 +289,9 @@ interface InputPropertyDeclaration {
 
 // @public
 export function mapItems<TIn, TOut>(items: AsyncIterable<TIn>, transform: (item: TIn) => TOut | Promise<TOut>): AsyncIterable<TOut>;
+
+// @public
+type MutableFieldMetadata = "label" | "categoryId" | "hidden" | "readOnly";
 
 // @public
 export interface PropertyField extends BaseField {
@@ -409,13 +412,7 @@ interface TransformableDescriptor {
 }
 
 // @public
-type TransformableField<TField extends Field = Field> = TField extends Field ? Omit<TField, "id" | "selectorId"> & {
-    readonly id: string;
-} & (TField extends {
-    selectorId: string;
-} ? {
-    readonly selectorId: string;
-} : {}) : never;
+type TransformableField<TField extends Field = Field> = TField extends Field ? DeepReadonly<Omit<TField, MutableFieldMetadata>> & Pick<TField, MutableFieldMetadata> : never;
 
 // @public (undocumented)
 type ValueFilterOperator = "is-equal" | "is-not-equal" | "is-null" | "is-not-null" | "less-than" | "less-than-or-equal" | "greater-than" | "greater-than-or-equal" | "like" | "is-in";
