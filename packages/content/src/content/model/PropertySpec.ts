@@ -12,9 +12,15 @@
 export interface StepPropertySpec {
   /** 0-based position in the path. */
   stepIndex: number;
-  /** Properties from the target class at this step. */
+  /**
+   * Properties to load from the step's target class. Omit to load no properties from the target
+   * class at this step.
+   */
   target?: ClassPropertySpec;
-  /** Properties from the relationship class at this step. */
+  /**
+   * Properties to load from the step's relationship class. Omit to load no properties from the
+   * relationship class at this step.
+   */
   relationship?: ClassPropertySpec;
 }
 
@@ -32,7 +38,7 @@ export interface ClassPropertySpec {
    * - `{ include: [...] }`: only these properties.
    * - `{ exclude: [...] }`: all except these properties.
    */
-  select?: PropertySelection;
+  select: PropertySelection;
 
   /**
    * Overrides applied to all selected properties.

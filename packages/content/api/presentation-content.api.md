@@ -84,7 +84,7 @@ export namespace CategoryDefinition {
 interface ClassPropertySpec {
     defaultOverrides?: PropertyOverrides;
     overrides?: Record<string, PropertyOverrides>;
-    select?: PropertySelection;
+    select: PropertySelection;
 }
 
 // @public

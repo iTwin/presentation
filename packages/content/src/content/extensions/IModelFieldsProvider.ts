@@ -71,8 +71,12 @@ export interface RelatedPropertiesDeclaration {
   path: RelationshipPath;
 
   /**
-   * Per-step property specifications. Sparse — only list steps that need customization.
-   * Steps without a spec use defaults: final step = "all", earlier steps = "none".
+   * Per-step property specifications, opting in the classes to load properties from.
+   *
+   * When omitted entirely, all properties of the final step's target class are loaded (and nothing
+   * from intermediate target classes or relationship classes). When provided, only the classes
+   * explicitly named via each step's `target`/`relationship` are loaded — omitted classes and
+   * unlisted steps load nothing.
    */
   properties?: StepPropertySpec[];
 

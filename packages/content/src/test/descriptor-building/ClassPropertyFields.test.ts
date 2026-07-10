@@ -63,7 +63,7 @@ describe("createClassPropertyFields", () => {
       className: "TestSchema.C",
       pathFromTarget: [],
       valueClassNames: ["TestSchema.C"],
-      spec: { overrides: { gamma: { label: "Override Gamma" } } },
+      spec: { select: "all", overrides: { gamma: { label: "Override Gamma" } } },
     });
 
     expect(fields.map((f) => f.label)).to.deep.equal(["alpha", "Prop Beta", "Override Gamma"]);
@@ -123,20 +123,6 @@ describe("createClassPropertyFields", () => {
       expect(await selectNames("all")).to.deep.equal(["A", "B", "C"]);
     });
 
-    it("includes all when the spec omits 'select'", async () => {
-      const fields = await createClassPropertyFields({
-        imodelAccess: createSingleClassIModelAccess("TestSchema.C", [
-          createPrimitiveProperty({ name: "A", declaringClassName: "TestSchema.C" }),
-          createPrimitiveProperty({ name: "B", declaringClassName: "TestSchema.C" }),
-        ]),
-        className: "TestSchema.C",
-        pathFromTarget: [],
-        valueClassNames: ["TestSchema.C"],
-        spec: {},
-      });
-      expect(fields.map((f) => f.propertyName)).to.deep.equal(["A", "B"]);
-    });
-
     it("includes none with 'none'", async () => {
       expect(await selectNames("none")).to.deep.equal([]);
     });
@@ -162,7 +148,7 @@ describe("createClassPropertyFields", () => {
         className: "TestSchema.C",
         pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
-        spec: { defaultOverrides: { readOnly: true, categoryId: "cat", hidden: true } },
+        spec: { select: "all", defaultOverrides: { readOnly: true, categoryId: "cat", hidden: true } },
       });
 
       for (const field of fields) {
@@ -184,6 +170,7 @@ describe("createClassPropertyFields", () => {
         pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
         spec: {
+          select: "all",
           defaultOverrides: { categoryId: "default", readOnly: true },
           overrides: { alpha: { categoryId: "custom", label: "Custom Alpha" } },
         },

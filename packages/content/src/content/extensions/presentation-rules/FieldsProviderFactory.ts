@@ -138,7 +138,7 @@ function mapPropertiesForStep(
   forceCategoryId: CategoryDefinition["id"] | undefined,
 ): StepPropertySpec["target"] {
   const overrides: ClassPropertySpec["overrides"] = {};
-  let select: ClassPropertySpec["select"];
+  let select: ClassPropertySpec["select"] | undefined;
   let defaultOverridesFromWildcard: (typeof overrides)[string] | undefined;
 
   if (props === "_none_") {
@@ -206,7 +206,11 @@ function mapPropertiesForStep(
     defaultOverrides = { ...defaultOverridesFromWildcard, categoryId: forceCategoryId };
   }
 
-  return { select, defaultOverrides, overrides: Object.keys(overrides).length > 0 ? overrides : undefined };
+  return {
+    select: select ?? "all",
+    defaultOverrides,
+    overrides: Object.keys(overrides).length > 0 ? overrides : undefined,
+  };
 }
 
 /**

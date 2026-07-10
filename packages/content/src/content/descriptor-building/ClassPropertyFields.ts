@@ -87,8 +87,8 @@ export async function createClassPropertyFields(props: {
   return fields;
 }
 
-/** Determines whether a property is selected by a `ClassPropertySpec.select` value (default `"all"`). */
-function isSelected(propertyName: string, select: ClassPropertySpec["select"] = "all"): boolean {
+/** Determines whether a property is selected by a `ClassPropertySpec.select` value. */
+function isSelected(propertyName: string, select: ClassPropertySpec["select"]): boolean {
   if (select === "all") {
     return true;
   }
