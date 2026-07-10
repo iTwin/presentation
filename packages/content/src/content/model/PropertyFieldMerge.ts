@@ -80,7 +80,7 @@ function valueDescriptorsAgree(a: ValueDescriptor, b: ValueDescriptor): boolean 
 function toComparableValueDescriptor(descriptor: ValueDescriptor): unknown {
   switch (descriptor.kind) {
     case "primitive":
-      return ["primitive", descriptor.type, descriptor.kindOfQuantity ?? null];
+      return ["primitive", descriptor.type, descriptor.kindOfQuantity ?? null, descriptor.enumeration ?? null];
     case "array":
       return ["array", toComparableValueDescriptor(descriptor.elementType)];
     case "struct":
