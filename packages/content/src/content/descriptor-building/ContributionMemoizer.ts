@@ -38,12 +38,12 @@ type ContributionIModelAccess = Parameters<IModelFieldsProvider["getContribution
  * @internal
  */
 export function createContributionMemoizer(props: { imodelAccess: ContributionIModelAccess }): {
-  getContribution(provider: IModelFieldsProvider, target: ContentTarget): Promise<FieldsProviderContribution>;
+  getContribution: (provider: IModelFieldsProvider, target: ContentTarget) => Promise<FieldsProviderContribution>;
 } {
   const { imodelAccess } = props;
   const cache = new WeakMap<ContentTarget, Map<IModelFieldsProvider["id"], Promise<FieldsProviderContribution>>>();
   return {
-    async getContribution(provider, target) {
+    getContribution: async (provider, target) => {
       let byProvider = cache.get(target);
       if (!byProvider) {
         byProvider = new Map();

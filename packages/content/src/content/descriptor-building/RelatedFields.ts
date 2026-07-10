@@ -1,0 +1,131 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { collectInParallel } from "../InternalUtils.js";
+import { createClassPropertyFields } from "./ClassPropertyFields.js";
+
+import type { ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
+import type { ContentSource } from "../ContentTarget.js";
+import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
+import type { PropertyField } from "../model/Field.js";
+import type { StepPropertySpec } from "../model/PropertySpec.js";
+
+type GetContribution = (
+  provider: IModelFieldsProvider,
+  target: ContentSource["target"],
+) => ReturnType<IModelFieldsProvider["getContribution"]>;
+
+/**
+ * Enumerates the **related** property fields of a content source — the properties reached by
+ * navigating each of the source's resolved relationship paths.
+ *
+ * Each of the source's `resolvedDeclarations` links back to the provider and declaration that
+ * produced it during source resolution (Stage 1). This re-reads that declaration (via
+ * `getContribution`) to recover its per-step property specs, then enumerates fields for every
+ * concrete path the declaration resolved to:
+ *
+ * - When the declaration omits `properties`, all properties of each path's final-step target class
+ *   are loaded (nothing from intermediate steps or relationship classes).
+ * - When `properties` is provided, only the classes explicitly named by each step's `target`
+ *   (the step's target class) and `relationship` (the step's relationship class) are loaded —
+ *   omitted classes and unlisted steps contribute nothing.
+ *
+ * A field's `pathFromTarget` is the sub-path from the content target up to and including the step
+ * whose class supplies the property, and its `valueClassNames` are that step's concrete class.
+ * Same-property candidates from multiple paths are merged (and value classes unioned) later by
+ * `mergePropertyFieldsByIdentity`.
+ *
+ * @internal
+ */
+export async function createRelatedPropertyFields(props: {
+  imodelAccess: ECSchemaProvider;
+  source: ContentSource;
+  getContribution: GetContribution;
+  providersById: ReadonlyMap<IModelFieldsProvider["id"], IModelFieldsProvider>;
+}): Promise<PropertyField[]> {
+  const { imodelAccess, source, getContribution, providersById } = props;
+  return collectInParallel(source.resolvedDeclarations, async (group) => {
+    const provider = providersById.get(group.providerId);
+    if (!provider) {
+      throw new Error(
+        `Content configuration is missing the iModel fields provider "${group.providerId}" that resolved a related-properties declaration for target "${source.target.primaryClass}".`,
+      );
+    }
+    const contribution = await getContribution(provider, source.target);
+    const declaration = contribution?.relatedProperties?.[group.declarationIndex];
+    if (!declaration) {
+      throw new Error(
+        `iModel fields provider "${group.providerId}" no longer returns the related-properties declaration at index ${group.declarationIndex} for target "${source.target.primaryClass}".`,
+      );
+    }
+    return collectInParallel(group.paths, async ({ path }) =>
+      createFieldsForPath({ imodelAccess, path, properties: declaration.properties }),
+    );
+  });
+}
+
+/** Enumerates the property fields contributed by a single concrete relationship path. */
+async function createFieldsForPath(props: {
+  imodelAccess: ECSchemaProvider;
+  path: RelationshipPath;
+  properties: RelatedPropertiesDeclaration["properties"];
+}): Promise<PropertyField[]> {
+  const { imodelAccess, path, properties } = props;
+
+  // Default (no per-step specs): all properties of the final step's target class.
+  if (properties === undefined) {
+    const lastStep = path[path.length - 1];
+    return createClassPropertyFields({
+      imodelAccess,
+      className: lastStep.targetClassName,
+      pathFromTarget: path,
+      valueClassNames: [lastStep.targetClassName],
+      spec: { select: "all" },
+    });
+  }
+
+  // Opt-in: only the classes explicitly named by each step's `target`/`relationship`.
+  return collectInParallel(properties, async (stepSpec) => createFieldsForStep({ imodelAccess, path, stepSpec }));
+}
+
+/** Enumerates the target-class and relationship-class fields opted in by a single `StepPropertySpec`. */
+async function createFieldsForStep(props: {
+  imodelAccess: ECSchemaProvider;
+  path: RelationshipPath;
+  stepSpec: StepPropertySpec;
+}): Promise<PropertyField[]> {
+  const { imodelAccess, path, stepSpec } = props;
+  const step = path[stepSpec.stepIndex];
+  const pathFromTarget = path.slice(0, stepSpec.stepIndex + 1);
+  const fields: PropertyField[] = [];
+  if (stepSpec.target) {
+    fields.push(
+      ...(await createClassPropertyFields({
+        imodelAccess,
+        className: step.targetClassName,
+        pathFromTarget,
+        valueClassNames: [step.targetClassName],
+        spec: stepSpec.target,
+      })),
+    );
+  }
+  if (stepSpec.relationship) {
+    // Known limitation: `step.relationshipName` is the *declared* relationship class — Stage 1
+    // resolves concrete entity endpoints (`sourceClassName`/`targetClassName`) from the data, but
+    // not the relationship class. So for a polymorphic relationship these `valueClassNames` may be
+    // a non-concrete (base/abstract) relationship class rather than the concrete classes present in
+    // the data. Tracked with https://github.com/iTwin/presentation/issues/1442.
+    fields.push(
+      ...(await createClassPropertyFields({
+        imodelAccess,
+        className: step.relationshipName,
+        pathFromTarget,
+        valueClassNames: [step.relationshipName],
+        spec: stepSpec.relationship,
+      })),
+    );
+  }
+  return fields;
+}

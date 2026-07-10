@@ -3,8 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { collectInParallel } from "../InternalUtils.js";
 import { mergePropertyFieldsByIdentity } from "../model/PropertyFieldMerge.js";
+import { createContributionMemoizer } from "./ContributionMemoizer.js";
 import { createDirectPropertyFields } from "./DirectFields.js";
+import { createRelatedPropertyFields } from "./RelatedFields.js";
 
 import type { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentConfiguration } from "../Content.js";
@@ -33,16 +36,23 @@ interface BuildContentDescriptorProps {
  * resolves categories, runs descriptor transformers, and assembles the value selectors.
  *
  * This is being implemented incrementally. It currently enumerates the direct property fields of
- * each source's primary class (merged across sources) and carries the resolved `sources`; category
- * and selector assembly are added in later stages.
+ * each source's primary class and the related property fields reached via each source's resolved
+ * relationship paths (merged across sources); category and selector assembly are added in later
+ * stages.
  *
  * @internal
  */
 export async function buildContentDescriptor(props: BuildContentDescriptorProps): Promise<ContentDescriptor> {
-  const { imodelAccess, sources } = props;
-  const candidates = (
-    await Promise.all(sources.map(async (source) => createDirectPropertyFields({ imodelAccess, source })))
-  ).flat();
+  const { imodelAccess, sources, config } = props;
+  const providersById = new Map((config?.fieldsProviders ?? []).map((provider) => [provider.id, provider]));
+  const { getContribution } = createContributionMemoizer({ imodelAccess });
+  const candidates = await collectInParallel(sources, async (source) => {
+    const [direct, related] = await Promise.all([
+      createDirectPropertyFields({ imodelAccess, source }),
+      createRelatedPropertyFields({ imodelAccess, source, getContribution, providersById }),
+    ]);
+    return [...direct, ...related];
+  });
   const fields = mergePropertyFieldsByIdentity(candidates);
   return { sources, fields, categories: {}, selectors: {} };
 }

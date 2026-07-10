@@ -7,8 +7,9 @@ import { describe, expect, it } from "vitest";
 import { buildContentDescriptor } from "../../content/descriptor-building/BuildDescriptor.js";
 import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
 
-import type { EC } from "@itwin/presentation-shared";
+import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
+import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
 import type { PropertyField } from "../../content/model/Field.js";
 
 function createSource(
@@ -58,5 +59,49 @@ describe("buildContentDescriptor", () => {
     const imodelAccess = createSchemaAccess([createEntityClass({ fullName: "TestSchema.Empty" })]);
     const descriptor = await buildContentDescriptor({ imodelAccess, sources: [createSource("TestSchema.Empty")] });
     expect(descriptor.fields).to.deep.equal({});
+  });
+
+  it("enumerates related property fields from resolved declarations", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.A",
+        properties: [createPrimitiveProperty({ name: "Direct", declaringClassName: "TestSchema.A" })],
+      }),
+      createEntityClass({
+        fullName: "TestSchema.B",
+        properties: [createPrimitiveProperty({ name: "Related", declaringClassName: "TestSchema.B" })],
+      }),
+    ]);
+    const path: RelationshipPath = [
+      { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
+    ];
+    const provider: IModelFieldsProvider = {
+      id: "p1_v1",
+      async getContribution() {
+        return { relatedProperties: [{ path }] };
+      },
+    };
+    const source: ContentSource = {
+      target: { primaryClass: "TestSchema.A" },
+      resolvedPrimaryClasses: ["TestSchema.A"],
+      resolvedDeclarations: [
+        { providerId: provider.id, declarationIndex: 0, paths: [{ path, targetClassNames: ["TestSchema.A"] }] },
+      ],
+    };
+
+    const descriptor = await buildContentDescriptor({
+      imodelAccess,
+      sources: [source],
+      config: { fieldsProviders: [provider] },
+    });
+
+    expect(Object.keys(descriptor.fields)).to.deep.equal([
+      "TestSchema.A.Direct",
+      "TestSchema.B.Related(TestSchema.A-[TestSchema.AtoB]->TestSchema.B)",
+    ]);
+    const related = descriptor.fields[
+      "TestSchema.B.Related(TestSchema.A-[TestSchema.AtoB]->TestSchema.B)"
+    ] as PropertyField;
+    expect(related.valueClassNames).to.deep.equal(["TestSchema.B"]);
   });
 });
