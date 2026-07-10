@@ -34,8 +34,8 @@ type GetContribution = (
  *
  * A field's `pathFromTarget` is the sub-path from the content target up to and including the step
  * whose class supplies the property, and its `valueClassNames` are that step's concrete class.
- * Same-property candidates from multiple paths are merged (and value classes unioned) later by
- * `mergePropertyFieldsByIdentity`.
+ * Each field is paired with the contributing provider so the merge step can resolve cross-provider
+ * metadata conflicts.
  *
  * @internal
  */
@@ -44,7 +44,7 @@ export async function createRelatedPropertyFields(props: {
   source: ContentSource;
   getContribution: GetContribution;
   providersById: ReadonlyMap<IModelFieldsProvider["id"], IModelFieldsProvider>;
-}): Promise<PropertyField[]> {
+}): Promise<Array<{ field: PropertyField; provider: IModelFieldsProvider }>> {
   const { imodelAccess, source, getContribution, providersById } = props;
   return collectInParallel(source.resolvedDeclarations, async (group) => {
     const provider = providersById.get(group.providerId);
@@ -60,9 +60,10 @@ export async function createRelatedPropertyFields(props: {
         `iModel fields provider "${group.providerId}" no longer returns the related-properties declaration at index ${group.declarationIndex} for target "${source.target.primaryClass}".`,
       );
     }
-    return collectInParallel(group.paths, async ({ path }) =>
+    const fields = await collectInParallel(group.paths, async ({ path }) =>
       createFieldsForPath({ imodelAccess, path, properties: declaration.properties }),
     );
+    return fields.map((field) => ({ field, provider }));
   });
 }
 

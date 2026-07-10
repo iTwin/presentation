@@ -9,6 +9,7 @@ import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "
 
 import type { EC } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
+import type { PropertyField } from "../../content/model/Field.js";
 
 function createSource(props: {
   primaryClass: EC.FullClassName;
@@ -21,6 +22,11 @@ function createSource(props: {
   };
 }
 
+/** Calls the enumerator and unwraps the merge candidates to their fields. */
+async function enumerate(props: Parameters<typeof createDirectPropertyFields>[0]): Promise<PropertyField[]> {
+  return (await createDirectPropertyFields(props)).map((candidate) => candidate.field);
+}
+
 describe("createDirectPropertyFields", () => {
   it("enumerates the primary class properties as direct fields (empty path)", async () => {
     const imodelAccess = createSchemaAccess([
@@ -30,7 +36,7 @@ describe("createDirectPropertyFields", () => {
       }),
     ]);
 
-    const fields = await createDirectPropertyFields({
+    const fields = await enumerate({
       imodelAccess,
       source: createSource({ primaryClass: "TestSchema.Element", resolvedPrimaryClasses: ["TestSchema.Element"] }),
     });
@@ -58,7 +64,7 @@ describe("createDirectPropertyFields", () => {
       }),
     ]);
 
-    const [field] = await createDirectPropertyFields({
+    const [field] = await enumerate({
       imodelAccess,
       source: createSource({
         primaryClass: "TestSchema.Element",
@@ -77,7 +83,7 @@ describe("createDirectPropertyFields", () => {
       }),
     ]);
 
-    const [field] = await createDirectPropertyFields({
+    const [field] = await enumerate({
       imodelAccess,
       source: createSource({ primaryClass: "TestSchema:Element", resolvedPrimaryClasses: [] }),
     });

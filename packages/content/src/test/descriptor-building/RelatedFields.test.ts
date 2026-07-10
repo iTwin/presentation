@@ -57,11 +57,34 @@ function resolvedPath(path: RelationshipPath, targetClassNames: EC.FullClassName
   return { path, targetClassNames };
 }
 
+/** Calls the enumerator and unwraps the merge candidates to their fields. */
+async function enumerate(props: Parameters<typeof createRelatedPropertyFields>[0]): Promise<PropertyField[]> {
+  return (await createRelatedPropertyFields(props)).map((candidate) => candidate.field);
+}
+
 describe("createRelatedPropertyFields", () => {
   it("returns no fields when the source has no resolved declarations", async () => {
     const imodelAccess = createSchemaAccess([]);
-    const fields = await createRelatedPropertyFields({ imodelAccess, source: createSource([]), ...wireProviders([]) });
+    const fields = await enumerate({ imodelAccess, source: createSource([]), ...wireProviders([]) });
     expect(fields).to.deep.equal([]);
+  });
+
+  it("pairs each enumerated field with the contributing provider", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.B",
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.B" })],
+      }),
+    ]);
+    const provider = createProvider("p1_v1", [{ path: [aToB] }]);
+    const source = createSource([
+      { providerId: provider.id, declarationIndex: 0, paths: [resolvedPath([aToB], ["TestSchema.A"])] },
+    ]);
+
+    const candidates = await createRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
+
+    expect(candidates).to.have.lengthOf(1);
+    expect(candidates[0].provider).to.equal(provider);
   });
 
   it("loads all properties of the final step's target class when the declaration omits `properties`", async () => {
@@ -76,7 +99,7 @@ describe("createRelatedPropertyFields", () => {
       { providerId: provider.id, declarationIndex: 0, paths: [resolvedPath([aToB], ["TestSchema.A"])] },
     ]);
 
-    const fields = await createRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
+    const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
 
     expect(fields).to.have.lengthOf(1);
     expect(fields[0].sourceClassName).to.equal("TestSchema.B");
@@ -107,7 +130,7 @@ describe("createRelatedPropertyFields", () => {
       { providerId: provider.id, declarationIndex: 0, paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])] },
     ]);
 
-    const fields = await createRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
+    const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
 
     expect(fields.map((f) => f.propertyName)).to.deep.equal(["Keep"]);
     expect(fields[0].pathFromTarget).to.deep.equal([aToB, bToC]);
@@ -130,7 +153,7 @@ describe("createRelatedPropertyFields", () => {
       { providerId: provider.id, declarationIndex: 0, paths: [resolvedPath([aToB], ["TestSchema.A"])] },
     ]);
 
-    const fields = await createRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
+    const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
 
     expect(fields).to.have.lengthOf(1);
     expect(fields[0].sourceClassName).to.equal("TestSchema.aToB");
@@ -159,7 +182,7 @@ describe("createRelatedPropertyFields", () => {
       { providerId: provider.id, declarationIndex: 0, paths: [resolvedPath([aToB], ["TestSchema.A"])] },
     ]);
 
-    const fields = await createRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
+    const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
 
     expect(fields.map((f) => f.propertyName)).to.deep.equal(["TargetProp", "RelProp"]);
   });
@@ -186,7 +209,7 @@ describe("createRelatedPropertyFields", () => {
       },
     ]);
 
-    const fields = await createRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
+    const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
 
     expect(fields.map((f) => f.valueClassNames[0])).to.deep.equal(["TestSchema.BDoor", "TestSchema.BWindow"]);
   });

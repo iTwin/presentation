@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collectInParallel } from "../InternalUtils.js";
-import { mergePropertyFieldsByIdentity } from "../model/PropertyFieldMerge.js";
 import { createContributionMemoizer } from "./ContributionMemoizer.js";
 import { createDirectPropertyFields } from "./DirectFields.js";
+import { mergePropertyFieldsByIdentity } from "./PropertyFieldMerge.js";
 import { createRelatedPropertyFields } from "./RelatedFields.js";
 
 import type { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
