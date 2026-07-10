@@ -380,10 +380,10 @@ export type ValueDescriptor =
 /**
  * Describes a scalar primitive value.
  *
- * When the value is backed by an enumeration (only possible for `String`- and `Integer`-typed
- * values), `enumeration` carries the enumeration's metadata (its declared enumerators and their
- * labels) so consumers can map raw values to display labels without re-reading schema. The
- * `type` discriminates the enumerator value type (`String` → `string`, `Integer` → `number`).
+ * When the value is backed by an enumeration (only possible for `String`-, `Integer`- and
+ * `Long`-typed values), `enumeration` carries the enumeration's metadata (its declared enumerators
+ * and their labels) so consumers can map raw values to display labels without re-reading schema. The
+ * `type` discriminates the enumerator value type (`String` → `string`, `Integer | Long` → `number`).
  *
  * @public
  */
