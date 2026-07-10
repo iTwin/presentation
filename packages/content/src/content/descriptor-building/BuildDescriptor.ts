@@ -3,10 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { mergePropertyFieldsByIdentity } from "../model/PropertyFieldMerge.js";
+import { createDirectPropertyFields } from "./DirectFields.js";
+
 import type { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
-import type { ContentConfiguration } from "./Content.js";
-import type { ContentSource } from "./ContentTarget.js";
-import type { ContentDescriptor } from "./model/ContentDescriptor.js";
+import type { ContentConfiguration } from "../Content.js";
+import type { ContentSource } from "../ContentTarget.js";
+import type { ContentDescriptor } from "../model/ContentDescriptor.js";
 
 /**
  * Props for {@link buildContentDescriptor}.
@@ -29,12 +32,17 @@ interface BuildContentDescriptorProps {
  * metadata to enumerate direct and related property fields, appends calculated and external fields,
  * resolves categories, runs descriptor transformers, and assembles the value selectors.
  *
- * This is the skeleton that orchestrates those steps; the field-enumeration stages are added
- * incrementally. It currently produces a descriptor carrying the resolved `sources` with empty
- * field/category/selector maps.
+ * This is being implemented incrementally. It currently enumerates the direct property fields of
+ * each source's primary class (merged across sources) and carries the resolved `sources`; category
+ * and selector assembly are added in later stages.
  *
  * @internal
  */
 export async function buildContentDescriptor(props: BuildContentDescriptorProps): Promise<ContentDescriptor> {
-  return { sources: props.sources, fields: {}, categories: {}, selectors: {} };
+  const { imodelAccess, sources } = props;
+  const candidates = (
+    await Promise.all(sources.map(async (source) => createDirectPropertyFields({ imodelAccess, source })))
+  ).flat();
+  const fields = mergePropertyFieldsByIdentity(candidates);
+  return { sources, fields, categories: {}, selectors: {} };
 }

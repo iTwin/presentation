@@ -33,8 +33,8 @@
  *   - Merges external values into the final `ContentItem` accessors.
  */
 
-import { resolveContentSourcesImpl } from "./ResolveContentSources.js";
 import { createContentProviderImpl } from "./CreateContentProvider.js";
+import { resolveContentSourcesImpl } from "./ResolveContentSources.js";
 
 import type {
   ECClassHierarchyInspector,

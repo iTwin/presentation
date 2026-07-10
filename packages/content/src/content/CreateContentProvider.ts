@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { buildContentDescriptor } from "./BuildDescriptor.js";
+import { buildContentDescriptor } from "./descriptor-building/BuildDescriptor.js";
 
 import type { Props } from "@itwin/presentation-shared";
 import type { ContentProvider, createContentProvider } from "./Content.js";

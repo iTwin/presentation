@@ -5,11 +5,15 @@
 
 import { describe, expect, it } from "vitest";
 import { createContentProvider } from "../content/Content.js";
+import { createEntityClass, createSchemaAccess } from "./MetadataStubs.js";
 
-import type { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import type { ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import type { ContentSource } from "../content/ContentTarget.js";
 
-const imodelAccess = {} as ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
+const imodelAccess = { ...createSchemaAccess([createEntityClass({ fullName: "Schema.A" })]) } as ReturnType<
+  typeof createSchemaAccess
+> &
+  ECSqlQueryExecutor;
 
 function createSource(primaryClass: ContentSource["target"]["primaryClass"]): ContentSource {
   return { target: { primaryClass }, resolvedPrimaryClasses: [primaryClass], resolvedDeclarations: [] };

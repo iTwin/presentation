@@ -5,30 +5,9 @@
 
 import { describe, expect, it } from "vitest";
 import { createValueDescriptorFromProperty } from "../../content/model/PropertyValueDescriptor.js";
+import { createPrimitiveProperty } from "../MetadataStubs.js";
 
 import type { EC } from "@itwin/presentation-shared";
-
-function createPrimitiveProperty(props: {
-  name: string;
-  primitiveType: EC.PrimitiveType;
-  label?: string;
-  koq?: EC.FullClassName;
-  array?: boolean;
-}): EC.Property {
-  return {
-    name: props.name,
-    label: props.label,
-    class: {} as EC.Class,
-    kindOfQuantity: Promise.resolve(props.koq ? ({ fullName: props.koq } as unknown as EC.KindOfQuantity) : undefined),
-    isArray: () => props.array ?? false,
-    isStruct: () => false,
-    isPrimitive: () => true,
-    isEnumeration: () => false,
-    isNavigation: () => false,
-    primitiveType: props.primitiveType,
-    getCustomAttributes: async () => ({}) as EC.CustomAttributeSet,
-  } as unknown as EC.Property;
-}
 
 function createEnumerationProperty(props: {
   name: string;

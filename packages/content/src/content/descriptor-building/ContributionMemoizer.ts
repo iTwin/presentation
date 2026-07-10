@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ContentTarget } from "./ContentTarget.js";
-import type { IModelFieldsProvider } from "./extensions/IModelFieldsProvider.js";
+import type { ContentTarget } from "../ContentTarget.js";
+import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
 
 /** The contribution returned by an `IModelFieldsProvider`, with `undefined` meaning "not applicable". */
 type FieldsProviderContribution = Awaited<ReturnType<IModelFieldsProvider["getContribution"]>>;

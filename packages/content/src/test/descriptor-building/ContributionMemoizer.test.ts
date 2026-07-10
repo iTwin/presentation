@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { createContributionMemoizer } from "../content/ContributionMemoizer.js";
+import { createContributionMemoizer } from "../../content/descriptor-building/ContributionMemoizer.js";
 
 import type { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
-import type { ContentTarget } from "../content/ContentTarget.js";
-import type { IModelFieldsProvider } from "../content/extensions/IModelFieldsProvider.js";
+import type { ContentTarget } from "../../content/ContentTarget.js";
+import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
 
 type Contribution = Awaited<ReturnType<IModelFieldsProvider["getContribution"]>>;
 
