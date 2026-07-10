@@ -312,11 +312,7 @@ describe("mergePropertyFieldsByIdentity", () => {
       type: {
         kind: "primitive",
         type: "Integer",
-        enumeration: {
-          name: "Stuff.Color",
-          isStrict: true,
-          enumerators: [{ value: 0, label: "Red" }],
-        },
+        enumeration: { name: "Stuff.Color", isStrict: true, enumerators: [{ value: 0, label: "Red" }] },
       },
     });
     const b = createField({
@@ -326,11 +322,7 @@ describe("mergePropertyFieldsByIdentity", () => {
       type: {
         kind: "primitive",
         type: "Integer",
-        enumeration: {
-          name: "Stuff.Color",
-          isStrict: true,
-          enumerators: [{ value: 1, label: "Green" }],
-        },
+        enumeration: { name: "Stuff.Color", isStrict: true, enumerators: [{ value: 1, label: "Green" }] },
       },
     });
     expect(() => mergePropertyFieldsByIdentity([a, b])).to.throw(/divergent metadata/);
