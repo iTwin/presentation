@@ -407,6 +407,20 @@ export interface ECSqlQueryRow {
 type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 // @public
+interface EnumerationInfo<TValue extends string | number = string | number> {
+    enumerators: EnumeratorInfo<TValue>[];
+    isStrict: boolean;
+    name: string;
+}
+
+// @public
+interface EnumeratorInfo<TValue extends string | number = string | number> {
+    description?: string;
+    label: string;
+    value: TValue;
+}
+
+// @public
 interface Event_2<TListener extends (...args: any[]) => void = () => void> {
     // (undocumented)
     addListener: (listener: TListener) => () => void;
@@ -508,9 +522,6 @@ export const NOOP_LOGGER: ILogger;
 // @public
 export function normalizeFullClassName(fullClassName: string): EC.FullClassNameDotNotation;
 
-// @public (undocumented)
-type NumericPrimitiveValueType = Extract<PrimitiveValueType, "Double" | "Integer" | "Long">;
-
 // @public
 export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
 
@@ -554,11 +565,21 @@ export namespace PrimitiveValue {
 export type PrimitiveValueDescriptor = {
     kind: "primitive";
 } & ({
-    type: Exclude<PrimitiveValueType, NumericPrimitiveValueType>;
+    type: Extract<PrimitiveValueType, "String">;
     kindOfQuantity?: undefined;
+    enumeration?: EnumerationInfo<string>;
 } | {
-    type: NumericPrimitiveValueType;
+    type: Extract<PrimitiveValueType, "Integer" | "Long">;
     kindOfQuantity?: string;
+    enumeration?: EnumerationInfo<number>;
+} | {
+    type: Extract<PrimitiveValueType, "Double">;
+    kindOfQuantity?: string;
+    enumeration?: undefined;
+} | {
+    type: Exclude<PrimitiveValueType, "Integer" | "Long" | "Double" | "String">;
+    kindOfQuantity?: undefined;
+    enumeration?: undefined;
 });
 
 // @public

@@ -361,9 +361,6 @@ export namespace EC {
  */
 export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
-/** @public */
-type NumericPrimitiveValueType = Extract<PrimitiveValueType, "Double" | "Integer" | "Long">;
-
 /**
  * A type descriptor for a value's shape.
  *
@@ -382,24 +379,78 @@ export type ValueDescriptor =
 
 /**
  * Describes a scalar primitive value.
+ *
+ * When the value is backed by an enumeration (only possible for `String`- and `Integer`-typed
+ * values), `enumeration` carries the enumeration's metadata (its declared enumerators and their
+ * labels) so consumers can map raw values to display labels without re-reading schema. The
+ * `type` discriminates the enumerator value type (`String` → `string`, `Integer` → `number`).
+ *
  * @public
  */
 export type PrimitiveValueDescriptor = { kind: "primitive" } & (
   | {
       /** The primitive value type. */
-      type: Exclude<PrimitiveValueType, NumericPrimitiveValueType>;
+      type: Extract<PrimitiveValueType, "String">;
       kindOfQuantity?: undefined;
+      /** Metadata of the enumeration backing this value, when it is enumeration-backed. */
+      enumeration?: EnumerationInfo<string>;
     }
   | {
       /** The primitive value type. */
-      type: NumericPrimitiveValueType;
+      type: Extract<PrimitiveValueType, "Integer" | "Long">;
       /**
        * Full name of the KindOfQuantity associated with this property (e.g., `"Units.LENGTH"`).
        * Determines how the value should be formatted and which units to display.
        */
       kindOfQuantity?: string;
+      /** Metadata of the enumeration backing this value, when it is enumeration-backed. */
+      enumeration?: EnumerationInfo<number>;
+    }
+  | {
+      /** The primitive value type. */
+      type: Extract<PrimitiveValueType, "Double">;
+      /**
+       * Full name of the KindOfQuantity associated with this property (e.g., `"Units.LENGTH"`).
+       * Determines how the value should be formatted and which units to display.
+       */
+      kindOfQuantity?: string;
+      enumeration?: undefined;
+    }
+  | {
+      /** The primitive value type. */
+      type: Exclude<PrimitiveValueType, "Integer" | "Long" | "Double" | "String">;
+      kindOfQuantity?: undefined;
+      enumeration?: undefined;
     }
 );
+
+/**
+ * Metadata about the enumeration backing a primitive value. Preserved on a
+ * `PrimitiveValueDescriptor` so consumers can map raw enum values to their display labels
+ * without re-reading schema.
+ * @public
+ */
+interface EnumerationInfo<TValue extends string | number = string | number> {
+  /** Name of the enumeration type (e.g., `"MySchema.MyEnum"` for schema-backed enums). */
+  name: string;
+  /** When `true`, values are restricted to the declared enumerators. */
+  isStrict: boolean;
+  /** The declared enumerators. */
+  enumerators: EnumeratorInfo<TValue>[];
+}
+
+/**
+ * A single enumerator of an `EnumerationInfo`.
+ * @public
+ */
+interface EnumeratorInfo<TValue extends string | number = string | number> {
+  /** Display label for the enumerator. */
+  label: string;
+  /** The enumerator's raw value (string- or integer-backed, per the owning descriptor's `type`). */
+  value: TValue;
+  /** Optional description. */
+  description?: string;
+}
 
 /**
  * Describes a named struct value with typed members.
