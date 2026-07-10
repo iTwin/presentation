@@ -273,4 +273,66 @@ describe("mergePropertyFieldsByIdentity", () => {
     const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Point" });
     expect(result[id].valueClassNames).to.deep.equal(["Stuff.Door", "Stuff.Window"]);
   });
+
+  it("merges candidates with structurally equal enumeration metadata", () => {
+    const type = (): PropertyField["type"] => ({
+      kind: "primitive",
+      type: "Integer",
+      enumeration: {
+        name: "Stuff.Color",
+        isStrict: true,
+        enumerators: [
+          { value: 0, label: "Red" },
+          { value: 1, label: "Green", description: "The green one" },
+        ],
+      },
+    });
+    const a = createField({
+      sourceClassName: "Stuff:Thing",
+      propertyName: "Color",
+      valueClassNames: ["Stuff:Door"],
+      type: type(),
+    });
+    const b = createField({
+      sourceClassName: "Stuff:Thing",
+      propertyName: "Color",
+      valueClassNames: ["Stuff:Window"],
+      type: type(),
+    });
+    const result = mergePropertyFieldsByIdentity([a, b]);
+    const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Color" });
+    expect(result[id].valueClassNames).to.deep.equal(["Stuff.Door", "Stuff.Window"]);
+  });
+
+  it("throws when grouped candidates have divergent enumeration metadata", () => {
+    const a = createField({
+      sourceClassName: "Stuff:Thing",
+      propertyName: "Color",
+      valueClassNames: ["Stuff:Door"],
+      type: {
+        kind: "primitive",
+        type: "Integer",
+        enumeration: {
+          name: "Stuff.Color",
+          isStrict: true,
+          enumerators: [{ value: 0, label: "Red" }],
+        },
+      },
+    });
+    const b = createField({
+      sourceClassName: "Stuff:Thing",
+      propertyName: "Color",
+      valueClassNames: ["Stuff:Window"],
+      type: {
+        kind: "primitive",
+        type: "Integer",
+        enumeration: {
+          name: "Stuff.Color",
+          isStrict: true,
+          enumerators: [{ value: 1, label: "Green" }],
+        },
+      },
+    });
+    expect(() => mergePropertyFieldsByIdentity([a, b])).to.throw(/divergent metadata/);
+  });
 });
