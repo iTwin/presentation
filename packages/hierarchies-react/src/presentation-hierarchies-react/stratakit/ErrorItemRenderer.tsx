@@ -151,7 +151,7 @@ function MessageWithLink({ linkLabel, scrollToElement, message }: MessageWithLin
         type="button"
         onClick={scrollToElement}
         variant="caption"
-        sx={{ verticalAlign: "baseline" }}
+        style={{ verticalAlign: "baseline" }}
       >
         {linkLabel}
       </Link>
