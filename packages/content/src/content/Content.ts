@@ -34,6 +34,7 @@
  */
 
 import { resolveContentSourcesImpl } from "./ResolveContentSources.js";
+import { createContentProviderImpl } from "./CreateContentProvider.js";
 
 import type {
   ECClassHierarchyInspector,
@@ -204,7 +205,7 @@ interface ContentProviderProps {
  *
  * @public
  */
-interface ContentProvider {
+export interface ContentProvider {
   /**
    * Get the content descriptor for the configured sources.
    * Built lazily on first call and cached for subsequent calls.
@@ -245,7 +246,6 @@ interface ContentProvider {
  *
  * @public
  */
-/* v8 ignore next 3 */
-export function createContentProvider(_props: ContentProviderProps): ContentProvider {
-  throw new Error("Not implemented");
+export function createContentProvider(props: ContentProviderProps): ContentProvider {
+  return createContentProviderImpl(props);
 }

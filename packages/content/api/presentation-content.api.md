@@ -171,7 +171,7 @@ export interface ContentValues {
 }
 
 // @public
-export function createContentProvider(_props: ContentProviderProps): ContentProvider;
+export function createContentProvider(props: ContentProviderProps): ContentProvider;
 
 // @public
 export function createIModelContentConfiguration(props: CreateIModelContentConfigurationProps): Promise<ContentConfiguration>;
