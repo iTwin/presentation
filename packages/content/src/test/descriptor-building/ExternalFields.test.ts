@@ -54,8 +54,8 @@ describe("collectExternalFields", () => {
       id: "ext_v1",
       fields: [],
       inputs: {
-        direct: { className: "TestSchema.A", propertyName: "Code" },
-        related: { className: "TestSchema.B", propertyName: "Name", path },
+        direct: { propertyClassName: "TestSchema.A", propertyName: "Code" },
+        related: { propertyClassName: "TestSchema.B", propertyName: "Name", path },
       },
       async getValues() {
         return [];

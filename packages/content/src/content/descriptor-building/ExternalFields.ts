@@ -49,7 +49,7 @@ export function collectExternalFields(externalProviders: ExternalFieldsProvider[
       const declarations = Object.values(provider.inputs) as ReadonlyArray<InputPropertyDeclaration>;
       for (const input of declarations) {
         inputs.push({
-          propertyClassName: input.className,
+          propertyClassName: input.propertyClassName,
           propertyName: input.propertyName,
           ...(input.path ? { pathFromTarget: input.path } : undefined),
         });

@@ -78,7 +78,7 @@ function createRelatedField(props: { pathFromTarget?: RelationshipPath; category
     selectorId: "field",
     label: "Field",
     type: { kind: "primitive", type: "String" },
-    sourceClassName: "TestSchema.B",
+    propertyClassName: "TestSchema.B",
     propertyName: "Prop",
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: ["TestSchema.B"],

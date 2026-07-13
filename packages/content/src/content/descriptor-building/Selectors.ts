@@ -43,12 +43,7 @@ export function collectSelectors(
     }
   }
   for (const input of externalInputs) {
-    const selector = createPropertySelector({
-      id: computePropertySelectorId(input),
-      sourceClassName: input.propertyClassName,
-      propertyName: input.propertyName,
-      pathFromTarget: input.pathFromTarget,
-    });
+    const selector = createPropertySelector({ ...input, id: computePropertySelectorId(input) });
     result[selector.id] ??= selector;
   }
   return result;
@@ -57,14 +52,14 @@ export function collectSelectors(
 /** Creates a {@link PropertyValueSelector} with its id derived from the property's identity. */
 function createPropertySelector(props: {
   id: string;
-  sourceClassName: EC.FullClassName;
+  propertyClassName: EC.FullClassName;
   propertyName: string;
   pathFromTarget?: RelationshipPath;
 }): PropertyValueSelector {
   return {
     kind: "property",
     id: props.id,
-    sourceClassName: props.sourceClassName,
+    propertyClassName: props.propertyClassName,
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
   };

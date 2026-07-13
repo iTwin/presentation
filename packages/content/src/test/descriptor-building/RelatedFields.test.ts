@@ -102,7 +102,7 @@ describe("createRelatedPropertyFields", () => {
     const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
 
     expect(fields).to.have.lengthOf(1);
-    expect(fields[0].sourceClassName).to.equal("TestSchema.B");
+    expect(fields[0].propertyClassName).to.equal("TestSchema.B");
     expect(fields[0].propertyName).to.equal("Prop");
     expect(fields[0].pathFromTarget).to.deep.equal([aToB]);
     expect(fields[0].valueClassNames).to.deep.equal(["TestSchema.B"]);
@@ -156,7 +156,7 @@ describe("createRelatedPropertyFields", () => {
     const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
 
     expect(fields).to.have.lengthOf(1);
-    expect(fields[0].sourceClassName).to.equal("TestSchema.aToB");
+    expect(fields[0].propertyClassName).to.equal("TestSchema.aToB");
     expect(fields[0].propertyName).to.equal("Weight");
     expect(fields[0].pathFromTarget).to.deep.equal([aToB]);
     expect(fields[0].valueClassNames).to.deep.equal(["TestSchema.aToB"]);

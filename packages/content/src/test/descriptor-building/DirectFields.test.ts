@@ -48,7 +48,7 @@ describe("createDirectPropertyFields", () => {
         selectorId: "TestSchema.Element.CodeValue",
         label: "CodeValue",
         type: { kind: "primitive", type: "String" },
-        sourceClassName: "TestSchema.Element",
+        propertyClassName: "TestSchema.Element",
         propertyName: "CodeValue",
         pathFromTarget: [],
         valueClassNames: ["TestSchema.Element"],

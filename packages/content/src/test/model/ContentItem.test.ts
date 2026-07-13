@@ -25,7 +25,7 @@ function createTestPropertyField(id: string): PropertyField {
     selectorId: id,
     label: id,
     type: { kind: "primitive", type: "String" },
-    sourceClassName: "BisCore.Element",
+    propertyClassName: "BisCore.Element",
     propertyName: id,
     pathFromTarget: [],
     valueClassNames: ["BisCore.Element"],

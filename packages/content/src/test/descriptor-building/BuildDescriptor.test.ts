@@ -196,7 +196,7 @@ describe("buildContentDescriptor", () => {
     const externalProvider: ExternalFieldsProvider<"code"> = {
       id: "ext_v1",
       fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
-      inputs: { code: { className: "TestSchema.A", propertyName: "Prop" } },
+      inputs: { code: { propertyClassName: "TestSchema.A", propertyName: "Prop" } },
       async getValues() {
         return [];
       },

@@ -15,14 +15,14 @@ import type { ContentDescriptor } from "../../content/model/ContentDescriptor.js
 import type { CalculatedField, Field, PropertyField as PropertyFieldType } from "../../content/model/Field.js";
 
 function propertyField(props: {
-  sourceClassName: EC.FullClassName;
+  propertyClassName: EC.FullClassName;
   propertyName: string;
   valueClassNames: string[];
   label?: string;
   pathFromTarget?: PropertyFieldType["pathFromTarget"];
 }): PropertyFieldType {
   const selectorId = PropertyField.computeId({
-    propertyClassName: props.sourceClassName,
+    propertyClassName: props.propertyClassName,
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget,
   });
@@ -32,7 +32,7 @@ function propertyField(props: {
     selectorId,
     label: props.label ?? "Label",
     type: { kind: "primitive", type: "String" },
-    sourceClassName: props.sourceClassName,
+    propertyClassName: props.propertyClassName,
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: toSortedUniqueClassNames(props.valueClassNames as EC.FullClassName[]),
@@ -65,7 +65,7 @@ describe("ValueSelector", () => {
   describe("collectSelectors", () => {
     it("produces one selector per SQL-backed field", () => {
       const prop = propertyField({
-        sourceClassName: "Stuff:Thing",
+        propertyClassName: "Stuff:Thing",
         propertyName: "Height",
         valueClassNames: ["Stuff:Door"],
       });
@@ -95,7 +95,7 @@ describe("ValueSelector", () => {
 
     it("deduplicates a property field and its fork into a single selector", () => {
       const field = propertyField({
-        sourceClassName: "Stuff:Thing",
+        propertyClassName: "Stuff:Thing",
         propertyName: "Height",
         valueClassNames: ["Stuff:Door", "Stuff:Window"],
       });
@@ -114,7 +114,7 @@ describe("ValueSelector", () => {
       expect(selectors[id]).to.deep.equal({
         kind: "property",
         id,
-        sourceClassName: "Stuff:Thing",
+        propertyClassName: "Stuff:Thing",
         propertyName: "Height",
         pathFromTarget: [],
       });
@@ -122,7 +122,7 @@ describe("ValueSelector", () => {
 
     it("reuses the field-backed selector for an external input matching a field (no duplicate)", () => {
       const prop = propertyField({
-        sourceClassName: "Stuff:Thing",
+        propertyClassName: "Stuff:Thing",
         propertyName: "Height",
         valueClassNames: ["Stuff:Door"],
       });
@@ -132,12 +132,12 @@ describe("ValueSelector", () => {
 
     it("drops a removed output field's selector on recompute, but keeps it when it is also an external input (pinning replacement)", () => {
       const removable = propertyField({
-        sourceClassName: "Stuff:Thing",
+        propertyClassName: "Stuff:Thing",
         propertyName: "Height",
         valueClassNames: ["Stuff:Door"],
       });
       const inputBacked = propertyField({
-        sourceClassName: "Stuff:Thing",
+        propertyClassName: "Stuff:Thing",
         propertyName: "Width",
         valueClassNames: ["Stuff:Door"],
       });

@@ -24,7 +24,7 @@ export type ValueSelector = PropertyValueSelector | CalculatedValueSelector;
  * A {@link ValueSelector} that selects a real EC property column.
  *
  * Reuses the column-locating coordinates of the {@link (PropertyField:interface)}(s) that read it
- * (`sourceClassName`, `propertyName`, `pathFromTarget`) via `Pick`, so the field stays the single
+ * (`propertyClassName`, `propertyName`, `pathFromTarget`) via `Pick`, so the field stays the single
  * source of truth. Unlike a field, a selector is deduplicated and may exist with no backing field
  * (an external fields provider input column).
  *
@@ -32,7 +32,7 @@ export type ValueSelector = PropertyValueSelector | CalculatedValueSelector;
  */
 export interface PropertyValueSelector extends Pick<
   PropertyField,
-  "sourceClassName" | "propertyName" | "pathFromTarget"
+  "propertyClassName" | "propertyName" | "pathFromTarget"
 > {
   kind: "property";
   /**
@@ -69,9 +69,5 @@ export function computePropertySelectorId(props: {
   propertyName: string;
   pathFromTarget?: RelationshipPath;
 }): ValueSelector["id"] {
-  return PropertyField.computeId({
-    propertyClassName: props.propertyClassName,
-    propertyName: props.propertyName,
-    pathFromTarget: props.pathFromTarget,
-  });
+  return PropertyField.computeId(props);
 }

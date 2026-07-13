@@ -21,11 +21,11 @@ type PropertyOverrides = NonNullable<ClassPropertySpec["overrides"]>[string];
  * (`select`) and applies metadata overrides; direct enumeration passes `{ select: "all" }`.
  *
  * For each included property whose value type is supported:
- * - `sourceClassName` is the class that *declares* the property (may be a base class), so an
+ * - `propertyClassName` is the class that *declares* the property (may be a base class), so an
  *   inherited property is attributed to its declaring class;
  * - `label` resolves to the override label, else the property's label, else its name;
  * - `categoryId`/`readOnly`/`hidden` come from the merged overrides when present;
- * - `id`/`selectorId` are derived from `(sourceClassName, propertyName, pathFromTarget)`.
+ * - `id`/`selectorId` are derived from `(propertyClassName, propertyName, pathFromTarget)`.
  *
  * Properties with unsupported value types (e.g. `Binary`/`IGeometry`) are skipped. The returned
  * fields are candidates whose identity is finalized (and same-property variants merged) by
@@ -56,19 +56,15 @@ export async function createClassPropertyFields(props: {
       continue;
     }
     const overrides: PropertyOverrides = { ...spec.defaultOverrides, ...spec.overrides?.[property.name] };
-    const sourceClassName = property.class.fullName;
-    const id = PropertyField.computeId({
-      propertyClassName: sourceClassName,
-      propertyName: property.name,
-      pathFromTarget,
-    });
+    const propertyClassName = property.class.fullName;
+    const id = PropertyField.computeId({ propertyClassName, propertyName: property.name, pathFromTarget });
     const field: PropertyField = {
       kind: "property",
       id,
       selectorId: id,
       label: overrides.label ?? property.label ?? property.name,
       type,
-      sourceClassName,
+      propertyClassName,
       propertyName: property.name,
       pathFromTarget,
       valueClassNames,

@@ -282,8 +282,8 @@ interface IModelFieldsProvider extends BaseFieldsProvider {
 
 // @public
 interface InputPropertyDeclaration {
-    className: EC.FullClassName;
     path?: RelationshipPath;
+    propertyClassName: EC.FullClassName;
     propertyName: string;
 }
 
@@ -298,9 +298,9 @@ export interface PropertyField extends BaseField {
     // (undocumented)
     kind: "property";
     pathFromTarget: RelationshipPath;
+    propertyClassName: EC.FullClassName;
     propertyName: string;
     selectorId: string;
-    sourceClassName: EC.FullClassName;
     valueClassNames: EC.FullClassName[];
 }
 
@@ -334,7 +334,7 @@ type PropertySelection = "all" | "none" | {
 };
 
 // @public
-export interface PropertyValueSelector extends Pick<PropertyField, "sourceClassName" | "propertyName" | "pathFromTarget"> {
+export interface PropertyValueSelector extends Pick<PropertyField, "propertyClassName" | "propertyName" | "pathFromTarget"> {
     id: string;
     // (undocumented)
     kind: "property";

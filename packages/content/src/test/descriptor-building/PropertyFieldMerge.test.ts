@@ -10,7 +10,7 @@ import { PropertyField } from "../../content/model/Field.js";
 import type { EC } from "@itwin/presentation-shared";
 
 function createField(props: {
-  sourceClassName: EC.FullClassName;
+  propertyClassName: EC.FullClassName;
   propertyName: string;
   valueClassNames: EC.FullClassName[];
   label?: string;
@@ -29,7 +29,7 @@ function createField(props: {
     categoryId: props.categoryId,
     hidden: props.hidden,
     readOnly: props.readOnly,
-    sourceClassName: props.sourceClassName,
+    propertyClassName: props.propertyClassName,
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: props.valueClassNames,
@@ -48,7 +48,7 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("passes a single candidate through, keyed by base id, with normalized target classes", () => {
     const field = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Window", "Stuff:Door"],
     });
@@ -61,7 +61,7 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("does not mutate the input candidate", () => {
     const field = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Window"],
     });
@@ -71,9 +71,13 @@ describe("mergePropertyFieldsByIdentity", () => {
   });
 
   it("unions target classes of direct-property candidates that share identity", () => {
-    const a = createField({ sourceClassName: "Stuff:Thing", propertyName: "Height", valueClassNames: ["Stuff:Door"] });
+    const a = createField({
+      propertyClassName: "Stuff:Thing",
+      propertyName: "Height",
+      valueClassNames: ["Stuff:Door"],
+    });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Window"],
     });
@@ -84,12 +88,12 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("de-duplicates overlapping target classes across candidates", () => {
     const a = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Door", "Stuff:Window"],
     });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Window", "Stuff:Roof"],
     });
@@ -107,13 +111,13 @@ describe("mergePropertyFieldsByIdentity", () => {
       },
     ];
     const a = createField({
-      sourceClassName: "BisCore:ExternalSourceAspect",
+      propertyClassName: "BisCore:ExternalSourceAspect",
       propertyName: "Identifier",
       pathFromTarget: path,
       valueClassNames: ["BisCore:ExternalSourceAspectX"],
     });
     const b = createField({
-      sourceClassName: "BisCore:ExternalSourceAspect",
+      propertyClassName: "BisCore:ExternalSourceAspect",
       propertyName: "Identifier",
       pathFromTarget: path,
       valueClassNames: ["BisCore:ExternalSourceAspectY"],
@@ -131,21 +135,25 @@ describe("mergePropertyFieldsByIdentity", () => {
   });
 
   it("keeps candidates with distinct identities separate", () => {
-    const a = createField({ sourceClassName: "Stuff:Thing", propertyName: "Height", valueClassNames: ["Stuff:Door"] });
-    const b = createField({ sourceClassName: "Stuff:Thing", propertyName: "Width", valueClassNames: ["Stuff:Door"] });
+    const a = createField({
+      propertyClassName: "Stuff:Thing",
+      propertyName: "Height",
+      valueClassNames: ["Stuff:Door"],
+    });
+    const b = createField({ propertyClassName: "Stuff:Thing", propertyName: "Width", valueClassNames: ["Stuff:Door"] });
     const result = merge([a, b]);
     expect(Object.keys(result)).to.have.length(2);
   });
 
   it("throws when grouped candidates have divergent metadata", () => {
     const a = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Door"],
       label: "One",
     });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Window"],
       label: "Two",
@@ -155,13 +163,13 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("throws when grouped candidates have divergent category", () => {
     const a = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Door"],
       categoryId: "a",
     });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Window"],
       categoryId: "b",
@@ -171,13 +179,13 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("throws when grouped candidates have divergent hidden flag", () => {
     const a = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Door"],
       hidden: true,
     });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Window"],
       hidden: false,
@@ -187,13 +195,13 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("throws when grouped candidates have divergent readOnly flag", () => {
     const a = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Door"],
       readOnly: true,
     });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Window"],
       readOnly: false,
@@ -203,13 +211,13 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("throws when grouped candidates have divergent value type", () => {
     const a = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Door"],
       type: { kind: "primitive", type: "String" },
     });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Window"],
       type: { kind: "primitive", type: "Double" },
@@ -219,13 +227,13 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("throws when grouped navigation candidates have divergent target class", () => {
     const a = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Owner",
       valueClassNames: ["Stuff:Door"],
       type: { kind: "navigation", targetClassName: "Stuff.Person" },
     });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Owner",
       valueClassNames: ["Stuff:Window"],
       type: { kind: "navigation", targetClassName: "Stuff.Organization" },
@@ -235,13 +243,13 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("merges navigation candidates that share a target class", () => {
     const a = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Owner",
       valueClassNames: ["Stuff:Door"],
       type: { kind: "navigation", targetClassName: "Stuff.Person" },
     });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Owner",
       valueClassNames: ["Stuff:Window"],
       type: { kind: "navigation", targetClassName: "Stuff.Person" },
@@ -263,13 +271,13 @@ describe("mergePropertyFieldsByIdentity", () => {
       ],
     });
     const a = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Point",
       valueClassNames: ["Stuff:Door"],
       type: type(),
     });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Point",
       valueClassNames: ["Stuff:Window"],
       type: type(),
@@ -293,13 +301,13 @@ describe("mergePropertyFieldsByIdentity", () => {
       },
     });
     const a = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Color",
       valueClassNames: ["Stuff:Door"],
       type: type(),
     });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Color",
       valueClassNames: ["Stuff:Window"],
       type: type(),
@@ -311,7 +319,7 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("throws when grouped candidates have divergent enumeration metadata", () => {
     const a = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Color",
       valueClassNames: ["Stuff:Door"],
       type: {
@@ -321,7 +329,7 @@ describe("mergePropertyFieldsByIdentity", () => {
       },
     });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Color",
       valueClassNames: ["Stuff:Window"],
       type: {
@@ -335,13 +343,13 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("resolves inter-provider metadata conflicts in favor of the higher priority, unioning value classes", () => {
     const a = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Door"],
       label: "Low priority",
     });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Window"],
       label: "High priority",
@@ -357,13 +365,13 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("resolves inter-provider ties in favor of input order", () => {
     const a = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Door"],
       label: "First",
     });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Window"],
       label: "Second",
@@ -378,13 +386,13 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("throws when the same provider produces divergent metadata for one field id", () => {
     const a = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Door"],
       label: "One",
     });
     const b = createField({
-      sourceClassName: "Stuff:Thing",
+      propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Window"],
       label: "Two",

@@ -34,7 +34,7 @@ interface PropertyFieldCandidate {
  * keyed by field ID, applying the **merge-by-default** contract:
  *
  * - Candidates are grouped by their base ID (`PropertyField.computeId` without a `forkKey`),
- *   i.e. by declared `(sourceClassName, propertyName, pathFromTarget)`. Concrete-endpoint
+ *   i.e. by declared `(propertyClassName, propertyName, pathFromTarget)`. Concrete-endpoint
  *   variants of the same declared property therefore collapse into one field.
  * - Each group produces a single field whose `valueClassNames` is the sorted, de-duplicated
  *   union of the group's value-supplier classes.
@@ -54,11 +54,7 @@ export function mergePropertyFieldsByIdentity(
 ): Record<Field["id"], PropertyField> {
   const groups = new Map<Field["id"], PropertyFieldCandidate[]>();
   for (const candidate of candidates) {
-    const baseId = PropertyField.computeId({
-      propertyClassName: candidate.field.sourceClassName,
-      propertyName: candidate.field.propertyName,
-      pathFromTarget: candidate.field.pathFromTarget,
-    });
+    const baseId = PropertyField.computeId(candidate.field);
     let group = groups.get(baseId);
     if (!group) {
       group = [];

@@ -43,7 +43,7 @@ describe("createClassPropertyFields", () => {
         }),
         label: "Prop",
         type: { kind: "primitive", type: "String" },
-        sourceClassName: "TestSchema.B",
+        propertyClassName: "TestSchema.B",
         propertyName: "Prop",
         pathFromTarget: path,
         valueClassNames: ["TestSchema.B"],
@@ -99,7 +99,7 @@ describe("createClassPropertyFields", () => {
       spec: { select: "all" },
     });
 
-    expect(field.sourceClassName).to.equal("BisCore.Element");
+    expect(field.propertyClassName).to.equal("BisCore.Element");
     expect(field.id).to.equal("BisCore.Element.UserLabel");
   });
 

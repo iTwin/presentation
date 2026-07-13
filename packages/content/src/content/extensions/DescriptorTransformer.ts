@@ -90,7 +90,7 @@ type MutableFieldMetadata = "label" | "categoryId" | "hidden" | "readOnly";
  *
  * Transformers may only modify metadata (`label`, `categoryId`, `hidden`, `readOnly`). Identity
  * (`id`, `selectorId`), value shape (`type`), and the column-defining properties a field reads
- * (`sourceClassName`/`propertyName`/`pathFromTarget` for property fields,
+ * (`propertyClassName`/`propertyName`/`pathFromTarget` for property fields,
  * `expression`/`targetAlias`/`bindings` for calculated fields) are deeply readonly, so a transformer
  * can never silently change the column a field selects — not even by mutating a nested array or
  * object (e.g. `pathFromTarget`, `valueClassNames`, or `type`). Value-supplier scoping is done
@@ -173,12 +173,7 @@ export function createTransformableDescriptor(
       if (subset.length === 0) {
         throw new Error(`Cannot fork field "${id}": the value class subset must not be empty.`);
       }
-      const forkedId = PropertyField.computeId({
-        propertyClassName: field.sourceClassName,
-        propertyName: field.propertyName,
-        pathFromTarget: field.pathFromTarget,
-        forkKey: computeFieldForkKey(subset),
-      });
+      const forkedId = PropertyField.computeId({ ...field, forkKey: computeFieldForkKey(subset) });
       if (forkedId in descriptor.fields) {
         return descriptor.fields[forkedId] as PropertyField;
       }
