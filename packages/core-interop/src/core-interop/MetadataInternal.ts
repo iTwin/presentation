@@ -18,6 +18,7 @@ import type {
   PrimitiveArrayProperty as CorePrimitiveArrayProperty,
   PrimitiveProperty as CorePrimitiveProperty,
   Property as CoreProperty,
+  PropertyCategory as CorePropertyCategory,
   RelationshipClass as CoreRelationshipClass,
   RelationshipConstraint as CoreRelationshipConstraint,
   Schema as CoreSchema,
@@ -238,6 +239,12 @@ abstract class ECPropertyImpl<TCoreProperty extends CoreProperty> implements EC.
       (coreKindOfQuantity) => new ECKindOfQuantityImpl(coreKindOfQuantity),
     );
   }
+  public get category(): Promise<EC.PropertyCategory | undefined> {
+    return createFromOptionalLazyLoaded(
+      this._coreProperty.category,
+      (coreCategory) => new ECPropertyCategoryImpl(coreCategory),
+    );
+  }
   public async getCustomAttributes(): Promise<EC.CustomAttributeSet> {
     return createCustomAttributesSet(this._coreProperty.customAttributes);
   }
@@ -453,6 +460,18 @@ class ECRelationshipConstraintImpl implements EC.RelationshipConstraint {
 class ECKindOfQuantityImpl extends ECSchemaItemImpl<CoreKindOfQuantity> implements EC.KindOfQuantity {
   constructor(coreKindOfQuantity: CoreKindOfQuantity) {
     super(coreKindOfQuantity);
+  }
+}
+
+class ECPropertyCategoryImpl extends ECSchemaItemImpl<CorePropertyCategory> implements EC.PropertyCategory {
+  constructor(coreCategory: CorePropertyCategory) {
+    super(coreCategory);
+  }
+  public get priority() {
+    return this._coreSchemaItem.priority;
+  }
+  public get description() {
+    return this._coreSchemaItem.description;
   }
 }
 

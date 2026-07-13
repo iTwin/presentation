@@ -737,6 +737,34 @@ describe("createECProperty", () => {
           .kindOfQuantity,
       ).toBeUndefined();
     });
+
+    it("maps category", async () => {
+      const coreProperty = {
+        ...propertyStub,
+        isPrimitive: () => true,
+        name: "test-property",
+        category: Promise.resolve({
+          fullName: "SchemaName.TestCategory",
+          name: "TestCategory",
+          label: "Test category",
+          description: "Test category description",
+          priority: 5,
+          schema: stubSchema("SchemaName"),
+        }),
+      } as unknown as CorePrimitiveProperty;
+      const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveProperty;
+      const category = (await property.category)!;
+      expect(category.fullName).toBe("SchemaName.TestCategory");
+      expect(category.name).toBe("TestCategory");
+      expect(category.label).toBe("Test category");
+      expect(category.description).toBe("Test category description");
+      expect(category.priority).toBe(5);
+
+      expect(
+        await createECProperty({ ...coreProperty, category: undefined } as CorePrimitiveProperty, propertyClass)
+          .category,
+      ).toBeUndefined();
+    });
   });
 
   describe("Navigation property", () => {
