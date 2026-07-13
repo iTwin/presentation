@@ -65,6 +65,9 @@ abstract class ECSchemaItemImpl<TCoreSchemaItem extends CoreSchemaItem> implemen
   public get label() {
     return this._coreSchemaItem.label;
   }
+  public get description() {
+    return this._coreSchemaItem.description;
+  }
 }
 
 /** @internal */
@@ -477,9 +480,6 @@ class ECPropertyCategoryImpl extends ECSchemaItemImpl<CorePropertyCategory> impl
   }
   public get priority() {
     return this._coreSchemaItem.priority;
-  }
-  public get description() {
-    return this._coreSchemaItem.description;
   }
 }
 

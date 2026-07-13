@@ -114,6 +114,7 @@ export namespace EC {
     fullName: FullClassName;
     name: string;
     label?: string;
+    description?: string;
   }
 
   /**
@@ -173,8 +174,6 @@ export namespace EC {
   export interface PropertyCategory extends SchemaItem {
     /** Determines the display order of the category relative to other categories. Higher priority categories are displayed first. */
     priority: number;
-    /** Optional description of the category. */
-    description?: string;
   }
 
   /**

@@ -264,7 +264,6 @@ export namespace EC {
         name: string;
     }
     export interface PropertyCategory extends SchemaItem {
-        description?: string;
         priority: number;
     }
     export interface RelationshipClass extends Class {
@@ -299,6 +298,8 @@ export namespace EC {
         version: SchemaVersion;
     }
     export interface SchemaItem {
+        // (undocumented)
+        description?: string;
         // (undocumented)
         fullName: FullClassName;
         // (undocumented)
