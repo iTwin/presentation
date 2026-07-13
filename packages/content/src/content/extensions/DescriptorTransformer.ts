@@ -142,9 +142,15 @@ interface TransformableDescriptor {
  * Creates a {@link TransformableDescriptor} view over a {@link (ContentDescriptor:interface)},
  * backing `removeField` and `forkField` against the descriptor's live `fields` record.
  *
+ * Accepts only the parts of the descriptor a transformer operates on (`sources`, `fields`,
+ * `categories`) — value selectors are derived after transforms run and are intentionally out of
+ * reach here.
+ *
  * @internal
  */
-export function createTransformableDescriptor(descriptor: ContentDescriptor): TransformableDescriptor {
+export function createTransformableDescriptor(
+  descriptor: Pick<ContentDescriptor, "sources" | "fields" | "categories">,
+): TransformableDescriptor {
   return {
     sources: descriptor.sources,
     categories: descriptor.categories,

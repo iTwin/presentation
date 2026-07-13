@@ -3,9 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import {
+  createTransformableDescriptor,
+  DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY,
+} from "../extensions/DescriptorTransformer.js";
 import { collectInParallel } from "../InternalUtils.js";
 import { collectCalculatedFields } from "./CalculatedFields.js";
-import { collectCategories } from "./Categories.js";
+import { collectCategories, pruneUnreferencedCategories } from "./Categories.js";
 import { createContributionMemoizer } from "./ContributionMemoizer.js";
 import { createDirectPropertyFields } from "./DirectFields.js";
 import { collectExternalFields } from "./ExternalFields.js";
@@ -17,7 +21,6 @@ import type { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/present
 import type { ContentConfiguration } from "../Content.js";
 import type { ContentSource } from "../ContentTarget.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
-import type { Field } from "../model/Field.js";
 
 /**
  * Props for {@link buildContentDescriptor}.
@@ -39,11 +42,6 @@ interface BuildContentDescriptorProps {
  * Re-calls providers (cheap — no data queries) to recover declaration metadata, reads EC schema
  * metadata to enumerate direct and related property fields, appends calculated and external fields,
  * resolves categories, runs descriptor transformers, and assembles the value selectors.
- *
- * This is being implemented incrementally. It currently enumerates the direct and related property
- * fields, appends provider calculated fields and external-provider fields, assembles the category
- * registry (provider-declared plus auto-created related-path categories), and computes the value
- * selectors (field-backed plus external-input columns); descriptor transformers run in a later stage.
  *
  * @internal
  */
@@ -69,7 +67,28 @@ export async function buildContentDescriptor(props: BuildContentDescriptorProps)
   ]);
   const { fields: externalFields, inputs: externalInputs } = collectExternalFields(externalProviders);
 
-  const fields: Record<Field["id"], Field> = { ...propertyFields, ...calculatedFields, ...externalFields };
-  const selectors = collectSelectors(Object.values(fields), externalInputs);
-  return { sources, fields, categories, selectors };
+  // Everything a transformer operates on — selectors are derived only after transforms run.
+  const transformed: Pick<ContentDescriptor, "sources" | "fields" | "categories"> = {
+    sources,
+    fields: { ...propertyFields, ...calculatedFields, ...externalFields },
+    categories,
+  };
+
+  // Run descriptor transformers sequentially in ascending priority — each sees prior mutations.
+  const transformers = [...(config?.descriptorTransformers ?? [])].sort(
+    (a, b) =>
+      (a.priority ?? DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY) - (b.priority ?? DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY),
+  );
+  for (const transformer of transformers) {
+    await transformer.transform({ descriptor: createTransformableDescriptor(transformed), imodelAccess });
+  }
+
+  // Selectors and category pruning reflect the post-transform field set: a removed field drops its
+  // selector (unless an external input still requires the column), and its category may fall away.
+  return {
+    sources: transformed.sources,
+    fields: transformed.fields,
+    categories: pruneUnreferencedCategories(transformed.fields, transformed.categories),
+    selectors: collectSelectors(Object.values(transformed.fields), externalInputs),
+  };
 }

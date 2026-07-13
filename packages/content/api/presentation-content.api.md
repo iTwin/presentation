@@ -113,7 +113,7 @@ export interface ContentItem {
 
 // @public
 interface ContentProvider {
-    getContentDescriptor(): Promise<Readonly<ContentDescriptor>>;
+    getContentDescriptor(): Promise<DeepReadonly<ContentDescriptor>>;
     getInstanceKeys(options?: Pick<ContentRequestOptions, "filters">): AsyncIterable<InstanceKey>;
     getItems(options?: ContentRequestOptions): AsyncIterable<ContentItem>;
     getSize(options?: Pick<ContentRequestOptions, "filters">): Promise<number>;

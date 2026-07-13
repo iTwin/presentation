@@ -6,13 +6,14 @@
 import { describe, expect, it } from "vitest";
 import { buildContentDescriptor } from "../../content/descriptor-building/BuildDescriptor.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
+import { PropertyField } from "../../content/model/Field.js";
 import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
+import type { DescriptorTransformer } from "../../content/extensions/DescriptorTransformer.js";
 import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
-import type { PropertyField } from "../../content/model/Field.js";
 
 function createSource(
   primaryClass: EC.FullClassName,
@@ -169,5 +170,116 @@ describe("buildContentDescriptor", () => {
     expect(descriptor.fields["ext_v1:status"].kind).to.equal("external");
     // External fields have no selector; the input reuses the property field's column selector.
     expect(Object.keys(descriptor.selectors)).to.deep.equal(["TestSchema.A.Prop"]);
+  });
+
+  it("applies descriptor transformer metadata changes", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.A",
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.A" })],
+      }),
+    ]);
+    const transformer: DescriptorTransformer = {
+      async transform({ descriptor: view }) {
+        const field = view.fields["TestSchema.A.Prop"];
+        field.label = "Renamed";
+        field.hidden = true;
+      },
+    };
+
+    const descriptor = await buildContentDescriptor({
+      imodelAccess,
+      sources: [createSource("TestSchema.A")],
+      config: { descriptorTransformers: [transformer] },
+    });
+
+    expect(descriptor.fields["TestSchema.A.Prop"].label).to.equal("Renamed");
+    expect(descriptor.fields["TestSchema.A.Prop"].hidden).to.equal(true);
+  });
+
+  it("runs transformers in ascending priority order, defaulting an unset priority", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.A",
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.A" })],
+      }),
+    ]);
+    const order: number[] = [];
+    const high: DescriptorTransformer = {
+      priority: 3,
+      async transform() {
+        order.push(3);
+      },
+    };
+    // No explicit priority → defaults to DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY (1000).
+    const unset: DescriptorTransformer = {
+      async transform() {
+        order.push(1000);
+      },
+    };
+    const low: DescriptorTransformer = {
+      priority: 1,
+      async transform() {
+        order.push(1);
+      },
+    };
+
+    await buildContentDescriptor({
+      imodelAccess,
+      sources: [createSource("TestSchema.A")],
+      config: { descriptorTransformers: [high, unset, low] },
+    });
+
+    expect(order).to.deep.equal([1, 3, 1000]);
+  });
+
+  it("drops a removed field's selector and prunes its now-unreferenced category", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.A",
+        properties: [createPrimitiveProperty({ name: "Keep", declaringClassName: "TestSchema.A" })],
+      }),
+      createEntityClass({
+        fullName: "TestSchema.B",
+        properties: [createPrimitiveProperty({ name: "Rel", declaringClassName: "TestSchema.B" })],
+      }),
+    ]);
+    const path: RelationshipPath = [
+      { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
+    ];
+    const provider: IModelFieldsProvider = {
+      id: "p_v1",
+      async getContribution() {
+        return { relatedProperties: [{ path }] };
+      },
+    };
+    const source: ContentSource = {
+      target: { primaryClass: "TestSchema.A" },
+      resolvedPrimaryClasses: ["TestSchema.A"],
+      resolvedDeclarations: [
+        { providerId: provider.id, declarationIndex: 0, paths: [{ path, targetClassNames: ["TestSchema.A"] }] },
+      ],
+    };
+    const relatedId = PropertyField.computeId({
+      propertyClassName: "TestSchema.B",
+      propertyName: "Rel",
+      pathFromTarget: path,
+    });
+    const transformer: DescriptorTransformer = {
+      async transform({ descriptor: view }) {
+        view.removeField(relatedId);
+      },
+    };
+
+    const descriptor = await buildContentDescriptor({
+      imodelAccess,
+      sources: [source],
+      config: { fieldsProviders: [provider], descriptorTransformers: [transformer] },
+    });
+
+    // The related field (and thus its selector and auto category) is gone; the direct field remains.
+    expect(Object.keys(descriptor.fields)).to.deep.equal(["TestSchema.A.Keep"]);
+    expect(Object.keys(descriptor.selectors)).to.deep.equal(["TestSchema.A.Keep"]);
+    expect(descriptor.categories).to.deep.equal({});
   });
 });

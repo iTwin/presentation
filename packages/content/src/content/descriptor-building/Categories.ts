@@ -12,7 +12,7 @@ import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation
 import type { ContentSource } from "../ContentTarget.js";
 import type { ExternalFieldsProvider } from "../extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
-import type { PropertyField } from "../model/Field.js";
+import type { Field, PropertyField } from "../model/Field.js";
 
 type GetContribution = (
   provider: IModelFieldsProvider,
@@ -119,6 +119,30 @@ export async function collectCategories(props: {
 async function getClassLabel(imodelAccess: ECSchemaProvider, className: EC.FullClassName): Promise<string> {
   const cls = await getClass(imodelAccess, className);
   return cls.label ?? cls.name;
+}
+
+/**
+ * Drops categories that no field references. A category is kept when a field targets it directly or
+ * it is an ancestor (via `parentId`) of such a category — so a referenced category's whole parent
+ * chain survives.
+ *
+ * @internal
+ */
+export function pruneUnreferencedCategories(
+  fields: Record<Field["id"], Field>,
+  categories: Record<CategoryDefinition["id"], CategoryDefinition>,
+): Record<CategoryDefinition["id"], CategoryDefinition> {
+  const referenced = new Set<CategoryDefinition["id"]>();
+  for (const field of Object.values(fields)) {
+    let id: CategoryDefinition["id"] | undefined = field.categoryId;
+    // Walk the parent chain, stopping at the root, an already-visited category, or a dangling
+    // reference (a `categoryId`/`parentId` pointing at a category that no longer exists).
+    while (id !== undefined && !referenced.has(id) && id in categories) {
+      referenced.add(id);
+      id = categories[id].parentId;
+    }
+  }
+  return Object.fromEntries(Object.entries(categories).filter(([id]) => referenced.has(id)));
 }
 
 /**

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectCategories } from "../../content/descriptor-building/Categories.js";
+import { collectCategories, pruneUnreferencedCategories } from "../../content/descriptor-building/Categories.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
 import { createEntityClass, createSchemaAccess } from "../MetadataStubs.js";
 
@@ -349,5 +349,28 @@ describe("collectCategories", () => {
     });
     expect(categories[id].label).to.equal("Provider Category");
     expect(field.categoryId).to.equal(id);
+  });
+});
+
+describe("pruneUnreferencedCategories", () => {
+  it("keeps referenced categories and their ancestor chain, dropping the rest", () => {
+    const categories = {
+      root: { id: "root", label: "Root" },
+      mid: { id: "mid", label: "Mid", parentId: "root" },
+      leaf: { id: "leaf", label: "Leaf", parentId: "mid" },
+      orphan: { id: "orphan", label: "Orphan" },
+    };
+    const leafField = { ...createRelatedField({ categoryId: "leaf" }), id: "leafField" };
+    const rootField = { ...createRelatedField({ categoryId: "root" }), id: "rootField" };
+    const pruned = pruneUnreferencedCategories({ leafField, rootField }, categories);
+    expect(Object.keys(pruned).sort()).to.deep.equal(["leaf", "mid", "root"]);
+  });
+
+  it("ignores fields without a category and dangling category references", () => {
+    const categories = { a: { id: "a", label: "A" } };
+    const noCategory = { ...createRelatedField({}), id: "noCategory" };
+    const dangling = { ...createRelatedField({ categoryId: "missing" }), id: "dangling" };
+    const pruned = pruneUnreferencedCategories({ noCategory, dangling }, categories);
+    expect(pruned).to.deep.equal({});
   });
 });
