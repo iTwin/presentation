@@ -10,6 +10,7 @@ import { createEntityClass, createSchemaAccess } from "../MetadataStubs.js";
 
 import type { RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
+import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
 import type { PropertyField } from "../../content/model/Field.js";
 
@@ -54,6 +55,22 @@ function createProvider(
 const getContribution: Parameters<typeof collectCategories>[0]["getContribution"] = async (provider, target) =>
   provider.getContribution({ imodelAccess: createSchemaAccess([]), target });
 
+function createExternalProvider(
+  id: ExternalFieldsProvider["id"],
+  categories?: Record<string, CategoryDefinition>,
+  priority?: number,
+): ExternalFieldsProvider {
+  return {
+    id,
+    fields: [],
+    ...(categories !== undefined ? { categories } : undefined),
+    ...(priority !== undefined ? { priority } : undefined),
+    async getValues() {
+      return [];
+    },
+  };
+}
+
 function createRelatedField(props: { pathFromTarget?: RelationshipPath; categoryId?: string }): PropertyField {
   return {
     kind: "property",
@@ -76,6 +93,7 @@ describe("collectCategories", () => {
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
       providers: [provider],
+      externalProviders: [],
       getContribution,
       fields: {},
     });
@@ -93,6 +111,7 @@ describe("collectCategories", () => {
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
       providers: [provider],
+      externalProviders: [],
       getContribution,
       fields: {},
     });
@@ -106,6 +125,7 @@ describe("collectCategories", () => {
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
       providers: [low, high],
+      externalProviders: [],
       getContribution,
       fields: {},
     });
@@ -119,10 +139,56 @@ describe("collectCategories", () => {
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
       providers: [first, second],
+      externalProviders: [],
       getContribution,
       fields: {},
     });
     expect(categories.cat.label).to.equal("First");
+  });
+
+  it("collects categories from external fields providers and resolves conflicts by priority", async () => {
+    const imodelProvider = createProvider("imodel_v1", { shared: { id: "shared", label: "From iModel" } }, 1);
+    const external = createExternalProvider(
+      "ext_v1",
+      { shared: { id: "shared", label: "From External" }, extOnly: { id: "extOnly", label: "Ext Only" } },
+      2,
+    );
+    const categories = await collectCategories({
+      imodelAccess: createSchemaAccess([]),
+      sources: [createSource()],
+      providers: [imodelProvider],
+      externalProviders: [external],
+      getContribution,
+      fields: {},
+    });
+    expect(categories.shared.label).to.equal("From External");
+    expect(categories.extOnly).to.deep.equal({ id: "extOnly", label: "Ext Only" });
+  });
+
+  it("ignores external fields providers that declare no categories", async () => {
+    const external = createExternalProvider("ext_v1");
+    const categories = await collectCategories({
+      imodelAccess: createSchemaAccess([]),
+      sources: [createSource()],
+      providers: [],
+      externalProviders: [external],
+      getContribution,
+      fields: {},
+    });
+    expect(categories).to.deep.equal({});
+  });
+
+  it("applies the default priority to external categories without an explicit priority", async () => {
+    const external = createExternalProvider("ext_v1", { cat: { id: "cat", label: "Ext" } });
+    const categories = await collectCategories({
+      imodelAccess: createSchemaAccess([]),
+      sources: [createSource()],
+      providers: [],
+      externalProviders: [external],
+      getContribution,
+      fields: {},
+    });
+    expect(categories.cat).to.deep.equal({ id: "cat", label: "Ext" });
   });
 
   it("auto-creates a category for a related field without one, labelled by the terminal class", async () => {
@@ -132,6 +198,7 @@ describe("collectCategories", () => {
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B", label: "The B" })]),
       sources: [createSource()],
       providers: [],
+      externalProviders: [],
       getContribution,
       fields,
     });
@@ -149,6 +216,7 @@ describe("collectCategories", () => {
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B" })]),
       sources: [createSource()],
       providers: [],
+      externalProviders: [],
       getContribution,
       fields,
     });
@@ -165,6 +233,7 @@ describe("collectCategories", () => {
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.D", label: "The D" })]),
       sources: [createSource()],
       providers: [],
+      externalProviders: [],
       getContribution,
       fields: { d: field },
     });
@@ -185,6 +254,7 @@ describe("collectCategories", () => {
       ]),
       sources: [createSource()],
       providers: [],
+      externalProviders: [],
       getContribution,
       fields: { b: bField, d: dField },
     });
@@ -208,6 +278,7 @@ describe("collectCategories", () => {
       ]),
       sources: [createSource()],
       providers: [],
+      externalProviders: [],
       getContribution,
       fields: { b: bField, c: cField, d: dField },
     });
@@ -235,6 +306,7 @@ describe("collectCategories", () => {
       ]),
       sources: [createSource()],
       providers: [],
+      externalProviders: [],
       getContribution,
       fields: { y: yField, c: cField },
     });
@@ -254,6 +326,7 @@ describe("collectCategories", () => {
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
       providers: [],
+      externalProviders: [],
       getContribution,
       fields: { direct, categorized },
     });
@@ -270,6 +343,7 @@ describe("collectCategories", () => {
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B", label: "Should not be used" })]),
       sources: [createSource()],
       providers: [provider],
+      externalProviders: [],
       getContribution,
       fields: { field },
     });

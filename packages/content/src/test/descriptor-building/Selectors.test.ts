@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
+import { collectSelectors } from "../../content/descriptor-building/Selectors.js";
 import { createTransformableDescriptor } from "../../content/extensions/DescriptorTransformer.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { toSortedUniqueClassNames } from "../../content/model/Utils.js";
-import { collectSelectors, computePropertySelectorId } from "../../content/model/ValueSelector.js";
+import { computePropertySelectorId } from "../../content/model/ValueSelector.js";
 
 import type { EC, ECSqlBinding } from "@itwin/presentation-shared";
 import type { ContentDescriptor } from "../../content/model/ContentDescriptor.js";

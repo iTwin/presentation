@@ -4,16 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collectInParallel } from "../InternalUtils.js";
+import { collectCalculatedFields } from "./CalculatedFields.js";
 import { collectCategories } from "./Categories.js";
 import { createContributionMemoizer } from "./ContributionMemoizer.js";
 import { createDirectPropertyFields } from "./DirectFields.js";
+import { collectExternalFields } from "./ExternalFields.js";
 import { mergePropertyFieldsByIdentity } from "./PropertyFieldMerge.js";
 import { createRelatedPropertyFields } from "./RelatedFields.js";
+import { collectSelectors } from "./Selectors.js";
 
 import type { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentConfiguration } from "../Content.js";
 import type { ContentSource } from "../ContentTarget.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
+import type { Field } from "../model/Field.js";
 
 /**
  * Props for {@link buildContentDescriptor}.
@@ -36,18 +40,20 @@ interface BuildContentDescriptorProps {
  * metadata to enumerate direct and related property fields, appends calculated and external fields,
  * resolves categories, runs descriptor transformers, and assembles the value selectors.
  *
- * This is being implemented incrementally. It currently enumerates the direct property fields of
- * each source's primary class and the related property fields reached via each source's resolved
- * relationship paths (merged across sources), and assembles the category registry (provider-declared
- * plus auto-created related-path categories); selector assembly is added in a later stage.
+ * This is being implemented incrementally. It currently enumerates the direct and related property
+ * fields, appends provider calculated fields and external-provider fields, assembles the category
+ * registry (provider-declared plus auto-created related-path categories), and computes the value
+ * selectors (field-backed plus external-input columns); descriptor transformers run in a later stage.
  *
  * @internal
  */
 export async function buildContentDescriptor(props: BuildContentDescriptorProps): Promise<ContentDescriptor> {
   const { imodelAccess, sources, config } = props;
   const providers = config?.fieldsProviders ?? [];
+  const externalProviders = config?.externalFieldsProviders ?? [];
   const providersById = new Map(providers.map((provider) => [provider.id, provider]));
   const { getContribution } = createContributionMemoizer({ imodelAccess });
+
   const candidates = await collectInParallel(sources, async (source) => {
     const [direct, related] = await Promise.all([
       createDirectPropertyFields({ imodelAccess, source }),
@@ -55,7 +61,15 @@ export async function buildContentDescriptor(props: BuildContentDescriptorProps)
     ]);
     return [...direct, ...related];
   });
-  const fields = mergePropertyFieldsByIdentity(candidates);
-  const categories = await collectCategories({ imodelAccess, sources, providers, getContribution, fields });
-  return { sources, fields, categories, selectors: {} };
+  const propertyFields = mergePropertyFieldsByIdentity(candidates);
+
+  const [categories, calculatedFields] = await Promise.all([
+    collectCategories({ imodelAccess, sources, providers, externalProviders, getContribution, fields: propertyFields }),
+    collectCalculatedFields({ sources, providers, getContribution }),
+  ]);
+  const { fields: externalFields, inputs: externalInputs } = collectExternalFields(externalProviders);
+
+  const fields: Record<Field["id"], Field> = { ...propertyFields, ...calculatedFields, ...externalFields };
+  const selectors = collectSelectors(Object.values(fields), externalInputs);
+  return { sources, fields, categories, selectors };
 }

@@ -69,7 +69,7 @@ export interface ExternalFieldsProvider<
  *
  * @public
  */
-interface InputPropertyDeclaration {
+export interface InputPropertyDeclaration {
   /** Full class name that owns the property. */
   className: EC.FullClassName;
   /** The EC property name. */

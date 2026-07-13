@@ -10,6 +10,7 @@ import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
+import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
 import type { PropertyField } from "../../content/model/Field.js";
 
@@ -109,5 +110,64 @@ describe("buildContentDescriptor", () => {
     const categoryId = CategoryDefinition.computeId({ path });
     expect(related.categoryId).to.equal(categoryId);
     expect(descriptor.categories[categoryId]).to.deep.equal({ id: categoryId, label: "B" });
+  });
+
+  it("appends provider calculated fields with matching value selectors", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.A",
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.A" })],
+      }),
+    ]);
+    const fieldsProvider: IModelFieldsProvider = {
+      id: "calc_v1",
+      async getContribution() {
+        return {
+          calculatedFields: [
+            { id: "sum", label: "Sum", expression: "this.Prop", type: { kind: "primitive", type: "Double" } },
+          ],
+        };
+      },
+    };
+
+    const descriptor = await buildContentDescriptor({
+      imodelAccess,
+      sources: [createSource("TestSchema.A")],
+      config: { fieldsProviders: [fieldsProvider] },
+    });
+
+    expect(Object.keys(descriptor.fields).sort()).to.deep.equal(["TestSchema.A.Prop", "calc_v1:sum"]);
+    expect(descriptor.fields["calc_v1:sum"].kind).to.equal("calculated");
+    // Both the property field and the calculated field back a selector.
+    expect(Object.keys(descriptor.selectors).sort()).to.deep.equal(["TestSchema.A.Prop", "calc_v1:sum"]);
+    expect(descriptor.selectors["calc_v1:sum"].kind).to.equal("calculated");
+  });
+
+  it("appends external fields without selectors and keeps external input columns", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.A",
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.A" })],
+      }),
+    ]);
+    const externalProvider: ExternalFieldsProvider<"code"> = {
+      id: "ext_v1",
+      fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
+      inputs: { code: { className: "TestSchema.A", propertyName: "Prop" } },
+      async getValues() {
+        return [];
+      },
+    };
+
+    const descriptor = await buildContentDescriptor({
+      imodelAccess,
+      sources: [createSource("TestSchema.A")],
+      config: { externalFieldsProviders: [externalProvider] },
+    });
+
+    expect(Object.keys(descriptor.fields).sort()).to.deep.equal(["TestSchema.A.Prop", "ext_v1:status"]);
+    expect(descriptor.fields["ext_v1:status"].kind).to.equal("external");
+    // External fields have no selector; the input reuses the property field's column selector.
+    expect(Object.keys(descriptor.selectors)).to.deep.equal(["TestSchema.A.Prop"]);
   });
 });

@@ -10,6 +10,7 @@ import { CategoryDefinition } from "../model/Category.js";
 
 import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
+import type { ExternalFieldsProvider } from "../extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
 import type { PropertyField } from "../model/Field.js";
 
@@ -21,9 +22,10 @@ type GetContribution = (
 /**
  * Assembles the descriptor's category registry:
  *
- * 1. Collects every `CategoryDefinition` contributed by the configured providers (for each source's
- *    target), deduplicated by `id`. When several providers declare the same `id` with different
- *    metadata, the highest-priority provider wins (ties keep the first seen).
+ * 1. Collects every `CategoryDefinition` contributed by the configured iModel fields providers (for
+ *    each source's target) and external fields providers, deduplicated by `id`. When several
+ *    providers declare the same `id` with different metadata, the highest-priority provider wins
+ *    (ties keep the first seen).
  * 2. Auto-creates categories for **related** property fields that were not assigned a category by a
  *    provider. A category is created at each distinct field path terminal — i.e. where fields
  *    actually attach — and never at intermediate classes that carry no fields. Each such category
@@ -43,10 +45,11 @@ export async function collectCategories(props: {
   imodelAccess: ECSchemaProvider;
   sources: ContentSource[];
   providers: IModelFieldsProvider[];
+  externalProviders: ExternalFieldsProvider[];
   getContribution: GetContribution;
   fields: Record<PropertyField["id"], PropertyField>;
 }): Promise<Record<CategoryDefinition["id"], CategoryDefinition>> {
-  const { imodelAccess, sources, providers, getContribution, fields } = props;
+  const { imodelAccess, sources, providers, externalProviders, getContribution, fields } = props;
   const registry = new Map<CategoryDefinition["id"], { category: CategoryDefinition; priority: number }>();
 
   // 1. Provider-contributed categories (higher priority wins on conflict).
@@ -60,7 +63,15 @@ export async function collectCategories(props: {
       return Object.values(contribution.categories).map((category) => ({ category, priority }));
     }),
   );
-  for (const { category, priority } of contributed) {
+  const externalContributed = externalProviders.flatMap((provider) =>
+    provider.categories
+      ? Object.values(provider.categories).map((category) => ({
+          category,
+          priority: provider.priority ?? DEFAULT_FIELDS_PROVIDER_PRIORITY,
+        }))
+      : [],
+  );
+  for (const { category, priority } of [...contributed, ...externalContributed]) {
     const existing = registry.get(category.id);
     if (!existing || priority > existing.priority) {
       registry.set(category.id, { category, priority });
