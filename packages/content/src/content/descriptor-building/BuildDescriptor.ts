@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collectInParallel } from "../InternalUtils.js";
+import { collectCategories } from "./Categories.js";
 import { createContributionMemoizer } from "./ContributionMemoizer.js";
 import { createDirectPropertyFields } from "./DirectFields.js";
 import { mergePropertyFieldsByIdentity } from "./PropertyFieldMerge.js";
@@ -37,14 +38,15 @@ interface BuildContentDescriptorProps {
  *
  * This is being implemented incrementally. It currently enumerates the direct property fields of
  * each source's primary class and the related property fields reached via each source's resolved
- * relationship paths (merged across sources); category and selector assembly are added in later
- * stages.
+ * relationship paths (merged across sources), and assembles the category registry (provider-declared
+ * plus auto-created related-path categories); selector assembly is added in a later stage.
  *
  * @internal
  */
 export async function buildContentDescriptor(props: BuildContentDescriptorProps): Promise<ContentDescriptor> {
   const { imodelAccess, sources, config } = props;
-  const providersById = new Map((config?.fieldsProviders ?? []).map((provider) => [provider.id, provider]));
+  const providers = config?.fieldsProviders ?? [];
+  const providersById = new Map(providers.map((provider) => [provider.id, provider]));
   const { getContribution } = createContributionMemoizer({ imodelAccess });
   const candidates = await collectInParallel(sources, async (source) => {
     const [direct, related] = await Promise.all([
@@ -54,5 +56,6 @@ export async function buildContentDescriptor(props: BuildContentDescriptorProps)
     return [...direct, ...related];
   });
   const fields = mergePropertyFieldsByIdentity(candidates);
-  return { sources, fields, categories: {}, selectors: {} };
+  const categories = await collectCategories({ imodelAccess, sources, providers, getContribution, fields });
+  return { sources, fields, categories, selectors: {} };
 }

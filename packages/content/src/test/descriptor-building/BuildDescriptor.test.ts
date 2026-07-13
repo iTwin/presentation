@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { buildContentDescriptor } from "../../content/descriptor-building/BuildDescriptor.js";
+import { CategoryDefinition } from "../../content/model/Category.js";
 import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
@@ -103,5 +104,10 @@ describe("buildContentDescriptor", () => {
       "TestSchema.B.Related(TestSchema.A-[TestSchema.AtoB]->TestSchema.B)"
     ] as PropertyField;
     expect(related.valueClassNames).to.deep.equal(["TestSchema.B"]);
+
+    // The related field gets an auto-created path category labelled by its terminal class.
+    const categoryId = CategoryDefinition.computeId({ path });
+    expect(related.categoryId).to.equal(categoryId);
+    expect(descriptor.categories[categoryId]).to.deep.equal({ id: categoryId, label: "B" });
   });
 });
