@@ -114,6 +114,7 @@ export namespace EC {
     fullName: FullClassName;
     name: string;
     label?: string;
+    description?: string;
   }
 
   /**
@@ -164,6 +165,16 @@ export namespace EC {
    * @public
    */
   export type KindOfQuantity = SchemaItem;
+
+  /**
+   * Represents a property category used to group related properties.
+   * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/propertycategory/
+   * @public
+   */
+  export interface PropertyCategory extends SchemaItem {
+    /** Determines the display order of the category relative to other categories. Higher priority categories are displayed first. */
+    priority: number;
+  }
 
   /**
    * Represents a relationship constraint multiplicity.
@@ -230,6 +241,7 @@ export namespace EC {
     class: Class;
     label?: string;
     kindOfQuantity: Promise<KindOfQuantity | undefined>;
+    category: Promise<PropertyCategory | undefined>;
 
     isArray(): this is ArrayProperty;
     isStruct(): this is StructProperty;
