@@ -127,6 +127,8 @@ export namespace EC {
     is(other: Class): Promise<boolean>;
     getProperty(name: string): Promise<Property | undefined>;
     getProperties(): Promise<Array<Property>>;
+    /** Gets only the properties defined directly on this class, excluding those inherited from base classes. */
+    getOwnProperties(): Promise<Array<Property>>;
     isEntityClass(): this is EntityClass;
     isRelationshipClass(): this is RelationshipClass;
     isStructClass(): this is StructClass;

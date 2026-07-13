@@ -414,6 +414,36 @@ describe("createECClass", () => {
     });
   });
 
+  describe("getOwnProperties", () => {
+    it("returns only direct properties from core class", async () => {
+      const coreClass = {
+        schemaItemType: SchemaItemType.EntityClass,
+        fullName: "s.c",
+        name: "c",
+        label: "C",
+        getProperties: vi
+          .fn()
+          .mockResolvedValue([
+            {
+              isArray: () => false,
+              isStruct: () => false,
+              isEnumeration: () => false,
+              isNavigation: () => false,
+              isPrimitive: () => true,
+            },
+          ]),
+      } as unknown as CoreClass;
+      const ecClass = createECClass(coreClass, schema);
+      const properties = await ecClass.getOwnProperties();
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(coreClass.getProperties).toHaveBeenCalledOnce();
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(coreClass.getProperties).toHaveBeenCalledWith(true);
+      expect(properties.length).toBeGreaterThan(0);
+    });
+  });
+
   describe("getProperty", () => {
     it("returns property from core class", async () => {
       const coreClass = {

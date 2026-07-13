@@ -161,6 +161,7 @@ export namespace EC {
         getCustomAttributes(): Promise<CustomAttributeSet>;
         // (undocumented)
         getDerivedClasses(): Promise<Class[]>;
+        getOwnProperties(): Promise<Array<Property>>;
         // (undocumented)
         getProperties(): Promise<Array<Property>>;
         // (undocumented)

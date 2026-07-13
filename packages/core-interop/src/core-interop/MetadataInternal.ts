@@ -121,6 +121,14 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
     }
     return result;
   }
+  public async getOwnProperties(): Promise<Array<EC.Property>> {
+    const coreProperties = await this._coreSchemaItem.getProperties(true);
+    const result = new Array<EC.Property>();
+    for (const coreProperty of coreProperties) {
+      result.push(createECProperty(coreProperty, this));
+    }
+    return result;
+  }
   public async getDerivedClasses(): Promise<EC.Class[]> {
     const coreDerivedClasses = await this._coreSchemaItem.getDerivedClasses();
     return coreDerivedClasses ? coreDerivedClasses.map((coreClass) => createECClass(coreClass, this.schema)) : [];
