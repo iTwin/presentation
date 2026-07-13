@@ -146,7 +146,12 @@ function MessageWithLink({ linkLabel, scrollToElement, message }: MessageWithLin
   return (
     <div>
       {firstPart}{" "}
-      <Link render={<button type="button" />} onClick={scrollToElement} variant="caption" style={{ verticalAlign: "baseline" }}>
+      <Link
+        render={<button type="button" />}
+        onClick={scrollToElement}
+        variant="caption"
+        style={{ verticalAlign: "baseline" }}
+      >
         {linkLabel}
       </Link>
       {secondPart ? " " : ""}
