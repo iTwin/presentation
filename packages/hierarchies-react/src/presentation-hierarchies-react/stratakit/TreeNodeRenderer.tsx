@@ -223,7 +223,7 @@ export const PlaceholderNode: FC<
           {...props}
           ref={forwardedRef}
           label={translate("loading")}
-          unstable_decorations={<CircularProgress size={20} title={translate("loading")} />}
+          unstable_decorations={<CircularProgress size={16} title={translate("loading")} />}
         />
       );
     },

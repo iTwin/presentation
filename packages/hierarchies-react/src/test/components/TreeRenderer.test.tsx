@@ -191,7 +191,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
       await locator.getByText("Node with context menu").click({ button: "right" });
       await expect.element(page.getByText("Context Action 1")).toBeVisible();
       await expect.element(page.getByText("Context Action 2")).toBeVisible();
-      await validateSnapshot(locator, { skipA11y: ["aria-hidden-focus", "aria-required-children"] });
+      await validateSnapshot(locator);
     });
 
     it("renders tree with filter action on filterable node", async () => {
