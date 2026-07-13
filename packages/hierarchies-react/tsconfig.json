@@ -10,7 +10,8 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "rootDir": ".",
-    "noEmit": true
+    "noEmit": true,
+    "types": ["@stratakit/mui/types.d.ts"]
   },
   "include": ["src", "types.d.ts", "tsdown.config.ts", "vitest.config.ts"]
 }
