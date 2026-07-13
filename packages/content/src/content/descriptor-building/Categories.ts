@@ -13,11 +13,7 @@ import type { ContentSource } from "../ContentTarget.js";
 import type { ExternalFieldsProvider } from "../extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
 import type { Field, PropertyField } from "../model/Field.js";
-
-type GetContribution = (
-  provider: IModelFieldsProvider,
-  target: ContentSource["target"],
-) => ReturnType<IModelFieldsProvider["getContribution"]>;
+import type { GetContribution } from "./ContributionMemoizer.js";
 
 /**
  * Assembles the descriptor's category registry:
@@ -44,17 +40,17 @@ type GetContribution = (
 export async function collectCategories(props: {
   imodelAccess: ECSchemaProvider;
   sources: ContentSource[];
-  providers: IModelFieldsProvider[];
-  externalProviders: ExternalFieldsProvider[];
+  imodelFieldsProviders: IModelFieldsProvider[];
+  externalFieldsProviders: ExternalFieldsProvider[];
   getContribution: GetContribution;
   fields: Record<PropertyField["id"], PropertyField>;
 }): Promise<Record<CategoryDefinition["id"], CategoryDefinition>> {
-  const { imodelAccess, sources, providers, externalProviders, getContribution, fields } = props;
+  const { imodelAccess, sources, imodelFieldsProviders, externalFieldsProviders, getContribution, fields } = props;
   const registry = new Map<CategoryDefinition["id"], { category: CategoryDefinition; priority: number }>();
 
   // 1. Provider-contributed categories (higher priority wins on conflict).
   const contributed = await collectInParallel(sources, async (source) =>
-    collectInParallel(providers, async (provider) => {
+    collectInParallel(imodelFieldsProviders, async (provider) => {
       const contribution = await getContribution(provider, source.target);
       if (!contribution?.categories) {
         return [];
@@ -63,7 +59,7 @@ export async function collectCategories(props: {
       return Object.values(contribution.categories).map((category) => ({ category, priority }));
     }),
   );
-  const externalContributed = externalProviders.flatMap((provider) =>
+  const externalContributed = externalFieldsProviders.flatMap((provider) =>
     provider.categories
       ? Object.values(provider.categories).map((category) => ({
           category,
@@ -128,10 +124,11 @@ async function getClassLabel(imodelAccess: ECSchemaProvider, className: EC.FullC
  *
  * @internal
  */
-export function pruneUnreferencedCategories(
-  fields: Record<Field["id"], Field>,
-  categories: Record<CategoryDefinition["id"], CategoryDefinition>,
-): Record<CategoryDefinition["id"], CategoryDefinition> {
+export function pruneUnreferencedCategories(props: {
+  fields: Record<Field["id"], Field>;
+  categories: Record<CategoryDefinition["id"], CategoryDefinition>;
+}): Record<CategoryDefinition["id"], CategoryDefinition> {
+  const { fields, categories } = props;
   const referenced = new Set<CategoryDefinition["id"]>();
   for (const field of Object.values(fields)) {
     let id: CategoryDefinition["id"] | undefined = field.categoryId;

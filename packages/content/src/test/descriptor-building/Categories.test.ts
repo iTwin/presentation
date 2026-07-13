@@ -92,8 +92,8 @@ describe("collectCategories", () => {
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
-      providers: [provider],
-      externalProviders: [],
+      imodelFieldsProviders: [provider],
+      externalFieldsProviders: [],
       getContribution,
       fields: {},
     });
@@ -110,8 +110,8 @@ describe("collectCategories", () => {
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
-      providers: [provider],
-      externalProviders: [],
+      imodelFieldsProviders: [provider],
+      externalFieldsProviders: [],
       getContribution,
       fields: {},
     });
@@ -124,8 +124,8 @@ describe("collectCategories", () => {
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
-      providers: [low, high],
-      externalProviders: [],
+      imodelFieldsProviders: [low, high],
+      externalFieldsProviders: [],
       getContribution,
       fields: {},
     });
@@ -138,8 +138,8 @@ describe("collectCategories", () => {
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
-      providers: [first, second],
-      externalProviders: [],
+      imodelFieldsProviders: [first, second],
+      externalFieldsProviders: [],
       getContribution,
       fields: {},
     });
@@ -156,8 +156,8 @@ describe("collectCategories", () => {
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
-      providers: [imodelProvider],
-      externalProviders: [external],
+      imodelFieldsProviders: [imodelProvider],
+      externalFieldsProviders: [external],
       getContribution,
       fields: {},
     });
@@ -170,8 +170,8 @@ describe("collectCategories", () => {
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
-      providers: [],
-      externalProviders: [external],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [external],
       getContribution,
       fields: {},
     });
@@ -183,8 +183,8 @@ describe("collectCategories", () => {
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
-      providers: [],
-      externalProviders: [external],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [external],
       getContribution,
       fields: {},
     });
@@ -197,8 +197,8 @@ describe("collectCategories", () => {
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B", label: "The B" })]),
       sources: [createSource()],
-      providers: [],
-      externalProviders: [],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [],
       getContribution,
       fields,
     });
@@ -215,8 +215,8 @@ describe("collectCategories", () => {
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B" })]),
       sources: [createSource()],
-      providers: [],
-      externalProviders: [],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [],
       getContribution,
       fields,
     });
@@ -232,8 +232,8 @@ describe("collectCategories", () => {
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.D", label: "The D" })]),
       sources: [createSource()],
-      providers: [],
-      externalProviders: [],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [],
       getContribution,
       fields: { d: field },
     });
@@ -253,8 +253,8 @@ describe("collectCategories", () => {
         createEntityClass({ fullName: "TestSchema.D", label: "The D" }),
       ]),
       sources: [createSource()],
-      providers: [],
-      externalProviders: [],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [],
       getContribution,
       fields: { b: bField, d: dField },
     });
@@ -277,8 +277,8 @@ describe("collectCategories", () => {
         createEntityClass({ fullName: "TestSchema.D", label: "The D" }),
       ]),
       sources: [createSource()],
-      providers: [],
-      externalProviders: [],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [],
       getContribution,
       fields: { b: bField, c: cField, d: dField },
     });
@@ -305,8 +305,8 @@ describe("collectCategories", () => {
         createEntityClass({ fullName: "TestSchema.C", label: "The C" }),
       ]),
       sources: [createSource()],
-      providers: [],
-      externalProviders: [],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [],
       getContribution,
       fields: { y: yField, c: cField },
     });
@@ -325,8 +325,8 @@ describe("collectCategories", () => {
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
-      providers: [],
-      externalProviders: [],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [],
       getContribution,
       fields: { direct, categorized },
     });
@@ -342,8 +342,8 @@ describe("collectCategories", () => {
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B", label: "Should not be used" })]),
       sources: [createSource()],
-      providers: [provider],
-      externalProviders: [],
+      imodelFieldsProviders: [provider],
+      externalFieldsProviders: [],
       getContribution,
       fields: { field },
     });
@@ -362,7 +362,7 @@ describe("pruneUnreferencedCategories", () => {
     };
     const leafField = { ...createRelatedField({ categoryId: "leaf" }), id: "leafField" };
     const rootField = { ...createRelatedField({ categoryId: "root" }), id: "rootField" };
-    const pruned = pruneUnreferencedCategories({ leafField, rootField }, categories);
+    const pruned = pruneUnreferencedCategories({ fields: { leafField, rootField }, categories });
     expect(Object.keys(pruned).sort()).to.deep.equal(["leaf", "mid", "root"]);
   });
 
@@ -370,7 +370,7 @@ describe("pruneUnreferencedCategories", () => {
     const categories = { a: { id: "a", label: "A" } };
     const noCategory = { ...createRelatedField({}), id: "noCategory" };
     const dangling = { ...createRelatedField({ categoryId: "missing" }), id: "dangling" };
-    const pruned = pruneUnreferencedCategories({ noCategory, dangling }, categories);
+    const pruned = pruneUnreferencedCategories({ fields: { noCategory, dangling }, categories });
     expect(pruned).to.deep.equal({});
   });
 });

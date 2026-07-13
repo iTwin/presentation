@@ -4,18 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collectInParallel } from "../InternalUtils.js";
-import { createClassPropertyFields } from "./ClassPropertyFields.js";
+import { collectClassPropertyFields } from "./ClassPropertyFields.js";
 
 import type { ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { PropertyField } from "../model/Field.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
-
-type GetContribution = (
-  provider: IModelFieldsProvider,
-  target: ContentSource["target"],
-) => ReturnType<IModelFieldsProvider["getContribution"]>;
+import type { GetContribution } from "./ContributionMemoizer.js";
 
 /**
  * Enumerates the **related** property fields of a content source — the properties reached by
@@ -39,15 +35,15 @@ type GetContribution = (
  *
  * @internal
  */
-export async function createRelatedPropertyFields(props: {
+export async function collectRelatedPropertyFields(props: {
   imodelAccess: ECSchemaProvider;
   source: ContentSource;
   getContribution: GetContribution;
-  providersById: ReadonlyMap<IModelFieldsProvider["id"], IModelFieldsProvider>;
+  imodelFieldsProvidersById: ReadonlyMap<IModelFieldsProvider["id"], IModelFieldsProvider>;
 }): Promise<Array<{ field: PropertyField; provider: IModelFieldsProvider }>> {
-  const { imodelAccess, source, getContribution, providersById } = props;
+  const { imodelAccess, source, getContribution, imodelFieldsProvidersById } = props;
   return collectInParallel(source.resolvedDeclarations, async (group) => {
-    const provider = providersById.get(group.providerId);
+    const provider = imodelFieldsProvidersById.get(group.providerId);
     if (!provider) {
       throw new Error(
         `Content configuration is missing the iModel fields provider "${group.providerId}" that resolved a related-properties declaration for target "${source.target.primaryClass}".`,
@@ -78,7 +74,7 @@ async function createFieldsForPath(props: {
   // Default (no per-step specs): all properties of the final step's target class.
   if (properties === undefined) {
     const lastStep = path[path.length - 1];
-    return createClassPropertyFields({
+    return collectClassPropertyFields({
       imodelAccess,
       className: lastStep.targetClassName,
       pathFromTarget: path,
@@ -103,7 +99,7 @@ async function createFieldsForStep(props: {
   const fields: PropertyField[] = [];
   if (stepSpec.target) {
     fields.push(
-      ...(await createClassPropertyFields({
+      ...(await collectClassPropertyFields({
         imodelAccess,
         className: step.targetClassName,
         pathFromTarget,
@@ -119,7 +115,7 @@ async function createFieldsForStep(props: {
     // a non-concrete (base/abstract) relationship class rather than the concrete classes present in
     // the data. Tracked with https://github.com/iTwin/presentation/issues/1442.
     fields.push(
-      ...(await createClassPropertyFields({
+      ...(await collectClassPropertyFields({
         imodelAccess,
         className: step.relationshipName,
         pathFromTarget,

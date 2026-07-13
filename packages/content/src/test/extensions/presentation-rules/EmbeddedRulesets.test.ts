@@ -48,7 +48,7 @@ describe("createIModelContentConfiguration", () => {
         queryError: new Error("ECClass 'PresentationRules.Ruleset' does not exist or could not be loaded."),
       }),
     });
-    expect(config.fieldsProviders).to.deep.equal([]);
+    expect(config.imodelFieldsProviders).to.deep.equal([]);
     expect(config.descriptorTransformers).to.deep.equal([]);
   });
 
@@ -61,7 +61,7 @@ describe("createIModelContentConfiguration", () => {
 
   it("returns an empty configuration when there are no embedded rulesets", async () => {
     const config = await createIModelContentConfiguration({ imodelAccess: createIModelAccess({ rulesets: [] }) });
-    expect(config.fieldsProviders).to.deep.equal([]);
+    expect(config.imodelFieldsProviders).to.deep.equal([]);
     expect(config.descriptorTransformers).to.deep.equal([]);
   });
 
@@ -70,7 +70,7 @@ describe("createIModelContentConfiguration", () => {
       { id: "primary", rules: [{ ruleType: "ContentModifier", calculatedProperties: [{ label: "X", value: "1" }] }] },
     ];
     const config = await createIModelContentConfiguration({ imodelAccess: createIModelAccess({ rulesets }) });
-    expect(config.fieldsProviders).to.deep.equal([]);
+    expect(config.imodelFieldsProviders).to.deep.equal([]);
     expect(config.descriptorTransformers).to.deep.equal([]);
   });
 
@@ -79,7 +79,7 @@ describe("createIModelContentConfiguration", () => {
       { ...supplemental, rules: [{ ruleType: "ContentModifier", calculatedProperties: [{ label: "X", value: "1" }] }] },
     ];
     const config = await createIModelContentConfiguration({ imodelAccess: createIModelAccess({ rulesets }) });
-    expect(config.fieldsProviders).to.have.length(1);
+    expect(config.imodelFieldsProviders).to.have.length(1);
     expect(config.descriptorTransformers).to.have.length(1);
   });
 
@@ -94,7 +94,7 @@ describe("createIModelContentConfiguration", () => {
     const config = await createIModelContentConfiguration({
       imodelAccess: createIModelAccess({ rulesets, schemas: new Map() }),
     });
-    expect(config.fieldsProviders).to.deep.equal([]);
+    expect(config.imodelFieldsProviders).to.deep.equal([]);
     expect(config.descriptorTransformers).to.deep.equal([]);
   });
 
@@ -112,7 +112,7 @@ describe("createIModelContentConfiguration", () => {
         schemas: new Map([["PresentSchema", { read: 1, write: 0, minor: 0 }]]),
       }),
     });
-    expect(config.fieldsProviders).to.have.length(1);
+    expect(config.imodelFieldsProviders).to.have.length(1);
     expect(config.descriptorTransformers).to.have.length(1);
   });
 
@@ -127,7 +127,7 @@ describe("createIModelContentConfiguration", () => {
     const config = await createIModelContentConfiguration({
       imodelAccess: createIModelAccess({ rulesets, schemas: new Map() }),
     });
-    expect(config.fieldsProviders).to.deep.equal([]);
+    expect(config.imodelFieldsProviders).to.deep.equal([]);
     expect(config.descriptorTransformers).to.deep.equal([]);
   });
 
@@ -145,7 +145,7 @@ describe("createIModelContentConfiguration", () => {
         schemas: new Map([["PresentSchema", { read: 1, write: 0, minor: 0 }]]),
       }),
     });
-    expect(config.fieldsProviders).to.have.length(1);
+    expect(config.imodelFieldsProviders).to.have.length(1);
     expect(config.descriptorTransformers).to.have.length(1);
   });
 
@@ -161,7 +161,7 @@ describe("createIModelContentConfiguration", () => {
       },
     ];
     const config = await createIModelContentConfiguration({ imodelAccess: createIModelAccess({ rulesets }) });
-    expect(config.fieldsProviders).to.have.length(1);
+    expect(config.imodelFieldsProviders).to.have.length(1);
     expect(config.descriptorTransformers).to.have.length(1);
   });
 
@@ -177,7 +177,7 @@ describe("createIModelContentConfiguration", () => {
       { ...supplemental, rules: [{ ruleType: "ContentModifier", propertyCategories: [{ id: "cat", label: "Cat" }] }] },
     ];
     const config = await createIModelContentConfiguration({ imodelAccess: createIModelAccess({ rulesets }) });
-    expect(config.fieldsProviders).to.have.length(3);
+    expect(config.imodelFieldsProviders).to.have.length(3);
     expect(config.descriptorTransformers).to.have.length(3);
   });
 
@@ -189,7 +189,7 @@ describe("createIModelContentConfiguration", () => {
       },
     ];
     const config = await createIModelContentConfiguration({ imodelAccess: createIModelAccess({ rulesets }) });
-    expect(config.fieldsProviders?.[0].priority).to.equal(42);
+    expect(config.imodelFieldsProviders?.[0].priority).to.equal(42);
     expect(config.descriptorTransformers?.[0].priority).to.equal(42);
   });
 });

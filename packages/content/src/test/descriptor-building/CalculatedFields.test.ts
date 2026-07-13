@@ -35,13 +35,21 @@ const getContribution: Parameters<typeof collectCalculatedFields>[0]["getContrib
 describe("collectCalculatedFields", () => {
   it("returns no fields when providers declare none", async () => {
     const provider = createProvider("p_v1", { calculatedFields: [] });
-    const fields = await collectCalculatedFields({ sources: [createSource()], providers: [provider], getContribution });
+    const fields = await collectCalculatedFields({
+      sources: [createSource()],
+      imodelFieldsProviders: [provider],
+      getContribution,
+    });
     expect(fields).to.deep.equal({});
   });
 
   it("skips providers that are not applicable to the target", async () => {
     const provider = createProvider("p_v1", undefined);
-    const fields = await collectCalculatedFields({ sources: [createSource()], providers: [provider], getContribution });
+    const fields = await collectCalculatedFields({
+      sources: [createSource()],
+      imodelFieldsProviders: [provider],
+      getContribution,
+    });
     expect(fields).to.deep.equal({});
   });
 
@@ -51,7 +59,11 @@ describe("collectCalculatedFields", () => {
         { id: "flow", label: "Flow", expression: "this.FlowRate * 2", type: { kind: "primitive", type: "Double" } },
       ],
     });
-    const fields = await collectCalculatedFields({ sources: [createSource()], providers: [provider], getContribution });
+    const fields = await collectCalculatedFields({
+      sources: [createSource()],
+      imodelFieldsProviders: [provider],
+      getContribution,
+    });
     expect(fields).to.deep.equal({
       "p_v1:flow": {
         kind: "calculated",
@@ -78,7 +90,11 @@ describe("collectCalculatedFields", () => {
         },
       ],
     });
-    const fields = await collectCalculatedFields({ sources: [createSource()], providers: [provider], getContribution });
+    const fields = await collectCalculatedFields({
+      sources: [createSource()],
+      imodelFieldsProviders: [provider],
+      getContribution,
+    });
     const field = fields["p_v1:calc"];
     expect(field.targetAlias).to.equal("e");
     expect(field.bindings).to.deep.equal({ p: { type: "string", value: "v" } });
@@ -91,7 +107,7 @@ describe("collectCalculatedFields", () => {
     });
     const fields = await collectCalculatedFields({
       sources: [createSource(), createSource()],
-      providers: [provider],
+      imodelFieldsProviders: [provider],
       getContribution,
     });
     expect(Object.keys(fields)).to.deep.equal(["p_v1:calc"]);

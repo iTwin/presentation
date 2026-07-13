@@ -129,7 +129,7 @@ interface ContentRequestOptions {
  */
 export interface ContentConfiguration {
   /** iModel fields providers (contribute related properties and calculated fields). */
-  fieldsProviders?: IModelFieldsProvider[];
+  imodelFieldsProviders?: IModelFieldsProvider[];
 
   /** External fields providers (declare + populate fields from outside the iModel). */
   externalFieldsProviders?: ExternalFieldsProvider[];
@@ -151,8 +151,8 @@ interface ResolveContentSourcesProps {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
   /** The content targets to resolve. */
   targets: ContentTarget[];
-  /** Extension point configuration (only `fieldsProviders` is used for resolution). */
-  config?: Pick<ContentConfiguration, "fieldsProviders">;
+  /** Extension point configuration (only `imodelFieldsProviders` is used for resolution). */
+  config?: Pick<ContentConfiguration, "imodelFieldsProviders">;
 }
 
 /**
@@ -174,7 +174,7 @@ export async function resolveContentSources(props: ResolveContentSourcesProps): 
   return resolveContentSourcesImpl({
     imodelAccess: props.imodelAccess,
     targets: props.targets,
-    fieldsProviders: props.config?.fieldsProviders ?? [],
+    imodelFieldsProviders: props.config?.imodelFieldsProviders ?? [],
   });
 }
 

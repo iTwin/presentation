@@ -137,7 +137,7 @@ describe("buildContentDescriptor", () => {
     const descriptor = await buildContentDescriptor({
       imodelAccess,
       sources: [source],
-      config: { fieldsProviders: [provider] },
+      config: { imodelFieldsProviders: [provider] },
     });
 
     expect(Object.keys(descriptor.fields)).to.deep.equal([
@@ -176,7 +176,7 @@ describe("buildContentDescriptor", () => {
     const descriptor = await buildContentDescriptor({
       imodelAccess,
       sources: [createSource("TestSchema.A")],
-      config: { fieldsProviders: [fieldsProvider] },
+      config: { imodelFieldsProviders: [fieldsProvider] },
     });
 
     expect(Object.keys(descriptor.fields).sort()).to.deep.equal(["TestSchema.A.Prop", "calc_v1:sum"]);
@@ -316,7 +316,7 @@ describe("buildContentDescriptor", () => {
     const descriptor = await buildContentDescriptor({
       imodelAccess,
       sources: [source],
-      config: { fieldsProviders: [provider], descriptorTransformers: [transformer] },
+      config: { imodelFieldsProviders: [provider], descriptorTransformers: [transformer] },
     });
 
     // The related field (and thus its selector and auto category) is gone; the direct field remains.

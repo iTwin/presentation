@@ -345,16 +345,16 @@ function resolveTarget({
 export async function resolveContentSourcesImpl(props: {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
   targets: ContentTarget[];
-  fieldsProviders: IModelFieldsProvider[];
+  imodelFieldsProviders: IModelFieldsProvider[];
 }): Promise<ContentSource[]> {
-  if (props.targets.length === 0 || props.fieldsProviders.length === 0) {
+  if (props.targets.length === 0 || props.imodelFieldsProviders.length === 0) {
     return props.targets.map((target) => ({ target, resolvedPrimaryClasses: [], resolvedDeclarations: [] }));
   }
 
   return lastValueFrom(
     from(props.targets).pipe(
       mergeMap((target, idx) =>
-        resolveTarget({ imodelAccess: props.imodelAccess, providers: props.fieldsProviders, target }).pipe(
+        resolveTarget({ imodelAccess: props.imodelAccess, providers: props.imodelFieldsProviders, target }).pipe(
           map((source) => ({ source, idx })),
         ),
       ),

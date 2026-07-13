@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { normalizeFullClassName } from "@itwin/presentation-shared";
-import { createClassPropertyFields } from "./ClassPropertyFields.js";
+import { collectClassPropertyFields } from "./ClassPropertyFields.js";
 
 import type { ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
@@ -14,13 +14,13 @@ import type { PropertyField } from "../model/Field.js";
  * Enumerates the **direct** property fields of a content source — the properties of the source's
  * primary class, reached with no relationship path (`pathFromTarget: []`).
  *
- * Delegates to `createClassPropertyFields`, passing the source's resolved primary classes as the
+ * Delegates to `collectClassPropertyFields`, passing the source's resolved primary classes as the
  * fields' value classes (falling back to the normalized `primaryClass` when none were resolved).
  * Direct fields are schema-derived, so the enumerated fields carry no contributing provider.
  *
  * @internal
  */
-export async function createDirectPropertyFields(props: {
+export async function collectDirectPropertyFields(props: {
   imodelAccess: ECSchemaProvider;
   source: ContentSource;
 }): Promise<Array<{ field: PropertyField }>> {
@@ -29,7 +29,7 @@ export async function createDirectPropertyFields(props: {
     source.resolvedPrimaryClasses.length > 0
       ? source.resolvedPrimaryClasses
       : [normalizeFullClassName(source.target.primaryClass)];
-  const fields = await createClassPropertyFields({
+  const fields = await collectClassPropertyFields({
     imodelAccess,
     className: source.target.primaryClass,
     pathFromTarget: [],

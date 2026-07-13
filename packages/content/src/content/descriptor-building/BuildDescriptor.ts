@@ -11,10 +11,10 @@ import { collectInParallel } from "../InternalUtils.js";
 import { collectCalculatedFields } from "./CalculatedFields.js";
 import { collectCategories, pruneUnreferencedCategories } from "./Categories.js";
 import { createContributionMemoizer } from "./ContributionMemoizer.js";
-import { createDirectPropertyFields } from "./DirectFields.js";
+import { collectDirectPropertyFields } from "./DirectFields.js";
 import { collectExternalFields } from "./ExternalFields.js";
 import { mergePropertyFieldsByIdentity } from "./PropertyFieldMerge.js";
-import { createRelatedPropertyFields } from "./RelatedFields.js";
+import { collectRelatedPropertyFields } from "./RelatedFields.js";
 import { collectSelectors } from "./Selectors.js";
 
 import type { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
@@ -47,25 +47,32 @@ interface BuildContentDescriptorProps {
  */
 export async function buildContentDescriptor(props: BuildContentDescriptorProps): Promise<ContentDescriptor> {
   const { imodelAccess, sources, config } = props;
-  const providers = config?.fieldsProviders ?? [];
-  const externalProviders = config?.externalFieldsProviders ?? [];
-  const providersById = new Map(providers.map((provider) => [provider.id, provider]));
+  const imodelFieldsProviders = config?.imodelFieldsProviders ?? [];
+  const externalFieldsProviders = config?.externalFieldsProviders ?? [];
+  const imodelFieldsProvidersById = new Map(imodelFieldsProviders.map((provider) => [provider.id, provider]));
   const { getContribution } = createContributionMemoizer({ imodelAccess });
 
   const candidates = await collectInParallel(sources, async (source) => {
     const [direct, related] = await Promise.all([
-      createDirectPropertyFields({ imodelAccess, source }),
-      createRelatedPropertyFields({ imodelAccess, source, getContribution, providersById }),
+      collectDirectPropertyFields({ imodelAccess, source }),
+      collectRelatedPropertyFields({ imodelAccess, source, getContribution, imodelFieldsProvidersById }),
     ]);
     return [...direct, ...related];
   });
   const propertyFields = mergePropertyFieldsByIdentity(candidates);
 
   const [categories, calculatedFields] = await Promise.all([
-    collectCategories({ imodelAccess, sources, providers, externalProviders, getContribution, fields: propertyFields }),
-    collectCalculatedFields({ sources, providers, getContribution }),
+    collectCategories({
+      imodelAccess,
+      sources,
+      imodelFieldsProviders,
+      externalFieldsProviders,
+      getContribution,
+      fields: propertyFields,
+    }),
+    collectCalculatedFields({ sources, imodelFieldsProviders, getContribution }),
   ]);
-  const { fields: externalFields, inputs: externalInputs } = collectExternalFields(externalProviders);
+  const { fields: externalFields, inputs: externalInputs } = collectExternalFields(externalFieldsProviders);
 
   // Everything a transformer operates on — selectors are derived only after transforms run.
   const transformed: Pick<ContentDescriptor, "sources" | "fields" | "categories"> = {
@@ -88,7 +95,7 @@ export async function buildContentDescriptor(props: BuildContentDescriptorProps)
   return {
     sources: transformed.sources,
     fields: transformed.fields,
-    categories: pruneUnreferencedCategories(transformed.fields, transformed.categories),
-    selectors: collectSelectors(Object.values(transformed.fields), externalInputs),
+    categories: pruneUnreferencedCategories({ fields: transformed.fields, categories: transformed.categories }),
+    selectors: collectSelectors({ fields: Object.values(transformed.fields), externalInputs }),
   };
 }

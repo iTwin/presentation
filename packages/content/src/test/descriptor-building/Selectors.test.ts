@@ -70,7 +70,7 @@ describe("ValueSelector", () => {
         valueClassNames: ["Stuff:Door"],
       });
       const calc = calculatedField({ id: "provider:calc", expression: "1" });
-      const selectors = collectSelectors([prop, calc], []);
+      const selectors = collectSelectors({ fields: [prop, calc], externalInputs: [] });
       expect(Object.keys(selectors)).to.have.members([prop.selectorId, calc.selectorId]);
       expect(selectors[prop.selectorId].kind).to.equal("property");
       expect(selectors[calc.selectorId].kind).to.equal("calculated");
@@ -83,7 +83,7 @@ describe("ValueSelector", () => {
         targetAlias: "this",
         bindings: { factor: { type: "double", value: 2 } },
       });
-      const selectors = collectSelectors([calc], []);
+      const selectors = collectSelectors({ fields: [calc], externalInputs: [] });
       expect(selectors[calc.selectorId]).to.deep.equal({
         kind: "calculated",
         id: calc.selectorId,
@@ -103,12 +103,15 @@ describe("ValueSelector", () => {
       const fork = createTransformableDescriptor(descriptor).forkField(field.id, ["Stuff:Door"]);
       expect(fork.id).to.not.equal(field.id);
 
-      const selectors = collectSelectors(Object.values(descriptor.fields), []);
+      const selectors = collectSelectors({ fields: Object.values(descriptor.fields), externalInputs: [] });
       expect(Object.keys(selectors)).to.deep.equal([field.selectorId]);
     });
 
     it("adds a field-less selector for an external input with no matching field", () => {
-      const selectors = collectSelectors([], [{ propertyClassName: "Stuff:Thing", propertyName: "Height" }]);
+      const selectors = collectSelectors({
+        fields: [],
+        externalInputs: [{ propertyClassName: "Stuff:Thing", propertyName: "Height" }],
+      });
       const id = computePropertySelectorId({ propertyClassName: "Stuff:Thing", propertyName: "Height" });
       expect(Object.keys(selectors)).to.deep.equal([id]);
       expect(selectors[id]).to.deep.equal({
@@ -126,7 +129,10 @@ describe("ValueSelector", () => {
         propertyName: "Height",
         valueClassNames: ["Stuff:Door"],
       });
-      const selectors = collectSelectors([prop], [{ propertyClassName: "Stuff:Thing", propertyName: "Height" }]);
+      const selectors = collectSelectors({
+        fields: [prop],
+        externalInputs: [{ propertyClassName: "Stuff:Thing", propertyName: "Height" }],
+      });
       expect(Object.keys(selectors)).to.deep.equal([prop.selectorId]);
     });
 
@@ -148,7 +154,7 @@ describe("ValueSelector", () => {
       transformable.removeField(removable.id);
       transformable.removeField(inputBacked.id);
 
-      const selectors = collectSelectors(Object.values(descriptor.fields), externalInputs);
+      const selectors = collectSelectors({ fields: Object.values(descriptor.fields), externalInputs });
       expect(selectors).to.have.property(inputBacked.selectorId);
       expect(selectors).to.not.have.property(removable.selectorId);
     });

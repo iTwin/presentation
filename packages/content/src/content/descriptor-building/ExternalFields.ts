@@ -24,13 +24,13 @@ export interface ExternalInput {
  *
  * @internal
  */
-export function collectExternalFields(externalProviders: ExternalFieldsProvider[]): {
+export function collectExternalFields(externalFieldsProviders: ExternalFieldsProvider[]): {
   fields: Record<Field["id"], ExternalField>;
   inputs: ExternalInput[];
 } {
   const fields: Record<Field["id"], ExternalField> = {};
   const inputs: ExternalInput[] = [];
-  for (const provider of externalProviders) {
+  for (const provider of externalFieldsProviders) {
     for (const declaration of provider.fields) {
       const id = `${provider.id}:${declaration.id}`;
       const field: ExternalField = {

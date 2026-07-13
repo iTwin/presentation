@@ -23,10 +23,11 @@ import type { ExternalInput } from "./ExternalFields.js";
  *
  * @internal
  */
-export function collectSelectors(
-  fields: Iterable<Field>,
-  externalInputs: Iterable<ExternalInput>,
-): Record<ValueSelector["id"], ValueSelector> {
+export function collectSelectors(props: {
+  fields: Iterable<Field>;
+  externalInputs: Iterable<ExternalInput>;
+}): Record<ValueSelector["id"], ValueSelector> {
+  const { fields, externalInputs } = props;
   const result: Record<ValueSelector["id"], ValueSelector> = {};
   for (const field of fields) {
     switch (field.kind) {

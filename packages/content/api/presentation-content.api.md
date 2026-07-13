@@ -91,7 +91,7 @@ interface ClassPropertySpec {
 export interface ContentConfiguration {
     descriptorTransformers?: DescriptorTransformer[];
     externalFieldsProviders?: ExternalFieldsProvider[];
-    fieldsProviders?: IModelFieldsProvider[];
+    imodelFieldsProviders?: IModelFieldsProvider[];
     queryFilterers?: QueryFilterer[];
 }
 
@@ -373,7 +373,7 @@ export function resolveContentSources(props: ResolveContentSourcesProps): Promis
 
 // @public
 interface ResolveContentSourcesProps {
-    config?: Pick<ContentConfiguration, "fieldsProviders">;
+    config?: Pick<ContentConfiguration, "imodelFieldsProviders">;
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
     targets: ContentTarget[];
 }

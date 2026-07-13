@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { createRelatedPropertyFields } from "../../content/descriptor-building/RelatedFields.js";
+import { collectRelatedPropertyFields } from "../../content/descriptor-building/RelatedFields.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
 
@@ -39,14 +39,14 @@ function createProvider(
   };
 }
 
-/** Wires a set of providers into the `(providersById, getContribution)` pair the enumerator expects. */
+/** Wires a set of providers into the `(imodelFieldsProvidersById, getContribution)` pair the enumerator expects. */
 function wireProviders(providers: IModelFieldsProvider[]) {
-  const providersById = new Map(providers.map((provider) => [provider.id, provider]));
-  const getContribution: Parameters<typeof createRelatedPropertyFields>[0]["getContribution"] = async (
+  const imodelFieldsProvidersById = new Map(providers.map((provider) => [provider.id, provider]));
+  const getContribution: Parameters<typeof collectRelatedPropertyFields>[0]["getContribution"] = async (
     provider,
     target,
   ) => provider.getContribution({ imodelAccess: createSchemaAccess([]), target });
-  return { providersById, getContribution };
+  return { imodelFieldsProvidersById, getContribution };
 }
 
 function createSource(resolvedDeclarations: ContentSource["resolvedDeclarations"]): ContentSource {
@@ -58,11 +58,11 @@ function resolvedPath(path: RelationshipPath, targetClassNames: EC.FullClassName
 }
 
 /** Calls the enumerator and unwraps the merge candidates to their fields. */
-async function enumerate(props: Parameters<typeof createRelatedPropertyFields>[0]): Promise<PropertyField[]> {
-  return (await createRelatedPropertyFields(props)).map((candidate) => candidate.field);
+async function enumerate(props: Parameters<typeof collectRelatedPropertyFields>[0]): Promise<PropertyField[]> {
+  return (await collectRelatedPropertyFields(props)).map((candidate) => candidate.field);
 }
 
-describe("createRelatedPropertyFields", () => {
+describe("collectRelatedPropertyFields", () => {
   it("returns no fields when the source has no resolved declarations", async () => {
     const imodelAccess = createSchemaAccess([]);
     const fields = await enumerate({ imodelAccess, source: createSource([]), ...wireProviders([]) });
@@ -81,7 +81,7 @@ describe("createRelatedPropertyFields", () => {
       { providerId: provider.id, declarationIndex: 0, paths: [resolvedPath([aToB], ["TestSchema.A"])] },
     ]);
 
-    const candidates = await createRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
+    const candidates = await collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
 
     expect(candidates).to.have.lengthOf(1);
     expect(candidates[0].provider).to.equal(provider);
@@ -220,7 +220,7 @@ describe("createRelatedPropertyFields", () => {
       { providerId: "missing_v1", declarationIndex: 0, paths: [resolvedPath([aToB], ["TestSchema.A"])] },
     ]);
 
-    await expect(createRelatedPropertyFields({ imodelAccess, source, ...wireProviders([]) })).rejects.toThrow(
+    await expect(collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([]) })).rejects.toThrow(
       /missing the iModel fields provider "missing_v1"/,
     );
   });
@@ -232,7 +232,7 @@ describe("createRelatedPropertyFields", () => {
       { providerId: provider.id, declarationIndex: 0, paths: [resolvedPath([aToB], ["TestSchema.A"])] },
     ]);
 
-    await expect(createRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) })).rejects.toThrow(
+    await expect(collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) })).rejects.toThrow(
       /no longer returns the related-properties declaration at index 0/,
     );
   });

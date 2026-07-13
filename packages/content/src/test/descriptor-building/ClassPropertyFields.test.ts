@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { createClassPropertyFields } from "../../content/descriptor-building/ClassPropertyFields.js";
+import { collectClassPropertyFields } from "../../content/descriptor-building/ClassPropertyFields.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
 
@@ -18,13 +18,13 @@ function createSingleClassIModelAccess(fullName: EC.FullClassName, properties: E
   return createSchemaAccess([createEntityClass({ fullName, properties })]);
 }
 
-describe("createClassPropertyFields", () => {
+describe("collectClassPropertyFields", () => {
   it("enumerates all selected properties with the given path and value classes", async () => {
     const imodelAccess = createSingleClassIModelAccess("TestSchema.B", [
       createPrimitiveProperty({ name: "Prop", primitiveType: "String", declaringClassName: "TestSchema.B" }),
     ]);
 
-    const fields = await createClassPropertyFields({
+    const fields = await collectClassPropertyFields({
       imodelAccess,
       className: "TestSchema.B",
       pathFromTarget: path,
@@ -58,7 +58,7 @@ describe("createClassPropertyFields", () => {
       createPrimitiveProperty({ name: "gamma", label: "Prop Gamma", declaringClassName: "TestSchema.C" }),
     ]);
 
-    const fields = await createClassPropertyFields({
+    const fields = await collectClassPropertyFields({
       imodelAccess,
       className: "TestSchema.C",
       pathFromTarget: [],
@@ -75,7 +75,7 @@ describe("createClassPropertyFields", () => {
       createPrimitiveProperty({ name: "Geom", primitiveType: "IGeometry", declaringClassName: "TestSchema.C" }),
     ]);
 
-    const fields = await createClassPropertyFields({
+    const fields = await collectClassPropertyFields({
       imodelAccess,
       className: "TestSchema.C",
       pathFromTarget: [],
@@ -91,7 +91,7 @@ describe("createClassPropertyFields", () => {
       createPrimitiveProperty({ name: "UserLabel", declaringClassName: "BisCore.Element" }),
     ]);
 
-    const [field] = await createClassPropertyFields({
+    const [field] = await collectClassPropertyFields({
       imodelAccess,
       className: "TestSchema.Derived",
       pathFromTarget: [],
@@ -104,8 +104,10 @@ describe("createClassPropertyFields", () => {
   });
 
   describe("select", () => {
-    async function selectNames(select: NonNullable<Parameters<typeof createClassPropertyFields>[0]["spec"]>["select"]) {
-      const fields = await createClassPropertyFields({
+    async function selectNames(
+      select: NonNullable<Parameters<typeof collectClassPropertyFields>[0]["spec"]>["select"],
+    ) {
+      const fields = await collectClassPropertyFields({
         imodelAccess: createSingleClassIModelAccess("TestSchema.C", [
           createPrimitiveProperty({ name: "A", declaringClassName: "TestSchema.C" }),
           createPrimitiveProperty({ name: "B", declaringClassName: "TestSchema.C" }),
@@ -143,7 +145,7 @@ describe("createClassPropertyFields", () => {
         createPrimitiveProperty({ name: "B", declaringClassName: "TestSchema.C" }),
       ]);
 
-      const fields = await createClassPropertyFields({
+      const fields = await collectClassPropertyFields({
         imodelAccess,
         className: "TestSchema.C",
         pathFromTarget: [],
@@ -164,7 +166,7 @@ describe("createClassPropertyFields", () => {
         createPrimitiveProperty({ name: "beta", declaringClassName: "TestSchema.C" }),
       ]);
 
-      const fields = await createClassPropertyFields({
+      const fields = await collectClassPropertyFields({
         imodelAccess,
         className: "TestSchema.C",
         pathFromTarget: [],
@@ -189,7 +191,7 @@ describe("createClassPropertyFields", () => {
         createPrimitiveProperty({ name: "A", declaringClassName: "TestSchema.C" }),
       ]);
 
-      const [field] = await createClassPropertyFields({
+      const [field] = await collectClassPropertyFields({
         imodelAccess,
         className: "TestSchema.C",
         pathFromTarget: [],

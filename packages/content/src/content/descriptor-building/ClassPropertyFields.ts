@@ -33,7 +33,7 @@ type PropertyOverrides = NonNullable<ClassPropertySpec["overrides"]>[string];
  *
  * @internal
  */
-export async function createClassPropertyFields(props: {
+export async function collectClassPropertyFields(props: {
   imodelAccess: ECSchemaProvider;
   /** The class whose properties are enumerated. */
   className: EC.FullClassName;

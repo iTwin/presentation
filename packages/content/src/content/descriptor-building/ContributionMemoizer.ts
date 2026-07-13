@@ -13,6 +13,18 @@ type FieldsProviderContribution = Awaited<ReturnType<IModelFieldsProvider["getCo
 type ContributionIModelAccess = Parameters<IModelFieldsProvider["getContribution"]>[0]["imodelAccess"];
 
 /**
+ * Re-fetches an `IModelFieldsProvider` contribution for a target — the memoized accessor produced by
+ * {@link createContributionMemoizer} and consumed by the Stage 2 field/category/calculated-field
+ * collectors.
+ *
+ * @internal
+ */
+export type GetContribution = (
+  provider: IModelFieldsProvider,
+  target: ContentTarget,
+) => Promise<FieldsProviderContribution>;
+
+/**
  * Re-fetches `IModelFieldsProvider` contributions during descriptor building (Stage 2).
  *
  * Descriptor building re-calls providers to recover declaration metadata (property specs,
@@ -38,7 +50,7 @@ type ContributionIModelAccess = Parameters<IModelFieldsProvider["getContribution
  * @internal
  */
 export function createContributionMemoizer(props: { imodelAccess: ContributionIModelAccess }): {
-  getContribution: (provider: IModelFieldsProvider, target: ContentTarget) => Promise<FieldsProviderContribution>;
+  getContribution: GetContribution;
 } {
   const { imodelAccess } = props;
   const cache = new WeakMap<ContentTarget, Map<IModelFieldsProvider["id"], Promise<FieldsProviderContribution>>>();

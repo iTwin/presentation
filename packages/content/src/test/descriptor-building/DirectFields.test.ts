@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { createDirectPropertyFields } from "../../content/descriptor-building/DirectFields.js";
+import { collectDirectPropertyFields } from "../../content/descriptor-building/DirectFields.js";
 import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
 
 import type { EC } from "@itwin/presentation-shared";
@@ -23,11 +23,11 @@ function createSource(props: {
 }
 
 /** Calls the enumerator and unwraps the merge candidates to their fields. */
-async function enumerate(props: Parameters<typeof createDirectPropertyFields>[0]): Promise<PropertyField[]> {
-  return (await createDirectPropertyFields(props)).map((candidate) => candidate.field);
+async function enumerate(props: Parameters<typeof collectDirectPropertyFields>[0]): Promise<PropertyField[]> {
+  return (await collectDirectPropertyFields(props)).map((candidate) => candidate.field);
 }
 
-describe("createDirectPropertyFields", () => {
+describe("collectDirectPropertyFields", () => {
   it("enumerates the primary class properties as direct fields (empty path)", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
