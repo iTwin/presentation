@@ -64,6 +64,48 @@ describe("buildContentDescriptor", () => {
     expect(descriptor.fields).to.deep.equal({});
   });
 
+  it("unions fields across multiple targets, merging a shared inherited property", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.Pump",
+        properties: [
+          createPrimitiveProperty({ name: "Name", declaringClassName: "BisCore.Element" }),
+          createPrimitiveProperty({ name: "FlowRate", declaringClassName: "TestSchema.Pump" }),
+        ],
+      }),
+      createEntityClass({
+        fullName: "TestSchema.Valve",
+        properties: [
+          createPrimitiveProperty({ name: "Name", declaringClassName: "BisCore.Element" }),
+          createPrimitiveProperty({ name: "Diameter", declaringClassName: "TestSchema.Valve" }),
+        ],
+      }),
+    ]);
+
+    const descriptor = await buildContentDescriptor({
+      imodelAccess,
+      sources: [createSource("TestSchema.Pump"), createSource("TestSchema.Valve")],
+    });
+
+    expect(Object.keys(descriptor.fields).sort()).to.deep.equal([
+      "BisCore.Element.Name",
+      "TestSchema.Pump.FlowRate",
+      "TestSchema.Valve.Diameter",
+    ]);
+    // The shared inherited property merges into one field spanning both targets' value classes.
+    expect((descriptor.fields["BisCore.Element.Name"] as PropertyField).valueClassNames).to.deep.equal([
+      "TestSchema.Pump",
+      "TestSchema.Valve",
+    ]);
+    // Target-specific properties stay separate, scoped to their own class.
+    expect((descriptor.fields["TestSchema.Pump.FlowRate"] as PropertyField).valueClassNames).to.deep.equal([
+      "TestSchema.Pump",
+    ]);
+    expect((descriptor.fields["TestSchema.Valve.Diameter"] as PropertyField).valueClassNames).to.deep.equal([
+      "TestSchema.Valve",
+    ]);
+  });
+
   it("enumerates related property fields from resolved declarations", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
