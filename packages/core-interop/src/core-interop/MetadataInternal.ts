@@ -18,6 +18,7 @@ import type {
   PrimitiveArrayProperty as CorePrimitiveArrayProperty,
   PrimitiveProperty as CorePrimitiveProperty,
   Property as CoreProperty,
+  PropertyCategory as CorePropertyCategory,
   RelationshipClass as CoreRelationshipClass,
   RelationshipConstraint as CoreRelationshipConstraint,
   Schema as CoreSchema,
@@ -63,6 +64,9 @@ abstract class ECSchemaItemImpl<TCoreSchemaItem extends CoreSchemaItem> implemen
   }
   public get label() {
     return this._coreSchemaItem.label;
+  }
+  public get description() {
+    return this._coreSchemaItem.description;
   }
 }
 
@@ -114,6 +118,14 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
   }
   public async getProperties(): Promise<Array<EC.Property>> {
     const coreProperties = await this._coreSchemaItem.getProperties();
+    const result = new Array<EC.Property>();
+    for (const coreProperty of coreProperties) {
+      result.push(createECProperty(coreProperty, this));
+    }
+    return result;
+  }
+  public async getOwnProperties(): Promise<Array<EC.Property>> {
+    const coreProperties = await this._coreSchemaItem.getProperties(true);
     const result = new Array<EC.Property>();
     for (const coreProperty of coreProperties) {
       result.push(createECProperty(coreProperty, this));
@@ -236,6 +248,12 @@ abstract class ECPropertyImpl<TCoreProperty extends CoreProperty> implements EC.
     return createFromOptionalLazyLoaded(
       this._coreProperty.kindOfQuantity,
       (coreKindOfQuantity) => new ECKindOfQuantityImpl(coreKindOfQuantity),
+    );
+  }
+  public get category(): Promise<EC.PropertyCategory | undefined> {
+    return createFromOptionalLazyLoaded(
+      this._coreProperty.category,
+      (coreCategory) => new ECPropertyCategoryImpl(coreCategory),
     );
   }
   public async getCustomAttributes(): Promise<EC.CustomAttributeSet> {
@@ -453,6 +471,15 @@ class ECRelationshipConstraintImpl implements EC.RelationshipConstraint {
 class ECKindOfQuantityImpl extends ECSchemaItemImpl<CoreKindOfQuantity> implements EC.KindOfQuantity {
   constructor(coreKindOfQuantity: CoreKindOfQuantity) {
     super(coreKindOfQuantity);
+  }
+}
+
+class ECPropertyCategoryImpl extends ECSchemaItemImpl<CorePropertyCategory> implements EC.PropertyCategory {
+  constructor(coreCategory: CorePropertyCategory) {
+    super(coreCategory);
+  }
+  public get priority() {
+    return this._coreSchemaItem.priority;
   }
 }
 

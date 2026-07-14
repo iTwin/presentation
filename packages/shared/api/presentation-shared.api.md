@@ -161,6 +161,7 @@ export namespace EC {
         getCustomAttributes(): Promise<CustomAttributeSet>;
         // (undocumented)
         getDerivedClasses(): Promise<Class[]>;
+        getOwnProperties(): Promise<Array<Property>>;
         // (undocumented)
         getProperties(): Promise<Array<Property>>;
         // (undocumented)
@@ -240,6 +241,8 @@ export namespace EC {
     export type PrimitiveType = "Binary" | "Boolean" | "DateTime" | "Double" | "Integer" | "Long" | "Point2d" | "Point3d" | "String" | "IGeometry";
     export interface Property {
         // (undocumented)
+        category: Promise<PropertyCategory | undefined>;
+        // (undocumented)
         class: Class;
         // (undocumented)
         getCustomAttributes(): Promise<CustomAttributeSet>;
@@ -259,6 +262,9 @@ export namespace EC {
         label?: string;
         // (undocumented)
         name: string;
+    }
+    export interface PropertyCategory extends SchemaItem {
+        priority: number;
     }
     export interface RelationshipClass extends Class {
         // (undocumented)
@@ -292,6 +298,8 @@ export namespace EC {
         version: SchemaVersion;
     }
     export interface SchemaItem {
+        // (undocumented)
+        description?: string;
         // (undocumented)
         fullName: FullClassName;
         // (undocumented)

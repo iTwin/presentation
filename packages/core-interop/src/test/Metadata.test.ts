@@ -414,6 +414,36 @@ describe("createECClass", () => {
     });
   });
 
+  describe("getOwnProperties", () => {
+    it("returns only direct properties from core class", async () => {
+      const coreClass = {
+        schemaItemType: SchemaItemType.EntityClass,
+        fullName: "s.c",
+        name: "c",
+        label: "C",
+        getProperties: vi
+          .fn()
+          .mockResolvedValue([
+            {
+              isArray: () => false,
+              isStruct: () => false,
+              isEnumeration: () => false,
+              isNavigation: () => false,
+              isPrimitive: () => true,
+            },
+          ]),
+      } as unknown as CoreClass;
+      const ecClass = createECClass(coreClass, schema);
+      const properties = await ecClass.getOwnProperties();
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(coreClass.getProperties).toHaveBeenCalledOnce();
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(coreClass.getProperties).toHaveBeenCalledWith(true);
+      expect(properties.length).toBeGreaterThan(0);
+    });
+  });
+
   describe("getProperty", () => {
     it("returns property from core class", async () => {
       const coreClass = {
@@ -735,6 +765,34 @@ describe("createECProperty", () => {
       expect(
         await createECProperty({ ...coreProperty, kindOfQuantity: undefined } as CorePrimitiveProperty, propertyClass)
           .kindOfQuantity,
+      ).toBeUndefined();
+    });
+
+    it("maps category", async () => {
+      const coreProperty = {
+        ...propertyStub,
+        isPrimitive: () => true,
+        name: "test-property",
+        category: Promise.resolve({
+          fullName: "SchemaName.TestCategory",
+          name: "TestCategory",
+          label: "Test category",
+          description: "Test category description",
+          priority: 5,
+          schema: stubSchema("SchemaName"),
+        }),
+      } as unknown as CorePrimitiveProperty;
+      const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveProperty;
+      const category = (await property.category)!;
+      expect(category.fullName).toBe("SchemaName.TestCategory");
+      expect(category.name).toBe("TestCategory");
+      expect(category.label).toBe("Test category");
+      expect(category.description).toBe("Test category description");
+      expect(category.priority).toBe(5);
+
+      expect(
+        await createECProperty({ ...coreProperty, category: undefined } as CorePrimitiveProperty, propertyClass)
+          .category,
       ).toBeUndefined();
     });
   });
