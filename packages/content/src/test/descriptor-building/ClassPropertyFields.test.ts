@@ -18,9 +18,11 @@ function createSingleClassIModelAccess(fullName: EC.FullClassName, properties: E
   return createSchemaAccess([createEntityClass({ fullName, properties })]);
 }
 
-/** Calls the collector and returns just the produced fields (dropping schema categories). */
-async function collectFields(props: Parameters<typeof collectClassPropertyFields>[0]): Promise<PropertyField[]> {
-  return (await collectClassPropertyFields(props)).fields;
+/** Calls the collector and returns just the produced fields (dropping category facts). */
+async function collectFields(
+  props: Omit<Parameters<typeof collectClassPropertyFields>[0], "anchor">,
+): Promise<PropertyField[]> {
+  return (await collectClassPropertyFields({ ...props, anchor: "none" })).map(({ field }) => field);
 }
 
 describe("collectClassPropertyFields", () => {
@@ -150,18 +152,19 @@ describe("collectClassPropertyFields", () => {
         createPrimitiveProperty({ name: "B", declaringClassName: "TestSchema.C" }),
       ]);
 
-      const fields = await collectFields({
+      const results = await collectClassPropertyFields({
         imodelAccess,
         className: "TestSchema.C",
         pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
         spec: { select: "all", defaultOverrides: { readOnly: true, categoryId: "cat", hidden: true } },
+        anchor: "targetClass",
       });
 
-      for (const field of fields) {
+      for (const { field, categorization } of results) {
         expect(field.readOnly).to.equal(true);
-        expect(field.categoryId).to.equal("cat");
         expect(field.hidden).to.equal(true);
+        expect(categorization.category).to.deep.equal({ source: "override", id: "cat" });
       }
     });
 
@@ -171,7 +174,7 @@ describe("collectClassPropertyFields", () => {
         createPrimitiveProperty({ name: "beta", declaringClassName: "TestSchema.C" }),
       ]);
 
-      const fields = await collectFields({
+      const results = await collectClassPropertyFields({
         imodelAccess,
         className: "TestSchema.C",
         pathFromTarget: [],
@@ -181,14 +184,15 @@ describe("collectClassPropertyFields", () => {
           defaultOverrides: { categoryId: "default", readOnly: true },
           overrides: { alpha: { categoryId: "custom", label: "Custom Alpha" } },
         },
+        anchor: "targetClass",
       });
 
-      const [alpha, beta] = fields;
-      expect(alpha.categoryId).to.equal("custom");
-      expect(alpha.label).to.equal("Custom Alpha");
-      expect(alpha.readOnly).to.equal(true);
-      expect(beta.categoryId).to.equal("default");
-      expect(beta.readOnly).to.equal(true);
+      const [alpha, beta] = results;
+      expect(alpha.categorization.category).to.deep.equal({ source: "override", id: "custom" });
+      expect(alpha.field.label).to.equal("Custom Alpha");
+      expect(alpha.field.readOnly).to.equal(true);
+      expect(beta.categorization.category).to.deep.equal({ source: "override", id: "default" });
+      expect(beta.field.readOnly).to.equal(true);
     });
 
     it("omits categoryId/readOnly/hidden when no override provides them", async () => {
@@ -210,8 +214,8 @@ describe("collectClassPropertyFields", () => {
     });
   });
 
-  describe("schema property category", () => {
-    it("uses the EC schema property category directly for a direct property", async () => {
+  describe("category facts", () => {
+    it("reports the EC schema property category", async () => {
       const imodelAccess = createSingleClassIModelAccess("TestSchema.C", [
         createPrimitiveProperty({
           name: "A",
@@ -220,16 +224,19 @@ describe("collectClassPropertyFields", () => {
         }),
       ]);
 
-      const { fields, categories } = await collectClassPropertyFields({
+      const [{ categorization }] = await collectClassPropertyFields({
         imodelAccess,
         className: "TestSchema.C",
         pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
         spec: { select: "all" },
+        anchor: "none",
       });
 
-      expect(fields[0].categoryId).to.equal("TestSchema.Geometry");
-      expect(categories).to.deep.equal([{ id: "TestSchema.Geometry", label: "Geometry" }]);
+      expect(categorization).to.deep.equal({
+        anchor: "none",
+        category: { source: "schema", id: "TestSchema.Geometry", label: "Geometry" },
+      });
     });
 
     it("falls back to the schema category's name when it has no label", async () => {
@@ -241,18 +248,22 @@ describe("collectClassPropertyFields", () => {
         }),
       ]);
 
-      const { categories } = await collectClassPropertyFields({
+      const [{ categorization }] = await collectClassPropertyFields({
         imodelAccess,
         className: "TestSchema.C",
         pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
         spec: { select: "all" },
+        anchor: "targetClass",
       });
 
-      expect(categories).to.deep.equal([{ id: "TestSchema.Geometry", label: "Geometry" }]);
+      expect(categorization).to.deep.equal({
+        anchor: "targetClass",
+        category: { source: "schema", id: "TestSchema.Geometry", label: "Geometry" },
+      });
     });
 
-    it("lets an explicit override category win over the schema property category", async () => {
+    it("reports a spec override in place of the schema property category", async () => {
       const imodelAccess = createSingleClassIModelAccess("TestSchema.C", [
         createPrimitiveProperty({
           name: "prop",
@@ -261,16 +272,33 @@ describe("collectClassPropertyFields", () => {
         }),
       ]);
 
-      const { fields, categories } = await collectClassPropertyFields({
+      const [{ categorization }] = await collectClassPropertyFields({
         imodelAccess,
         className: "TestSchema.C",
         pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
         spec: { select: "all", overrides: { prop: { categoryId: "custom" } } },
+        anchor: "none",
       });
 
-      expect(fields[0].categoryId).to.equal("custom");
-      expect(categories).to.deep.equal([]);
+      expect(categorization).to.deep.equal({ anchor: "none", category: { source: "override", id: "custom" } });
+    });
+
+    it("reports no schema category or override when the property has neither", async () => {
+      const imodelAccess = createSingleClassIModelAccess("TestSchema.C", [
+        createPrimitiveProperty({ name: "A", declaringClassName: "TestSchema.C" }),
+      ]);
+
+      const [{ categorization }] = await collectClassPropertyFields({
+        imodelAccess,
+        className: "TestSchema.C",
+        pathFromTarget: [],
+        valueClassNames: ["TestSchema.C"],
+        spec: { select: "all" },
+        anchor: "relationshipClass",
+      });
+
+      expect(categorization).to.deep.equal({ anchor: "relationshipClass" });
     });
   });
 });

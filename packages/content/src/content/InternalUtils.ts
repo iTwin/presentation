@@ -3,6 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { getClass } from "@itwin/presentation-shared";
+
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
+
 /**
  * Prefix applied to internally generated ECSQL binding names
  * to avoid collisions with consumer-supplied filter bindings.
@@ -39,4 +43,14 @@ export function stableStringify(value: unknown): string {
   }
   const keys = Object.keys(value).sort();
   return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify((value as Record<string, unknown>)[k])}`).join(",")}}`;
+}
+
+/**
+ * Resolves a class's display label (its label, else its name).
+ *
+ * @internal
+ */
+export async function getClassLabel(imodelAccess: ECSchemaProvider, className: EC.FullClassName): Promise<string> {
+  const ecClass = await getClass(imodelAccess, className);
+  return ecClass.label ?? ecClass.name;
 }

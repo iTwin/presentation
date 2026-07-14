@@ -10,6 +10,7 @@ import { createEntityClass, createSchemaAccess } from "../MetadataStubs.js";
 
 import type { RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
+import type { CategorizedField, FieldCategorization } from "../../content/descriptor-building/ClassPropertyFields.js";
 import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
 import type { PropertyField } from "../../content/model/Field.js";
@@ -71,16 +72,51 @@ function createExternalProvider(
   };
 }
 
-function createRelatedField(props: { pathFromTarget?: RelationshipPath; categoryId?: string }): PropertyField {
+/** An enumerated related property field paired with its category facts (input to `collectCategories`). */
+function createCategorizedField(props: {
+  id?: string;
+  propertyName?: string;
+  pathFromTarget?: RelationshipPath;
+  anchor?: FieldCategorization["anchor"];
+  schemaCategory?: { id: string; label: string };
+  overrideCategoryId?: string;
+}): CategorizedField {
+  const id = props.id ?? "field";
+  const categorization: FieldCategorization = { anchor: props.anchor ?? "targetClass" };
+  if (props.schemaCategory) {
+    categorization.category = { source: "schema", ...props.schemaCategory };
+  }
+  if (props.overrideCategoryId !== undefined) {
+    categorization.category = { source: "override", id: props.overrideCategoryId };
+  }
+  return {
+    field: {
+      kind: "property",
+      id,
+      selectorId: id,
+      label: "Field",
+      type: { kind: "primitive", type: "String" },
+      propertyClassName: "TestSchema.B",
+      propertyName: props.propertyName ?? "Prop",
+      pathFromTarget: props.pathFromTarget ?? [],
+      valueClassNames: ["TestSchema.B"],
+    },
+    categorization,
+  };
+}
+
+/** A final property field (with `categoryId` already assigned) for the pruning tests. */
+function createFieldWithCategory(props: { id?: string; categoryId?: string }): PropertyField {
+  const id = props.id ?? "field";
   return {
     kind: "property",
-    id: "field",
-    selectorId: "field",
+    id,
+    selectorId: id,
     label: "Field",
     type: { kind: "primitive", type: "String" },
     propertyClassName: "TestSchema.B",
     propertyName: "Prop",
-    pathFromTarget: props.pathFromTarget ?? [],
+    pathFromTarget: [],
     valueClassNames: ["TestSchema.B"],
     ...(props.categoryId !== undefined ? { categoryId: props.categoryId } : undefined),
   };
@@ -95,7 +131,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [provider],
       externalFieldsProviders: [],
       getContribution,
-      fields: {},
+      fields: [],
     });
     expect(categories).to.deep.equal({ cat: { id: "cat", label: "Cat" } });
   });
@@ -113,7 +149,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [provider],
       externalFieldsProviders: [],
       getContribution,
-      fields: {},
+      fields: [],
     });
     expect(categories).to.deep.equal({});
   });
@@ -127,7 +163,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [low, high],
       externalFieldsProviders: [],
       getContribution,
-      fields: {},
+      fields: [],
     });
     expect(categories.cat.label).to.equal("High");
   });
@@ -141,7 +177,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [first, second],
       externalFieldsProviders: [],
       getContribution,
-      fields: {},
+      fields: [],
     });
     expect(categories.cat.label).to.equal("First");
   });
@@ -159,7 +195,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [imodelProvider],
       externalFieldsProviders: [external],
       getContribution,
-      fields: {},
+      fields: [],
     });
     expect(categories.shared.label).to.equal("From External");
     expect(categories.extOnly).to.deep.equal({ id: "extOnly", label: "Ext Only" });
@@ -173,7 +209,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [external],
       getContribution,
-      fields: {},
+      fields: [],
     });
     expect(categories).to.deep.equal({});
   });
@@ -186,67 +222,64 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [external],
       getContribution,
-      fields: {},
+      fields: [],
     });
     expect(categories.cat).to.deep.equal({ id: "cat", label: "Ext" });
   });
 
   it("auto-creates a category for a related field without one, labelled by the terminal class", async () => {
-    const field = createRelatedField({ pathFromTarget: [aToB] });
-    const fields = { field };
+    const field = createCategorizedField({ pathFromTarget: [aToB] });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B", label: "The B" })]),
       sources: [createSource()],
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
-      fields,
+      fields: [field],
     });
     const id = CategoryDefinition.computeId({ path: [aToB] });
     expect(categories[id]).to.deep.equal({ id, label: "The B" });
-    expect(field.categoryId).to.equal(id);
+    expect(field.field.categoryId).to.equal(id);
   });
 
   it("shares one auto-created category across related fields on the same path", async () => {
-    const fields = {
-      a: { ...createRelatedField({ pathFromTarget: [aToB] }), id: "a", propertyName: "A" },
-      b: { ...createRelatedField({ pathFromTarget: [aToB] }), id: "b", propertyName: "B" },
-    };
+    const a = createCategorizedField({ id: "a", propertyName: "A", pathFromTarget: [aToB] });
+    const b = createCategorizedField({ id: "b", propertyName: "B", pathFromTarget: [aToB] });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B" })]),
       sources: [createSource()],
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
-      fields,
+      fields: [a, b],
     });
     const id = CategoryDefinition.computeId({ path: [aToB] });
     expect(Object.keys(categories)).to.deep.equal([id]);
-    expect(fields.a.categoryId).to.equal(id);
-    expect(fields.b.categoryId).to.equal(id);
+    expect(a.field.categoryId).to.equal(id);
+    expect(b.field.categoryId).to.equal(id);
   });
 
   it("creates a single terminal category when no fields attach at intermediate classes", async () => {
     // Segment [a->b->c->d]: only a field at the full path → only a `d` category, no `b`/`c`.
-    const field = { ...createRelatedField({ pathFromTarget: [aToB, bToC, cToD] }), id: "d" };
+    const field = createCategorizedField({ id: "d", pathFromTarget: [aToB, bToC, cToD] });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.D", label: "The D" })]),
       sources: [createSource()],
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
-      fields: { d: field },
+      fields: [field],
     });
     const dId = CategoryDefinition.computeId({ path: [aToB, bToC, cToD] });
     expect(Object.keys(categories)).to.deep.equal([dId]);
     expect(categories[dId]).to.deep.equal({ id: dId, label: "The D" });
-    expect(field.categoryId).to.equal(dId);
+    expect(field.field.categoryId).to.equal(dId);
   });
 
   it("nests a terminal under the nearest shorter segment terminal, skipping field-less classes", async () => {
     // Segments [a->b],[b->c->d]: fields at `a->b` and `a->b->c->d` → `b` (top) and `d` (under `b`), no `c`.
-    const bField = { ...createRelatedField({ pathFromTarget: [aToB] }), id: "b", propertyName: "PB" };
-    const dField = { ...createRelatedField({ pathFromTarget: [aToB, bToC, cToD] }), id: "d", propertyName: "PD" };
+    const bField = createCategorizedField({ id: "b", propertyName: "PB", pathFromTarget: [aToB] });
+    const dField = createCategorizedField({ id: "d", propertyName: "PD", pathFromTarget: [aToB, bToC, cToD] });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([
         createEntityClass({ fullName: "TestSchema.B", label: "The B" }),
@@ -256,7 +289,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
-      fields: { b: bField, d: dField },
+      fields: [bField, dField],
     });
     const bId = CategoryDefinition.computeId({ path: [aToB] });
     const dId = CategoryDefinition.computeId({ path: [aToB, bToC, cToD] });
@@ -267,9 +300,9 @@ describe("collectCategories", () => {
 
   it("nests a full chain of categories when fields attach at every segment terminal", async () => {
     // Segments [a->b],[b->c],[c->d]: fields at each terminal → `b` -> `c` -> `d`.
-    const bField = { ...createRelatedField({ pathFromTarget: [aToB] }), id: "b", propertyName: "PB" };
-    const cField = { ...createRelatedField({ pathFromTarget: [aToB, bToC] }), id: "c", propertyName: "PC" };
-    const dField = { ...createRelatedField({ pathFromTarget: [aToB, bToC, cToD] }), id: "d", propertyName: "PD" };
+    const bField = createCategorizedField({ id: "b", propertyName: "PB", pathFromTarget: [aToB] });
+    const cField = createCategorizedField({ id: "c", propertyName: "PC", pathFromTarget: [aToB, bToC] });
+    const dField = createCategorizedField({ id: "d", propertyName: "PD", pathFromTarget: [aToB, bToC, cToD] });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([
         createEntityClass({ fullName: "TestSchema.B", label: "The B" }),
@@ -280,7 +313,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
-      fields: { b: bField, c: cField, d: dField },
+      fields: [bField, cField, dField],
     });
     const bId = CategoryDefinition.computeId({ path: [aToB] });
     const cId = CategoryDefinition.computeId({ path: [aToB, bToC] });
@@ -297,8 +330,8 @@ describe("collectCategories", () => {
       targetClassName: "TestSchema.Y",
       relationshipName: "TestSchema.aToY",
     };
-    const yField = { ...createRelatedField({ pathFromTarget: [aToY] }), id: "y", propertyName: "PY" };
-    const cField = { ...createRelatedField({ pathFromTarget: [aToB, bToC] }), id: "c", propertyName: "PC" };
+    const yField = createCategorizedField({ id: "y", propertyName: "PY", pathFromTarget: [aToY] });
+    const cField = createCategorizedField({ id: "c", propertyName: "PC", pathFromTarget: [aToB, bToC] });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([
         createEntityClass({ fullName: "TestSchema.Y", label: "The Y" }),
@@ -308,7 +341,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
-      fields: { y: yField, c: cField },
+      fields: [yField, cField],
     });
     const yId = CategoryDefinition.computeId({ path: [aToY] });
     const cId = CategoryDefinition.computeId({ path: [aToB, bToC] });
@@ -317,27 +350,28 @@ describe("collectCategories", () => {
   });
 
   it("does not auto-create for direct fields or fields that already have a category", async () => {
-    const direct = { ...createRelatedField({ pathFromTarget: [] }), id: "direct" };
-    const categorized = {
-      ...createRelatedField({ pathFromTarget: [aToB], categoryId: "explicit" }),
+    const direct = createCategorizedField({ id: "direct", pathFromTarget: [], anchor: "none" });
+    const categorized = createCategorizedField({
       id: "categorized",
-    };
+      pathFromTarget: [aToB],
+      overrideCategoryId: "explicit",
+    });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
-      fields: { direct, categorized },
+      fields: [direct, categorized],
     });
     expect(categories).to.deep.equal({});
-    expect(direct.categoryId).to.be.undefined;
-    expect(categorized.categoryId).to.equal("explicit");
+    expect(direct.field.categoryId).to.be.undefined;
+    expect(categorized.field.categoryId).to.equal("explicit");
   });
 
   it("does not auto-create when a provider already declared the field's path category", async () => {
     const id = CategoryDefinition.computeId({ path: [aToB] });
-    const field = createRelatedField({ pathFromTarget: [aToB] });
+    const field = createCategorizedField({ pathFromTarget: [aToB] });
     const provider = createProvider("p_v1", { [id]: { id, label: "Provider Category" } });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B", label: "Should not be used" })]),
@@ -345,42 +379,195 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [provider],
       externalFieldsProviders: [],
       getContribution,
-      fields: { field },
+      fields: [field],
     });
     expect(categories[id].label).to.equal("Provider Category");
-    expect(field.categoryId).to.equal(id);
+    expect(field.field.categoryId).to.equal(id);
   });
 
-  it("auto-creates the path category as the parent of a related field's schema category", async () => {
+  it("does not auto-create when a provider already declared a relationship category", async () => {
+    const id = CategoryDefinition.computeId({ path: [aToB], omitTargetClass: true });
+    const field = createCategorizedField({ pathFromTarget: [aToB], anchor: "relationshipClass" });
+    const provider = createProvider("p_v1", { [id]: { id, label: "Provider Relationship" } });
+    const categories = await collectCategories({
+      imodelAccess: createSchemaAccess([]),
+      sources: [createSource()],
+      imodelFieldsProviders: [provider],
+      externalFieldsProviders: [],
+      getContribution,
+      fields: [field],
+    });
+    expect(categories[id].label).to.equal("Provider Relationship");
+    expect(field.field.categoryId).to.equal(id);
+  });
+
+  it("nests a related field's schema category under the auto-created path category", async () => {
     // A related field carrying a schema property category keeps that (sub-)category, but the path
-    // category it nests under must still be auto-created — unlike an override category, which suppresses it.
+    // category it nests under must still be auto-created — unlike an override, which suppresses it.
     const parentId = CategoryDefinition.computeId({ path: [aToB] });
-    const field = createRelatedField({ pathFromTarget: [aToB], categoryId: "TestSchema.Geometry" });
+    const schemaCategoryId = `${parentId}/TestSchema.Geometry`;
+    const field = createCategorizedField({
+      pathFromTarget: [aToB],
+      schemaCategory: { id: "TestSchema.Geometry", label: "Geometry" },
+    });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B", label: "B Label" })]),
       sources: [createSource()],
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
-      fields: { field },
-      schemaCategories: [{ id: "TestSchema.Geometry", label: "Geometry", parentId }],
+      fields: [field],
     });
-    expect(field.categoryId).to.equal("TestSchema.Geometry");
-    expect(categories["TestSchema.Geometry"]).to.deep.equal({ id: "TestSchema.Geometry", label: "Geometry", parentId });
+    expect(field.field.categoryId).to.equal(schemaCategoryId);
+    expect(categories[schemaCategoryId]).to.deep.equal({ id: schemaCategoryId, label: "Geometry", parentId });
     expect(categories[parentId]).to.deep.equal({ id: parentId, label: "B Label" });
   });
 
+  it("nests the target category and both schema sub-categories under the relationship category", async () => {
+    // A step that loads both target- and relationship-class properties (both with the same schema
+    // category): the relationship class becomes the top-level group, the target class nests under it,
+    // and the shared schema category yields a distinct sub-category under each owner.
+    const geometry = { id: "TestSchema.Geometry", label: "Geometry" };
+    const relUn = createCategorizedField({
+      id: "relUn",
+      propertyName: "RelUn",
+      pathFromTarget: [aToB],
+      anchor: "relationshipClass",
+    });
+    const relCat = createCategorizedField({
+      id: "relCat",
+      propertyName: "RelCat",
+      pathFromTarget: [aToB],
+      anchor: "relationshipClass",
+      schemaCategory: geometry,
+    });
+    const targetUn = createCategorizedField({
+      id: "targetUn",
+      propertyName: "TargetUn",
+      pathFromTarget: [aToB],
+      anchor: "targetClass",
+    });
+    const targetCat = createCategorizedField({
+      id: "targetCat",
+      propertyName: "TargetCat",
+      pathFromTarget: [aToB],
+      anchor: "targetClass",
+      schemaCategory: geometry,
+    });
+    const categories = await collectCategories({
+      imodelAccess: createSchemaAccess([
+        createEntityClass({ fullName: "TestSchema.B", label: "The B" }),
+        createEntityClass({ fullName: "TestSchema.aToB", label: "A to B" }),
+      ]),
+      sources: [createSource()],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [],
+      getContribution,
+      fields: [relUn, relCat, targetUn, targetCat],
+    });
+
+    const relId = CategoryDefinition.computeId({ path: [aToB], omitTargetClass: true });
+    const targetId = CategoryDefinition.computeId({ path: [aToB] });
+    const relSchemaId = `${relId}/TestSchema.Geometry`;
+    const targetSchemaId = `${targetId}/TestSchema.Geometry`;
+    // Each field lands in its own category; the two schema sub-categories are distinct.
+    expect(relUn.field.categoryId).to.equal(relId);
+    expect(relCat.field.categoryId).to.equal(relSchemaId);
+    expect(targetUn.field.categoryId).to.equal(targetId);
+    expect(targetCat.field.categoryId).to.equal(targetSchemaId);
+    // - relationship category ("A to B", top-level)
+    //   - relationship schema category
+    //   - target class category ("The B", under the relationship category)
+    //     - target schema category
+    expect(categories[relId]).to.deep.equal({ id: relId, label: "A to B" });
+    expect(categories[relSchemaId]).to.deep.equal({ id: relSchemaId, label: "Geometry", parentId: relId });
+    expect(categories[targetId]).to.deep.equal({ id: targetId, label: "The B", parentId: relId });
+    expect(categories[targetSchemaId]).to.deep.equal({ id: targetSchemaId, label: "Geometry", parentId: targetId });
+  });
+
+  it("nests a later step's relationship category under an earlier step's target category", async () => {
+    // Path a-[ab]->b-[bc]->c showing "b" (target of step 0) and "bc" (relationship of step 1).
+    const bField = createCategorizedField({
+      id: "b",
+      propertyName: "B",
+      pathFromTarget: [aToB],
+      anchor: "targetClass",
+    });
+    const bcField = createCategorizedField({
+      id: "bc",
+      propertyName: "BC",
+      pathFromTarget: [aToB, bToC],
+      anchor: "relationshipClass",
+    });
+    const categories = await collectCategories({
+      imodelAccess: createSchemaAccess([
+        createEntityClass({ fullName: "TestSchema.B", label: "The B" }),
+        createEntityClass({ fullName: "TestSchema.bToC", label: "B to C" }),
+      ]),
+      sources: [createSource()],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [],
+      getContribution,
+      fields: [bField, bcField],
+    });
+    const bId = CategoryDefinition.computeId({ path: [aToB] });
+    const bcId = CategoryDefinition.computeId({ path: [aToB, bToC], omitTargetClass: true });
+    expect(bField.field.categoryId).to.equal(bId);
+    expect(bcField.field.categoryId).to.equal(bcId);
+    // - "b" (target class category, top-level)
+    //   - "bc" (relationship category, nested under "b")
+    expect(categories[bId]).to.deep.equal({ id: bId, label: "The B" });
+    expect(categories[bcId]).to.deep.equal({ id: bcId, label: "B to C", parentId: bId });
+  });
+
+  it("nests a relationship category under an earlier step's relationship category when the intermediate target has no fields", async () => {
+    // Relationship properties at both steps, none from the intermediate `b` target class.
+    const abField = createCategorizedField({
+      id: "ab",
+      propertyName: "AB",
+      pathFromTarget: [aToB],
+      anchor: "relationshipClass",
+    });
+    const bcField = createCategorizedField({
+      id: "bc",
+      propertyName: "BC",
+      pathFromTarget: [aToB, bToC],
+      anchor: "relationshipClass",
+    });
+    const categories = await collectCategories({
+      imodelAccess: createSchemaAccess([
+        createEntityClass({ fullName: "TestSchema.aToB", label: "A to B" }),
+        createEntityClass({ fullName: "TestSchema.bToC", label: "B to C" }),
+      ]),
+      sources: [createSource()],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [],
+      getContribution,
+      fields: [abField, bcField],
+    });
+    const abId = CategoryDefinition.computeId({ path: [aToB], omitTargetClass: true });
+    const bcId = CategoryDefinition.computeId({ path: [aToB, bToC], omitTargetClass: true });
+    // - "ab" (relationship category, top-level)
+    //   - "bc" (relationship category, nested under "ab" — the field-less `b` target is skipped)
+    expect(categories[abId]).to.deep.equal({ id: abId, label: "A to B" });
+    expect(categories[bcId]).to.deep.equal({ id: bcId, label: "B to C", parentId: abId });
+  });
+
   describe("schema property categories", () => {
-    it("registers schema property categories referenced by fields", async () => {
+    it("registers a direct field's schema property category top-level", async () => {
+      const field = createCategorizedField({
+        anchor: "none",
+        schemaCategory: { id: "TestSchema.Geometry", label: "Geometry" },
+      });
       const categories = await collectCategories({
         imodelAccess: createSchemaAccess([]),
         sources: [createSource()],
         imodelFieldsProviders: [],
         externalFieldsProviders: [],
         getContribution,
-        fields: {},
-        schemaCategories: [{ id: "TestSchema.Geometry", label: "Geometry" }],
+        fields: [field],
       });
+      expect(field.field.categoryId).to.equal("TestSchema.Geometry");
       expect(categories).to.deep.equal({ "TestSchema.Geometry": { id: "TestSchema.Geometry", label: "Geometry" } });
     });
 
@@ -388,14 +575,17 @@ describe("collectCategories", () => {
       const provider = createProvider("p_v1", {
         "TestSchema.Geometry": { id: "TestSchema.Geometry", label: "Provider Geometry" },
       });
+      const field = createCategorizedField({
+        anchor: "none",
+        schemaCategory: { id: "TestSchema.Geometry", label: "Schema Geometry" },
+      });
       const categories = await collectCategories({
         imodelAccess: createSchemaAccess([]),
         sources: [createSource()],
         imodelFieldsProviders: [provider],
         externalFieldsProviders: [],
         getContribution,
-        fields: {},
-        schemaCategories: [{ id: "TestSchema.Geometry", label: "Schema Geometry" }],
+        fields: [field],
       });
       expect(categories["TestSchema.Geometry"].label).to.equal("Provider Geometry");
     });
@@ -410,16 +600,16 @@ describe("pruneUnreferencedCategories", () => {
       leaf: { id: "leaf", label: "Leaf", parentId: "mid" },
       orphan: { id: "orphan", label: "Orphan" },
     };
-    const leafField = { ...createRelatedField({ categoryId: "leaf" }), id: "leafField" };
-    const rootField = { ...createRelatedField({ categoryId: "root" }), id: "rootField" };
+    const leafField = createFieldWithCategory({ id: "leafField", categoryId: "leaf" });
+    const rootField = createFieldWithCategory({ id: "rootField", categoryId: "root" });
     const pruned = pruneUnreferencedCategories({ fields: { leafField, rootField }, categories });
     expect(Object.keys(pruned).sort()).to.deep.equal(["leaf", "mid", "root"]);
   });
 
   it("ignores fields without a category and dangling category references", () => {
     const categories = { a: { id: "a", label: "A" } };
-    const noCategory = { ...createRelatedField({}), id: "noCategory" };
-    const dangling = { ...createRelatedField({ categoryId: "missing" }), id: "dangling" };
+    const noCategory = createFieldWithCategory({ id: "noCategory" });
+    const dangling = createFieldWithCategory({ id: "dangling", categoryId: "missing" });
     const pruned = pruneUnreferencedCategories({ fields: { noCategory, dangling }, categories });
     expect(pruned).to.deep.equal({});
   });

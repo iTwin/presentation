@@ -14,7 +14,6 @@ function createField(props: {
   propertyName: string;
   valueClassNames: EC.FullClassName[];
   label?: string;
-  categoryId?: string;
   hidden?: boolean;
   readOnly?: boolean;
   type?: PropertyField["type"];
@@ -26,7 +25,6 @@ function createField(props: {
     selectorId: "unused",
     label: props.label ?? "Label",
     type: props.type ?? { kind: "primitive", type: "String" },
-    categoryId: props.categoryId,
     hidden: props.hidden,
     readOnly: props.readOnly,
     propertyClassName: props.propertyClassName,
@@ -36,10 +34,17 @@ function createField(props: {
   };
 }
 
+/** Re-keys the merge output by field id, for the record-shaped assertions below. */
+function toRecord(result: ReturnType<typeof mergePropertyFieldsByIdentity>): Record<string, PropertyField> {
+  return Object.fromEntries(result.map(({ field }) => [field.id, field]));
+}
+
 describe("mergePropertyFieldsByIdentity", () => {
-  /** Wraps bare fields as merge candidates from a single (unspecified) source. */
+  /** Wraps bare fields as merge candidates from a single (unspecified) source, keyed by field id. */
   function merge(fields: PropertyField[]) {
-    return mergePropertyFieldsByIdentity(fields.map((field) => ({ field })));
+    return toRecord(
+      mergePropertyFieldsByIdentity(fields.map((field) => ({ field, categorization: { anchor: "none" as const } }))),
+    );
   }
 
   it("returns an empty record for no candidates", () => {
@@ -161,20 +166,45 @@ describe("mergePropertyFieldsByIdentity", () => {
     expect(() => merge([a, b])).to.throw(/divergent metadata/);
   });
 
-  it("throws when grouped candidates have divergent category", () => {
+  it("throws when grouped candidates have divergent category facts", () => {
     const a = createField({
       propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Door"],
-      categoryId: "a",
     });
     const b = createField({
       propertyClassName: "Stuff:Thing",
       propertyName: "Height",
       valueClassNames: ["Stuff:Window"],
-      categoryId: "b",
     });
-    expect(() => merge([a, b])).to.throw(/divergent metadata/);
+    expect(() =>
+      mergePropertyFieldsByIdentity([
+        { field: a, categorization: { anchor: "none", category: { source: "override", id: "a" } } },
+        { field: b, categorization: { anchor: "none", category: { source: "override", id: "b" } } },
+      ]),
+    ).to.throw(/divergent metadata/);
+  });
+
+  it("merges candidates that agree on schema category facts", () => {
+    const a = createField({
+      propertyClassName: "Stuff:Thing",
+      propertyName: "Height",
+      valueClassNames: ["Stuff:Door"],
+    });
+    const b = createField({
+      propertyClassName: "Stuff:Thing",
+      propertyName: "Height",
+      valueClassNames: ["Stuff:Window"],
+    });
+    const schema = { anchor: "targetClass", category: { source: "schema", id: "Geo", label: "Geometry" } } as const;
+    const result = toRecord(
+      mergePropertyFieldsByIdentity([
+        { field: a, categorization: schema, provider: { id: "p_v1" } },
+        { field: b, categorization: schema, provider: { id: "p_v1" } },
+      ]),
+    );
+    const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Height" });
+    expect(result[id].valueClassNames).to.deep.equal(["Stuff.Door", "Stuff.Window"]);
   });
 
   it("throws when grouped candidates have divergent hidden flag", () => {
@@ -354,10 +384,12 @@ describe("mergePropertyFieldsByIdentity", () => {
       valueClassNames: ["Stuff:Window"],
       label: "High priority",
     });
-    const result = mergePropertyFieldsByIdentity([
-      { field: a, provider: { id: "a_v1", priority: 1 } },
-      { field: b, provider: { id: "b_v1", priority: 2 } },
-    ]);
+    const result = toRecord(
+      mergePropertyFieldsByIdentity([
+        { field: a, categorization: { anchor: "none" }, provider: { id: "a_v1", priority: 1 } },
+        { field: b, categorization: { anchor: "none" }, provider: { id: "b_v1", priority: 2 } },
+      ]),
+    );
     const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Height" });
     expect(result[id].label).to.equal("High priority");
     expect(result[id].valueClassNames).to.deep.equal(["Stuff.Door", "Stuff.Window"]);
@@ -376,10 +408,12 @@ describe("mergePropertyFieldsByIdentity", () => {
       valueClassNames: ["Stuff:Window"],
       label: "Second",
     });
-    const result = mergePropertyFieldsByIdentity([
-      { field: a, provider: { id: "a_v1", priority: 5 } },
-      { field: b, provider: { id: "b_v1", priority: 5 } },
-    ]);
+    const result = toRecord(
+      mergePropertyFieldsByIdentity([
+        { field: a, categorization: { anchor: "none" }, provider: { id: "a_v1", priority: 5 } },
+        { field: b, categorization: { anchor: "none" }, provider: { id: "b_v1", priority: 5 } },
+      ]),
+    );
     const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Height" });
     expect(result[id].label).to.equal("First");
   });
@@ -399,8 +433,8 @@ describe("mergePropertyFieldsByIdentity", () => {
     });
     expect(() =>
       mergePropertyFieldsByIdentity([
-        { field: a, provider: { id: "p_v1" } },
-        { field: b, provider: { id: "p_v1" } },
+        { field: a, categorization: { anchor: "none" }, provider: { id: "p_v1" } },
+        { field: b, categorization: { anchor: "none" }, provider: { id: "p_v1" } },
       ]),
     ).to.throw(/provider "p_v1"/);
   });

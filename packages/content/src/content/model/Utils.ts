@@ -19,17 +19,25 @@ export type DeepReadonly<T> = T extends (...args: any[]) => any
       ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
       : T;
 
-export function serializeRelationshipPath(path: RelationshipPath): string {
+/**
+ * Serializes a relationship path to a deterministic string. When `omitLastTargetClass` is set, the
+ * final step's target class (and its arrow) is left off, yielding a target-independent serialization
+ * of the path's last relationship.
+ */
+export function serializeRelationshipPath(path: RelationshipPath, options?: { omitLastTargetClass?: boolean }): string {
   let result = "";
-  for (const step of path) {
+  path.forEach((step, index) => {
     if (result.length === 0) {
       result = normalizeFullClassName(step.sourceClassName);
     }
     const rel = step.relationshipReverse
       ? `[!${normalizeFullClassName(step.relationshipName)}]`
       : `[${normalizeFullClassName(step.relationshipName)}]`;
-    result += `-${rel}->${normalizeFullClassName(step.targetClassName)}`;
-  }
+    result += `-${rel}`;
+    if (!(options?.omitLastTargetClass && index === path.length - 1)) {
+      result += `->${normalizeFullClassName(step.targetClassName)}`;
+    }
+  });
   return result;
 }
 

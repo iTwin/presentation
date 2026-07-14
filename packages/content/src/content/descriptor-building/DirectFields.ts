@@ -8,8 +8,7 @@ import { collectClassPropertyFields } from "./ClassPropertyFields.js";
 
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
-import type { CategoryDefinition } from "../model/Category.js";
-import type { PropertyField } from "../model/Field.js";
+import type { CategorizedField } from "./ClassPropertyFields.js";
 
 /**
  * Enumerates the **direct** property fields of a content source — the properties of the source's
@@ -25,14 +24,15 @@ import type { PropertyField } from "../model/Field.js";
  * property is attributed only to the concretes under it. When no concrete classes were resolved,
  * the enumeration falls back to the normalized `primaryClass` alone.
  *
- * Direct fields are schema-derived, so the enumerated candidates carry no contributing provider.
+ * Direct fields have no class-based category (`anchor: "none"`) and, being schema-derived, carry no
+ * contributing provider.
  *
  * @internal
  */
 export async function collectDirectPropertyFields(props: {
   imodelAccess: ECSchemaProvider;
   source: ContentSource;
-}): Promise<{ fields: Array<{ field: PropertyField }>; categories: CategoryDefinition[] }> {
+}): Promise<CategorizedField[]> {
   const { imodelAccess, source } = props;
   const concreteClassNames =
     source.resolvedPrimaryClasses.length > 0
@@ -44,27 +44,21 @@ export async function collectDirectPropertyFields(props: {
   // properties then converts every property exactly once, at its unique declaring class.
   const derivedConcretesByDeclaringClass = await collectDeclaringClassClosure(imodelAccess, concreteClassNames);
 
-  const fields: PropertyField[] = [];
-  const categories = new Map<CategoryDefinition["id"], CategoryDefinition>();
-  await Promise.all(
-    [...derivedConcretesByDeclaringClass].map(async ([declaringClass, derivedConcretes]) => {
-      const result = await collectClassPropertyFields({
+  const perClass = await Promise.all(
+    [...derivedConcretesByDeclaringClass].map(async ([declaringClass, derivedConcretes]) =>
+      collectClassPropertyFields({
         imodelAccess,
         className: declaringClass,
         pathFromTarget: [],
         // Preserve the resolved-class order (the walk populates the set in arbitrary order).
         valueClassNames: concreteClassNames.filter((concreteClassName) => derivedConcretes.has(concreteClassName)),
         spec: { select: "all" },
+        anchor: "none",
         excludeInherited: true,
-      });
-      fields.push(...result.fields);
-      for (const category of result.categories) {
-        categories.set(category.id, category);
-      }
-    }),
+      }),
+    ),
   );
-
-  return { fields: fields.map((field) => ({ field })), categories: [...categories.values()] };
+  return perClass.flat();
 }
 
 /**

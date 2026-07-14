@@ -74,6 +74,7 @@ export interface CategoryDefinition {
 export namespace CategoryDefinition {
     export function computeId(props: {
         path: RelationshipPath;
+        omitTargetClass?: boolean;
     }): CategoryDefinition["id"];
     export function create(props: {
         path: RelationshipPath;

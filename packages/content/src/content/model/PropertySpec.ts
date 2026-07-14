@@ -20,6 +20,12 @@ export interface StepPropertySpec {
   /**
    * Properties to load from the step's relationship class. Omit to load no properties from the
    * relationship class at this step.
+   *
+   * Relationship-class fields are grouped under a dedicated **relationship category** (labelled by
+   * the relationship class), with the step's target-class category nested beneath it. A category
+   * defined for these fields should therefore nest under the relationship category, whose id is
+   * `CategoryDefinition.computeId({ path, omitTargetClass: true })` — as opposed to target-class
+   * fields, which nest under the target category (`CategoryDefinition.computeId({ path })`).
    */
   relationship?: ClassPropertySpec;
 }

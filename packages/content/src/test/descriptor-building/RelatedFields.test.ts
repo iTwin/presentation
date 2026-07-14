@@ -5,7 +5,6 @@
 
 import { describe, expect, it } from "vitest";
 import { collectRelatedPropertyFields } from "../../content/descriptor-building/RelatedFields.js";
-import { CategoryDefinition } from "../../content/model/Category.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
 
@@ -58,9 +57,9 @@ function resolvedPath(path: RelationshipPath, targetClassNames: EC.FullClassName
   return { path, targetClassNames };
 }
 
-/** Calls the enumerator and unwraps the merge candidates to their fields. */
+/** Calls the enumerator and unwraps the candidates to their fields. */
 async function enumerate(props: Parameters<typeof collectRelatedPropertyFields>[0]): Promise<PropertyField[]> {
-  return (await collectRelatedPropertyFields(props)).fields.map(({ field }) => field);
+  return (await collectRelatedPropertyFields(props)).map(({ field }) => field);
 }
 
 describe("collectRelatedPropertyFields", () => {
@@ -82,9 +81,9 @@ describe("collectRelatedPropertyFields", () => {
       { providerId: provider.id, declarationIndex: 0, paths: [resolvedPath([aToB], ["TestSchema.A"])] },
     ]);
 
-    const { fields } = await collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
-    expect(fields).to.have.lengthOf(1);
-    expect(fields[0].provider).to.equal(provider);
+    const candidates = await collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
+    expect(candidates).to.have.lengthOf(1);
+    expect(candidates[0].provider).to.equal(provider);
   });
 
   it("loads all properties of the final step's target class when the declaration omits `properties`", async () => {
@@ -162,7 +161,7 @@ describe("collectRelatedPropertyFields", () => {
     expect(fields[0].valueClassNames).to.deep.equal(["TestSchema.aToB"]);
   });
 
-  it("returns schema property categories referenced by related fields, nested under the path category", async () => {
+  it("reports each related field's category facts with a `targetClass` anchor", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.B",
@@ -172,7 +171,6 @@ describe("collectRelatedPropertyFields", () => {
             declaringClassName: "TestSchema.B",
             category: { fullName: "TestSchema.Geometry", label: "Geometry" },
           }),
-          // A category-less property alongside a categorized one — only the latter is re-parented.
           createPrimitiveProperty({ name: "Uncategorized", declaringClassName: "TestSchema.B" }),
         ],
       }),
@@ -185,18 +183,13 @@ describe("collectRelatedPropertyFields", () => {
     const source = createSource([
       { providerId: provider.id, declarationIndex: 0, paths: [resolvedPath([aToB], ["TestSchema.B"])] },
     ]);
-    const parentId = CategoryDefinition.computeId({ path: [aToB] });
 
-    const { fields, categories } = await collectRelatedPropertyFields({
-      imodelAccess,
-      source,
-      ...wireProviders([provider]),
-    });
+    const candidates = await collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
 
-    const byName = new Map(fields.map(({ field }) => [field.propertyName, field]));
-    expect(byName.get("Prop")?.categoryId).to.equal(`${parentId}/TestSchema.Geometry`);
-    expect(byName.get("Uncategorized")?.categoryId).to.be.undefined;
-    expect(categories).to.deep.equal([{ id: `${parentId}/TestSchema.Geometry`, label: "Geometry", parentId }]);
+    expect(candidates.map((candidate) => candidate.categorization)).to.deep.equal([
+      { anchor: "targetClass", category: { source: "schema", id: "TestSchema.Geometry", label: "Geometry" } },
+      { anchor: "targetClass" },
+    ]);
   });
 
   it("loads both target and relationship class properties for a step spec", async () => {
@@ -222,6 +215,32 @@ describe("collectRelatedPropertyFields", () => {
     const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
 
     expect(fields.map((f) => f.propertyName)).to.deep.equal(["TargetProp", "RelProp"]);
+  });
+
+  it("reports a relationship field's spec override as a categorization fact", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.aToB",
+        label: "A to B",
+        properties: [createPrimitiveProperty({ name: "relProp", declaringClassName: "TestSchema.aToB" })],
+      }),
+    ]);
+    const declaration: RelatedPropertiesDeclaration = {
+      path: [aToB],
+      properties: [{ stepIndex: 0, relationship: { select: "all", overrides: { relProp: { categoryId: "custom" } } } }],
+    };
+    const provider = createProvider("p1_v1", [declaration]);
+    const source = createSource([
+      { providerId: provider.id, declarationIndex: 0, paths: [resolvedPath([aToB], ["TestSchema.A"])] },
+    ]);
+
+    const candidates = await collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
+
+    const candidate = candidates.find(({ field }) => field.propertyName === "relProp");
+    expect(candidate?.categorization).to.deep.equal({
+      anchor: "relationshipClass",
+      category: { source: "override", id: "custom" },
+    });
   });
 
   it("enumerates every resolved path of a declaration", async () => {

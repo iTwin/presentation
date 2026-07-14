@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { getClass } from "@itwin/presentation-shared";
-import { stableStringify } from "../../InternalUtils.js";
+import { getClassLabel, stableStringify } from "../../InternalUtils.js";
 import { CategoryDefinition } from "../../model/Category.js";
 import { hashString } from "../../model/Utils.js";
 import { convertECExpressionToECSql } from "../ecexpressions/ECExpressionToECSql.js";
@@ -96,12 +96,6 @@ export function createFieldsProviderFromContentModifierRule(
 }
 
 // ── Relationship path mapping ────────────────────────────────────────
-
-/** Returns the display label of a class. */
-async function getClassLabel(imodelAccess: ECSchemaProvider, className: EC.FullClassName): Promise<string> {
-  const cls = await getClass(imodelAccess, className);
-  return cls.label ?? cls.name;
-}
 
 /**
  * Normalizes the deprecated `propertyNames` field into the shape accepted by `mapPropertiesForStep`.

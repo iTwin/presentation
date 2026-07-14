@@ -15,6 +15,36 @@ import type { ClassPropertySpec } from "../model/PropertySpec.js";
 type PropertyOverrides = NonNullable<ClassPropertySpec["overrides"]>[string];
 
 /**
+ * The raw category facts of an enumerated property field. Field enumeration only reports these
+ * facts; the single categorization pass (`collectCategories`) turns them into concrete category ids,
+ * creates the category tree, and assigns each field's `categoryId`.
+ */
+export interface FieldCategorization {
+  /**
+   * Which class the field's value comes from, for class-based category anchoring:
+   * - `"none"` — a direct field (no class-based category; a schema category, if any, is top-level);
+   * - `"targetClass"` — a related field from its step's target class;
+   * - `"relationshipClass"` — a related field from its step's relationship class.
+   */
+  anchor: "none" | "targetClass" | "relationshipClass";
+  /**
+   * The property's category source, if any — the two sources are mutually exclusive (an explicit
+   * spec override takes precedence over the EC schema property category):
+   * - `{ source: "override" }` — the category id set by the property's spec override;
+   * - `{ source: "schema" }` — the EC schema property category assigned to the property (unscoped).
+   */
+  category?:
+    | { source: "override"; id: CategoryDefinition["id"] }
+    | { source: "schema"; id: CategoryDefinition["id"]; label: string };
+}
+
+/** A property field paired with the category facts the categorization pass needs. */
+export interface CategorizedField {
+  field: PropertyField;
+  categorization: FieldCategorization;
+}
+
+/**
  * Enumerates the properties of an EC class into `PropertyField` candidates.
  *
  * Shared by direct-property enumeration (zero-length `pathFromTarget`) and related-property
@@ -27,16 +57,16 @@ type PropertyOverrides = NonNullable<ClassPropertySpec["overrides"]>[string];
  * - `propertyClassName` is the class that *declares* the property (may be a base class), so an
  *   inherited property is attributed to its declaring class;
  * - `label` resolves to the override label, else the property's label, else its name;
- * - `categoryId` resolves to the override category, else the EC schema property category (if the
- *   property has one assigned), which is emitted top-level — callers that enumerate related
- *   properties re-parent it under the path's class-based category;
  * - `readOnly`/`hidden` come from the merged overrides when present;
  * - `id`/`selectorId` are derived from `(propertyClassName, propertyName, pathFromTarget)`.
  *
+ * Each field is paired with its {@link FieldCategorization} — the raw category facts (its EC schema
+ * property category and/or spec override, plus the given `anchor`) — but no `categoryId` is assigned
+ * and no category is created here: that is the categorization pass's job.
+ *
  * Properties with unsupported value types (e.g. `Binary`/`IGeometry`) are skipped. The returned
  * fields are candidates whose identity is finalized (and same-property variants merged) by
- * `mergePropertyFieldsByIdentity`; the returned `categories` are the EC schema property categories
- * the fields reference and must be registered with the descriptor's category registry.
+ * `mergePropertyFieldsByIdentity`.
  *
  * @internal
  */
@@ -50,13 +80,14 @@ export async function collectClassPropertyFields(props: {
   valueClassNames: EC.FullClassName[];
   /** Property selection + overrides. Pass `{ select: "all" }` to include every property unchanged. */
   spec: ClassPropertySpec;
+  /** How the produced fields anchor for categorization (see {@link FieldCategorization.anchor}). */
+  anchor: FieldCategorization["anchor"];
   /** When `true`, enumerate only properties declared directly on `className` (exclude inherited ones). */
   excludeInherited?: boolean;
-}): Promise<{ fields: PropertyField[]; categories: CategoryDefinition[] }> {
-  const { imodelAccess, className, pathFromTarget, valueClassNames, spec, excludeInherited } = props;
+}): Promise<CategorizedField[]> {
+  const { imodelAccess, className, pathFromTarget, valueClassNames, spec, anchor, excludeInherited } = props;
   const ecClass = await getClass(imodelAccess, className);
-  const fields: PropertyField[] = [];
-  const categories = new Map<CategoryDefinition["id"], CategoryDefinition>();
+  const result: CategorizedField[] = [];
   const properties = excludeInherited ? await ecClass.getOwnProperties() : await ecClass.getProperties();
   for (const property of properties) {
     if (!isSelected(property.name, spec.select)) {
@@ -80,38 +111,29 @@ export async function collectClassPropertyFields(props: {
       pathFromTarget,
       valueClassNames,
     };
-    // Category precedence: explicit override wins; otherwise fall back to the EC schema property
-    // category (registered so it lands in the descriptor's category registry).
-    let categoryId = overrides.categoryId;
-    if (categoryId === undefined) {
-      const schemaCategory = await property.category;
-      if (schemaCategory) {
-        const definition = createSchemaCategory(schemaCategory);
-        categories.set(definition.id, definition);
-        categoryId = definition.id;
-      }
-    }
-    if (categoryId !== undefined) {
-      field.categoryId = categoryId;
-    }
     if (overrides.readOnly !== undefined) {
       field.readOnly = overrides.readOnly;
     }
     if (overrides.hidden !== undefined) {
       field.hidden = overrides.hidden;
     }
-    fields.push(field);
+    // Report the raw category facts: an explicit spec override, else the EC schema property category.
+    const categorization: FieldCategorization = { anchor };
+    if (overrides.categoryId !== undefined) {
+      categorization.category = { source: "override", id: overrides.categoryId };
+    } else {
+      const schemaCategory = await property.category;
+      if (schemaCategory) {
+        categorization.category = {
+          source: "schema",
+          id: schemaCategory.fullName,
+          label: schemaCategory.label ?? schemaCategory.name,
+        };
+      }
+    }
+    result.push({ field, categorization });
   }
-  return { fields, categories: [...categories.values()] };
-}
-
-/**
- * Builds a top-level `CategoryDefinition` for an EC schema property category. Nesting a related
- * property's schema category under its path's class-based category is the related pipeline's concern,
- * so this enumeration stays path-agnostic.
- */
-function createSchemaCategory(schemaCategory: EC.PropertyCategory): CategoryDefinition {
-  return { id: schemaCategory.fullName, label: schemaCategory.label ?? schemaCategory.name };
+  return result;
 }
 
 /** Determines whether a property is selected by a `ClassPropertySpec.select` value. */

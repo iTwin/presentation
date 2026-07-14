@@ -34,13 +34,18 @@ export namespace CategoryDefinition {
    * Two providers using the same path will produce the same ID, allowing their fields
    * to merge under one category.
    *
+   * By default the ID identifies the **target** category (grouping the fields of the path's final
+   * target class). Pass `omitTargetClass: true` to get the **relationship** category ID instead: the
+   * same ID with the final target class removed, so it is independent of which concrete target class
+   * the relationship reaches.
+   *
    * @throws Error if the path is empty.
    */
-  export function computeId(props: { path: RelationshipPath }): CategoryDefinition["id"] {
+  export function computeId(props: { path: RelationshipPath; omitTargetClass?: boolean }): CategoryDefinition["id"] {
     if (props.path.length === 0) {
       throw new Error("Cannot compute category ID from an empty relationship path.");
     }
-    return serializeRelationshipPath(props.path);
+    return serializeRelationshipPath(props.path, { omitLastTargetClass: props.omitTargetClass });
   }
 
   /**

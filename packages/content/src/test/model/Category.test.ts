@@ -68,6 +68,29 @@ describe("CategoryDefinition", () => {
       });
       expect(result).to.equal("S.A-[S.Rel]->S.B");
     });
+
+    it("omits the final target class when `omitTargetClass` is set", () => {
+      const result = CategoryDefinition.computeId({
+        path: [
+          {
+            sourceClassName: "BisCore:Element",
+            targetClassName: "BisCore:Model",
+            relationshipName: "BisCore:ModelContainsElements",
+            relationshipReverse: true,
+          },
+          {
+            sourceClassName: "BisCore:Model",
+            targetClassName: "BisCore:Element",
+            relationshipName: "BisCore:ModelModelsElement",
+          },
+        ],
+        omitTargetClass: true,
+      });
+      // Same as the full multi-step id, with the final target class (and its arrow) removed.
+      expect(result).to.equal(
+        "BisCore.Element-[!BisCore.ModelContainsElements]->BisCore.Model-[BisCore.ModelModelsElement]",
+      );
+    });
   });
 
   describe("create", () => {

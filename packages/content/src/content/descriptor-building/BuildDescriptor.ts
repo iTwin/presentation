@@ -21,6 +21,7 @@ import type { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/present
 import type { ContentConfiguration } from "../Content.js";
 import type { ContentSource } from "../ContentTarget.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
+import type { Field, PropertyField } from "../model/Field.js";
 
 /**
  * Props for {@link buildContentDescriptor}.
@@ -52,17 +53,16 @@ export async function buildContentDescriptor(props: BuildContentDescriptorProps)
   const imodelFieldsProvidersById = new Map(imodelFieldsProviders.map((provider) => [provider.id, provider]));
   const { getContribution } = createContributionMemoizer({ imodelAccess });
 
-  const perSource = await collectInParallel(sources, async (source) => {
+  const candidates = await collectInParallel(sources, async (source) => {
     const [direct, related] = await Promise.all([
       collectDirectPropertyFields({ imodelAccess, source }),
       collectRelatedPropertyFields({ imodelAccess, source, getContribution, imodelFieldsProvidersById }),
     ]);
-    return [
-      { fields: [...direct.fields, ...related.fields], categories: [...direct.categories, ...related.categories] },
-    ];
+    return [...direct, ...related];
   });
-  const propertyFields = mergePropertyFieldsByIdentity(perSource.flatMap(({ fields }) => fields));
-  const schemaCategories = perSource.flatMap((entry) => entry.categories);
+  // Merge keeps each field's category facts; `collectCategories` (below) is the single place that
+  // turns those facts into category ids and assigns `categoryId` (mutating the merged field objects).
+  const mergedPropertyFields = mergePropertyFieldsByIdentity(candidates);
 
   const [categories, calculatedFields] = await Promise.all([
     collectCategories({
@@ -71,12 +71,14 @@ export async function buildContentDescriptor(props: BuildContentDescriptorProps)
       imodelFieldsProviders,
       externalFieldsProviders,
       getContribution,
-      fields: propertyFields,
-      schemaCategories,
+      fields: mergedPropertyFields,
     }),
     collectCalculatedFields({ sources, imodelFieldsProviders, getContribution }),
   ]);
   const { fields: externalFields, inputs: externalInputs } = collectExternalFields(externalFieldsProviders);
+  const propertyFields: Record<Field["id"], PropertyField> = Object.fromEntries(
+    mergedPropertyFields.map(({ field }) => [field.id, field]),
+  );
 
   // Everything a transformer operates on — selectors are derived only after transforms run.
   const transformed: Pick<ContentDescriptor, "sources" | "fields" | "categories"> = {
