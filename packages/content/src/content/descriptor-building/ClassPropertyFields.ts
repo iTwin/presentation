@@ -18,7 +18,9 @@ type PropertyOverrides = NonNullable<ClassPropertySpec["overrides"]>[string];
  *
  * Shared by direct-property enumeration (zero-length `pathFromTarget`) and related-property
  * enumeration (a non-empty path to the class). The `spec` controls which properties are included
- * (`select`) and applies metadata overrides; direct enumeration passes `{ select: "all" }`.
+ * (`select`) and applies metadata overrides; direct enumeration passes `{ select: "all" }`. Pass
+ * `excludeInherited` to enumerate only the properties declared directly on `className` (used by
+ * direct-field enumeration to visit each declaring class exactly once).
  *
  * For each included property whose value type is supported:
  * - `propertyClassName` is the class that *declares* the property (may be a base class), so an
@@ -43,11 +45,14 @@ export async function collectClassPropertyFields(props: {
   valueClassNames: EC.FullClassName[];
   /** Property selection + overrides. Pass `{ select: "all" }` to include every property unchanged. */
   spec: ClassPropertySpec;
+  /** When `true`, enumerate only properties declared directly on `className` (exclude inherited ones). */
+  excludeInherited?: boolean;
 }): Promise<PropertyField[]> {
-  const { imodelAccess, className, pathFromTarget, valueClassNames, spec } = props;
+  const { imodelAccess, className, pathFromTarget, valueClassNames, spec, excludeInherited } = props;
   const ecClass = await getClass(imodelAccess, className);
   const fields: PropertyField[] = [];
-  for (const property of await ecClass.getProperties()) {
+  const properties = excludeInherited ? await ecClass.getOwnProperties() : await ecClass.getProperties();
+  for (const property of properties) {
     if (!isSelected(property.name, spec.select)) {
       continue;
     }
