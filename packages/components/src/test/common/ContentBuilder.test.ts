@@ -12,7 +12,12 @@ import {
   StructValue,
   PropertyValueFormat as UiPropertyValueFormat,
 } from "@itwin/appui-abstract";
-import { createContentTraverser, EnumerationInfo, PropertyValueFormat } from "@itwin/presentation-common";
+import {
+  createContentTraverser,
+  EnumerationInfo,
+  LabelDefinition,
+  PropertyValueFormat,
+} from "@itwin/presentation-common";
 import { PropertyValueConstraints, WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
 import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder.js";
 import {
@@ -311,36 +316,33 @@ describe("PropertyRecordsBuilder", () => {
     expect(builder.entries[0].value).toEqual({ valueFormat: UiPropertyValueFormat.Primitive });
   });
 
-  it("creates merged property record with quantity editor when field has kind of quantity", () => {
-    const fieldName = "test-field";
+  it("set navigation property display value", () => {
+    const fieldName = "nav-field";
     const descriptor = createTestContentDescriptor({
       fields: [
-        createTestPropertiesContentField({
+        createTestSimpleContentField({
           name: fieldName,
-          properties: [
-            {
-              property: {
-                classInfo: createTestECClassInfo(),
-                name: "test-props",
-                type: "double",
-                kindOfQuantity: { label: "Length", name: "testKOQ", persistenceUnit: "m" },
-              },
-            },
-          ],
+          type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Navigation },
         }),
       ],
     });
     const item = createTestContentItem({
-      values: {},
-      displayValues: { [fieldName]: "-- m" },
-      mergedFieldNames: [fieldName],
+      values: {
+        [fieldName]: {
+          id: "0x1",
+          className: "TestSchema:TestClass",
+          label: LabelDefinition.fromLabelString("Navigation Prop Label"),
+        },
+      },
+      displayValues: {},
     });
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries).toHaveLength(1);
-    expect(builder.entries[0].isMerged).toBe(true);
-    expect(builder.entries[0].property.editor?.name).toBe(QuantityEditorName);
-    expect(builder.entries[0].property.kindOfQuantityName).toBe("testKOQ");
-    expect(builder.entries[0].value).toEqual({ valueFormat: UiPropertyValueFormat.Primitive, displayValue: "-- m" });
+    expect(builder.entries[0].value).toEqual({
+      valueFormat: UiPropertyValueFormat.Primitive,
+      value: { id: "0x1", className: "TestSchema:TestClass" },
+      displayValue: "Navigation Prop Label",
+    });
   });
 
   it("sorts struct properties", () => {
