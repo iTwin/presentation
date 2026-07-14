@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { getClass } from "@itwin/presentation-shared";
+import { stableStringify } from "../../InternalUtils.js";
 import { CategoryDefinition } from "../../model/Category.js";
 import { hashString } from "../../model/Utils.js";
 import { convertECExpressionToECSql } from "../ecexpressions/ECExpressionToECSql.js";
@@ -523,16 +524,4 @@ async function mapCalculatedProperties(
       };
     }),
   );
-}
-
-/** Produces a stable JSON representation with sorted keys for hashing. */
-function stableStringify(value: unknown): string {
-  if (value === null || value === undefined || typeof value !== "object") {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(",")}]`;
-  }
-  const keys = Object.keys(value).sort();
-  return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify((value as Record<string, unknown>)[k])}`).join(",")}}`;
 }

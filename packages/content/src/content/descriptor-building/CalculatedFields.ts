@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { collectInParallel } from "../InternalUtils.js";
+import { collectInParallel, stableStringify } from "../InternalUtils.js";
 
 import type { ContentSource } from "../ContentTarget.js";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
@@ -15,8 +15,12 @@ import type { GetContribution } from "./ContributionMemoizer.js";
  *
  * Each provider's contribution (re-fetched per source target) may declare calculated fields — ECSQL
  * expressions evaluated in the query. A field's global id is `${providerId}:${localId}`, and its
- * `selectorId` equals that id (each calculated field backs its own selector). The same provider
- * contributes the same calculated fields for every target, so results are deduplicated by id.
+ * `selectorId` equals that id (each calculated field backs its own selector). A provider may
+ * contribute the same local id for several targets; because the id doubles as the selector id, the
+ * same calculated field must be one field/one selector across the descriptor. Declarations that
+ * collapse to the same id are therefore deduplicated, but only after asserting they are structurally
+ * identical — a divergence (different expression, type, category, etc. under one id) is a provider
+ * bug and throws, mirroring the intra-provider check in `mergePropertyFieldsByIdentity`.
  *
  * @internal
  */
@@ -53,7 +57,22 @@ export async function collectCalculatedFields(props: {
     if (declaration.categoryId !== undefined) {
       field.categoryId = declaration.categoryId;
     }
+
+    if (id in result && !calculatedFieldsAgree(result[id], field)) {
+      throw new Error(
+        `Cannot merge calculated field "${id}": provider "${providerId}" produced divergent declarations for one id across targets.`,
+      );
+    }
     result[id] = field;
   }
   return result;
+}
+
+/**
+ * Structural equality for two calculated fields that collapsed to the same id. The fields carry
+ * nested value shapes (`type`) and `bindings` records that cannot be compared by reference, so both
+ * are reduced to a canonical, key-sorted JSON form and compared as strings.
+ */
+function calculatedFieldsAgree(a: CalculatedField, b: CalculatedField): boolean {
+  return stableStringify(a) === stableStringify(b);
 }

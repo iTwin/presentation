@@ -112,4 +112,43 @@ describe("collectCalculatedFields", () => {
     });
     expect(Object.keys(fields)).to.deep.equal(["p_v1:calc"]);
   });
+
+  it("throws when a provider declares divergent calculated fields for one id across targets", async () => {
+    const provider: IModelFieldsProvider = {
+      id: "p_v1",
+      async getContribution({ target }) {
+        return {
+          calculatedFields: [
+            {
+              id: "calc",
+              label: "Calc",
+              expression: target.primaryClass === "TestSchema.A" ? "1" : "2",
+              type: {
+                kind: "struct",
+                members: [{ name: "m", label: "M", type: { kind: "primitive", type: "Integer" } }],
+              },
+            },
+          ],
+        };
+      },
+    };
+    await expect(
+      collectCalculatedFields({
+        sources: [
+          {
+            target: { primaryClass: "TestSchema.A" },
+            resolvedPrimaryClasses: ["TestSchema.A"],
+            resolvedDeclarations: [],
+          },
+          {
+            target: { primaryClass: "TestSchema.B" },
+            resolvedPrimaryClasses: ["TestSchema.B"],
+            resolvedDeclarations: [],
+          },
+        ],
+        imodelFieldsProviders: [provider],
+        getContribution,
+      }),
+    ).rejects.toThrow(/Cannot merge calculated field "p_v1:calc"/);
+  });
 });
