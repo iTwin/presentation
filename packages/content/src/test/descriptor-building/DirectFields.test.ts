@@ -162,6 +162,7 @@ describe("collectDirectPropertyFields", () => {
     const pumpMixin = createMixinClass({
       fullName: "TestSchema.HasFlowRate",
       ownProperties: [createPrimitiveProperty({ name: "FlowRate", declaringClassName: "TestSchema.HasFlowRate" })],
+      baseClass: sharedMixin,
     });
     const element = createEntityClass({ fullName: "TestSchema.Element", mixins: [sharedMixin] });
     const pump = createEntityClass({ fullName: "TestSchema.Pump", baseClass: element, mixins: [pumpMixin] });
