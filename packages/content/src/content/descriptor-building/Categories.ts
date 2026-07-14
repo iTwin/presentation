@@ -21,7 +21,8 @@ import type { GetContribution } from "./ContributionMemoizer.js";
  * 1. Collects every `CategoryDefinition` contributed by the configured iModel fields providers (for
  *    each source's target) and external fields providers, deduplicated by `id`. When several
  *    providers declare the same `id` with different metadata, the highest-priority provider wins
- *    (ties keep the first seen).
+ *    (ties keep the first seen). EC schema property categories referenced by the fields are added as
+ *    defaults — a provider-declared category with the same `id` overrides them.
  * 2. Auto-creates categories for **related** property fields that were not assigned a category by a
  *    provider. A category is created at each distinct field path terminal — i.e. where fields
  *    actually attach — and never at intermediate classes that carry no fields. Each such category
@@ -44,8 +45,18 @@ export async function collectCategories(props: {
   externalFieldsProviders: ExternalFieldsProvider[];
   getContribution: GetContribution;
   fields: Record<PropertyField["id"], PropertyField>;
+  /** EC schema property categories referenced by the enumerated property fields (id/label/parentId). */
+  schemaCategories?: CategoryDefinition[];
 }): Promise<Record<CategoryDefinition["id"], CategoryDefinition>> {
-  const { imodelAccess, sources, imodelFieldsProviders, externalFieldsProviders, getContribution, fields } = props;
+  const {
+    imodelAccess,
+    sources,
+    imodelFieldsProviders,
+    externalFieldsProviders,
+    getContribution,
+    fields,
+    schemaCategories = [],
+  } = props;
   const registry = new Map<CategoryDefinition["id"], { category: CategoryDefinition; priority: number }>();
 
   // 1. Provider-contributed categories (higher priority wins on conflict).
@@ -74,15 +85,32 @@ export async function collectCategories(props: {
     }
   }
 
+  // EC schema property categories are defaults: a provider-declared category with the same id wins,
+  // so they only register when the id is not already taken.
+  for (const category of schemaCategories) {
+    if (!registry.has(category.id)) {
+      registry.set(category.id, { category, priority: DEFAULT_FIELDS_PROVIDER_PRIORITY });
+    }
+  }
+
   // 2. Auto-create categories at each related field's path terminal, nested by segment. The distinct
-  //    field paths are the "segment terminals"; a class with no fields gets no category.
+  //    field paths are the "segment terminals"; a class with no fields gets no category. A related
+  //    field with no category attaches directly to its path category; one carrying a schema property
+  //    category keeps that (sub-)category but still needs its path category created as the parent.
+  const schemaCategoryIds = new Set(schemaCategories.map((category) => category.id));
   const terminals = new Map<CategoryDefinition["id"], RelationshipPath>();
   for (const field of Object.values(fields)) {
-    if (field.pathFromTarget.length === 0 || field.categoryId !== undefined) {
+    if (field.pathFromTarget.length === 0) {
+      continue;
+    }
+    if (field.categoryId !== undefined && !schemaCategoryIds.has(field.categoryId)) {
+      // Provider/override category fully controls placement — no path category is implied.
       continue;
     }
     const id = CategoryDefinition.computeId({ path: field.pathFromTarget });
-    field.categoryId = id;
+    if (field.categoryId === undefined) {
+      field.categoryId = id;
+    }
     terminals.set(id, field.pathFromTarget);
   }
   const labelsToResolve: Array<{ category: CategoryDefinition; className: EC.FullClassName }> = [];

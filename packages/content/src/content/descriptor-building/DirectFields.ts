@@ -8,6 +8,7 @@ import { collectClassPropertyFields } from "./ClassPropertyFields.js";
 
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
+import type { CategoryDefinition } from "../model/Category.js";
 import type { PropertyField } from "../model/Field.js";
 
 /**
@@ -31,7 +32,7 @@ import type { PropertyField } from "../model/Field.js";
 export async function collectDirectPropertyFields(props: {
   imodelAccess: ECSchemaProvider;
   source: ContentSource;
-}): Promise<Array<{ field: PropertyField }>> {
+}): Promise<{ fields: Array<{ field: PropertyField }>; categories: CategoryDefinition[] }> {
   const { imodelAccess, source } = props;
   const concreteClassNames =
     source.resolvedPrimaryClasses.length > 0
@@ -44,6 +45,7 @@ export async function collectDirectPropertyFields(props: {
   const derivedConcretesByDeclaringClass = await collectDeclaringClassClosure(imodelAccess, concreteClassNames);
 
   const fields: PropertyField[] = [];
+  const categories = new Map<CategoryDefinition["id"], CategoryDefinition>();
   await Promise.all(
     [...derivedConcretesByDeclaringClass].map(async ([declaringClass, derivedConcretes]) => {
       const result = await collectClassPropertyFields({
@@ -55,11 +57,14 @@ export async function collectDirectPropertyFields(props: {
         spec: { select: "all" },
         excludeInherited: true,
       });
-      fields.push(...result);
+      fields.push(...result.fields);
+      for (const category of result.categories) {
+        categories.set(category.id, category);
+      }
     }),
   );
 
-  return fields.map((field) => ({ field }));
+  return { fields: fields.map((field) => ({ field })), categories: [...categories.values()] };
 }
 
 /**

@@ -18,13 +18,18 @@ function createSingleClassIModelAccess(fullName: EC.FullClassName, properties: E
   return createSchemaAccess([createEntityClass({ fullName, properties })]);
 }
 
+/** Calls the collector and returns just the produced fields (dropping schema categories). */
+async function collectFields(props: Parameters<typeof collectClassPropertyFields>[0]): Promise<PropertyField[]> {
+  return (await collectClassPropertyFields(props)).fields;
+}
+
 describe("collectClassPropertyFields", () => {
   it("enumerates all selected properties with the given path and value classes", async () => {
     const imodelAccess = createSingleClassIModelAccess("TestSchema.B", [
       createPrimitiveProperty({ name: "Prop", primitiveType: "String", declaringClassName: "TestSchema.B" }),
     ]);
 
-    const fields = await collectClassPropertyFields({
+    const fields = await collectFields({
       imodelAccess,
       className: "TestSchema.B",
       pathFromTarget: path,
@@ -58,7 +63,7 @@ describe("collectClassPropertyFields", () => {
       createPrimitiveProperty({ name: "gamma", label: "Prop Gamma", declaringClassName: "TestSchema.C" }),
     ]);
 
-    const fields = await collectClassPropertyFields({
+    const fields = await collectFields({
       imodelAccess,
       className: "TestSchema.C",
       pathFromTarget: [],
@@ -75,7 +80,7 @@ describe("collectClassPropertyFields", () => {
       createPrimitiveProperty({ name: "Geom", primitiveType: "IGeometry", declaringClassName: "TestSchema.C" }),
     ]);
 
-    const fields = await collectClassPropertyFields({
+    const fields = await collectFields({
       imodelAccess,
       className: "TestSchema.C",
       pathFromTarget: [],
@@ -91,7 +96,7 @@ describe("collectClassPropertyFields", () => {
       createPrimitiveProperty({ name: "UserLabel", declaringClassName: "BisCore.Element" }),
     ]);
 
-    const [field] = await collectClassPropertyFields({
+    const [field] = await collectFields({
       imodelAccess,
       className: "TestSchema.Derived",
       pathFromTarget: [],
@@ -107,7 +112,7 @@ describe("collectClassPropertyFields", () => {
     async function selectNames(
       select: NonNullable<Parameters<typeof collectClassPropertyFields>[0]["spec"]>["select"],
     ) {
-      const fields = await collectClassPropertyFields({
+      const fields = await collectFields({
         imodelAccess: createSingleClassIModelAccess("TestSchema.C", [
           createPrimitiveProperty({ name: "A", declaringClassName: "TestSchema.C" }),
           createPrimitiveProperty({ name: "B", declaringClassName: "TestSchema.C" }),
@@ -145,7 +150,7 @@ describe("collectClassPropertyFields", () => {
         createPrimitiveProperty({ name: "B", declaringClassName: "TestSchema.C" }),
       ]);
 
-      const fields = await collectClassPropertyFields({
+      const fields = await collectFields({
         imodelAccess,
         className: "TestSchema.C",
         pathFromTarget: [],
@@ -166,7 +171,7 @@ describe("collectClassPropertyFields", () => {
         createPrimitiveProperty({ name: "beta", declaringClassName: "TestSchema.C" }),
       ]);
 
-      const fields = await collectClassPropertyFields({
+      const fields = await collectFields({
         imodelAccess,
         className: "TestSchema.C",
         pathFromTarget: [],
@@ -191,7 +196,7 @@ describe("collectClassPropertyFields", () => {
         createPrimitiveProperty({ name: "A", declaringClassName: "TestSchema.C" }),
       ]);
 
-      const [field] = await collectClassPropertyFields({
+      const [field] = await collectFields({
         imodelAccess,
         className: "TestSchema.C",
         pathFromTarget: [],
@@ -202,6 +207,70 @@ describe("collectClassPropertyFields", () => {
       expect(field).to.not.have.property("categoryId");
       expect(field).to.not.have.property("readOnly");
       expect(field).to.not.have.property("hidden");
+    });
+  });
+
+  describe("schema property category", () => {
+    it("uses the EC schema property category directly for a direct property", async () => {
+      const imodelAccess = createSingleClassIModelAccess("TestSchema.C", [
+        createPrimitiveProperty({
+          name: "A",
+          declaringClassName: "TestSchema.C",
+          category: { fullName: "TestSchema.Geometry", label: "Geometry" },
+        }),
+      ]);
+
+      const { fields, categories } = await collectClassPropertyFields({
+        imodelAccess,
+        className: "TestSchema.C",
+        pathFromTarget: [],
+        valueClassNames: ["TestSchema.C"],
+        spec: { select: "all" },
+      });
+
+      expect(fields[0].categoryId).to.equal("TestSchema.Geometry");
+      expect(categories).to.deep.equal([{ id: "TestSchema.Geometry", label: "Geometry" }]);
+    });
+
+    it("falls back to the schema category's name when it has no label", async () => {
+      const imodelAccess = createSingleClassIModelAccess("TestSchema.C", [
+        createPrimitiveProperty({
+          name: "A",
+          declaringClassName: "TestSchema.C",
+          category: { fullName: "TestSchema.Geometry" },
+        }),
+      ]);
+
+      const { categories } = await collectClassPropertyFields({
+        imodelAccess,
+        className: "TestSchema.C",
+        pathFromTarget: [],
+        valueClassNames: ["TestSchema.C"],
+        spec: { select: "all" },
+      });
+
+      expect(categories).to.deep.equal([{ id: "TestSchema.Geometry", label: "Geometry" }]);
+    });
+
+    it("lets an explicit override category win over the schema property category", async () => {
+      const imodelAccess = createSingleClassIModelAccess("TestSchema.C", [
+        createPrimitiveProperty({
+          name: "prop",
+          declaringClassName: "TestSchema.C",
+          category: { fullName: "TestSchema.Geometry", label: "Geometry" },
+        }),
+      ]);
+
+      const { fields, categories } = await collectClassPropertyFields({
+        imodelAccess,
+        className: "TestSchema.C",
+        pathFromTarget: [],
+        valueClassNames: ["TestSchema.C"],
+        spec: { select: "all", overrides: { prop: { categoryId: "custom" } } },
+      });
+
+      expect(fields[0].categoryId).to.equal("custom");
+      expect(categories).to.deep.equal([]);
     });
   });
 });

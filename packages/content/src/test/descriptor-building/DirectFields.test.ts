@@ -24,7 +24,7 @@ function createSource(props: {
 
 /** Calls the enumerator and unwraps the merge candidates to their fields. */
 async function enumerate(props: Parameters<typeof collectDirectPropertyFields>[0]): Promise<PropertyField[]> {
-  return (await collectDirectPropertyFields(props)).map((candidate) => candidate.field);
+  return (await collectDirectPropertyFields(props)).fields.map(({ field }) => field);
 }
 
 describe("collectDirectPropertyFields", () => {
@@ -127,5 +127,28 @@ describe("collectDirectPropertyFields", () => {
     // Each subclass-declared property is attributed to just its own concrete class.
     expect(byName.get("FlowRate")?.valueClassNames).to.deep.equal(["TestSchema.Pump"]);
     expect(byName.get("Diameter")?.valueClassNames).to.deep.equal(["TestSchema.Valve"]);
+  });
+
+  it("returns the EC schema property categories referenced by the direct fields", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.Element",
+        ownProperties: [
+          createPrimitiveProperty({
+            name: "CodeValue",
+            declaringClassName: "TestSchema.Element",
+            category: { fullName: "TestSchema.Identity", label: "Identity" },
+          }),
+        ],
+      }),
+    ]);
+
+    const { fields, categories } = await collectDirectPropertyFields({
+      imodelAccess,
+      source: createSource({ primaryClass: "TestSchema.Element", resolvedPrimaryClasses: ["TestSchema.Element"] }),
+    });
+
+    expect(fields[0].field.categoryId).to.equal("TestSchema.Identity");
+    expect(categories).to.deep.equal([{ id: "TestSchema.Identity", label: "Identity" }]);
   });
 });

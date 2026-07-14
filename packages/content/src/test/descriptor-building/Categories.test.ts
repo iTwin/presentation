@@ -350,6 +350,56 @@ describe("collectCategories", () => {
     expect(categories[id].label).to.equal("Provider Category");
     expect(field.categoryId).to.equal(id);
   });
+
+  it("auto-creates the path category as the parent of a related field's schema category", async () => {
+    // A related field carrying a schema property category keeps that (sub-)category, but the path
+    // category it nests under must still be auto-created — unlike an override category, which suppresses it.
+    const parentId = CategoryDefinition.computeId({ path: [aToB] });
+    const field = createRelatedField({ pathFromTarget: [aToB], categoryId: "TestSchema.Geometry" });
+    const categories = await collectCategories({
+      imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B", label: "B Label" })]),
+      sources: [createSource()],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [],
+      getContribution,
+      fields: { field },
+      schemaCategories: [{ id: "TestSchema.Geometry", label: "Geometry", parentId }],
+    });
+    expect(field.categoryId).to.equal("TestSchema.Geometry");
+    expect(categories["TestSchema.Geometry"]).to.deep.equal({ id: "TestSchema.Geometry", label: "Geometry", parentId });
+    expect(categories[parentId]).to.deep.equal({ id: parentId, label: "B Label" });
+  });
+
+  describe("schema property categories", () => {
+    it("registers schema property categories referenced by fields", async () => {
+      const categories = await collectCategories({
+        imodelAccess: createSchemaAccess([]),
+        sources: [createSource()],
+        imodelFieldsProviders: [],
+        externalFieldsProviders: [],
+        getContribution,
+        fields: {},
+        schemaCategories: [{ id: "TestSchema.Geometry", label: "Geometry" }],
+      });
+      expect(categories).to.deep.equal({ "TestSchema.Geometry": { id: "TestSchema.Geometry", label: "Geometry" } });
+    });
+
+    it("lets a provider category override a schema property category with the same id", async () => {
+      const provider = createProvider("p_v1", {
+        "TestSchema.Geometry": { id: "TestSchema.Geometry", label: "Provider Geometry" },
+      });
+      const categories = await collectCategories({
+        imodelAccess: createSchemaAccess([]),
+        sources: [createSource()],
+        imodelFieldsProviders: [provider],
+        externalFieldsProviders: [],
+        getContribution,
+        fields: {},
+        schemaCategories: [{ id: "TestSchema.Geometry", label: "Schema Geometry" }],
+      });
+      expect(categories["TestSchema.Geometry"].label).to.equal("Provider Geometry");
+    });
+  });
 });
 
 describe("pruneUnreferencedCategories", () => {
