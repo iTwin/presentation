@@ -347,8 +347,8 @@ export async function resolveContentSourcesImpl(props: {
   targets: ContentTarget[];
   imodelFieldsProviders: IModelFieldsProvider[];
 }): Promise<ContentSource[]> {
-  if (props.targets.length === 0 || props.imodelFieldsProviders.length === 0) {
-    return props.targets.map((target) => ({ target, resolvedPrimaryClasses: [], resolvedDeclarations: [] }));
+  if (props.targets.length === 0) {
+    return [];
   }
 
   return lastValueFrom(

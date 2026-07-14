@@ -59,6 +59,8 @@ export function createEntityClass(props: {
   baseClass?: EC.Class;
   /** Mixins applied directly to the class. */
   mixins?: EC.Mixin[];
+  /** Classes that derive directly or indirectly from this class. */
+  derivedClasses?: EC.Class[];
 }): EC.EntityClass {
   const normalized = normalizeFullClassName(props.fullName);
   const dotIndex = normalized.indexOf(".");
@@ -79,7 +81,7 @@ export function createEntityClass(props: {
     isStructClass: () => false,
     isMixin: () => false,
     getMixins: async () => props.mixins ?? [],
-    getDerivedClasses: async () => [],
+    getDerivedClasses: async () => props.derivedClasses ?? [],
     getCustomAttributes: async () => new Map() as unknown as EC.CustomAttributeSet,
   } as unknown as EC.EntityClass;
 }

@@ -97,8 +97,31 @@ describe("resolveContentSources", () => {
       const targets: ContentTarget[] = [targetA, { primaryClass: "TestSchema.ClassB" }];
       const result = await resolveContentSources({ imodelAccess: createMockIModelAccess(), targets });
       expect(result).to.have.length(2);
-      expect(result[0]).to.deep.equal({ target: targets[0], resolvedPrimaryClasses: [], resolvedDeclarations: [] });
-      expect(result[1]).to.deep.equal({ target: targets[1], resolvedPrimaryClasses: [], resolvedDeclarations: [] });
+      expect(result[0]).to.deep.equal({
+        target: targets[0],
+        resolvedPrimaryClasses: ["TestSchema.ClassA"],
+        resolvedDeclarations: [],
+      });
+      expect(result[1]).to.deep.equal({
+        target: targets[1],
+        resolvedPrimaryClasses: ["TestSchema.ClassB"],
+        resolvedDeclarations: [],
+      });
+    });
+
+    it("resolves polymorphic primary classes when no providers are configured", async () => {
+      const imodelAccess = createMockIModelAccess({
+        derivedClasses: { "TestSchema.ClassA": ["TestSchema.ConcreteA"] },
+        primaryClassScanResults: [{ 0: "TestSchema.ConcreteA" }],
+      });
+
+      const [result] = await resolveContentSources({ imodelAccess, targets: [targetA] });
+
+      expect(result).to.deep.equal({
+        target: targetA,
+        resolvedPrimaryClasses: ["TestSchema.ConcreteA"],
+        resolvedDeclarations: [],
+      });
     });
 
     it("returns empty resolvedDeclarations when provider returns undefined", async () => {
