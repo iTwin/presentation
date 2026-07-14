@@ -44,6 +44,7 @@
     // Lithuanian word
     "kita",
     "lage",
+    "memoizer",
     "millis",
     "montecarlo",
     // Lithuanian word
@@ -63,6 +64,8 @@
     "sublabel",
     "tsdown",
     "txns",
+    "unioned",
+    "unioning",
     "unregisters",
     "unsubscription",
     "USCUSTOM",
