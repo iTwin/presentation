@@ -54,6 +54,7 @@ export function createTestSimpleContentField(props?: {
   priority?: number;
   editor?: EditorDescription;
   renderer?: RendererDescription;
+  extendedData?: { [key: string]: any };
 }) {
   return new Field({
     ...props,
@@ -115,6 +116,7 @@ export function createTestNestedContentField(props: {
   editor?: EditorDescription;
   renderer?: RendererDescription;
   relationshipMeaning?: RelationshipMeaning;
+  extendedData?: { [key: string]: any };
 }) {
   const nestedContentFieldType: StructTypeDescription = {
     valueFormat: PropertyValueFormat.Struct,
@@ -134,6 +136,7 @@ export function createTestNestedContentField(props: {
     editor: props.editor,
     autoExpand: !!props.autoExpand,
     renderer: props.renderer,
+    extendedData: props.extendedData,
   });
   if (props.relationshipMeaning) {
     field.relationshipMeaning = props.relationshipMeaning;

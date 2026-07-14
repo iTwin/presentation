@@ -1,5 +1,13 @@
 # @itwin/presentation-hierarchies
 
+## 1.7.17
+
+### Patch Changes
+
+- [#1400](https://github.com/iTwin/presentation/pull/1400): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.17
+
 ## 1.7.16
 
 ### Patch Changes

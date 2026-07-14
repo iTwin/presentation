@@ -120,6 +120,63 @@ describe("PropertyRecordsBuilder", () => {
     expect(builder.entries[0].extendedData).toEqual(extendedData);
   });
 
+  it("sets extended data from field", () => {
+    const fieldExtendedData = { fieldValue: 456 };
+    const descriptor = createTestContentDescriptor({
+      fields: [createTestSimpleContentField({ extendedData: fieldExtendedData })],
+    });
+    const item = createTestContentItem({ values: {}, displayValues: {} });
+    createContentTraverser(builder)(descriptor, [item]);
+    expect(builder.entries).toHaveLength(1);
+    expect(builder.entries[0].extendedData).toEqual(fieldExtendedData);
+  });
+
+  it("merges extended data from field and item", () => {
+    const fieldExtendedData = { fieldValue: 456 };
+    const itemExtendedData = { itemValue: 123 };
+    const descriptor = createTestContentDescriptor({
+      fields: [createTestSimpleContentField({ extendedData: fieldExtendedData })],
+    });
+    const item = createTestContentItem({ values: {}, displayValues: {}, extendedData: itemExtendedData });
+    createContentTraverser(builder)(descriptor, [item]);
+    expect(builder.entries).toHaveLength(1);
+    expect(builder.entries[0].extendedData).toEqual({ ...fieldExtendedData, ...itemExtendedData });
+  });
+
+  it("sets extended data from nested content field on struct and array records", () => {
+    const category = createTestCategoryDescription();
+    const fieldExtendedData = { fieldValue: 456 };
+    const descriptor = createTestContentDescriptor({
+      fields: [
+        createTestNestedContentField({
+          name: "parent",
+          category,
+          extendedData: fieldExtendedData,
+          nestedFields: [createTestSimpleContentField({ name: "child", category })],
+        }),
+      ],
+    });
+    const item = createTestContentItem({
+      values: {
+        parent: [
+          {
+            primaryKeys: [createTestECInstanceKey()],
+            values: { child: "value" },
+            displayValues: { child: "display value" },
+            mergedFieldNames: [],
+          },
+        ],
+      },
+      displayValues: {},
+    });
+    createContentTraverser(builder)(descriptor, [item]);
+    expect(builder.entries).toHaveLength(1);
+    const arrayRecord = builder.entries[0];
+    expect(arrayRecord.extendedData).toEqual(fieldExtendedData);
+    const structRecord = (arrayRecord.value as ArrayValue).items[0];
+    expect(structRecord.extendedData).toEqual(fieldExtendedData);
+  });
+
   it("sets `autoExpand` flag for nested content field based property records", () => {
     const category = createTestCategoryDescription();
     const descriptor = createTestContentDescriptor({

@@ -14,6 +14,12 @@ overrides:
   "@opentelemetry/otlp-transformer>protobufjs": ^8.0.2
   "uuid@<14": ^14.0.0
 
+packageExtensions:
+  'mocha-junit-reporter@*':
+    peerDependenciesMeta:
+      mocha:
+        optional: true
+
 autoInstallPeers: true
 
 catalogs:
@@ -25,15 +31,15 @@ catalogs:
   build-tools:
     '@itwin/build-tools': ^5.11.2
     '@itwin/eslint-plugin': ^6.1.0
-    '@types/node': ^24.13.2
-    '@vitejs/plugin-react': ^6.0.2
+    '@types/node': ^24.13.3
+    '@vitejs/plugin-react': ^6.0.3
     cpx2: ^7.0.2
     cross-env: ^7.0.3
-    eslint: ^9.39.4
+    eslint: ^9.39.5
     eslint-plugin-react: ^7.37.5
     rimraf: ^6.1.3
     typescript: ~6.0.3
-    vite: ^8.0.16
+    vite: ^8.1.4
   itwinjs-core:
     '@itwin/core-bentley': ^5.11.2
     '@itwin/core-common': ^5.11.2
@@ -76,9 +82,9 @@ catalogs:
     '@testing-library/dom': ^10.4.1
     '@testing-library/react': ^16.3.2
     '@testing-library/user-event': ^14.6.1
-    '@vitest/coverage-v8': ^4.1.8
-    happy-dom: ^20.10.3
-    vitest: ^4.1.8
+    '@vitest/coverage-v8': ^4.1.10
+    happy-dom: ^20.10.6
+    vitest: ^4.1.10
 
 hoistPattern:
   - '!*'

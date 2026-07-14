@@ -359,7 +359,7 @@ function applyPropertyRecordAttributes(
   record: WithIModelKey<PropertyRecord>,
   field: Field,
   displayValue: string | undefined,
-  extendedData: typeof Item.prototype.extendedData,
+  itemExtendedData: typeof Item.prototype.extendedData,
   propertyRecordsProcessor?: (record: PropertyRecord) => void,
 ) {
   if (displayValue) {
@@ -371,8 +371,8 @@ function applyPropertyRecordAttributes(
   if (field.isNestedContentField() && field.autoExpand) {
     record.autoExpand = true;
   }
-  if (extendedData) {
-    record.extendedData = extendedData;
+  if (field.extendedData || itemExtendedData) {
+    record.extendedData = { ...field.extendedData, ...itemExtendedData };
   }
   propertyRecordsProcessor?.(record);
 }
