@@ -57,7 +57,9 @@ export function createEntityClass(props: {
   ownProperties?: EC.Property[];
   /** The class this one derives from, resolved by `baseClass`. */
   baseClass?: EC.Class;
-}): EC.Class {
+  /** Mixins applied directly to the class. */
+  mixins?: EC.Mixin[];
+}): EC.EntityClass {
   const normalized = normalizeFullClassName(props.fullName);
   const dotIndex = normalized.indexOf(".");
   const schemaName = normalized.slice(0, dotIndex);
@@ -76,9 +78,36 @@ export function createEntityClass(props: {
     isRelationshipClass: () => false,
     isStructClass: () => false,
     isMixin: () => false,
+    getMixins: async () => props.mixins ?? [],
     getDerivedClasses: async () => [],
     getCustomAttributes: async () => new Map() as unknown as EC.CustomAttributeSet,
-  } as unknown as EC.Class;
+  } as unknown as EC.EntityClass;
+}
+
+/** Creates a mixin class stub for tests. */
+export function createMixinClass(props: {
+  fullName: EC.FullClassName;
+  ownProperties?: EC.Property[];
+  baseClass?: EC.Class;
+}): EC.Mixin {
+  const normalized = normalizeFullClassName(props.fullName);
+  const dotIndex = normalized.indexOf(".");
+  return {
+    schema: { name: normalized.slice(0, dotIndex) } as unknown as EC.Schema,
+    fullName: props.fullName,
+    name: normalized.slice(dotIndex + 1),
+    baseClass: Promise.resolve(props.baseClass),
+    is: async () => false,
+    getProperty: async (name: string) => props.ownProperties?.find((property) => property.name === name),
+    getProperties: async () => props.ownProperties ?? [],
+    getOwnProperties: async () => props.ownProperties ?? [],
+    isEntityClass: () => false,
+    isRelationshipClass: () => false,
+    isStructClass: () => false,
+    isMixin: () => true,
+    getDerivedClasses: async () => [],
+    getCustomAttributes: async () => new Map() as unknown as EC.CustomAttributeSet,
+  } as unknown as EC.Mixin;
 }
 
 /**

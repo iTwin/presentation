@@ -225,6 +225,24 @@ describe("createECClass", () => {
     expect(typeof result.is === "function").toBe(true);
   });
 
+  it("gets mixins applied to an entity class", async () => {
+    const coreClass = {
+      fullName: "s.c",
+      name: "c",
+      schemaItemType: SchemaItemType.EntityClass,
+      mixins: [Promise.resolve({ fullName: "s.m", name: "m", schemaItemType: SchemaItemType.Mixin })],
+    } as unknown as CoreClass;
+
+    const result = createECClass(coreClass, schema);
+    expect(result.isEntityClass()).toBe(true);
+    if (!result.isEntityClass()) {
+      throw new Error("Expected an entity class.");
+    }
+    const mixins = await result.getMixins();
+    expect(mixins.map((mixin) => mixin.fullName)).toEqual(["s.m"]);
+    expect(mixins[0].isMixin()).toBe(true);
+  });
+
   it("creates relationship class from core class", async () => {
     const coreClass = {
       fullName: "s.c",

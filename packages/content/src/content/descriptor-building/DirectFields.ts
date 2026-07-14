@@ -63,11 +63,9 @@ export async function collectDirectPropertyFields(props: {
 
 /**
  * Maps each declaring class in the given concrete classes' closure — each concrete class plus every
- * ancestor reachable through its `baseClass` chain — to the concretes that derive from (or equal)
- * it. Because walking a concrete's `baseClass` chain visits exactly the classes it derives from, the
- * derivation relationship falls out of the same traversal, with no extra hierarchy lookups. Names
- * are normalized, which both deduplicates the closure and suits the consumer (`getClass` accepts
- * either notation).
+ * base class and applied mixin reachable from it — to the concretes that derive from (or equal) it.
+ * Names are normalized, which both deduplicates the closure and suits the consumer (`getClass`
+ * accepts either notation).
  */
 async function collectDeclaringClassClosure(
   imodelAccess: ECSchemaProvider,
@@ -76,16 +74,28 @@ async function collectDeclaringClassClosure(
   const closure = new Map<EC.FullClassNameDotNotation, Set<EC.FullClassNameDotNotation>>();
   await Promise.all(
     concreteClassNames.map(async (concreteClassName) => {
-      let ecClass: EC.Class | undefined = await getClass(imodelAccess, concreteClassName);
-      while (ecClass) {
+      const pending: EC.Class[] = [await getClass(imodelAccess, concreteClassName)];
+      const visited = new Set<EC.FullClassNameDotNotation>();
+      while (pending.length > 0) {
+        const ecClass = pending.pop()!;
         const declaringClassName = normalizeFullClassName(ecClass.fullName);
+        if (visited.has(declaringClassName)) {
+          continue;
+        }
+        visited.add(declaringClassName);
         let derivedConcretes = closure.get(declaringClassName);
         if (!derivedConcretes) {
           derivedConcretes = new Set();
           closure.set(declaringClassName, derivedConcretes);
         }
         derivedConcretes.add(concreteClassName);
-        ecClass = await ecClass.baseClass;
+        const baseClass = await ecClass.baseClass;
+        if (baseClass) {
+          pending.push(baseClass);
+        }
+        if (ecClass.isEntityClass()) {
+          pending.push(...(await ecClass.getMixins()));
+        }
       }
     }),
   );

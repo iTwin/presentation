@@ -143,7 +143,10 @@ export namespace EC {
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/entityclass/
    * @public
    */
-  export type EntityClass = Class;
+  export interface EntityClass extends Class {
+    /** Gets the mixins applied directly to this entity class. */
+    getMixins(): Promise<Mixin[]>;
+  }
 
   /**
    * Represents a struct class.

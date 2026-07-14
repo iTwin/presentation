@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { collectDirectPropertyFields } from "../../content/descriptor-building/DirectFields.js";
-import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
+import { createEntityClass, createMixinClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
 
 import type { EC } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
@@ -127,6 +127,54 @@ describe("collectDirectPropertyFields", () => {
     // Each subclass-declared property is attributed to just its own concrete class.
     expect(byName.get("FlowRate")?.valueClassNames).to.deep.equal(["TestSchema.Pump"]);
     expect(byName.get("Diameter")?.valueClassNames).to.deep.equal(["TestSchema.Valve"]);
+  });
+
+  it("enumerates properties from a mixin applied to a leaf class", async () => {
+    const mixin = createMixinClass({
+      fullName: "TestSchema.HasCode",
+      ownProperties: [createPrimitiveProperty({ name: "Code", declaringClassName: "TestSchema.HasCode" })],
+    });
+    const element = createEntityClass({
+      fullName: "TestSchema.Element",
+      ownProperties: [createPrimitiveProperty({ name: "Label", declaringClassName: "TestSchema.Element" })],
+      mixins: [mixin],
+    });
+
+    const fields = await enumerate({
+      imodelAccess: createSchemaAccess([element, mixin]),
+      source: createSource({ primaryClass: element.fullName, resolvedPrimaryClasses: [element.fullName] }),
+    });
+
+    expect(fields.map((field) => field.propertyName)).to.have.members(["Label", "Code"]);
+    expect(fields.find((field) => field.propertyName === "Code")).to.include({
+      propertyClassName: "TestSchema.HasCode",
+    });
+    expect(fields.find((field) => field.propertyName === "Code")?.valueClassNames).to.deep.equal([
+      "TestSchema.Element",
+    ]);
+  });
+
+  it("attributes shared and concrete-specific mixin properties to the applicable concrete classes", async () => {
+    const sharedMixin = createMixinClass({
+      fullName: "TestSchema.HasCode",
+      ownProperties: [createPrimitiveProperty({ name: "Code", declaringClassName: "TestSchema.HasCode" })],
+    });
+    const pumpMixin = createMixinClass({
+      fullName: "TestSchema.HasFlowRate",
+      ownProperties: [createPrimitiveProperty({ name: "FlowRate", declaringClassName: "TestSchema.HasFlowRate" })],
+    });
+    const element = createEntityClass({ fullName: "TestSchema.Element", mixins: [sharedMixin] });
+    const pump = createEntityClass({ fullName: "TestSchema.Pump", baseClass: element, mixins: [pumpMixin] });
+    const valve = createEntityClass({ fullName: "TestSchema.Valve", baseClass: element });
+
+    const fields = await enumerate({
+      imodelAccess: createSchemaAccess([element, pump, valve, sharedMixin, pumpMixin]),
+      source: createSource({ primaryClass: element.fullName, resolvedPrimaryClasses: [pump.fullName, valve.fullName] }),
+    });
+
+    const byName = new Map(fields.map((field) => [field.propertyName, field]));
+    expect(byName.get("Code")?.valueClassNames).to.deep.equal(["TestSchema.Pump", "TestSchema.Valve"]);
+    expect(byName.get("FlowRate")?.valueClassNames).to.deep.equal(["TestSchema.Pump"]);
   });
 
   it("reports each direct field's category facts with a `none` anchor", async () => {
