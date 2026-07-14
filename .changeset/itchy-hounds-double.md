@@ -2,8 +2,6 @@
 "@itwin/presentation-components": major
 ---
 
-Removed deprecated APIs:
-
 Removed deprecated exports:
 - `PresentationTreeNodeLoaderProps` - use `usePresentationTreeState` instead.
 - `PresentationTreeNodeLoaderResult` - use `usePresentationTreeState` instead.
