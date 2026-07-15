@@ -1,5 +1,13 @@
 # @itwin/unified-selection
 
+## 1.8.3
+
+### Patch Changes
+
+- [#1430](https://github.com/iTwin/presentation/pull/1430): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.18
+
 ## 1.8.2
 
 ### Patch Changes

@@ -1,5 +1,119 @@
 # Change Log - @itwin/presentation-components
 
+## 6.0.0
+
+### Major Changes
+
+- [#1365](https://github.com/iTwin/presentation/pull/1365): Dropped CommonJS modules support.
+- [#1365](https://github.com/iTwin/presentation/pull/1365): Removed deprecated APIs.
+
+  Removed deprecated exports:
+
+  - `PresentationTreeNodeLoaderProps` - use `usePresentationTreeState` instead.
+  - `PresentationTreeNodeLoaderResult` - use `usePresentationTreeState` instead.
+  - `usePresentationTreeNodeLoader` - use `usePresentationTreeState` instead.
+  - `useRulesetRegistration` - use `Presentation.presentation.rulesets().add(ruleset)` directly.
+  - `useUnifiedSelectionTreeEventHandler` - use `usePresentationTreeState` with `UsePresentationTreeProps.eventHandlerFactory`, or manually create and dispose `UnifiedSelectionTreeEventHandler`.
+
+  Removed deprecated members:
+
+  - `ContentDataProvider.getFieldByPropertyRecord` - use `ContentDataProvider.getFieldByPropertyDescription` instead.
+  - `IContentDataProvider.getFieldByPropertyRecord` - use `IContentDataProvider.getFieldByPropertyDescription` instead.
+  - `IPresentationTreeDataProvider.getNodeKey` - use `isPresentationTreeNodeItem` and `PresentationTreeNodeItem.key` to get the `NodeKey`.
+  - `PresentationTreeDataProvider.getNodeKey` - use `isPresentationTreeNodeItem` and `PresentationTreeNodeItem.key` to get the `NodeKey`.
+  - `PresentationTreeDataProviderDataSourceEntryPoints.getNodesCount` - the entry point is not used anymore, its usage has been replaced by `getNodesIterator`.
+  - `UnifiedSelectionTreeEventHandler.getNodeKey` - use `isPresentationTreeNodeItem` and `PresentationTreeNodeItem.key` to get the `NodeKey`.
+
+- [#1365](https://github.com/iTwin/presentation/pull/1365): Removed values formatting in `ContentDataProvider`. This leaves values formatting up to UI components presenting them. AppUI property renderers and editors already perform this formatting, so consumers using those components are not affected by this change.
+- [#1365](https://github.com/iTwin/presentation/pull/1365): Updated peer dependencies:
+  - `itwinjs-core` to `^5.11.2`,
+  - `appui` to `^5.33.0`,
+  - `@itwin/itwinui-react` to `^3.21.0`,
+  - dropped `react` v17 support.
+- [#1365](https://github.com/iTwin/presentation/pull/1365): `usePropertyDataProviderWithUnifiedSelection` now requires `selectionStorage` prop.
+
+  The `selectionStorage` prop in `PropertyDataProviderWithUnifiedSelectionProps` has been made required. Previously, when not provided, the hook fell back to the deprecated `SelectionManager` from `@itwin/presentation-frontend` package. Consumers must now explicitly supply a `SelectionStorage` instance from `@itwin/unified-selection`.
+
+  Before:
+
+  ```tsx
+  const { isOverLimit, numSelectedElements } =
+    usePropertyDataProviderWithUnifiedSelection({ dataProvider });
+  ```
+
+  After:
+
+  ```tsx
+  import { createStorage } from "@itwin/unified-selection";
+
+  const selectionStorage = createStorage(); // create once, share across all components
+
+  const { isOverLimit, numSelectedElements } =
+    usePropertyDataProviderWithUnifiedSelection({
+      dataProvider,
+      selectionStorage,
+    });
+  ```
+
+- [#1365](https://github.com/iTwin/presentation/pull/1365): `usePresentationTableWithUnifiedSelection` now requires `selectionStorage` prop.
+
+  The `selectionStorage` prop in `UsePresentationTableWithUnifiedSelectionProps` has been made required. Previously, when not provided, the hook fell back to the deprecated `SelectionManager` from `@itwin/presentation-frontend` package. Consumers must now explicitly supply a `SelectionStorage` instance from `@itwin/unified-selection`.
+
+  Before:
+
+  ```tsx
+  const { rows, columns } = usePresentationTableWithUnifiedSelection({
+    imodel,
+    ruleset,
+    columnMapper,
+    rowMapper,
+  });
+  ```
+
+  After:
+
+  ```tsx
+  import { createStorage } from "@itwin/unified-selection";
+
+  const selectionStorage = createStorage(); // create once, share across all components
+
+  const { rows, columns } = usePresentationTableWithUnifiedSelection({
+    imodel,
+    ruleset,
+    columnMapper,
+    rowMapper,
+    selectionStorage,
+  });
+  ```
+
+- [#1365](https://github.com/iTwin/presentation/pull/1365): `FavoritePropertiesDataProvider` constructor now requires `FavoritePropertiesDataProviderProps` with `activeScopeProvider`.
+
+  The constructor argument has been changed from optional to required, and `activeScopeProvider` within `FavoritePropertiesDataProviderProps` has been made required. Previously, when `activeScopeProvider` was not provided, the provider fell back to the deprecated `SelectionScopesManager` from `@itwin/presentation-frontend` package to determine the active scope. Consumers must now supply the `activeScopeProvider` callback explicitly.
+
+  Before:
+
+  ```ts
+  const provider = new FavoritePropertiesDataProvider();
+  ```
+
+  After:
+
+  ```ts
+  const provider = new FavoritePropertiesDataProvider({
+    activeScopeProvider: () => ({ id: "element" }),
+  });
+  ```
+
+### Minor Changes
+
+- [#1365](https://github.com/iTwin/presentation/pull/1365): `PresentationPropertyDataProvider`: add `propertiesMergeMode` property (`"union" | "intersection"`, defaults to `"union"`) and export the `PropertiesMergeMode` type. When set to `"intersection"`, only properties common to all selected element classes are displayed in the property grid; otherwise properties from all selected classes are shown.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.18
+  - @itwin/unified-selection@1.8.3
+
 ## 5.16.3
 
 ### Patch Changes
