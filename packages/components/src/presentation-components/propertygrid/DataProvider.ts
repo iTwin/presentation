@@ -183,7 +183,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     if (this._propertiesMergeMode === "intersection") {
       const descriptor = await this.getContentDescriptor();
       if (descriptor) {
-        const fieldsSelector = await buildIntersectionFieldsSelector(this.imodel, this.keys, descriptor.fields);
+        const fieldsSelector = await buildIntersectionFieldsSelector(this.imodel, descriptor);
         if (fieldsSelector) {
           return { ...baseOverrides, fieldsSelector };
         }

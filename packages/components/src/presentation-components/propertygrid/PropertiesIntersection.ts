@@ -10,27 +10,16 @@ import { Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaView } from "@itwin/ecschema-metadata";
 import {
+  Descriptor,
   DescriptorOverrides,
   Field,
   FieldDescriptor,
-  Key,
-  KeySet,
   NestedContentField,
   PropertiesField,
 } from "@itwin/presentation-common";
 import { getClassId, hasBaseClass } from "../instance-filter-builder/SchemaViewUtils.js";
 
 type DescriptorFieldsSelector = NonNullable<DescriptorOverrides["fieldsSelector"]>;
-
-/**
- * Returns the set of distinct class full names (colon-separated, e.g. `"Schema:ClassName"`) present in `keys.instanceKeys`.
- * @internal
- */
-export function getDistinctClassNames(keys: KeySet): string[] {
-  const set = new Set<string>();
-  keys.forEach((key) => Key.isInstanceKey(key) && set.add(key.className));
-  return [...set];
-}
 
 /**
  * Checks whether every resolved key class is equal to or derived from at least one of the given target classes.
@@ -118,29 +107,31 @@ function collectMatchedFieldDescriptors(fields: Field[], keyClasses: Array<Schem
 }
 
 /**
- * Builds a `DescriptorFieldsSelector` that includes only fields present for all distinct key
- * classes (intersection). Returns `undefined` when there are ≤1 distinct class (no filtering needed).
+ * Builds a `DescriptorFieldsSelector` that includes only fields present for all distinct select
+ * classes of the `descriptor` (intersection). Returns `undefined` when no filtering is needed - that
+ * is, when there's a single, non-polymorphic select class (all content instances share that exact
+ * class). A polymorphic select class is still filtered, because its content may include subclass
+ * instances carrying subclass-specific properties that must be excluded.
  * @internal
  */
 export async function buildIntersectionFieldsSelector(
   imodel: IModelConnection,
-  keys: KeySet,
-  fields: Field[],
+  descriptor: Descriptor,
 ): Promise<DescriptorFieldsSelector | undefined> {
-  const keyClassNames = getDistinctClassNames(keys);
-  if (keyClassNames.length <= 1) {
+  const anyPolymorphic = descriptor.selectClasses.some(({ isSelectPolymorphic }) => isSelectPolymorphic);
+  if (descriptor.selectClasses.length <= 1 && !anyPolymorphic) {
     return undefined;
   }
 
   const schemaView = await imodel.getSchemaView();
-  const keyClasses = keyClassNames.map((name) => {
-    const classView = schemaView.findClass(name);
+  const keyClasses = descriptor.selectClasses.map(({ selectClassInfo }) => {
+    const classView = schemaView.findClass(selectClassInfo.name);
     if (!classView) {
-      throw new Error(`Failed to resolve key class "${name}" in schema view`);
+      throw new Error(`Failed to resolve select class "${selectClassInfo.name}" in schema view`);
     }
     return classView;
   });
 
-  const descriptors = collectMatchedFieldDescriptors(fields, keyClasses);
+  const descriptors = collectMatchedFieldDescriptors(descriptor.fields, keyClasses);
   return { type: "include", fields: descriptors };
 }
