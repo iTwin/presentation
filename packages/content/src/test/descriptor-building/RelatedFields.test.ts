@@ -323,6 +323,22 @@ describe("collectRelatedPropertyFields", () => {
     expect(fields.map((f) => f.propertyName)).to.deep.equal(["BProp", "CProp"]);
   });
 
+  it("throws when a step spec references an out-of-bounds step index", async () => {
+    const imodelAccess = createSchemaAccess([]);
+    const declaration: RelatedPropertiesDeclaration = {
+      path: [aToB],
+      properties: [{ stepIndex: 1, target: { select: "all" } }],
+    };
+    const provider = createProvider("p1_v1", [declaration]);
+    const source = createSource([
+      { providerId: provider.id, declarationIndex: 0, paths: [resolvedPath([aToB], ["TestSchema.A"])] },
+    ]);
+
+    await expect(collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) })).rejects.toThrow(
+      /references step index 1, but the resolved path only has 1 step/,
+    );
+  });
+
   it("throws when the configuration is missing the provider that resolved a declaration", async () => {
     const imodelAccess = createSchemaAccess([]);
     const source = createSource([

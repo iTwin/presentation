@@ -108,6 +108,11 @@ async function createFieldsForStep(props: {
   stepSpec: StepPropertySpec;
 }): Promise<CategorizedField[]> {
   const { imodelAccess, path, stepSpec } = props;
+  if (stepSpec.stepIndex < 0 || stepSpec.stepIndex >= path.length) {
+    throw new Error(
+      `Related-properties declaration references step index ${stepSpec.stepIndex}, but the resolved path only has ${path.length} step(s).`,
+    );
+  }
   const step = path[stepSpec.stepIndex];
   const pathFromTarget = path.slice(0, stepSpec.stepIndex + 1);
   const enumerated: CategorizedField[] = [];
