@@ -1,5 +1,20 @@
 # @itwin/presentation-core-interop
 
+## 2.0.0-alpha.2
+
+### Minor Changes
+
+- [#1445](https://github.com/iTwin/presentation/pull/1445): `EC.Class`: Added `getOwnProperties` method that returns only the properties defined directly on the class, excluding those inherited from base classes.
+- [#1350](https://github.com/iTwin/presentation/pull/1350): `createECSqlQueryExecutor`: Updated to handle both positional and named bindings when creating query readers.
+- [#1444](https://github.com/iTwin/presentation/pull/1444): `EC.Property`: Added `category` attribute that provides access to the property's `EC.PropertyCategory`. Also added a `description` attribute to `EC.SchemaItem`.
+- [#1363](https://github.com/iTwin/presentation/pull/1363): `createECSchemaProvider`: Populate `version` property on `EC.Schema` objects from the underlying `@itwin/ecschema-metadata` schema version fields.
+
+### Patch Changes
+
+- [#1377](https://github.com/iTwin/presentation/pull/1377): `createECSqlQueryExecutor`: queries are now automatically cancelled when consumers break out of iteration.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.11
+
 ## 2.0.0-alpha.1
 
 ### Patch Changes

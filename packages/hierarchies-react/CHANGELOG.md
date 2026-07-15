@@ -1,5 +1,21 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.63
+
+### Major Changes
+
+- [#1425](https://github.com/iTwin/presentation/pull/1425): Moved the package to use `@mui/material` and `@stratakit/mui`.
+
+  **Breaking:** Removed `@stratakit/foundations`, `@stratakit/icons` optional peer dependencies. Added `@mui/material` and `@stratakit/mui` as optional peer dependencies.
+
+### Patch Changes
+
+- [#1325](https://github.com/iTwin/presentation/pull/1325): Add accessible name for tree context menu.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.11
+  - @itwin/presentation-hierarchies@2.0.0-alpha.16
+  - @itwin/unified-selection@1.8.1-alpha.0
+
 ## 2.0.0-alpha.62
 
 ### Patch Changes

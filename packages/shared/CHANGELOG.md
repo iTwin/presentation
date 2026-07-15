@@ -1,5 +1,94 @@
 # @itwin/presentation-shared
 
+## 2.0.0-alpha.11
+
+### Major Changes
+
+- [#1445](https://github.com/iTwin/presentation/pull/1445): `EC.Class`: Added `getOwnProperties` method that returns only the properties defined directly on the class, excluding those inherited from base classes.
+- [#1360](https://github.com/iTwin/presentation/pull/1360): `createRelationshipPathJoinClause` now returns `{ joins: string; bindings?: Record<string, ECSqlBinding> }` instead of a plain `string`. Callers must be updated to read the SQL clause from the `joins` property:
+
+  ```ts
+  // Before
+  const joinClause = await createRelationshipPathJoinClause({
+    schemaProvider,
+    path,
+  });
+
+  // After
+  const { joins: joinClause, bindings } =
+    await createRelationshipPathJoinClause({ schemaProvider, path });
+  ```
+
+  `RelationshipPathStep` now accepts an optional `instanceFilter` attribute. When provided, the resolved expression is appended as an `AND` condition to the relevant JOIN's `ON` clause. ECSQL parameter bindings declared in `instanceFilter.bindings` are collected across all steps and returned in the `bindings` field of the result.
+
+- [#1350](https://github.com/iTwin/presentation/pull/1350): `ECSqlQueryDef.bindings` is now `ECSqlBinding[] | Record<string, ECSqlBinding>` (previously `ECSqlBinding[]`). This is non-breaking for consumers who only define queries, but breaking for code that reads or forwards bindings (e.g., custom `ECSqlQueryExecutor` implementations) because it must now handle both formats.
+
+  Migration example:
+
+  ```ts
+  // Before
+  function handleBindings(bindings: ECSqlBinding[]) {
+    bindings.forEach((b, i) => bind(i + 1, b));
+  }
+
+  // After
+  function handleBindings(
+    bindings: ECSqlBinding[] | Record<string, ECSqlBinding>
+  ) {
+    const entries: Array<[string | number, ECSqlBinding]> = Array.isArray(
+      bindings
+    )
+      ? bindings.map((b, i) => [i + 1, b])
+      : Object.entries(bindings);
+    for (const [key, b] of entries) {
+      bind(key, b);
+    }
+  }
+  ```
+
+  Alternatively, update to the latest `@itwin/presentation-core-interop` which handles both binding formats out of the box.
+
+- [#1444](https://github.com/iTwin/presentation/pull/1444): `EC.Property`: Added `category` attribute that provides access to the property's `EC.PropertyCategory`. Also added a `description` attribute to `EC.SchemaItem`.
+- [#1363](https://github.com/iTwin/presentation/pull/1363): Add `version` property to `EC.Schema` interface. Any code that manually implements the `EC.Schema` interface must now provide a `version: { read: number; write: number; minor: number }` object matching the EC schema version format `"read.write.minor"`.
+
+  Consumers who obtain `EC.Schema` objects exclusively through `createECSchemaProvider` from `@itwin/presentation-core-interop` are unaffected — upgrading to the latest `@itwin/presentation-core-interop` is sufficient.
+
+  Migration example for custom `EC.Schema` implementations:
+
+  ```ts
+  // Before
+  const schema: EC.Schema = {
+    name: "MySchema",
+    getClass: async () => undefined,
+    getCustomAttributes: async () => new Map(),
+  };
+
+  // After
+  const schema: EC.Schema = {
+    name: "MySchema",
+    version: { read: 1, write: 0, minor: 0 },
+    getClass: async () => undefined,
+    getCustomAttributes: async () => new Map(),
+  };
+  ```
+
+### Minor Changes
+
+- [#1379](https://github.com/iTwin/presentation/pull/1379): `ECSql.createClassSelector`: Add a utility that creates a bracket-quoted ECSQL class selector (`[SchemaName].[ClassName]`) from a full class name.
+- [#1361](https://github.com/iTwin/presentation/pull/1361): `TypedPrimitiveValue`: The `type` fields now use `Extract<PrimitiveValueType, ...>` to stay in sync with `PrimitiveValueType`. Additionally, the `koqName` property is now available for `"Integer"` and `"Long"` typed values, not just `"Double"`.
+- [#1357](https://github.com/iTwin/presentation/pull/1357): Added new public APIs for describing and carrying property values:
+
+  - `ValueDescriptor` — a discriminated union (`PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor | NavigationValueDescriptor`) that describes the shape of a value without carrying the value itself.
+  - `NavigationValueDescriptor` — describes a navigation property value (a reference to another EC instance). The runtime value stays the referenced instance's id, while this descriptor additionally carries the reference's target class name (`targetClassName`) as metadata.
+  - `PrimitiveValueDescriptor` now carries optional enumeration metadata (via `enumeration`) for enumeration-backed values. Only available on `String | Integer | Long`-typed descriptors, with the enumerator value type discriminated by `type` (`String` → `string`, `Integer | Long` → `number`). The runtime value stays the raw backing primitive, while the descriptor preserves the enumeration's name, strictness, and declared enumerators (value, label, optional description) so consumers can map raw values to display labels without re-reading schema.
+  - `StructValue` and `ArrayValue` — composite value types complementing the existing `PrimitiveValue`. `Value` is the new top-level union (`PrimitiveValue | StructValue | ArrayValue | undefined`) that represents any value that can be assigned to an EC instance property.
+
+### Patch Changes
+
+- [#1429](https://github.com/iTwin/presentation/pull/1429): `createRelationshipPathJoinClause`: The step `instanceFilter` alias placeholders are now substituted in both their bare (`this.`, `rel.`) and bracket-quoted (`[this].`, `[rel].`) forms.
+
+  Previously only the bare form was replaced, so a bracket-quoted placeholder was left referencing a non-existent alias in the generated JOIN `ON` clause.
+
 ## 2.0.0-alpha.10
 
 ### Minor Changes
