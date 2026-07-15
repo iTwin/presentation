@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it } from "vitest";
 import { collectRelatedPropertyFields } from "../../content/descriptor-building/RelatedFields.js";
 import { PropertyField } from "../../content/model/Field.js";
@@ -268,6 +269,58 @@ describe("collectRelatedPropertyFields", () => {
     const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
 
     expect(fields.map((f) => f.valueClassNames[0])).to.deep.equal(["TestSchema.BDoor", "TestSchema.BWindow"]);
+  });
+
+  it("returns candidates in declaration order regardless of async resolution order", async () => {
+    const aToC: RelationshipPath[number] = {
+      sourceClassName: "TestSchema.A",
+      targetClassName: "TestSchema.C",
+      relationshipName: "TestSchema.aToC",
+    };
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.B",
+        properties: [createPrimitiveProperty({ name: "BProp", declaringClassName: "TestSchema.B" })],
+      }),
+      createEntityClass({
+        fullName: "TestSchema.C",
+        properties: [createPrimitiveProperty({ name: "CProp", declaringClassName: "TestSchema.C" })],
+      }),
+    ]);
+    // Both providers are gated so we can force the second declaration's provider to fully resolve
+    // before the first — if candidates were appended in completion order, the second provider's field
+    // would come first.
+    const firstGate = new ResolvablePromise<void>();
+    const secondGate = new ResolvablePromise<void>();
+    const firstProvider: IModelFieldsProvider = {
+      id: "first_v1",
+      async getContribution() {
+        await firstGate;
+        return { relatedProperties: [{ path: [aToB] }] };
+      },
+    };
+    const secondProvider: IModelFieldsProvider = {
+      id: "second_v1",
+      async getContribution() {
+        await secondGate;
+        return { relatedProperties: [{ path: [aToC] }] };
+      },
+    };
+    const source = createSource([
+      { providerId: firstProvider.id, declarationIndex: 0, paths: [resolvedPath([aToB], ["TestSchema.A"])] },
+      { providerId: secondProvider.id, declarationIndex: 0, paths: [resolvedPath([aToC], ["TestSchema.A"])] },
+    ]);
+
+    const resultPromise = collectRelatedPropertyFields({
+      imodelAccess,
+      source,
+      ...wireProviders([firstProvider, secondProvider]),
+    });
+    // Let the second declaration's provider fully resolve before the first one.
+    await secondGate.resolve();
+    await firstGate.resolve();
+    const fields = (await resultPromise).map(({ field }) => field);
+    expect(fields.map((f) => f.propertyName)).to.deep.equal(["BProp", "CProp"]);
   });
 
   it("throws when the configuration is missing the provider that resolved a declaration", async () => {

@@ -1041,6 +1041,9 @@ importers:
       eslint:
         specifier: catalog:build-tools
         version: 9.39.4
+      presentation-test-utilities:
+        specifier: workspace:*
+        version: link:../test-utilities
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.3
