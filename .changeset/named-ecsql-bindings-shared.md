@@ -2,7 +2,7 @@
 "@itwin/presentation-shared": major
 ---
 
-**Breaking:** `ECSqlQueryDef.bindings` is now `ECSqlBinding[] | Record<string, ECSqlBinding>` (previously `ECSqlBinding[]`). This is non-breaking for consumers who only define queries, but breaking for code that reads or forwards bindings (e.g., custom `ECSqlQueryExecutor` implementations) because it must now handle both formats.
+`ECSqlQueryDef.bindings` is now `ECSqlBinding[] | Record<string, ECSqlBinding>` (previously `ECSqlBinding[]`). This is non-breaking for consumers who only define queries, but breaking for code that reads or forwards bindings (e.g., custom `ECSqlQueryExecutor` implementations) because it must now handle both formats.
 
 Migration example:
 

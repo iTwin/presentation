@@ -1,5 +1,5 @@
 ---
-"@itwin/presentation-hierarchies-react": minor
+"@itwin/presentation-hierarchies-react": major
 ---
 
 Moved the package to use `@mui/material` and `@stratakit/mui`.
