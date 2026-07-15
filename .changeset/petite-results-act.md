@@ -2,7 +2,7 @@
 "@itwin/presentation-components": major
 ---
 
-**Breaking:** `usePresentationTableWithUnifiedSelection` now requires `selectionStorage` prop.
+`usePresentationTableWithUnifiedSelection` now requires `selectionStorage` prop.
 
 The `selectionStorage` prop in `UsePresentationTableWithUnifiedSelectionProps` has been made required. Previously, when not provided, the hook fell back to the deprecated `SelectionManager` from `@itwin/presentation-frontend` package. Consumers must now explicitly supply a `SelectionStorage` instance from `@itwin/unified-selection`.
 
