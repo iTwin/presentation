@@ -17,8 +17,9 @@ import {
   useRef,
   useState,
 } from "react";
-import { Description, IconButton, Spinner, Text, TextBox, VisuallyHidden } from "@stratakit/bricks";
-import { DropdownMenu, unstable_Popover as Popover, Tree } from "@stratakit/structures";
+import { CircularProgress, FormHelperText, IconButton, Menu, TextField, Typography } from "@mui/material";
+import { Icon } from "@stratakit/mui";
+import { unstable_Popover as Popover, Tree } from "@stratakit/structures";
 import { useTranslation } from "../LocalizationContext.js";
 import { TreeActionBase } from "./TreeAction.js";
 import { useTreeNodeRenameContext } from "./TreeNodeRenameAction.js";
@@ -187,32 +188,22 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
             }}
           />
         </Popover>
-        <DropdownMenu.Provider
-          open={contextMenuProps !== undefined}
-          setOpen={(open) => {
-            if (!open) {
-              setContextMenuProps(undefined);
-            }
+        <Menu
+          open={!!contextMenuProps}
+          onClose={() => setContextMenuProps(undefined)}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setContextMenuProps(undefined);
           }}
-          key={`${node.id}-${contextMenuProps?.position.x ?? ""}-${contextMenuProps?.position.y ?? ""}`}
+          anchorReference="anchorPosition"
+          anchorPosition={
+            contextMenuProps ? { top: contextMenuProps.position.y, left: contextMenuProps.position.x } : undefined
+          }
+          aria-label={translate("more")}
+          onClick={() => setContextMenuProps(undefined)}
         >
-          {contextMenuProps ? (
-            <DropdownMenu.Button
-              render={(renderProps) => (
-                <div style={{ position: "fixed", top: contextMenuProps.position.y, left: contextMenuProps.position.x }}>
-                  <VisuallyHidden {...renderProps}>{translate("more")}</VisuallyHidden>
-                </div>
-              )}
-            />
-          ) : null}
-          {/* `autoFocus` prop is coming from ariakit and is not native HTML `autoFocus` prop. */}
-          {/* `focusable` is needed for `autoFocus` to work. StrataKit exposes only `autoFocus` and does not set `focusable` internally. */}
-          {/* eslint-disable jsx-a11y/no-autofocus */}
-          {/* @ts-expect-error focusable is passed through */}
-          <DropdownMenu.Content focusable autoFocus={true}>
-            {contextMenuProps?.actions}
-          </DropdownMenu.Content>
-        </DropdownMenu.Provider>
+          {contextMenuProps?.actions}
+        </Menu>
       </>
     );
   }),
@@ -225,7 +216,6 @@ export const PlaceholderNode: FC<
   >
 > = memo(
   forwardRef<HTMLElement, Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize">>(
-    // eslint-disable-next-line @typescript-eslint/no-shadow
     function PlaceholderNode({ ...props }, forwardedRef) {
       const translate = useTranslation();
       return (
@@ -233,7 +223,7 @@ export const PlaceholderNode: FC<
           {...props}
           ref={forwardedRef}
           label={translate("loading")}
-          unstable_decorations={<Spinner size={"small"} title={translate("loading")} />}
+          unstable_decorations={<CircularProgress size={16} title={translate("loading")} />}
         />
       );
     },
@@ -288,37 +278,37 @@ function LabelEditor({
   return (
     <div key={initialLabel} className="phr-node-label-editor">
       <div className="phr-node-label-editor-input-row">
-        <TextBox.Root style={{ width: "100%" }} className={hasError ? "with-error" : undefined}>
-          <TextBox.Input
-            id={inputId}
-            ref={inputRef}
-            aria-label={translate("newLabel")}
-            value={newLabelValue}
-            onChange={(event) => {
-              setNewLabelValue(event.target.value);
-              setHasError(false);
-            }}
-            onKeyUp={(event) => {
-              if (event.key === "Enter") {
-                handleLabelChange();
-              } else if (event.key === "Escape") {
-                cancelLabelChange();
-              }
-            }}
-          />
-        </TextBox.Root>
-        <IconButton icon={dismissSvg} label={translate("cancel")} onClick={cancelLabelChange} />
-        <IconButton
-          icon={checkmarkSvg}
-          label={translate("confirm")}
-          onClick={handleLabelChange}
-          disabled={!canRename}
+        <TextField
+          fullWidth
+          error={hasError}
+          size="small"
+          id={inputId}
+          inputRef={inputRef}
+          slotProps={{ htmlInput: { "aria-label": translate("newLabel") } }}
+          value={newLabelValue}
+          onChange={(event) => {
+            setNewLabelValue(event.target.value);
+            setHasError(false);
+          }}
+          onKeyUp={(event) => {
+            if (event.key === "Enter") {
+              handleLabelChange();
+            } else if (event.key === "Escape") {
+              cancelLabelChange();
+            }
+          }}
         />
+        <IconButton aria-label={translate("cancel")} onClick={cancelLabelChange} size="small">
+          <Icon href={dismissSvg} />
+        </IconButton>
+        <IconButton aria-label={translate("confirm")} onClick={handleLabelChange} disabled={!canRename} size="small">
+          <Icon href={checkmarkSvg} />
+        </IconButton>
       </div>
       {labelValidationHint !== undefined ? (
-        <Description id={inputId} tone={hasError ? "critical" : "neutral"} style={{ display: "flex" }}>
-          <Text variant="caption-lg">{labelValidationHint}</Text>
-        </Description>
+        <FormHelperText error={hasError} style={{ display: "flex" }}>
+          <Typography variant="caption">{labelValidationHint}</Typography>
+        </FormHelperText>
       ) : undefined}
     </div>
   );

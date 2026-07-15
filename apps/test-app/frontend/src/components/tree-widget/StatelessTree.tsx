@@ -7,7 +7,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { debounceTime, Subject } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
-import { Button, Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
 import { DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
 import { PresentationInstanceFilter, PresentationInstanceFilterDialog } from "@itwin/presentation-components";
 import {
@@ -29,7 +28,8 @@ import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { Selectable, Selectables } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
-import { Icon } from "@stratakit/foundations";
+import { Button, CircularProgress, Stack, Switch, TextField, Typography } from "@mui/material";
+import { Icon } from "@stratakit/mui";
 import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
 import { TreeRendererWithFilterAction } from "./TreeRendererWithFilterAction";
 
@@ -123,7 +123,7 @@ function Tree({
     throw new Error("Unified selection context is not available");
   }
 
-  const { isReloading, setFormatter, ...treeProps } = useIModelUnifiedSelectionTree({
+  const { setFormatter, ...treeProps } = useIModelUnifiedSelectionTree({
     selectionStorage: unifiedSelectionContext.storage,
     sourceName: "StatelessTreeV2",
     imodelAccess,
@@ -198,17 +198,18 @@ function Tree({
 
     if (!treeProps.treeRendererProps) {
       return (
-        <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
-          <Text isMuted> Loading </Text>
-        </Flex>
+        <Stack style={{ alignItems: "center", justifyContent: "center", height: "100%", gap: 8 }}>
+          <CircularProgress size={32} />
+          <Typography color="text.secondary">Loading</Typography>
+        </Stack>
       );
     }
 
     if (treeProps.treeRendererProps.rootNodes.length === 0 && searchText) {
       return (
-        <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
-          <Text isMuted>There are no nodes matching search text {searchText}</Text>
-        </Flex>
+        <Stack style={{ alignItems: "center", justifyContent: "center", height: "100%" }}>
+          <Typography color="text.secondary">There are no nodes matching search text {searchText}</Typography>
+        </Stack>
       );
     }
 
@@ -224,43 +225,11 @@ function Tree({
     );
   };
 
-  const renderLoadingOverlay = () => {
-    if (treeProps.rootErrorRendererProps !== undefined || treeProps.treeRendererProps !== undefined || !isReloading) {
-      return <></>;
-    }
-    return (
-      <div
-        style={{
-          position: "absolute",
-          zIndex: 1000,
-          height: "inherit",
-          width: "100%",
-          overflow: "hidden",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            opacity: 0.5,
-            pointerEvents: "none",
-            width: "100%",
-            height: "100%",
-            backgroundColor: "var(--iui-color-background-backdrop)",
-          }}
-        />
-        <ProgressRadial size="large" indeterminate />
-      </div>
-    );
-  };
-
   return (
-    <Flex flexDirection="column" style={{ width, height }}>
-      <Flex style={{ width: "100%", padding: "0.5rem" }}>
+    <Stack style={{ width, height }}>
+      <Stack direction="row" spacing={1} style={{ width: "100%", padding: "0.5rem" }}>
         <DebouncedSearchBox onChange={setSearchText} />
-        <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
+        <Switch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
         {imodel.isBriefcaseConnection() ? (
           <Button onClick={() => void removeSelectedElements(imodel)}>Delete</Button>
         ) : null}
@@ -279,9 +248,8 @@ function Tree({
         >
           Rename selected node
         </Button>
-      </Flex>
+      </Stack>
       {renderContent()}
-      {renderLoadingOverlay()}
       <PresentationInstanceFilterDialog
         imodel={imodel}
         isOpen={!!filteringOptions}
@@ -298,11 +266,11 @@ function Tree({
         propertiesSource={propertiesSource}
         initialFilter={getInitialFilter}
       />
-    </Flex>
+    </Stack>
   );
 }
 
-type SearchBoxProps = ComponentPropsWithoutRef<typeof SearchBox>;
+type SearchBoxProps = ComponentPropsWithoutRef<typeof TextField>;
 
 function DebouncedSearchBox({
   onChange,
@@ -312,12 +280,7 @@ function DebouncedSearchBox({
     return debounced(onChange, 500);
   }, [onChange]);
 
-  return (
-    <SearchBox
-      {...props}
-      inputProps={{ ...props.inputProps, value: undefined, onChange: (e) => handleChange(e.currentTarget.value) }}
-    />
-  );
+  return <TextField {...props} placeholder="Search..." onChange={(e) => handleChange(e.currentTarget.value)} />;
 }
 
 function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {

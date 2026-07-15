@@ -29,7 +29,7 @@ import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } fro
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel } from "@itwin/unified-selection";
 import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
-import { Root } from "@stratakit/foundations";
+import { Root } from "@stratakit/mui";
 import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
@@ -166,14 +166,7 @@ export function App() {
   }, [state.imodel]);
 
   return (
-    <ThemeProvider
-      theme={"light"}
-      future={{ themeBridge: true }}
-      as={Root}
-      colorScheme={"light"}
-      synchronizeColorScheme
-      density="dense"
-    >
+    <ThemeProvider theme={"light"} future={{ themeBridge: true }} as={Root} colorScheme={"light"}>
       <UnifiedSelectionContextProvider storage={MyAppFrontend.selectionStorage}>
         <div className="app">
           <div className="app-header">
