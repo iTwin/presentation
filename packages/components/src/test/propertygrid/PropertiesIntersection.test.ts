@@ -5,67 +5,46 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, Field, KeySet } from "@itwin/presentation-common";
-import {
-  buildIntersectionFieldsSelector,
-  getDistinctClassNames,
-} from "../../presentation-components/propertygrid/PropertiesIntersection.js";
+import { ClassInfo, Field } from "@itwin/presentation-common";
+import { buildIntersectionFieldsSelector } from "../../presentation-components/propertygrid/PropertiesIntersection.js";
 import { createTestECClassInfo, createTestPropertyInfo, stubSchemaViewForClasses } from "../_helpers/Common.js";
 import {
+  createTestContentDescriptor,
   createTestNestedContentField,
   createTestPropertiesContentField,
+  createTestSelectClassInfo,
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
 
 const createClassInfo = (id: string, name: string): ClassInfo => createTestECClassInfo({ id, name });
-
-describe("getDistinctClassNames", () => {
-  it("returns class names from instanceKeys", () => {
-    const keys = new KeySet([
-      { className: "Schema:A", id: "0x1" },
-      { className: "Schema:A", id: "0x2" },
-      { className: "Schema:B", id: "0x3" },
-    ]);
-    const result = getDistinctClassNames(keys);
-    expect(result).toHaveLength(2);
-    expect(result).toContain("Schema:A");
-    expect(result).toContain("Schema:B");
-  });
-
-  it("returns empty array when keys is empty", () => {
-    expect(getDistinctClassNames(new KeySet())).toHaveLength(0);
-  });
-});
+const selectClass = (classInfo: ClassInfo) => createTestSelectClassInfo({ selectClassInfo: classInfo });
 
 describe("buildIntersectionFieldsSelector", () => {
   const imodelMock = { getSchemaView: vi.fn() };
   const imodel = imodelMock as unknown as IModelConnection;
 
-  it("returns undefined when only one distinct class is present", async () => {
-    const keys = new KeySet([
-      { className: "Schema:A", id: "0x1" },
-      { className: "Schema:A", id: "0x2" },
-    ]);
-    const result = await buildIntersectionFieldsSelector(imodel, keys, []);
+  it("returns undefined when only one distinct non-polymorphic class is present", async () => {
+    const descriptor = createTestContentDescriptor({
+      fields: [],
+      selectClasses: [selectClass(createClassInfo("0xa", "Schema:A"))],
+    });
+    const result = await buildIntersectionFieldsSelector(imodel, descriptor);
     expect(result).toBeUndefined();
   });
 
-  it("returns undefined when keys are empty", async () => {
-    const result = await buildIntersectionFieldsSelector(imodel, new KeySet(), []);
+  it("returns undefined when there are no select classes", async () => {
+    const descriptor = createTestContentDescriptor({ fields: [], selectClasses: [] });
+    const result = await buildIntersectionFieldsSelector(imodel, descriptor);
     expect(result).toBeUndefined();
   });
 
   describe("with two distinct classes", () => {
-    let keys: KeySet;
     const baseClassInfo = createClassInfo("0x100", "Schema:Base");
     const classAInfo = createClassInfo("0xa", "Schema:ClassA");
     const classBInfo = createClassInfo("0xb", "Schema:ClassB");
+    const selectClasses = [selectClass(classAInfo), selectClass(classBInfo)];
 
     beforeEach(() => {
-      keys = new KeySet([
-        { className: "Schema:ClassA", id: "0x1" },
-        { className: "Schema:ClassB", id: "0x2" },
-      ]);
       // Both ClassA and ClassB derive from Base
       imodelMock.getSchemaView.mockResolvedValue(
         stubSchemaViewForClasses([
@@ -91,9 +70,10 @@ describe("buildIntersectionFieldsSelector", () => {
       return field;
     }
 
-    /** Runs `buildIntersectionFieldsSelector` for the current `keys` and returns the included field descriptors. */
+    /** Runs `buildIntersectionFieldsSelector` for the current select classes and returns the included field descriptors. */
     async function getIncludedFields(fields: Field[]) {
-      const result = await buildIntersectionFieldsSelector(imodel, keys, fields);
+      const descriptor = createTestContentDescriptor({ fields, selectClasses });
+      const result = await buildIntersectionFieldsSelector(imodel, descriptor);
       expect(result!.type).toBe("include");
       return result!.fields;
     }
@@ -158,14 +138,57 @@ describe("buildIntersectionFieldsSelector", () => {
       ]);
     });
 
-    it("throws on unresolved key class", async () => {
-      // Schema view can't resolve the key classes
+    it("throws on unresolved select class", async () => {
+      // Schema view can't resolve the select classes
       imodelMock.getSchemaView.mockResolvedValue(stubSchemaViewForClasses([]));
       const field = createTestPropertiesContentField({
         name: "Prop",
         properties: [{ property: createTestPropertyInfo() }],
       });
-      await expect(getIncludedFields([field])).rejects.toThrow(/Failed to resolve key class/);
+      await expect(getIncludedFields([field])).rejects.toThrow(/Failed to resolve select class/);
+    });
+  });
+
+  describe("with a single polymorphic select class", () => {
+    const classXInfo = createClassInfo("0x10", "Schema:X");
+    const classAInfo = createClassInfo("0xa", "Schema:A");
+    const classBInfo = createClassInfo("0xb", "Schema:B");
+    // A single polymorphic select class X: content includes instances of its subclasses (A, B), which may
+    // carry subclass-specific properties. Intersection should keep only the properties common to all of
+    // them, i.e. the base class X properties.
+    const selectClasses = [createTestSelectClassInfo({ selectClassInfo: classXInfo, isSelectPolymorphic: true })];
+
+    beforeEach(() => {
+      // A and B derive from X
+      imodelMock.getSchemaView.mockResolvedValue(
+        stubSchemaViewForClasses([
+          { classInfo: classXInfo },
+          { classInfo: classAInfo, baseClassFullName: classXInfo.name },
+          { classInfo: classBInfo, baseClassFullName: classXInfo.name },
+        ]),
+      );
+    });
+
+    function propField(name: string, classInfo: ClassInfo) {
+      return createTestPropertiesContentField({
+        name,
+        properties: [{ property: createTestPropertyInfo({ classInfo }) }],
+      });
+    }
+
+    it("keeps only base class properties, dropping subclass-specific ones", async () => {
+      const baseProp = propField("BaseProp", classXInfo);
+      const classAOnlyProp = propField("ClassAOnlyProp", classAInfo);
+      const classBOnlyProp = propField("ClassBOnlyProp", classBInfo);
+
+      const descriptor = createTestContentDescriptor({
+        fields: [baseProp, classAOnlyProp, classBOnlyProp],
+        selectClasses,
+      });
+      const result = await buildIntersectionFieldsSelector(imodel, descriptor);
+
+      expect(result!.type).toBe("include");
+      expect(result!.fields).toEqual([baseProp.getFieldDescriptor()]);
     });
   });
 });
