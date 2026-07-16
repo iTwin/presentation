@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { getClass, normalizeFullClassName } from "@itwin/presentation-shared";
+import { getOrCreate } from "../InternalUtils.js";
 import { collectClassPropertyFields } from "./ClassPropertyFields.js";
 
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
@@ -83,12 +84,11 @@ async function collectDeclaringClassClosure(
           continue;
         }
         visited.add(declaringClassName);
-        let derivedConcretes = closure.get(declaringClassName);
-        if (!derivedConcretes) {
-          derivedConcretes = new Set();
-          closure.set(declaringClassName, derivedConcretes);
-        }
-        derivedConcretes.add(concreteClassName);
+        getOrCreate({
+          map: closure,
+          key: declaringClassName,
+          createFunc: () => new Set<EC.FullClassNameDotNotation>(),
+        }).add(concreteClassName);
         const baseClass = await ecClass.baseClass;
         if (baseClass) {
           pending.push(baseClass);

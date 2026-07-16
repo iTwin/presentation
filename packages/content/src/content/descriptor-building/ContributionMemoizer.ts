@@ -3,6 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { getOrCreate } from "../InternalUtils.js";
+
 import type { Props } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../ContentTarget.js";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
@@ -20,7 +22,10 @@ type ContributionIModelAccess = Props<IModelFieldsProvider["getContribution"]>["
  *
  * @internal
  */
-export type GetContributionFn = (props: { provider: IModelFieldsProvider; target: ContentTarget }) => GetContributionReturnType;
+export type GetContributionFn = (props: {
+  provider: IModelFieldsProvider;
+  target: ContentTarget;
+}) => GetContributionReturnType;
 
 /**
  * Re-fetches `IModelFieldsProvider` contributions during descriptor building (Stage 2).
@@ -54,19 +59,14 @@ export function createContributionMemoizer(props: { imodelAccess: ContributionIM
   const cache = new WeakMap<ContentTarget, Map<IModelFieldsProvider["id"], GetContributionReturnType>>();
   return {
     getContribution: async ({ provider, target }) => {
-      let byProvider = cache.get(target);
-      if (!byProvider) {
-        byProvider = new Map();
-        cache.set(target, byProvider);
-      }
+      const byProvider = getOrCreate({ map: cache, key: target, createFunc: () => new Map() });
       // Cached values are always promises (truthy), so `undefined` unambiguously means "not cached"
       // — even when a provider's contribution resolves to `undefined` (not applicable).
-      let contribution = byProvider.get(provider.id);
-      if (contribution === undefined) {
-        contribution = provider.getContribution({ imodelAccess, target });
-        byProvider.set(provider.id, contribution);
-      }
-      return contribution;
+      return getOrCreate({
+        map: byProvider,
+        key: provider.id,
+        createFunc: async () => provider.getContribution({ imodelAccess, target }),
+      });
     },
   };
 }

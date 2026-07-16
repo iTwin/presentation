@@ -5,6 +5,7 @@
 
 import { normalizeFullClassName, type ValueDescriptor } from "@itwin/presentation-shared";
 import { DEFAULT_FIELDS_PROVIDER_PRIORITY } from "../extensions/BaseFieldsProvider.js";
+import { getOrCreate } from "../InternalUtils.js";
 import { PropertyField } from "../model/Field.js";
 import { toSortedUniqueClassNames } from "../model/Utils.js";
 
@@ -54,12 +55,7 @@ export function mergePropertyFieldsByIdentity(candidates: PropertyFieldCandidate
   const groups = new Map<Field["id"], PropertyFieldCandidate[]>();
   for (const candidate of candidates) {
     const baseId = PropertyField.computeId(candidate.field);
-    let group = groups.get(baseId);
-    if (!group) {
-      group = [];
-      groups.set(baseId, group);
-    }
-    group.push(candidate);
+    getOrCreate({ map: groups, key: baseId, createFunc: () => [] }).push(candidate);
   }
 
   const result: CategorizedField[] = [];

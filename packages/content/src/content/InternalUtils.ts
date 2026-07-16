@@ -16,6 +16,29 @@ import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 export const ECSQL_PREFIX = "pres_";
 
 /**
+ * Gets the entry for `key` from `map`, or inserts and returns `createFunc()` when absent.
+ * Accepts any map-like object — both `Map` and `WeakMap` satisfy the structural constraint.
+ *
+ * @internal
+ */
+export function getOrCreate<TKey, TValue>({
+  map,
+  key,
+  createFunc,
+}: {
+  map: { get(key: TKey): TValue | undefined; set(key: TKey, value: TValue): unknown };
+  key: TKey;
+  createFunc: () => TValue;
+}): TValue {
+  let entry = map.get(key);
+  if (entry === undefined) {
+    entry = createFunc();
+    map.set(key, entry);
+  }
+  return entry;
+}
+
+/**
  * Runs `expand` over every input in parallel and concatenates the resulting arrays into a single
  * flat array (preserving input order). A concise replacement for `(await Promise.all(...)).flat()`.
  *
