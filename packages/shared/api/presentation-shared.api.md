@@ -659,7 +659,7 @@ interface RelationshipJoinInfo {
 // @public
 export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
 
-// @public (undocumented)
+// @public
 interface RelationshipPathJoinClauseResult {
     // (undocumented)
     bindings?: Record<string, ECSqlBinding>;
