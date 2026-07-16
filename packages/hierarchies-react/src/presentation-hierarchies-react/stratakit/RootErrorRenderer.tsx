@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Button, Text } from "@stratakit/bricks";
-import { Icon } from "@stratakit/foundations";
+import { Button, Typography } from "@mui/material";
+import { Icon } from "@stratakit/mui";
 import { useTranslation } from "../LocalizationContext.js";
 
 import errorSvg from "@stratakit/icons/status-error.svg";
@@ -73,14 +73,14 @@ function RootErrorContainer({ actions, message }: RootErrorContainerProps) {
       }}
     >
       <Icon href={errorSvg} size="large" />
-      <Text variant={"body-sm"} style={{ textAlign: "center" }}>
+      <Typography variant="caption" style={{ textAlign: "center" }}>
         {message}
-      </Text>
+      </Typography>
       {actions
         ?.filter(({ condition }) => condition())
         .map((action) => {
           return (
-            <Button key={action.label} onClick={() => action.action()}>
+            <Button key={action.label} onClick={() => action.action()} size="small">
               {action.label}
             </Button>
           );

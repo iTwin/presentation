@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Anchor, Text } from "@stratakit/bricks";
+import { Link, Typography } from "@mui/material";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { useTranslation } from "../LocalizationContext.js";
@@ -123,11 +123,11 @@ function ErrorItemContainer({ treeNode, message, actions, scrollToElement }: Err
       actions={actions
         ?.filter(({ condition }) => condition())
         .map(({ label, action }) => (
-          <Text key={label} variant="body-sm">
-            <Anchor onClick={action} render={<button />}>
+          <Typography key={label} variant="caption" render={<div />}>
+            <Link render={<button type="button" />} onClick={action}>
               {label}
-            </Anchor>
-          </Text>
+            </Link>
+          </Typography>
         ))}
     />
   );
@@ -146,9 +146,14 @@ function MessageWithLink({ linkLabel, scrollToElement, message }: MessageWithLin
   return (
     <div>
       {firstPart}{" "}
-      <Anchor onClick={scrollToElement} render={<button />}>
+      <Link
+        render={<button type="button" />}
+        onClick={scrollToElement}
+        variant="caption"
+        style={{ verticalAlign: "baseline" }}
+      >
         {linkLabel}
-      </Anchor>
+      </Link>
       {secondPart ? " " : ""}
       {secondPart ? secondPart : null}
     </div>

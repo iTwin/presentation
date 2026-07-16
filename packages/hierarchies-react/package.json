@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-hierarchies-react",
-  "version": "2.0.0-alpha.62",
+  "version": "2.0.0-alpha.63",
   "description": "React components based on `@itwin/presentation-hierarchies`",
   "license": "MIT",
   "author": {
@@ -66,7 +66,7 @@
     "@itwin/presentation-hierarchies": "workspace:*",
     "@itwin/presentation-shared": "workspace:*",
     "@itwin/unified-selection": "workspace:^",
-    "@stratakit/bricks": "catalog:stratakit",
+    "@stratakit/icons": "catalog:stratakit",
     "@stratakit/structures": "catalog:stratakit",
     "@tanstack/react-virtual": "^3.13.24",
     "classnames": "catalog:react",
@@ -76,25 +76,25 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@stratakit/foundations": "^0.4.7",
-    "@stratakit/icons": "^0.3.1",
+    "@mui/material": "^9.0.0",
+    "@stratakit/mui": "^0.5.0",
     "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
     "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
-    "@stratakit/foundations": {
+    "@mui/material": {
       "optional": true
     },
-    "@stratakit/icons": {
+    "@stratakit/mui": {
       "optional": true
     }
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
     "@itwin/eslint-plugin": "catalog:build-tools",
+    "@mui/material": "catalog:stratakit",
     "@rolldown/plugin-babel": "catalog:build-tools",
-    "@stratakit/foundations": "catalog:stratakit",
-    "@stratakit/icons": "catalog:stratakit",
+    "@stratakit/mui": "catalog:stratakit",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
     "@testing-library/user-event": "catalog:test-tools",

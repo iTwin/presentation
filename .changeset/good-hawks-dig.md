@@ -2,7 +2,7 @@
 "@itwin/presentation-shared": major
 ---
 
-**Breaking:** `createRelationshipPathJoinClause` now returns `{ joins: string; bindings?: Record<string, ECSqlBinding> }` instead of a plain `string`. Callers must be updated to read the SQL clause from the `joins` property:
+`createRelationshipPathJoinClause` now returns `{ joins: string; bindings?: Record<string, ECSqlBinding> }` instead of a plain `string`. Callers must be updated to read the SQL clause from the `joins` property:
 
 ```ts
 // Before
