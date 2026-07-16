@@ -132,10 +132,10 @@ function createRawPrimitiveValueSelector(value: PrimitiveValue | undefined): str
 function createRawPropertyValueSelector(classAlias: string, propertyName: string, componentName?: string): string;
 
 // @public
-function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps): Promise<{
-    joins: string;
-    bindings?: Record<string, ECSqlBinding>;
-}>;
+function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps): Promise<RelationshipPathJoinClauseResult>;
+
+// @public
+function createRelationshipPathJoinClause(info: RelationshipPathJoinInfo): RelationshipPathJoinClauseResult;
 
 // @public
 interface CreateRelationshipPathJoinClauseProps {
@@ -144,6 +144,9 @@ interface CreateRelationshipPathJoinClauseProps {
     // (undocumented)
     schemaProvider: ECSchemaProvider;
 }
+
+// @public
+function createRelationshipPathJoinInfo(props: CreateRelationshipPathJoinClauseProps): Promise<RelationshipPathJoinInfo>;
 
 // @public
 export namespace EC {
@@ -344,7 +347,8 @@ declare namespace ECSql {
         createConcatenatedValueStringSelector,
         createInstanceKeySelector,
         createPrimitivePropertyValueSelectorProps,
-        createRelationshipPathJoinClause
+        createRelationshipPathJoinClause,
+        createRelationshipPathJoinInfo
     }
 }
 
@@ -509,6 +513,29 @@ interface JoinRelationshipPathStep extends RelationshipPathStep {
 }
 
 // @public
+interface JoinTargetClass {
+    // (undocumented)
+    className: EC.FullClassName;
+    // (undocumented)
+    kind: "class";
+}
+
+// @public
+interface JoinTargetRelationshipSelect {
+    // (undocumented)
+    innerJoinCondition: string;
+    innerTarget: JoinTargetClass;
+    // (undocumented)
+    innerTargetAlias: string;
+    // (undocumented)
+    kind: "relationship-select";
+    // (undocumented)
+    relationshipAlias: string;
+    // (undocumented)
+    relationshipClassName: EC.FullClassName;
+}
+
+// @public
 export function julianToDateTime(julianDate: number): Date;
 
 // @public
@@ -603,7 +630,30 @@ export interface RaisableEvent<TListener extends (...args: any[]) => void = () =
 }
 
 // @public
+interface RelationshipJoinInfo {
+    joinAlias: string;
+    joinCondition: string;
+    joinTarget: JoinTargetClass | JoinTargetRelationshipSelect;
+    // (undocumented)
+    joinType: "inner" | "outer";
+}
+
+// @public
 export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
+
+// @public (undocumented)
+interface RelationshipPathJoinClauseResult {
+    // (undocumented)
+    bindings?: Record<string, ECSqlBinding>;
+    // (undocumented)
+    joins: string;
+}
+
+// @public
+interface RelationshipPathJoinInfo {
+    bindings?: Record<string, ECSqlBinding>;
+    joins: RelationshipJoinInfo[];
+}
 
 // @public
 interface RelationshipPathStep {

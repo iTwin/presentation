@@ -13,4 +13,4 @@ export {
   createInstanceKeySelector,
   createPrimitivePropertyValueSelectorProps,
 } from "./ECSqlValueSelectorSnippets.js";
-export { createRelationshipPathJoinClause } from "./ECSqlJoinSnippets.js";
+export { createRelationshipPathJoinClause, createRelationshipPathJoinInfo } from "./ECSqlJoinSnippets.js";
