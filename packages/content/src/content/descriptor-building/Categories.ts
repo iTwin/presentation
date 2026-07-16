@@ -13,7 +13,7 @@ import type { ExternalFieldsProvider } from "../extensions/ExternalFieldsProvide
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
 import type { Field, PropertyField } from "../model/Field.js";
 import type { CategorizedField, FieldCategorization } from "./ClassPropertyFields.js";
-import type { GetContribution } from "./ContributionMemoizer.js";
+import type { GetContributionFn } from "./ContributionMemoizer.js";
 
 /**
  * Assembles the descriptor's category registry and assigns every property field's `categoryId` — the
@@ -47,7 +47,7 @@ export async function collectCategories(props: {
   sources: ContentSource[];
   imodelFieldsProviders: IModelFieldsProvider[];
   externalFieldsProviders: ExternalFieldsProvider[];
-  getContribution: GetContribution;
+  getContribution: GetContributionFn;
   fields: CategorizedField[];
 }): Promise<Record<CategoryDefinition["id"], CategoryDefinition>> {
   const { imodelAccess, sources, imodelFieldsProviders, externalFieldsProviders, getContribution, fields } = props;
@@ -60,7 +60,7 @@ export async function collectCategories(props: {
       collectInParallel({
         inputs: imodelFieldsProviders,
         expand: async (provider) => {
-          const contribution = await getContribution(provider, source.target);
+          const contribution = await getContribution({ provider, target: source.target });
           if (!contribution?.categories) {
             return [];
           }

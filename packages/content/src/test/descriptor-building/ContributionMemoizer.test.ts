@@ -27,8 +27,8 @@ describe("createContributionMemoizer", () => {
     const target: ContentTarget = { primaryClass: "Schema.A" };
     const memoizer = createContributionMemoizer({ imodelAccess });
 
-    expect(await memoizer.getContribution(provider, target)).to.equal(contribution);
-    expect(await memoizer.getContribution(provider, target)).to.equal(contribution);
+    expect(await memoizer.getContribution({ provider, target })).to.equal(contribution);
+    expect(await memoizer.getContribution({ provider, target })).to.equal(contribution);
     expect(getContribution).toHaveBeenCalledTimes(1);
     expect(getContribution).toHaveBeenCalledWith({ imodelAccess, target });
   });
@@ -38,8 +38,8 @@ describe("createContributionMemoizer", () => {
     const target: ContentTarget = { primaryClass: "Schema.A" };
     const memoizer = createContributionMemoizer({ imodelAccess });
 
-    expect(await memoizer.getContribution(provider, target)).to.be.undefined;
-    expect(await memoizer.getContribution(provider, target)).to.be.undefined;
+    expect(await memoizer.getContribution({ provider, target })).to.be.undefined;
+    expect(await memoizer.getContribution({ provider, target })).to.be.undefined;
     expect(getContribution).toHaveBeenCalledTimes(1);
   });
 
@@ -49,8 +49,8 @@ describe("createContributionMemoizer", () => {
     const target: ContentTarget = { primaryClass: "Schema.A" };
     const memoizer = createContributionMemoizer({ imodelAccess });
 
-    await memoizer.getContribution(p1.provider, target);
-    await memoizer.getContribution(p2.provider, target);
+    await memoizer.getContribution({ provider: p1.provider, target });
+    await memoizer.getContribution({ provider: p2.provider, target });
 
     expect(p1.getContribution).toHaveBeenCalledTimes(1);
     expect(p2.getContribution).toHaveBeenCalledTimes(1);
@@ -64,7 +64,7 @@ describe("createContributionMemoizer", () => {
     const memoizer = createContributionMemoizer({ imodelAccess });
 
     for (let i = 0; i < 5; ++i) {
-      await memoizer.getContribution(provider, target);
+      await memoizer.getContribution({ provider, target });
     }
 
     expect(getContribution).toHaveBeenCalledTimes(1);
@@ -77,8 +77,8 @@ describe("createContributionMemoizer", () => {
     const { provider, getContribution } = createProvider("p_v1", { calculatedFields: [] });
     const memoizer = createContributionMemoizer({ imodelAccess });
 
-    await memoizer.getContribution(provider, { primaryClass: "Schema.A", instanceIds: ["0x1"] });
-    await memoizer.getContribution(provider, { primaryClass: "Schema.A", instanceIds: ["0x1"] });
+    await memoizer.getContribution({ provider, target: { primaryClass: "Schema.A", instanceIds: ["0x1"] } });
+    await memoizer.getContribution({ provider, target: { primaryClass: "Schema.A", instanceIds: ["0x1"] } });
 
     expect(getContribution).toHaveBeenCalledTimes(2);
   });

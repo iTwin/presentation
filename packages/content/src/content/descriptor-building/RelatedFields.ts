@@ -11,7 +11,7 @@ import type { ContentSource } from "../ContentTarget.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
 import type { CategorizedField } from "./ClassPropertyFields.js";
-import type { GetContribution } from "./ContributionMemoizer.js";
+import type { GetContributionFn } from "./ContributionMemoizer.js";
 
 /** A related property field paired with its category facts and the provider that contributed it. */
 type RelatedCandidate = CategorizedField & { provider: IModelFieldsProvider };
@@ -43,7 +43,7 @@ type RelatedCandidate = CategorizedField & { provider: IModelFieldsProvider };
 export async function collectRelatedPropertyFields(props: {
   imodelAccess: ECSchemaProvider;
   source: ContentSource;
-  getContribution: GetContribution;
+  getContribution: GetContributionFn;
   imodelFieldsProvidersById: ReadonlyMap<IModelFieldsProvider["id"], IModelFieldsProvider>;
 }): Promise<RelatedCandidate[]> {
   const { imodelAccess, source, getContribution, imodelFieldsProvidersById } = props;
@@ -59,7 +59,7 @@ export async function collectRelatedPropertyFields(props: {
           `Content configuration is missing the iModel fields provider "${group.providerId}" that resolved a related-properties declaration for target "${source.target.primaryClass}".`,
         );
       }
-      const contribution = await getContribution(provider, source.target);
+      const contribution = await getContribution({ provider, target: source.target });
       const declaration = contribution?.relatedProperties?.[group.declarationIndex];
       if (!declaration) {
         throw new Error(

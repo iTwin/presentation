@@ -53,7 +53,7 @@ function createProvider(
   };
 }
 
-const getContribution: Parameters<typeof collectCategories>[0]["getContribution"] = async (provider, target) =>
+const getContribution: Parameters<typeof collectCategories>[0]["getContribution"] = async ({ provider, target }) =>
   provider.getContribution({ imodelAccess: createSchemaAccess([]), target });
 
 function createExternalProvider(

@@ -3,14 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import type { Props } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../ContentTarget.js";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
 
 /** The contribution returned by an `IModelFieldsProvider`, with `undefined` meaning "not applicable". */
-type FieldsProviderContribution = Awaited<ReturnType<IModelFieldsProvider["getContribution"]>>;
+type GetContributionReturnType = ReturnType<IModelFieldsProvider["getContribution"]>;
 
 /** The iModel access shape required by `IModelFieldsProvider.getContribution`. */
-type ContributionIModelAccess = Parameters<IModelFieldsProvider["getContribution"]>[0]["imodelAccess"];
+type ContributionIModelAccess = Props<IModelFieldsProvider["getContribution"]>["imodelAccess"];
 
 /**
  * Re-fetches an `IModelFieldsProvider` contribution for a target — the memoized accessor produced by
@@ -19,10 +20,7 @@ type ContributionIModelAccess = Parameters<IModelFieldsProvider["getContribution
  *
  * @internal
  */
-export type GetContribution = (
-  provider: IModelFieldsProvider,
-  target: ContentTarget,
-) => Promise<FieldsProviderContribution>;
+export type GetContributionFn = (props: { provider: IModelFieldsProvider; target: ContentTarget }) => GetContributionReturnType;
 
 /**
  * Re-fetches `IModelFieldsProvider` contributions during descriptor building (Stage 2).
@@ -50,12 +48,12 @@ export type GetContribution = (
  * @internal
  */
 export function createContributionMemoizer(props: { imodelAccess: ContributionIModelAccess }): {
-  getContribution: GetContribution;
+  getContribution: GetContributionFn;
 } {
   const { imodelAccess } = props;
-  const cache = new WeakMap<ContentTarget, Map<IModelFieldsProvider["id"], Promise<FieldsProviderContribution>>>();
+  const cache = new WeakMap<ContentTarget, Map<IModelFieldsProvider["id"], GetContributionReturnType>>();
   return {
-    getContribution: async (provider, target) => {
+    getContribution: async ({ provider, target }) => {
       let byProvider = cache.get(target);
       if (!byProvider) {
         byProvider = new Map();

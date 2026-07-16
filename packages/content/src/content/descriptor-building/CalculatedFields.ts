@@ -8,7 +8,7 @@ import { collectInParallel, stableStringify } from "../InternalUtils.js";
 import type { ContentSource } from "../ContentTarget.js";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
 import type { CalculatedField, Field } from "../model/Field.js";
-import type { GetContribution } from "./ContributionMemoizer.js";
+import type { GetContributionFn } from "./ContributionMemoizer.js";
 
 /**
  * Collects the `CalculatedField`s contributed by the configured providers.
@@ -27,7 +27,7 @@ import type { GetContribution } from "./ContributionMemoizer.js";
 export async function collectCalculatedFields(props: {
   sources: ContentSource[];
   imodelFieldsProviders: IModelFieldsProvider[];
-  getContribution: GetContribution;
+  getContribution: GetContributionFn;
 }): Promise<Record<Field["id"], CalculatedField>> {
   const { sources, imodelFieldsProviders, getContribution } = props;
   const declared = await collectInParallel({
@@ -36,7 +36,7 @@ export async function collectCalculatedFields(props: {
       collectInParallel({
         inputs: imodelFieldsProviders,
         expand: async (provider) => {
-          const contribution = await getContribution(provider, source.target);
+          const contribution = await getContribution({ provider, target: source.target });
           return (contribution?.calculatedFields ?? []).map((declaration) => ({
             providerId: provider.id,
             declaration,

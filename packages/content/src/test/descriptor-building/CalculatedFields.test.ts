@@ -29,8 +29,10 @@ function createProvider(id: IModelFieldsProvider["id"], contribution: Contributi
   };
 }
 
-const getContribution: Parameters<typeof collectCalculatedFields>[0]["getContribution"] = async (provider, target) =>
-  provider.getContribution({ imodelAccess: createSchemaAccess([]), target });
+const getContribution: Parameters<typeof collectCalculatedFields>[0]["getContribution"] = async ({
+  provider,
+  target,
+}) => provider.getContribution({ imodelAccess: createSchemaAccess([]), target });
 
 describe("collectCalculatedFields", () => {
   it("returns no fields when providers declare none", async () => {

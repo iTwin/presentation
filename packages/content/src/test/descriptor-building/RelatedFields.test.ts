@@ -43,10 +43,10 @@ function createProvider(
 /** Wires a set of providers into the `(imodelFieldsProvidersById, getContribution)` pair the enumerator expects. */
 function wireProviders(providers: IModelFieldsProvider[]) {
   const imodelFieldsProvidersById = new Map(providers.map((provider) => [provider.id, provider]));
-  const getContribution: Parameters<typeof collectRelatedPropertyFields>[0]["getContribution"] = async (
+  const getContribution: Parameters<typeof collectRelatedPropertyFields>[0]["getContribution"] = async ({
     provider,
     target,
-  ) => provider.getContribution({ imodelAccess: createSchemaAccess([]), target });
+  }) => provider.getContribution({ imodelAccess: createSchemaAccess([]), target });
   return { imodelFieldsProvidersById, getContribution };
 }
 
