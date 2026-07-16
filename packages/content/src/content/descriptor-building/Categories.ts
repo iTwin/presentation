@@ -54,16 +54,21 @@ export async function collectCategories(props: {
   const registry = new Map<CategoryDefinition["id"], { category: CategoryDefinition; priority: number }>();
 
   // 1. Provider-contributed categories (higher priority wins on conflict).
-  const contributed = await collectInParallel(sources, async (source) =>
-    collectInParallel(imodelFieldsProviders, async (provider) => {
-      const contribution = await getContribution(provider, source.target);
-      if (!contribution?.categories) {
-        return [];
-      }
-      const priority = provider.priority ?? DEFAULT_FIELDS_PROVIDER_PRIORITY;
-      return Object.values(contribution.categories).map((category) => ({ category, priority }));
-    }),
-  );
+  const contributed = await collectInParallel({
+    inputs: sources,
+    expand: async (source) =>
+      collectInParallel({
+        inputs: imodelFieldsProviders,
+        expand: async (provider) => {
+          const contribution = await getContribution(provider, source.target);
+          if (!contribution?.categories) {
+            return [];
+          }
+          const priority = provider.priority ?? DEFAULT_FIELDS_PROVIDER_PRIORITY;
+          return Object.values(contribution.categories).map((category) => ({ category, priority }));
+        },
+      }),
+  });
   const externalContributed = externalFieldsProviders.flatMap((provider) =>
     provider.categories
       ? Object.values(provider.categories).map((category) => ({
@@ -157,7 +162,7 @@ export async function collectCategories(props: {
   // them in place.
   await Promise.all(
     labelsToResolve.map(async ({ category, className }) => {
-      category.label = await getClassLabel(imodelAccess, className);
+      category.label = await getClassLabel({ imodelAccess, className });
     }),
   );
 

@@ -16,16 +16,19 @@ import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 export const ECSQL_PREFIX = "pres_";
 
 /**
- * Runs `fn` over every item in parallel and concatenates the resulting arrays into a single
+ * Runs `expand` over every input in parallel and concatenates the resulting arrays into a single
  * flat array (preserving input order). A concise replacement for `(await Promise.all(...)).flat()`.
  *
  * @internal
  */
-export async function collectInParallel<TItem, TResult>(
-  items: readonly TItem[],
-  fn: (item: TItem) => Promise<TResult[]>,
-): Promise<TResult[]> {
-  return (await Promise.all(items.map(fn))).flat();
+export async function collectInParallel<TInput, TOutput>({
+  inputs,
+  expand,
+}: {
+  inputs: readonly TInput[];
+  expand: (input: TInput) => Promise<TOutput[]>;
+}): Promise<TOutput[]> {
+  return (await Promise.all(inputs.map(expand))).flat();
 }
 
 /**
@@ -50,7 +53,13 @@ export function stableStringify(value: unknown): string {
  *
  * @internal
  */
-export async function getClassLabel(imodelAccess: ECSchemaProvider, className: EC.FullClassName): Promise<string> {
+export async function getClassLabel({
+  imodelAccess,
+  className,
+}: {
+  imodelAccess: ECSchemaProvider;
+  className: EC.FullClassName;
+}): Promise<string> {
   const ecClass = await getClass(imodelAccess, className);
   return ecClass.label ?? ecClass.name;
 }

@@ -50,26 +50,29 @@ export async function collectRelatedPropertyFields(props: {
   // Enumerate each declaration group concurrently, but flatten the results in input order so the
   // candidate order is deterministic across runs — downstream merge tie-breaking (equal-priority
   // inter-provider conflicts) resolves to input order.
-  return collectInParallel(source.resolvedDeclarations, async (group) => {
-    const provider = imodelFieldsProvidersById.get(group.providerId);
-    if (!provider) {
-      throw new Error(
-        `Content configuration is missing the iModel fields provider "${group.providerId}" that resolved a related-properties declaration for target "${source.target.primaryClass}".`,
+  return collectInParallel({
+    inputs: source.resolvedDeclarations,
+    expand: async (group) => {
+      const provider = imodelFieldsProvidersById.get(group.providerId);
+      if (!provider) {
+        throw new Error(
+          `Content configuration is missing the iModel fields provider "${group.providerId}" that resolved a related-properties declaration for target "${source.target.primaryClass}".`,
+        );
+      }
+      const contribution = await getContribution(provider, source.target);
+      const declaration = contribution?.relatedProperties?.[group.declarationIndex];
+      if (!declaration) {
+        throw new Error(
+          `iModel fields provider "${group.providerId}" no longer returns the related-properties declaration at index ${group.declarationIndex} for target "${source.target.primaryClass}".`,
+        );
+      }
+      const perPath = await Promise.all(
+        group.paths.map(async ({ path }) =>
+          createFieldsForPath({ imodelAccess, path, properties: declaration.properties }),
+        ),
       );
-    }
-    const contribution = await getContribution(provider, source.target);
-    const declaration = contribution?.relatedProperties?.[group.declarationIndex];
-    if (!declaration) {
-      throw new Error(
-        `iModel fields provider "${group.providerId}" no longer returns the related-properties declaration at index ${group.declarationIndex} for target "${source.target.primaryClass}".`,
-      );
-    }
-    const perPath = await Promise.all(
-      group.paths.map(async ({ path }) =>
-        createFieldsForPath({ imodelAccess, path, properties: declaration.properties }),
-      ),
-    );
-    return perPath.flat().map((enumerated) => ({ ...enumerated, provider }));
+      return perPath.flat().map((enumerated) => ({ ...enumerated, provider }));
+    },
   });
 }
 

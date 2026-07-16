@@ -53,12 +53,15 @@ export async function buildContentDescriptor(props: BuildContentDescriptorProps)
   const imodelFieldsProvidersById = new Map(imodelFieldsProviders.map((provider) => [provider.id, provider]));
   const { getContribution } = createContributionMemoizer({ imodelAccess });
 
-  const candidates = await collectInParallel(sources, async (source) => {
-    const [direct, related] = await Promise.all([
-      collectDirectPropertyFields({ imodelAccess, source }),
-      collectRelatedPropertyFields({ imodelAccess, source, getContribution, imodelFieldsProvidersById }),
-    ]);
-    return [...direct, ...related];
+  const candidates = await collectInParallel({
+    inputs: sources,
+    expand: async (source) => {
+      const [direct, related] = await Promise.all([
+        collectDirectPropertyFields({ imodelAccess, source }),
+        collectRelatedPropertyFields({ imodelAccess, source, getContribution, imodelFieldsProvidersById }),
+      ]);
+      return [...direct, ...related];
+    },
   });
   // Merge keeps each field's category facts; `collectCategories` (below) is the single place that
   // turns those facts into category ids and assigns `categoryId` (mutating the merged field objects).

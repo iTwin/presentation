@@ -30,12 +30,20 @@ export async function collectCalculatedFields(props: {
   getContribution: GetContribution;
 }): Promise<Record<Field["id"], CalculatedField>> {
   const { sources, imodelFieldsProviders, getContribution } = props;
-  const declared = await collectInParallel(sources, async (source) =>
-    collectInParallel(imodelFieldsProviders, async (provider) => {
-      const contribution = await getContribution(provider, source.target);
-      return (contribution?.calculatedFields ?? []).map((declaration) => ({ providerId: provider.id, declaration }));
-    }),
-  );
+  const declared = await collectInParallel({
+    inputs: sources,
+    expand: async (source) =>
+      collectInParallel({
+        inputs: imodelFieldsProviders,
+        expand: async (provider) => {
+          const contribution = await getContribution(provider, source.target);
+          return (contribution?.calculatedFields ?? []).map((declaration) => ({
+            providerId: provider.id,
+            declaration,
+          }));
+        },
+      }),
+  });
 
   const result: Record<Field["id"], CalculatedField> = {};
   for (const { providerId, declaration } of declared) {

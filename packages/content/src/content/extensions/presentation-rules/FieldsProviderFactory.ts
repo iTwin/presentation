@@ -291,7 +291,7 @@ async function mapRelatedPropertiesSpec(props: {
   const baseId = CategoryDefinition.computeId({ path });
   const targetCategory: CategoryDefinition = {
     id: `${baseId}/target`,
-    label: await getClassLabel(imodelAccess, currentSourceClassName),
+    label: await getClassLabel({ imodelAccess, className: currentSourceClassName }),
     parentId: parentCategoryId,
   };
   categories[targetCategory.id] = targetCategory;
@@ -306,10 +306,10 @@ async function mapRelatedPropertiesSpec(props: {
     const lastStep = steps[steps.length - 1];
     const relationshipCategory: CategoryDefinition = {
       id: `${baseId}/rel`,
-      label: await getClassLabel(
+      label: await getClassLabel({
         imodelAccess,
-        `${lastStep.relationship.schemaName}.${lastStep.relationship.className}`,
-      ),
+        className: `${lastStep.relationship.schemaName}.${lastStep.relationship.className}`,
+      }),
       parentId: parentCategoryId,
     };
     categories[relationshipCategory.id] = relationshipCategory;
