@@ -6,7 +6,7 @@
  * @module DisplayLabels
  */
 
-import { bufferCount, from, map, mergeAll, mergeMap, reduce } from "rxjs";
+import { bufferCount, from, map, mergeMap, reduce } from "rxjs";
 import { DEFAULT_KEYS_BATCH_SIZE } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { memoize } from "../common/Utils.js";
@@ -73,28 +73,13 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
         .pipe(
           bufferCount(DEFAULT_KEYS_BATCH_SIZE),
           mergeMap((keysBatch, batchIndex) => {
-            // note: `getDisplayLabelDefinitionsIterator` may not be available in older versions of core
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            if (Presentation.presentation.getDisplayLabelDefinitionsIterator) {
-              return from(
-                Presentation.presentation.getDisplayLabelDefinitionsIterator({ imodel: this.imodel, keys: keysBatch }),
-              ).pipe(
-                mergeMap((result) => result.items),
-                map((item, itemIndex) => ({
-                  value: item.displayValue,
-                  index: batchIndex * DEFAULT_KEYS_BATCH_SIZE + itemIndex,
-                })),
-              );
-            }
-
             return from(
-              // eslint-disable-next-line @typescript-eslint/no-deprecated
-              Presentation.presentation.getDisplayLabelDefinitions({ imodel: this.imodel, keys: keysBatch }),
+              Presentation.presentation.getDisplayLabelDefinitionsIterator({ imodel: this.imodel, keys: keysBatch }),
             ).pipe(
-              mergeAll(),
-              map((item, valueIndex) => ({
+              mergeMap((result) => result.items),
+              map((item, itemIndex) => ({
                 value: item.displayValue,
-                index: batchIndex * DEFAULT_KEYS_BATCH_SIZE + valueIndex,
+                index: batchIndex * DEFAULT_KEYS_BATCH_SIZE + itemIndex,
               })),
             );
           }),

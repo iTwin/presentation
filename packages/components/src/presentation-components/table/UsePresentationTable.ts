@@ -9,9 +9,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { debounceTime, EMPTY, from, map, mergeMap, of, Subject, switchMap, tap } from "rxjs";
 import { BeEvent, Guid } from "@itwin/core-bentley";
-import { Key, KeySet, NodeKey } from "@itwin/presentation-common";
+import { KeySet } from "@itwin/presentation-common";
 import { createIModelKey } from "@itwin/presentation-core-interop";
-import { Presentation } from "@itwin/presentation-frontend";
 import { parseFullClassName } from "@itwin/presentation-shared";
 import { Selectables } from "@itwin/unified-selection";
 import { useColumns } from "./UseColumns.js";
@@ -95,11 +94,8 @@ export interface UsePresentationTableWithUnifiedSelectionProps<TColumn, TRow> ex
 > {
   /**
    * Unified selection storage to use for listening, getting and changing active selection.
-   *
-   * When not specified, the deprecated `SelectionManager` from `@itwin/presentation-frontend` package
-   * is used.
    */
-  selectionStorage?: SelectionStorage;
+  selectionStorage: SelectionStorage;
 }
 
 /**
@@ -220,21 +216,13 @@ function useSelectionHandler({
   tableName,
 }: {
   imodel: IModelConnection;
-  selectionStorage?: SelectionStorage;
+  selectionStorage: SelectionStorage;
   tableName: string;
 }) {
   const [selectionChange] = useState(() => new BeEvent<(level: number) => void>());
   useEffect(() => {
-    if (selectionStorage) {
-      return selectionStorage.selectionChangeEvent.addListener((args) => {
-        if (args.imodelKey === createIModelKey(imodel) && args.source !== tableName) {
-          selectionChange.raiseEvent(args.level);
-        }
-      });
-    }
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    return Presentation.selection.selectionChange.addListener((args) => {
-      if (imodel === args.imodel && args.source !== tableName) {
+    return selectionStorage.selectionChangeEvent.addListener((args) => {
+      if (args.imodelKey === createIModelKey(imodel) && args.source !== tableName) {
         selectionChange.raiseEvent(args.level);
       }
     });
@@ -242,41 +230,32 @@ function useSelectionHandler({
 
   const getSelection = useCallback(
     async (args: { level: number }): Promise<SelectableInstanceKey[]> => {
-      return selectionStorage
-        ? loadInstanceKeysFromSelectables(
-            selectionStorage.getSelection({ imodelKey: createIModelKey(imodel), level: args.level }),
-          )
-        : // eslint-disable-next-line @typescript-eslint/no-deprecated
-          loadInstanceKeysFromKeySet(Presentation.selection.getSelection(imodel, args.level));
+      return loadInstanceKeysFromSelectables(
+        selectionStorage.getSelection({ imodelKey: createIModelKey(imodel), level: args.level }),
+      );
     },
     [imodel, selectionStorage],
   );
 
   const getSelectionKeySet = useCallback(
     async (args: { level: number }): Promise<KeySet> => {
-      return selectionStorage
-        ? new KeySet(
-            await loadInstanceKeysFromSelectables(
-              selectionStorage.getSelection({ imodelKey: createIModelKey(imodel), level: args.level }),
-            ),
-          )
-        : // eslint-disable-next-line @typescript-eslint/no-deprecated
-          new KeySet(Presentation.selection.getSelection(imodel, args.level));
+      return new KeySet(
+        await loadInstanceKeysFromSelectables(
+          selectionStorage.getSelection({ imodelKey: createIModelKey(imodel), level: args.level }),
+        ),
+      );
     },
     [imodel, selectionStorage],
   );
 
   const replaceSelection = useCallback(
     (args: { source: string; level: number; selectables: SelectableInstanceKey[] }) => {
-      return selectionStorage
-        ? selectionStorage.replaceSelection({
-            imodelKey: createIModelKey(imodel),
-            source: args.source,
-            level: args.level,
-            selectables: args.selectables,
-          })
-        : // eslint-disable-next-line @typescript-eslint/no-deprecated
-          Presentation.selection.replaceSelection(args.source, imodel, args.selectables, args.level);
+      selectionStorage.replaceSelection({
+        imodelKey: createIModelKey(imodel),
+        source: args.source,
+        level: args.level,
+        selectables: args.selectables,
+      });
     },
     [imodel, selectionStorage],
   );
@@ -291,21 +270,6 @@ async function loadInstanceKeysFromSelectables(selectables: Selectables) {
   for await (const selectable of Selectables.load(selectables)) {
     keys.push(selectable);
   }
-  return keys;
-}
-
-async function loadInstanceKeysFromKeySet(keySet: Readonly<KeySet>) {
-  const keys: SelectableInstanceKey[] = [];
-  keySet.forEach((key) => {
-    if (Key.isInstanceKey(key)) {
-      keys.push(key);
-      /* v8 ignore start -- @preserve */
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-    } else if (NodeKey.isInstancesNodeKey(key)) {
-      keys.push(...key.instanceKeys);
-    }
-    /* v8 ignore stop -- @preserve */
-  });
   return keys;
 }
 

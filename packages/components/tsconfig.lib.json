@@ -2,10 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
-    "module": "CommonJS",
-    "moduleResolution": "Bundler",
     "rootDir": "./src",
-    "outDir": "lib/cjs"
+    "outDir": "lib"
   },
   "include": ["src/styles.d.ts", "src/presentation-components", "src/presentation-components.ts"]
 }

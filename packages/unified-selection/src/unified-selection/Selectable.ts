@@ -6,6 +6,7 @@
 import { from, map, merge, mergeMap } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
+import { releaseMainThreadOnItemsCount } from "./Utils.js";
 
 import type { Id64String } from "@itwin/core-bentley";
 
@@ -290,7 +291,12 @@ export namespace Selectables {
     return eachValueFrom(
       merge(
         from(selectables.instanceKeys).pipe(
-          mergeMap(([className, ids]) => from(ids).pipe(map((id) => ({ className, id })))),
+          mergeMap(([className, ids]) =>
+            from(ids).pipe(
+              releaseMainThreadOnItemsCount(1000),
+              map((id) => ({ className, id })),
+            ),
+          ),
         ),
         from(selectables.custom).pipe(mergeMap(([_, selectable]) => from(selectable.loadInstanceKeys()))),
       ),

@@ -20,10 +20,9 @@ import { createInstanceFilterDefinition } from "../instance-filter-builder/Prese
 import { InfoTreeNodeItemType, isPresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
 import { createInfoNode, createTreeNodeItem, pageOptionsUiToPresentation } from "./Utils.js";
 
-import type { DelayLoadedTreeNodeItem, PageOptions, TreeNodeItem } from "@itwin/components-react";
+import type { DelayLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type {
-  BaseNodeKey,
   ClassInfo,
   ClientDiagnosticsOptions,
   FilterByTextHierarchyRequestOptions,
@@ -32,10 +31,12 @@ import type {
   Node,
   NodePathElement,
   Paged,
+  PageOptions,
   RequestOptionsWithRuleset,
   Ruleset,
 } from "@itwin/presentation-common";
 import type { DiagnosticsProps } from "../common/Diagnostics.js";
+import type { LocalizationKey } from "../common/LocalizedStrings.js";
 import type { PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder.js";
 import type { PresentationInstanceFilter } from "../instance-filter-builder/PresentationInstanceFilter.js";
 import type { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider.js";
@@ -120,8 +121,6 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
  * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface PresentationTreeDataProviderDataSourceEntryPoints {
-  /** @deprecated in 4.0. The entry point is not used anymore, its usage has been replaced by [[getNodesIterator]]. */
-  getNodesCount?: (requestOptions: HierarchyRequestOptions<IModelConnection, NodeKey>) => Promise<number>;
   /** @deprecated in 5.2. The entry point is not used anymore, its usage has been replaced by [[getNodesIterator]]. */
   getNodesAndCount?: (
     requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>,
@@ -161,16 +160,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
             await props.dataSourceOverrides.getNodesAndCount(requestOptions),
           );
         }
-
-        // the `PresentationManager.getNodesIterator` has only been added to @itwin/presentation-frontend in 4.5.1, and our peerDependency is
-        // set to 4.0.0, so we need to check if the method is really there
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        if (Presentation.presentation.getNodesIterator) {
-          return Presentation.presentation.getNodesIterator(requestOptions);
-        }
-        return createNodesIteratorFromDeprecatedResponse(
-          await Presentation.presentation.getNodesAndCount(requestOptions),
-        );
+        return Presentation.presentation.getNodesIterator(requestOptions);
       },
       getFilteredNodePaths: async (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) =>
         Presentation.presentation.getFilteredNodePaths(requestOptions),
@@ -256,18 +246,6 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
       ...(isHierarchyLevelLimitingSupported ? { sizeLimit: this.hierarchyLevelSizeLimit } : undefined),
       ...(instanceFilter ? { instanceFilter } : undefined),
     };
-  }
-
-  /**
-   * Returns a [NodeKey]($presentation-common) from given [TreeNodeItem]($components-react).
-   *
-   * **Warning**: Returns invalid [NodeKey]($presentation-common) if `node` is not a [[PresentationTreeNodeItem]].
-   *
-   * @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common).
-   */
-  public getNodeKey(node: TreeNodeItem): NodeKey {
-    const invalidKey: BaseNodeKey = { type: "", pathFromRoot: [], version: 0 };
-    return isPresentationTreeNodeItem(node) ? node.key : invalidKey;
   }
 
   /**
@@ -430,7 +408,11 @@ async function createNodesAndCountResult(
   }
 }
 
-function createStatusNodeResult(parentNode: TreeNodeItem | undefined, labelKey: string, type?: InfoTreeNodeItemType) {
+function createStatusNodeResult(
+  parentNode: TreeNodeItem | undefined,
+  labelKey: LocalizationKey,
+  type?: InfoTreeNodeItemType,
+) {
   return { nodes: [createInfoNode(parentNode, translate(labelKey), type)], count: 1 };
 }
 

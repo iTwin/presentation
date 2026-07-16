@@ -15,12 +15,13 @@ import { IModelApp } from "@itwin/core-frontend";
 import { PresentationError, PresentationStatus, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../../presentation-components/common/Utils.js";
-import {
-  ECClassInfo,
-  getIModelMetadataProvider,
-} from "../../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
 import { PresentationTreeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer.js";
-import { createTestECClassInfo, createTestPropertyInfo, stubVirtualization } from "../../_helpers/Common.js";
+import {
+  createTestECClassInfo,
+  createTestPropertyInfo,
+  stubSchemaViewForClasses,
+  stubVirtualization,
+} from "../../_helpers/Common.js";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
 import { act, cleanup, render, waitFor } from "../../TestUtils.js";
 import { createTreeModelNodeInput } from "./Helpers.js";
@@ -43,11 +44,13 @@ describe("PresentationTreeRenderer", () => {
   stubVirtualization();
 
   const onCloseEvent = new BeEvent<() => void>();
-  const testImodel = {
+  const imodelMock = {
     key: "renderer-test-imodel",
     onClose: onCloseEvent,
     createQueryReader: vi.fn().mockReturnValue({ toArray: async () => [] }),
-  } as unknown as IModelConnection;
+    getSchemaView: vi.fn().mockResolvedValue(stubSchemaViewForClasses([])),
+  };
+  const testImodel = imodelMock as unknown as IModelConnection;
 
   const baseTreeProps = {
     imodel: testImodel,
@@ -96,12 +99,9 @@ describe("PresentationTreeRenderer", () => {
     );
     vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
 
-    // stub getECClassInfo to prevent unhandled errors when filter dialog opens
+    // stub schema view to prevent unhandled errors when filter dialog opens
     const classInfo = createTestECClassInfo();
-    const metadataProvider = getIModelMetadataProvider(baseTreeProps.imodel);
-    vi.spyOn(metadataProvider, "getECClassInfo").mockResolvedValue(
-      new ECClassInfo(classInfo.id, classInfo.name, classInfo.label, new Set(), new Set()),
-    );
+    imodelMock.getSchemaView.mockResolvedValue(stubSchemaViewForClasses([{ classInfo }]));
 
     nodeLoaderStub.loadNode.mockReturnValue(EMPTY);
     presentationManager.getNodesCount.mockResolvedValue(15);

@@ -7,11 +7,7 @@
  */
 
 import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
-import {
-  defaultPropertyFilterBuilderRuleValidator,
-  isUnaryPropertyFilterBuilderOperator,
-  PropertyFilterBuilderRuleRangeValue,
-} from "@itwin/components-react";
+import { isUnaryPropertyFilterBuilderOperator, PropertyFilterBuilderRuleRangeValue } from "@itwin/components-react";
 import { combineFieldNames } from "@itwin/presentation-common";
 import { createFieldInfo, createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder.js";
 import { translate } from "../common/Utils.js";
@@ -137,30 +133,30 @@ function getCategorizedFieldName(fieldName: string, categoryName?: string) {
 }
 
 /** @internal */
-export function filterRuleValidator(item: PropertyFilterBuilderRule) {
-  // skip empty rules and rules that do not require value
-  if (
-    item.property === undefined ||
-    item.operator === undefined ||
-    isUnaryPropertyFilterBuilderOperator(item.operator)
-  ) {
-    return undefined;
-  }
+export function createFilterRuleValidator(defaultValidator: (item: PropertyFilterBuilderRule) => string | undefined) {
+  return (item: PropertyFilterBuilderRule) => {
+    // skip empty rules and rules that do not require value
+    if (
+      item.property === undefined ||
+      item.operator === undefined ||
+      isUnaryPropertyFilterBuilderOperator(item.operator)
+    ) {
+      return undefined;
+    }
 
-  /* v8 ignore next -- @preserve */
-  if (item.value !== undefined && item.value.valueFormat !== PropertyValueFormat.Primitive) {
-    return undefined;
-  }
+    /* v8 ignore next 3 -- @preserve */
+    if (item.value !== undefined && item.value.valueFormat !== PropertyValueFormat.Primitive) {
+      return undefined;
+    }
 
-  const error = numericPropertyValidator({ property: item.property, operator: item.operator, value: item.value });
+    const error = numericPropertyValidator({ property: item.property, operator: item.operator, value: item.value });
 
-  if (error) {
-    return error;
-  }
+    if (error) {
+      return error;
+    }
 
-  // TODO: refactor to `useDefaultPropertyFilterBuilderRuleValidator` after AppUI peer dep bumped to 5.0
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  return defaultPropertyFilterBuilderRuleValidator(item);
+    return defaultValidator(item);
+  };
 }
 
 interface ValidatorContext {

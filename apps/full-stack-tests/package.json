@@ -55,7 +55,7 @@
     "deep-equal-in-any-order": "catalog:test-tools",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
-    "fast-xml-parser": "^5.8.0",
+    "fast-xml-parser": "^5.9.3",
     "happy-dom": "catalog:test-tools",
     "i18next-http-backend": "^3.0.6",
     "object-hash": "^3.0.0",
@@ -65,7 +65,7 @@
     "rimraf": "catalog:build-tools",
     "rxjs": "catalog:rxjs",
     "sanitize-filename": "^1.6.4",
-    "sass": "^1.100.0",
+    "sass": "^1.101.0",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools"
   }

@@ -9,9 +9,9 @@ import { PropertyFilterBuilderRuleRangeValue } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import {
+  createFilterRuleValidator,
   createInstanceFilterPropertyInfos,
   DEFAULT_ROOT_CATEGORY_NAME,
-  filterRuleValidator,
 } from "../../presentation-components/instance-filter-builder/Utils.js";
 import { QuantityEditorName } from "../../presentation-components/properties/editors/EditorNames.js";
 import { createTestECClassInfo } from "../_helpers/Common.js";
@@ -167,7 +167,7 @@ describe("createInstanceFilterPropertyInfos", () => {
   });
 });
 
-describe("filterRuleValidator", () => {
+describe("createFilterRuleValidator", () => {
   const numericProperty: PropertyDescription = {
     displayLabel: "Numeric Prop",
     name: "numeric-prop",
@@ -186,6 +186,7 @@ describe("filterRuleValidator", () => {
   });
 
   it("returns error message for invalid numeric rule", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -198,6 +199,7 @@ describe("filterRuleValidator", () => {
   });
 
   it("does not return error message for invalid numeric value if operator is 'IsEqual' or 'IsNotEqual'", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -210,6 +212,7 @@ describe("filterRuleValidator", () => {
   });
 
   it("returns error message for invalid quantity rule", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -222,6 +225,7 @@ describe("filterRuleValidator", () => {
   });
 
   it("returns error message for invalid from quantity value in between rule", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -237,6 +241,7 @@ describe("filterRuleValidator", () => {
   });
 
   it("returns error message for invalid to quantity value in between rule", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -252,6 +257,7 @@ describe("filterRuleValidator", () => {
   });
 
   it("does not return error message for valid numeric rule", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -264,6 +270,7 @@ describe("filterRuleValidator", () => {
   });
 
   it("does not return error message for valid quantity rule", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -276,6 +283,7 @@ describe("filterRuleValidator", () => {
   });
 
   it("does not return error message for valid quantity value in between rule", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
