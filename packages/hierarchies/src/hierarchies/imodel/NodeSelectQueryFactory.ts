@@ -819,7 +819,7 @@ function getECSqlComparisonOperator(
   }
 }
 
-type JoinRelationshipPath = Props<typeof ECSql.createRelationshipPathJoinClause>["path"];
+type JoinRelationshipPath = Extract<Props<typeof ECSql.createRelationshipPathJoinClause>, { schemaProvider: ECSchemaProvider }>["path"];
 function assignRelationshipPathAliases(
   path: GenericInstanceFilterRelationshipStep[],
   pathIndex: number,

@@ -561,6 +561,21 @@ export function normalizeFullClassName(fullClassName: string): EC.FullClassNameD
 export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
 
 // @public
+type OverloadParameters<TFunc> = TFunc extends {
+    (...args: infer A1): any;
+    (...args: infer A2): any;
+    (...args: infer A3): any;
+    (...args: infer A4): any;
+} ? A1 | A2 | A3 | A4 : TFunc extends {
+    (...args: infer A1): any;
+    (...args: infer A2): any;
+    (...args: infer A3): any;
+} ? A1 | A2 | A3 : TFunc extends {
+    (...args: infer A1): any;
+    (...args: infer A2): any;
+} ? A1 | A2 : TFunc extends (...args: infer A1) => any ? A1 : never;
+
+// @public
 export function parseFullClassName(fullClassName: string): {
     schemaName: string;
     className: string;
@@ -621,7 +636,10 @@ export type PrimitiveValueDescriptor = {
 type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
 // @public
-export type Props<TFunc extends (...args: any[]) => any> = Parameters<TFunc> extends [infer TProps] ? Exclude<TProps, undefined> extends object ? TProps : never : Parameters<TFunc> extends [(infer TProps)?] ? Exclude<TProps, undefined> extends object ? TProps | undefined : never : never;
+export type Props<TFunc extends (...args: any[]) => any> = PropsFromParameters<OverloadParameters<TFunc>>;
+
+// @public
+type PropsFromParameters<TParams> = TParams extends [infer TProps] ? Exclude<TProps, undefined> extends object ? TProps : never : TParams extends [(infer TProps)?] ? Exclude<TProps, undefined> extends object ? TProps | undefined : never : never;
 
 // @public
 export interface RaisableEvent<TListener extends (...args: any[]) => void = () => void> extends Event_2<TListener> {
