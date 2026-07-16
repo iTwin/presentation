@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResolvablePromise } from "presentation-test-utilities";
-import { beforeEach, describe, expect, it } from "vitest";
+import { assert, beforeEach, describe, expect, it } from "vitest";
 import {
   createRelationshipPathJoinClause,
   createRelationshipPathJoinInfo,
@@ -797,8 +797,8 @@ describe("createRelationshipPathJoinClause", () => {
       const first = result.joins[0];
       expect(first.joinType).toBe("outer");
       expect(first.joinAlias).toBe("r");
-      expect(first.joinTarget.kind).to.deep.eq("relationship-select");
-      const joinTarget = first.joinTarget as any;
+      assert(first.joinTarget.kind === "relationship-select");
+      const joinTarget = first.joinTarget;
       expect(joinTarget.relationshipClassName).toBe(relationship.fullName);
       expect(joinTarget.relationshipAlias).toBe("r");
       expect(joinTarget.innerTarget).toEqual({ kind: "class", className: targetClass.fullName });
