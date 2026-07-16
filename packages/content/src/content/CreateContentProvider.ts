@@ -21,7 +21,8 @@ export function createContentProviderImpl(props: Props<typeof createContentProvi
   const { imodelAccess, sources, config } = props;
   let descriptor: Promise<ContentDescriptor> | undefined;
   async function getContentDescriptor() {
-    return (descriptor ??= buildContentDescriptor({ imodelAccess, sources, config }));
+    descriptor ??= buildContentDescriptor({ imodelAccess, sources, config });
+    return descriptor;
   }
   return {
     getContentDescriptor,
