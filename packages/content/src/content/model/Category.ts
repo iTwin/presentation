@@ -45,7 +45,7 @@ export namespace CategoryDefinition {
     if (props.path.length === 0) {
       throw new Error("Cannot compute category ID from an empty relationship path.");
     }
-    return serializeRelationshipPath(props.path, { omitLastTargetClass: props.omitTargetClass });
+    return serializeRelationshipPath({ path: props.path, omitLastTargetClass: props.omitTargetClass });
   }
 
   /**

@@ -24,7 +24,13 @@ export type DeepReadonly<T> = T extends (...args: any[]) => any
  * final step's target class (and its arrow) is left off, yielding a target-independent serialization
  * of the path's last relationship.
  */
-export function serializeRelationshipPath(path: RelationshipPath, options?: { omitLastTargetClass?: boolean }): string {
+export function serializeRelationshipPath({
+  path,
+  omitLastTargetClass,
+}: {
+  path: RelationshipPath;
+  omitLastTargetClass?: boolean;
+}): string {
   let result = "";
   path.forEach((step, index) => {
     if (result.length === 0) {
@@ -34,7 +40,7 @@ export function serializeRelationshipPath(path: RelationshipPath, options?: { om
       ? `[!${normalizeFullClassName(step.relationshipName)}]`
       : `[${normalizeFullClassName(step.relationshipName)}]`;
     result += `-${rel}`;
-    if (!(options?.omitLastTargetClass && index === path.length - 1)) {
+    if (!(omitLastTargetClass && index === path.length - 1)) {
       result += `->${normalizeFullClassName(step.targetClassName)}`;
     }
   });
