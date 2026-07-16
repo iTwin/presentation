@@ -61,7 +61,7 @@ interface JoinTargetRelationshipSelect {
 }
 
 /**
- * One concrete JOIN clause: `${joinType} JOIN ${joinTarget} [joinAlias] ON ${joinCondition}`.
+ * One concrete JOIN clause rendered as either `INNER JOIN ... ON ...` or `OUTER JOIN ... ON ...`.
  * @public
  */
 interface RelationshipJoinInfo {
@@ -174,7 +174,10 @@ export async function createRelationshipPathJoinInfo(
   return { joins, bindings: Object.keys(bindings).length > 0 ? bindings : undefined };
 }
 
-/** @public */
+/**
+ * Result of `createRelationshipPathJoinClause`.
+ * @public
+ */
 interface RelationshipPathJoinClauseResult {
   joins: string;
   bindings?: Record<string, ECSqlBinding>;
