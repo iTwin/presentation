@@ -6,7 +6,7 @@
 import "../../common/DisposePolyfill.js";
 
 import { useEffect, useMemo, useState } from "react";
-import { from, map, mergeMap, toArray } from "rxjs";
+import { from, mergeMap, toArray } from "rxjs";
 import { DisplayValue, KeySet } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../common/Utils.js";
@@ -149,16 +149,12 @@ async function getItems({
     keys,
   };
   const items = await new Promise<DisplayValueGroup[]>((resolve) => {
-    // note: `getDistinctValuesIterator` may not be available in older versions of core
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    (Presentation.presentation.getDistinctValuesIterator
-      ? from(Presentation.presentation.getDistinctValuesIterator(requestProps)).pipe(
-          mergeMap((result) => result.items),
-          toArray(),
-        )
-      : // eslint-disable-next-line @typescript-eslint/no-deprecated
-        from(Presentation.presentation.getPagedDistinctValues(requestProps)).pipe(map((result) => result.items))
-    ).subscribe({ next: resolve, error: () => resolve([]) });
+    from(Presentation.presentation.getDistinctValuesIterator(requestProps))
+      .pipe(
+        mergeMap((result) => result.items),
+        toArray(),
+      )
+      .subscribe({ next: resolve, error: () => resolve([]) });
   });
 
   const hasMore = items.length === VALUE_BATCH_SIZE;

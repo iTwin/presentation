@@ -5,7 +5,7 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import { StandardTypeNames, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
-import { createContentTraverser, PropertyValueFormat } from "@itwin/presentation-common";
+import { createContentTraverser, LabelDefinition, PropertyValueFormat } from "@itwin/presentation-common";
 import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder.js";
 import {
   NavigationEditorName,
@@ -109,6 +109,63 @@ describe("PropertyRecordsBuilder", () => {
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries).toHaveLength(1);
     expect(builder.entries[0].extendedData).toEqual(extendedData);
+  });
+
+  it("sets extended data from field", () => {
+    const fieldExtendedData = { fieldValue: 456 };
+    const descriptor = createTestContentDescriptor({
+      fields: [createTestSimpleContentField({ extendedData: fieldExtendedData })],
+    });
+    const item = createTestContentItem({ values: {}, displayValues: {} });
+    createContentTraverser(builder)(descriptor, [item]);
+    expect(builder.entries).toHaveLength(1);
+    expect(builder.entries[0].extendedData).toEqual(fieldExtendedData);
+  });
+
+  it("merges extended data from field and item", () => {
+    const fieldExtendedData = { fieldValue: 456 };
+    const itemExtendedData = { itemValue: 123 };
+    const descriptor = createTestContentDescriptor({
+      fields: [createTestSimpleContentField({ extendedData: fieldExtendedData })],
+    });
+    const item = createTestContentItem({ values: {}, displayValues: {}, extendedData: itemExtendedData });
+    createContentTraverser(builder)(descriptor, [item]);
+    expect(builder.entries).toHaveLength(1);
+    expect(builder.entries[0].extendedData).toEqual({ ...fieldExtendedData, ...itemExtendedData });
+  });
+
+  it("sets extended data from nested content field on struct and array records", () => {
+    const category = createTestCategoryDescription();
+    const fieldExtendedData = { fieldValue: 456 };
+    const descriptor = createTestContentDescriptor({
+      fields: [
+        createTestNestedContentField({
+          name: "parent",
+          category,
+          extendedData: fieldExtendedData,
+          nestedFields: [createTestSimpleContentField({ name: "child", category })],
+        }),
+      ],
+    });
+    const item = createTestContentItem({
+      values: {
+        parent: [
+          {
+            primaryKeys: [createTestECInstanceKey()],
+            values: { child: "value" },
+            displayValues: { child: "display value" },
+            mergedFieldNames: [],
+          },
+        ],
+      },
+      displayValues: {},
+    });
+    createContentTraverser(builder)(descriptor, [item]);
+    expect(builder.entries).toHaveLength(1);
+    const arrayRecord = builder.entries[0];
+    expect(arrayRecord.extendedData).toEqual(fieldExtendedData);
+    const structRecord = (arrayRecord.value as ArrayValue).items[0];
+    expect(structRecord.extendedData).toEqual(fieldExtendedData);
   });
 
   it("sets `autoExpand` flag for nested content field based property records", () => {
@@ -307,36 +364,33 @@ describe("PropertyRecordsBuilder", () => {
     expect(builder.entries[0].value).toEqual({ valueFormat: UiPropertyValueFormat.Primitive });
   });
 
-  it("creates merged property record with quantity editor when field has kind of quantity", () => {
-    const fieldName = "test-field";
+  it("set navigation property display value", () => {
+    const fieldName = "nav-field";
     const descriptor = createTestContentDescriptor({
       fields: [
-        createTestPropertiesContentField({
+        createTestSimpleContentField({
           name: fieldName,
-          properties: [
-            {
-              property: {
-                classInfo: createTestECClassInfo(),
-                name: "test-props",
-                type: "double",
-                kindOfQuantity: { label: "Length", name: "testKOQ", persistenceUnit: "m" },
-              },
-            },
-          ],
+          type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Navigation },
         }),
       ],
     });
     const item = createTestContentItem({
-      values: {},
-      displayValues: { [fieldName]: "-- m" },
-      mergedFieldNames: [fieldName],
+      values: {
+        [fieldName]: {
+          id: "0x1",
+          className: "TestSchema:TestClass",
+          label: LabelDefinition.fromLabelString("Navigation Prop Label"),
+        },
+      },
+      displayValues: {},
     });
     createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries).toHaveLength(1);
-    expect(builder.entries[0].isMerged).toBe(true);
-    expect(builder.entries[0].property.editor?.name).toBe(QuantityEditorName);
-    expect(builder.entries[0].property.kindOfQuantityName).toBe("testKOQ");
-    expect(builder.entries[0].value).toEqual({ valueFormat: UiPropertyValueFormat.Primitive, displayValue: "-- m" });
+    expect(builder.entries[0].value).toEqual({
+      valueFormat: UiPropertyValueFormat.Primitive,
+      value: { id: "0x1", className: "TestSchema:TestClass" },
+      displayValue: "Navigation Prop Label",
+    });
   });
 
   it("sorts struct properties", () => {

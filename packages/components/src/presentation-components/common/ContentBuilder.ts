@@ -9,7 +9,12 @@
 import { inPlaceSort } from "fast-sort";
 import { PropertyRecord, StandardTypeNames, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
 import { assert } from "@itwin/core-bentley";
-import { combineFieldNames, PropertyValueFormat as PresentationPropertyValueFormat } from "@itwin/presentation-common";
+import { KOQ_RENDERER_NAME } from "@itwin/imodel-components-react";
+import {
+  combineFieldNames,
+  PropertyValueFormat as PresentationPropertyValueFormat,
+  Value,
+} from "@itwin/presentation-common";
 import { NavigationEditorName, NumericEditorName, QuantityEditorName } from "../properties/editors/EditorNames.js";
 import {
   InstanceKeyValueRendererName,
@@ -109,6 +114,7 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     description.quantityType = info.koqName;
     description.editor = { name: QuantityEditorName, ...description.editor };
+    description.renderer = { name: KOQ_RENDERER_NAME, ...description.renderer };
   }
 
   if (info.constraints) {
@@ -304,11 +310,7 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
     const propertyField = props.requestedField;
     const rootAppender = this._appendersStack[0];
     assert(IPropertiesAppender.isRoot(rootAppender));
-    const displayValue = rootAppender.item.displayValues[props.mergedField.name] as string | undefined;
-    const value: PrimitiveValue = {
-      valueFormat: UiPropertyValueFormat.Primitive,
-      ...(displayValue?.startsWith("--") ? { displayValue } : {}),
-    };
+    const value: PrimitiveValue = { valueFormat: UiPropertyValueFormat.Primitive };
     const record = new PropertyRecord(
       value,
       createPropertyDescriptionFromFieldInfo(createFieldInfo(propertyField, props.parentFieldName)),
@@ -321,12 +323,15 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
 
   public processPrimitiveValue(props: ProcessPrimitiveValueProps): void {
     const appender = this.currentPropertiesAppender;
-    const value: PrimitiveValue = {
-      valueFormat: UiPropertyValueFormat.Primitive,
-      value: props.rawValue,
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
-      displayValue: props.displayValue?.toString() ?? "",
-    };
+
+    const displayValue =
+      props.field.type.typeName === "navigation" && Value.isNavigationValue(props.rawValue)
+        ? props.rawValue.label.displayValue
+        : undefined;
+    const rawValue = Value.isNavigationValue(props.rawValue)
+      ? { id: props.rawValue.id, className: props.rawValue.className }
+      : props.rawValue;
+    const value: PrimitiveValue = { valueFormat: UiPropertyValueFormat.Primitive, value: rawValue, displayValue };
     const record = new PropertyRecord(
       value,
       createPropertyDescriptionFromFieldInfo({
@@ -337,8 +342,7 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
     applyPropertyRecordAttributes(
       record,
       props.field,
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
-      props.displayValue?.toString(),
+      undefined,
       IPropertiesAppender.isRoot(appender) ? appender.item.extendedData : undefined,
       this._propertyRecordsProcessor,
     );
@@ -350,7 +354,7 @@ function applyPropertyRecordAttributes(
   record: WithIModelKey<PropertyRecord>,
   field: Field,
   displayValue: string | undefined,
-  extendedData: typeof Item.prototype.extendedData,
+  itemExtendedData: typeof Item.prototype.extendedData,
   propertyRecordsProcessor?: (record: PropertyRecord) => void,
 ) {
   if (displayValue) {
@@ -362,8 +366,8 @@ function applyPropertyRecordAttributes(
   if (field.isNestedContentField() && field.autoExpand) {
     record.autoExpand = true;
   }
-  if (extendedData) {
-    record.extendedData = extendedData;
+  if (field.extendedData || itemExtendedData) {
+    record.extendedData = { ...field.extendedData, ...itemExtendedData };
   }
   propertyRecordsProcessor?.(record);
 }
