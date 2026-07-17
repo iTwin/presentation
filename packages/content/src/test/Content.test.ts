@@ -5,7 +5,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { resolveContentSources } from "../content/Content.js";
-import { ECSQL_PREFIX } from "../content/InternalUtils.js";
+import { TARGET_FILTER_JOIN_ALIAS } from "../content/query/TargetFilter.js";
 
 import type {
   EC,
@@ -858,11 +858,10 @@ describe("resolveContentSources", () => {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
       const query = call[0];
-      const idSetAlias = `${ECSQL_PREFIX}instanceIds`;
       expect(query.ecsql).to.include(
-        `JOIN IdSet(:${idSetAlias}) [${idSetAlias}] ON [${idSetAlias}].id = [this].ECInstanceId`,
+        `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}] ON [${TARGET_FILTER_JOIN_ALIAS}].id = [this].ECInstanceId`,
       );
-      expect(query.bindings).to.deep.equal({ [idSetAlias]: { type: "idset", value: ["0x1", "0x2"] } });
+      expect(query.bindings).to.deep.equal({ [TARGET_FILTER_JOIN_ALIAS]: { type: "idset", value: ["0x1", "0x2"] } });
     });
   });
 
