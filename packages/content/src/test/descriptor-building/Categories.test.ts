@@ -215,16 +215,31 @@ describe("collectCategories", () => {
   });
 
   it("applies the default priority to external categories without an explicit priority", async () => {
+    // External provider with no explicit priority uses DEFAULT_FIELDS_PROVIDER_PRIORITY (1000).
+    // A competing iModel provider at priority 999 loses; one at priority 1001 wins.
     const external = createExternalProvider("ext_v1", { cat: { id: "cat", label: "Ext" } });
-    const categories = await collectCategories({
+
+    const lowerPriorityProvider = createProvider("low_v1", { cat: { id: "cat", label: "Lower" } }, 999);
+    const categoriesVsLower = await collectCategories({
       imodelAccess: createSchemaAccess([]),
       sources: [createSource()],
-      imodelFieldsProviders: [],
+      imodelFieldsProviders: [lowerPriorityProvider],
       externalFieldsProviders: [external],
       getContribution,
       fields: [],
     });
-    expect(categories.cat).to.deep.equal({ id: "cat", label: "Ext" });
+    expect(categoriesVsLower.cat.label).to.equal("Ext");
+
+    const higherPriorityProvider = createProvider("high_v1", { cat: { id: "cat", label: "Higher" } }, 1001);
+    const categoriesVsHigher = await collectCategories({
+      imodelAccess: createSchemaAccess([]),
+      sources: [createSource()],
+      imodelFieldsProviders: [higherPriorityProvider],
+      externalFieldsProviders: [external],
+      getContribution,
+      fields: [],
+    });
+    expect(categoriesVsHigher.cat.label).to.equal("Higher");
   });
 
   it("auto-creates a category for a related field without one, labelled by the terminal class", async () => {

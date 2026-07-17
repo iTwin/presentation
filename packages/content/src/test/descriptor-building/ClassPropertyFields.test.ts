@@ -220,7 +220,7 @@ describe("collectClassPropertyFields", () => {
         createPrimitiveProperty({
           name: "A",
           declaringClassName: "TestSchema.C",
-          category: { fullName: "TestSchema.Geometry", label: "Geometry" },
+          category: { fullName: "TestSchema.GeometryClass", label: "Geometry" },
         }),
       ]);
 
@@ -235,7 +235,7 @@ describe("collectClassPropertyFields", () => {
 
       expect(categorization).to.deep.equal({
         anchor: "none",
-        category: { source: "schema", id: "TestSchema.Geometry", label: "Geometry" },
+        category: { source: "schema", id: "TestSchema.GeometryClass", label: "Geometry" },
       });
     });
 
@@ -244,7 +244,7 @@ describe("collectClassPropertyFields", () => {
         createPrimitiveProperty({
           name: "A",
           declaringClassName: "TestSchema.C",
-          category: { fullName: "TestSchema.Geometry" },
+          category: { fullName: "TestSchema.GeometryClass" },
         }),
       ]);
 
@@ -259,7 +259,7 @@ describe("collectClassPropertyFields", () => {
 
       expect(categorization).to.deep.equal({
         anchor: "targetClass",
-        category: { source: "schema", id: "TestSchema.Geometry", label: "Geometry" },
+        category: { source: "schema", id: "TestSchema.GeometryClass", label: "GeometryClass" },
       });
     });
 
