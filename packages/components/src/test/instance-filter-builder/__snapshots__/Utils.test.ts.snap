@@ -158,6 +158,9 @@ Array [
       "kindOfQuantityName": "Test:KoQ",
       "name": "root#PropertiesField",
       "quantityType": "Test:KoQ",
+      "renderer": Object {
+        "name": "KoqPropertyValueRenderer",
+      },
       "typename": "string",
     },
     "sourceClassId": "0x1",

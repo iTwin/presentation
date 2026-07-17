@@ -9,16 +9,12 @@
 
 import { Observable as RxjsObservable } from "rxjs/internal/Observable";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { CheckBoxState } from "@itwin/core-react";
 import { NodeKey } from "@itwin/presentation-common";
-import { StyleHelper } from "../common/StyleHelper.js";
 import { createLabelRecord } from "../common/Utils.js";
 import { InfoTreeNodeItemType } from "./PresentationTreeNodeItem.js";
 
 import type {
   DelayLoadedTreeNodeItem,
-  ItemColorOverrides,
-  ItemStyle,
   Observable,
   TreeNodeItem,
   PageOptions as UiPageOptions,
@@ -62,8 +58,9 @@ export function createTreeNodeItem(
     key: node.key,
   };
   assignOptionalTreeNodeItemFields(item, node, parentId);
-  const customizeItemCallback = props?.customizeTreeNodeItem ?? customizeTreeNodeItem;
-  customizeItemCallback(item, node);
+  if (props?.customizeTreeNodeItem) {
+    props.customizeTreeNodeItem(item, node);
+  }
   return item;
 }
 
@@ -80,8 +77,9 @@ export function createPartialTreeNodeItem(
   }
 
   assignOptionalTreeNodeItemFields(item, node, parentId);
-  const customizeItemCallback = props.customizeTreeNodeItem ?? customizeTreeNodeItem;
-  customizeItemCallback(item, node);
+  if (props.customizeTreeNodeItem) {
+    props.customizeTreeNodeItem(item, node);
+  }
   return item;
 }
 
@@ -119,67 +117,6 @@ function assignOptionalTreeNodeItemFields(
     item.extendedData = node.extendedData;
   }
 }
-
-/**
- * Applies customization from [Node]($presentation-common) to [TreeNodeItem]($components-react).
- * @public
- * @deprecated in 3.2. This is a temporary function to apply deprecated [Node]($presentation-common) customization attributes on a [TreeNodeItem]($components-react).
- * The recommendation is to switch to using a custom customization function that looks at node's [Node.extendedData]($presentation-common) and applies
- * [TreeNodeItem]($components-react) customization based on values in extended data.
- * See [extended data usage page]($docs/presentation/customization/ExtendedDataUsage.md) for more details.
- */
-/* v8 ignore start -- @preserve */
-export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node>) {
-  if (node.imageId) {
-    item.icon = node.imageId;
-  }
-
-  if (hasCheckboxVisible(node) && node.isCheckboxVisible) {
-    item.isCheckboxVisible = true;
-
-    if (hasIsChecked(node) && node.isChecked) {
-      item.checkBoxState = CheckBoxState.On;
-    }
-
-    if (hasIsCheckboxEnabled(node) && !node.isCheckboxEnabled) {
-      item.isCheckboxDisabled = true;
-    }
-  }
-
-  const style = createTreeNodeItemStyle(node);
-  if (Object.keys(style).length > 0) {
-    item.style = style;
-  }
-}
-
-function createTreeNodeItemStyle(node: Partial<Node>): ItemStyle {
-  const style: ItemStyle = {};
-  if (StyleHelper.isBold(node)) {
-    style.isBold = true;
-  }
-
-  if (StyleHelper.isItalic(node)) {
-    style.isItalic = true;
-  }
-
-  const colorOverrides: ItemColorOverrides = {};
-  const foreColor = StyleHelper.getForeColor(node);
-  if (foreColor) {
-    colorOverrides.color = foreColor;
-  }
-
-  const backColor = StyleHelper.getBackColor(node);
-  if (backColor) {
-    colorOverrides.backgroundColor = backColor;
-  }
-
-  if (Object.keys(colorOverrides).length > 0) {
-    style.colorOverrides = colorOverrides;
-  }
-
-  return style;
-}
-/* v8 ignore stop -- @preserve */
 
 /** @internal */
 export function pageOptionsUiToPresentation(pageOptions?: UiPageOptions): PresentationPageOptions | undefined {
@@ -227,24 +164,3 @@ export function createInfoNode(
     type: type ?? InfoTreeNodeItemType.Unset,
   };
 }
-
-// TODO: Remove these types after itwinjs-core 4.x is dropped
-type WithCheckboxVisible<T> = T & { isCheckboxVisible?: boolean };
-type WithIsChecked<T> = T & { isChecked?: boolean };
-type WithIsCheckboxEnabled<T> = T & { isCheckboxEnabled?: boolean };
-
-function hasCheckboxVisible<T extends object>(node: T): node is WithCheckboxVisible<T> {
-  return "isCheckboxVisible" in node;
-}
-
-/* v8 ignore start -- @preserve */
-
-function hasIsChecked<T extends object>(node: T): node is WithIsChecked<T> {
-  return "isChecked" in node;
-}
-
-function hasIsCheckboxEnabled<T extends object>(node: T): node is WithIsCheckboxEnabled<T> {
-  return "isCheckboxEnabled" in node;
-}
-
-/* v8 ignore stop -- @preserve */

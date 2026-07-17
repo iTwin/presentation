@@ -13,29 +13,25 @@ import { useCallback, useEffect, useState } from "react";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { Guid } from "@itwin/core-bentley";
 import { KeySet, LabelDefinition, parseCombinedFieldNames } from "@itwin/presentation-common";
-import { createSelectionScopeProps, Presentation } from "@itwin/presentation-frontend";
+import { Presentation } from "@itwin/presentation-frontend";
 import { Selectables } from "@itwin/unified-selection";
+import { LOCALIZATION_NAMESPACE } from "./LocalizedStrings.js";
 
 import type { Primitives, PrimitiveValue, PropertyDescription } from "@itwin/appui-abstract";
 import type { GuidString } from "@itwin/core-bentley";
 import type { TranslationOptions } from "@itwin/core-common";
 import type { Descriptor, Field, LabelCompositeValue, Ruleset, Value } from "@itwin/presentation-common";
-import type { SelectionScopesManager } from "@itwin/presentation-frontend";
-import type { computeSelection } from "@itwin/unified-selection";
-
-/** @internal */
-export const localizationNamespaceName = "PresentationComponents";
+import type { LocalizationKey } from "./LocalizedStrings.js";
 
 /**
- * Translate a string with the specified id from `PresentationComponents`
+ * Translate a string with the specified id from the `PresentationComponents`
  * localization namespace. The `stringId` should not contain namespace - it's
  * prepended automatically.
  *
  * @internal
  */
-export const translate = (stringId: string, options?: TranslationOptions): string => {
-  stringId = `${localizationNamespaceName}:${stringId}`;
-  return Presentation.localization.getLocalizedString(stringId, options);
+export const translate = (stringId: LocalizationKey, options?: TranslationOptions): string => {
+  return Presentation.localization.getLocalizedString(`${LOCALIZATION_NAMESPACE}:${stringId}`, options);
 };
 
 /**
@@ -57,12 +53,10 @@ export const getDisplayName = <P>(component: React.ComponentType<P>): string => 
  * @internal
  */
 export const findField = (descriptor: Descriptor, recordPropertyName: string): Field | undefined => {
-  // note: define `fieldsSource` as an object with optional `getFieldByName` method, because some field sources received this
-  // method later than our minimum required version of `@itwin/presentation-common`
-  let fieldsSource: { getFieldByName?: (name: string) => Field | undefined } = descriptor;
+  let fieldsSource: { getFieldByName: (name: string) => Field | undefined } = descriptor;
   const fieldNames = parseCombinedFieldNames(recordPropertyName);
   while (fieldNames.length) {
-    const field: Field | undefined = fieldsSource.getFieldByName?.(fieldNames.shift()!);
+    const field: Field | undefined = fieldsSource.getFieldByName(fieldNames.shift()!);
     if (!fieldNames.length) {
       return field;
     }
@@ -71,9 +65,7 @@ export const findField = (descriptor: Descriptor, recordPropertyName: string): F
     }
     if (field.isNestedContentField()) {
       fieldsSource = field;
-      // note: `isStructPropertiesField` and `isArrayPropertiesField` may not be available in older versions of core
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    } else if (field.isPropertiesField() && (field.isStructPropertiesField?.() || field.isArrayPropertiesField?.())) {
+    } else if (field.isPropertiesField() && (field.isStructPropertiesField() || field.isArrayPropertiesField())) {
       fieldsSource = field;
     } else {
       return undefined;
@@ -254,37 +246,6 @@ export async function createKeySetFromSelectables(selectables: Selectables): Pro
   }
   return keys;
 }
-
-/* v8 ignore start -- @preserve */
-
-export function mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  scope: SelectionScopesManager["activeScope"],
-): Parameters<typeof computeSelection>[0]["scope"] {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  const scopeProps = createSelectionScopeProps(scope);
-  switch (scopeProps.id) {
-    case "functional-element":
-      return { id: "functional" };
-    case "functional-assembly":
-      return { id: "functional", ancestorLevel: 1 };
-    case "functional-top-assembly":
-      return { id: "functional", ancestorLevel: -1 };
-    case "element":
-      return { id: "element" };
-    case "assembly":
-      return { id: "element", ancestorLevel: 1 };
-    case "top-assembly":
-      return { id: "element", ancestorLevel: -1 };
-    case "category":
-      return { id: "category" };
-    case "model":
-      return { id: "model" };
-  }
-  throw new Error(`Unknown selection scope: "${scopeProps.id}"`);
-}
-
-/* v8 ignore stop -- @preserve */
 
 /**
  * A helper that disposes the given object, if it's disposable.

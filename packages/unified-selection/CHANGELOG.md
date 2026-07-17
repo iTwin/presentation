@@ -1,5 +1,27 @@
 # @itwin/unified-selection
 
+## 1.8.3
+
+### Patch Changes
+
+- [#1430](https://github.com/iTwin/presentation/pull/1430): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.18
+
+## 1.8.2
+
+### Patch Changes
+
+- [#1400](https://github.com/iTwin/presentation/pull/1400): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.17
+
+## 1.8.1
+
+### Patch Changes
+
+- 9f2f1f405e82bbb5bad83de67c265ea0407d6cf1: Avoid freezing main thread when loading huge amount of selectable instance keys.
+
 ## 1.8.1-alpha.0
 
 ### Patch Changes

@@ -19,13 +19,10 @@ import {
   SelectionHelper,
   SelectionManager,
 } from "@itwin/presentation-frontend";
-import {
-  UnifiedSelectionTreeEventHandler,
-  useUnifiedSelectionTreeEventHandler,
-} from "../../../presentation-components/tree/controlled/UseUnifiedSelection.js";
+import { UnifiedSelectionTreeEventHandler } from "../../../presentation-components/tree/controlled/UseUnifiedSelection.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
 import { createTestTreeNodeItem } from "../../_helpers/UiComponents.js";
-import { configure, createMocked, renderHook } from "../../TestUtils.js";
+import { createMocked } from "../../TestUtils.js";
 
 import type { ObservableInput } from "rxjs/internal/types";
 import type { Mocked } from "vitest";
@@ -40,7 +37,6 @@ import type {
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { Key, NodeKey } from "@itwin/presentation-common";
 import type { ISelectionProvider, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
-import type { UnifiedSelectionTreeEventHandlerParams } from "../../../presentation-components/tree/controlled/UseUnifiedSelection.js";
 import type { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 import type { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
 
@@ -595,38 +591,5 @@ describe("UnifiedSelectionEventHandler", () => {
         SelectionHelper.getKeysForSelection([getItemKey(node2.item)]),
       );
     });
-  });
-});
-
-describe("useUnifiedSelectionTreeEventHandler", () => {
-  const modelSource = new TreeModelSource();
-  const dataProvider = {} as IPresentationTreeDataProvider;
-
-  const nodeLoader = { modelSource, dataProvider } as AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
-
-  beforeAll(async () => {
-    await UiComponents.initialize(new EmptyLocalization());
-  });
-
-  afterAll(() => {
-    UiComponents.terminate();
-  });
-
-  beforeEach(() => {
-    const selectionManager = createMocked(SelectionManager);
-    Object.assign(selectionManager, { selectionChange: new SelectionChangeEvent() });
-    vi.spyOn(Presentation, "selection", "get").mockReturnValue(selectionManager);
-  });
-
-  it("creates and disposes UnifiedSelectionTreeEventHandler", () => {
-    configure({ reactStrictMode: false });
-    const { result, unmount } = renderHook(
-      (props: UnifiedSelectionTreeEventHandlerParams) => useUnifiedSelectionTreeEventHandler(props),
-      { initialProps: { nodeLoader } },
-    );
-    expect(result.current).toBeDefined();
-    expect(nodeLoader.modelSource.onModelChanged.numberOfListeners).toBe(1);
-    unmount();
-    expect(nodeLoader.modelSource.onModelChanged.numberOfListeners).toBe(0);
   });
 });
