@@ -12,6 +12,7 @@ const { join } = require("path");
 
 const ignore = [
   "node_modules",
+  ".changeset",
   ".git",
   "lib",
   "build",
