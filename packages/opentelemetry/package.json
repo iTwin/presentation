@@ -21,20 +21,17 @@
     "url": "http://www.bentley.com"
   },
   "type": "module",
-  "main": "lib/cjs/presentation-opentelemetry.js",
-  "types": "lib/cjs/presentation-opentelemetry",
-  "module": "lib/esm/presentation-opentelemetry.js",
+  "types": "lib/presentation-opentelemetry",
+  "module": "lib/presentation-opentelemetry.js",
   "exports": {
     ".": {
-      "import": "./lib/esm/presentation-opentelemetry.js",
-      "require": "./lib/cjs/presentation-opentelemetry.js"
+      "import": "./lib/presentation-opentelemetry.js"
     },
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "npm run -s typecheck && npm run -s build:cjs && npm run -s build:esm",
-    "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && tsc -p tsconfig.cjs.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
+    "build": "npm run -s typecheck && npm run -s build:lib",
+    "build:lib": "tsc -p tsconfig.lib.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "rimraf lib build",
     "cover": "vitest run --coverage",
@@ -45,7 +42,7 @@
     "lint": "eslint \"./src/**/*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "extract-api": "betools extract-api --entry=presentation-opentelemetry --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "extract-api": "betools extract-api --entry=lib/presentation-opentelemetry --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-opentelemetry.api.md"
   },
   "peerDependencies": {

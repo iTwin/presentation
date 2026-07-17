@@ -48,7 +48,7 @@ This is a **pnpm monorepo** orchestrated with **Lage** and versioned with **Chan
 
 ## Key Conventions
 
-- Packages produce dual CJS/ESM output via `tsconfig.cjs.json` / `tsconfig.esm.json`
+- Packages produce ESM-only output via `tsconfig.lib.json` (built with `tsc`) or `tsdown`
 - Public API is tracked via `extract-api` and `.api.md` report files in `api/` folders
 - Copyright headers are required on all source files (enforced by `copyrightLinter.js`):
   ```

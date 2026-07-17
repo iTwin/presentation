@@ -3,7 +3,7 @@
   "compilerOptions": {
     "noEmit": false,
     "rootDir": "./src",
-    "outDir": "lib/esm"
+    "outDir": "lib"
   },
-  "include": ["src/hierarchies", "src/presentation-hierarchies.ts"]
+  "include": ["src/shared", "src/presentation-shared.ts"]
 }
