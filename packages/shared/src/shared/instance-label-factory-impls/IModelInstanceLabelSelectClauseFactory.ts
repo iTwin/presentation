@@ -16,6 +16,7 @@ import { createBisInstanceLabelSelectClauseFactory } from "./BisInstanceLabelSel
 import { createClassBasedInstanceLabelSelectClauseFactory } from "./ClassBasedInstanceLabelSelectClauseFactory.js";
 import { ALIAS_PREFIX } from "./Utils.js";
 
+import type { CreateRelationshipPathJoinClauseProps } from "../ecsql-snippets/ECSqlJoinSnippets.js";
 import type { TypedValueSelectClauseProps } from "../ecsql-snippets/ECSqlValueSelectorSnippets.js";
 import type { ECSqlQueryExecutor } from "../ECSqlCore.js";
 import type {
@@ -347,7 +348,7 @@ async function compileCompositeSpec(
   return ctx.selectorsConcatenator(selectors, checkSelector);
 }
 
-type JoinRelationshipPathStep = Parameters<typeof createRelationshipPathJoinClause>[0]["path"][number];
+type JoinRelationshipPathStep = CreateRelationshipPathJoinClauseProps["path"][number];
 
 function normalizeRelationshipPath(path: RelationshipPathSpecification): RelationshipStepSpecification[] {
   return Array.isArray(path) ? path : [path];

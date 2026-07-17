@@ -25,7 +25,10 @@ import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "./exten
 
 // --- Types ---
 
-type JoinRelationshipPath = Props<typeof ECSql.createRelationshipPathJoinClause>["path"];
+type JoinRelationshipPath = Extract<
+  Props<typeof ECSql.createRelationshipPathJoinClause>,
+  { schemaProvider: ECSchemaProvider }
+>["path"];
 
 interface ResolutionQueryContext {
   target: ContentTarget;
