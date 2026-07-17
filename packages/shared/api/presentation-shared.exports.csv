@@ -40,6 +40,8 @@ public;function;normalizeFullClassName
 public;type;OmitOverUnion
 public;function;parseFullClassName
 public;function;parseInstanceLabel
+public;interface;Point2dValue
+public;interface;Point3dValue
 public;type;PrimitiveValue
 public;namespace;PrimitiveValue
 public;type;PrimitiveValueDescriptor

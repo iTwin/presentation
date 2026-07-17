@@ -52,7 +52,7 @@ export namespace InstanceKey {
  * A data structure for a 2d point.
  * @public
  */
-export interface Point2d {
+export interface Point2dValue {
   x: number;
   y: number;
 }
@@ -61,7 +61,7 @@ export interface Point2d {
  * A data structure for a 3d point.
  * @public
  */
-export interface Point3d {
+export interface Point3dValue {
   x: number;
   y: number;
   z: number;
@@ -71,17 +71,17 @@ export interface Point3d {
  * A union for all supported primitive value types.
  * @public
  */
-export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;
+export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2dValue | Point3dValue;
 
 /** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace PrimitiveValue {
   /**
-   * Checks whether the given value is a `Point2d`.
-   * @note Since `Point3d` is a superset of `Point2d`, this function will return `true` for `Point3d` as well.
+   * Checks whether the given value is a `Point2dValue`.
+   * @note Since `Point3dValue` is a superset of `Point2dValue`, this function will return `true` for `Point3dValue` as well.
    * @public
    */
-  export function isPoint2d(value: PrimitiveValue): value is Point2d {
+  export function isPoint2d(value: PrimitiveValue): value is Point2dValue {
     if (typeof value !== "object") {
       return false;
     }
@@ -89,10 +89,10 @@ export namespace PrimitiveValue {
   }
 
   /**
-   * Checks whether the given value is a `Point3d`.
+   * Checks whether the given value is a `Point3dValue`.
    * @public
    */
-  export function isPoint3d(value: PrimitiveValue): value is Point3d {
+  export function isPoint3d(value: PrimitiveValue): value is Point3dValue {
     if (typeof value !== "object") {
       return false;
     }
@@ -114,8 +114,8 @@ export type TypedPrimitiveValue = (
       value: number | string | Date; // julian day format, ISO format or `Date`
       type: Extract<PrimitiveValueType, "DateTime">;
     }
-  | { value: Point2d; type: Extract<PrimitiveValueType, "Point2d"> }
-  | { value: Point3d; type: Extract<PrimitiveValueType, "Point3d"> }
+  | { value: Point2dValue; type: Extract<PrimitiveValueType, "Point2d"> }
+  | { value: Point3dValue; type: Extract<PrimitiveValueType, "Point3d"> }
 ) & { extendedType?: string };
 
 /** @public */

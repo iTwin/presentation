@@ -543,7 +543,7 @@ export function parseFullClassName(fullClassName: string): {
 export function parseInstanceLabel(value: string | undefined): ConcatenatedValue | string;
 
 // @public
-interface Point2d {
+export interface Point2dValue {
     // (undocumented)
     x: number;
     // (undocumented)
@@ -551,7 +551,7 @@ interface Point2d {
 }
 
 // @public
-interface Point3d {
+export interface Point3dValue {
     // (undocumented)
     x: number;
     // (undocumented)
@@ -561,12 +561,12 @@ interface Point3d {
 }
 
 // @public
-export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;
+export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2dValue | Point3dValue;
 
 // @public (undocumented)
 export namespace PrimitiveValue {
-    export function isPoint2d(value: PrimitiveValue): value is Point2d;
-    export function isPoint3d(value: PrimitiveValue): value is Point3d;
+    export function isPoint2d(value: PrimitiveValue): value is Point2dValue;
+    export function isPoint3d(value: PrimitiveValue): value is Point3dValue;
 }
 
 // @public
@@ -666,10 +666,10 @@ export type TypedPrimitiveValue = ({
     value: number | string | Date;
     type: Extract<PrimitiveValueType, "DateTime">;
 } | {
-    value: Point2d;
+    value: Point2dValue;
     type: Extract<PrimitiveValueType, "Point2d">;
 } | {
-    value: Point3d;
+    value: Point3dValue;
     type: Extract<PrimitiveValueType, "Point3d">;
 }) & {
     extendedType?: string;
