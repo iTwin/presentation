@@ -380,6 +380,11 @@ export type ECSqlBinding = {
 };
 
 // @public
+export namespace ECSqlBinding {
+    export function create(input: TypedPrimitiveValue): ECSqlBinding;
+}
+
+// @public
 export interface ECSqlQueryDef {
     bindings?: ECSqlBinding[] | Record<string, ECSqlBinding>;
     ctes?: string[];
@@ -543,7 +548,7 @@ export function parseFullClassName(fullClassName: string): {
 export function parseInstanceLabel(value: string | undefined): ConcatenatedValue | string;
 
 // @public
-interface Point2d {
+export interface Point2dValue {
     // (undocumented)
     x: number;
     // (undocumented)
@@ -551,7 +556,7 @@ interface Point2d {
 }
 
 // @public
-interface Point3d {
+export interface Point3dValue {
     // (undocumented)
     x: number;
     // (undocumented)
@@ -561,12 +566,12 @@ interface Point3d {
 }
 
 // @public
-export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;
+export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2dValue | Point3dValue;
 
 // @public (undocumented)
 export namespace PrimitiveValue {
-    export function isPoint2d(value: PrimitiveValue): value is Point2d;
-    export function isPoint3d(value: PrimitiveValue): value is Point3d;
+    export function isPoint2d(value: PrimitiveValue): value is Point2dValue;
+    export function isPoint3d(value: PrimitiveValue): value is Point3dValue;
 }
 
 // @public
@@ -591,7 +596,7 @@ export type PrimitiveValueDescriptor = {
 });
 
 // @public
-type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
+export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
 // @public
 export type Props<TFunc extends (...args: any[]) => any> = Parameters<TFunc> extends [infer TProps] ? Exclude<TProps, undefined> extends object ? TProps : never : Parameters<TFunc> extends [(infer TProps)?] ? Exclude<TProps, undefined> extends object ? TProps | undefined : never : never;
@@ -651,7 +656,15 @@ export function trimWhitespace(str: string | undefined): string | undefined;
 // @public
 export type TypedPrimitiveValue = ({
     value: number;
-    type: Extract<PrimitiveValueType, "Double" | "Integer" | "Long">;
+    type: Extract<PrimitiveValueType, "Double">;
+    koqName?: string;
+} | {
+    value: number;
+    type: Extract<PrimitiveValueType, "Integer">;
+    koqName?: string;
+} | {
+    value: number;
+    type: Extract<PrimitiveValueType, "Long">;
     koqName?: string;
 } | {
     value: boolean;
@@ -666,10 +679,10 @@ export type TypedPrimitiveValue = ({
     value: number | string | Date;
     type: Extract<PrimitiveValueType, "DateTime">;
 } | {
-    value: Point2d;
+    value: Point2dValue;
     type: Extract<PrimitiveValueType, "Point2d">;
 } | {
-    value: Point3d;
+    value: Point3dValue;
     type: Extract<PrimitiveValueType, "Point3d">;
 }) & {
     extendedType?: string;
@@ -677,7 +690,9 @@ export type TypedPrimitiveValue = ({
 
 // @public (undocumented)
 export namespace TypedPrimitiveValue {
-    export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue;
+    export function create<TValue extends PrimitiveValue, TType extends PrimitiveValueType>(value: TValue, type: TType, koqName?: string, extendedType?: string): Extract<TypedPrimitiveValue, {
+        type: TType;
+    }>;
 }
 
 // @public
