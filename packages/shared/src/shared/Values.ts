@@ -106,7 +106,9 @@ export namespace PrimitiveValue {
  * @public
  */
 export type TypedPrimitiveValue = (
-  | { value: number; type: Extract<PrimitiveValueType, "Double" | "Integer" | "Long">; koqName?: string }
+  | { value: number; type: Extract<PrimitiveValueType, "Double">; koqName?: string }
+  | { value: number; type: Extract<PrimitiveValueType, "Integer">; koqName?: string }
+  | { value: number; type: Extract<PrimitiveValueType, "Long">; koqName?: string }
   | { value: boolean; type: Extract<PrimitiveValueType, "Boolean"> }
   | { value: Id64String; type: Extract<PrimitiveValueType, "Id"> }
   | { value: string; type: Extract<PrimitiveValueType, "String"> }
@@ -126,52 +128,59 @@ export namespace TypedPrimitiveValue {
    * @throws Error if primitive type and value are incompatible.
    * @public
    */
-  export function create(
-    value: PrimitiveValue,
-    type: PrimitiveValueType,
+  export function create<TValue extends PrimitiveValue, TType extends PrimitiveValueType>(
+    value: TValue,
+    type: TType,
     koqName?: string,
     extendedType?: string,
-  ): TypedPrimitiveValue {
-    switch (type) {
-      case "Double":
-      case "Integer":
-      case "Long":
-        if (typeof value === "number") {
-          return { type, koqName, extendedType, value };
-        }
-        break;
-      case "Boolean":
-        if (typeof value === "boolean") {
-          return { type, extendedType, value };
-        }
-        break;
-      case "Id":
-        if (typeof value === "string" && Id64.isId64(value)) {
-          return { type, extendedType, value };
-        }
-        break;
-      case "String":
-        if (typeof value === "string") {
-          return { type, extendedType, value };
-        }
-        break;
-      case "DateTime":
-        if (typeof value === "string" || typeof value === "number" || value instanceof Date) {
-          return { type, extendedType, value };
-        }
-        break;
-      case "Point3d":
-        if (PrimitiveValue.isPoint3d(value)) {
-          return { type, extendedType, value };
-        }
-        break;
-      case "Point2d":
-        if (PrimitiveValue.isPoint2d(value)) {
-          return { type, extendedType, value };
-        }
-        break;
-    }
-    throw new Error(`PrimitiveValueType ${type} isn't compatible with value ${JSON.stringify(value)}`);
+  ): Extract<TypedPrimitiveValue, { type: TType }> {
+    // The function's return type narrows `TypedPrimitiveValue` based on the generic `TType`. TypeScript can't verify that the
+    // objects created below satisfy that narrowed type, because narrowing the `type`/`value` variables via control flow doesn't
+    // narrow the `TType` type parameter itself (it stays generic within the function body). So we build the value with a concrete
+    // `TypedPrimitiveValue` return type - which TypeScript does check branch-by-branch - and apply the narrowing with a single
+    // cast at the boundary, rather than casting every `return` statement individually.
+    return (function (): TypedPrimitiveValue {
+      switch (type) {
+        case "Double":
+        case "Integer":
+        case "Long":
+          if (typeof value === "number") {
+            return { type, koqName, extendedType, value };
+          }
+          break;
+        case "Boolean":
+          if (typeof value === "boolean") {
+            return { type, extendedType, value };
+          }
+          break;
+        case "Id":
+          if (typeof value === "string" && Id64.isId64(value)) {
+            return { type, extendedType, value };
+          }
+          break;
+        case "String":
+          if (typeof value === "string") {
+            return { type, extendedType, value };
+          }
+          break;
+        case "DateTime":
+          if (typeof value === "string" || typeof value === "number" || value instanceof Date) {
+            return { type, extendedType, value };
+          }
+          break;
+        case "Point3d":
+          if (PrimitiveValue.isPoint3d(value)) {
+            return { type, extendedType, value };
+          }
+          break;
+        case "Point2d":
+          if (PrimitiveValue.isPoint2d(value)) {
+            return { type, extendedType, value };
+          }
+          break;
+      }
+      throw new Error(`PrimitiveValueType ${type} isn't compatible with value ${JSON.stringify(value)}`);
+    })() as Extract<TypedPrimitiveValue, { type: TType }>;
   }
 }
 

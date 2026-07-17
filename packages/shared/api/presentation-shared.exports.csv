@@ -19,6 +19,7 @@ public;namespace;EC
 public;interface;ECClassHierarchyInspector
 public;interface;ECSchemaProvider
 public;type;ECSqlBinding
+public;namespace;ECSqlBinding
 public;interface;ECSqlQueryDef
 public;interface;ECSqlQueryExecutor
 public;interface;ECSqlQueryReaderOptions
@@ -45,6 +46,7 @@ public;interface;Point3dValue
 public;type;PrimitiveValue
 public;namespace;PrimitiveValue
 public;type;PrimitiveValueDescriptor
+public;type;PrimitiveValueType
 public;type;Props
 public;interface;RaisableEvent
 public;type;RelationshipPath

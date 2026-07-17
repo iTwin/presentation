@@ -6,13 +6,8 @@
 export * as ECSql from "./shared/ecsql-snippets/index.js";
 
 export { ConcatenatedValue, ConcatenatedValuePart } from "./shared/ConcatenatedValue.js";
-export type {
-  ECSqlBinding,
-  ECSqlQueryDef,
-  ECSqlQueryExecutor,
-  ECSqlQueryReaderOptions,
-  ECSqlQueryRow,
-} from "./shared/ECSqlCore.js";
+export { ECSqlBinding } from "./shared/ECSqlCore.js";
+export type { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "./shared/ECSqlCore.js";
 export type { IPrimitiveValueFormatter } from "./shared/Formatting.js";
 export { createDefaultValueFormatter, formatConcatenatedValue } from "./shared/Formatting.js";
 export type { IInstanceLabelSelectClauseFactory } from "./shared/InstanceLabelSelectClauseFactory.js";
@@ -31,6 +26,7 @@ export type {
   ECSchemaProvider,
   NavigationValueDescriptor,
   PrimitiveValueDescriptor,
+  PrimitiveValueType,
   RelationshipPath,
   StructValueDescriptor,
   ValueDescriptor,

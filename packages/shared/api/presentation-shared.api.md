@@ -380,6 +380,11 @@ export type ECSqlBinding = {
 };
 
 // @public
+export namespace ECSqlBinding {
+    export function create(input: TypedPrimitiveValue): ECSqlBinding;
+}
+
+// @public
 export interface ECSqlQueryDef {
     bindings?: ECSqlBinding[] | Record<string, ECSqlBinding>;
     ctes?: string[];
@@ -591,7 +596,7 @@ export type PrimitiveValueDescriptor = {
 });
 
 // @public
-type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
+export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
 // @public
 export type Props<TFunc extends (...args: any[]) => any> = Parameters<TFunc> extends [infer TProps] ? Exclude<TProps, undefined> extends object ? TProps : never : Parameters<TFunc> extends [(infer TProps)?] ? Exclude<TProps, undefined> extends object ? TProps | undefined : never : never;
@@ -651,7 +656,15 @@ export function trimWhitespace(str: string | undefined): string | undefined;
 // @public
 export type TypedPrimitiveValue = ({
     value: number;
-    type: Extract<PrimitiveValueType, "Double" | "Integer" | "Long">;
+    type: Extract<PrimitiveValueType, "Double">;
+    koqName?: string;
+} | {
+    value: number;
+    type: Extract<PrimitiveValueType, "Integer">;
+    koqName?: string;
+} | {
+    value: number;
+    type: Extract<PrimitiveValueType, "Long">;
     koqName?: string;
 } | {
     value: boolean;
@@ -677,7 +690,9 @@ export type TypedPrimitiveValue = ({
 
 // @public (undocumented)
 export namespace TypedPrimitiveValue {
-    export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue;
+    export function create<TValue extends PrimitiveValue, TType extends PrimitiveValueType>(value: TValue, type: TType, koqName?: string, extendedType?: string): Extract<TypedPrimitiveValue, {
+        type: TType;
+    }>;
 }
 
 // @public
