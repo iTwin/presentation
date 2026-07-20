@@ -132,10 +132,10 @@ function createRawPrimitiveValueSelector(value: PrimitiveValue | undefined): str
 function createRawPropertyValueSelector(classAlias: string, propertyName: string, componentName?: string): string;
 
 // @public
-function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps): Promise<{
-    joins: string;
-    bindings?: Record<string, ECSqlBinding>;
-}>;
+function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps): Promise<RelationshipPathJoinClauseResult>;
+
+// @public
+function createRelationshipPathJoinClause(info: RelationshipPathJoinInfo): RelationshipPathJoinClauseResult;
 
 // @public
 interface CreateRelationshipPathJoinClauseProps {
@@ -144,6 +144,9 @@ interface CreateRelationshipPathJoinClauseProps {
     // (undocumented)
     schemaProvider: ECSchemaProvider;
 }
+
+// @public
+function createRelationshipPathJoinInfo(props: CreateRelationshipPathJoinClauseProps): Promise<RelationshipPathJoinInfo>;
 
 // @public
 export namespace EC {
@@ -344,7 +347,8 @@ declare namespace ECSql {
         createConcatenatedValueStringSelector,
         createInstanceKeySelector,
         createPrimitivePropertyValueSelectorProps,
-        createRelationshipPathJoinClause
+        createRelationshipPathJoinClause,
+        createRelationshipPathJoinInfo
     }
 }
 
@@ -378,6 +382,11 @@ export type ECSqlBinding = {
         z: number;
     };
 };
+
+// @public
+export namespace ECSqlBinding {
+    export function create(input: TypedPrimitiveValue): ECSqlBinding;
+}
 
 // @public
 export interface ECSqlQueryDef {
@@ -509,6 +518,29 @@ interface JoinRelationshipPathStep extends RelationshipPathStep {
 }
 
 // @public
+interface JoinTargetClass {
+    // (undocumented)
+    className: EC.FullClassName;
+    // (undocumented)
+    kind: "class";
+}
+
+// @public
+interface JoinTargetRelationshipSelect {
+    // (undocumented)
+    innerJoinCondition: string;
+    innerTarget: JoinTargetClass;
+    // (undocumented)
+    innerTargetAlias: string;
+    // (undocumented)
+    kind: "relationship-select";
+    // (undocumented)
+    relationshipAlias: string;
+    // (undocumented)
+    relationshipClassName: EC.FullClassName;
+}
+
+// @public
 export function julianToDateTime(julianDate: number): Date;
 
 // @public
@@ -534,6 +566,21 @@ export function normalizeFullClassName(fullClassName: string): EC.FullClassNameD
 export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
 
 // @public
+type OverloadParameters<TFunc> = TFunc extends {
+    (...args: infer A1): any;
+    (...args: infer A2): any;
+    (...args: infer A3): any;
+    (...args: infer A4): any;
+} ? A1 | A2 | A3 | A4 : TFunc extends {
+    (...args: infer A1): any;
+    (...args: infer A2): any;
+    (...args: infer A3): any;
+} ? A1 | A2 | A3 : TFunc extends {
+    (...args: infer A1): any;
+    (...args: infer A2): any;
+} ? A1 | A2 : TFunc extends (...args: infer A1) => any ? A1 : never;
+
+// @public
 export function parseFullClassName(fullClassName: string): {
     schemaName: string;
     className: string;
@@ -543,7 +590,7 @@ export function parseFullClassName(fullClassName: string): {
 export function parseInstanceLabel(value: string | undefined): ConcatenatedValue | string;
 
 // @public
-interface Point2d {
+export interface Point2dValue {
     // (undocumented)
     x: number;
     // (undocumented)
@@ -551,7 +598,7 @@ interface Point2d {
 }
 
 // @public
-interface Point3d {
+export interface Point3dValue {
     // (undocumented)
     x: number;
     // (undocumented)
@@ -561,12 +608,12 @@ interface Point3d {
 }
 
 // @public
-export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;
+export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2dValue | Point3dValue;
 
 // @public (undocumented)
 export namespace PrimitiveValue {
-    export function isPoint2d(value: PrimitiveValue): value is Point2d;
-    export function isPoint3d(value: PrimitiveValue): value is Point3d;
+    export function isPoint2d(value: PrimitiveValue): value is Point2dValue;
+    export function isPoint3d(value: PrimitiveValue): value is Point3dValue;
 }
 
 // @public
@@ -591,10 +638,13 @@ export type PrimitiveValueDescriptor = {
 });
 
 // @public
-type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
+export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
 // @public
-export type Props<TFunc extends (...args: any[]) => any> = Parameters<TFunc> extends [infer TProps] ? Exclude<TProps, undefined> extends object ? TProps : never : Parameters<TFunc> extends [(infer TProps)?] ? Exclude<TProps, undefined> extends object ? TProps | undefined : never : never;
+export type Props<TFunc extends (...args: any[]) => any> = PropsFromParameters<OverloadParameters<TFunc>>;
+
+// @public
+type PropsFromParameters<TParams> = TParams extends [infer TProps] ? Exclude<TProps, undefined> extends object ? TProps : never : TParams extends [(infer TProps)?] ? Exclude<TProps, undefined> extends object ? TProps | undefined : never : never;
 
 // @public
 export interface RaisableEvent<TListener extends (...args: any[]) => void = () => void> extends Event_2<TListener> {
@@ -603,7 +653,30 @@ export interface RaisableEvent<TListener extends (...args: any[]) => void = () =
 }
 
 // @public
+interface RelationshipJoinInfo {
+    joinAlias: string;
+    joinCondition: string;
+    joinTarget: JoinTargetClass | JoinTargetRelationshipSelect;
+    // (undocumented)
+    joinType: "inner" | "outer";
+}
+
+// @public
 export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
+
+// @public
+interface RelationshipPathJoinClauseResult {
+    // (undocumented)
+    bindings?: Record<string, ECSqlBinding>;
+    // (undocumented)
+    joins: string;
+}
+
+// @public
+interface RelationshipPathJoinInfo {
+    bindings?: Record<string, ECSqlBinding>;
+    joins: RelationshipJoinInfo[];
+}
 
 // @public
 interface RelationshipPathStep {
@@ -651,7 +724,15 @@ export function trimWhitespace(str: string | undefined): string | undefined;
 // @public
 export type TypedPrimitiveValue = ({
     value: number;
-    type: Extract<PrimitiveValueType, "Double" | "Integer" | "Long">;
+    type: Extract<PrimitiveValueType, "Double">;
+    koqName?: string;
+} | {
+    value: number;
+    type: Extract<PrimitiveValueType, "Integer">;
+    koqName?: string;
+} | {
+    value: number;
+    type: Extract<PrimitiveValueType, "Long">;
     koqName?: string;
 } | {
     value: boolean;
@@ -666,10 +747,10 @@ export type TypedPrimitiveValue = ({
     value: number | string | Date;
     type: Extract<PrimitiveValueType, "DateTime">;
 } | {
-    value: Point2d;
+    value: Point2dValue;
     type: Extract<PrimitiveValueType, "Point2d">;
 } | {
-    value: Point3d;
+    value: Point3dValue;
     type: Extract<PrimitiveValueType, "Point3d">;
 }) & {
     extendedType?: string;
@@ -677,7 +758,9 @@ export type TypedPrimitiveValue = ({
 
 // @public (undocumented)
 export namespace TypedPrimitiveValue {
-    export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue;
+    export function create<TValue extends PrimitiveValue, TType extends PrimitiveValueType>(value: TValue, type: TType, koqName?: string, extendedType?: string): Extract<TypedPrimitiveValue, {
+        type: TType;
+    }>;
 }
 
 // @public

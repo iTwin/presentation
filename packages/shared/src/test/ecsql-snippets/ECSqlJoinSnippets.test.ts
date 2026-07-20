@@ -4,11 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResolvablePromise } from "presentation-test-utilities";
-import { beforeEach, describe, expect, it } from "vitest";
-import { createRelationshipPathJoinClause } from "../../shared/ecsql-snippets/ECSqlJoinSnippets.js";
+import { assert, beforeEach, describe, expect, it } from "vitest";
+import {
+  createRelationshipPathJoinClause,
+  createRelationshipPathJoinInfo,
+} from "../../shared/ecsql-snippets/ECSqlJoinSnippets.js";
 import { trimWhitespace } from "../../shared/Utils.js";
 import { createECSchemaProviderStub } from "../MetadataProviderStub.js";
 
+import type { ECSqlBinding } from "../../shared/ECSqlCore.js";
 import type { EC } from "../../shared/Metadata.js";
 
 describe("createRelationshipPathJoinClause", () => {
@@ -700,6 +704,298 @@ describe("createRelationshipPathJoinClause", () => {
           ],
         }),
       ).rejects.toThrow(`Binding key "threshold" is used in multiple steps`);
+    });
+  });
+
+  describe("createRelationshipPathJoinInfo", () => {
+    it("returns empty joins array for empty path", async () => {
+      const result = await createRelationshipPathJoinInfo({ schemaProvider, path: [] });
+      expect(result.joins).toEqual([]);
+      expect(result.bindings).toBeUndefined();
+    });
+
+    it("navigation property step produces one class entry", async () => {
+      const { sourceClass, targetClass, relationship, navigationProperty } =
+        await setupNavigationPropertyRelationshipClasses({
+          navigationPropertyDirection: "Forward",
+          navigationPropertyName: "PhysicalMaterial",
+          source: "PhysicalElement",
+          target: "PhysicalMaterial",
+          relationship: { name: "PhysicalElementIsOfPhysicalMaterial", direction: "Forward" },
+        });
+      const result = await createRelationshipPathJoinInfo({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: sourceClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            targetClassName: targetClass.fullName,
+            targetAlias: "t",
+          },
+        ],
+      });
+      expect(result.joins).toHaveLength(1);
+      expect(result.joins[0].joinType).toBe("inner");
+      expect(result.joins[0].joinTarget).toEqual({ kind: "class", className: targetClass.fullName });
+      expect(result.joins[0].joinAlias).toBe("t");
+      expect(trimWhitespace(result.joins[0].joinCondition)).toBe(
+        trimWhitespace(`[t].[ECInstanceId] = [s].[${navigationProperty.name}].[Id]`),
+      );
+      expect(result.bindings).toBeUndefined();
+    });
+
+    it("link-table inner step produces two class entries", async () => {
+      const { sourceClass, targetClass, relationship } = setupLinkTableRelationshipClasses();
+      const result = await createRelationshipPathJoinInfo({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: sourceClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            targetClassName: targetClass.fullName,
+            targetAlias: "t",
+          },
+        ],
+      });
+      expect(result.joins).toHaveLength(2);
+      expect(result.joins[0]).toMatchObject({
+        joinType: "inner",
+        joinTarget: { kind: "class", className: relationship.fullName },
+        joinAlias: "r",
+      });
+      expect(trimWhitespace(result.joins[0].joinCondition)).toBe("[r].[SourceECInstanceId] = [s].[ECInstanceId]");
+      expect(result.joins[1]).toMatchObject({
+        joinType: "inner",
+        joinTarget: { kind: "class", className: targetClass.fullName },
+        joinAlias: "t",
+      });
+      expect(trimWhitespace(result.joins[1].joinCondition)).toBe("[t].[ECInstanceId] = [r].[TargetECInstanceId]");
+      expect(result.bindings).toBeUndefined();
+    });
+
+    it("link-table outer step produces a relationship-select entry then a class entry", async () => {
+      const { sourceClass, targetClass, relationship } = setupLinkTableRelationshipClasses();
+      const result = await createRelationshipPathJoinInfo({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: sourceClass.fullName,
+            sourceAlias: "s",
+            relationshipName: relationship.fullName,
+            relationshipAlias: "r",
+            targetClassName: targetClass.fullName,
+            targetAlias: "t",
+            joinType: "outer",
+          },
+        ],
+      });
+      expect(result.joins).toHaveLength(2);
+      const first = result.joins[0];
+      expect(first.joinType).toBe("outer");
+      expect(first.joinAlias).toBe("r");
+      assert(first.joinTarget.kind === "relationship-select");
+      const joinTarget = first.joinTarget;
+      expect(joinTarget.relationshipClassName).toBe(relationship.fullName);
+      expect(joinTarget.relationshipAlias).toBe("r");
+      expect(joinTarget.innerTarget).toEqual({ kind: "class", className: targetClass.fullName });
+      expect(joinTarget.innerTargetAlias).toBe("t");
+      expect(trimWhitespace(joinTarget.innerJoinCondition)).toBe("[t].[ECInstanceId] = [r].[TargetECInstanceId]");
+      expect(trimWhitespace(first.joinCondition)).toBe("[r].[SourceECInstanceId] = [s].[ECInstanceId]");
+      expect(result.joins[1]).toMatchObject({
+        joinType: "outer",
+        joinTarget: { kind: "class", className: targetClass.fullName },
+        joinAlias: "t",
+      });
+      expect(trimWhitespace(result.joins[1].joinCondition)).toBe("[t].[ECInstanceId] = [r].[TargetECInstanceId]");
+      expect(result.bindings).toBeUndefined();
+    });
+
+    it("collects bindings across steps", async () => {
+      const step1 = setupLinkTableRelationshipClasses({ source: "a", relationship: "r1", target: "b" });
+      const step2 = setupLinkTableRelationshipClasses({ source: step1.targetClass, relationship: "r2", target: "c" });
+      const result = await createRelationshipPathJoinInfo({
+        schemaProvider,
+        path: [
+          {
+            sourceClassName: step1.sourceClass.fullName,
+            sourceAlias: "a",
+            relationshipName: step1.relationship.fullName,
+            relationshipAlias: "r1",
+            targetClassName: step1.targetClass.fullName,
+            targetAlias: "b",
+            instanceFilter: {
+              expression: "this.Active = :isActive",
+              bindings: { isActive: { type: "boolean", value: true } },
+            },
+          },
+          {
+            sourceClassName: step2.sourceClass.fullName,
+            sourceAlias: "b",
+            relationshipName: step2.relationship.fullName,
+            relationshipAlias: "r2",
+            targetClassName: step2.targetClass.fullName,
+            targetAlias: "c",
+            instanceFilter: {
+              expression: "this.Weight > :minWeight",
+              bindings: { minWeight: { type: "double", value: 5.0 } },
+            },
+          },
+        ],
+      });
+      expect(result.bindings).toEqual({
+        isActive: { type: "boolean", value: true },
+        minWeight: { type: "double", value: 5.0 },
+      });
+    });
+
+    it("throws on duplicate binding key across steps", async () => {
+      const step1 = setupLinkTableRelationshipClasses({ source: "a", relationship: "r1", target: "b" });
+      const step2 = setupLinkTableRelationshipClasses({ source: step1.targetClass, relationship: "r2", target: "c" });
+      await expect(
+        createRelationshipPathJoinInfo({
+          schemaProvider,
+          path: [
+            {
+              sourceClassName: step1.sourceClass.fullName,
+              sourceAlias: "a",
+              relationshipName: step1.relationship.fullName,
+              relationshipAlias: "r1",
+              targetClassName: step1.targetClass.fullName,
+              targetAlias: "b",
+              instanceFilter: {
+                expression: "this.Value > :threshold",
+                bindings: { threshold: { type: "double", value: 1.0 } },
+              },
+            },
+            {
+              sourceClassName: step2.sourceClass.fullName,
+              sourceAlias: "b",
+              relationshipName: step2.relationship.fullName,
+              relationshipAlias: "r2",
+              targetClassName: step2.targetClass.fullName,
+              targetAlias: "c",
+              instanceFilter: {
+                expression: "this.Value < :threshold",
+                bindings: { threshold: { type: "double", value: 9.0 } },
+              },
+            },
+          ],
+        }),
+      ).rejects.toThrow(`Binding key "threshold" is used in multiple steps`);
+    });
+
+    describe("parity with async createRelationshipPathJoinClause", () => {
+      it("nav property path: sync render matches async", async () => {
+        const { sourceClass, targetClass, relationship } = await setupNavigationPropertyRelationshipClasses({
+          navigationPropertyDirection: "Forward",
+          navigationPropertyName: "PhysicalMaterial",
+          source: "PhysicalElement",
+          target: "PhysicalMaterial",
+          relationship: { name: "PhysicalElementIsOfPhysicalMaterial", direction: "Forward" },
+        });
+        const props = {
+          schemaProvider,
+          path: [
+            {
+              sourceClassName: sourceClass.fullName,
+              sourceAlias: "s",
+              relationshipName: relationship.fullName,
+              relationshipAlias: "r",
+              targetClassName: targetClass.fullName,
+              targetAlias: "t",
+            },
+          ],
+        };
+        const fromProps = await createRelationshipPathJoinClause(props);
+        const fromInfo = createRelationshipPathJoinClause(await createRelationshipPathJoinInfo(props));
+        expect(trimWhitespace(fromInfo.joins)).toBe(trimWhitespace(fromProps.joins));
+        expect(fromInfo.bindings).toEqual(fromProps.bindings);
+      });
+
+      it("link-table inner path: sync render matches async", async () => {
+        const { sourceClass, targetClass, relationship } = setupLinkTableRelationshipClasses();
+        const props = {
+          schemaProvider,
+          path: [
+            {
+              sourceClassName: sourceClass.fullName,
+              sourceAlias: "s",
+              relationshipName: relationship.fullName,
+              relationshipAlias: "r",
+              targetClassName: targetClass.fullName,
+              targetAlias: "t",
+            },
+          ],
+        };
+        const fromProps = await createRelationshipPathJoinClause(props);
+        const fromInfo = createRelationshipPathJoinClause(await createRelationshipPathJoinInfo(props));
+        expect(trimWhitespace(fromInfo.joins)).toBe(trimWhitespace(fromProps.joins));
+        expect(fromInfo.bindings).toEqual(fromProps.bindings);
+      });
+
+      it("link-table outer path: sync render matches async", async () => {
+        const { sourceClass, targetClass, relationship } = setupLinkTableRelationshipClasses();
+        const props = {
+          schemaProvider,
+          path: [
+            {
+              sourceClassName: sourceClass.fullName,
+              sourceAlias: "s",
+              relationshipName: relationship.fullName,
+              relationshipAlias: "r",
+              targetClassName: targetClass.fullName,
+              targetAlias: "t",
+              joinType: "outer" as const,
+            },
+          ],
+        };
+        const fromProps = await createRelationshipPathJoinClause(props);
+        const fromInfo = createRelationshipPathJoinClause(await createRelationshipPathJoinInfo(props));
+        expect(trimWhitespace(fromInfo.joins)).toBe(trimWhitespace(fromProps.joins));
+        expect(fromInfo.bindings).toEqual(fromProps.bindings);
+      });
+
+      it("multi-step with instanceFilter: sync render matches async", async () => {
+        const step1 = setupLinkTableRelationshipClasses({ source: "a", relationship: "r1", target: "b" });
+        const step2 = setupLinkTableRelationshipClasses({ source: step1.targetClass, relationship: "r2", target: "c" });
+        const props = {
+          schemaProvider,
+          path: [
+            {
+              sourceClassName: step1.sourceClass.fullName,
+              sourceAlias: "a",
+              relationshipName: step1.relationship.fullName,
+              relationshipAlias: "r1",
+              targetClassName: step1.targetClass.fullName,
+              targetAlias: "b",
+              instanceFilter: {
+                expression: "this.Active = :isActive",
+                bindings: { isActive: { type: "boolean" as const, value: true } } as Record<string, ECSqlBinding>,
+              },
+            },
+            {
+              sourceClassName: step2.sourceClass.fullName,
+              sourceAlias: "b",
+              relationshipName: step2.relationship.fullName,
+              relationshipAlias: "r2",
+              targetClassName: step2.targetClass.fullName,
+              targetAlias: "c",
+              instanceFilter: {
+                expression: "this.Weight > :minWeight",
+                bindings: { minWeight: { type: "double" as const, value: 5.0 } } as Record<string, ECSqlBinding>,
+              },
+            },
+          ],
+        };
+        const fromProps = await createRelationshipPathJoinClause(props);
+        const fromInfo = createRelationshipPathJoinClause(await createRelationshipPathJoinInfo(props));
+        expect(trimWhitespace(fromInfo.joins)).toBe(trimWhitespace(fromProps.joins));
+        expect(fromInfo.bindings).toEqual(fromProps.bindings);
+      });
     });
   });
 
