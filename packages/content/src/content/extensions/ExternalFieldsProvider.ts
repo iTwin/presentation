@@ -69,9 +69,9 @@ export interface ExternalFieldsProvider<
  *
  * @public
  */
-interface InputPropertyDeclaration {
+export interface InputPropertyDeclaration {
   /** Full class name that owns the property. */
-  className: EC.FullClassName;
+  propertyClassName: EC.FullClassName;
   /** The EC property name. */
   propertyName: string;
   /**
@@ -125,8 +125,8 @@ type ExternalFieldValueRecord<TFieldIds extends readonly string[]> = {
  *     { id: "lastMaintenance", label: "Last Maintenance", type: { kind: "primitive", type: "DateTime" } },
  *   ],
  *   inputs: {
- *     serialNo: { className: "MySchema:Pump", propertyName: "SerialNumber" },
- *     deviceId: { className: "MySchema:Device", propertyName: "DeviceId", path: [{ sourceClassName: "MySchema:Pump", targetClassName: "MySchema:Device", relationshipName: "MySchema:PumpHasDevice" }] },
+ *     serialNo: { propertyClassName: "MySchema:Pump", propertyName: "SerialNumber" },
+ *     deviceId: { propertyClassName: "MySchema:Device", propertyName: "DeviceId", path: [{ sourceClassName: "MySchema:Pump", targetClassName: "MySchema:Device", relationshipName: "MySchema:PumpHasDevice" }] },
  *   },
  *   async getValues({ items }) {
  *     const serials = items.map((item) => item.inputValues.serialNo);

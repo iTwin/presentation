@@ -194,7 +194,9 @@ export namespace EC {
         // (undocumented)
         get(className: FullClassName): CustomAttribute | undefined;
     }
-    export type EntityClass = Class;
+    export interface EntityClass extends Class {
+        getMixins(): Promise<Mixin[]>;
+    }
     export interface Enumeration extends SchemaItem {
         // (undocumented)
         enumerators: Array<Enumerator<string | number>>;

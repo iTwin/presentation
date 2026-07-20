@@ -29,7 +29,7 @@ function propertyField(props: {
     selectorId: fieldId,
     label: "Label",
     type: { kind: "primitive", type: "String" },
-    sourceClassName: props.sourceClassName,
+    propertyClassName: props.sourceClassName,
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: toSortedUniqueClassNames(props.valueClassNames),

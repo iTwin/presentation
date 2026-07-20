@@ -148,6 +148,11 @@ class ECEntityClassImpl extends ECClassImpl<CoreEntityClass> implements EC.Entit
   public override isEntityClass(): this is EC.EntityClass {
     return true;
   }
+  public async getMixins(): Promise<EC.Mixin[]> {
+    return Promise.all(
+      this._coreSchemaItem.mixins.map(async (coreMixin) => new ECMixinImpl(await coreMixin, this.schema)),
+    );
+  }
 }
 
 class ECRelationshipClassImpl extends ECClassImpl<CoreRelationshipClass> implements EC.RelationshipClass {

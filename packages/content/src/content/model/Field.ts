@@ -20,7 +20,7 @@ import { serializeRelationshipPath } from "./Utils.js";
 interface BaseField {
   /**
    * Stable ID that uniquely identifies this field across descriptor rebuilds.
-   * Derived from: sourceClassName + propertyAccessPath (for property fields),
+   * Derived from: propertyClassName + propertyAccessPath (for property fields),
    * or a declared stable name (for calculated/external fields).
    */
   id: string;
@@ -48,11 +48,11 @@ export interface PropertyField extends BaseField {
    * Drives the SQL column / property metadata. Distinct from {@link (PropertyField:interface).valueClassNames},
    * which are the concrete *value-supplier* classes this field represents.
    */
-  sourceClassName: EC.FullClassName;
-  /** The EC property name within the source class. */
+  propertyClassName: EC.FullClassName;
+  /** The EC property name within the property's class. */
   propertyName: string;
   /**
-   * Relationship path from the content target to this field's source class.
+   * Relationship path from the content target to this field's property class.
    * Empty array means the field belongs to the target class directly.
    */
   pathFromTarget: RelationshipPath;
@@ -67,7 +67,7 @@ export interface PropertyField extends BaseField {
    * `BisCore.ExternalSourceAspect` and loaded over a relationship.
    *
    * Do not confuse this with:
-   * - {@link (PropertyField:interface).sourceClassName} — the class that *declares* the property.
+   * - {@link (PropertyField:interface).propertyClassName} — the class that *declares* the property.
    * - The content *target* classes (the classes content was requested for). For a direct property the
    *   value classes coincide with the target classes, but for a related property they are the
    *   related-endpoint classes rather than the target.
@@ -102,7 +102,7 @@ export namespace PropertyField {
   }): Field["id"] {
     let identity = `${normalizeFullClassName(props.propertyClassName)}.${props.propertyName}`;
     if (props.pathFromTarget && props.pathFromTarget.length > 0) {
-      identity += `(${serializeRelationshipPath(props.pathFromTarget)})`;
+      identity += `(${serializeRelationshipPath({ path: props.pathFromTarget })})`;
     }
     if (props.forkKey) {
       identity += `#${props.forkKey}`;

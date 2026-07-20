@@ -761,9 +761,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
       const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       const target = result!.relatedProperties![0].properties![0].target!;
-      // When no properties are specified, no `select` customization is produced, but the target's
-      // default category is still applied via `defaultOverrides`.
-      expect(target.select).toBeUndefined();
+      // When no properties are specified, `select` defaults to "all", and the target's default
+      // category is applied via `defaultOverrides`.
+      expect(target.select).toEqual("all");
       const targetCategory = Object.values(result!.categories!).find((c) => c.id.endsWith("/target"));
       expect(targetCategory).toBeDefined();
       expect(target.defaultOverrides!.categoryId).toEqual(targetCategory!.id);

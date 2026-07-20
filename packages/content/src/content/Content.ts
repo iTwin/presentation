@@ -33,6 +33,7 @@
  *   - Merges external values into the final `ContentItem` accessors.
  */
 
+import { createContentProviderImpl } from "./CreateContentProvider.js";
 import { resolveContentSourcesImpl } from "./ResolveContentSources.js";
 
 import type {
@@ -50,6 +51,7 @@ import type { QueryFilterer } from "./extensions/QueryFilterer.js";
 import type { ContentDescriptor } from "./model/ContentDescriptor.js";
 import type { ContentItem } from "./model/ContentItem.js";
 import type { CalculatedField, PropertyField } from "./model/Field.js";
+import type { DeepReadonly } from "./model/Utils.js";
 
 /**
  * Sorting specification for content value requests.
@@ -127,7 +129,7 @@ interface ContentRequestOptions {
  */
 export interface ContentConfiguration {
   /** iModel fields providers (contribute related properties and calculated fields). */
-  fieldsProviders?: IModelFieldsProvider[];
+  imodelFieldsProviders?: IModelFieldsProvider[];
 
   /** External fields providers (declare + populate fields from outside the iModel). */
   externalFieldsProviders?: ExternalFieldsProvider[];
@@ -149,8 +151,8 @@ interface ResolveContentSourcesProps {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
   /** The content targets to resolve. */
   targets: ContentTarget[];
-  /** Extension point configuration (only `fieldsProviders` is used for resolution). */
-  config?: Pick<ContentConfiguration, "fieldsProviders">;
+  /** Extension point configuration (only `imodelFieldsProviders` is used for resolution). */
+  config?: Pick<ContentConfiguration, "imodelFieldsProviders">;
 }
 
 /**
@@ -172,7 +174,7 @@ export async function resolveContentSources(props: ResolveContentSourcesProps): 
   return resolveContentSourcesImpl({
     imodelAccess: props.imodelAccess,
     targets: props.targets,
-    fieldsProviders: props.config?.fieldsProviders ?? [],
+    imodelFieldsProviders: props.config?.imodelFieldsProviders ?? [],
   });
 }
 
@@ -204,15 +206,16 @@ interface ContentProviderProps {
  *
  * @public
  */
-interface ContentProvider {
+export interface ContentProvider {
   /**
    * Get the content descriptor for the configured sources.
    * Built lazily on first call and cached for subsequent calls.
    *
    * The descriptor reflects all fields providers and descriptor transformers
-   * from the content configuration.
+   * from the content configuration. It is deeply readonly — modify it by registering a
+   * `DescriptorTransformer`, not by mutating the returned object.
    */
-  getContentDescriptor(): Promise<Readonly<ContentDescriptor>>;
+  getContentDescriptor(): Promise<DeepReadonly<ContentDescriptor>>;
 
   /**
    * Get the total number of content items matching the configured sources.
@@ -245,7 +248,6 @@ interface ContentProvider {
  *
  * @public
  */
-/* v8 ignore next 3 */
-export function createContentProvider(_props: ContentProviderProps): ContentProvider {
-  throw new Error("Not implemented");
+export function createContentProvider(props: ContentProviderProps): ContentProvider {
+  return createContentProviderImpl(props);
 }

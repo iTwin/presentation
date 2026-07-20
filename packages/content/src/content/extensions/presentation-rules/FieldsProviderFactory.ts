@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { getClass } from "@itwin/presentation-shared";
+import { getClassLabel, stableStringify } from "../../InternalUtils.js";
 import { CategoryDefinition } from "../../model/Category.js";
 import { hashString } from "../../model/Utils.js";
 import { convertECExpressionToECSql } from "../ecexpressions/ECExpressionToECSql.js";
@@ -96,12 +97,6 @@ export function createFieldsProviderFromContentModifierRule(
 
 // ── Relationship path mapping ────────────────────────────────────────
 
-/** Returns the display label of a class. */
-async function getClassLabel(imodelAccess: ECSchemaProvider, className: EC.FullClassName): Promise<string> {
-  const cls = await getClass(imodelAccess, className);
-  return cls.label ?? cls.name;
-}
-
 /**
  * Normalizes the deprecated `propertyNames` field into the shape accepted by `mapPropertiesForStep`.
  * Returns `undefined` when `propertyNames` is not set.
@@ -138,7 +133,7 @@ function mapPropertiesForStep(
   forceCategoryId: CategoryDefinition["id"] | undefined,
 ): StepPropertySpec["target"] {
   const overrides: ClassPropertySpec["overrides"] = {};
-  let select: ClassPropertySpec["select"];
+  let select: ClassPropertySpec["select"] | undefined;
   let defaultOverridesFromWildcard: (typeof overrides)[string] | undefined;
 
   if (props === "_none_") {
@@ -206,7 +201,11 @@ function mapPropertiesForStep(
     defaultOverrides = { ...defaultOverridesFromWildcard, categoryId: forceCategoryId };
   }
 
-  return { select, defaultOverrides, overrides: Object.keys(overrides).length > 0 ? overrides : undefined };
+  return {
+    select: select ?? "all",
+    defaultOverrides,
+    overrides: Object.keys(overrides).length > 0 ? overrides : undefined,
+  };
 }
 
 /**
@@ -292,7 +291,7 @@ async function mapRelatedPropertiesSpec(props: {
   const baseId = CategoryDefinition.computeId({ path });
   const targetCategory: CategoryDefinition = {
     id: `${baseId}/target`,
-    label: await getClassLabel(imodelAccess, currentSourceClassName),
+    label: await getClassLabel({ imodelAccess, className: currentSourceClassName }),
     parentId: parentCategoryId,
   };
   categories[targetCategory.id] = targetCategory;
@@ -307,10 +306,10 @@ async function mapRelatedPropertiesSpec(props: {
     const lastStep = steps[steps.length - 1];
     const relationshipCategory: CategoryDefinition = {
       id: `${baseId}/rel`,
-      label: await getClassLabel(
+      label: await getClassLabel({
         imodelAccess,
-        `${lastStep.relationship.schemaName}.${lastStep.relationship.className}`,
-      ),
+        className: `${lastStep.relationship.schemaName}.${lastStep.relationship.className}`,
+      }),
       parentId: parentCategoryId,
     };
     categories[relationshipCategory.id] = relationshipCategory;
@@ -519,16 +518,4 @@ async function mapCalculatedProperties(
       };
     }),
   );
-}
-
-/** Produces a stable JSON representation with sorted keys for hashing. */
-function stableStringify(value: unknown): string {
-  if (value === null || value === undefined || typeof value !== "object") {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(",")}]`;
-  }
-  const keys = Object.keys(value).sort();
-  return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify((value as Record<string, unknown>)[k])}`).join(",")}}`;
 }

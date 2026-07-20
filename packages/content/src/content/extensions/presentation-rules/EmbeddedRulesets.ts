@@ -37,7 +37,7 @@ export async function createIModelContentConfiguration(
   props: CreateIModelContentConfigurationProps,
 ): Promise<ContentConfiguration> {
   const { imodelAccess } = props;
-  const fieldsProviders: IModelFieldsProvider[] = [];
+  const imodelFieldsProviders: IModelFieldsProvider[] = [];
   const descriptorTransformers: DescriptorTransformer[] = [];
 
   for await (const ruleset of loadEmbeddedRulesets(imodelAccess)) {
@@ -52,12 +52,12 @@ export async function createIModelContentConfiguration(
         continue;
       }
       const { fieldsProvider, descriptorTransformer } = mapContentModifierRule(rule);
-      fieldsProviders.push(fieldsProvider);
+      imodelFieldsProviders.push(fieldsProvider);
       descriptorTransformers.push(descriptorTransformer);
     }
   }
 
-  return { fieldsProviders, descriptorTransformers };
+  return { imodelFieldsProviders, descriptorTransformers };
 }
 
 /** Narrows a `RulesetRule` to a `ContentModifier` rule. */

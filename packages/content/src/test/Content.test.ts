@@ -97,8 +97,31 @@ describe("resolveContentSources", () => {
       const targets: ContentTarget[] = [targetA, { primaryClass: "TestSchema.ClassB" }];
       const result = await resolveContentSources({ imodelAccess: createMockIModelAccess(), targets });
       expect(result).to.have.length(2);
-      expect(result[0]).to.deep.equal({ target: targets[0], resolvedPrimaryClasses: [], resolvedDeclarations: [] });
-      expect(result[1]).to.deep.equal({ target: targets[1], resolvedPrimaryClasses: [], resolvedDeclarations: [] });
+      expect(result[0]).to.deep.equal({
+        target: targets[0],
+        resolvedPrimaryClasses: ["TestSchema.ClassA"],
+        resolvedDeclarations: [],
+      });
+      expect(result[1]).to.deep.equal({
+        target: targets[1],
+        resolvedPrimaryClasses: ["TestSchema.ClassB"],
+        resolvedDeclarations: [],
+      });
+    });
+
+    it("resolves polymorphic primary classes when no providers are configured", async () => {
+      const imodelAccess = createMockIModelAccess({
+        derivedClasses: { "TestSchema.ClassA": ["TestSchema.ConcreteA"] },
+        primaryClassScanResults: [{ 0: "TestSchema.ConcreteA" }],
+      });
+
+      const [result] = await resolveContentSources({ imodelAccess, targets: [targetA] });
+
+      expect(result).to.deep.equal({
+        target: targetA,
+        resolvedPrimaryClasses: ["TestSchema.ConcreteA"],
+        resolvedDeclarations: [],
+      });
     });
 
     it("returns empty resolvedDeclarations when provider returns undefined", async () => {
@@ -106,7 +129,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess: createMockIModelAccess(),
         targets: [targetA],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
       expect(result).to.have.length(1);
       expect(result[0].resolvedDeclarations).to.deep.equal([]);
@@ -117,7 +140,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess: createMockIModelAccess(),
         targets: [targetA],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
       expect(result).to.have.length(1);
       expect(result[0].resolvedDeclarations).to.deep.equal([]);
@@ -137,7 +160,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [targetA],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
       expect(result[0].resolvedDeclarations).to.deep.equal([]);
     });
@@ -162,7 +185,7 @@ describe("resolveContentSources", () => {
         ),
       };
       await expect(
-        resolveContentSources({ imodelAccess, targets: [targetA], config: { fieldsProviders: [provider] } }),
+        resolveContentSources({ imodelAccess, targets: [targetA], config: { imodelFieldsProviders: [provider] } }),
       ).rejects.toThrow(queryError);
     });
   });
@@ -183,7 +206,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [targetA],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       expect(result).to.deep.equal([
@@ -231,7 +254,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [targetA],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       expect(result).to.deep.equal([
@@ -292,7 +315,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [targetA],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       expect(result).to.deep.equal([
@@ -356,7 +379,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [targetA],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       // 3 strategies are applicable for a 3-step path: original, subquery-anchor, cross-join
@@ -420,7 +443,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [targetA],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       expect(result[0].resolvedDeclarations).to.deep.equal([
@@ -462,7 +485,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [targetA],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       expect(result[0].resolvedDeclarations).to.deep.equal([
@@ -529,7 +552,7 @@ describe("resolveContentSources", () => {
     const result = await resolveContentSources({
       imodelAccess,
       targets: [targetA],
-      config: { fieldsProviders: [provider] },
+      config: { imodelFieldsProviders: [provider] },
     });
 
     expect(resolveFn).toHaveBeenCalledOnce();
@@ -566,7 +589,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [targetA],
-        config: { fieldsProviders: [provider1, provider2] },
+        config: { imodelFieldsProviders: [provider1, provider2] },
       });
 
       expect(result[0].resolvedDeclarations).to.deep.equal([
@@ -622,7 +645,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [targetA],
-        config: { fieldsProviders: [provider1, provider2] },
+        config: { imodelFieldsProviders: [provider1, provider2] },
       });
 
       expect(result[0].resolvedDeclarations.map((d) => d.providerId)).to.deep.equal(["active_v1"]);
@@ -652,7 +675,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [targetA],
-        config: { fieldsProviders: [provider1, provider2] },
+        config: { imodelFieldsProviders: [provider1, provider2] },
       });
 
       expect(result[0].resolvedDeclarations.map((d) => d.providerId)).to.deep.equal(["slow_v1", "fast_v1"]);
@@ -674,7 +697,7 @@ describe("resolveContentSources", () => {
         resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB" }],
       });
 
-      await resolveContentSources({ imodelAccess, targets: [target], config: { fieldsProviders: [provider] } });
+      await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodelAccess.createQueryReader).toHaveBeenCalled();
@@ -707,7 +730,7 @@ describe("resolveContentSources", () => {
         resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB" }],
       });
 
-      await resolveContentSources({ imodelAccess, targets: [target], config: { fieldsProviders: [provider] } });
+      await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodelAccess.createQueryReader).toHaveBeenCalled();
@@ -735,7 +758,7 @@ describe("resolveContentSources", () => {
         resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB" }],
       });
 
-      await resolveContentSources({ imodelAccess, targets: [target], config: { fieldsProviders: [provider] } });
+      await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
@@ -761,7 +784,7 @@ describe("resolveContentSources", () => {
         resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB" }],
       });
 
-      await resolveContentSources({ imodelAccess, targets: [target], config: { fieldsProviders: [provider] } });
+      await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
@@ -800,7 +823,7 @@ describe("resolveContentSources", () => {
         resolvePathsQueryResults: [{ 0: "TestSchema.ConcreteB", 1: "TestSchema.ConcreteC", 2: "TestSchema.ConcreteD" }],
       });
 
-      await resolveContentSources({ imodelAccess, targets: [target], config: { fieldsProviders: [provider] } });
+      await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
       // All 3 strategies should include the filter bindings in their queries
       // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -831,7 +854,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [target1, target2],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       expect(result.map((r) => ({ target: r.target, declarationCount: r.resolvedDeclarations.length }))).to.deep.equal([
@@ -854,7 +877,7 @@ describe("resolveContentSources", () => {
         resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB" }],
       });
 
-      await resolveContentSources({ imodelAccess, targets, config: { fieldsProviders: [provider] } });
+      await resolveContentSources({ imodelAccess, targets, config: { imodelFieldsProviders: [provider] } });
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(provider.getContribution).toHaveBeenCalledTimes(2);
@@ -887,7 +910,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [targetA],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       expect(result[0].resolvedDeclarations.map((d) => d.declarationIndex)).to.deep.equal([0, 1]);
@@ -930,7 +953,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [targetA],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       expect(result[0].resolvedDeclarations.map((d) => d.declarationIndex)).to.deep.equal([1]);
@@ -958,7 +981,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [{ primaryClass: "TestSchema.ClassA" }],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       expect(result[0].resolvedPrimaryClasses).to.deep.equal(["TestSchema.ClassA"]);
@@ -974,7 +997,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [{ primaryClass: "TestSchema:ClassA" }],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       expect(result[0].resolvedPrimaryClasses).to.deep.equal(["TestSchema.ClassA"]);
@@ -989,7 +1012,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [{ primaryClass: "TestSchema.ClassA" }],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       expect(result[0].resolvedPrimaryClasses).to.deep.equal(["TestSchema.Door", "TestSchema.Window"]);
@@ -1004,7 +1027,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [{ primaryClass: "TestSchema.ClassA" }],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       expect(result[0].resolvedPrimaryClasses).to.deep.equal(["TestSchema.Door", "TestSchema.Window"]);
@@ -1019,7 +1042,7 @@ describe("resolveContentSources", () => {
       const result = await resolveContentSources({
         imodelAccess,
         targets: [{ primaryClass: "TestSchema.ClassA" }],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       expect(result[0].resolvedPrimaryClasses).to.deep.equal([]);
@@ -1042,7 +1065,7 @@ describe("resolveContentSources", () => {
             },
           },
         ],
-        config: { fieldsProviders: [provider] },
+        config: { imodelFieldsProviders: [provider] },
       });
 
       const scanQuery = vi

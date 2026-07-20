@@ -74,6 +74,7 @@ export interface CategoryDefinition {
 export namespace CategoryDefinition {
     export function computeId(props: {
         path: RelationshipPath;
+        omitTargetClass?: boolean;
     }): CategoryDefinition["id"];
     export function create(props: {
         path: RelationshipPath;
@@ -84,14 +85,14 @@ export namespace CategoryDefinition {
 interface ClassPropertySpec {
     defaultOverrides?: PropertyOverrides;
     overrides?: Record<string, PropertyOverrides>;
-    select?: PropertySelection;
+    select: PropertySelection;
 }
 
 // @public
 export interface ContentConfiguration {
     descriptorTransformers?: DescriptorTransformer[];
     externalFieldsProviders?: ExternalFieldsProvider[];
-    fieldsProviders?: IModelFieldsProvider[];
+    imodelFieldsProviders?: IModelFieldsProvider[];
     queryFilterers?: QueryFilterer[];
 }
 
@@ -113,7 +114,7 @@ export interface ContentItem {
 
 // @public
 interface ContentProvider {
-    getContentDescriptor(): Promise<Readonly<ContentDescriptor>>;
+    getContentDescriptor(): Promise<DeepReadonly<ContentDescriptor>>;
     getInstanceKeys(options?: Pick<ContentRequestOptions, "filters">): AsyncIterable<InstanceKey>;
     getItems(options?: ContentRequestOptions): AsyncIterable<ContentItem>;
     getSize(options?: Pick<ContentRequestOptions, "filters">): Promise<number>;
@@ -171,7 +172,7 @@ export interface ContentValues {
 }
 
 // @public
-export function createContentProvider(_props: ContentProviderProps): ContentProvider;
+export function createContentProvider(props: ContentProviderProps): ContentProvider;
 
 // @public
 export function createIModelContentConfiguration(props: CreateIModelContentConfigurationProps): Promise<ContentConfiguration>;
@@ -282,8 +283,8 @@ interface IModelFieldsProvider extends BaseFieldsProvider {
 
 // @public
 interface InputPropertyDeclaration {
-    className: EC.FullClassName;
     path?: RelationshipPath;
+    propertyClassName: EC.FullClassName;
     propertyName: string;
 }
 
@@ -298,9 +299,9 @@ export interface PropertyField extends BaseField {
     // (undocumented)
     kind: "property";
     pathFromTarget: RelationshipPath;
+    propertyClassName: EC.FullClassName;
     propertyName: string;
     selectorId: string;
-    sourceClassName: EC.FullClassName;
     valueClassNames: EC.FullClassName[];
 }
 
@@ -334,7 +335,7 @@ type PropertySelection = "all" | "none" | {
 };
 
 // @public
-export interface PropertyValueSelector extends Pick<PropertyField, "sourceClassName" | "propertyName" | "pathFromTarget"> {
+export interface PropertyValueSelector extends Pick<PropertyField, "propertyClassName" | "propertyName" | "pathFromTarget"> {
     id: string;
     // (undocumented)
     kind: "property";
@@ -373,7 +374,7 @@ export function resolveContentSources(props: ResolveContentSourcesProps): Promis
 
 // @public
 interface ResolveContentSourcesProps {
-    config?: Pick<ContentConfiguration, "fieldsProviders">;
+    config?: Pick<ContentConfiguration, "imodelFieldsProviders">;
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
     targets: ContentTarget[];
 }
