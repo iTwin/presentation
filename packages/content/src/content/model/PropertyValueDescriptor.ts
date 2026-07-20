@@ -120,12 +120,9 @@ function createPrimitiveValueDescriptor(
 ): PrimitiveValueDescriptor {
   switch (type) {
     case "Integer":
-      return kindOfQuantity !== undefined ? { kind: "primitive", type, kindOfQuantity } : { kind: "primitive", type };
     case "Double":
     case "Long":
       return kindOfQuantity !== undefined ? { kind: "primitive", type, kindOfQuantity } : { kind: "primitive", type };
-    case "String":
-      return { kind: "primitive", type };
     default:
       return { kind: "primitive", type };
   }
