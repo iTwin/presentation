@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { getClass } from "../Metadata.js";
-import { createRawPropertyValueSelector } from "./ECSqlValueSelectorSnippets.js";
+import { createClassSelector, createRawPropertyValueSelector } from "./ECSqlValueSelectorSnippets.js";
 
 import type { ECSqlBinding } from "../ECSqlCore.js";
 import type { EC, ECSchemaProvider, RelationshipPath, RelationshipPathStep } from "../Metadata.js";
@@ -27,12 +27,160 @@ interface JoinRelationshipPathStep extends RelationshipPathStep {
 type JoinRelationshipPath = RelationshipPath<JoinRelationshipPathStep>;
 
 /**
- * Props for `createRelationshipPathJoinClause`.
+ * Props for `createRelationshipPathJoinClause` and `createRelationshipPathJoinInfo`.
  * @public
  */
-interface CreateRelationshipPathJoinClauseProps {
+export interface CreateRelationshipPathJoinClauseProps {
   schemaProvider: ECSchemaProvider;
   path: JoinRelationshipPath;
+}
+
+/**
+ * A join onto a plain class table.
+ * @public
+ */
+interface JoinTargetClass {
+  kind: "class";
+  className: EC.FullClassName;
+}
+
+/**
+ * A join onto a pre-joined relationship subquery (the outer link-table case), i.e.
+ * `(SELECT [rel].* FROM [relationship] [rel] INNER JOIN [target] [t] ON <innerJoinCondition>)`.
+ * Rendering emits the subquery; the outer target is a separate `RelationshipJoinInfo` entry.
+ * @public
+ */
+interface JoinTargetRelationshipSelect {
+  kind: "relationship-select";
+  relationshipClassName: EC.FullClassName;
+  relationshipAlias: string;
+  /** The class inner-joined inside the subquery, its alias, and the inner `ON` condition. */
+  innerTarget: JoinTargetClass;
+  innerTargetAlias: string;
+  innerJoinCondition: string;
+}
+
+/**
+ * One concrete JOIN clause rendered as either `INNER JOIN ... ON ...` or `OUTER JOIN ... ON ...`.
+ * @public
+ */
+interface RelationshipJoinInfo {
+  joinType: "inner" | "outer";
+  /** What is joined: a class table, or (outer link-table case) a nested relationship SELECT. */
+  joinTarget: JoinTargetClass | JoinTargetRelationshipSelect;
+  /** Alias assigned to the joined table. */
+  joinAlias: string;
+  /** The `ON` condition expression (without the `ON` keyword). */
+  joinCondition: string;
+}
+
+/**
+ * A resolved, render-ready description of a relationship-path JOIN, as a flat, ordered list of
+ * concrete join clauses. Produced by `createRelationshipPathJoinInfo`; consumed by the
+ * `createRelationshipPathJoinClause` render overload.
+ * @public
+ */
+interface RelationshipPathJoinInfo {
+  /**
+   * The ordered JOIN clauses to emit — one entry per JOIN. A path step contributes 1 (navigation
+   * property) or 2 (link-table) entries. Note the join-table count is not `joins.length`: an
+   * outer link-table entry (`JoinTargetRelationshipSelect`) wraps a subquery that itself joins the
+   * relationship + target.
+   */
+  joins: RelationshipJoinInfo[];
+  /** `instanceFilter` bindings collected across all steps, or `undefined` when none. */
+  bindings?: Record<string, ECSqlBinding>;
+}
+
+/**
+ * Resolves a relationship path into a `RelationshipPathJoinInfo` (schema-reading pass; produces no ECSQL).
+ * @public
+ */
+export async function createRelationshipPathJoinInfo(
+  props: CreateRelationshipPathJoinClauseProps,
+): Promise<RelationshipPathJoinInfo> {
+  if (props.path.length === 0) {
+    return { joins: [] };
+  }
+  let prev = {
+    alias: props.path[0].sourceAlias,
+    joinPropertyName: "ECInstanceId",
+    className: props.path[0].sourceClassName,
+  };
+  const joins: RelationshipJoinInfo[] = [];
+  const bindings: Record<string, ECSqlBinding> = {};
+  for (const stepDef of props.path) {
+    const step = await getRelationshipPathStepClasses(props.schemaProvider, stepDef);
+    const navigationProperty = await getNavigationProperty(step);
+    const filterCondition = resolveInstanceFilterCondition(step);
+    if (step.instanceFilter?.bindings) {
+      for (const [key, value] of Object.entries(step.instanceFilter.bindings)) {
+        if (key in bindings) {
+          throw new Error(
+            `Binding key "${key}" is used in multiple steps of the relationship path. Each binding key must be unique across all steps.`,
+          );
+        }
+        bindings[key] = value;
+      }
+    }
+    if (navigationProperty) {
+      const isNavigationPropertyForward = navigationProperty.direction === "Forward";
+      const joinCondition =
+        isNavigationPropertyForward === !step.relationshipReverse
+          ? `${createRawPropertyValueSelector(step.targetAlias, "ECInstanceId")} = ${createRawPropertyValueSelector(prev.alias, navigationProperty.name, "Id")}${filterCondition}`
+          : `${createRawPropertyValueSelector(step.targetAlias, navigationProperty.name, "Id")} = ${createRawPropertyValueSelector(prev.alias, prev.joinPropertyName)}${filterCondition}`;
+      joins.push({
+        joinType: step.joinType ?? "inner",
+        joinTarget: { kind: "class", className: step.target.fullName },
+        joinAlias: step.targetAlias,
+        joinCondition,
+      });
+    } else {
+      const relPropNames = !step.relationshipReverse
+        ? { this: "SourceECInstanceId", next: "TargetECInstanceId" }
+        : { this: "TargetECInstanceId", next: "SourceECInstanceId" };
+      const targetJoinCondition = `${createRawPropertyValueSelector(step.targetAlias, "ECInstanceId")} = ${createRawPropertyValueSelector(step.relationshipAlias, relPropNames.next)}${filterCondition}`;
+      if (step.joinType === "outer") {
+        joins.push({
+          joinType: "outer",
+          joinTarget: {
+            kind: "relationship-select",
+            relationshipClassName: step.relationship.fullName,
+            relationshipAlias: step.relationshipAlias,
+            innerTarget: { kind: "class", className: step.target.fullName },
+            innerTargetAlias: step.targetAlias,
+            innerJoinCondition: targetJoinCondition,
+          },
+          joinAlias: step.relationshipAlias,
+          joinCondition: `${createRawPropertyValueSelector(step.relationshipAlias, relPropNames.this)} = ${createRawPropertyValueSelector(prev.alias, prev.joinPropertyName)}`,
+        });
+      } else {
+        joins.push({
+          joinType: "inner",
+          joinTarget: { kind: "class", className: step.relationship.fullName },
+          joinAlias: step.relationshipAlias,
+          joinCondition: `${createRawPropertyValueSelector(step.relationshipAlias, relPropNames.this)} = ${createRawPropertyValueSelector(prev.alias, prev.joinPropertyName)}`,
+        });
+      }
+      joins.push({
+        joinType: step.joinType ?? "inner",
+        joinTarget: { kind: "class", className: step.target.fullName },
+        joinAlias: step.targetAlias,
+        joinCondition: targetJoinCondition,
+      });
+    }
+    prev = { alias: step.targetAlias, className: step.target.fullName, joinPropertyName: "ECInstanceId" };
+  }
+  return { joins, bindings: Object.keys(bindings).length > 0 ? bindings : undefined };
+}
+
+/**
+ * Result of `createRelationshipPathJoinClause`.
+ * @public
+ */
+interface RelationshipPathJoinClauseResult {
+  joins: string;
+  bindings?: Record<string, ECSqlBinding>;
 }
 
 /**
@@ -72,80 +220,41 @@ interface CreateRelationshipPathJoinClauseProps {
  */
 export async function createRelationshipPathJoinClause(
   props: CreateRelationshipPathJoinClauseProps,
-): Promise<{ joins: string; bindings?: Record<string, ECSqlBinding> }> {
-  if (props.path.length === 0) {
-    return { joins: "" };
+): Promise<RelationshipPathJoinClauseResult>;
+/**
+ * Render a pre-resolved `RelationshipPathJoinInfo` into an ECSQL JOIN clause (sync, no schema access).
+ * @public
+ */
+export function createRelationshipPathJoinClause(info: RelationshipPathJoinInfo): RelationshipPathJoinClauseResult;
+export function createRelationshipPathJoinClause(
+  arg: CreateRelationshipPathJoinClauseProps | RelationshipPathJoinInfo,
+): Promise<RelationshipPathJoinClauseResult> | RelationshipPathJoinClauseResult {
+  if ("joins" in arg) {
+    return renderRelationshipPathJoinClause(arg);
   }
-  let prev = {
-    alias: props.path[0].sourceAlias,
-    joinPropertyName: "ECInstanceId",
-    className: props.path[0].sourceClassName,
-  };
+  return createRelationshipPathJoinInfo(arg).then(renderRelationshipPathJoinClause);
+}
+
+function renderRelationshipPathJoinClause(info: RelationshipPathJoinInfo): RelationshipPathJoinClauseResult {
   let joins = "";
-  const bindings: Record<string, ECSqlBinding> = {};
-  for (const stepDef of props.path) {
-    const step = await getRelationshipPathStepClasses(props.schemaProvider, stepDef);
-    const navigationProperty = await getNavigationProperty(step);
-    const filterCondition = resolveInstanceFilterCondition(step);
-    if (step.instanceFilter?.bindings) {
-      for (const [key, value] of Object.entries(step.instanceFilter.bindings)) {
-        if (key in bindings) {
-          throw new Error(
-            `Binding key "${key}" is used in multiple steps of the relationship path. Each binding key must be unique across all steps.`,
-          );
-        }
-        bindings[key] = value;
-      }
-    }
-    if (navigationProperty) {
-      const isNavigationPropertyForward = navigationProperty.direction === "Forward";
-      const relationshipJoinPropertyNames =
-        isNavigationPropertyForward === !step.relationshipReverse
-          ? {
-              this: createRawPropertyValueSelector(step.targetAlias, "ECInstanceId"),
-              next: createRawPropertyValueSelector(prev.alias, navigationProperty.name, "Id"),
-            }
-          : {
-              this: createRawPropertyValueSelector(step.targetAlias, navigationProperty.name, "Id"),
-              next: createRawPropertyValueSelector(prev.alias, prev.joinPropertyName),
-            };
+  for (const entry of info.joins) {
+    const joinKw = entry.joinType === "outer" ? "OUTER JOIN" : "INNER JOIN";
+    if (entry.joinTarget.kind === "class") {
       joins += `
-        ${getJoinClause(step.joinType)} ${getClassSelectClause(step.target, step.targetAlias)}
-          ON ${relationshipJoinPropertyNames.this} = ${relationshipJoinPropertyNames.next}${filterCondition}
+        ${joinKw} ${createClassSelector(entry.joinTarget.className)} [${entry.joinAlias}] ON ${entry.joinCondition}
       `;
-      prev = { alias: step.targetAlias, className: step.target.fullName, joinPropertyName: "ECInstanceId" };
     } else {
-      const relationshipJoinPropertyNames = !step.relationshipReverse
-        ? { this: "SourceECInstanceId", next: "TargetECInstanceId" }
-        : { this: "TargetECInstanceId", next: "SourceECInstanceId" };
-      if (step.joinType === "outer") {
-        joins += `
-          ${getJoinClause("outer")} (
-            SELECT [${step.relationshipAlias}].*
-            FROM ${getClassSelectClause(step.relationship, step.relationshipAlias)}
-            ${getJoinClause("inner")} ${getClassSelectClause(step.target, step.targetAlias)}
-              ON ${createRawPropertyValueSelector(step.targetAlias, "ECInstanceId")}
-                = ${createRawPropertyValueSelector(step.relationshipAlias, relationshipJoinPropertyNames.next)}${filterCondition}
-          ) [${step.relationshipAlias}]
-          ON ${createRawPropertyValueSelector(step.relationshipAlias, relationshipJoinPropertyNames.this)}
-            = ${createRawPropertyValueSelector(prev.alias, prev.joinPropertyName)}
-        `;
-      } else {
-        joins += `
-          ${getJoinClause("inner")} ${getClassSelectClause(step.relationship, step.relationshipAlias)}
-            ON ${createRawPropertyValueSelector(step.relationshipAlias, relationshipJoinPropertyNames.this)}
-              = ${createRawPropertyValueSelector(prev.alias, prev.joinPropertyName)}
-        `;
-      }
+      const t = entry.joinTarget;
       joins += `
-        ${getJoinClause(step.joinType)} ${getClassSelectClause(step.target, step.targetAlias)}
-          ON ${createRawPropertyValueSelector(step.targetAlias, "ECInstanceId")}
-            = ${createRawPropertyValueSelector(step.relationshipAlias, relationshipJoinPropertyNames.next)}${filterCondition}
+        ${joinKw} (
+          SELECT [${t.relationshipAlias}].*
+          FROM ${createClassSelector(t.relationshipClassName)} [${t.relationshipAlias}]
+          INNER JOIN ${createClassSelector(t.innerTarget.className)} [${t.innerTargetAlias}] ON ${t.innerJoinCondition}
+        ) [${entry.joinAlias}] ON ${entry.joinCondition}
       `;
-      prev = { alias: step.targetAlias, className: step.target.fullName, joinPropertyName: "ECInstanceId" };
     }
   }
-  return { joins, bindings: Object.keys(bindings).length > 0 ? bindings : undefined };
+  return { joins, bindings: info.bindings };
 }
 
 function resolveInstanceFilterCondition(step: ResolvedRelationshipPathStep): string {
@@ -203,16 +312,4 @@ async function getNavigationProperty(step: ResolvedRelationshipPathStep): Promis
     }
   }
   return undefined;
-}
-
-function getJoinClause(type: "inner" | "outer" | undefined) {
-  if (type === "outer") {
-    return "OUTER JOIN";
-  }
-  return "INNER JOIN";
-}
-
-function getClassSelectClause(ecClass: EC.Class, alias: string) {
-  const classSelector = `[${ecClass.schema.name}].[${ecClass.name}]`;
-  return `${classSelector} [${alias}]`;
 }
