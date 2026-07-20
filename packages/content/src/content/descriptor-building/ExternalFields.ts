@@ -46,7 +46,7 @@ export function collectExternalFields(externalFieldsProviders: ExternalFieldsPro
       fields[id] = field;
     }
     if (provider.inputs) {
-      const declarations = Object.values(provider.inputs) as ReadonlyArray<InputPropertyDeclaration>;
+      const declarations: ReadonlyArray<InputPropertyDeclaration> = Object.values(provider.inputs);
       for (const input of declarations) {
         inputs.push({
           propertyClassName: input.propertyClassName,
