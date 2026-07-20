@@ -11,6 +11,9 @@ import { ECSqlBinding } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import type { Id64String } from '@itwin/core-bentley';
 import type { InstanceKey } from '@itwin/presentation-shared';
+import type { Point2dValue } from '@itwin/presentation-shared';
+import type { Point3dValue } from '@itwin/presentation-shared';
+import type { PrimitiveValue } from '@itwin/presentation-shared';
 import { RelationshipPath } from '@itwin/presentation-shared';
 import type { Value } from '@itwin/presentation-shared';
 import { ValueDescriptor } from '@itwin/presentation-shared';
@@ -158,11 +161,21 @@ export interface ContentTarget {
 }
 
 // @public
-interface ContentValueFilter {
+type ContentValueFilter = (ContentValueFilterBase & {
+    operator: ScalarValueFilterOperator;
+    value: PrimitiveValue;
+}) | (ContentValueFilterBase & {
+    operator: "is-in" | "is-not-in";
+    value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>[];
+}) | (ContentValueFilterBase & {
+    operator: "is-null" | "is-not-null";
+    value?: never;
+});
+
+// @public
+interface ContentValueFilterBase {
     field: PropertyField | CalculatedField;
     member?: string;
-    operator: ValueFilterOperator;
-    value: Value;
 }
 
 // @public
@@ -392,6 +405,9 @@ interface ResolvedPath {
     targetClassNames: EC.FullClassNameDotNotation[];
 }
 
+// @public (undocumented)
+type ScalarValueFilterOperator = Exclude<ValueFilterOperator, "is-null" | "is-not-null" | "is-in" | "is-not-in">;
+
 // @public
 interface StepPropertySpec {
     relationship?: ClassPropertySpec;
@@ -416,7 +432,7 @@ interface TransformableDescriptor {
 type TransformableField<TField extends Field = Field> = TField extends Field ? DeepReadonly<Omit<TField, MutableFieldMetadata>> & Pick<TField, MutableFieldMetadata> : never;
 
 // @public (undocumented)
-type ValueFilterOperator = "is-equal" | "is-not-equal" | "is-null" | "is-not-null" | "less-than" | "less-than-or-equal" | "greater-than" | "greater-than-or-equal" | "like" | "is-in";
+type ValueFilterOperator = "is-equal" | "is-not-equal" | "is-null" | "is-not-null" | "less-than" | "less-than-or-equal" | "greater-than" | "greater-than-or-equal" | "like" | "is-in" | "is-not-in";
 
 // @public
 export type ValueSelector = PropertyValueSelector | CalculatedValueSelector;

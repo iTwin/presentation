@@ -41,7 +41,9 @@ import type {
   ECSchemaProvider,
   ECSqlQueryExecutor,
   InstanceKey,
-  Value,
+  Point2dValue,
+  Point3dValue,
+  PrimitiveValue,
 } from "@itwin/presentation-shared";
 import type { ContentSource, ContentTarget } from "./ContentTarget.js";
 import type { DescriptorTransformer } from "./extensions/DescriptorTransformer.js";
@@ -66,13 +68,10 @@ interface ContentSortSpec {
 }
 
 /**
- * A value filter applied during query building (Stage 3).
- * Adds a WHERE clause to the final query — does not affect which fields
- * exist in the descriptor (only which rows are returned).
- *
+ * Attributes shared by all content value filters.
  * @public
  */
-export interface ContentValueFilter {
+interface ContentValueFilterBase {
   /** The field to filter on. */
   field: PropertyField | CalculatedField;
   /**
@@ -81,11 +80,37 @@ export interface ContentValueFilter {
    * Omit for scalar fields.
    */
   member?: string;
-  /** The filter operator. */
-  operator: ValueFilterOperator;
-  /** The value(s) to compare against. */
-  value: Value;
 }
+
+/** @public */
+type ScalarValueFilterOperator = Exclude<ValueFilterOperator, "is-null" | "is-not-null" | "is-in" | "is-not-in">;
+
+/**
+ * A value filter applied during query building (Stage 3).
+ * Adds a WHERE clause to the final query — does not affect which fields
+ * exist in the descriptor (only which rows are returned).
+ *
+ * @public
+ */
+export type ContentValueFilter =
+  | (ContentValueFilterBase & {
+      /** The filter operator. */
+      operator: ScalarValueFilterOperator;
+      /** The scalar value to compare against. */
+      value: PrimitiveValue;
+    })
+  | (ContentValueFilterBase & {
+      /** The filter operator. */
+      operator: "is-in" | "is-not-in";
+      /** The values to compare against. */
+      value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>[];
+    })
+  | (ContentValueFilterBase & {
+      /** The filter operator. */
+      operator: "is-null" | "is-not-null";
+      /** Null checks do not accept values. */
+      value?: never;
+    });
 
 /** @public */
 type ValueFilterOperator =
@@ -98,7 +123,8 @@ type ValueFilterOperator =
   | "greater-than"
   | "greater-than-or-equal"
   | "like"
-  | "is-in";
+  | "is-in"
+  | "is-not-in";
 
 /**
  * Request options passed alongside the descriptor when loading values.
